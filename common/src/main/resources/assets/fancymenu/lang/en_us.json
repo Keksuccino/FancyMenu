@@ -1815,5 +1815,9 @@
   "fancymenu.ui.generic.description": "Description",
   "fancymenu.ui.generic.search": "Search...",
   "fancymenu.listeners.manage.description.listener_desc": "Listener Type",
-  "fancymenu.listeners.manage.description.actions": "Action Script"
+  "fancymenu.listeners.manage.description.actions": "Action Script",
+  "fancymenu.ui.generic.next": "Next",
+  "fancymenu.ui.generic.continue": "Continue",
+  "fancymenu.ui.generic.next_step": "Next Step",
+  "fancymenu.actions.manage.no_value_to_edit": "§xThe selected action has no value to edit."
 }

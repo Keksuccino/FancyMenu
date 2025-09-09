@@ -321,12 +321,41 @@ public class BuildRequirementScreen extends Screen {
 
     }
 
-    public static class RequirementScrollEntry extends TextListScrollAreaEntry {
+    public class RequirementScrollEntry extends TextListScrollAreaEntry {
 
         public LoadingRequirement requirement;
+        protected long lastClickTime = 0;
+        protected static final long DOUBLE_CLICK_TIME = 500; // milliseconds
 
         public RequirementScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull Color listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
             super(parent, text, listDotColor, onClick);
+        }
+        
+        @Override
+        public void onClick(ScrollAreaEntry entry) {
+            long currentTime = System.currentTimeMillis();
+            
+            // Check if this is a double-click
+            if (currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) {
+                // Double-click detected
+                if (this.requirement != null && BuildRequirementScreen.this.instance.requirement == this.requirement) {
+                    // Check if requirement has value or doesn't need value -> act as "Done"
+                    if (!this.requirement.hasValue() || BuildRequirementScreen.this.instance.value != null) {
+                        Minecraft.getInstance().setScreen(BuildRequirementScreen.this.parentScreen);
+                        BuildRequirementScreen.this.callback.accept(BuildRequirementScreen.this.instance);
+                    } else {
+                        // Requirement needs value but none is set -> open edit value interface
+                        BuildRequirementScreen.this.instance.requirement.editValue(BuildRequirementScreen.this, BuildRequirementScreen.this.instance);
+                    }
+                    this.lastClickTime = 0; // Reset to prevent triple clicks
+                    return;
+                }
+            }
+            
+            this.lastClickTime = currentTime;
+            
+            // Normal single click behavior
+            super.onClick(entry);
         }
 
     }

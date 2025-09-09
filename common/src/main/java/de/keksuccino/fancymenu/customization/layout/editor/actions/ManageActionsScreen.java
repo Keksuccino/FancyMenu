@@ -202,57 +202,15 @@ public class ManageActionsScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.moveDownButton);
 
         this.editButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.edit_action"), (button) -> {
-            ExecutableEntry selected = this.getSelectedEntry();
-            if (selected != null) {
-                AbstractExecutableBlock block = selected.getParentBlock();
-                if (selected.executable instanceof ActionInstance i) {
-                    BuildActionScreen s = new BuildActionScreen(i.copy(false), (call) -> {
-                        if (call != null) {
-                            int index = block.getExecutables().indexOf(selected.executable);
-                            block.getExecutables().remove(selected.executable);
-                            if (index != -1) {
-                                block.getExecutables().add(index, call);
-                            } else {
-                                block.getExecutables().add(call);
-                            }
-                            this.updateActionInstanceScrollArea(false);
-                        }
-                        Minecraft.getInstance().setScreen(this);
-                    });
-                    Minecraft.getInstance().setScreen(s);
-                } else if (selected.executable instanceof IfExecutableBlock b) {
-                    ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
-                        if (container != null) {
-                            b.condition = container;
-                            this.updateActionInstanceScrollArea(true);
-                        }
-                        Minecraft.getInstance().setScreen(this);
-                    });
-                    Minecraft.getInstance().setScreen(s);
-                } else if (selected.executable instanceof ElseIfExecutableBlock b) {
-                    ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
-                        if (container != null) {
-                            b.condition = container;
-                            this.updateActionInstanceScrollArea(true);
-                        }
-                        Minecraft.getInstance().setScreen(this);
-                    });
-                    Minecraft.getInstance().setScreen(s);
-                } else if (selected.executable instanceof WhileExecutableBlock b) {
-                    ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
-                        if (container != null) {
-                            b.condition = container;
-                            this.updateActionInstanceScrollArea(true);
-                        }
-                        Minecraft.getInstance().setScreen(this);
-                    });
-                    Minecraft.getInstance().setScreen(s);
-                }
-            }
+            this.onEdit();
         }).setIsActiveSupplier(consumes -> {
             ExecutableEntry selected = this.getSelectedEntry();
             if ((selected == null) || (selected.executable instanceof ElseExecutableBlock)) {
                 consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
+                return false;
+            }
+            if ((selected.executable instanceof ActionInstance i) && !i.action.hasValue()) {
+                consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.no_value_to_edit")));
                 return false;
             }
             consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.edit_action.desc")));
@@ -345,6 +303,57 @@ public class ManageActionsScreen extends Screen {
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
 
+    }
+
+    protected void onEdit() {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if (selected != null) {
+            AbstractExecutableBlock block = selected.getParentBlock();
+            if (selected.executable instanceof ActionInstance i) {
+                if (!i.action.hasValue()) return; // If action has no value to edit, do nothing
+                BuildActionScreen s = new BuildActionScreen(i.copy(false), (call) -> {
+                    if (call != null) {
+                        int index = block.getExecutables().indexOf(selected.executable);
+                        block.getExecutables().remove(selected.executable);
+                        if (index != -1) {
+                            block.getExecutables().add(index, call);
+                        } else {
+                            block.getExecutables().add(call);
+                        }
+                        this.updateActionInstanceScrollArea(false);
+                    }
+                    Minecraft.getInstance().setScreen(this);
+                });
+                Minecraft.getInstance().setScreen(s);
+            } else if (selected.executable instanceof IfExecutableBlock b) {
+                ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
+                    if (container != null) {
+                        b.condition = container;
+                        this.updateActionInstanceScrollArea(true);
+                    }
+                    Minecraft.getInstance().setScreen(this);
+                });
+                Minecraft.getInstance().setScreen(s);
+            } else if (selected.executable instanceof ElseIfExecutableBlock b) {
+                ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
+                    if (container != null) {
+                        b.condition = container;
+                        this.updateActionInstanceScrollArea(true);
+                    }
+                    Minecraft.getInstance().setScreen(this);
+                });
+                Minecraft.getInstance().setScreen(s);
+            } else if (selected.executable instanceof WhileExecutableBlock b) {
+                ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
+                    if (container != null) {
+                        b.condition = container;
+                        this.updateActionInstanceScrollArea(true);
+                    }
+                    Minecraft.getInstance().setScreen(this);
+                });
+                Minecraft.getInstance().setScreen(s);
+            }
+        }
     }
 
     @Override

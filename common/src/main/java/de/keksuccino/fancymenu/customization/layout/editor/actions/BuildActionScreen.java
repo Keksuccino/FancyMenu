@@ -5,13 +5,12 @@ import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.LogicExecutorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -35,15 +34,19 @@ public class BuildActionScreen extends Screen {
     protected ScrollArea actionDescriptionScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedEditBox searchBar;
 
+    public boolean isEdit;
+
     public BuildActionScreen(@Nullable ActionInstance instanceToEdit, @NotNull Consumer<ActionInstance> callback) {
 
         super((instanceToEdit != null) ? Component.translatable("fancymenu.editor.action.screens.edit_action") : Component.translatable("fancymenu.editor.action.screens.add_action"));
 
-        if (instanceToEdit != null) {
+        this.isEdit = (instanceToEdit != null);
+
+        if (this.isEdit) {
             this.originalAction = instanceToEdit.action;
             this.originalActionValue = instanceToEdit.value;
         }
-        this.instance = (instanceToEdit != null) ? instanceToEdit : new ActionInstance(Action.EMPTY, null);
+        this.instance = this.isEdit ? instanceToEdit : new ActionInstance(Action.EMPTY, null);
         this.callback = callback;
 
     }
@@ -78,45 +81,17 @@ public class BuildActionScreen extends Screen {
         this.actionDescriptionScrollArea.setY(50 + 15, true);
 
         // Calculate button positions
-        int editValueButtonX = this.width - 20 - 150; // 150 is the button width
-        int editValueButtonY = this.height - 20 - 20 - 5 - 20 - 15 - 20;
         int cancelButtonX = this.width - 20 - 150;
         int cancelButtonY = this.height - 20 - 20 - 5 - 20;
         int doneButtonX = this.width - 20 - 150;
         int doneButtonY = this.height - 20 - 20;
 
         // Create buttons with proper positions in constructors
-        ExtendedButton editValueButton = new ExtendedButton(editValueButtonX, editValueButtonY, 150, 20, Component.translatable("fancymenu.editor.action.screens.build_screen.edit_value"), (button) -> {
-            if (this.instance.action == Action.EMPTY) return;
-            this.originalAction = null;
-            this.originalActionValue = null;
-            this.instance.action.editValue(this, this.instance);
-        }).setIsActiveSupplier(consumes -> (this.instance.action != Action.EMPTY) && this.instance.action.hasValue())
-                .setTooltipSupplier(consumes -> {
-                    if ((this.instance.action != Action.EMPTY) && !this.instance.action.hasValue()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value"));
-                    }
-                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.action.screens.build_screen.edit_value.desc.normal"));
-                });
-        this.addRenderableWidget(editValueButton);
-        UIBase.applyDefaultWidgetSkinTo(editValueButton);
-
-        ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
-            this.callback.accept((this.instance.action != Action.EMPTY) ? this.instance : null);
-        }).setIsActiveSupplier(consumes -> {
-                    if (this.instance.action == Action.EMPTY) return false;
-                    return (this.instance.value != null) || !this.instance.action.hasValue();
-                })
-                .setTooltipSupplier(consumes -> {
-                    if (this.instance.action == Action.EMPTY) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.action.screens.finish.no_action_selected"));
-                    } else if ((this.instance.value == null) && this.instance.action.hasValue()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.action.screens.build_screen.finish.no_value_set"));
-                    }
-                    return null;
-                });
-        this.addRenderableWidget(doneButton);
-        UIBase.applyDefaultWidgetSkinTo(doneButton);
+        ExtendedButton doneOrNextButton = new ExtendedButton(doneButtonX, doneButtonY, 150, 20, Component.empty(), (button) -> {
+            this.onNextStep();
+        }).setLabelSupplier(consumes -> this.needsValueFirst() ? Component.translatable("fancymenu.ui.generic.next_step") : Component.translatable("fancymenu.guicomponents.done"));
+        this.addRenderableWidget(doneOrNextButton);
+        UIBase.applyDefaultWidgetSkinTo(doneOrNextButton);
 
         ExtendedButton cancelButton = new ExtendedButton(cancelButtonX, cancelButtonY, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
@@ -125,9 +100,51 @@ public class BuildActionScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(cancelButton);
 
         this.updateActionsList();
-
         this.setDescription(this.instance.action);
 
+        if (this.isEdit) {
+            // Skip this screen and go directly to value configuration it's an edit
+            this.onNextStep();
+        }
+
+    }
+
+    protected void onEditValue() {
+        if (this.instance.action == Action.EMPTY) return;
+        this.originalAction = null;
+        this.originalActionValue = null;
+        this.instance.action.editValue(LogicExecutorScreen.build(() -> {
+            if (this.canClickDone()) {
+                this.onDone();
+            } else {
+                Minecraft.getInstance().setScreen(this);
+            }
+        }), this.instance);
+    }
+
+    protected boolean hasValue() {
+        return (this.instance.action != Action.EMPTY) && this.instance.action.hasValue();
+    }
+
+    protected void onDone() {
+        this.callback.accept((this.instance.action != Action.EMPTY) ? this.instance : null);
+    }
+
+    protected boolean canClickDone() {
+        if (this.instance.action == Action.EMPTY) return false;
+        return (this.instance.value != null) || !this.instance.action.hasValue();
+    }
+
+    protected boolean needsValueFirst() {
+        return this.hasValue() && !this.canClickDone();
+    }
+
+    protected void onNextStep() {
+        if (this.hasValue()) {
+            this.onEditValue();
+        } else if (this.canClickDone()) {
+            this.onDone();
+        }
     }
 
     @Override
@@ -227,9 +244,11 @@ public class BuildActionScreen extends Screen {
 
     }
 
-    public static class ActionScrollEntry extends TextListScrollAreaEntry {
+    public class ActionScrollEntry extends TextListScrollAreaEntry {
 
         public Action action;
+        protected long lastClickTime = 0;
+        protected static final long DOUBLE_CLICK_TIME = 500; // milliseconds
 
         public ActionScrollEntry(ScrollArea parent, @NotNull Action action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
             super(parent, buildLabel(action), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
@@ -245,6 +264,26 @@ public class BuildActionScreen extends Screen {
                 c = c.append(Component.translatable("fancymenu.editor.actions.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()).withStrikethrough(false)));
             }
             return c;
+        }
+        
+        @Override
+        public void onClick(ScrollAreaEntry entry) {
+            long currentTime = System.currentTimeMillis();
+            
+            // Check if this is a double-click
+            if (currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) {
+                // Double-click detected
+                if (BuildActionScreen.this.instance.action == this.action) {
+                    BuildActionScreen.this.onNextStep();
+                    this.lastClickTime = 0; // Reset to prevent triple clicks
+                    return;
+                }
+            }
+            
+            this.lastClickTime = currentTime;
+            
+            // Normal single click behavior
+            super.onClick(entry);
         }
 
     }
