@@ -1,7 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 
-- It's npw possible to double-click actions in the action selection list of the Build/Edit Action Screen
+- It's npw possible to double-click actions in the action selection list of the Add/Edit Action Screen
   - When the action needs a value and none is set yet, double-clicking will open the edit value inferface
   - When the action does not need a value or already has one set, double-clicking will act as a shortcut to pressing "Done"
 - It's npw possible to double-click requirements in the requirement selection list of the Build/Edit Requirement Screen
