@@ -19,6 +19,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
   - When the requirement has a value, double-clicking opend the Edit Value screen, if not, it works as a shortcut to pressing "Done"
 - The description boxes of the selection screens for actions and requirements now have line wrapping for their description boxes so you don't need to scroll horizontally anymore
 - You can now target the default ".minecraft" directory in the "File Text" placeholder by starting the target file path with ".minecraft/"
+- You can now target the default ".minecraft" directory in the "File/Folder Exists" requirement by starting the target file path with ".minecraft/"
 - Fixed "World Save Data" placeholder being in the wrong category
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
  
