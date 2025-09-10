@@ -7,6 +7,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Added "Rename File in Game Directory" action to rename files in the instance's game directory and the ".minecraft" directory
 - Added "Download File to Game Directory" action to download files to the instance's game directory and the ".minecraft" directory
   - There's also a listener that triggers when a file finishes downloading via this action (also includes if the download succeeded or not)
+- Added "Write File in Game Directory" action to write text content to files in the instance's game directory and the ".minecraft" directory
 - Added "Print to Game Log" action to print text to the game's log for debugging (#1267)
 - Improved the "flow" of the action script building process
   - Clicking "Edit" now only works when an action is selected that has a value
