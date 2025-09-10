@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 
 - Added "Delete File in Game Directory" action to delete files in the instance's game directory and the ".minecraft" directory
+- Added "Create File in Game Directory" action to create new empty files in the instance's game directory and the ".minecraft" directory
 - Added "Move File in Game Directory" action to move files in the instance's game directory and the ".minecraft" directory
 - Added "Copy File in Game Directory" action to copy files in the instance's game directory and the ".minecraft" directory
 - Added "Rename File in Game Directory" action to rename files in the instance's game directory and the ".minecraft" directory
