@@ -4,8 +4,7 @@ import de.keksuccino.fancymenu.customization.action.actions.audio.NextTrackActio
 import de.keksuccino.fancymenu.customization.action.actions.audio.PreviousTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.SetAudioElementVolumeAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.TogglePlayTrackAction;
-import de.keksuccino.fancymenu.customization.action.actions.file.DeleteFileAction;
-import de.keksuccino.fancymenu.customization.action.actions.file.MoveFileAction;
+import de.keksuccino.fancymenu.customization.action.actions.file.*;
 import de.keksuccino.fancymenu.customization.action.actions.layout.DisableLayoutAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.EnableLayoutAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.ToggleLayoutAction;
@@ -61,6 +60,9 @@ public class Actions {
     public static final PrintToLogAction PRINT_TO_LOG = new PrintToLogAction();
     public static final DeleteFileAction DELETE_FILE = new DeleteFileAction();
     public static final MoveFileAction MOVE_FILE = new MoveFileAction();
+    public static final CopyFileAction COPY_FILE = new CopyFileAction();
+    public static final RenameFileAction RENAME_FILE = new RenameFileAction();
+    public static final DownloadFileAction DOWNLOAD_FILE = new DownloadFileAction();
 
     public static void registerAll() {
 
@@ -97,6 +99,9 @@ public class Actions {
         ActionRegistry.register(PRINT_TO_LOG);
         ActionRegistry.register(DELETE_FILE);
         ActionRegistry.register(MOVE_FILE);
+        ActionRegistry.register(COPY_FILE);
+        ActionRegistry.register(RENAME_FILE);
+        ActionRegistry.register(DOWNLOAD_FILE);
 
     }
 

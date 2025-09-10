@@ -13,7 +13,7 @@ public class ListenerRegistry {
     private static final CharacterFilter IDENTIFIER_NAME_VALIDATOR = CharacterFilter.buildResourceNameFilter();
     private static final Map<String, AbstractListener> LISTENERS = new LinkedHashMap<>();
 
-    public static void registerListener(@NotNull AbstractListener listener) {
+    public static void register(@NotNull AbstractListener listener) {
         if (!ListenerHandler.canRegisterListeners) {
             throw new RuntimeException("[FANCYMENU] Tried to register listener too late: " + listener.getIdentifier());
         }

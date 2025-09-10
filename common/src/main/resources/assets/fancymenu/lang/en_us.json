@@ -1812,6 +1812,8 @@
   "fancymenu.listeners.on_char_typed.desc": "This listener triggers whenever a character is typed in a screen.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$char §r= The typed character",
   "fancymenu.listeners.on_variable_updated": "On Variable Updated [FM Variable]",
   "fancymenu.listeners.on_variable_updated.desc": "This listener triggers whenever a FancyMenu variable gets updated/set.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$var_name §r= The variable name\n- §z$$old_value §r= The old variable value\n- §z$$new_value §r= The new variable value",
+  "fancymenu.listeners.on_file_downloaded": "On File Downloaded via Action",
+  "fancymenu.listeners.on_file_downloaded.desc": "This listener triggers when a file finishes downloading via the 'Download File to Game Directory' action.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$download_url §r= The URL of the file that got downloaded\n- §z$$target_file_path §r= The path the file got saved to\n- §z$$download_succeeded §r= If the file download was successful (true/false)",
   "fancymenu.ui.generic.description": "Description",
   "fancymenu.ui.generic.search": "Search...",
   "fancymenu.listeners.manage.description.listener_desc": "Listener Type",
@@ -1829,5 +1831,17 @@
   "fancymenu.actions.move_file": "Move File in Game Directory",
   "fancymenu.actions.move_file.desc": "This action moves a file in the game directory, which starts at the root of the Minecraft instance directory. This action is limited to work only inside the game directory for safety reasons.\n\nIt is also possible to access the default '.minecraft' directory with this action. For that, just start paths with the '.minecraft/' prefix.",
   "fancymenu.actions.move_file.value.source": "Source File Path",
-  "fancymenu.actions.move_file.value.destination": "Destination File Path"
+  "fancymenu.actions.move_file.value.destination": "Destination File Path",
+  "fancymenu.actions.copy_file": "Copy File in Game Directory",
+  "fancymenu.actions.copy_file.desc": "This action copies a file in the game directory, which starts at the root of the Minecraft instance directory. This action is limited to work only inside the game directory for safety reasons.\n\nIt is also possible to access the default '.minecraft' directory with this action. For that, just start paths with the '.minecraft/' prefix.",
+  "fancymenu.actions.copy_file.value.source": "Source File Path",
+  "fancymenu.actions.copy_file.value.destination": "Destination File Path",
+  "fancymenu.actions.rename_file": "Rename File in Game Directory",
+  "fancymenu.actions.rename_file.desc": "This action renames a file in the game directory, which starts at the root of the Minecraft instance directory. This action is limited to work only inside the game directory for safety reasons.\n\nIt is also possible to access the default '.minecraft' directory with this action. For that, just start paths with the '.minecraft/' prefix.",
+  "fancymenu.actions.rename_file.value.filepath": "File Path",
+  "fancymenu.actions.rename_file.value.new_name": "New File Name",
+  "fancymenu.actions.download_file": "Download File to Game Directory",
+  "fancymenu.actions.download_file.desc": "This action downloads a file from a URL and saves it to the game directory, which starts at the root of the Minecraft instance directory. This action is limited to work only inside the game directory for safety reasons.\n\n§lAsynchronous Download:§r This action downloads files asynchronously, which means the download happens in the background without freezing or blocking the game. The game will continue running normally while the file is being downloaded.\n\nIt is also possible to access the default '.minecraft' directory with this action. For that, just start paths with the '.minecraft/' prefix.",
+  "fancymenu.actions.download_file.value.url": "File URL",
+  "fancymenu.actions.download_file.value.target_path": "Target File Path"
 }

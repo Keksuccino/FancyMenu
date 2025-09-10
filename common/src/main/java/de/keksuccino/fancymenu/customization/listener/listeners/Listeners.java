@@ -6,11 +6,13 @@ public class Listeners {
 
     public static final OnCharTypedListener ON_CHAR_TYPED = new OnCharTypedListener();
     public static final OnVariableUpdatedListener ON_VARIABLE_UPDATED = new OnVariableUpdatedListener();
+    public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
 
     public static void registerAll() {
 
-        ListenerRegistry.registerListener(ON_CHAR_TYPED);
-        ListenerRegistry.registerListener(ON_VARIABLE_UPDATED);
+        ListenerRegistry.register(ON_CHAR_TYPED);
+        ListenerRegistry.register(ON_VARIABLE_UPDATED);
+        ListenerRegistry.register(ON_FILE_DOWNLOADED);
 
     }
 
