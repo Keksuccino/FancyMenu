@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.sy
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +25,8 @@ public class FileExistsRequirement extends LoadingRequirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
         if (value != null) {
+            // Convert short .minecraft paths to actual valid .minecraft paths
+            value = DotMinecraftUtils.resolveMinecraftPath(value);
             return new File(value).exists();
         }
         return false;

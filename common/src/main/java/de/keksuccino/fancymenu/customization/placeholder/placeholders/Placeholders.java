@@ -182,6 +182,8 @@ public class Placeholders {
     public static final FileTextPlaceholder FILE_TEXT = new FileTextPlaceholder();
     public static final WorldSaveNamesPlaceholder LEVEL_SAVE_NAMES = new WorldSaveNamesPlaceholder();
     public static final WorldSaveDataPlaceholder LEVEL_SAVE_DATA = new WorldSaveDataPlaceholder();
+    public static final FileSizePlaceholder FILE_SIZE = new FileSizePlaceholder();
+    public static final FileMd5Placeholder FILE_MD5 = new FileMd5Placeholder();
 
     public static void registerAll() {
 
@@ -309,6 +311,8 @@ public class Placeholders {
         PlaceholderRegistry.register(REPLACE_TEXT);
         PlaceholderRegistry.register(NBT_DATA_GET);
         PlaceholderRegistry.register(FILE_TEXT);
+        PlaceholderRegistry.register(FILE_SIZE);
+        PlaceholderRegistry.register(FILE_MD5);
 
         //Audio
         PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);

@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import net.minecraft.client.resources.language.I18n;
@@ -38,6 +39,7 @@ public class FileTextPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
+
         String pathOrUrl = dps.values.get("path_or_url");
         String separator = dps.values.get("separator");
         String mode = dps.values.get("mode");
@@ -46,6 +48,9 @@ public class FileTextPlaceholder extends Placeholder {
         if (pathOrUrl == null || pathOrUrl.isEmpty()) {
             return "";
         }
+
+        //Convert short .minecraft path to actual .minecraft path
+        pathOrUrl = DotMinecraftUtils.resolveMinecraftPath(pathOrUrl);
         
         if (separator == null) {
             separator = "\\n"; // Default to newline

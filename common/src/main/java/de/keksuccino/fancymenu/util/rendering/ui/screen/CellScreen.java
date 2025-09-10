@@ -760,15 +760,21 @@ public abstract class CellScreen extends Screen {
         public ExtendedButton openEditorButton;
         public final boolean allowEditor;
         protected boolean widgetSizesSet = false;
-        protected BiConsumer<String, TextInputCell> editorCallback = (s, cell) -> cell.editBox.setValue(s);
-        protected ConsumingSupplier<TextInputCell, String> editorSetTextSupplier = consumes -> consumes.editBox.getValue();
+        protected BiConsumer<String, TextInputCell> editorCallback = (s, cell) -> cell.editBox.setValue(s.replace("\n", "\\n"));
+        protected ConsumingSupplier<TextInputCell, String> editorSetTextSupplier = consumes -> {
+            if (this.editorMultiLineMode) {
+                return consumes.editBox.getValue().replace("\\n", "\n");
+            }
+            return consumes.editBox.getValue().replace("\n", "\\n");
+        };
+        protected boolean editorMultiLineMode = false;
 
         public TextInputCell(@Nullable CharacterFilter characterFilter, boolean allowEditor, boolean allowEditorPlaceholders) {
 
             this.allowEditor = allowEditor;
 
             this.editBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 20, 18, Component.empty());
-            this.editBox.setMaxLength(100000);
+            this.editBox.setMaxLength(1000000);
             this.editBox.setCharacterFilter(characterFilter);
             UIBase.applyDefaultWidgetSkinTo(this.editBox);
             this.children().add(this.editBox);
@@ -782,7 +788,7 @@ public abstract class CellScreen extends Screen {
                             }
                             Minecraft.getInstance().setScreen(CellScreen.this);
                         });
-                        s.setMultilineMode(false);
+                        s.setMultilineMode(this.editorMultiLineMode);
                         s.setPlaceholdersAllowed(allowEditorPlaceholders);
                         s.setText(this.editorSetTextSupplier.get(this));
                         Minecraft.getInstance().setScreen(s);
@@ -856,6 +862,15 @@ public abstract class CellScreen extends Screen {
             this.editBox.setCursorPosition(0);
             this.editBox.setHighlightPos(0);
             this.editBox.setDisplayPosition(0);
+            return this;
+        }
+
+        public boolean isEditorMultiLineMode() {
+            return editorMultiLineMode;
+        }
+
+        public TextInputCell setEditorMultiLineMode(boolean editorMultiLineMode) {
+            this.editorMultiLineMode = editorMultiLineMode;
             return this;
         }
 

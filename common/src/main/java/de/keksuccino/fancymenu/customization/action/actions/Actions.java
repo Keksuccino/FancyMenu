@@ -63,6 +63,8 @@ public class Actions {
     public static final CopyFileAction COPY_FILE = new CopyFileAction();
     public static final RenameFileAction RENAME_FILE = new RenameFileAction();
     public static final DownloadFileAction DOWNLOAD_FILE = new DownloadFileAction();
+    public static final WriteFileAction WRITE_FILE = new WriteFileAction();
+    public static final CreateFileAction CREATE_FILE = new CreateFileAction();
 
     public static void registerAll() {
 
@@ -102,6 +104,8 @@ public class Actions {
         ActionRegistry.register(COPY_FILE);
         ActionRegistry.register(RENAME_FILE);
         ActionRegistry.register(DOWNLOAD_FILE);
+        ActionRegistry.register(WRITE_FILE);
+        ActionRegistry.register(CREATE_FILE);
 
     }
 
