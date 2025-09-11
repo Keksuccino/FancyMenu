@@ -28,6 +28,7 @@ public class EditorElementSettings {
     private boolean stayOnScreenAllowed = true;
     private boolean stickyAnchorAllowed = true;
     private boolean inEditorColorSupported = false;
+    private boolean rotatable = true;
 
     private boolean skipReInit = false;
 
@@ -244,6 +245,15 @@ public class EditorElementSettings {
 
     public void setIdentifierCopyable(boolean copyable) {
         this.identifierCopyable = copyable;
+        this.settingsChanged();
+    }
+
+    public boolean isRotatable() {
+        return this.rotatable;
+    }
+
+    public void setRotatable(boolean rotatable) {
+        this.rotatable = rotatable;
         this.settingsChanged();
     }
 

@@ -1886,5 +1886,8 @@
   "fancymenu.requirements.is_any_screen_open": "Is Any Screen Open",
   "fancymenu.requirements.is_any_screen_open.desc": "Returns true if any screen is open.\nFor example, this will return false if the user is walking around in a world, because then there's no screen open.\nIt will return true if the Inventory or Pause screen is open.",
   "fancymenu.actions.reload_resource_packs": "Reload Resource Packs",
-  "fancymenu.actions.reload_resource_packs.desc": "This action reloads resource packs just like when pressing F3 + T."
+  "fancymenu.actions.reload_resource_packs.desc": "This action reloads resource packs just like when pressing F3 + T.",
+  "fancymenu.element.rotation.degrees": "Rotation",
+  "fancymenu.element.rotation.degrees.desc": "Set the rotation angle in degrees for this element.\nPositive values rotate clockwise.\n\nThis is the same as using the grabbers,\nbut more precise for full control.",
+  "fancymenu.element.border_display.rotation": "Rotation: %s degrees"
 }

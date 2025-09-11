@@ -70,17 +70,20 @@ public class TooltipElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
         if (isEditor()) {
-            this._render(graphics, mouseX, mouseY, partial);
+            super.renderInternal(graphics, mouseX, mouseY, partial);
         } else {
             ScreenRenderUtils.postPostRenderTask((graphics1, mouseX1, mouseY1, partial1) -> {
-                this._render(graphics, mouseX, mouseY, partial);
+                super.renderInternal(graphics, mouseX, mouseY, partial);
             });
         }
+
     }
 
-    protected void _render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -148,6 +151,7 @@ public class TooltipElement extends AbstractElement {
         }
 
         RenderingUtils.resetShaderColor(graphics);
+
     }
     
     private void renderVanillaTooltipBackground(GuiGraphics graphics, int x, int y, int width, int height) {

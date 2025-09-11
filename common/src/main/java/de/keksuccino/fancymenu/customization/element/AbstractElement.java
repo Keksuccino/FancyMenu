@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import com.mojang.serialization.JsonOps;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -160,11 +161,32 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	protected RuntimePropertyContainer cachedMemory;
 	protected int cachedMouseX = 0;
 	protected int cachedMouseY = 0;
+	/** The rotation angle in degrees. 0 = no rotation, positive values rotate clockwise */
+	public float rotationDegrees = 0.0F;
+	/** Whether this element type supports rotation. Can be overridden in subclasses. */
+	protected boolean supportsRotation = true;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
 		this.builder = builder;
 		this.instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
+	}
+
+	/**
+	 * Returns whether this element type supports rotation.
+	 * @return true if this element can be rotated, false otherwise
+	 */
+	public boolean supportsRotation() {
+		return this.supportsRotation;
+	}
+
+	/**
+	 * Sets whether this element type supports rotation.
+	 * This should typically be called in the constructor of element subclasses.
+	 * @param supportsRotation true to enable rotation, false to disable it
+	 */
+	protected void setSupportsRotation(boolean supportsRotation) {
+		this.supportsRotation = supportsRotation;
 	}
 
 	public void setParentLayout(@Nullable Layout parentLayout) {
@@ -199,6 +221,23 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		this.tickBaseOpacity();
 
+		// Apply rotation if needed
+		boolean rotationApplied = false;
+		if (this.supportsRotation && (this.rotationDegrees != 0.0F)) {
+			graphics.pose().pushPose();
+
+			// Calculate center point of the element
+			float centerX = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2.0F);
+			float centerY = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2.0F);
+
+			// Translate to center, rotate, then translate back
+			graphics.pose().translate(centerX, centerY, 0);
+			graphics.pose().mulPose(Axis.ZP.rotationDegrees(this.rotationDegrees));
+			graphics.pose().translate(-centerX, -centerY, 0);
+
+			rotationApplied = true;
+		}
+
 		this.renderTick_Head();
 
 		this.tickVisibleInvisible();
@@ -221,6 +260,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.render(graphics, mouseX, mouseY, partial);
 
 		this.renderTick_Tail();
+
+		// Pop the rotation transformation
+		if (rotationApplied) {
+			graphics.pose().popPose();
+		}
 
 	}
 
