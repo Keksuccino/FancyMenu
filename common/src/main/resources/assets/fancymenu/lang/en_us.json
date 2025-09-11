@@ -1882,5 +1882,9 @@
   "fancymenu.elements.player_entity.wearables.legs": "Set Legs Armor",
   "fancymenu.elements.player_entity.wearables.legs.enchant": "Enchant Legs Armor: %s",
   "fancymenu.elements.player_entity.wearables.feet": "Set Feet Armor",
-  "fancymenu.elements.player_entity.wearables.feet.enchant": "Enchant Feet Armor: %s"
+  "fancymenu.elements.player_entity.wearables.feet.enchant": "Enchant Feet Armor: %s",
+  "fancymenu.requirements.is_any_screen_open": "Is Any Screen Open",
+  "fancymenu.requirements.is_any_screen_open.desc": "Returns true if any screen is open.\nFor example, this will return false if the user is walking around in a world, because then there's no screen open.\nIt will return true if the Inventory or Pause screen is open.",
+  "fancymenu.actions.reload_resource_packs": "Reload Resource Packs",
+  "fancymenu.actions.reload_resource_packs.desc": "This action reloads resource packs just like when pressing F3 + T."
 }

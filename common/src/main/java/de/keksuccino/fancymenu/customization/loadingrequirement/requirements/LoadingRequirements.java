@@ -93,6 +93,7 @@ public class LoadingRequirements {
     public static final MouseClickedRequirement MOUSE_CLICKED = new MouseClickedRequirement();
     public static final IsInternetConnectionAvailableRequirement IS_INTERNET_CONNECTION_AVAILABLE = new IsInternetConnectionAvailableRequirement();
     public static final IsMcefLoadedRequirement IS_MCEF_LOADED = new IsMcefLoadedRequirement();
+    public static final IsAnyScreenOpenRequirement IS_ANY_SCREEN_OPEN = new IsAnyScreenOpenRequirement();
 
     public static void registerAll() {
 
@@ -104,6 +105,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_BUTTON_ACTIVE);
         LoadingRequirementRegistry.register(IS_MENU_TITLE);
         LoadingRequirementRegistry.register(IS_KEY_PRESSED);
+        LoadingRequirementRegistry.register(IS_ANY_SCREEN_OPEN);
 
         LoadingRequirementRegistry.register(IS_REAL_TIME_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_HOUR);

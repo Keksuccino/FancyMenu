@@ -65,6 +65,7 @@ public class Actions {
     public static final DownloadFileAction DOWNLOAD_FILE = new DownloadFileAction();
     public static final WriteFileAction WRITE_FILE = new WriteFileAction();
     public static final CreateFileAction CREATE_FILE = new CreateFileAction();
+    public static final ReloadResourcePacksAction RELOAD_RESOURCE_PACKS = new ReloadResourcePacksAction();
 
     public static void registerAll() {
 
@@ -106,6 +107,7 @@ public class Actions {
         ActionRegistry.register(DOWNLOAD_FILE);
         ActionRegistry.register(WRITE_FILE);
         ActionRegistry.register(CREATE_FILE);
+        ActionRegistry.register(RELOAD_RESOURCE_PACKS);
 
     }
 
