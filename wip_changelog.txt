@@ -24,6 +24,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - The description boxes of the selection screens for actions and requirements now have line wrapping for their description boxes so you don't need to scroll horizontally anymore
 - You can now target the default ".minecraft" directory in the "File Text" placeholder by starting the target file path with ".minecraft/" (#1242)
 - You can now target the default ".minecraft" directory in the "File/Folder Exists" requirement by starting the target file path with ".minecraft/" (#1242)
+- It's now possible to use placeholders in the tint value of Image elements (#1271)
 - Fixed "World Save Data" placeholder being in the wrong category
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
 - Fixed missing localizations for some options of the new (1.21.4+) Player Entity element (#1276)
