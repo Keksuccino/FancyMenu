@@ -52,7 +52,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,9 +74,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	};
 	protected static final ConsumingSupplier<AbstractEditorElement, Integer> ROTATION_GRABBER_COLOR = (editorElement) -> {
 		if (editorElement.isSelected()) {
-			return 0xFF00FF00; // Green for rotation grabbers
+			return UIBase.getUIColorTheme().layout_editor_element_border_rotation_grabber_color_selected.getColorInt();
 		}
-		return 0xFF00AA00; // Darker green when not selected
+		return UIBase.getUIColorTheme().layout_editor_element_border_rotation_grabber_color_normal.getColorInt();
 	};
 
 	public AbstractElement element;
