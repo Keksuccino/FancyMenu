@@ -422,6 +422,7 @@ public class PlaceholderParser {
             if (identifier == null) return this.placeholderString;
             Placeholder p = this.getPlaceholder();
             if (p == null) return this.placeholderString;
+            if (!p.checkAsync()) return this.placeholderString;
             HashMap<String, String> values = this.getValues();
             if (this.hasValues() && ((values == null) || values.isEmpty())) return this.placeholderString;
             DeserializedPlaceholderString deserialized = new DeserializedPlaceholderString(identifier, null, this.placeholderString);

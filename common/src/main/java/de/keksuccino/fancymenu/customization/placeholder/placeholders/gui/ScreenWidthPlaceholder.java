@@ -18,6 +18,11 @@ public class ScreenWidthPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         if (Minecraft.getInstance().screen != null) {
             return "" + Minecraft.getInstance().screen.width;

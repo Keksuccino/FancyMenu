@@ -17,6 +17,11 @@ public class PlayerViewDirectionPlaceholder extends Placeholder {
         super("player_view_direction");
     }
 
+    @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
     @SuppressWarnings("all")
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {

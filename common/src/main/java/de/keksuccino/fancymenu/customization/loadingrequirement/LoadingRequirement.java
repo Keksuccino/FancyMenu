@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.customization.loadingrequirement;
 
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.customization.placeholder.AsyncPlaceholderErrorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -23,6 +25,7 @@ public abstract class LoadingRequirement {
 
     protected final String identifier;
     private LoadingRequirementInstance currentInstance;
+    protected volatile boolean asyncErrorShown = false;
 
     /**
      * The identifier needs to be unique! It is not possible to register two requirements with the same identifier.
@@ -153,6 +156,19 @@ public abstract class LoadingRequirement {
     @NotNull
     public LoadingRequirementInstance getCurrentInstance() {
         return this.currentInstance;
+    }
+
+    public boolean canRunAsync() {
+        return true;
+    }
+
+    public boolean checkAsync() {
+        boolean sameThread = Minecraft.getInstance().isSameThread();
+        if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
+            this.asyncErrorShown = true;
+            QueueableScreenHandler.addToQueue(new AsyncRequirementErrorScreen(Component.literal(this.getDisplayName())));
+        }
+        return this.canRunAsync() || sameThread; // should check requirement
     }
 
 }

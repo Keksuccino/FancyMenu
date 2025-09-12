@@ -35,6 +35,11 @@ public class IsPlayerInBiomeRequirement extends LoadingRequirement {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return true;
     }

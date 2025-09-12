@@ -22,6 +22,11 @@ public class WorldLoadProgressPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         Screen s = Minecraft.getInstance().screen;
         if (s instanceof ProgressScreen p) {

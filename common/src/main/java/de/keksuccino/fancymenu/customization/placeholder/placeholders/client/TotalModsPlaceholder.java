@@ -25,6 +25,11 @@ public class TotalModsPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         int loaded = getLoadedMods();
         int total = getTotalMods();

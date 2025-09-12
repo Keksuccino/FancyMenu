@@ -18,6 +18,11 @@ public class PlayerGamemodePlaceholder extends Placeholder {
         super("player_gamemode");
     }
 
+    @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
     @SuppressWarnings("all")
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {

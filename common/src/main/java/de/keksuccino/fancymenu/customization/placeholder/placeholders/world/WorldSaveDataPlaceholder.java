@@ -19,6 +19,11 @@ public class WorldSaveDataPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String levelName = dps.values.get("level_name");
         if (levelName == null) {

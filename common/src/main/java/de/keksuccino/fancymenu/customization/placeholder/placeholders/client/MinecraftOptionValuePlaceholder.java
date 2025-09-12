@@ -19,6 +19,11 @@ public class MinecraftOptionValuePlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         if (!dps.values.containsKey("name")) {
             return null;

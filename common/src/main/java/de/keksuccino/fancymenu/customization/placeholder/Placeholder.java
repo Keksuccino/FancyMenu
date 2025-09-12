@@ -5,8 +5,12 @@
 
 package de.keksuccino.fancymenu.customization.placeholder;
 
+import de.keksuccino.fancymenu.customization.action.AsyncActionErrorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -14,6 +18,7 @@ import java.util.List;
 public abstract class Placeholder {
 
     protected final String id;
+    protected volatile boolean asyncErrorShown = false;
 
     public Placeholder(String id) {
         this.id = id;
@@ -60,6 +65,19 @@ public abstract class Placeholder {
      */
     public boolean shouldShowUpInPlaceholderMenu(@Nullable LayoutEditorScreen editor) {
         return true;
+    }
+
+    public boolean canRunAsync() {
+        return true;
+    }
+
+    public boolean checkAsync() {
+        boolean sameThread = Minecraft.getInstance().isSameThread();
+        if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
+            this.asyncErrorShown = true;
+            QueueableScreenHandler.addToQueue(new AsyncPlaceholderErrorScreen(Component.literal(this.getDisplayName())));
+        }
+        return this.canRunAsync() || sameThread; // should parse placeholder
     }
 
 }

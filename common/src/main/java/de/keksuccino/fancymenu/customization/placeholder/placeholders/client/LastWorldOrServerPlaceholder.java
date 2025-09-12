@@ -20,6 +20,11 @@ public class LastWorldOrServerPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String type = dps.values.get("type");
         boolean fullPath = SerializationUtils.deserializeBoolean(true, dps.values.get("full_world_path"));

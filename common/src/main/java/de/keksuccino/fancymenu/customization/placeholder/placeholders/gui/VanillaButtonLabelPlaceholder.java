@@ -23,6 +23,11 @@ public class VanillaButtonLabelPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String buttonLocator = dps.values.get("locator");
         if (buttonLocator != null) {

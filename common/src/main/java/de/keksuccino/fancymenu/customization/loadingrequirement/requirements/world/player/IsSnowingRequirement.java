@@ -25,6 +25,11 @@ public class IsSnowingRequirement extends LoadingRequirement {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return false;
     }

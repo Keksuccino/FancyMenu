@@ -19,6 +19,11 @@ public class LoadedModsPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         return "" + getLoadedMods();
     }
