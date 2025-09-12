@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScree
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
@@ -18,7 +19,7 @@ public class AsyncPlaceholderErrorScreen extends QueueableScreen {
 
     protected AsyncPlaceholderErrorScreen(@NotNull Component placeholderName) {
         super(Component.empty());
-        this.placeholderName = placeholderName;
+        this.placeholderName = placeholderName.copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
     }
 
     @Override

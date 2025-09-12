@@ -2,6 +2,9 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.queueable;
 
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Queue;
@@ -10,10 +13,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class QueueableScreenHandler {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Queue<QueueableScreen> SCREEN_QUEUE = new ConcurrentLinkedQueue<>();
     private static final AtomicBoolean IS_PROCESSING = new AtomicBoolean(false);
 
     private static volatile QueueableScreen currentScreen = null;
+    private static volatile Screen cachedOriginalScreen = null;
+    private static volatile boolean hasScreenCached = false;
 
     /**
      * Adds a QueueableScreen to the queue and processes it.
@@ -49,7 +55,7 @@ public class QueueableScreenHandler {
             IS_PROCESSING.set(false);
         }
         
-        // Process next screen in queue
+        // Process next screen in queue or restore original screen if queue is empty
         processQueue();
     }
 
@@ -63,6 +69,12 @@ public class QueueableScreenHandler {
             QueueableScreen nextScreen = SCREEN_QUEUE.poll();
             
             if (nextScreen != null) {
+                // Cache the original screen before opening the first queueable screen
+                if (!hasScreenCached && currentScreen == null) {
+                    cachedOriginalScreen = Minecraft.getInstance().screen;
+                    hasScreenCached = true;
+                }
+                
                 currentScreen = nextScreen;
                 
                 // Open the screen on the main thread
@@ -74,6 +86,20 @@ public class QueueableScreenHandler {
             } else {
                 // No screens to process, reset the flag
                 IS_PROCESSING.set(false);
+                
+                // If we have cached a screen (even if null) and no more screens to process, restore it
+                if (hasScreenCached) {
+                    final Screen screenToRestore = cachedOriginalScreen;
+                    cachedOriginalScreen = null;
+                    hasScreenCached = false;
+                    
+                    // Restore the original screen on the main thread (even if it's null)
+                    if (Minecraft.getInstance().isSameThread()) {
+                        Minecraft.getInstance().setScreen(screenToRestore);
+                    } else {
+                        MainThreadTaskExecutor.executeInMainThread(() -> Minecraft.getInstance().setScreen(screenToRestore), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                    }
+                }
             }
         }
     }
@@ -87,9 +113,9 @@ public class QueueableScreenHandler {
     private static void openScreen(@NotNull QueueableScreen screen) {
         try {
             Minecraft.getInstance().setScreen(screen);
-        } catch (Exception e) {
+        } catch (Exception ex) {
             // If opening fails, reset state and try next screen
-            e.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to open QueueableScreen!", ex);
             currentScreen = null;
             IS_PROCESSING.set(false);
             processQueue();
@@ -102,6 +128,20 @@ public class QueueableScreenHandler {
      */
     public static void clearQueue() {
         SCREEN_QUEUE.clear();
+    }
+
+    /**
+     * Clears all screens from the queue and optionally clears the cached original screen.
+     * This will not close the currently displayed screen.
+     * 
+     * @param clearCached If true, also clears the cached original screen
+     */
+    public static void clearQueue(boolean clearCached) {
+        SCREEN_QUEUE.clear();
+        if (clearCached && !isScreenActive()) {
+            cachedOriginalScreen = null;
+            hasScreenCached = false;
+        }
     }
 
     /**
@@ -130,6 +170,25 @@ public class QueueableScreenHandler {
     @Nullable
     public static QueueableScreen getCurrentScreen() {
         return currentScreen;
+    }
+
+    /**
+     * Gets the cached original screen that was open before the first queueable screen.
+     * 
+     * @return The cached original screen, or null if no screen was cached or if the cached screen was null
+     */
+    @Nullable
+    public static Screen getCachedOriginalScreen() {
+        return cachedOriginalScreen;
+    }
+
+    /**
+     * Checks if an original screen has been cached.
+     * 
+     * @return true if a screen has been cached (even if it was null), false otherwise
+     */
+    public static boolean hasScreenCached() {
+        return hasScreenCached;
     }
 
 }

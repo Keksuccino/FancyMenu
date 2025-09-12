@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScree
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,7 +20,7 @@ public class AsyncRequirementErrorScreen extends QueueableScreen {
 
     protected AsyncRequirementErrorScreen(@NotNull Component requirementName) {
         super(Component.empty());
-        this.requirementName = requirementName;
+        this.requirementName = requirementName.copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
     }
 
     @Override
