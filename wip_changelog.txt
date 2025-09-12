@@ -18,6 +18,9 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Added "Nether" FancyMenu theme (by Mowzy - Thanks so much for the great looking design!)
 - Added "Butter Dark" FancyMenu theme (by caelaThinx - Thanks so much for the great looking design!)
 - Added "Butter OLED" FancyMenu theme (by caelaThinx - Thanks so much for the great looking design!)
+- Some placeholders now show an error when the user tries to use them in an asynchronous environment (like a Ticker element) when they can't safely get parsed aynchronously
+- Some actions now show an error when the user tries to use them in an asynchronous environment (like a Ticker element) when they can't safely execute aynchronously
+- Some requirements now show an error when the user tries to use them in an asynchronous environment (like a Ticker element) when they can't safely be used aynchronously
 - Improved the "flow" of the action script building process
   - Clicking "Edit" now only works when an action is selected that has a value
   - Clicking "Edit" now goes straight to the Edit Action Value screen instead of opening the action type selection first
