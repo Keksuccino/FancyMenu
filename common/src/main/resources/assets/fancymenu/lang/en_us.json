@@ -1886,8 +1886,11 @@
   "fancymenu.requirements.is_any_screen_open": "Is Any Screen Open",
   "fancymenu.requirements.is_any_screen_open.desc": "Returns true if any screen is open.\nFor example, this will return false if the user is walking around in a world, because then there's no screen open.\nIt will return true if the Inventory or Pause screen is open.",
   "fancymenu.actions.reload_resource_packs": "Reload Resource Packs",
-  "fancymenu.actions.reload_resource_packs.desc": "This action reloads resource packs just like when pressing F3 + T.",
+  "fancymenu.actions.reload_resource_packs.desc": "This action reloads resource packs just like when pressing F3 + T.\n\nThis action can only execute once every 5 seconds to prevent your Minecraft from exploding.",
   "fancymenu.element.rotation.degrees": "Rotation",
   "fancymenu.element.rotation.degrees.desc": "Set the rotation angle in degrees for this element.\nPositive values rotate clockwise.\n\nThis is the same as using the grabbers,\nbut more precise for full control.",
-  "fancymenu.element.border_display.rotation": "Rotation: %s degrees"
+  "fancymenu.element.border_display.rotation": "Rotation: %s degrees",
+  "fancymenu.actions.async.cant_run_async": "§l§xFailed to execute FancyMenu action!\n\nYou tried to asynchronously execute an action that only works on the game thread.\nThe action is probably part of a Ticker element that runs in Async mode.\n\n§lAction Name: §x%s",
+  "fancymenu.requirements.async.cant_run_async": "§l§xFailed to check FancyMenu requirement!\n\nYou tried to asynchronously use an requirement that only works on the game thread.\nThe requirement is probably part of a Ticker element that runs in Async mode.\n\n§lRequirement Name: §x%s",
+  "fancymenu.placeholders.async.cant_run_async": "§l§xFailed to parse FancyMenu placeholder!\n\nYou tried to asynchronously parse a placeholder that only works on the game thread.\nThe placeholder is probably part of a Ticker element that runs in Async mode.\n\n§lPlaceholder Name: §x%s"
 }

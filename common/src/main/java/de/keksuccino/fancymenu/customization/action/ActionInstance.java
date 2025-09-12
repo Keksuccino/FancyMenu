@@ -44,6 +44,7 @@ public class ActionInstance implements Executable, ValuePlaceholderHolder {
     public void execute() {
         String v = this.value;
         try {
+            if (!this.action.checkAsync()) return;
             if (v != null) {
                 //Replace value placeholders in value
                 for (Map.Entry<String, Supplier<String>> m : this.valuePlaceholders.entrySet()) {
