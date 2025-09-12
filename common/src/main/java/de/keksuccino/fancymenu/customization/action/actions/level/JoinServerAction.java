@@ -21,10 +21,13 @@ public class JoinServerAction extends Action {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static long lastErrorTriggered = -1;
-
     public JoinServerAction() {
         super("joinserver");
+    }
+
+    @Override
+    public boolean canRunAsync() {
+        return false;
     }
 
     @Override

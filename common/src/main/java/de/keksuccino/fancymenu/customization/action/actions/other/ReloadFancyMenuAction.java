@@ -14,6 +14,11 @@ public class ReloadFancyMenuAction extends Action {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return false;
     }
