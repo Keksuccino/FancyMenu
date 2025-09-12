@@ -14,6 +14,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Added "File Size" placeholder to get the size of a local file in bytes (#1244)
 - Added "File MD5" placeholder to get the MD5 hash of a local file
 - Added "Print to Game Log" action to print text to the game's log for debugging (#1267)
+- Added "Oled Purple" FancyMenu theme (by Mowzy - Thanks so much for the great looking design!)
 - Improved the "flow" of the action script building process
   - Clicking "Edit" now only works when an action is selected that has a value
   - Clicking "Edit" now goes straight to the Edit Action Value screen instead of opening the action type selection first
@@ -25,6 +26,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - You can now target the default ".minecraft" directory in the "File Text" placeholder by starting the target file path with ".minecraft/" (#1242)
 - You can now target the default ".minecraft" directory in the "File/Folder Exists" requirement by starting the target file path with ".minecraft/" (#1242)
 - It's now possible to use placeholders in the tint value of Image elements (#1271)
+- Updated the list of Patreon supporters in the Credits screen (Thanks so much to all the supporters and big sorry for updating the list so slowly, but I always forget that screen exists lmao)
 - Fixed "World Save Data" placeholder being in the wrong category
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
 - Fixed missing localizations for some options of the new (1.21.4+) Player Entity element (#1276)
