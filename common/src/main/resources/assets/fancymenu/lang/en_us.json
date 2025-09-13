@@ -1889,6 +1889,8 @@
   "fancymenu.actions.reload_resource_packs.desc": "This action reloads resource packs just like when pressing F3 + T.\n\nThis action can only execute once every 5 seconds to prevent your Minecraft from exploding.",
   "fancymenu.element.rotation.degrees": "Rotation",
   "fancymenu.element.rotation.degrees.desc": "Set the rotation angle in degrees for this element.\nPositive values rotate clockwise.\n\nThis is the same as using the grabbers,\nbut more precise for full control.",
+  "fancymenu.element.rotation.advanced_mode": "Advanced Rotation Mode: %s",
+  "fancymenu.element.rotation.advanced_mode.desc": "Enabling this allows you to use placeholders in the element\nrotation degrees value, but it will also disable rotation grabbers.",
   "fancymenu.element.border_display.rotation": "Rotation: %s degrees",
   "fancymenu.actions.async.cant_run_async": "§l§xFailed to execute FancyMenu action!§r\n\nYou tried to asynchronously execute an action that only works on the game thread.\nThe action is probably part of a Ticker element that runs in Async mode.\n\n§lAction Name: §x%s",
   "fancymenu.requirements.async.cant_run_async": "§l§xFailed to check FancyMenu requirement!§r\n\nYou tried to asynchronously use an requirement that only works on the game thread.\nThe requirement is probably part of a Ticker element that runs in Async mode.\n\n§lRequirement Name: §x%s",

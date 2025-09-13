@@ -662,18 +662,36 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		if (this.settings.isRotatable() && this.element.supportsRotation()) {
+		if (this.element.supportsRotation()) {
 
 			this.rightClickMenu.addSeparatorEntry("separator_before_rotation").setStackable(true);
 
-			this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "rotation_degrees",
-							consumes -> consumes.settings.isRotatable() && consumes.element.supportsRotation(),
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "advanced_rotation_mode", AbstractEditorElement.class,
+							consumes -> consumes.element.advancedRotationMode,
+							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.advancedRotationMode = aBoolean,
+							"fancymenu.element.rotation.advanced_mode")
+					.setStackable(false)
+					.setIcon(ContextMenu.IconFactory.getIcon("reload"))
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.advanced_mode.desc")));
+
+			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "rotation_degrees", AbstractEditorElement.class,
 							consumes -> consumes.element.rotationDegrees,
 							(abstractEditorElement, aFloat) -> abstractEditorElement.element.rotationDegrees = aFloat,
-							Component.translatable("fancymenu.element.rotation.degrees"), true, 0.0F, null, null)
-					.setStackable(true)
+							Component.translatable("fancymenu.element.rotation.degrees"), true, 0, null, null)
+					.setStackable(false)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.degrees.desc")))
-					.setIcon(ContextMenu.IconFactory.getIcon("undo"));
+					.setIcon(ContextMenu.IconFactory.getIcon("reload"))
+					.addIsVisibleSupplier((menu, entry) -> !this.element.advancedRotationMode);
+
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "rotation_degrees_advanced", AbstractEditorElement.class,
+							consumes -> consumes.element.advancedRotationDegrees,
+							(abstractEditorElement, s) -> abstractEditorElement.element.advancedRotationDegrees = s,
+							null, false, true, Component.translatable("fancymenu.element.rotation.degrees"),
+							true, null, null, null)
+					.setStackable(false)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.degrees.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("reload"))
+					.addIsVisibleSupplier((menu, entry) -> this.element.advancedRotationMode);
 
 		}
 
@@ -751,7 +769,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			this.topLeftDisplay.removeLine("advanced_positioning_enabled");
 		}
 		// Handle rotation display
-		boolean shouldShowRotation = this.settings.isRotatable() && this.element.supportsRotation() && this.element.rotationDegrees != 0.0F;
+		boolean shouldShowRotation = this.element.supportsRotation() && this.element.rotationDegrees != 0.0F;
 		if (shouldShowRotation && !this.topLeftDisplay.hasLine("rotation")) {
 			// Insert rotation line after width line
 			this.topLeftDisplay.addLine("rotation", () -> Component.translatable("fancymenu.element.border_display.rotation", String.format("%.1f", this.element.rotationDegrees)));
@@ -807,7 +825,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			}
 
 			// Render rotation grabbers
-			if (this.settings.isRotatable() && this.element.supportsRotation()) {
+			if (this.element.supportsRotation()) {
 				for (RotationGrabber g : this.rotationGrabbers) {
 					g.render(graphics, mouseX, mouseY, partial);
 				}
@@ -1313,7 +1331,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	}
 
 	public boolean isGettingRotated() {
-		if (!this.settings.isRotatable() || !this.element.supportsRotation()) {
+		if (!this.element.supportsRotation()) {
 			return false;
 		}
 		return this.activeRotationGrabber != null;
@@ -1348,7 +1366,10 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (!FancyMenu.getOptions().enableRotationGrabbers.getValue()) {
 			return null;
 		}
-		if (!this.settings.isRotatable() || !this.element.supportsRotation()) {
+		if (!this.element.supportsRotation()) {
+			return null;
+		}
+		if (this.element.advancedRotationMode) {
 			return null;
 		}
 		if (this.isMultiSelected()) {
@@ -1905,10 +1926,16 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		protected boolean isGrabberEnabled() {
+			if (!FancyMenu.getOptions().enableRotationGrabbers.getValue()) {
+				return false;
+			}
 			if (AbstractEditorElement.this.isMultiSelected()) {
 				return false;
 			}
-			return AbstractEditorElement.this.settings.isRotatable() && AbstractEditorElement.this.element.supportsRotation();
+			if (AbstractEditorElement.this.element.advancedRotationMode) {
+				return false;
+			}
+			return AbstractEditorElement.this.element.supportsRotation();
 		}
 
 		protected boolean isMouseOver(double mouseX, double mouseY) {

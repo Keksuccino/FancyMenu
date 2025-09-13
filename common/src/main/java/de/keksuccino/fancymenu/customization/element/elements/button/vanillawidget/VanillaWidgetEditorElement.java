@@ -26,7 +26,6 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
         this.settings.setCopyable(false);
         this.settings.setHideInsteadOfDestroy(true);
         this.settings.setVanillaAnchorPointAllowed(true);
-        this.settings.setRotatable(false);
     }
 
     @Override

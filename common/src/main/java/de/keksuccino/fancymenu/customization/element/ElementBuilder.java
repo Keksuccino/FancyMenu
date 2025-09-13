@@ -259,6 +259,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.layerHiddenInEditor = deserializeBoolean(element.layerHiddenInEditor, serialized.getValue("layer_hidden_in_editor"));
 
             element.rotationDegrees = deserializeNumber(Float.class, element.rotationDegrees, serialized.getValue("rotation_degrees"));
+            element.advancedRotationMode = deserializeBoolean(element.advancedRotationMode, serialized.getValue("advanced_rotation_mode"));
+            element.advancedRotationDegrees = serialized.getValue("advanced_rotation_degrees");
 
             element.afterConstruction();
 
@@ -391,6 +393,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("layer_hidden_in_editor", "" + element.layerHiddenInEditor);
 
             sec.putProperty("rotation_degrees", "" + element.rotationDegrees);
+            sec.putProperty("advanced_rotation_mode", "" + element.advancedRotationMode);
+            sec.putProperty("advanced_rotation_degrees", element.advancedRotationDegrees);
 
             return sec;
 

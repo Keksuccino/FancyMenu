@@ -324,8 +324,8 @@ public class LayoutEditorUI {
 						rotationGrabbersToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.getByBoolean(FancyMenu.getOptions().enableRotationGrabbers.getValue()), false);
 					}
 				})
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.settings.enable_rotation_grabbers")))
-				.setIcon(ContextMenu.IconFactory.getIcon("undo"));
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.settings.enable_rotation_grabbers.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("reload"));
 
 		windowMenu.addSeparatorEntry("separator_after_enable_rotation_grabbers");
 

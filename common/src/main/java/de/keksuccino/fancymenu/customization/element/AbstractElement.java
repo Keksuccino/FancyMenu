@@ -163,8 +163,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	protected int cachedMouseY = 0;
 	/** The rotation angle in degrees. 0 = no rotation, positive values rotate clockwise */
 	public float rotationDegrees = 0.0F;
+	public boolean advancedRotationMode = false;
+	@Nullable
+	public String advancedRotationDegrees;
 	/** Whether this element type supports rotation. Can be overridden in subclasses. */
 	protected boolean supportsRotation = true;
+	protected String lastAdvancedRotationDegrees;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -223,7 +227,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		// Apply rotation if needed
 		boolean rotationApplied = false;
-		if (this.supportsRotation && (this.rotationDegrees != 0.0F)) {
+		float rotDegrees = this.getRotationDegrees();
+		if (this.supportsRotation && (rotDegrees != 0.0F)) {
 			graphics.pose().pushPose();
 
 			// Calculate center point of the element
@@ -232,7 +237,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 			// Translate to center, rotate, then translate back
 			graphics.pose().translate(centerX, centerY, 0);
-			graphics.pose().mulPose(Axis.ZP.rotationDegrees(this.rotationDegrees));
+			graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotDegrees));
 			graphics.pose().translate(-centerX, -centerY, 0);
 
 			rotationApplied = true;
@@ -552,6 +557,24 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public void setInstanceIdentifier(@NotNull String id) {
 		this.instanceIdentifier = Objects.requireNonNull(id);
+	}
+
+	public float getRotationDegrees() {
+		if (!this.supportsRotation()) return 0;
+		if (this.advancedRotationMode) {
+			if (this.advancedRotationDegrees == null) return 0;
+			String degrees = PlaceholderParser.replacePlaceholders(this.advancedRotationDegrees);
+			if (!degrees.equals(this.lastAdvancedRotationDegrees)) {
+				this.lastAdvancedRotationDegrees = degrees;
+				if (MathUtils.isFloat(degrees)) {
+					this.rotationDegrees = Float.parseFloat(degrees);
+				} else {
+					this.rotationDegrees = 0;
+					LOGGER.error("[FANCYMENU] Failed to parse advanced rotation degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
+				}
+			}
+		}
+		return this.rotationDegrees;
 	}
 
 	/**
