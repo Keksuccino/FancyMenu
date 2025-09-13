@@ -315,6 +315,20 @@ public class LayoutEditorUI {
 
 		windowMenu.addSeparatorEntry("separator_after_anchor_overlay_opacity");
 
+		LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> rotationGrabbersToggleCycle = CommonCycles.cycleEnabledDisabled("fancymenu.editor.settings.enable_rotation_grabbers", FancyMenu.getOptions().enableRotationGrabbers.getValue());
+		rotationGrabbersToggleCycle.addCycleListener(cycle -> FancyMenu.getOptions().enableRotationGrabbers.setValue(cycle.getAsBoolean()));
+		windowMenu.addValueCycleEntry("enable_rotation_grabbers", rotationGrabbersToggleCycle)
+				.setTickAction((menu, entry, isPost) -> {
+					//This is to correct the displayed value in case the grid got toggled via shortcut
+					if (FancyMenu.getOptions().enableRotationGrabbers.getValue() != rotationGrabbersToggleCycle.current().getAsBoolean()) {
+						rotationGrabbersToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.getByBoolean(FancyMenu.getOptions().enableRotationGrabbers.getValue()), false);
+					}
+				})
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.settings.enable_rotation_grabbers")))
+				.setIcon(ContextMenu.IconFactory.getIcon("undo"));
+
+		windowMenu.addSeparatorEntry("separator_after_enable_rotation_grabbers");
+
 		if (!LayoutEditorScreen.FORCE_DISABLE_BUDDY) {
 			windowMenu.addValueCycleEntry("toggle_buddy", CommonCycles.cycleEnabledDisabled("fancymenu.editor.buddy.enable", FancyMenu.getOptions().enableBuddy.getValue()).addCycleListener(cycleEnabledDisabled -> {
 				FancyMenu.getOptions().enableBuddy.setValue(cycleEnabledDisabled.getAsBoolean());

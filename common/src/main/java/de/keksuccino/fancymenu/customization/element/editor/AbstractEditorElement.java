@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
@@ -105,6 +106,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	protected RotationGrabber activeRotationGrabber = null;
 	protected float rotationStartAngle = 0.0F;
 	protected double rotationStartMouseAngle = 0.0;
+	protected LayoutEditorHistory.Snapshot preRotationSnapshot;
 	protected AspectRatio resizeAspectRatio = new AspectRatio(10, 10);
 	public long renderMovingNotAllowedTime = -1;
 	public boolean recentlyMovedByDragging = false;
@@ -961,6 +963,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
 					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
 					if (this.activeRotationGrabber != null) {
+						this.preRotationSnapshot = this.editor.history.createSnapshot();
 						this.rotationStartAngle = this.element.rotationDegrees;
 						// Calculate initial mouse angle relative to element center
 						float centerX = this.getX() + (this.getWidth() / 2.0F);
@@ -984,6 +987,12 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (button == 0) {
 			this.leftMouseDown = false;
 			this.activeResizeGrabber = null;
+			if (this.isGettingRotated() && (this.preRotationSnapshot != null)) {
+				if (this.rotationStartAngle != this.element.rotationDegrees) {
+					this.editor.history.saveSnapshot(this.preRotationSnapshot);
+				}
+			}
+			this.preRotationSnapshot = null;
 			this.activeRotationGrabber = null;
 			this.element.updateAutoSizing(true);
 			this.recentlyMovedByDragging = false;
@@ -1336,7 +1345,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	@Nullable
 	public RotationGrabber getHoveredRotationGrabber() {
+		if (!FancyMenu.getOptions().enableRotationGrabbers.getValue()) {
+			return null;
+		}
 		if (!this.settings.isRotatable() || !this.element.supportsRotation()) {
+			return null;
+		}
+		if (this.isMultiSelected()) {
 			return null;
 		}
 		if (this.activeRotationGrabber != null) {
@@ -1870,8 +1885,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
 			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
 				graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, ROTATION_GRABBER_COLOR.get(AbstractEditorElement.this));
-				// Draw a small circle or dot to distinguish from resize grabbers
-				graphics.fill(this.getX() + 1, this.getY() + 1, this.getX() + this.width - 1, this.getY() + this.height - 1, 0xFF00FF00);
 			}
 		}
 
