@@ -169,17 +169,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	/** Whether this element type supports rotation. Can be overridden in subclasses. */
 	protected boolean supportsRotation = true;
 	protected String lastAdvancedRotationDegrees;
-	/** Whether this element type supports perspective distortion. Can be overridden in subclasses. */
-	protected boolean supportsPerspectiveDistort = true;
-	/** Perspective distortion offsets for each corner (top-left, top-right, bottom-left, bottom-right) */
-	public float perspectiveDistortTopLeftX = 0.0F;
-	public float perspectiveDistortTopLeftY = 0.0F;
-	public float perspectiveDistortTopRightX = 0.0F;
-	public float perspectiveDistortTopRightY = 0.0F;
-	public float perspectiveDistortBottomLeftX = 0.0F;
-	public float perspectiveDistortBottomLeftY = 0.0F;
-	public float perspectiveDistortBottomRightX = 0.0F;
-	public float perspectiveDistortBottomRightY = 0.0F;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -202,86 +191,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 */
 	protected void setSupportsRotation(boolean supportsRotation) {
 		this.supportsRotation = supportsRotation;
-	}
-
-	/**
-	 * Returns whether this element type supports perspective distortion.
-	 * @return true if this element can be perspective distorted, false otherwise
-	 */
-	public boolean supportsPerspectiveDistort() {
-		return this.supportsPerspectiveDistort;
-	}
-
-	/**
-	 * Sets whether this element type supports perspective distortion.
-	 * This should typically be called in the constructor of element subclasses.
-	 * @param supportsPerspectiveDistort true to enable perspective distortion, false to disable it
-	 */
-	protected void setSupportsPerspectiveDistort(boolean supportsPerspectiveDistort) {
-		this.supportsPerspectiveDistort = supportsPerspectiveDistort;
-	}
-
-	/**
-	 * Returns whether this element has any perspective distortion applied.
-	 * @return true if any corner has a non-zero distortion offset
-	 */
-	public boolean hasPerspectiveDistortion() {
-		return perspectiveDistortTopLeftX != 0.0F || perspectiveDistortTopLeftY != 0.0F ||
-			   perspectiveDistortTopRightX != 0.0F || perspectiveDistortTopRightY != 0.0F ||
-			   perspectiveDistortBottomLeftX != 0.0F || perspectiveDistortBottomLeftY != 0.0F ||
-			   perspectiveDistortBottomRightX != 0.0F || perspectiveDistortBottomRightY != 0.0F;
-	}
-
-	/**
-	 * Applies perspective distortion transformation to the graphics context.
-	 * This creates a custom transformation matrix that distorts the element
-	 * based on the corner offset values.
-	 */
-	protected void applyPerspectiveDistortion(@NotNull GuiGraphics graphics) {
-		// Get the base element position and size
-		float x = this.getAbsoluteX();
-		float y = this.getAbsoluteY();
-		float width = this.getAbsoluteWidth();
-		float height = this.getAbsoluteHeight();
-		
-		// For now, we'll use a simple shear transformation as an approximation
-		// A full perspective transformation would require custom shader or more complex matrix math
-		// This provides a reasonable visual effect for UI elements
-		
-		float centerX = x + width / 2.0F;
-		float centerY = y + height / 2.0F;
-		
-		// Calculate average distortion for shear effect
-		float shearX = ((perspectiveDistortTopRightX - perspectiveDistortTopLeftX) + 
-						(perspectiveDistortBottomRightX - perspectiveDistortBottomLeftX)) / (2.0F * height);
-		float shearY = ((perspectiveDistortBottomLeftY - perspectiveDistortTopLeftY) + 
-						(perspectiveDistortBottomRightY - perspectiveDistortTopRightY)) / (2.0F * width);
-		
-		// Apply transformation
-		graphics.pose().translate(centerX, centerY, 0);
-		
-		// Create a shear matrix effect
-		org.joml.Matrix4f matrix = new org.joml.Matrix4f();
-		matrix.identity();
-		matrix.m10(shearX); // Shear X based on Y
-		matrix.m01(shearY); // Shear Y based on X
-		
-		graphics.pose().mulPose(matrix);
-		graphics.pose().translate(-centerX, -centerY, 0);
-	}
-	
-	/**
-	 * Resets all perspective distortion values to zero.
-	 */
-	public void resetPerspectiveDistortion() {
-		this.perspectiveDistortTopLeftX = 0.0F;
-		this.perspectiveDistortTopLeftY = 0.0F;
-		this.perspectiveDistortTopRightX = 0.0F;
-		this.perspectiveDistortTopRightY = 0.0F;
-		this.perspectiveDistortBottomLeftX = 0.0F;
-		this.perspectiveDistortBottomLeftY = 0.0F;
-		this.perspectiveDistortBottomRightX = 0.0F;
-		this.perspectiveDistortBottomRightY = 0.0F;
 	}
 
 	public void setParentLayout(@Nullable Layout parentLayout) {
@@ -315,14 +224,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
 
 		this.tickBaseOpacity();
-
-		// Apply perspective distortion if needed
-		boolean perspectiveApplied = false;
-		if (this.supportsPerspectiveDistort && this.hasPerspectiveDistortion()) {
-			graphics.pose().pushPose();
-			this.applyPerspectiveDistortion(graphics);
-			perspectiveApplied = true;
-		}
 
 		// Apply rotation if needed
 		boolean rotationApplied = false;
@@ -367,11 +268,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		// Pop the rotation transformation
 		if (rotationApplied) {
-			graphics.pose().popPose();
-		}
-
-		// Pop the perspective transformation
-		if (perspectiveApplied) {
 			graphics.pose().popPose();
 		}
 
@@ -887,42 +783,42 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			this.cachedElementAnchorPointParent = null;
 			return;
 		}
-		
+
 		// Normalize the identifier (remove potential prefixes)
 		String normalizedIdentifier = anchorPointElementIdentifier
-			.replace("vanillabtn:", "")
-			.replace("button_compatibility_id:", "");
-		
+				.replace("vanillabtn:", "")
+				.replace("button_compatibility_id:", "");
+
 		// Check for self-anchoring
 		if (this.getInstanceIdentifier().equals(normalizedIdentifier)) {
 			this.resetToDefaultAnchor();
-			LOGGER.error("[FANCYMENU] Tried to anchor element to itself! (Element: " + this.getInstanceIdentifier() + ")", 
-				new IllegalStateException("Anchoring element to itself"));
+			LOGGER.error("[FANCYMENU] Tried to anchor element to itself! (Element: " + this.getInstanceIdentifier() + ")",
+					new IllegalStateException("Anchoring element to itself"));
 			return;
 		}
-		
+
 		// Try to get the target parent element (it might not exist yet, which is valid)
 		AbstractElement parent = getElementByInstanceIdentifier(normalizedIdentifier);
-		
+
 		// Only check for circular dependencies if parent exists
 		// If parent is null, it might be created later, which is a valid scenario
 		if (parent != null) {
 			// Check for circular dependencies (both direct and transitive)
 			if (detectCircularDependency(this, parent)) {
 				this.resetToDefaultAnchor();
-				LOGGER.error("[FANCYMENU] Detected circular anchor dependency! Cannot anchor '" + 
-					this.getInstanceIdentifier() + "' to '" + normalizedIdentifier + 
-					"' as it would create a circular reference chain.", 
-					new IllegalStateException("Circular anchor dependency detected"));
+				LOGGER.error("[FANCYMENU] Detected circular anchor dependency! Cannot anchor '" +
+								this.getInstanceIdentifier() + "' to '" + normalizedIdentifier +
+								"' as it would create a circular reference chain.",
+						new IllegalStateException("Circular anchor dependency detected"));
 				return;
 			}
 		}
-		
+
 		// Set the anchor identifier (parent might be null and resolved later)
 		this.anchorPointElementIdentifier = normalizedIdentifier;
 		this.cachedElementAnchorPointParent = parent;
 	}
-	
+
 	/**
 	 * Detects circular dependencies in the anchor chain.
 	 * @param child The element being anchored
@@ -933,44 +829,44 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		// Set a reasonable depth limit to prevent infinite loops
 		final int MAX_DEPTH = 100;
 		int depth = 0;
-		
+
 		Set<String> visitedElements = new HashSet<>();
 		visitedElements.add(child.getInstanceIdentifier());
-		
+
 		AbstractElement current = proposedParent;
 		while (current != null && depth < MAX_DEPTH) {
 			String currentId = current.getInstanceIdentifier();
-			
+
 			// Check if we've encountered the child element in the chain
 			if (visitedElements.contains(currentId)) {
 				return true; // Circular dependency detected
 			}
-			
+
 			visitedElements.add(currentId);
-			
+
 			// Move up the anchor chain
 			String parentId = current.getAnchorPointElementIdentifier();
 			if (parentId == null || parentId.trim().isEmpty()) {
 				break; // Reached the top of the chain
 			}
-			
+
 			// Normalize the parent ID
 			parentId = parentId.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
-			
+
 			current = getElementByInstanceIdentifier(parentId);
 			depth++;
 		}
-		
+
 		// Check if we hit the depth limit (which might indicate an issue)
 		if (depth >= MAX_DEPTH) {
-			LOGGER.warn("[FANCYMENU] Anchor chain depth exceeded " + MAX_DEPTH + 
-				" levels while checking for circular dependencies. This might indicate a problem.");
+			LOGGER.warn("[FANCYMENU] Anchor chain depth exceeded " + MAX_DEPTH +
+					" levels while checking for circular dependencies. This might indicate a problem.");
 			return true; // Treat as circular to be safe
 		}
-		
+
 		return false; // No circular dependency found
 	}
-	
+
 	/**
 	 * Resets the element's anchor to default values.
 	 */
@@ -1191,13 +1087,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	public enum Alignment {
-		
+
 		LEFT("left"),
 		RIGHT("right"),
 		CENTERED("centered");
-		
+
 		public final String key;
-		
+
 		Alignment(String key) {
 			this.key = key;
 		}
@@ -1210,7 +1106,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			}
 			return null;
 		}
-		
+
 	}
 
 	public enum AppearanceDelay {
