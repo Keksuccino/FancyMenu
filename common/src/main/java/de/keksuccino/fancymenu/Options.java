@@ -47,6 +47,7 @@ public class Options extends AbstractOptions {
     public final Option<Double> anchorOverlayHoverChargingTimeSeconds = new Option<>(config, "anchor_overlay_hover_charging_time_seconds", 2.0D, "layout_editor");
     public final Option<Boolean> enableBuddy = new Option<>(config, "enable_buddy", true, "layout_editor");
     public final Option<Boolean> enableRotationGrabbers = new Option<>(config, "enable_rotation_grabbers", true, "layout_editor");
+    public final Option<Boolean> enablePerspectiveDistortGrabbers = new Option<>(config, "enable_perspective_distort_grabbers", true, "layout_editor");
 
     public final Option<Float> uiScale = new Option<>(config, "ui_scale", 4.0F, "ui");
     public final Option<Boolean> playUiClickSounds = new Option<>(config, "play_ui_click_sounds", true, "ui");

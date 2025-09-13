@@ -262,6 +262,16 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.advancedRotationMode = deserializeBoolean(element.advancedRotationMode, serialized.getValue("advanced_rotation_mode"));
             element.advancedRotationDegrees = serialized.getValue("advanced_rotation_degrees");
 
+            // Deserialize perspective distortion values
+            element.perspectiveDistortTopLeftX = deserializeNumber(Float.class, element.perspectiveDistortTopLeftX, serialized.getValue("perspective_distort_tl_x"));
+            element.perspectiveDistortTopLeftY = deserializeNumber(Float.class, element.perspectiveDistortTopLeftY, serialized.getValue("perspective_distort_tl_y"));
+            element.perspectiveDistortTopRightX = deserializeNumber(Float.class, element.perspectiveDistortTopRightX, serialized.getValue("perspective_distort_tr_x"));
+            element.perspectiveDistortTopRightY = deserializeNumber(Float.class, element.perspectiveDistortTopRightY, serialized.getValue("perspective_distort_tr_y"));
+            element.perspectiveDistortBottomLeftX = deserializeNumber(Float.class, element.perspectiveDistortBottomLeftX, serialized.getValue("perspective_distort_bl_x"));
+            element.perspectiveDistortBottomLeftY = deserializeNumber(Float.class, element.perspectiveDistortBottomLeftY, serialized.getValue("perspective_distort_bl_y"));
+            element.perspectiveDistortBottomRightX = deserializeNumber(Float.class, element.perspectiveDistortBottomRightX, serialized.getValue("perspective_distort_br_x"));
+            element.perspectiveDistortBottomRightY = deserializeNumber(Float.class, element.perspectiveDistortBottomRightY, serialized.getValue("perspective_distort_br_y"));
+
             element.afterConstruction();
 
             return element;
@@ -395,6 +405,16 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("rotation_degrees", "" + element.rotationDegrees);
             sec.putProperty("advanced_rotation_mode", "" + element.advancedRotationMode);
             sec.putProperty("advanced_rotation_degrees", element.advancedRotationDegrees);
+
+            // Serialize perspective distortion values
+            sec.putProperty("perspective_distort_tl_x", "" + element.perspectiveDistortTopLeftX);
+            sec.putProperty("perspective_distort_tl_y", "" + element.perspectiveDistortTopLeftY);
+            sec.putProperty("perspective_distort_tr_x", "" + element.perspectiveDistortTopRightX);
+            sec.putProperty("perspective_distort_tr_y", "" + element.perspectiveDistortTopRightY);
+            sec.putProperty("perspective_distort_bl_x", "" + element.perspectiveDistortBottomLeftX);
+            sec.putProperty("perspective_distort_bl_y", "" + element.perspectiveDistortBottomLeftY);
+            sec.putProperty("perspective_distort_br_x", "" + element.perspectiveDistortBottomRightX);
+            sec.putProperty("perspective_distort_br_y", "" + element.perspectiveDistortBottomRightY);
 
             return sec;
 

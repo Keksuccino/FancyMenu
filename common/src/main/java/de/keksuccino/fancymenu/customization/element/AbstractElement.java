@@ -169,6 +169,17 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	/** Whether this element type supports rotation. Can be overridden in subclasses. */
 	protected boolean supportsRotation = true;
 	protected String lastAdvancedRotationDegrees;
+	/** Whether this element type supports perspective distortion. Can be overridden in subclasses. */
+	protected boolean supportsPerspectiveDistort = true;
+	/** Perspective distortion offsets for each corner (top-left, top-right, bottom-left, bottom-right) */
+	public float perspectiveDistortTopLeftX = 0.0F;
+	public float perspectiveDistortTopLeftY = 0.0F;
+	public float perspectiveDistortTopRightX = 0.0F;
+	public float perspectiveDistortTopRightY = 0.0F;
+	public float perspectiveDistortBottomLeftX = 0.0F;
+	public float perspectiveDistortBottomLeftY = 0.0F;
+	public float perspectiveDistortBottomRightX = 0.0F;
+	public float perspectiveDistortBottomRightY = 0.0F;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -191,6 +202,86 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 */
 	protected void setSupportsRotation(boolean supportsRotation) {
 		this.supportsRotation = supportsRotation;
+	}
+
+	/**
+	 * Returns whether this element type supports perspective distortion.
+	 * @return true if this element can be perspective distorted, false otherwise
+	 */
+	public boolean supportsPerspectiveDistort() {
+		return this.supportsPerspectiveDistort;
+	}
+
+	/**
+	 * Sets whether this element type supports perspective distortion.
+	 * This should typically be called in the constructor of element subclasses.
+	 * @param supportsPerspectiveDistort true to enable perspective distortion, false to disable it
+	 */
+	protected void setSupportsPerspectiveDistort(boolean supportsPerspectiveDistort) {
+		this.supportsPerspectiveDistort = supportsPerspectiveDistort;
+	}
+
+	/**
+	 * Returns whether this element has any perspective distortion applied.
+	 * @return true if any corner has a non-zero distortion offset
+	 */
+	public boolean hasPerspectiveDistortion() {
+		return perspectiveDistortTopLeftX != 0.0F || perspectiveDistortTopLeftY != 0.0F ||
+			   perspectiveDistortTopRightX != 0.0F || perspectiveDistortTopRightY != 0.0F ||
+			   perspectiveDistortBottomLeftX != 0.0F || perspectiveDistortBottomLeftY != 0.0F ||
+			   perspectiveDistortBottomRightX != 0.0F || perspectiveDistortBottomRightY != 0.0F;
+	}
+
+	/**
+	 * Applies perspective distortion transformation to the graphics context.
+	 * This creates a custom transformation matrix that distorts the element
+	 * based on the corner offset values.
+	 */
+	protected void applyPerspectiveDistortion(@NotNull GuiGraphics graphics) {
+		// Get the base element position and size
+		float x = this.getAbsoluteX();
+		float y = this.getAbsoluteY();
+		float width = this.getAbsoluteWidth();
+		float height = this.getAbsoluteHeight();
+		
+		// For now, we'll use a simple shear transformation as an approximation
+		// A full perspective transformation would require custom shader or more complex matrix math
+		// This provides a reasonable visual effect for UI elements
+		
+		float centerX = x + width / 2.0F;
+		float centerY = y + height / 2.0F;
+		
+		// Calculate average distortion for shear effect
+		float shearX = ((perspectiveDistortTopRightX - perspectiveDistortTopLeftX) + 
+						(perspectiveDistortBottomRightX - perspectiveDistortBottomLeftX)) / (2.0F * height);
+		float shearY = ((perspectiveDistortBottomLeftY - perspectiveDistortTopLeftY) + 
+						(perspectiveDistortBottomRightY - perspectiveDistortTopRightY)) / (2.0F * width);
+		
+		// Apply transformation
+		graphics.pose().translate(centerX, centerY, 0);
+		
+		// Create a shear matrix effect
+		org.joml.Matrix4f matrix = new org.joml.Matrix4f();
+		matrix.identity();
+		matrix.m10(shearX); // Shear X based on Y
+		matrix.m01(shearY); // Shear Y based on X
+		
+		graphics.pose().mulPose(matrix);
+		graphics.pose().translate(-centerX, -centerY, 0);
+	}
+	
+	/**
+	 * Resets all perspective distortion values to zero.
+	 */
+	public void resetPerspectiveDistortion() {
+		this.perspectiveDistortTopLeftX = 0.0F;
+		this.perspectiveDistortTopLeftY = 0.0F;
+		this.perspectiveDistortTopRightX = 0.0F;
+		this.perspectiveDistortTopRightY = 0.0F;
+		this.perspectiveDistortBottomLeftX = 0.0F;
+		this.perspectiveDistortBottomLeftY = 0.0F;
+		this.perspectiveDistortBottomRightX = 0.0F;
+		this.perspectiveDistortBottomRightY = 0.0F;
 	}
 
 	public void setParentLayout(@Nullable Layout parentLayout) {
@@ -224,6 +315,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
 
 		this.tickBaseOpacity();
+
+		// Apply perspective distortion if needed
+		boolean perspectiveApplied = false;
+		if (this.supportsPerspectiveDistort && this.hasPerspectiveDistortion()) {
+			graphics.pose().pushPose();
+			this.applyPerspectiveDistortion(graphics);
+			perspectiveApplied = true;
+		}
 
 		// Apply rotation if needed
 		boolean rotationApplied = false;
@@ -268,6 +367,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		// Pop the rotation transformation
 		if (rotationApplied) {
+			graphics.pose().popPose();
+		}
+
+		// Pop the perspective transformation
+		if (perspectiveApplied) {
 			graphics.pose().popPose();
 		}
 

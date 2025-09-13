@@ -107,6 +107,16 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	protected float rotationStartAngle = 0.0F;
 	protected double rotationStartMouseAngle = 0.0;
 	protected LayoutEditorHistory.Snapshot preRotationSnapshot;
+	protected PerspectiveDistortGrabber[] perspectiveDistortGrabbers = new PerspectiveDistortGrabber[]{
+		new PerspectiveDistortGrabber(PerspectiveDistortGrabberPosition.TOP_LEFT), 
+		new PerspectiveDistortGrabber(PerspectiveDistortGrabberPosition.TOP_RIGHT), 
+		new PerspectiveDistortGrabber(PerspectiveDistortGrabberPosition.BOTTOM_LEFT), 
+		new PerspectiveDistortGrabber(PerspectiveDistortGrabberPosition.BOTTOM_RIGHT)
+	};
+	protected PerspectiveDistortGrabber activePerspectiveDistortGrabber = null;
+	protected float perspectiveDistortStartOffsetX = 0.0F;
+	protected float perspectiveDistortStartOffsetY = 0.0F;
+	protected LayoutEditorHistory.Snapshot prePerspectiveDistortSnapshot;
 	protected AspectRatio resizeAspectRatio = new AspectRatio(10, 10);
 	public long renderMovingNotAllowedTime = -1;
 	public boolean recentlyMovedByDragging = false;
@@ -695,6 +705,36 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
+		if (this.element.supportsPerspectiveDistort()) {
+
+			this.rightClickMenu.addSeparatorEntry("separator_before_perspective_distort").setStackable(true);
+
+			this.rightClickMenu.addClickableEntry("reset_perspective_distort", Component.translatable("fancymenu.element.perspective_distort.reset"),
+							(menu, entry) -> {
+								if (entry.getStackMeta().isFirstInStack()) {
+									this.editor.history.saveSnapshot();
+									for (AbstractEditorElement e : this.editor.getSelectedElements()) {
+										if (e.element.supportsPerspectiveDistort()) {
+											e.element.resetPerspectiveDistortion();
+										}
+									}
+									menu.closeMenu();
+								}
+							})
+					.setStackable(true)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.perspective_distort.reset.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("reload"))
+					.setIsActiveSupplier((menu, entry) -> {
+						for (AbstractEditorElement e : this.editor.getSelectedElements()) {
+							if (e.element.supportsPerspectiveDistort() && e.element.hasPerspectiveDistortion()) {
+								return true;
+							}
+						}
+						return false;
+					});
+
+		}
+
 		if (this.settings.isParallaxAllowed()) {
 
 			this.rightClickMenu.addSeparatorEntry("separator_before_parallax").setStackable(true);
@@ -749,7 +789,10 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (hoveredGrabber != null) CursorHandler.setClientTickCursor(hoveredGrabber.getCursor());
 		
 		RotationGrabber hoveredRotationGrabber = this.getHoveredRotationGrabber();
-		if (hoveredRotationGrabber != null) CursorHandler.setClientTickCursor(CursorHandler.CURSOR_ROTATE);
+		if (hoveredRotationGrabber != null) CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_ALL);
+
+		PerspectiveDistortGrabber hoveredPerspectiveGrabber = this.getHoveredPerspectiveDistortGrabber();
+		if (hoveredPerspectiveGrabber != null) CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_ALL);
 
 		this.renderBorder(graphics, mouseX, mouseY, partial);
 
@@ -775,6 +818,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			this.topLeftDisplay.addLine("rotation", () -> Component.translatable("fancymenu.element.border_display.rotation", String.format("%.1f", this.element.rotationDegrees)));
 		} else if (!shouldShowRotation && this.topLeftDisplay.hasLine("rotation")) {
 			this.topLeftDisplay.removeLine("rotation");
+		}
+		// Handle perspective distortion display
+		boolean shouldShowPerspectiveDistort = this.element.supportsPerspectiveDistort() && this.element.hasPerspectiveDistortion();
+		if (shouldShowPerspectiveDistort && !this.topLeftDisplay.hasLine("perspective_distort")) {
+			this.topLeftDisplay.addLine("perspective_distort", () -> Component.translatable("fancymenu.element.border_display.perspective_distort"));
+		} else if (!shouldShowPerspectiveDistort && this.topLeftDisplay.hasLine("perspective_distort")) {
+			this.topLeftDisplay.removeLine("perspective_distort");
 		}
 	}
 
@@ -827,6 +877,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			// Render rotation grabbers
 			if (this.element.supportsRotation()) {
 				for (RotationGrabber g : this.rotationGrabbers) {
+					g.render(graphics, mouseX, mouseY, partial);
+				}
+			}
+
+			// Render perspective distort grabbers
+			if (this.element.supportsPerspectiveDistort() && FancyMenu.getOptions().enablePerspectiveDistortGrabbers.getValue()) {
+				for (PerspectiveDistortGrabber g : this.perspectiveDistortGrabbers) {
 					g.render(graphics, mouseX, mouseY, partial);
 				}
 			}
@@ -925,6 +982,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		this.leftMouseDown = false;
 		this.activeResizeGrabber = null;
 		this.activeRotationGrabber = null;
+		this.activePerspectiveDistortGrabber = null;
 		this.rightClickMenu.closeMenu();
 	}
 
@@ -976,7 +1034,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			if (!this.rightClickMenu.isUserNavigatingInMenu()) {
 				this.activeResizeGrabber = !this.isMultiSelected() ? this.getHoveredResizeGrabber() : null;
 				this.activeRotationGrabber = !this.isMultiSelected() ? this.getHoveredRotationGrabber() : null;
-				if (this.isHovered() || (this.isMultiSelected() && !this.editor.getHoveredElements().isEmpty()) || this.isGettingResized() || this.isGettingRotated()) {
+				this.activePerspectiveDistortGrabber = !this.isMultiSelected() ? this.getHoveredPerspectiveDistortGrabber() : null;
+				if (this.isHovered() || (this.isMultiSelected() && !this.editor.getHoveredElements().isEmpty()) || this.isGettingResized() || this.isGettingRotated() || this.isGettingPerspectiveDistorted()) {
 					this.leftMouseDown = true;
 					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
 					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
@@ -987,6 +1046,28 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						float centerX = this.getX() + (this.getWidth() / 2.0F);
 						float centerY = this.getY() + (this.getHeight() / 2.0F);
 						this.rotationStartMouseAngle = Math.toDegrees(Math.atan2(mouseY - centerY, mouseX - centerX));
+					}
+					if (this.activePerspectiveDistortGrabber != null) {
+						this.prePerspectiveDistortSnapshot = this.editor.history.createSnapshot();
+						// Store the initial offset values for the active corner
+						switch (this.activePerspectiveDistortGrabber.position) {
+							case TOP_LEFT:
+								this.perspectiveDistortStartOffsetX = this.element.perspectiveDistortTopLeftX;
+								this.perspectiveDistortStartOffsetY = this.element.perspectiveDistortTopLeftY;
+								break;
+							case TOP_RIGHT:
+								this.perspectiveDistortStartOffsetX = this.element.perspectiveDistortTopRightX;
+								this.perspectiveDistortStartOffsetY = this.element.perspectiveDistortTopRightY;
+								break;
+							case BOTTOM_LEFT:
+								this.perspectiveDistortStartOffsetX = this.element.perspectiveDistortBottomLeftX;
+								this.perspectiveDistortStartOffsetY = this.element.perspectiveDistortBottomLeftY;
+								break;
+							case BOTTOM_RIGHT:
+								this.perspectiveDistortStartOffsetX = this.element.perspectiveDistortBottomRightX;
+								this.perspectiveDistortStartOffsetY = this.element.perspectiveDistortBottomRightY;
+								break;
+						}
 					}
 					if (this.element.autoSizingWidth > 0) this.element.baseWidth = this.element.autoSizingWidth;
 					if (this.element.autoSizingHeight > 0) this.element.baseHeight = this.element.autoSizingHeight;
@@ -1012,6 +1093,32 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			}
 			this.preRotationSnapshot = null;
 			this.activeRotationGrabber = null;
+			if (this.isGettingPerspectiveDistorted() && (this.prePerspectiveDistortSnapshot != null)) {
+				boolean changed = false;
+				switch (this.activePerspectiveDistortGrabber.position) {
+					case TOP_LEFT:
+						changed = (this.perspectiveDistortStartOffsetX != this.element.perspectiveDistortTopLeftX) || 
+								  (this.perspectiveDistortStartOffsetY != this.element.perspectiveDistortTopLeftY);
+						break;
+					case TOP_RIGHT:
+						changed = (this.perspectiveDistortStartOffsetX != this.element.perspectiveDistortTopRightX) || 
+								  (this.perspectiveDistortStartOffsetY != this.element.perspectiveDistortTopRightY);
+						break;
+					case BOTTOM_LEFT:
+						changed = (this.perspectiveDistortStartOffsetX != this.element.perspectiveDistortBottomLeftX) || 
+								  (this.perspectiveDistortStartOffsetY != this.element.perspectiveDistortBottomLeftY);
+						break;
+					case BOTTOM_RIGHT:
+						changed = (this.perspectiveDistortStartOffsetX != this.element.perspectiveDistortBottomRightX) || 
+								  (this.perspectiveDistortStartOffsetY != this.element.perspectiveDistortBottomRightY);
+						break;
+				}
+				if (changed) {
+					this.editor.history.saveSnapshot(this.prePerspectiveDistortSnapshot);
+				}
+			}
+			this.prePerspectiveDistortSnapshot = null;
+			this.activePerspectiveDistortGrabber = null;
 			this.element.updateAutoSizing(true);
 			this.recentlyMovedByDragging = false;
 			this.recentlyResized = false;
@@ -1036,7 +1143,31 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			return false;
 		}
 		if (button == 0) {
-			if (this.leftMouseDown && this.isGettingRotated()) { // ROTATE ELEMENT
+			if (this.leftMouseDown && this.isGettingPerspectiveDistorted()) { // PERSPECTIVE DISTORT ELEMENT
+				// Calculate the mouse offset from the initial click position
+				float diffX = (float)(mouseX - this.leftMouseDownMouseX);
+				float diffY = (float)(mouseY - this.leftMouseDownMouseY);
+				
+				// Apply the offset to the appropriate corner
+				switch (this.activePerspectiveDistortGrabber.position) {
+					case TOP_LEFT:
+						this.element.perspectiveDistortTopLeftX = this.perspectiveDistortStartOffsetX + diffX;
+						this.element.perspectiveDistortTopLeftY = this.perspectiveDistortStartOffsetY + diffY;
+						break;
+					case TOP_RIGHT:
+						this.element.perspectiveDistortTopRightX = this.perspectiveDistortStartOffsetX + diffX;
+						this.element.perspectiveDistortTopRightY = this.perspectiveDistortStartOffsetY + diffY;
+						break;
+					case BOTTOM_LEFT:
+						this.element.perspectiveDistortBottomLeftX = this.perspectiveDistortStartOffsetX + diffX;
+						this.element.perspectiveDistortBottomLeftY = this.perspectiveDistortStartOffsetY + diffY;
+						break;
+					case BOTTOM_RIGHT:
+						this.element.perspectiveDistortBottomRightX = this.perspectiveDistortStartOffsetX + diffX;
+						this.element.perspectiveDistortBottomRightY = this.perspectiveDistortStartOffsetY + diffY;
+						break;
+				}
+			} else if (this.leftMouseDown && this.isGettingRotated()) { // ROTATE ELEMENT
 				// Calculate current mouse angle relative to element center
 				float centerX = this.getX() + (this.getWidth() / 2.0F);
 				float centerY = this.getY() + (this.getHeight() / 2.0F);
@@ -1056,7 +1187,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				while (newRotation >= 360) newRotation -= 360;
 				
 				this.element.rotationDegrees = newRotation;
-			} else if (this.leftMouseDown && !this.isGettingResized() && this.movingCrumpleZonePassed) { // MOVE ELEMENT
+			} else if (this.leftMouseDown && !this.isGettingResized() && !this.isGettingRotated() && !this.isGettingPerspectiveDistorted() && this.movingCrumpleZonePassed) { // MOVE ELEMENT
 				int diffX = (int)-(this.movingStartPosX - mouseX);
 				int diffY = (int)-(this.movingStartPosY - mouseY);
 				if (this.editor.allSelectedElementsMovable()) {
@@ -1300,7 +1431,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	public boolean isHovered() {
 		if (this.element.layerHiddenInEditor) return false;
-		return this.hovered || this.rightClickMenu.isUserNavigatingInMenu() || (this.getHoveredResizeGrabber() != null) || (this.getHoveredRotationGrabber() != null);
+		return this.hovered || this.rightClickMenu.isUserNavigatingInMenu() || (this.getHoveredResizeGrabber() != null) || (this.getHoveredRotationGrabber() != null) || (this.getHoveredPerspectiveDistortGrabber() != null);
 	}
 
 	public int getX() {
@@ -1379,6 +1510,35 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			return this.activeRotationGrabber;
 		}
 		for (RotationGrabber g : this.rotationGrabbers) {
+			if (g.hovered) {
+				return g;
+			}
+		}
+		return null;
+	}
+
+	public boolean isGettingPerspectiveDistorted() {
+		if (!this.element.supportsPerspectiveDistort()) {
+			return false;
+		}
+		return this.activePerspectiveDistortGrabber != null;
+	}
+
+	@Nullable
+	public PerspectiveDistortGrabber getHoveredPerspectiveDistortGrabber() {
+		if (!FancyMenu.getOptions().enablePerspectiveDistortGrabbers.getValue()) {
+			return null;
+		}
+		if (!this.element.supportsPerspectiveDistort()) {
+			return null;
+		}
+		if (this.isMultiSelected()) {
+			return null;
+		}
+		if (this.activePerspectiveDistortGrabber != null) {
+			return this.activePerspectiveDistortGrabber;
+		}
+		for (PerspectiveDistortGrabber g : this.perspectiveDistortGrabbers) {
 			if (g.hovered) {
 				return g;
 			}
@@ -1949,6 +2109,110 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		TOP_RIGHT,
 		BOTTOM_LEFT,
 		BOTTOM_RIGHT
+	}
+
+	public enum PerspectiveDistortGrabberPosition {
+		TOP_LEFT,
+		TOP_RIGHT,
+		BOTTOM_LEFT,
+		BOTTOM_RIGHT
+	}
+
+	public class PerspectiveDistortGrabber implements Renderable {
+		
+		protected int size = 6;
+		protected final PerspectiveDistortGrabberPosition position;
+		protected boolean hovered = false;
+		
+		protected PerspectiveDistortGrabber(PerspectiveDistortGrabberPosition position) {
+			this.position = position;
+		}
+		
+		@Override
+		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
+			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
+				// Get the distorted position based on the corner offsets
+				int x = this.getX();
+				int y = this.getY();
+				
+				// Draw a diamond shape for perspective distort grabbers
+				int centerX = x + (this.size / 2);
+				int centerY = y + (this.size / 2);
+				
+				// Draw filled diamond
+				int color = this.hovered ? 
+					UIBase.getUIColorTheme().layout_editor_element_border_perspective_grabber_color_hovered.getColorInt() :
+					UIBase.getUIColorTheme().layout_editor_element_border_perspective_grabber_color_normal.getColorInt();
+				
+				// Draw diamond using 4 triangles
+				graphics.fill(centerX - (this.size / 2), centerY, centerX, centerY - (this.size / 2), color); // Top-left triangle
+				graphics.fill(centerX, centerY - (this.size / 2), centerX + (this.size / 2), centerY, color); // Top-right triangle
+				graphics.fill(centerX, centerY + (this.size / 2), centerX - (this.size / 2), centerY, color); // Bottom-left triangle
+				graphics.fill(centerX + (this.size / 2), centerY, centerX, centerY + (this.size / 2), color); // Bottom-right triangle
+			}
+		}
+		
+		protected int getX() {
+			int baseX = AbstractEditorElement.this.getX();
+			int width = AbstractEditorElement.this.getWidth();
+			float offsetX = 0;
+			
+			switch (this.position) {
+				case TOP_LEFT:
+					offsetX = AbstractEditorElement.this.element.perspectiveDistortTopLeftX;
+					break;
+				case TOP_RIGHT:
+					baseX += width;
+					offsetX = AbstractEditorElement.this.element.perspectiveDistortTopRightX;
+					break;
+				case BOTTOM_LEFT:
+					offsetX = AbstractEditorElement.this.element.perspectiveDistortBottomLeftX;
+					break;
+				case BOTTOM_RIGHT:
+					baseX += width;
+					offsetX = AbstractEditorElement.this.element.perspectiveDistortBottomRightX;
+					break;
+			}
+			
+			return baseX + (int)offsetX - (this.size / 2);
+		}
+		
+		protected int getY() {
+			int baseY = AbstractEditorElement.this.getY();
+			int height = AbstractEditorElement.this.getHeight();
+			float offsetY = 0;
+			
+			switch (this.position) {
+				case TOP_LEFT:
+					offsetY = AbstractEditorElement.this.element.perspectiveDistortTopLeftY;
+					break;
+				case TOP_RIGHT:
+					offsetY = AbstractEditorElement.this.element.perspectiveDistortTopRightY;
+					break;
+				case BOTTOM_LEFT:
+					baseY += height;
+					offsetY = AbstractEditorElement.this.element.perspectiveDistortBottomLeftY;
+					break;
+				case BOTTOM_RIGHT:
+					baseY += height;
+					offsetY = AbstractEditorElement.this.element.perspectiveDistortBottomRightY;
+					break;
+			}
+			
+			return baseY + (int)offsetY - (this.size / 2);
+		}
+		
+		protected boolean isGrabberEnabled() {
+			return !AbstractEditorElement.this.isMultiSelected() && 
+				   AbstractEditorElement.this.element.supportsPerspectiveDistort() &&
+				   FancyMenu.getOptions().enablePerspectiveDistortGrabbers.getValue();
+		}
+		
+		protected boolean isMouseOver(double mouseX, double mouseY) {
+			return (mouseX >= this.getX()) && (mouseX <= this.getX() + this.size) && 
+				   (mouseY >= this.getY()) && (mouseY <= this.getY() + this.size);
+		}
 	}
 
 }
