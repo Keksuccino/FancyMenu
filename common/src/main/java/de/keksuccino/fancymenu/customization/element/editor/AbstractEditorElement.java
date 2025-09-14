@@ -1,13 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
-import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -51,17 +44,16 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
@@ -858,45 +850,21 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		float halfHeight = this.getHeight() / 2.0F;
 		float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // 8 pixels padding
 		
-		// Use many more segments for a smoother circle
-		int segments = 120; // Increased for smoother appearance
+		// Use many points to create a smooth circle
+		int points = 360; // One point per degree for maximum smoothness
 		int circleColor = ROTATION_GRABBER_COLOR.get(this);
-		float angleStep = (float)(2 * Math.PI / segments);
 		
-		// Get the pose matrix for transformations
-		PoseStack poseStack = graphics.pose();
-		poseStack.pushPose();
-		
-		// Use vertex buffer for smoother rendering
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-//		RenderSystem.disableTexture();
-		RenderSystem.setShader(GameRenderer::getPositionColorShader);
-		
-		BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
-		Matrix4f matrix = poseStack.last().pose();
-		
-		// Extract color components
-		float r = ((circleColor >> 16) & 0xFF) / 255.0F;
-		float g = ((circleColor >> 8) & 0xFF) / 255.0F;
-		float b = (circleColor & 0xFF) / 255.0F;
-		float a = ((circleColor >> 24) & 0xFF) / 255.0F;
-		
-		// Draw the circle as a continuous line strip
-		for (int i = 0; i <= segments; i++) {
-			float angle = i * angleStep;
-			float x = centerX + radius * (float)Math.cos(angle);
-			float y = centerY + radius * (float)Math.sin(angle);
-			bufferBuilder.addVertex(matrix, x, y, 0).setColor(r, g, b, a);
+		// Draw the circle by plotting points
+		for (int i = 0; i < points; i++) {
+			float angle = (float)(i * 2 * Math.PI / points);
+			
+			// Calculate position for this point
+			int x = Math.round(centerX + radius * (float)Math.cos(angle));
+			int y = Math.round(centerY + radius * (float)Math.sin(angle));
+			
+			// Draw a single pixel
+			graphics.fill(x, y, x + 1, y + 1, circleColor);
 		}
-		
-		BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-		
-		// Restore render state
-//		RenderSystem.enableTexture();
-		RenderSystem.disableBlend();
-		
-		poseStack.popPose();
 
 	}
 
