@@ -845,6 +845,17 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		if (((this.editor.getTopHoveredElement() == this) && !this.editor.isUserNavigatingInRightClickMenu() && !this.editor.isUserNavigatingInElementMenu()) || this.isSelected() || this.isMultiSelected()) {
 
+			// Render rotation circle and grabber
+			if (this.isSelected() && this.element.supportsRotation() && !this.element.advancedRotationMode && !this.isMultiSelected()) {
+				this.renderRotationCircle(graphics);
+				this.rotationGrabber.render(graphics, mouseX, mouseY, partial);
+			}
+
+			// Render tilt lines and grabbers
+			if (this.isSelected() && this.element.supportsTilting() && !this.isMultiSelected()) {
+				this.renderTiltControls(graphics, mouseX, mouseY, partial);
+			}
+
 			//TOP
 			graphics.fill(this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 1, this.getY() + 1, BORDER_COLOR.get(this));
 			//BOTTOM
@@ -856,17 +867,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 			for (ResizeGrabber g : this.resizeGrabbers) {
 				g.render(graphics, mouseX, mouseY, partial);
-			}
-
-			// Render rotation circle and grabber
-			if (this.isSelected() && this.element.supportsRotation() && !this.element.advancedRotationMode && !this.isMultiSelected()) {
-				this.renderRotationCircle(graphics);
-				this.rotationGrabber.render(graphics, mouseX, mouseY, partial);
-			}
-
-			// Render tilt lines and grabbers
-			if (this.isSelected() && this.element.supportsTilting() && !this.isMultiSelected()) {
-				this.renderTiltControls(graphics, mouseX, mouseY, partial);
 			}
 
 		}
