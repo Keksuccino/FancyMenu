@@ -2,9 +2,9 @@
 CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 
 - Added rotation support for many element types, which means you can now freely rotate them (#1258)
-  - In basic mode you can use the rotation grabbers to easily rotate the element or you can set the rotation manually in the element's right-click menu
-  - In advanced mode, the rotation value supports placeholders, which gives you maximum control over the element's rotation, but in this mode the rotation grabbers are disabled
-  - It is possible to disable the rotation grabbers in the editor settings (menu bar -> Window -> Element Rotation Grabbers)
+  - In basic mode you can use the rotation grabber to easily rotate the element or you can set the rotation manually in the element's right-click menu
+  - In advanced mode, the rotation value supports placeholders, which gives you maximum control over the element's rotation, but in this mode the rotation grabber is disabled
+  - It is possible to disable the rotation grabber in the editor settings (menu bar -> Window -> Element Rotation Grabbers)
   - You can Shift-click the rotation grabber to make it rotate in 45 degree steps
 - Added "Is Any Screen Open" requirement that returns true when ANY screen is open (useful for listeners, since they work outside menus) (#1275)
 - Added "Reload Resource Packs" action to reload resource packs just like when pressing F3 + T in-game (#1274)
