@@ -53,6 +53,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,6 +74,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 		return UIBase.getUIColorTheme().layout_editor_element_border_color_normal.getColorInt();
 	};
+	protected static final int VERTICAL_TILT_COLOR = 0xFF00FFFF; // Cyan for vertical tilt
+	protected static final int HORIZONTAL_TILT_COLOR = 0xFFFF00FF; // Magenta for horizontal tilt
 
 	public AbstractElement element;
 	public final EditorElementSettings settings;
@@ -101,6 +104,15 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	protected float rotationStartAngle = 0.0F;
 	protected double rotationStartMouseAngle = 0.0;
 	protected LayoutEditorHistory.Snapshot preRotationSnapshot;
+	protected VerticalTiltGrabber verticalTiltGrabber = new VerticalTiltGrabber();
+	protected boolean verticalTiltGrabberActive = false;
+	protected float verticalTiltStartAngle = 0.0F;
+	protected double verticalTiltStartMouseY = 0.0;
+	protected HorizontalTiltGrabber horizontalTiltGrabber = new HorizontalTiltGrabber();
+	protected boolean horizontalTiltGrabberActive = false;
+	protected float horizontalTiltStartAngle = 0.0F;
+	protected double horizontalTiltStartMouseX = 0.0;
+	protected LayoutEditorHistory.Snapshot preTiltSnapshot;
 	protected AspectRatio resizeAspectRatio = new AspectRatio(10, 10);
 	public long renderMovingNotAllowedTime = -1;
 	public boolean recentlyMovedByDragging = false;
@@ -689,6 +701,28 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
+		if (this.element.supportsTilting()) {
+
+			this.rightClickMenu.addSeparatorEntry("separator_before_tilting").setStackable(true);
+
+			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "vertical_tilt_degrees", AbstractEditorElement.class,
+							consumes -> consumes.element.verticalTiltDegrees,
+							(abstractEditorElement, aFloat) -> abstractEditorElement.element.verticalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, aFloat)),
+							Component.translatable("fancymenu.element.tilt.vertical.degrees"), true, 0, null, null)
+					.setStackable(false)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.degrees.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"));
+
+			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "horizontal_tilt_degrees", AbstractEditorElement.class,
+							consumes -> consumes.element.horizontalTiltDegrees,
+							(abstractEditorElement, aFloat) -> abstractEditorElement.element.horizontalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, aFloat)),
+							Component.translatable("fancymenu.element.tilt.horizontal.degrees"), true, 0, null, null)
+					.setStackable(false)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.degrees.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"));
+
+		}
+
 		if (this.settings.isParallaxAllowed()) {
 
 			this.rightClickMenu.addSeparatorEntry("separator_before_parallax").setStackable(true);
@@ -744,6 +778,12 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		RotationGrabber hoveredRotationGrabber = this.getHoveredRotationGrabber();
 		if (hoveredRotationGrabber != null) CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_ALL);
+
+		VerticalTiltGrabber hoveredVerticalTiltGrabber = this.getHoveredVerticalTiltGrabber();
+		if (hoveredVerticalTiltGrabber != null) CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_VERTICAL);
+
+		HorizontalTiltGrabber hoveredHorizontalTiltGrabber = this.getHoveredHorizontalTiltGrabber();
+		if (hoveredHorizontalTiltGrabber != null) CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_HORIZONTAL);
 
 		this.renderBorder(graphics, mouseX, mouseY, partial);
 
@@ -824,6 +864,11 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				this.rotationGrabber.render(graphics, mouseX, mouseY, partial);
 			}
 
+			// Render tilt lines and grabbers
+			if (this.isSelected() && this.element.supportsTilting() && !this.isMultiSelected()) {
+				this.renderTiltControls(graphics, mouseX, mouseY, partial);
+			}
+
 		}
 
 		if (this.isSelected()) {
@@ -837,28 +882,49 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		float centerX = this.getX() + (this.getWidth() / 2.0F);
 		float centerY = this.getY() + (this.getHeight() / 2.0F);
-		
+
 		// Calculate radius - slightly larger than the element's diagonal
 		float halfWidth = this.getWidth() / 2.0F;
 		float halfHeight = this.getHeight() / 2.0F;
 		float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // 8 pixels padding
-		
+
 		// Use many points to create a smooth circle
 		int points = 360; // One point per degree for maximum smoothness
 		int circleColor = UIBase.getUIColorTheme().layout_editor_element_border_rotation_controls_color.getColorInt();
-		
+
 		// Draw the circle by plotting points
 		for (int i = 0; i < points; i++) {
 			float angle = (float)(i * 2 * Math.PI / points);
-			
+
 			// Calculate position for this point
 			int x = Math.round(centerX + radius * (float)Math.cos(angle));
 			int y = Math.round(centerY + radius * (float)Math.sin(angle));
-			
+
 			// Draw a single pixel
 			graphics.fill(x, y, x + 1, y + 1, circleColor);
 		}
 
+	}
+
+	protected void renderTiltControls(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+		// Render vertical tilt line
+		float centerX = this.getX() + (this.getWidth() / 2.0F);
+		float centerY = this.getY() + (this.getHeight() / 2.0F);
+
+		// Vertical line (for vertical tilt)
+		int lineExtension = 20; // Extra pixels beyond element bounds
+		int verticalLineTop = this.getY() - lineExtension;
+		int verticalLineBottom = this.getY() + this.getHeight() + lineExtension;
+		graphics.fill((int)centerX - 1, verticalLineTop, (int)centerX + 1, verticalLineBottom, VERTICAL_TILT_COLOR);
+
+		// Horizontal line (for horizontal tilt)
+		int horizontalLineLeft = this.getX() - lineExtension;
+		int horizontalLineRight = this.getX() + this.getWidth() + lineExtension;
+		graphics.fill(horizontalLineLeft, (int)centerY - 1, horizontalLineRight, (int)centerY + 1, HORIZONTAL_TILT_COLOR);
+
+		// Render tilt grabbers
+		this.verticalTiltGrabber.render(graphics, mouseX, mouseY, partial);
+		this.horizontalTiltGrabber.render(graphics, mouseX, mouseY, partial);
 	}
 
 	/**
@@ -896,6 +962,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (resetElementStates) {
 			this.resetElementStates();
 		}
+
 		if (newAnchor == null) {
 			newAnchor = ElementAnchorPoints.MID_CENTERED;
 		}
@@ -946,6 +1013,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		this.leftMouseDown = false;
 		this.activeResizeGrabber = null;
 		this.rotationGrabberActive = false;
+		this.verticalTiltGrabberActive = false;
+		this.horizontalTiltGrabberActive = false;
 		this.rightClickMenu.closeMenu();
 	}
 
@@ -997,10 +1066,14 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			if (!this.rightClickMenu.isUserNavigatingInMenu()) {
 				this.activeResizeGrabber = !this.isMultiSelected() ? this.getHoveredResizeGrabber() : null;
 				this.rotationGrabberActive = !this.isMultiSelected() && this.getHoveredRotationGrabber() != null;
-				if (this.isHovered() || (this.isMultiSelected() && !this.editor.getHoveredElements().isEmpty()) || this.isGettingResized() || this.isGettingRotated()) {
+				this.verticalTiltGrabberActive = !this.isMultiSelected() && this.getHoveredVerticalTiltGrabber() != null;
+				this.horizontalTiltGrabberActive = !this.isMultiSelected() && this.getHoveredHorizontalTiltGrabber() != null;
+
+				if (this.isHovered() || (this.isMultiSelected() && !this.editor.getHoveredElements().isEmpty()) || this.isGettingResized() || this.isGettingRotated() || this.isGettingTilted()) {
 					this.leftMouseDown = true;
 					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
 					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
+
 					if (this.rotationGrabberActive) {
 						this.preRotationSnapshot = this.editor.history.createSnapshot();
 						this.rotationStartAngle = this.element.rotationDegrees;
@@ -1009,6 +1082,19 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						float centerY = this.getY() + (this.getHeight() / 2.0F);
 						this.rotationStartMouseAngle = Math.toDegrees(Math.atan2(mouseY - centerY, mouseX - centerX));
 					}
+
+					if (this.verticalTiltGrabberActive) {
+						this.preTiltSnapshot = this.editor.history.createSnapshot();
+						this.verticalTiltStartAngle = this.element.verticalTiltDegrees;
+						this.verticalTiltStartMouseY = mouseY;
+					}
+
+					if (this.horizontalTiltGrabberActive) {
+						this.preTiltSnapshot = this.editor.history.createSnapshot();
+						this.horizontalTiltStartAngle = this.element.horizontalTiltDegrees;
+						this.horizontalTiltStartMouseX = mouseX;
+					}
+
 					if (this.element.autoSizingWidth > 0) this.element.baseWidth = this.element.autoSizingWidth;
 					if (this.element.autoSizingHeight > 0) this.element.baseHeight = this.element.autoSizingHeight;
 					this.element.setAutoSizingBaseWidthAndHeight();
@@ -1031,8 +1117,16 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					this.editor.history.saveSnapshot(this.preRotationSnapshot);
 				}
 			}
+			if ((this.isGettingVerticalTilted() || this.isGettingHorizontalTilted()) && (this.preTiltSnapshot != null)) {
+				if ((this.verticalTiltStartAngle != this.element.verticalTiltDegrees) || (this.horizontalTiltStartAngle != this.element.horizontalTiltDegrees)) {
+					this.editor.history.saveSnapshot(this.preTiltSnapshot);
+				}
+			}
 			this.preRotationSnapshot = null;
+			this.preTiltSnapshot = null;
 			this.rotationGrabberActive = false;
+			this.verticalTiltGrabberActive = false;
+			this.horizontalTiltGrabberActive = false;
 			this.element.updateAutoSizing(true);
 			this.recentlyMovedByDragging = false;
 			this.recentlyResized = false;
@@ -1077,6 +1171,36 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				while (newRotation >= 360) newRotation -= 360;
 
 				this.element.rotationDegrees = newRotation;
+			} else if (this.leftMouseDown && this.isGettingVerticalTilted()) { // VERTICAL TILT
+				// Calculate tilt based on vertical mouse movement
+				double mouseDiff = mouseY - this.verticalTiltStartMouseY;
+				float tiltChange = (float)(mouseDiff * 0.5); // Scale factor for sensitivity
+				float newTilt = this.verticalTiltStartAngle + tiltChange;
+
+				// Clamp tilt to reasonable range (-60 to 60 degrees)
+				newTilt = Math.max(-60.0F, Math.min(60.0F, newTilt));
+
+				// Snap to 15-degree increments if shift is held
+				if (Screen.hasShiftDown()) {
+					newTilt = Math.round(newTilt / 15.0F) * 15.0F;
+				}
+
+				this.element.verticalTiltDegrees = newTilt;
+			} else if (this.leftMouseDown && this.isGettingHorizontalTilted()) { // HORIZONTAL TILT
+				// Calculate tilt based on horizontal mouse movement
+				double mouseDiff = mouseX - this.horizontalTiltStartMouseX;
+				float tiltChange = (float)(mouseDiff * 0.5); // Scale factor for sensitivity
+				float newTilt = this.horizontalTiltStartAngle + tiltChange;
+
+				// Clamp tilt to reasonable range (-60 to 60 degrees)
+				newTilt = Math.max(-60.0F, Math.min(60.0F, newTilt));
+
+				// Snap to 15-degree increments if shift is held
+				if (Screen.hasShiftDown()) {
+					newTilt = Math.round(newTilt / 15.0F) * 15.0F;
+				}
+
+				this.element.horizontalTiltDegrees = newTilt;
 			} else if (this.leftMouseDown && !this.isGettingResized() && this.movingCrumpleZonePassed) { // MOVE ELEMENT
 				int diffX = (int)-(this.movingStartPosX - mouseX);
 				int diffY = (int)-(this.movingStartPosY - mouseY);
@@ -1321,7 +1445,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	public boolean isHovered() {
 		if (this.element.layerHiddenInEditor) return false;
-		return this.hovered || this.rightClickMenu.isUserNavigatingInMenu() || (this.getHoveredResizeGrabber() != null) || (this.getHoveredRotationGrabber() != null);
+		return this.hovered || this.rightClickMenu.isUserNavigatingInMenu() || (this.getHoveredResizeGrabber() != null) || (this.getHoveredRotationGrabber() != null) || (this.getHoveredVerticalTiltGrabber() != null) || (this.getHoveredHorizontalTiltGrabber() != null);
 	}
 
 	public int getX() {
@@ -1356,6 +1480,24 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			return false;
 		}
 		return this.rotationGrabberActive;
+	}
+
+	public boolean isGettingVerticalTilted() {
+		if (!this.element.supportsTilting()) {
+			return false;
+		}
+		return this.verticalTiltGrabberActive;
+	}
+
+	public boolean isGettingHorizontalTilted() {
+		if (!this.element.supportsTilting()) {
+			return false;
+		}
+		return this.horizontalTiltGrabberActive;
+	}
+
+	public boolean isGettingTilted() {
+		return this.isGettingVerticalTilted() || this.isGettingHorizontalTilted();
 	}
 
 	public boolean isDragged() {
@@ -1405,146 +1547,38 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		return null;
 	}
 
-	public class ResizeGrabber implements Renderable {
-
-		protected int width = 4;
-		protected int height = 4;
-		protected final ResizeGrabberType type;
-		protected boolean hovered = false;
-
-		protected ResizeGrabber(ResizeGrabberType type) {
-			this.type = type;
+	@Nullable
+	public VerticalTiltGrabber getHoveredVerticalTiltGrabber() {
+		if (!this.element.supportsTilting()) {
+			return null;
 		}
-
-		@Override
-		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
-			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
-				graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
-			}
+		if (this.isMultiSelected()) {
+			return null;
 		}
-
-		protected int getX() {
-			int x = AbstractEditorElement.this.getX();
-			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
-				x += (AbstractEditorElement.this.getWidth() / 2) - (this.width / 2);
-			}
-			if (this.type == ResizeGrabberType.RIGHT) {
-				x += AbstractEditorElement.this.getWidth() - (this.width / 2);
-			}
-			if (this.type == ResizeGrabberType.LEFT) {
-				x -= (this.width / 2);
-			}
-			return x;
+		if (this.verticalTiltGrabberActive) {
+			return this.verticalTiltGrabber;
 		}
-
-		protected int getY() {
-			int y = AbstractEditorElement.this.getY();
-			if (this.type == ResizeGrabberType.TOP) {
-				y -= (this.height / 2);
-			}
-			if ((this.type == ResizeGrabberType.RIGHT) || (this.type == ResizeGrabberType.LEFT)) {
-				y += (AbstractEditorElement.this.getHeight() / 2) - (this.height / 2);
-			}
-			if (this.type == ResizeGrabberType.BOTTOM) {
-				y += AbstractEditorElement.this.getHeight() - (this.height / 2);
-			}
-			return y;
+		if (this.verticalTiltGrabber.hovered) {
+			return this.verticalTiltGrabber;
 		}
-
-		protected long getCursor() {
-			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
-				return CursorHandler.CURSOR_RESIZE_VERTICAL;
-			}
-			return CursorHandler.CURSOR_RESIZE_HORIZONTAL;
-		}
-
-		protected boolean isGrabberEnabled() {
-			if (AbstractEditorElement.this.isMultiSelected()) {
-				return false;
-			}
-			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
-				if ((this.type == ResizeGrabberType.TOP) && (AbstractEditorElement.this.element.advancedY != null)) return false;
-				return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableY() && (AbstractEditorElement.this.element.advancedHeight == null);
-			}
-			if ((this.type == ResizeGrabberType.LEFT) || (this.type == ResizeGrabberType.RIGHT)) {
-				if ((this.type == ResizeGrabberType.LEFT) && (AbstractEditorElement.this.element.advancedX != null)) return false;
-				return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableX() && (AbstractEditorElement.this.element.advancedWidth == null);
-			}
-			return false;
-		}
-
-		protected boolean isMouseOver(double mouseX, double mouseY) {
-			return (mouseX >= this.getX()) && (mouseX <= this.getX() + this.width) && (mouseY >= this.getY()) && mouseY <= this.getY() + this.height;
-		}
-
+		return null;
 	}
 
-	public class RotationGrabber implements Renderable {
-
-		protected int size = 8; // Size of the grabber
-		protected boolean hovered = false;
-
-		@Override
-		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
-			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
-				// Draw the grabber as a filled circle at the rotation position
-				int x = this.getX();
-				int y = this.getY();
-				int color = UIBase.getUIColorTheme().layout_editor_element_border_rotation_controls_color.getColorInt();
-
-				// Draw a small filled square (approximation of a circle for the grabber)
-				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, color);
-			}
+	@Nullable
+	public HorizontalTiltGrabber getHoveredHorizontalTiltGrabber() {
+		if (!this.element.supportsTilting()) {
+			return null;
 		}
-
-		protected int getX() {
-			float centerX = AbstractEditorElement.this.getX() + (AbstractEditorElement.this.getWidth() / 2.0F);
-			float halfWidth = AbstractEditorElement.this.getWidth() / 2.0F;
-			float halfHeight = AbstractEditorElement.this.getHeight() / 2.0F;
-			float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // Same padding as circle
-
-			// Position grabber at the current rotation angle
-			// Start at the top (90 degrees offset because 0 degrees is to the right in standard coordinates)
-			float angleRad = (float)Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
-			return (int)(centerX + radius * Math.cos(angleRad));
+		if (this.isMultiSelected()) {
+			return null;
 		}
-
-		protected int getY() {
-			float centerY = AbstractEditorElement.this.getY() + (AbstractEditorElement.this.getHeight() / 2.0F);
-			float halfWidth = AbstractEditorElement.this.getWidth() / 2.0F;
-			float halfHeight = AbstractEditorElement.this.getHeight() / 2.0F;
-			float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // Same padding as circle
-
-			// Position grabber at the current rotation angle
-			// Start at the top (90 degrees offset because 0 degrees is to the right in standard coordinates)
-			float angleRad = (float)Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
-			return (int)(centerY + radius * Math.sin(angleRad));
+		if (this.horizontalTiltGrabberActive) {
+			return this.horizontalTiltGrabber;
 		}
-
-		protected boolean isGrabberEnabled() {
-			if (!FancyMenu.getOptions().enableRotationGrabbers.getValue()) {
-				return false;
-			}
-			if (!AbstractEditorElement.this.element.supportsRotation()) {
-				return false;
-			}
-			if (AbstractEditorElement.this.element.advancedRotationMode) {
-				return false;
-			}
-			if (AbstractEditorElement.this.isMultiSelected()) {
-				return false;
-			}
-			return true;
+		if (this.horizontalTiltGrabber.hovered) {
+			return this.horizontalTiltGrabber;
 		}
-
-		protected boolean isMouseOver(double mouseX, double mouseY) {
-			int x = this.getX();
-			int y = this.getY();
-			return (mouseX >= x - size/2) && (mouseX <= x + size/2) && (mouseY >= y - size/2) && (mouseY <= y + size/2);
-		}
-
+		return null;
 	}
 
 	@SuppressWarnings("all")
@@ -1773,13 +1807,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	}
 
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull ConsumingSupplier<E, String> targetFieldGetter, @NotNull BiConsumer<E, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<AbstractEditorElement, String> getter = (ConsumingSupplier<AbstractEditorElement, String>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, String> setter = (BiConsumer<AbstractEditorElement, String>) targetFieldSetter;
-		return this.addInputContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
-	}
-
 	protected ContextMenu.ClickableContextMenuEntry<?> addGenericStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
 		return addInputContextMenuEntryTo(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
 	}
@@ -1974,6 +2001,252 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		RIGHT,
 		BOTTOM,
 		LEFT
+	}
+
+	public class ResizeGrabber implements Renderable {
+
+		protected int width = 4;
+		protected int height = 4;
+		protected final ResizeGrabberType type;
+		protected boolean hovered = false;
+
+		protected ResizeGrabber(ResizeGrabberType type) {
+			this.type = type;
+		}
+
+		@Override
+		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
+			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
+				graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
+			}
+		}
+
+		protected int getX() {
+			int x = AbstractEditorElement.this.getX();
+			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
+				x += (AbstractEditorElement.this.getWidth() / 2) - (this.width / 2);
+			}
+			if (this.type == ResizeGrabberType.RIGHT) {
+				x += AbstractEditorElement.this.getWidth() - (this.width / 2);
+			}
+			if (this.type == ResizeGrabberType.LEFT) {
+				x -= (this.width / 2);
+			}
+			return x;
+		}
+
+		protected int getY() {
+			int y = AbstractEditorElement.this.getY();
+			if (this.type == ResizeGrabberType.TOP) {
+				y -= (this.height / 2);
+			}
+			if ((this.type == ResizeGrabberType.RIGHT) || (this.type == ResizeGrabberType.LEFT)) {
+				y += (AbstractEditorElement.this.getHeight() / 2) - (this.height / 2);
+			}
+			if (this.type == ResizeGrabberType.BOTTOM) {
+				y += AbstractEditorElement.this.getHeight() - (this.height / 2);
+			}
+			return y;
+		}
+
+		protected long getCursor() {
+			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
+				return CursorHandler.CURSOR_RESIZE_VERTICAL;
+			}
+			return CursorHandler.CURSOR_RESIZE_HORIZONTAL;
+		}
+
+		protected boolean isGrabberEnabled() {
+			if (AbstractEditorElement.this.isMultiSelected()) {
+				return false;
+			}
+			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
+				if ((this.type == ResizeGrabberType.TOP) && (AbstractEditorElement.this.element.advancedY != null)) return false;
+				return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableY() && (AbstractEditorElement.this.element.advancedHeight == null);
+			}
+			if ((this.type == ResizeGrabberType.LEFT) || (this.type == ResizeGrabberType.RIGHT)) {
+				if ((this.type == ResizeGrabberType.LEFT) && (AbstractEditorElement.this.element.advancedX != null)) return false;
+				return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableX() && (AbstractEditorElement.this.element.advancedWidth == null);
+			}
+			return false;
+		}
+
+		protected boolean isMouseOver(double mouseX, double mouseY) {
+			return (mouseX >= this.getX()) && (mouseX <= this.getX() + this.width) && (mouseY >= this.getY()) && mouseY <= this.getY() + this.height;
+		}
+
+	}
+
+	public class RotationGrabber implements Renderable {
+
+		protected int size = 8; // Size of the grabber
+		protected boolean hovered = false;
+
+		@Override
+		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
+			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
+				// Draw the grabber as a filled circle at the rotation position
+				int x = this.getX();
+				int y = this.getY();
+				int color = UIBase.getUIColorTheme().layout_editor_element_border_rotation_controls_color.getColorInt();
+
+				// Draw a small filled square (approximation of a circle for the grabber)
+				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, color);
+			}
+		}
+
+		protected int getX() {
+			float centerX = AbstractEditorElement.this.getX() + (AbstractEditorElement.this.getWidth() / 2.0F);
+			float halfWidth = AbstractEditorElement.this.getWidth() / 2.0F;
+			float halfHeight = AbstractEditorElement.this.getHeight() / 2.0F;
+			float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // Same padding as circle
+
+			// Position grabber at the current rotation angle
+			// Start at the top (90 degrees offset because 0 degrees is to the right in standard coordinates)
+			float angleRad = (float)Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
+			return (int)(centerX + radius * Math.cos(angleRad));
+		}
+
+		protected int getY() {
+			float centerY = AbstractEditorElement.this.getY() + (AbstractEditorElement.this.getHeight() / 2.0F);
+			float halfWidth = AbstractEditorElement.this.getWidth() / 2.0F;
+			float halfHeight = AbstractEditorElement.this.getHeight() / 2.0F;
+			float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // Same padding as circle
+
+			// Position grabber at the current rotation angle
+			// Start at the top (90 degrees offset because 0 degrees is to the right in standard coordinates)
+			float angleRad = (float)Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
+			return (int)(centerY + radius * Math.sin(angleRad));
+		}
+
+		protected boolean isGrabberEnabled() {
+			if (!FancyMenu.getOptions().enableRotationGrabbers.getValue()) {
+				return false;
+			}
+			if (!AbstractEditorElement.this.element.supportsRotation()) {
+				return false;
+			}
+			if (AbstractEditorElement.this.element.advancedRotationMode) {
+				return false;
+			}
+			if (AbstractEditorElement.this.isMultiSelected()) {
+				return false;
+			}
+			return true;
+		}
+
+		protected boolean isMouseOver(double mouseX, double mouseY) {
+			int x = this.getX();
+			int y = this.getY();
+			return (mouseX >= x - size/2) && (mouseX <= x + size/2) && (mouseY >= y - size/2) && (mouseY <= y + size/2);
+		}
+
+	}
+
+	public class VerticalTiltGrabber implements Renderable {
+
+		protected int size = 8; // Size of the grabber
+		protected boolean hovered = false;
+
+		@Override
+		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
+			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
+				// Draw the grabber as a filled square at the tilt position
+				int x = this.getX();
+				int y = this.getY();
+
+				// Draw a small filled square (the grabber)
+				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, VERTICAL_TILT_COLOR);
+			}
+		}
+
+		protected int getX() {
+			float centerX = AbstractEditorElement.this.getX() + (AbstractEditorElement.this.getWidth() / 2.0F);
+			return (int)centerX;
+		}
+
+		protected int getY() {
+			float lineExtension = 20;
+			float lineLength = AbstractEditorElement.this.getHeight() + (lineExtension * 2);
+			float lineTop = AbstractEditorElement.this.getY() - lineExtension;
+
+			// Map tilt angle (-60 to 60) to position on line
+			// 0 degrees = center, -60 = top, 60 = bottom
+			float normalizedTilt = (AbstractEditorElement.this.element.verticalTiltDegrees + 60.0F) / 120.0F; // 0 to 1
+			return (int)(lineTop + (lineLength * normalizedTilt));
+		}
+
+		protected boolean isGrabberEnabled() {
+			if (!AbstractEditorElement.this.element.supportsTilting()) {
+				return false;
+			}
+			if (AbstractEditorElement.this.isMultiSelected()) {
+				return false;
+			}
+			return true;
+		}
+
+		protected boolean isMouseOver(double mouseX, double mouseY) {
+			int x = this.getX();
+			int y = this.getY();
+			return (mouseX >= x - size/2) && (mouseX <= x + size/2) && (mouseY >= y - size/2) && (mouseY <= y + size/2);
+		}
+
+	}
+
+	public class HorizontalTiltGrabber implements Renderable {
+
+		protected int size = 8; // Size of the grabber
+		protected boolean hovered = false;
+
+		@Override
+		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
+			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
+				// Draw the grabber as a filled square at the tilt position
+				int x = this.getX();
+				int y = this.getY();
+
+				// Draw a small filled square (the grabber)
+				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, HORIZONTAL_TILT_COLOR);
+			}
+		}
+
+		protected int getX() {
+			float lineExtension = 20;
+			float lineLength = AbstractEditorElement.this.getWidth() + (lineExtension * 2);
+			float lineLeft = AbstractEditorElement.this.getX() - lineExtension;
+
+			// Map tilt angle (-60 to 60) to position on line
+			// 0 degrees = center, -60 = left, 60 = right
+			float normalizedTilt = (AbstractEditorElement.this.element.horizontalTiltDegrees + 60.0F) / 120.0F; // 0 to 1
+			return (int)(lineLeft + (lineLength * normalizedTilt));
+		}
+
+		protected int getY() {
+			float centerY = AbstractEditorElement.this.getY() + (AbstractEditorElement.this.getHeight() / 2.0F);
+			return (int)centerY;
+		}
+
+		protected boolean isGrabberEnabled() {
+			if (!AbstractEditorElement.this.element.supportsTilting()) {
+				return false;
+			}
+			if (AbstractEditorElement.this.isMultiSelected()) {
+				return false;
+			}
+			return true;
+		}
+
+		protected boolean isMouseOver(double mouseX, double mouseY) {
+			int x = this.getX();
+			int y = this.getY();
+			return (mouseX >= x - size/2) && (mouseX <= x + size/2) && (mouseY >= y - size/2) && (mouseY <= y + size/2);
+		}
+
 	}
 
 }

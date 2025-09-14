@@ -262,6 +262,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.advancedRotationMode = deserializeBoolean(element.advancedRotationMode, serialized.getValue("advanced_rotation_mode"));
             element.advancedRotationDegrees = serialized.getValue("advanced_rotation_degrees");
 
+            element.verticalTiltDegrees = deserializeNumber(Float.class, element.verticalTiltDegrees, serialized.getValue("vertical_tilt_degrees"));
+            element.horizontalTiltDegrees = deserializeNumber(Float.class, element.horizontalTiltDegrees, serialized.getValue("horizontal_tilt_degrees"));
+
             element.afterConstruction();
 
             return element;
@@ -395,6 +398,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("rotation_degrees", "" + element.rotationDegrees);
             sec.putProperty("advanced_rotation_mode", "" + element.advancedRotationMode);
             sec.putProperty("advanced_rotation_degrees", element.advancedRotationDegrees);
+
+            sec.putProperty("vertical_tilt_degrees", "" + element.verticalTiltDegrees);
+            sec.putProperty("horizontal_tilt_degrees", "" + element.horizontalTiltDegrees);
 
             return sec;
 

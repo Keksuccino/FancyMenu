@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import com.mojang.math.Axis;
 import com.mojang.serialization.JsonOps;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -169,6 +170,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	/** Whether this element type supports rotation. Can be overridden in subclasses. */
 	protected boolean supportsRotation = true;
 	protected String lastAdvancedRotationDegrees;
+	
+	/** The vertical tilt angle in degrees. Positive values tilt top away from viewer */
+	public float verticalTiltDegrees = 0.0F;
+	/** The horizontal tilt angle in degrees. Positive values tilt right side away from viewer */
+	public float horizontalTiltDegrees = 0.0F;
+	/** Whether this element type supports tilting. Can be overridden in subclasses. */
+	protected boolean supportsTilting = true;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -191,6 +199,23 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 */
 	protected void setSupportsRotation(boolean supportsRotation) {
 		this.supportsRotation = supportsRotation;
+	}
+
+	/**
+	 * Returns whether this element type supports tilting.
+	 * @return true if this element can be tilted, false otherwise
+	 */
+	public boolean supportsTilting() {
+		return this.supportsTilting;
+	}
+
+	/**
+	 * Sets whether this element type supports tilting.
+	 * This should typically be called in the constructor of element subclasses.
+	 * @param supportsTilting true to enable tilting, false to disable it
+	 */
+	protected void setSupportsTilting(boolean supportsTilting) {
+		this.supportsTilting = supportsTilting;
 	}
 
 	public void setParentLayout(@Nullable Layout parentLayout) {
@@ -225,22 +250,44 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		this.tickBaseOpacity();
 
-		// Apply rotation if needed
-		boolean rotationApplied = false;
+		// Apply transformations if needed
+		boolean transformationsApplied = false;
 		float rotDegrees = this.getRotationDegrees();
-		if (this.supportsRotation && (rotDegrees != 0.0F)) {
+		boolean hasRotation = this.supportsRotation && (rotDegrees != 0.0F);
+		boolean hasTilt = this.supportsTilting && (this.verticalTiltDegrees != 0.0F || this.horizontalTiltDegrees != 0.0F);
+
+		if (this.shouldRender() && (hasRotation || hasTilt)) {
+
 			graphics.pose().pushPose();
+			transformationsApplied = true;
 
 			// Calculate center point of the element
 			float centerX = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2.0F);
 			float centerY = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2.0F);
 
-			// Translate to center, rotate, then translate back
+			// Translate to center
 			graphics.pose().translate(centerX, centerY, 0);
-			graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotDegrees));
+
+			// Apply tilting first (before rotation)
+			if (hasTilt) {
+				// Apply vertical tilt (rotation around X axis)
+				if (this.verticalTiltDegrees != 0.0F) {
+					graphics.pose().mulPose(Axis.XP.rotationDegrees(this.verticalTiltDegrees));
+				}
+				// Apply horizontal tilt (rotation around Y axis)
+				if (this.horizontalTiltDegrees != 0.0F) {
+					graphics.pose().mulPose(Axis.YP.rotationDegrees(this.horizontalTiltDegrees));
+				}
+			}
+
+			// Apply rotation (around Z axis)
+			if (hasRotation) {
+				graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotDegrees));
+			}
+
+			// Translate back
 			graphics.pose().translate(-centerX, -centerY, 0);
 
-			rotationApplied = true;
 		}
 
 		this.renderTick_Head();
@@ -257,17 +304,17 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		}
 
-		if (!this.shouldRender()) return;
-
 		this.renderTick_Inner_Stage_2();
 
-		//Render the actual element
-		this.render(graphics, mouseX, mouseY, partial);
+		if (this.shouldRender()) {
+			//Render the actual element
+			this.render(graphics, mouseX, mouseY, partial);
+		}
 
 		this.renderTick_Tail();
 
-		// Pop the rotation transformation
-		if (rotationApplied) {
+		// Pop the transformations
+		if (this.shouldRender() && transformationsApplied) {
 			graphics.pose().popPose();
 		}
 
