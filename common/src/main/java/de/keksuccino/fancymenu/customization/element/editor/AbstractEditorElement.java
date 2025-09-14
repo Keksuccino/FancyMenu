@@ -1,6 +1,13 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
+import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -44,6 +51,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -53,6 +61,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,8 +111,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	protected int resizingStartPosY = 0;
 	protected ResizeGrabber[] resizeGrabbers = new ResizeGrabber[]{new ResizeGrabber(ResizeGrabberType.TOP), new ResizeGrabber(ResizeGrabberType.RIGHT), new ResizeGrabber(ResizeGrabberType.BOTTOM), new ResizeGrabber(ResizeGrabberType.LEFT)};
 	protected ResizeGrabber activeResizeGrabber = null;
-	protected RotationGrabber[] rotationGrabbers = new RotationGrabber[]{new RotationGrabber(RotationGrabberPosition.TOP_LEFT), new RotationGrabber(RotationGrabberPosition.TOP_RIGHT), new RotationGrabber(RotationGrabberPosition.BOTTOM_LEFT), new RotationGrabber(RotationGrabberPosition.BOTTOM_RIGHT)};
-	protected RotationGrabber activeRotationGrabber = null;
+	protected RotationGrabber rotationGrabber = new RotationGrabber();
+	protected boolean rotationGrabberActive = false;
 	protected float rotationStartAngle = 0.0F;
 	protected double rotationStartMouseAngle = 0.0;
 	protected LayoutEditorHistory.Snapshot preRotationSnapshot;
@@ -824,11 +833,10 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				g.render(graphics, mouseX, mouseY, partial);
 			}
 
-			// Render rotation grabbers
-			if (this.element.supportsRotation()) {
-				for (RotationGrabber g : this.rotationGrabbers) {
-					g.render(graphics, mouseX, mouseY, partial);
-				}
+			// Render rotation circle and grabber
+			if (this.element.supportsRotation() && !this.element.advancedRotationMode && !this.isMultiSelected()) {
+				this.renderRotationCircle(graphics);
+				this.rotationGrabber.render(graphics, mouseX, mouseY, partial);
 			}
 
 		}
@@ -837,6 +845,58 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			this.topLeftDisplay.render(graphics, mouseX, mouseY, partial);
 			this.bottomRightDisplay.render(graphics, mouseX, mouseY, partial);
 		}
+
+	}
+
+	protected void renderRotationCircle(GuiGraphics graphics) {
+
+		float centerX = this.getX() + (this.getWidth() / 2.0F);
+		float centerY = this.getY() + (this.getHeight() / 2.0F);
+		
+		// Calculate radius - slightly larger than the element's diagonal
+		float halfWidth = this.getWidth() / 2.0F;
+		float halfHeight = this.getHeight() / 2.0F;
+		float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // 8 pixels padding
+		
+		// Use many more segments for a smoother circle
+		int segments = 120; // Increased for smoother appearance
+		int circleColor = ROTATION_GRABBER_COLOR.get(this);
+		float angleStep = (float)(2 * Math.PI / segments);
+		
+		// Get the pose matrix for transformations
+		PoseStack poseStack = graphics.pose();
+		poseStack.pushPose();
+		
+		// Use vertex buffer for smoother rendering
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+//		RenderSystem.disableTexture();
+		RenderSystem.setShader(GameRenderer::getPositionColorShader);
+		
+		BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+		Matrix4f matrix = poseStack.last().pose();
+		
+		// Extract color components
+		float r = ((circleColor >> 16) & 0xFF) / 255.0F;
+		float g = ((circleColor >> 8) & 0xFF) / 255.0F;
+		float b = (circleColor & 0xFF) / 255.0F;
+		float a = ((circleColor >> 24) & 0xFF) / 255.0F;
+		
+		// Draw the circle as a continuous line strip
+		for (int i = 0; i <= segments; i++) {
+			float angle = i * angleStep;
+			float x = centerX + radius * (float)Math.cos(angle);
+			float y = centerY + radius * (float)Math.sin(angle);
+			bufferBuilder.addVertex(matrix, x, y, 0).setColor(r, g, b, a);
+		}
+		
+		BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+		
+		// Restore render state
+//		RenderSystem.enableTexture();
+		RenderSystem.disableBlend();
+		
+		poseStack.popPose();
 
 	}
 
@@ -924,7 +984,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		this.multiSelected = false;
 		this.leftMouseDown = false;
 		this.activeResizeGrabber = null;
-		this.activeRotationGrabber = null;
+		this.rotationGrabberActive = false;
 		this.rightClickMenu.closeMenu();
 	}
 
@@ -975,12 +1035,12 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (button == 0) {
 			if (!this.rightClickMenu.isUserNavigatingInMenu()) {
 				this.activeResizeGrabber = !this.isMultiSelected() ? this.getHoveredResizeGrabber() : null;
-				this.activeRotationGrabber = !this.isMultiSelected() ? this.getHoveredRotationGrabber() : null;
+				this.rotationGrabberActive = !this.isMultiSelected() && this.getHoveredRotationGrabber() != null;
 				if (this.isHovered() || (this.isMultiSelected() && !this.editor.getHoveredElements().isEmpty()) || this.isGettingResized() || this.isGettingRotated()) {
 					this.leftMouseDown = true;
 					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
 					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
-					if (this.activeRotationGrabber != null) {
+					if (this.rotationGrabberActive) {
 						this.preRotationSnapshot = this.editor.history.createSnapshot();
 						this.rotationStartAngle = this.element.rotationDegrees;
 						// Calculate initial mouse angle relative to element center
@@ -1011,7 +1071,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				}
 			}
 			this.preRotationSnapshot = null;
-			this.activeRotationGrabber = null;
+			this.rotationGrabberActive = false;
 			this.element.updateAutoSizing(true);
 			this.recentlyMovedByDragging = false;
 			this.recentlyResized = false;
@@ -1334,7 +1394,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (!this.element.supportsRotation()) {
 			return false;
 		}
-		return this.activeRotationGrabber != null;
+		return this.rotationGrabberActive;
 	}
 
 	public boolean isDragged() {
@@ -1375,13 +1435,11 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (this.isMultiSelected()) {
 			return null;
 		}
-		if (this.activeRotationGrabber != null) {
-			return this.activeRotationGrabber;
+		if (this.rotationGrabberActive) {
+			return this.rotationGrabber;
 		}
-		for (RotationGrabber g : this.rotationGrabbers) {
-			if (g.hovered) {
-				return g;
-			}
+		if (this.rotationGrabber.hovered) {
+			return this.rotationGrabber;
 		}
 		return null;
 	}
@@ -1457,6 +1515,73 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		protected boolean isMouseOver(double mouseX, double mouseY) {
 			return (mouseX >= this.getX()) && (mouseX <= this.getX() + this.width) && (mouseY >= this.getY()) && mouseY <= this.getY() + this.height;
+		}
+
+	}
+
+	public class RotationGrabber implements Renderable {
+
+		protected int size = 8; // Size of the grabber
+		protected boolean hovered = false;
+
+		@Override
+		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
+			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
+				// Draw the grabber as a filled circle at the rotation position
+				int x = this.getX();
+				int y = this.getY();
+				int color = ROTATION_GRABBER_COLOR.get(AbstractEditorElement.this);
+
+				// Draw a small filled square (approximation of a circle for the grabber)
+				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, color);
+			}
+		}
+
+		protected int getX() {
+			float centerX = AbstractEditorElement.this.getX() + (AbstractEditorElement.this.getWidth() / 2.0F);
+			float halfWidth = AbstractEditorElement.this.getWidth() / 2.0F;
+			float halfHeight = AbstractEditorElement.this.getHeight() / 2.0F;
+			float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // Same padding as circle
+
+			// Position grabber at the current rotation angle
+			// Start at the top (90 degrees offset because 0 degrees is to the right in standard coordinates)
+			float angleRad = (float)Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
+			return (int)(centerX + radius * Math.cos(angleRad));
+		}
+
+		protected int getY() {
+			float centerY = AbstractEditorElement.this.getY() + (AbstractEditorElement.this.getHeight() / 2.0F);
+			float halfWidth = AbstractEditorElement.this.getWidth() / 2.0F;
+			float halfHeight = AbstractEditorElement.this.getHeight() / 2.0F;
+			float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // Same padding as circle
+
+			// Position grabber at the current rotation angle
+			// Start at the top (90 degrees offset because 0 degrees is to the right in standard coordinates)
+			float angleRad = (float)Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
+			return (int)(centerY + radius * Math.sin(angleRad));
+		}
+
+		protected boolean isGrabberEnabled() {
+			if (!FancyMenu.getOptions().enableRotationGrabbers.getValue()) {
+				return false;
+			}
+			if (!AbstractEditorElement.this.element.supportsRotation()) {
+				return false;
+			}
+			if (AbstractEditorElement.this.element.advancedRotationMode) {
+				return false;
+			}
+			if (AbstractEditorElement.this.isMultiSelected()) {
+				return false;
+			}
+			return true;
+		}
+
+		protected boolean isMouseOver(double mouseX, double mouseY) {
+			int x = this.getX();
+			int y = this.getY();
+			return (mouseX >= x - size/2) && (mouseX <= x + size/2) && (mouseY >= y - size/2) && (mouseY <= y + size/2);
 		}
 
 	}
@@ -1888,67 +2013,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		RIGHT,
 		BOTTOM,
 		LEFT
-	}
-
-	public class RotationGrabber implements Renderable {
-
-		protected int width = 6;
-		protected int height = 6;
-		protected final RotationGrabberPosition position;
-		protected boolean hovered = false;
-
-		protected RotationGrabber(RotationGrabberPosition position) {
-			this.position = position;
-		}
-
-		@Override
-		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
-			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
-				graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, ROTATION_GRABBER_COLOR.get(AbstractEditorElement.this));
-			}
-		}
-
-		protected int getX() {
-			int x = AbstractEditorElement.this.getX();
-			if ((this.position == RotationGrabberPosition.TOP_RIGHT) || (this.position == RotationGrabberPosition.BOTTOM_RIGHT)) {
-				x += AbstractEditorElement.this.getWidth() - this.width;
-			}
-			return x;
-		}
-
-		protected int getY() {
-			int y = AbstractEditorElement.this.getY();
-			if ((this.position == RotationGrabberPosition.BOTTOM_LEFT) || (this.position == RotationGrabberPosition.BOTTOM_RIGHT)) {
-				y += AbstractEditorElement.this.getHeight() - this.height;
-			}
-			return y;
-		}
-
-		protected boolean isGrabberEnabled() {
-			if (!FancyMenu.getOptions().enableRotationGrabbers.getValue()) {
-				return false;
-			}
-			if (AbstractEditorElement.this.isMultiSelected()) {
-				return false;
-			}
-			if (AbstractEditorElement.this.element.advancedRotationMode) {
-				return false;
-			}
-			return AbstractEditorElement.this.element.supportsRotation();
-		}
-
-		protected boolean isMouseOver(double mouseX, double mouseY) {
-			return (mouseX >= this.getX()) && (mouseX <= this.getX() + this.width) && (mouseY >= this.getY()) && mouseY <= this.getY() + this.height;
-		}
-
-	}
-
-	public enum RotationGrabberPosition {
-		TOP_LEFT,
-		TOP_RIGHT,
-		BOTTOM_LEFT,
-		BOTTOM_RIGHT
 	}
 
 }
