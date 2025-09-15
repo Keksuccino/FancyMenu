@@ -6,7 +6,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
   - In advanced mode, the rotation value supports placeholders, which gives you maximum control over the element's rotation, but in this mode the rotation grabber is disabled
   - It is possible to disable the visual rotation controls in the editor settings (menu bar -> Window -> Element Rotation Controls) to not see the grabber anymore
   - You can Shift-click the rotation grabber to make it snap to 45 degree steps
-- Added tilt support (horizontal and vertical) for many element types, which means you can now tilt them (#1258)
+- Added tilt support (horizontal and vertical) for many element types, which means you can now tilt them (#1259)
   - In basic mode you can use the tilt grabbers to easily tilt the element or you can set the tilt manually in the element's right-click menu
   - In advanced mode, the tilt values support placeholders, which gives you maximum control over the element's vertical/horizontal tilt, but in this mode the tilt grabbers are disabled
   - It is possible to disable the tilt visual tilt controls in the editor settings (menu bar -> Window -> Element Tilt Controls) to not see the grabbers anymore
