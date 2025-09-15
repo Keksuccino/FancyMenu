@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.mojang.math.Axis;
@@ -243,6 +244,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 */
 	public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+		RenderSystem.disableDepthTest();
+
 		this.cachedMouseX = mouseX;
 		this.cachedMouseY = mouseY;
 
@@ -317,6 +320,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.shouldRender() && transformationsApplied) {
 			graphics.pose().popPose();
 		}
+
+		RenderSystem.enableDepthTest();
 
 	}
 

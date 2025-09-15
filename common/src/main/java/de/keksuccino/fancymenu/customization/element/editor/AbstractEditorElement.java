@@ -53,7 +53,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
@@ -810,6 +809,19 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		} else if (!shouldShowRotation && this.topLeftDisplay.hasLine("rotation")) {
 			this.topLeftDisplay.removeLine("rotation");
 		}
+		// Handle tilt display
+		boolean shouldShowVerticalTilt = this.element.supportsTilting() && this.element.verticalTiltDegrees != 0.0F;
+		if (shouldShowVerticalTilt && !this.topLeftDisplay.hasLine("vertical_tilt")) {
+			this.topLeftDisplay.addLine("vertical_tilt", () -> Component.translatable("fancymenu.element.border_display.vertical_tilt", String.format("%.1f", this.element.verticalTiltDegrees)));
+		} else if (!shouldShowVerticalTilt && this.topLeftDisplay.hasLine("vertical_tilt")) {
+			this.topLeftDisplay.removeLine("vertical_tilt");
+		}
+		boolean shouldShowHorizontalTilt = this.element.supportsTilting() && this.element.horizontalTiltDegrees != 0.0F;
+		if (shouldShowHorizontalTilt && !this.topLeftDisplay.hasLine("horizontal_tilt")) {
+			this.topLeftDisplay.addLine("horizontal_tilt", () -> Component.translatable("fancymenu.element.border_display.horizontal_tilt", String.format("%.1f", this.element.horizontalTiltDegrees)));
+		} else if (!shouldShowHorizontalTilt && this.topLeftDisplay.hasLine("horizontal_tilt")) {
+			this.topLeftDisplay.removeLine("horizontal_tilt");
+		}
 	}
 
 	protected void renderDraggingNotAllowedOverlay(GuiGraphics graphics) {
@@ -962,7 +974,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (resetElementStates) {
 			this.resetElementStates();
 		}
-
 		if (newAnchor == null) {
 			newAnchor = ElementAnchorPoints.MID_CENTERED;
 		}
@@ -1073,7 +1084,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					this.leftMouseDown = true;
 					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
 					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
-
 					if (this.rotationGrabberActive) {
 						this.preRotationSnapshot = this.editor.history.createSnapshot();
 						this.rotationStartAngle = this.element.rotationDegrees;
@@ -2100,7 +2110,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				int color = UIBase.getUIColorTheme().layout_editor_element_border_rotation_controls_color.getColorInt();
 
 				// Draw a small filled square (approximation of a circle for the grabber)
-				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, color);
+				graphics.fill(x - size / 2, y - size / 2, x + size / 2, y + size / 2, color);
 			}
 		}
 
@@ -2108,24 +2118,24 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			float centerX = AbstractEditorElement.this.getX() + (AbstractEditorElement.this.getWidth() / 2.0F);
 			float halfWidth = AbstractEditorElement.this.getWidth() / 2.0F;
 			float halfHeight = AbstractEditorElement.this.getHeight() / 2.0F;
-			float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // Same padding as circle
+			float radius = (float) Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // Same padding as circle
 
 			// Position grabber at the current rotation angle
 			// Start at the top (90 degrees offset because 0 degrees is to the right in standard coordinates)
-			float angleRad = (float)Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
-			return (int)(centerX + radius * Math.cos(angleRad));
+			float angleRad = (float) Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
+			return (int) (centerX + radius * Math.cos(angleRad));
 		}
 
 		protected int getY() {
 			float centerY = AbstractEditorElement.this.getY() + (AbstractEditorElement.this.getHeight() / 2.0F);
 			float halfWidth = AbstractEditorElement.this.getWidth() / 2.0F;
 			float halfHeight = AbstractEditorElement.this.getHeight() / 2.0F;
-			float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // Same padding as circle
+			float radius = (float) Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // Same padding as circle
 
 			// Position grabber at the current rotation angle
 			// Start at the top (90 degrees offset because 0 degrees is to the right in standard coordinates)
-			float angleRad = (float)Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
-			return (int)(centerY + radius * Math.sin(angleRad));
+			float angleRad = (float) Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
+			return (int) (centerY + radius * Math.sin(angleRad));
 		}
 
 		protected boolean isGrabberEnabled() {
@@ -2147,7 +2157,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		protected boolean isMouseOver(double mouseX, double mouseY) {
 			int x = this.getX();
 			int y = this.getY();
-			return (mouseX >= x - size/2) && (mouseX <= x + size/2) && (mouseY >= y - size/2) && (mouseY <= y + size/2);
+			return (mouseX >= x - size / 2) && (mouseX <= x + size / 2) && (mouseY >= y - size / 2) && (mouseY <= y + size / 2);
 		}
 
 	}
@@ -2176,6 +2186,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		protected int getY() {
+			float centerY = AbstractEditorElement.this.getY() + (AbstractEditorElement.this.getHeight() / 2.0F);
 			float lineExtension = 20;
 			float lineLength = AbstractEditorElement.this.getHeight() + (lineExtension * 2);
 			float lineTop = AbstractEditorElement.this.getY() - lineExtension;
@@ -2223,6 +2234,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		protected int getX() {
+			float centerX = AbstractEditorElement.this.getX() + (AbstractEditorElement.this.getWidth() / 2.0F);
 			float lineExtension = 20;
 			float lineLength = AbstractEditorElement.this.getWidth() + (lineExtension * 2);
 			float lineLeft = AbstractEditorElement.this.getX() - lineExtension;
