@@ -702,13 +702,40 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 			this.rightClickMenu.addSeparatorEntry("separator_before_tilting").setStackable(true);
 
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "advanced_vertical_tilt_mode", AbstractEditorElement.class,
+							consumes -> consumes.element.advancedVerticalTiltMode,
+							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.advancedVerticalTiltMode = aBoolean,
+							"fancymenu.element.tilt.vertical.advanced_mode")
+					.setStackable(false)
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"))
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.advanced_mode.desc")));
+
 			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "vertical_tilt_degrees", AbstractEditorElement.class,
 							consumes -> consumes.element.verticalTiltDegrees,
 							(abstractEditorElement, aFloat) -> abstractEditorElement.element.verticalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, aFloat)),
 							Component.translatable("fancymenu.element.tilt.vertical.degrees"), true, 0, null, null)
 					.setStackable(false)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.degrees.desc")))
-					.setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"));
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"))
+					.addIsVisibleSupplier((menu, entry) -> !this.element.advancedVerticalTiltMode);
+
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "vertical_tilt_degrees_advanced", AbstractEditorElement.class,
+							consumes -> consumes.element.advancedVerticalTiltDegrees,
+							(abstractEditorElement, s) -> abstractEditorElement.element.advancedVerticalTiltDegrees = s,
+							null, false, true, Component.translatable("fancymenu.element.tilt.vertical.degrees"),
+							true, null, null, null)
+					.setStackable(false)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.degrees.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"))
+					.addIsVisibleSupplier((menu, entry) -> this.element.advancedVerticalTiltMode);
+
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "advanced_horizontal_tilt_mode", AbstractEditorElement.class,
+							consumes -> consumes.element.advancedHorizontalTiltMode,
+							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.advancedHorizontalTiltMode = aBoolean,
+							"fancymenu.element.tilt.horizontal.advanced_mode")
+					.setStackable(false)
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"))
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.advanced_mode.desc")));
 
 			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "horizontal_tilt_degrees", AbstractEditorElement.class,
 							consumes -> consumes.element.horizontalTiltDegrees,
@@ -716,7 +743,18 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 							Component.translatable("fancymenu.element.tilt.horizontal.degrees"), true, 0, null, null)
 					.setStackable(false)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.degrees.desc")))
-					.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"));
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"))
+					.addIsVisibleSupplier((menu, entry) -> !this.element.advancedHorizontalTiltMode);
+
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "horizontal_tilt_degrees_advanced", AbstractEditorElement.class,
+							consumes -> consumes.element.advancedHorizontalTiltDegrees,
+							(abstractEditorElement, s) -> abstractEditorElement.element.advancedHorizontalTiltDegrees = s,
+							null, false, true, Component.translatable("fancymenu.element.tilt.horizontal.degrees"),
+							true, null, null, null)
+					.setStackable(false)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.degrees.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"))
+					.addIsVisibleSupplier((menu, entry) -> this.element.advancedHorizontalTiltMode);
 
 		}
 
@@ -800,23 +838,23 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			this.topLeftDisplay.removeLine("advanced_positioning_enabled");
 		}
 		// Handle rotation display
-		boolean shouldShowRotation = this.element.supportsRotation() && this.element.rotationDegrees != 0.0F;
+		boolean shouldShowRotation = this.element.supportsRotation() && this.element.getRotationDegrees() != 0.0F;
 		if (shouldShowRotation && !this.topLeftDisplay.hasLine("rotation")) {
 			// Insert rotation line after width line
-			this.topLeftDisplay.addLine("rotation", () -> Component.translatable("fancymenu.element.border_display.rotation", String.format("%.1f", this.element.rotationDegrees)));
+			this.topLeftDisplay.addLine("rotation", () -> Component.translatable("fancymenu.element.border_display.rotation", String.format("%.1f", this.element.getRotationDegrees())));
 		} else if (!shouldShowRotation && this.topLeftDisplay.hasLine("rotation")) {
 			this.topLeftDisplay.removeLine("rotation");
 		}
 		// Handle tilt display
-		boolean shouldShowVerticalTilt = this.element.supportsTilting() && this.element.verticalTiltDegrees != 0.0F;
+		boolean shouldShowVerticalTilt = this.element.supportsTilting() && this.element.getVerticalTiltDegrees() != 0.0F;
 		if (shouldShowVerticalTilt && !this.topLeftDisplay.hasLine("vertical_tilt")) {
-			this.topLeftDisplay.addLine("vertical_tilt", () -> Component.translatable("fancymenu.element.border_display.vertical_tilt", String.format("%.1f", this.element.verticalTiltDegrees)));
+			this.topLeftDisplay.addLine("vertical_tilt", () -> Component.translatable("fancymenu.element.border_display.vertical_tilt", String.format("%.1f", this.element.getVerticalTiltDegrees())));
 		} else if (!shouldShowVerticalTilt && this.topLeftDisplay.hasLine("vertical_tilt")) {
 			this.topLeftDisplay.removeLine("vertical_tilt");
 		}
-		boolean shouldShowHorizontalTilt = this.element.supportsTilting() && this.element.horizontalTiltDegrees != 0.0F;
+		boolean shouldShowHorizontalTilt = this.element.supportsTilting() && this.element.getHorizontalTiltDegrees() != 0.0F;
 		if (shouldShowHorizontalTilt && !this.topLeftDisplay.hasLine("horizontal_tilt")) {
-			this.topLeftDisplay.addLine("horizontal_tilt", () -> Component.translatable("fancymenu.element.border_display.horizontal_tilt", String.format("%.1f", this.element.horizontalTiltDegrees)));
+			this.topLeftDisplay.addLine("horizontal_tilt", () -> Component.translatable("fancymenu.element.border_display.horizontal_tilt", String.format("%.1f", this.element.getHorizontalTiltDegrees())));
 		} else if (!shouldShowHorizontalTilt && this.topLeftDisplay.hasLine("horizontal_tilt")) {
 			this.topLeftDisplay.removeLine("horizontal_tilt");
 		}
@@ -933,22 +971,32 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		float centerX = this.getX() + (this.getWidth() / 2.0F);
 		float centerY = this.getY() + (this.getHeight() / 2.0F);
 
-		// Vertical line (for vertical tilt) - offset 8 pixels to the right
-		int lineExtension = 20; // Extra pixels beyond element bounds
-		int verticalLineX = (int)centerX + 8;
-		int verticalLineTop = this.getY() - lineExtension;
-		int verticalLineBottom = this.getY() + this.getHeight() + lineExtension;
-		graphics.fill(verticalLineX, verticalLineTop, verticalLineX + 1, verticalLineBottom, UIBase.getUIColorTheme().layout_editor_element_border_vertical_tilting_controls_color.getColorInt());
+		final int lineExtension = 20; // Extra pixels beyond element bounds
 
-		// Horizontal line (for horizontal tilt) - offset 8 pixels down
-		int horizontalLineY = (int)centerY + 8;
-		int horizontalLineLeft = this.getX() - lineExtension;
-		int horizontalLineRight = this.getX() + this.getWidth() + lineExtension;
-		graphics.fill(horizontalLineLeft, horizontalLineY, horizontalLineRight, horizontalLineY + 1, UIBase.getUIColorTheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorInt());
+		if (!this.element.advancedVerticalTiltMode) {
+			// Vertical line (for vertical tilt) - offset 8 pixels to the right
+			int verticalLineX = (int)centerX + 8;
+			int verticalLineTop = this.getY() - lineExtension;
+			int verticalLineBottom = this.getY() + this.getHeight() + lineExtension;
+			graphics.fill(verticalLineX, verticalLineTop, verticalLineX + 1, verticalLineBottom, UIBase.getUIColorTheme().layout_editor_element_border_vertical_tilting_controls_color.getColorInt());
+		}
+
+		if (!this.element.advancedHorizontalTiltMode) {
+			// Horizontal line (for horizontal tilt) - offset 8 pixels down
+			int horizontalLineY = (int)centerY + 8;
+			int horizontalLineLeft = this.getX() - lineExtension;
+			int horizontalLineRight = this.getX() + this.getWidth() + lineExtension;
+			graphics.fill(horizontalLineLeft, horizontalLineY, horizontalLineRight, horizontalLineY + 1, UIBase.getUIColorTheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorInt());
+		}
 
 		// Render tilt grabbers
-		this.verticalTiltGrabber.render(graphics, mouseX, mouseY, partial);
-		this.horizontalTiltGrabber.render(graphics, mouseX, mouseY, partial);
+		if (!this.element.advancedVerticalTiltMode) {
+			this.verticalTiltGrabber.render(graphics, mouseX, mouseY, partial);
+		}
+		if (!this.element.advancedVerticalTiltMode) {
+			this.horizontalTiltGrabber.render(graphics, mouseX, mouseY, partial);
+		}
+
 	}
 
 	/**
@@ -1577,6 +1625,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (!this.element.supportsTilting()) {
 			return null;
 		}
+		if (this.element.advancedVerticalTiltMode) {
+			return null;
+		}
 		if (this.isMultiSelected()) {
 			return null;
 		}
@@ -1595,6 +1646,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			return null;
 		}
 		if (!this.element.supportsTilting()) {
+			return null;
+		}
+		if (this.element.advancedHorizontalTiltMode) {
 			return null;
 		}
 		if (this.isMultiSelected()) {
@@ -2216,7 +2270,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		protected boolean isGrabberEnabled() {
+			if (!FancyMenu.getOptions().enableElementTiltingControls.getValue()) {
+				return false;
+			}
 			if (!AbstractEditorElement.this.element.supportsTilting()) {
+				return false;
+			}
+			if (AbstractEditorElement.this.element.advancedVerticalTiltMode) {
 				return false;
 			}
 			if (AbstractEditorElement.this.isMultiSelected()) {
@@ -2269,7 +2329,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		protected boolean isGrabberEnabled() {
+			if (!FancyMenu.getOptions().enableElementTiltingControls.getValue()) {
+				return false;
+			}
 			if (!AbstractEditorElement.this.element.supportsTilting()) {
+				return false;
+			}
+			if (AbstractEditorElement.this.element.advancedHorizontalTiltMode) {
 				return false;
 			}
 			if (AbstractEditorElement.this.isMultiSelected()) {

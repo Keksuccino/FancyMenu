@@ -176,6 +176,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public float horizontalTiltDegrees = 0.0F;
 	/** Whether this element type supports tilting. Can be overridden in subclasses. */
 	protected boolean supportsTilting = true;
+	public boolean advancedVerticalTiltMode = false;
+	@Nullable
+	public String advancedVerticalTiltDegrees;
+	protected String lastAdvancedVerticalTiltDegrees;
+	public boolean advancedHorizontalTiltMode = false;
+	@Nullable
+	public String advancedHorizontalTiltDegrees;
+	protected String lastAdvancedHorizontalTiltDegrees;
 	protected boolean allowDepthTestManipulation = false;
 
 	@SuppressWarnings("all")
@@ -258,8 +266,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		// Apply transformations if needed
 		boolean transformationsApplied = false;
 		float rotDegrees = this.getRotationDegrees();
+		float verticalTilt = this.getVerticalTiltDegrees();
+		float horizontalTilt = this.getHorizontalTiltDegrees();
 		boolean hasRotation = this.supportsRotation && (rotDegrees != 0.0F);
-		boolean hasTilt = this.supportsTilting && (this.verticalTiltDegrees != 0.0F || this.horizontalTiltDegrees != 0.0F);
+		boolean hasTilt = this.supportsTilting && (verticalTilt != 0.0F || horizontalTilt != 0.0F);
 
 		if (this.shouldRender() && (hasRotation || hasTilt)) {
 
@@ -276,12 +286,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			// Apply tilting first (before rotation)
 			if (hasTilt) {
 				// Apply vertical tilt (rotation around X axis)
-				if (this.verticalTiltDegrees != 0.0F) {
-					graphics.pose().mulPose(Axis.XP.rotationDegrees(this.verticalTiltDegrees));
+				if (verticalTilt != 0.0F) {
+					graphics.pose().mulPose(Axis.XP.rotationDegrees(verticalTilt));
 				}
 				// Apply horizontal tilt (rotation around Y axis)
-				if (this.horizontalTiltDegrees != 0.0F) {
-					graphics.pose().mulPose(Axis.YP.rotationDegrees(this.horizontalTiltDegrees));
+				if (horizontalTilt != 0.0F) {
+					graphics.pose().mulPose(Axis.YP.rotationDegrees(horizontalTilt));
 				}
 			}
 
@@ -632,6 +642,46 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			}
 		}
 		return this.rotationDegrees;
+	}
+
+	public float getVerticalTiltDegrees() {
+		if (!this.supportsTilting()) return 0;
+		if (this.advancedVerticalTiltMode) {
+			if (this.advancedVerticalTiltDegrees == null) return 0;
+			String degrees = PlaceholderParser.replacePlaceholders(this.advancedVerticalTiltDegrees);
+			if (!degrees.equals(this.lastAdvancedVerticalTiltDegrees)) {
+				this.lastAdvancedVerticalTiltDegrees = degrees;
+				if (MathUtils.isFloat(degrees)) {
+					float value = Float.parseFloat(degrees);
+					// Clamp to -60 to 60 range
+					this.verticalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, value));
+				} else {
+					this.verticalTiltDegrees = 0;
+					LOGGER.error("[FANCYMENU] Failed to parse advanced vertical tilt degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
+				}
+			}
+		}
+		return this.verticalTiltDegrees;
+	}
+
+	public float getHorizontalTiltDegrees() {
+		if (!this.supportsTilting()) return 0;
+		if (this.advancedHorizontalTiltMode) {
+			if (this.advancedHorizontalTiltDegrees == null) return 0;
+			String degrees = PlaceholderParser.replacePlaceholders(this.advancedHorizontalTiltDegrees);
+			if (!degrees.equals(this.lastAdvancedHorizontalTiltDegrees)) {
+				this.lastAdvancedHorizontalTiltDegrees = degrees;
+				if (MathUtils.isFloat(degrees)) {
+					float value = Float.parseFloat(degrees);
+					// Clamp to -60 to 60 range
+					this.horizontalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, value));
+				} else {
+					this.horizontalTiltDegrees = 0;
+					LOGGER.error("[FANCYMENU] Failed to parse advanced horizontal tilt degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
+				}
+			}
+		}
+		return this.horizontalTiltDegrees;
 	}
 
 	/**
