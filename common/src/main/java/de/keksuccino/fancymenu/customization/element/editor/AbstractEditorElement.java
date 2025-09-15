@@ -923,16 +923,18 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		float centerX = this.getX() + (this.getWidth() / 2.0F);
 		float centerY = this.getY() + (this.getHeight() / 2.0F);
 
-		// Vertical line (for vertical tilt)
+		// Vertical line (for vertical tilt) - offset 8 pixels to the right
 		int lineExtension = 20; // Extra pixels beyond element bounds
+		int verticalLineX = (int)centerX + 8;
 		int verticalLineTop = this.getY() - lineExtension;
 		int verticalLineBottom = this.getY() + this.getHeight() + lineExtension;
-		graphics.fill((int)centerX - 1, verticalLineTop, (int)centerX + 1, verticalLineBottom, VERTICAL_TILT_COLOR);
+		graphics.fill(verticalLineX, verticalLineTop, verticalLineX + 1, verticalLineBottom, VERTICAL_TILT_COLOR);
 
-		// Horizontal line (for horizontal tilt)
+		// Horizontal line (for horizontal tilt) - offset 8 pixels down
+		int horizontalLineY = (int)centerY + 8;
 		int horizontalLineLeft = this.getX() - lineExtension;
 		int horizontalLineRight = this.getX() + this.getWidth() + lineExtension;
-		graphics.fill(horizontalLineLeft, (int)centerY - 1, horizontalLineRight, (int)centerY + 1, HORIZONTAL_TILT_COLOR);
+		graphics.fill(horizontalLineLeft, horizontalLineY, horizontalLineRight, horizontalLineY + 1, HORIZONTAL_TILT_COLOR);
 
 		// Render tilt grabbers
 		this.verticalTiltGrabber.render(graphics, mouseX, mouseY, partial);
@@ -2182,7 +2184,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		protected int getX() {
 			float centerX = AbstractEditorElement.this.getX() + (AbstractEditorElement.this.getWidth() / 2.0F);
-			return (int)centerX;
+			return (int)centerX + 8; // Offset 8 pixels to the right to avoid overlap
 		}
 
 		protected int getY() {
@@ -2247,7 +2249,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		protected int getY() {
 			float centerY = AbstractEditorElement.this.getY() + (AbstractEditorElement.this.getHeight() / 2.0F);
-			return (int)centerY;
+			return (int)centerY + 8; // Offset 8 pixels down to avoid overlap
 		}
 
 		protected boolean isGrabberEnabled() {
