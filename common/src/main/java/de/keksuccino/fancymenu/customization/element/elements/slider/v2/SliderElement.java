@@ -71,6 +71,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         super(builder);
         this.buildSlider();
         this.prepareExecutableBlock();
+        this.allowDepthTestManipulation = true;
     }
 
     /**

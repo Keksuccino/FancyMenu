@@ -73,8 +73,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 		return UIBase.getUIColorTheme().layout_editor_element_border_color_normal.getColorInt();
 	};
-	protected static final int VERTICAL_TILT_COLOR = 0xFF00FFFF; // Cyan for vertical tilt
-	protected static final int HORIZONTAL_TILT_COLOR = 0xFFFF00FF; // Magenta for horizontal tilt
 
 	public AbstractElement element;
 	public final EditorElementSettings settings;
@@ -855,18 +853,10 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	protected void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+		RenderSystem.disableDepthTest();
+		RenderingUtils.setDepthTestLocked(true);
+
 		if (((this.editor.getTopHoveredElement() == this) && !this.editor.isUserNavigatingInRightClickMenu() && !this.editor.isUserNavigatingInElementMenu()) || this.isSelected() || this.isMultiSelected()) {
-
-			// Render rotation circle and grabber
-			if (this.isSelected() && this.element.supportsRotation() && !this.element.advancedRotationMode && !this.isMultiSelected()) {
-				this.renderRotationCircle(graphics);
-				this.rotationGrabber.render(graphics, mouseX, mouseY, partial);
-			}
-
-			// Render tilt lines and grabbers
-			if (this.isSelected() && this.element.supportsTilting() && !this.isMultiSelected()) {
-				this.renderTiltControls(graphics, mouseX, mouseY, partial);
-			}
 
 			//TOP
 			graphics.fill(this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 1, this.getY() + 1, BORDER_COLOR.get(this));
@@ -881,6 +871,16 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				g.render(graphics, mouseX, mouseY, partial);
 			}
 
+			// Render rotation circle and grabber
+			if (this.isSelected() && this.element.supportsRotation() && !this.element.advancedRotationMode && !this.isMultiSelected()) {
+				this.renderRotationControls(graphics, mouseX, mouseY, partial);
+			}
+
+			// Render tilt lines and grabbers
+			if (this.isSelected() && this.element.supportsTilting() && !this.isMultiSelected()) {
+				this.renderTiltControls(graphics, mouseX, mouseY, partial);
+			}
+
 		}
 
 		if (this.isSelected()) {
@@ -888,9 +888,14 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			this.bottomRightDisplay.render(graphics, mouseX, mouseY, partial);
 		}
 
+		RenderingUtils.setDepthTestLocked(false);
+		RenderSystem.enableDepthTest();
+
 	}
 
-	protected void renderRotationCircle(GuiGraphics graphics) {
+	protected void renderRotationControls(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+		if (!FancyMenu.getOptions().enableElementRotationControls.getValue()) return;
 
 		float centerX = this.getX() + (this.getWidth() / 2.0F);
 		float centerY = this.getY() + (this.getHeight() / 2.0F);
@@ -916,9 +921,14 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			graphics.fill(x, y, x + 1, y + 1, circleColor);
 		}
 
+		this.rotationGrabber.render(graphics, mouseX, mouseY, partial);
+
 	}
 
 	protected void renderTiltControls(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+		if (!FancyMenu.getOptions().enableElementTiltingControls.getValue()) return;
+
 		// Render vertical tilt line
 		float centerX = this.getX() + (this.getWidth() / 2.0F);
 		float centerY = this.getY() + (this.getHeight() / 2.0F);
@@ -928,13 +938,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		int verticalLineX = (int)centerX + 8;
 		int verticalLineTop = this.getY() - lineExtension;
 		int verticalLineBottom = this.getY() + this.getHeight() + lineExtension;
-		graphics.fill(verticalLineX, verticalLineTop, verticalLineX + 1, verticalLineBottom, VERTICAL_TILT_COLOR);
+		graphics.fill(verticalLineX, verticalLineTop, verticalLineX + 1, verticalLineBottom, UIBase.getUIColorTheme().layout_editor_element_border_vertical_tilting_controls_color.getColorInt());
 
 		// Horizontal line (for horizontal tilt) - offset 8 pixels down
 		int horizontalLineY = (int)centerY + 8;
 		int horizontalLineLeft = this.getX() - lineExtension;
 		int horizontalLineRight = this.getX() + this.getWidth() + lineExtension;
-		graphics.fill(horizontalLineLeft, horizontalLineY, horizontalLineRight, horizontalLineY + 1, HORIZONTAL_TILT_COLOR);
+		graphics.fill(horizontalLineLeft, horizontalLineY, horizontalLineRight, horizontalLineY + 1, UIBase.getUIColorTheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorInt());
 
 		// Render tilt grabbers
 		this.verticalTiltGrabber.render(graphics, mouseX, mouseY, partial);
@@ -1538,7 +1548,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	@Nullable
 	public RotationGrabber getHoveredRotationGrabber() {
-		if (!FancyMenu.getOptions().enableRotationGrabbers.getValue()) {
+		if (!FancyMenu.getOptions().enableElementRotationControls.getValue()) {
 			return null;
 		}
 		if (!this.element.supportsRotation()) {
@@ -1561,6 +1571,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	@Nullable
 	public VerticalTiltGrabber getHoveredVerticalTiltGrabber() {
+		if (!FancyMenu.getOptions().enableElementTiltingControls.getValue()) {
+			return null;
+		}
 		if (!this.element.supportsTilting()) {
 			return null;
 		}
@@ -1578,6 +1591,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	@Nullable
 	public HorizontalTiltGrabber getHoveredHorizontalTiltGrabber() {
+		if (!FancyMenu.getOptions().enableElementTiltingControls.getValue()) {
+			return null;
+		}
 		if (!this.element.supportsTilting()) {
 			return null;
 		}
@@ -2099,7 +2115,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	public class RotationGrabber implements Renderable {
 
-		protected int size = 8; // Size of the grabber
+		protected int size = 6; // Size of the grabber
 		protected boolean hovered = false;
 
 		@Override
@@ -2141,7 +2157,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		protected boolean isGrabberEnabled() {
-			if (!FancyMenu.getOptions().enableRotationGrabbers.getValue()) {
+			if (!FancyMenu.getOptions().enableElementRotationControls.getValue()) {
 				return false;
 			}
 			if (!AbstractEditorElement.this.element.supportsRotation()) {
@@ -2166,7 +2182,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	public class VerticalTiltGrabber implements Renderable {
 
-		protected int size = 8; // Size of the grabber
+		protected int size = 6; // Size of the grabber
 		protected boolean hovered = false;
 
 		@Override
@@ -2178,7 +2194,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				int y = this.getY();
 
 				// Draw a small filled square (the grabber)
-				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, VERTICAL_TILT_COLOR);
+				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUIColorTheme().layout_editor_element_border_vertical_tilting_controls_color.getColorInt());
 			}
 		}
 
@@ -2219,7 +2235,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	public class HorizontalTiltGrabber implements Renderable {
 
-		protected int size = 8; // Size of the grabber
+		protected int size = 6; // Size of the grabber
 		protected boolean hovered = false;
 
 		@Override
@@ -2231,7 +2247,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				int y = this.getY();
 
 				// Draw a small filled square (the grabber)
-				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, HORIZONTAL_TILT_COLOR);
+				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUIColorTheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorInt());
 			}
 		}
 

@@ -28,6 +28,7 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     public VanillaWidgetElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
         this.supportsRotation = false;
+        this.supportsTilting = false;
     }
 
     @Override

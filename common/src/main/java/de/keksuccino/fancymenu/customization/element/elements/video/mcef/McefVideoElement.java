@@ -77,6 +77,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     public MCEFVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         if (MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized) this.videoManager = MCEFVideoManager.getInstance();
+        this.allowDepthTestManipulation = true;
     }
 
     @Override

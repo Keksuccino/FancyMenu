@@ -84,6 +84,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     public ButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override

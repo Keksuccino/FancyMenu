@@ -37,6 +37,7 @@ public class ImageElement extends AbstractElement {
 
     public ImageElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override

@@ -1895,10 +1895,14 @@
   "fancymenu.actions.async.cant_run_async": "§l§xFailed to execute FancyMenu action!§r\n\nYou tried to asynchronously execute an action that only works on the game thread.\nThe action is probably part of a Ticker element that runs in Async mode.\n\n§lAction Name: §x%s",
   "fancymenu.requirements.async.cant_run_async": "§l§xFailed to check FancyMenu requirement!§r\n\nYou tried to asynchronously use an requirement that only works on the game thread.\nThe requirement is probably part of a Ticker element that runs in Async mode.\n\n§lRequirement Name: §x%s",
   "fancymenu.placeholders.async.cant_run_async": "§l§xFailed to parse FancyMenu placeholder!§r\n\nYou tried to asynchronously parse a placeholder that only works on the game thread.\nThe placeholder is probably part of a Ticker element that runs in Async mode.\n\n§lPlaceholder Name: §x%s",
-  "fancymenu.editor.settings.enable_rotation_grabbers": "Element Rotation Grabber: %s",
+  "fancymenu.editor.settings.enable_rotation_grabbers": "Element Rotation Controls: %s",
   "fancymenu.editor.settings.enable_rotation_grabbers.desc": "If elements should show controls for rotating them.\nYou can also set their rotation in their right-click menu.",
   "fancymenu.element.tilt.vertical.degrees": "Vertical Tilting",
   "fancymenu.element.tilt.vertical.degrees.desc": "Apply vertical tilting to the element in degrees.",
   "fancymenu.element.tilt.horizontal.degrees": "Horizontal Tilting",
-  "fancymenu.element.tilt.horizontal.degrees.desc": "Apply horizontal tilting to the element in degrees."
+  "fancymenu.element.tilt.horizontal.degrees.desc": "Apply horizontal tilting to the element in degrees.",
+  "fancymenu.editor.settings.enable_element_tilting_controls": "Element Tilting Controls: %s",
+  "fancymenu.editor.settings.enable_element_tilting_controls.desc": "If elements should show controls for tilting them.\nYou can also set their vertical/horizontal tilt in their right-click menu.",
+  "fancymenu.element.border_display.vertical_tilt": "Vertical Tilt: %s degrees",
+  "fancymenu.element.border_display.horizontal_tilt": "Horizontal Tilt: %s degrees"
 }

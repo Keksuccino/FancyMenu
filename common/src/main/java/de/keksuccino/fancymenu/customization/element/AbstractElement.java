@@ -6,7 +6,6 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import com.mojang.math.Axis;
 import com.mojang.serialization.JsonOps;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -18,10 +17,10 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -39,7 +38,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.*;
 import java.util.List;
 import java.util.HashSet;
@@ -178,6 +176,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public float horizontalTiltDegrees = 0.0F;
 	/** Whether this element type supports tilting. Can be overridden in subclasses. */
 	protected boolean supportsTilting = true;
+	protected boolean allowDepthTestManipulation = false;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -244,7 +243,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 */
 	public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		RenderSystem.disableDepthTest();
+		if (this.allowDepthTestManipulation) {
+			RenderSystem.disableDepthTest();
+			RenderingUtils.setDepthTestLocked(true);
+		}
 
 		this.cachedMouseX = mouseX;
 		this.cachedMouseY = mouseY;
@@ -321,7 +323,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			graphics.pose().popPose();
 		}
 
-		RenderSystem.enableDepthTest();
+		if (this.allowDepthTestManipulation) {
+			RenderingUtils.setDepthTestLocked(false);
+			RenderSystem.enableDepthTest();
+		}
 
 	}
 

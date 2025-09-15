@@ -57,6 +57,7 @@ public class ItemElement extends AbstractElement {
 
     public ItemElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.supportsTilting = false;
     }
 
     protected void updateCachedItem() {

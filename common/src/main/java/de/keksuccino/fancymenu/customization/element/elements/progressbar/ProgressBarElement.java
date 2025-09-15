@@ -50,6 +50,7 @@ public class ProgressBarElement extends AbstractElement {
 
     public ProgressBarElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     /**

@@ -56,6 +56,8 @@ public class TextElement extends AbstractElement {
 
         super(builder);
 
+        this.allowDepthTestManipulation = true;
+
         this.scrollArea = new ScrollArea(0, 0, this.getAbsoluteWidth(), this.getAbsoluteHeight()) {
             @Override
             public void updateScrollArea() {

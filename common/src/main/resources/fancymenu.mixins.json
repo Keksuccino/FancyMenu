@@ -55,6 +55,7 @@
     "client.MixinProgressScreen",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
+    "client.MixinRenderSystem",
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
     "client.MixinSoundEngine",

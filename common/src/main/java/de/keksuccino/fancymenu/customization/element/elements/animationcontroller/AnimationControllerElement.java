@@ -25,6 +25,7 @@ public class AnimationControllerElement extends AbstractElement {
 
     public AnimationControllerElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override

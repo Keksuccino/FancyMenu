@@ -53,6 +53,9 @@ public class TooltipElement extends AbstractElement {
 
     public TooltipElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+
+        this.allowDepthTestManipulation = true;
+        this.supportsTilting = false;
         
         // Configure markdown renderer for tooltip style
         this.markdownRenderer.setAutoLineBreakingEnabled(true);

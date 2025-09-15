@@ -48,6 +48,7 @@ public class AudioElement extends AbstractElement {
 
     public AudioElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     /**

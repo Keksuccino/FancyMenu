@@ -44,6 +44,7 @@ public class BrowserElement extends AbstractElement {
 
     public BrowserElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override
