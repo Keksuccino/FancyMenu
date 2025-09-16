@@ -1908,5 +1908,7 @@
   "fancymenu.element.tilt.horizontal.degrees": "Horizontal Tilt",
   "fancymenu.element.tilt.horizontal.degrees.desc": "Set the horizontal tilt angle in degrees for this element.\nPositive values tilt the right side away from the viewer.\nRange: -60 to 60 degrees.\n\nThis is the same as using the grabbers,\nbut more precise for full control.",
   "fancymenu.element.tilt.horizontal.advanced_mode": "Advanced Horizontal Tilt Mode: %s",
-  "fancymenu.element.tilt.horizontal.advanced_mode.desc": "Enabling this allows you to use placeholders in the element's\nhorizontal tilt degrees value, but it will also disable tilt grabbers."
+  "fancymenu.element.tilt.horizontal.advanced_mode.desc": "Enabling this allows you to use placeholders in the element's\nhorizontal tilt degrees value, but it will also disable tilt grabbers.",
+  "fancymenu.listeners.on_looking_at_block": "On Looking At Block",
+  "fancymenu.listeners.on_looking_at_block.desc": "This listener triggers once when the crosshair starts pointing at a block in the world.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$block_key §r= The resource location of the targeted block\n- §z$$distance §r= The distance from the player's eyes to the block hit position"
 }
