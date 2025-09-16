@@ -3,13 +3,6 @@
 ## Project Structure & Module Organization
 FancyMenu is a Minecraft 1.21.1 mod that uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric`, `forge`, and `neoforge`. Place shared Java sources in `common/src/main/java` and assets such as menu JSON, translations, or textures in `common/src/main/resources` so they ship with every loader build. Loader-only hooks belong inside each module's `src/main/java` tree; keep local run directories like `run_client` and `run_server` for iterative testing but never depend on them for assets.
 
-## Build, Test, and Development Commands
-- `./gradlew clean build` - compiles, remaps, and packages all modules for every loader.
-- `./gradlew :fabric:runClient` - launches the Fabric dev client using the shared sources.
-- `./gradlew :forge:runClient` - starts the Forge sandbox; swap the project name for NeoForge or dedicated servers.
-- `./gradlew publishAllPublicationsToMavenLocal` - publishes artifacts to the path provided via `%local_maven%`.
-- `./gradlew :common:jar` - produces a standalone jar of the shared module for quick inspection.
-
 ## Coding Style & Naming Conventions
 Target Java 21 with 4-space indentation and UTF-8 encoding, matching the Gradle toolchain configuration. Follow existing packages under `de.keksuccino.fancymenu`, mirroring existing sub-packages like `customization`, `events`, and `platform` to keep cross-loader boundaries clear. Name resources with the `fancymenu` prefix (e.g., `fancymenu.mixins.json`, `fancymenu.accesswidener`) so Gradle and the loaders resolve them consistently. Prefer explicit nullability annotations from `jsr305`, keep Mixin classes lightweight, and document multi-step flows with concise comments.
 
