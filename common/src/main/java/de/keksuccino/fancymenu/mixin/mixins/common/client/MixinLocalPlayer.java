@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import de.keksuccino.fancymenu.customization.listener.listeners.helpers.FluidContactInfo;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.listener.listeners.helpers.FluidContactInfo;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import java.util.Objects;
 
 @Mixin(LocalPlayer.class)
@@ -82,8 +83,10 @@ public class MixinLocalPlayer {
 
         if (!this.touchingStateInitialized_FancyMenu) {
             this.touchingStateInitialized_FancyMenu = true;
-            this.lastTouchingFluidState_FancyMenu = isTouchingFluid;
             this.lastTouchingFluidKey_FancyMenu = isTouchingFluid ? currentFluidKey : null;
+            if (isTouchingFluid) {
+                Listeners.ON_START_TOUCHING_FLUID.onStartTouchingFluid(currentFluidKey);
+            }
         } else {
             if (!this.lastTouchingFluidState_FancyMenu && isTouchingFluid) {
                 this.lastTouchingFluidKey_FancyMenu = currentFluidKey;
@@ -93,28 +96,33 @@ public class MixinLocalPlayer {
                 this.lastTouchingFluidKey_FancyMenu = null;
             } else if (isTouchingFluid) {
                 this.lastTouchingFluidKey_FancyMenu = currentFluidKey;
+            } else {
+                this.lastTouchingFluidKey_FancyMenu = null;
             }
-            this.lastTouchingFluidState_FancyMenu = isTouchingFluid;
         }
+        this.lastTouchingFluidState_FancyMenu = isTouchingFluid;
 
         boolean isSwimming = self.isSwimming();
         String swimmingFluidKey = isSwimming ? currentFluidKey : null;
 
         if (!this.swimmingStateInitialized_FancyMenu) {
             this.swimmingStateInitialized_FancyMenu = true;
-            this.lastSwimmingState_FancyMenu = isSwimming;
-            this.lastSwimmingFluidKey_FancyMenu = isSwimming ? swimmingFluidKey : null;
-            return;
-        }
-
-        if (!this.lastSwimmingState_FancyMenu && isSwimming) {
             this.lastSwimmingFluidKey_FancyMenu = swimmingFluidKey;
-            Listeners.ON_START_SWIMMING.onStartSwimming(swimmingFluidKey);
-        } else if (this.lastSwimmingState_FancyMenu && !isSwimming) {
-            Listeners.ON_STOP_SWIMMING.onStopSwimming(this.lastSwimmingFluidKey_FancyMenu);
-            this.lastSwimmingFluidKey_FancyMenu = null;
-        } else if (isSwimming) {
-            this.lastSwimmingFluidKey_FancyMenu = swimmingFluidKey;
+            if (isSwimming) {
+                Listeners.ON_START_SWIMMING.onStartSwimming(swimmingFluidKey);
+            }
+        } else {
+            if (!this.lastSwimmingState_FancyMenu && isSwimming) {
+                this.lastSwimmingFluidKey_FancyMenu = swimmingFluidKey;
+                Listeners.ON_START_SWIMMING.onStartSwimming(swimmingFluidKey);
+            } else if (this.lastSwimmingState_FancyMenu && !isSwimming) {
+                Listeners.ON_STOP_SWIMMING.onStopSwimming(this.lastSwimmingFluidKey_FancyMenu);
+                this.lastSwimmingFluidKey_FancyMenu = null;
+            } else if (isSwimming) {
+                this.lastSwimmingFluidKey_FancyMenu = swimmingFluidKey;
+            } else {
+                this.lastSwimmingFluidKey_FancyMenu = null;
+            }
         }
 
         this.lastSwimmingState_FancyMenu = isSwimming;
