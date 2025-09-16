@@ -1910,5 +1910,7 @@
   "fancymenu.element.tilt.horizontal.advanced_mode": "Advanced Horizontal Tilt Mode: %s",
   "fancymenu.element.tilt.horizontal.advanced_mode.desc": "Enabling this allows you to use placeholders in the element's\nhorizontal tilt degrees value, but it will also disable tilt grabbers.",
   "fancymenu.listeners.on_looking_at_block": "On Looking At Block",
-  "fancymenu.listeners.on_looking_at_block.desc": "This listener triggers once when the crosshair starts pointing at a block in the world.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$block_key §r= The resource location of the targeted block\n- §z$$distance §r= The distance from the player's eyes to the block hit position"
+  "fancymenu.listeners.on_looking_at_block.desc": "This listener triggers once when the crosshair starts pointing at a block in the world.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$block_key §r= The resource location of the targeted block\n- §z$$distance §r= The distance from the player's eyes to the block hit position",
+  "fancymenu.listeners.on_enter_biome": "On Enter Biome",
+  "fancymenu.listeners.on_enter_biome.desc": "This listener triggers once when the player enters a new biome.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$biome_key §r= The resource location of the biome the player entered"
 }

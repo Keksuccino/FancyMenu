@@ -28,7 +28,7 @@ public class MixinGameRenderer {
     }
 
     @Inject(method = "pick(F)V", at = @At("TAIL"))
-    private void fancymenu$onPick(float partialTicks, CallbackInfo info) {
+    private void tail_onPick_FancyMenu(float partialTicks, CallbackInfo info) {
 
         if (this.minecraft == null) {
             return;

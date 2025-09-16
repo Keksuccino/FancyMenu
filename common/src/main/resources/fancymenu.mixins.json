@@ -46,6 +46,7 @@
     "client.MixinImageButton",
     "client.MixinLevelLoadingScreen",
     "client.MixinLevelStorageAccess",
+    "client.MixinLocalPlayer",
     "client.MixinLoadingOverlay",
     "client.MixinMinecraft",
     "client.MixinMouseHandler",
