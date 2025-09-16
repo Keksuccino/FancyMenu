@@ -1918,5 +1918,9 @@
   "fancymenu.listeners.on_start_swimming": "On Start Swimming",
   "fancymenu.listeners.on_start_swimming.desc": "This listener triggers once when the player starts swimming.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$fluid_type §r= The resource location of the fluid the player started swimming in",
   "fancymenu.listeners.on_stop_swimming": "On Stop Swimming",
-  "fancymenu.listeners.on_stop_swimming.desc": "This listener triggers once when the player stops swimming.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$fluid_type §r= The resource location of the fluid the player stopped swimming in"
+  "fancymenu.listeners.on_stop_swimming.desc": "This listener triggers once when the player stops swimming.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$fluid_type §r= The resource location of the fluid the player stopped swimming in",
+  "fancymenu.listeners.on_start_touching_fluid": "On Start Touching Fluid",
+  "fancymenu.listeners.on_start_touching_fluid.desc": "This listener triggers once when the player starts touching a fluid.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$fluid_type §r= The resource location of the fluid the player touched",
+  "fancymenu.listeners.on_stop_touching_fluid": "On Stop Touching Fluid",
+  "fancymenu.listeners.on_stop_touching_fluid.desc": "This listener triggers once when the player stops touching a fluid.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$fluid_type §r= The resource location of the fluid the player stopped touching"
 }

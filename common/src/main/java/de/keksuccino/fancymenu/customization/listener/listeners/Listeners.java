@@ -12,6 +12,8 @@ public class Listeners {
     public static final OnLeaveBiomeListener ON_LEAVE_BIOME = new OnLeaveBiomeListener();
     public static final OnStartSwimmingListener ON_START_SWIMMING = new OnStartSwimmingListener();
     public static final OnStopSwimmingListener ON_STOP_SWIMMING = new OnStopSwimmingListener();
+    public static final OnStartTouchingFluidListener ON_START_TOUCHING_FLUID = new OnStartTouchingFluidListener();
+    public static final OnStopTouchingFluidListener ON_STOP_TOUCHING_FLUID = new OnStopTouchingFluidListener();
 
     public static void registerAll() {
 
@@ -23,6 +25,8 @@ public class Listeners {
         ListenerRegistry.register(ON_LEAVE_BIOME);
         ListenerRegistry.register(ON_START_SWIMMING);
         ListenerRegistry.register(ON_STOP_SWIMMING);
+        ListenerRegistry.register(ON_START_TOUCHING_FLUID);
+        ListenerRegistry.register(ON_STOP_TOUCHING_FLUID);
 
     }
 
