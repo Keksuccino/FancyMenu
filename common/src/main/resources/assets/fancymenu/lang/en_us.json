@@ -1912,5 +1912,7 @@
   "fancymenu.listeners.on_looking_at_block": "On Looking At Block",
   "fancymenu.listeners.on_looking_at_block.desc": "This listener triggers once when the crosshair starts pointing at a block in the world.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$block_key §r= The resource location of the targeted block\n- §z$$distance §r= The distance from the player's eyes to the block hit position",
   "fancymenu.listeners.on_enter_biome": "On Enter Biome",
-  "fancymenu.listeners.on_enter_biome.desc": "This listener triggers once when the player enters a new biome.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$biome_key §r= The resource location of the biome the player entered"
+  "fancymenu.listeners.on_enter_biome.desc": "This listener triggers once when the player enters a new biome.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$biome_key §r= The resource location of the biome the player entered",
+  "fancymenu.listeners.on_leave_biome": "On Leave Biome",
+  "fancymenu.listeners.on_leave_biome.desc": "This listener triggers once when the player leaves their current biome.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$biome_key §r= The resource location of the biome the player just left"
 }
