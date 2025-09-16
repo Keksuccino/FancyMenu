@@ -29,11 +29,14 @@ public class MixinLocalPlayer {
     @Unique
     private boolean swimmingStateInitialized_FancyMenu;
 
+    @Unique
+    private String lastSwimmingFluidKey_FancyMenu;
+
     @Inject(method = "tick", at = @At("TAIL"))
     private void after_tick_FancyMenu(CallbackInfo info) {
         LocalPlayer self = (LocalPlayer)(Object)this;
 
-        this.updateStartSwimmingListener_FancyMenu(self);
+        this.updateSwimmingListeners_FancyMenu(self);
 
         ResourceKey<Biome> currentBiomeKey = null;
         if (self.level() instanceof ClientLevel clientLevel && clientLevel.hasChunkAt(self.getBlockX(), self.getBlockZ())) {
@@ -57,27 +60,37 @@ public class MixinLocalPlayer {
     }
 
     @Unique
-    private void updateStartSwimmingListener_FancyMenu(LocalPlayer self) {
+    private void updateSwimmingListeners_FancyMenu(LocalPlayer self) {
         boolean isSwimming = self.isSwimming();
+        String currentFluidKey = null;
+
+        if (isSwimming && self.level() instanceof ClientLevel clientLevel && clientLevel.hasChunkAt(self.getBlockX(), self.getBlockZ())) {
+            FluidState fluidState = clientLevel.getFluidState(self.blockPosition());
+            if (!fluidState.isEmpty()) {
+                ResourceLocation fluidLocation = BuiltInRegistries.FLUID.getKey(fluidState.getType());
+                if (fluidLocation != null) {
+                    currentFluidKey = fluidLocation.toString();
+                }
+            }
+        }
 
         if (!this.swimmingStateInitialized_FancyMenu) {
             this.swimmingStateInitialized_FancyMenu = true;
             this.lastSwimmingState_FancyMenu = isSwimming;
+            if (isSwimming) {
+                this.lastSwimmingFluidKey_FancyMenu = currentFluidKey;
+            }
             return;
         }
 
         if (!this.lastSwimmingState_FancyMenu && isSwimming) {
-            String fluidKey = null;
-            if (self.level() instanceof ClientLevel clientLevel && clientLevel.hasChunkAt(self.getBlockX(), self.getBlockZ())) {
-                FluidState fluidState = clientLevel.getFluidState(self.blockPosition());
-                if (!fluidState.isEmpty()) {
-                    ResourceLocation fluidLocation = BuiltInRegistries.FLUID.getKey(fluidState.getType());
-                    if (fluidLocation != null) {
-                        fluidKey = fluidLocation.toString();
-                    }
-                }
-            }
-            Listeners.ON_START_SWIMMING.onStartSwimming(fluidKey);
+            this.lastSwimmingFluidKey_FancyMenu = currentFluidKey;
+            Listeners.ON_START_SWIMMING.onStartSwimming(currentFluidKey);
+        } else if (this.lastSwimmingState_FancyMenu && !isSwimming) {
+            Listeners.ON_STOP_SWIMMING.onStopSwimming(this.lastSwimmingFluidKey_FancyMenu);
+            this.lastSwimmingFluidKey_FancyMenu = null;
+        } else if (isSwimming) {
+            this.lastSwimmingFluidKey_FancyMenu = currentFluidKey;
         }
 
         this.lastSwimmingState_FancyMenu = isSwimming;
