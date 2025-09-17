@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
 
 public class Listeners {
 
+    public static final OnKeyPressedListener ON_KEY_PRESSED = new OnKeyPressedListener();
+    public static final OnKeyReleasedListener ON_KEY_RELEASED = new OnKeyReleasedListener();
     public static final OnCharTypedListener ON_CHAR_TYPED = new OnCharTypedListener();
     public static final OnMouseMovedListener ON_MOUSE_MOVED = new OnMouseMovedListener();
     public static final OnMouseScrolledListener ON_MOUSE_SCROLLED = new OnMouseScrolledListener();
@@ -19,6 +21,8 @@ public class Listeners {
 
     public static void registerAll() {
 
+        ListenerRegistry.register(ON_KEY_PRESSED);
+        ListenerRegistry.register(ON_KEY_RELEASED);
         ListenerRegistry.register(ON_CHAR_TYPED);
         ListenerRegistry.register(ON_MOUSE_MOVED);
         ListenerRegistry.register(ON_MOUSE_SCROLLED);
