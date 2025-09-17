@@ -18,7 +18,8 @@ Target Java 21 with 4-space indentation and UTF-8 encoding, matching the Gradle 
 FancyMenu uses its own custom packet system. If you need to add packets for a feature, make sure to analyze the `de.keksuccino.fancymenu.networking` package in the `common` module first, to understand how packets get implemented and registered.
 
 ## Minecraft Sources
-You have access to the full Minecraft 1.21.1 sources in the `minecraft_cached_sources` folder. Before starting a task, make sure to read sources you could need for the task, so you know how the current Minecraft code actually looks. Always do that, knowing how the actual Minecraft code looks is very important, especially when you work with mixins.
+You have access to the full Minecraft 1.21.1 sources in the `minecraft_cached_sources` folder. The folder contains source sets for Fabric (`fabric`), Forge (`forge`) and NeoForge (`neoforge`). Before starting a task, make sure to read sources you could need for the task, so you know how the current Minecraft code actually looks. Always do that, knowing how the actual Minecraft code looks is very important, especially when you work with mixins.
+Make sure to always compare Vanilla classes from all 3 modloaders (Fabric, Forge, NeoForge), since Forge and NeoForge often alter Vanilla classes, so mixins can't always get applied in `common` and instead need to get implemented for every launcher if the point to place the mixin differs between modloaders.
 
 ## File Edits
 When editing files, ALWAYS use UTF-8 encoding! NEVER use any other encodings, such as UTF-8-BOM, etc.
