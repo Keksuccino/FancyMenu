@@ -14,6 +14,8 @@ public class Listeners {
     public static final OnLookingAtBlockListener ON_LOOKING_AT_BLOCK = new OnLookingAtBlockListener();
     public static final OnEnterBiomeListener ON_ENTER_BIOME = new OnEnterBiomeListener();
     public static final OnLeaveBiomeListener ON_LEAVE_BIOME = new OnLeaveBiomeListener();
+    public static final OnEnterStructureListener ON_ENTER_STRUCTURE = new OnEnterStructureListener();
+    public static final OnLeaveStructureListener ON_LEAVE_STRUCTURE = new OnLeaveStructureListener();
     public static final OnStartSwimmingListener ON_START_SWIMMING = new OnStartSwimmingListener();
     public static final OnStopSwimmingListener ON_STOP_SWIMMING = new OnStopSwimmingListener();
     public static final OnStartTouchingFluidListener ON_START_TOUCHING_FLUID = new OnStartTouchingFluidListener();
@@ -31,6 +33,8 @@ public class Listeners {
         ListenerRegistry.register(ON_LOOKING_AT_BLOCK);
         ListenerRegistry.register(ON_ENTER_BIOME);
         ListenerRegistry.register(ON_LEAVE_BIOME);
+        ListenerRegistry.register(ON_ENTER_STRUCTURE);
+        ListenerRegistry.register(ON_LEAVE_STRUCTURE);
         ListenerRegistry.register(ON_START_SWIMMING);
         ListenerRegistry.register(ON_STOP_SWIMMING);
         ListenerRegistry.register(ON_START_TOUCHING_FLUID);

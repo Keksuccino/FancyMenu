@@ -36,6 +36,11 @@ public class PacketHandler {
         FANCYMENU_CLIENTS.add(playerUUID);
     }
 
+    public static boolean isFancyMenuClient(@NotNull ServerPlayer player) {
+        Objects.requireNonNull(player);
+        return FANCYMENU_CLIENTS.contains(player.getUUID().toString());
+    }
+
     public static void sendHandshakeToClient(@NotNull ServerPlayer player) {
         sendToClient(player, new HandshakePacket());
     }

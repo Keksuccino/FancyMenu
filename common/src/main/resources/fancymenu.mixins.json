@@ -67,6 +67,7 @@
     "client.MixinWorldListEntry"
   ],
   "mixins": [
+    "server.MixinServerPlayer"
   ],
   "injectors": {
     "defaultRequire": 1
