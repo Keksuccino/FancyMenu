@@ -46,7 +46,7 @@ public class MixinLocalPlayer {
     private String lastTouchingFluidKey_FancyMenu;
 
     @Unique
-    private static final FluidContactInfo NO_FLUID_FancyMenu = new FluidContactInfo(false, null);
+    private static final FluidContactInfo NO_FLUID_FANCYMENU = new FluidContactInfo(false, null);
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void after_tick_FancyMenu(CallbackInfo info) {
@@ -131,7 +131,7 @@ public class MixinLocalPlayer {
     @Unique
     private FluidContactInfo detectFluidContact_FancyMenu(LocalPlayer self) {
         if (!(self.level() instanceof ClientLevel clientLevel)) {
-            return NO_FLUID_FancyMenu;
+            return NO_FLUID_FANCYMENU;
         }
 
         AABB box = self.getBoundingBox().deflate(0.001D);
@@ -166,7 +166,7 @@ public class MixinLocalPlayer {
             }
         }
 
-        return NO_FLUID_FancyMenu;
+        return NO_FLUID_FANCYMENU;
     }
 
 }

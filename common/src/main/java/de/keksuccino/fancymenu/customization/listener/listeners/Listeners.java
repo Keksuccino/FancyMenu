@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
 public class Listeners {
 
     public static final OnCharTypedListener ON_CHAR_TYPED = new OnCharTypedListener();
+    public static final OnMouseMovedListener ON_MOUSE_MOVED = new OnMouseMovedListener();
     public static final OnVariableUpdatedListener ON_VARIABLE_UPDATED = new OnVariableUpdatedListener();
     public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
     public static final OnLookingAtBlockListener ON_LOOKING_AT_BLOCK = new OnLookingAtBlockListener();
@@ -18,6 +19,7 @@ public class Listeners {
     public static void registerAll() {
 
         ListenerRegistry.register(ON_CHAR_TYPED);
+        ListenerRegistry.register(ON_MOUSE_MOVED);
         ListenerRegistry.register(ON_VARIABLE_UPDATED);
         ListenerRegistry.register(ON_FILE_DOWNLOADED);
         ListenerRegistry.register(ON_LOOKING_AT_BLOCK);
