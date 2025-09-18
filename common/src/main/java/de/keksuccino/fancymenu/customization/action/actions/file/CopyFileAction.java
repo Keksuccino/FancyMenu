@@ -16,7 +16,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 public class CopyFileAction extends Action {
 
@@ -47,14 +52,27 @@ public class CopyFileAction extends Action {
                 }
                 File sourceFile = new File(sourcePath);
                 File destinationFile = new File(destinationPath);
-                if (sourceFile.isFile()) {
-                    if (!destinationFile.isFile()) {
-                        Files.copy(sourceFile, destinationFile);
-                    } else {
-                        throw new FileAlreadyExistsException("File exists at the destination path already! Can't copy to: " + destinationPath);
-                    }
+                if (!sourceFile.exists()) {
+                    throw new FileNotFoundException("Source not found! Can't copy: " + sourcePath);
+                }
+                if (destinationFile.exists()) {
+                    throw new FileAlreadyExistsException("Destination exists already! Can't copy to: " + destinationPath);
+                }
+                Path normalizedSourcePath = sourceFile.toPath().toAbsolutePath().normalize();
+                Path normalizedDestinationPath = destinationFile.toPath().toAbsolutePath().normalize();
+                if (normalizedDestinationPath.startsWith(normalizedSourcePath)) {
+                    throw new IllegalArgumentException("Destination path cannot be inside the source path: " + destinationPath);
+                }
+                Path destinationParent = normalizedDestinationPath.getParent();
+                if (destinationParent != null) {
+                    java.nio.file.Files.createDirectories(destinationParent);
+                }
+                if (sourceFile.isDirectory()) {
+                    copyDirectoryRecursively(sourceFile, destinationFile);
+                } else if (sourceFile.isFile()) {
+                    Files.copy(sourceFile, destinationFile);
                 } else {
-                    throw new FileNotFoundException("Source file not found! Can't copy: " + sourcePath);
+                    throw new FileNotFoundException("Source not found! Can't copy: " + sourcePath);
                 }
             }
         } catch (Exception ex) {
@@ -79,7 +97,7 @@ public class CopyFileAction extends Action {
 
     @Override
     public String getValueExample() {
-        return "/config/source_directory/file.txt||/config/destination_directory/file.txt";
+        return "/config/source_directory||/config/destination_directory";
     }
 
     @Override
@@ -104,6 +122,26 @@ public class CopyFileAction extends Action {
 
         Minecraft.getInstance().setScreen(s);
 
+    }
+
+    private void copyDirectoryRecursively(@NotNull File sourceDirectory, @NotNull File destinationDirectory) throws IOException {
+        Path sourcePath = sourceDirectory.toPath();
+        Path destinationPath = destinationDirectory.toPath();
+        java.nio.file.Files.walkFileTree(sourcePath, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                Path targetDir = destinationPath.resolve(sourcePath.relativize(dir));
+                java.nio.file.Files.createDirectories(targetDir);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Path targetFile = destinationPath.resolve(sourcePath.relativize(file));
+                java.nio.file.Files.copy(file, targetFile);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
 }
