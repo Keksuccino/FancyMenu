@@ -4,8 +4,14 @@ import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.structures.StructureEventPacket;
 import de.keksuccino.fancymenu.util.level.StructureUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -17,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Objects;
 
 @Mixin(ServerPlayer.class)
 public class MixinServerPlayer {
@@ -26,6 +33,12 @@ public class MixinServerPlayer {
 
     @Unique
     private final Map<String, Integer> structureMissingTickCounter_FancyMenu = new HashMap<>();
+
+    @Unique
+    private boolean structureHighPrecisionInitialized_FancyMenu;
+
+    @Unique
+    private String lastHighPrecisionStructureKey_FancyMenu;
 
     /** @reason Track structure enter/leave events for FancyMenu listeners. */
     @Inject(method = "tick", at = @At("TAIL"))
@@ -37,6 +50,8 @@ public class MixinServerPlayer {
     private void updateStructureListeners_FancyMenu(@NotNull ServerPlayer self) {
         if (!PacketHandler.isFancyMenuClient(self)) {
             this.structureMissingTickCounter_FancyMenu.clear();
+            this.structureHighPrecisionInitialized_FancyMenu = false;
+            this.lastHighPrecisionStructureKey_FancyMenu = null;
             return;
         }
 
@@ -64,6 +79,8 @@ public class MixinServerPlayer {
                 this.structureMissingTickCounter_FancyMenu.put(trackedKey, newCounter);
             }
         }
+
+        this.updateHighPrecisionStructureListeners_FancyMenu(self);
     }
 
     @Unique
@@ -78,6 +95,61 @@ public class MixinServerPlayer {
         }
 
         return new HashSet<>(StructureUtils.convertStructureKeysToStrings(StructureUtils.getAllStructuresAt(level, blockPos)));
+    }
+
+    @Unique
+    private void updateHighPrecisionStructureListeners_FancyMenu(@NotNull ServerPlayer self) {
+        String currentStructureKey = this.detectHighPrecisionStructureKey_FancyMenu(self);
+
+        if (!this.structureHighPrecisionInitialized_FancyMenu) {
+            this.structureHighPrecisionInitialized_FancyMenu = true;
+            this.lastHighPrecisionStructureKey_FancyMenu = currentStructureKey;
+            if (currentStructureKey != null) {
+                this.sendStructureEvent_FancyMenu(self, StructureEventPacket.StructureEventType.ENTER_HIGH_PRECISION, currentStructureKey);
+            }
+            return;
+        }
+
+        if (Objects.equals(this.lastHighPrecisionStructureKey_FancyMenu, currentStructureKey)) {
+            return;
+        }
+
+        if (this.lastHighPrecisionStructureKey_FancyMenu != null) {
+            this.sendStructureEvent_FancyMenu(self, StructureEventPacket.StructureEventType.LEAVE_HIGH_PRECISION, this.lastHighPrecisionStructureKey_FancyMenu);
+        }
+
+        this.lastHighPrecisionStructureKey_FancyMenu = currentStructureKey;
+
+        if (currentStructureKey != null) {
+            this.sendStructureEvent_FancyMenu(self, StructureEventPacket.StructureEventType.ENTER_HIGH_PRECISION, currentStructureKey);
+        }
+    }
+
+    @Unique
+    private String detectHighPrecisionStructureKey_FancyMenu(@NotNull ServerPlayer self) {
+        if (!(self.level() instanceof ServerLevel level)) {
+            return null;
+        }
+
+        BlockPos blockPos = self.blockPosition();
+        if (!level.isLoaded(blockPos)) {
+            return null;
+        }
+
+        StructureManager structureManager = level.structureManager();
+        StructureStart structureStart = structureManager.getStructureWithPieceAt(blockPos, holder -> true);
+        if (structureStart == StructureStart.INVALID_START) {
+            return null;
+        }
+
+        Structure structure = structureStart.getStructure();
+        if (structure == null) {
+            return null;
+        }
+
+        Registry<Structure> registry = level.registryAccess().registryOrThrow(Registries.STRUCTURE);
+        ResourceLocation location = registry.getKey(structure);
+        return (location != null) ? location.toString() : null;
     }
 
     @Unique

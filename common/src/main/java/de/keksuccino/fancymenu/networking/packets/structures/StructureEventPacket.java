@@ -19,6 +19,8 @@ public class StructureEventPacket extends Packet {
 
     public enum StructureEventType {
         ENTER,
-        LEAVE
+        LEAVE,
+        ENTER_HIGH_PRECISION,
+        LEAVE_HIGH_PRECISION
     }
 }

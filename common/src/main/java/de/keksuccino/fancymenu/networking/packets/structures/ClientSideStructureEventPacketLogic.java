@@ -18,6 +18,8 @@ public class ClientSideStructureEventPacketLogic {
             switch (packet.event_type) {
                 case ENTER -> Listeners.ON_ENTER_STRUCTURE.onStructureEntered(packet.structure_identifier);
                 case LEAVE -> Listeners.ON_LEAVE_STRUCTURE.onStructureLeft(packet.structure_identifier);
+                case ENTER_HIGH_PRECISION -> Listeners.ON_ENTER_STRUCTURE_HIGH_PRECISION.onStructureEntered(packet.structure_identifier);
+                case LEAVE_HIGH_PRECISION -> Listeners.ON_LEAVE_STRUCTURE_HIGH_PRECISION.onStructureLeft(packet.structure_identifier);
             }
             return true;
         } catch (Exception ex) {
