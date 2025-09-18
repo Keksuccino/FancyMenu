@@ -4,7 +4,7 @@
 FancyMenu is a Minecraft 1.21.1 mod that uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric`, `forge`, and `neoforge`. Place shared Java sources in `common/src/main/java` and assets such as menu JSON, translations, or textures in `common/src/main/resources` so they ship with every loader build. Loader-only hooks belong inside each module's `src/main/java` tree; keep local run directories like `run_client` and `run_server` for iterative testing but never depend on them for assets.
 
 ## Coding Style & Naming Conventions
-Target Java 21 with 4-space indentation and UTF-8 encoding, matching the Gradle toolchain configuration. Follow existing packages under `de.keksuccino.fancymenu`, mirroring existing sub-packages like `customization`, `events`, and `platform` to keep cross-loader boundaries clear. Name resources with the `fancymenu` prefix (e.g., `fancymenu.mixins.json`, `fancymenu.accesswidener`) so Gradle and the loaders resolve them consistently. Prefer explicit nullability annotations from `jsr305`, keep Mixin classes lightweight, and document multi-step flows with concise comments.
+Target Java 21 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matching the Gradle toolchain configuration. Follow existing packages under `de.keksuccino.fancymenu`, mirroring existing sub-packages like `customization`, `events`, and `platform` to keep cross-loader boundaries clear. Name resources with the `fancymenu` prefix (e.g., `fancymenu.mixins.json`, `fancymenu.accesswidener`) so Gradle and the loaders resolve them consistently. Prefer explicit nullability annotations from `jsr305`, keep Mixin classes lightweight, and document multi-step flows with concise comments.
 
 ## Mixin Structurization
 - Place shared mixins under `common/src/main/java/de/keksuccino/fancymenu/mixin/mixins/common/<side>` and mirror the existing folder depth when adding new targets.
@@ -21,8 +21,9 @@ FancyMenu uses its own custom packet system. If you need to add packets for a fe
 You have access to the full Minecraft 1.21.1 sources in the `minecraft_cached_sources` folder. The folder contains source sets for Fabric (`fabric`), Forge (`forge`) and NeoForge (`neoforge`). Before starting a task, make sure to read sources you could need for the task, so you know how the current Minecraft code actually looks. Always do that, knowing how the actual Minecraft code looks is very important, especially when you work with mixins.
 Make sure to always compare Vanilla classes from all 3 modloaders (Fabric, Forge, NeoForge), since Forge and NeoForge often alter Vanilla classes, so mixins can't always get applied in `common` and instead need to get implemented for every launcher if the point to place the mixin differs between modloaders.
 
-## File Edits
-When editing files, ALWAYS use UTF-8 encoding! NEVER use any other encodings, such as UTF-8-BOM, etc.
+## Writing to Files
+When writing files (edit or create), ALWAYS use UTF-8 (WITHOUT BOM) encoding! NEVER use any other encodings, such as UTF-8-BOM, etc.
+When you use PowerShell commands, generate PowerShell 5 compatible code to save files in UTF-8 without BOM, using System.Text.UTF8Encoding(false).
 
 ## Git & Run/Compile
 NEVER try to run git commands or try to run/compile the project!
