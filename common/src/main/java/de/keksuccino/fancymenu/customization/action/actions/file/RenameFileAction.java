@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.action.actions.file;
 
-import com.google.common.io.Files;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -17,6 +16,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class RenameFileAction extends Action {
 
@@ -38,27 +39,28 @@ public class RenameFileAction extends Action {
                 String[] valueArray = value.split("\\|\\|", 2);
                 String filePath = valueArray[0];
                 String newFileName = valueArray[1];
-                
-                // We only allow the default .minecraft directory and the instance's actual game directory for safety reasons
-                filePath = DotMinecraftUtils.resolveMinecraftPath(filePath);
-                if (!DotMinecraftUtils.isInsideMinecraftDirectory(filePath)) {
-                    filePath = GameDirectoryUtils.getAbsoluteGameDirectoryPath(filePath);
+                if (newFileName.isEmpty()) {
+                    throw new IllegalArgumentException("New name cannot be empty!");
                 }
-                
-                File oldFile = new File(filePath);
-                if (oldFile.isFile()) {
-                    // Get the parent directory and construct the new file path
-                    File parentDir = oldFile.getParentFile();
-                    File newFile = new File(parentDir, newFileName);
-                    
-                    if (!newFile.exists()) {
-                        Files.move(oldFile, newFile);
-                    } else {
-                        throw new FileAlreadyExistsException("File with the new name already exists! Can't rename to: " + newFileName);
-                    }
-                } else {
-                    throw new FileNotFoundException("Source file not found! Can't rename: " + filePath);
+                String resolvedPath = DotMinecraftUtils.resolveMinecraftPath(filePath);
+                if (!DotMinecraftUtils.isInsideMinecraftDirectory(resolvedPath)) {
+                    resolvedPath = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resolvedPath);
                 }
+                File oldFile = new File(resolvedPath);
+                if (!oldFile.exists()) {
+                    throw new FileNotFoundException("Source not found! Can't rename: " + resolvedPath);
+                }
+                File parentDir = oldFile.getParentFile();
+                if (parentDir == null) {
+                    throw new IllegalStateException("Unable to resolve parent directory for: " + resolvedPath);
+                }
+                File newFile = new File(parentDir, newFileName);
+                if (newFile.exists()) {
+                    throw new FileAlreadyExistsException("Target already exists! Can't rename to: " + newFile.getAbsolutePath());
+                }
+                Path sourcePath = oldFile.toPath();
+                Path targetPath = newFile.toPath();
+                Files.move(sourcePath, targetPath);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to rename file in game directory via RenameFileAction: " + value, ex);
@@ -82,7 +84,7 @@ public class RenameFileAction extends Action {
 
     @Override
     public String getValueExample() {
-        return "/config/some_mod_folder/old_file_name.txt||new_file_name.txt";
+        return "/config/some_mod_folder/old_name.txt||new_name.txt";
     }
 
     @Override

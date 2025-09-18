@@ -101,7 +101,7 @@ public class MoveFileAction extends Action {
 
     @Override
     public String getValueExample() {
-        return "/config/source_directory/*||/config/destination_directory";
+        return "/config/source_directory/some_file.txt||/config/destination_directory";
     }
 
     @Override

@@ -104,7 +104,7 @@ public class CopyFileAction extends Action {
 
     @Override
     public String getValueExample() {
-        return "/config/source_directory/*||/config/destination_directory";
+        return "/config/source_directory/some_file.txt||/config/destination_directory/some_file_copy.txt";
     }
 
     @Override
