@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.action.actions.file;
 
-import com.google.common.io.Files;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -16,7 +15,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class MoveFileAction extends Action {
 
@@ -36,25 +38,45 @@ public class MoveFileAction extends Action {
         try {
             if ((value != null) && value.contains("||")) {
                 String[] valueArray = value.split("\\|\\|", 2);
-                // We only allow the default .minecraft directory and the instance's actual game directory for safety reasons
-                String oldPath = DotMinecraftUtils.resolveMinecraftPath(valueArray[0]);
-                String newPath = DotMinecraftUtils.resolveMinecraftPath(valueArray[1]);
-                if (!DotMinecraftUtils.isInsideMinecraftDirectory(oldPath)) {
-                    oldPath = GameDirectoryUtils.getAbsoluteGameDirectoryPath(oldPath);
+                String rawSourcePath = valueArray[0];
+                String rawDestinationPath = valueArray[1];
+                boolean wildcardSource = isWildcardPath(rawSourcePath);
+                if (isWildcardPath(rawDestinationPath)) {
+                    throw new IllegalArgumentException("Destination path cannot end with '*': " + rawDestinationPath);
                 }
-                if (!DotMinecraftUtils.isInsideMinecraftDirectory(newPath)) {
-                    newPath = GameDirectoryUtils.getAbsoluteGameDirectoryPath(newPath);
+                String sourcePath = resolveActionPath(rawSourcePath, wildcardSource);
+                String destinationPath = resolveActionPath(rawDestinationPath, false);
+                File sourceFile = new File(sourcePath);
+                File destinationFile = new File(destinationPath);
+                if (!sourceFile.exists()) {
+                    throw new FileNotFoundException("Source not found! Can't move: " + (wildcardSource ? rawSourcePath : sourcePath));
                 }
-                File oldFile = new File(oldPath);
-                File newFile = new File(newPath);
-                if (oldFile.isFile()) {
-                    if (!newFile.isFile()) {
-                        Files.move(oldFile, newFile);
-                    } else {
-                        throw new FileAlreadyExistsException("File exists at the destination path already! Can't move to: " + newPath);
+                if (wildcardSource) {
+                    if (!sourceFile.isDirectory()) {
+                        throw new FileNotFoundException("Source directory not found! Can't move: " + rawSourcePath);
                     }
+                    ensureDestinationDirectory(destinationFile, destinationPath);
+                    moveWildcardFiles(sourceFile, destinationFile);
+                    return;
+                }
+                if (destinationFile.exists()) {
+                    throw new FileAlreadyExistsException("Destination exists already! Can't move to: " + destinationPath);
+                }
+                Path normalizedSourcePath = sourceFile.toPath().toAbsolutePath().normalize();
+                Path normalizedDestinationPath = destinationFile.toPath().toAbsolutePath().normalize();
+                if (normalizedDestinationPath.startsWith(normalizedSourcePath)) {
+                    throw new IllegalArgumentException("Destination path cannot be inside the source path: " + destinationPath);
+                }
+                Path destinationParent = normalizedDestinationPath.getParent();
+                if (destinationParent != null) {
+                    Files.createDirectories(destinationParent);
+                }
+                if (sourceFile.isDirectory()) {
+                    Files.move(normalizedSourcePath, normalizedDestinationPath);
+                } else if (sourceFile.isFile()) {
+                    Files.move(normalizedSourcePath, normalizedDestinationPath);
                 } else {
-                    throw new FileNotFoundException("Source file not found! Can't move: " + oldPath);
+                    throw new FileNotFoundException("Source not found! Can't move: " + sourcePath);
                 }
             }
         } catch (Exception ex) {
@@ -79,7 +101,7 @@ public class MoveFileAction extends Action {
 
     @Override
     public String getValueExample() {
-        return "/config/old_directory/file.txt||/config/new_directory/file.txt";
+        return "/config/source_directory/*||/config/destination_directory";
     }
 
     @Override
@@ -104,6 +126,57 @@ public class MoveFileAction extends Action {
 
         Minecraft.getInstance().setScreen(s);
 
+    }
+
+    private void moveWildcardFiles(@NotNull File sourceDirectory, @NotNull File destinationDirectory) throws IOException {
+        File[] filesToMove = sourceDirectory.listFiles(File::isFile);
+        if (filesToMove == null) {
+            throw new IOException("Failed to list files in source directory: " + sourceDirectory.getAbsolutePath());
+        }
+        for (File file : filesToMove) {
+            File targetFile = new File(destinationDirectory, file.getName());
+            if (targetFile.exists()) {
+                throw new FileAlreadyExistsException("File exists at the destination path already! Can't move to: " + targetFile.getAbsolutePath());
+            }
+        }
+        for (File file : filesToMove) {
+            File targetFile = new File(destinationDirectory, file.getName());
+            Files.move(file.toPath(), targetFile.toPath());
+        }
+    }
+
+    private void ensureDestinationDirectory(@NotNull File destinationDirectory, @NotNull String destinationPath) throws IOException {
+        if (destinationDirectory.exists()) {
+            if (!destinationDirectory.isDirectory()) {
+                throw new IllegalArgumentException("Destination must be a directory when using '*': " + destinationPath);
+            }
+        } else {
+            Files.createDirectories(destinationDirectory.toPath());
+        }
+    }
+
+    private @NotNull String resolveActionPath(@NotNull String path, boolean wildcard) {
+        String processedPath = wildcard ? stripTrailingWildcard(path) : path;
+        String resolvedPath = DotMinecraftUtils.resolveMinecraftPath(processedPath);
+        if (!DotMinecraftUtils.isInsideMinecraftDirectory(resolvedPath)) {
+            resolvedPath = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resolvedPath);
+        }
+        return resolvedPath;
+    }
+
+    private @NotNull String stripTrailingWildcard(@NotNull String path) {
+        if (path.length() <= 1) {
+            throw new IllegalArgumentException("Wildcard path requires a directory before '*': " + path);
+        }
+        String withoutWildcard = path.substring(0, path.length() - 1);
+        if (withoutWildcard.isEmpty()) {
+            throw new IllegalArgumentException("Wildcard path requires a directory before '*': " + path);
+        }
+        return withoutWildcard;
+    }
+
+    private boolean isWildcardPath(@Nullable String path) {
+        return (path != null) && path.endsWith("*");
     }
 
 }
