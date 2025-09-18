@@ -40,6 +40,12 @@ public class MixinServerPlayer {
     @Unique
     private String lastHighPrecisionStructureKey_FancyMenu;
 
+    @Unique
+    private static final int STRUCTURE_HIGH_PRECISION_LEAVE_GRACE_TICKS_FANCYMENU = 20;
+
+    @Unique
+    private int highPrecisionMissingTickCounter_FancyMenu;
+
     /** @reason Track structure enter/leave events for FancyMenu listeners. */
     @Inject(method = "tick", at = @At("TAIL"))
     private void after_tick_FancyMenu(CallbackInfo info) {
@@ -52,6 +58,7 @@ public class MixinServerPlayer {
             this.structureMissingTickCounter_FancyMenu.clear();
             this.structureHighPrecisionInitialized_FancyMenu = false;
             this.lastHighPrecisionStructureKey_FancyMenu = null;
+            this.highPrecisionMissingTickCounter_FancyMenu = 0;
             return;
         }
 
@@ -104,6 +111,7 @@ public class MixinServerPlayer {
         if (!this.structureHighPrecisionInitialized_FancyMenu) {
             this.structureHighPrecisionInitialized_FancyMenu = true;
             this.lastHighPrecisionStructureKey_FancyMenu = currentStructureKey;
+            this.highPrecisionMissingTickCounter_FancyMenu = 0;
             if (currentStructureKey != null) {
                 this.sendStructureEvent_FancyMenu(self, StructureEventPacket.StructureEventType.ENTER_HIGH_PRECISION, currentStructureKey);
             }
@@ -111,17 +119,29 @@ public class MixinServerPlayer {
         }
 
         if (Objects.equals(this.lastHighPrecisionStructureKey_FancyMenu, currentStructureKey)) {
+            if (currentStructureKey != null) {
+                this.highPrecisionMissingTickCounter_FancyMenu = 0;
+            }
+            return;
+        }
+
+        if (currentStructureKey != null) {
+            if (this.lastHighPrecisionStructureKey_FancyMenu != null) {
+                this.sendStructureEvent_FancyMenu(self, StructureEventPacket.StructureEventType.LEAVE_HIGH_PRECISION, this.lastHighPrecisionStructureKey_FancyMenu);
+            }
+            this.lastHighPrecisionStructureKey_FancyMenu = currentStructureKey;
+            this.highPrecisionMissingTickCounter_FancyMenu = 0;
+            this.sendStructureEvent_FancyMenu(self, StructureEventPacket.StructureEventType.ENTER_HIGH_PRECISION, currentStructureKey);
             return;
         }
 
         if (this.lastHighPrecisionStructureKey_FancyMenu != null) {
-            this.sendStructureEvent_FancyMenu(self, StructureEventPacket.StructureEventType.LEAVE_HIGH_PRECISION, this.lastHighPrecisionStructureKey_FancyMenu);
-        }
-
-        this.lastHighPrecisionStructureKey_FancyMenu = currentStructureKey;
-
-        if (currentStructureKey != null) {
-            this.sendStructureEvent_FancyMenu(self, StructureEventPacket.StructureEventType.ENTER_HIGH_PRECISION, currentStructureKey);
+            this.highPrecisionMissingTickCounter_FancyMenu++;
+            if (this.highPrecisionMissingTickCounter_FancyMenu > STRUCTURE_HIGH_PRECISION_LEAVE_GRACE_TICKS_FANCYMENU) {
+                this.sendStructureEvent_FancyMenu(self, StructureEventPacket.StructureEventType.LEAVE_HIGH_PRECISION, this.lastHighPrecisionStructureKey_FancyMenu);
+                this.lastHighPrecisionStructureKey_FancyMenu = null;
+                this.highPrecisionMissingTickCounter_FancyMenu = 0;
+            }
         }
     }
 
