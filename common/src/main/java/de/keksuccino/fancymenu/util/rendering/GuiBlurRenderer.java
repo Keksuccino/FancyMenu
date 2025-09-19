@@ -4,10 +4,12 @@ import com.mojang.blaze3d.pipeline.RenderCall;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
@@ -26,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public final class GuiBlurRenderer {
 
@@ -66,6 +67,7 @@ public final class GuiBlurRenderer {
         RenderSystem.assertOnRenderThread();
 
         Minecraft minecraft = Minecraft.getInstance();
+        Window window = minecraft.getWindow();
         RenderTarget mainTarget = minecraft.getMainRenderTarget();
         if (mainTarget == null) {
             fallbackFill(graphics, x, y, width, height, tintArgb);
@@ -77,7 +79,7 @@ public final class GuiBlurRenderer {
             return;
         }
 
-        double guiScale = minecraft.getWindow().getGuiScale();
+        double guiScale = window.getGuiScale();
         int windowWidth = mainTarget.viewWidth;
         int windowHeight = mainTarget.viewHeight;
 
@@ -88,7 +90,7 @@ public final class GuiBlurRenderer {
         int areaRightPx = areaLeftPx + areaWidthPx;
         int areaBottomPx = windowHeight - (areaTopPx + areaHeightPx);
 
-        if (areaRightPx <= 0 || areaBottomPx + areaHeightPx <= 0 || areaLeftPx >= windowWidth || areaBottomPx >= windowHeight) {
+        if (areaRightPx <= 0 || areaLeftPx >= windowWidth || areaBottomPx >= windowHeight || areaBottomPx + areaHeightPx <= 0) {
             return;
         }
 
@@ -104,50 +106,44 @@ public final class GuiBlurRenderer {
         int copyBottom = Mth.clamp(areaBottomPx - padding, 0, windowHeight);
         int copyTop = Mth.clamp(areaBottomPx + areaHeightPx + padding, 0, windowHeight);
 
-        int copyWidth = copyRight - copyLeft;
-        int copyHeight = copyTop - copyBottom;
-        if (copyWidth <= 0 || copyHeight <= 0) {
+        int copyWidth = Math.max(1, copyRight - copyLeft);
+        int copyHeight = Math.max(1, copyTop - copyBottom);
+
+        TextureTarget horizontalTarget = ensureTarget(copyWidth, copyHeight, true);
+        TextureTarget verticalTarget = ensureTarget(copyWidth, copyHeight, false);
+        if (horizontalTarget == null || verticalTarget == null) {
             fallbackFill(graphics, x, y, width, height, tintArgb);
             return;
         }
 
-        TextureTarget firstTarget = ensureTarget(copyWidth, copyHeight, true);
-        TextureTarget secondTarget = ensureTarget(copyWidth, copyHeight, false);
-        if (firstTarget == null || secondTarget == null) {
-            fallbackFill(graphics, x, y, width, height, tintArgb);
-            return;
-        }
+        blitRegion(mainTarget, horizontalTarget, copyLeft, copyBottom, copyRight, copyTop);
 
-        blitRegion(mainTarget, firstTarget, copyLeft, copyBottom, copyRight, copyTop);
-
-        TextureTarget blurred = runBlurPasses(minecraft, firstTarget, secondTarget, radius);
-
+        TextureTarget blurredTarget = runBlurPasses(minecraft, horizontalTarget, verticalTarget, radius);
         restoreMainTarget(mainTarget);
-
-        if (blurred == null) {
+        if (blurredTarget == null) {
             fallbackFill(graphics, x, y, width, height, tintArgb);
             return;
         }
 
-        float uMin = copyWidth == 0 ? 0.0F : (float) Mth.clamp(areaLeftPx - copyLeft, 0, copyWidth) / (float) copyWidth;
-        float uMax = copyWidth == 0 ? 1.0F : (float) Mth.clamp(areaRightPx - copyLeft, 0, copyWidth) / (float) copyWidth;
-        float vMin = copyHeight == 0 ? 0.0F : (float) Mth.clamp(areaBottomPx - copyBottom, 0, copyHeight) / (float) copyHeight;
-        float vMax = copyHeight == 0 ? 1.0F : (float) Mth.clamp(areaBottomPx + areaHeightPx - copyBottom, 0, copyHeight) / (float) copyHeight;
+        float uMin = (float) Mth.clamp(areaLeftPx - copyLeft, 0, copyWidth) / (float) copyWidth;
+        float uMax = (float) Mth.clamp(areaRightPx - copyLeft, 0, copyWidth) / (float) copyWidth;
+        float vMin = (float) Mth.clamp(areaBottomPx - copyBottom, 0, copyHeight) / (float) copyHeight;
+        float vMax = (float) Mth.clamp(areaBottomPx + areaHeightPx - copyBottom, 0, copyHeight) / (float) copyHeight;
 
-        float tintR = FastColor.ARGB32.red(tintArgb) / 255.0F;
-        float tintG = FastColor.ARGB32.green(tintArgb) / 255.0F;
-        float tintB = FastColor.ARGB32.blue(tintArgb) / 255.0F;
-        float tintA = FastColor.ARGB32.alpha(tintArgb) / 255.0F;
+        float tintR = (float) FastColor.ARGB32.red(tintArgb) / 255.0F;
+        float tintG = (float) FastColor.ARGB32.green(tintArgb) / 255.0F;
+        float tintB = (float) FastColor.ARGB32.blue(tintArgb) / 255.0F;
+        float tintA = (float) FastColor.ARGB32.alpha(tintArgb) / 255.0F;
 
         float cornerRadiusPx = rounded ? cornerRadiusGui * (float) guiScale : 0.0F;
         float maxRadiusPx = Math.min(areaWidthPx, areaHeightPx) * 0.5F;
         cornerRadiusPx = rounded ? Mth.clamp(cornerRadiusPx, 0.0F, maxRadiusPx) : 0.0F;
-        boolean useRounded = rounded && cornerRadiusPx > 0.0F;
-        float smoothRadiusPx = useRounded ? Math.max(1.0F, (float) guiScale * 0.75F) : 0.0F;
+        boolean useRoundedOutline = rounded && cornerRadiusPx > 0.0F;
+        float smoothRadiusPx = useRoundedOutline ? Math.max(1.0F, (float) guiScale * 0.75F) : 0.0F;
 
         renderCompositeQuad(
             graphics,
-            blurred,
+            blurredTarget,
             x,
             y,
             width,
@@ -166,8 +162,10 @@ public final class GuiBlurRenderer {
             tintA,
             cornerRadiusPx,
             smoothRadiusPx,
-            useRounded,
-            tintArgb);
+            useRoundedOutline,
+            tintArgb,
+            window
+        );
     }
 
     private void fallbackFill(GuiGraphics graphics, float x, float y, float width, float height, int tintArgb) {
@@ -221,12 +219,12 @@ public final class GuiBlurRenderer {
             return target;
         } catch (RuntimeException error) {
             LOGGER.error("Unable to allocate blur framebuffer of size {}x{}", width, height, error);
-            resourcesFailed = true;
             if (primary) {
                 pingTarget = null;
             } else {
                 pongTarget = null;
             }
+            resourcesFailed = true;
             return null;
         }
     }
@@ -245,34 +243,34 @@ public final class GuiBlurRenderer {
         RenderSystem.depthFunc(515);
     }
 
-    private @Nullable TextureTarget runBlurPasses(Minecraft minecraft, TextureTarget source, TextureTarget temp, float radius) {
+    private @Nullable TextureTarget runBlurPasses(Minecraft minecraft, TextureTarget horizontalInput, TextureTarget verticalInput, float radius) {
         if (boxBlurEffect == null) {
             return null;
         }
 
-        configureBlurEffect(minecraft, source, temp, new Matrix4f().setOrtho(0.0F, temp.width, 0.0F, temp.height, -1.0F, 1.0F), radius, 1.0F, 0.0F);
-        temp.clear(false);
-        temp.bindWrite(false);
-        RenderSystem.viewport(0, 0, temp.width, temp.height);
+        configureBlurEffect(minecraft, horizontalInput, verticalInput, new Matrix4f().setOrtho(0.0F, verticalInput.width, 0.0F, verticalInput.height, -1.0F, 1.0F), radius, 1.0F, 0.0F);
+        verticalInput.clear(false);
+        verticalInput.bindWrite(false);
+        RenderSystem.viewport(0, 0, verticalInput.width, verticalInput.height);
         RenderSystem.depthFunc(519);
         boxBlurEffect.apply();
-        drawFullscreenQuad(temp.width, temp.height);
+        drawFullscreenQuad(verticalInput.width, verticalInput.height);
         boxBlurEffect.clear();
-        temp.unbindWrite();
+        verticalInput.unbindWrite();
 
-        configureBlurEffect(minecraft, temp, source, new Matrix4f().setOrtho(0.0F, source.width, 0.0F, source.height, -1.0F, 1.0F), radius, 0.0F, 1.0F);
-        source.clear(false);
-        source.bindWrite(false);
-        RenderSystem.viewport(0, 0, source.width, source.height);
+        configureBlurEffect(minecraft, verticalInput, horizontalInput, new Matrix4f().setOrtho(0.0F, horizontalInput.width, 0.0F, horizontalInput.height, -1.0F, 1.0F), radius, 0.0F, 1.0F);
+        horizontalInput.clear(false);
+        horizontalInput.bindWrite(false);
+        RenderSystem.viewport(0, 0, horizontalInput.width, horizontalInput.height);
         RenderSystem.depthFunc(519);
         boxBlurEffect.apply();
-        drawFullscreenQuad(source.width, source.height);
+        drawFullscreenQuad(horizontalInput.width, horizontalInput.height);
         boxBlurEffect.clear();
-        source.unbindWrite();
-        temp.unbindRead();
+        horizontalInput.unbindWrite();
+        verticalInput.unbindRead();
 
         RenderSystem.depthFunc(515);
-        return source;
+        return horizontalInput;
     }
 
     private void configureBlurEffect(Minecraft minecraft, TextureTarget input, TextureTarget output, Matrix4f projection, float radius, float dirX, float dirY) {
@@ -297,7 +295,9 @@ public final class GuiBlurRenderer {
         builder.addVertex((float) width, 0.0F, 0.0F);
         builder.addVertex((float) width, (float) height, 0.0F);
         builder.addVertex(0.0F, (float) height, 0.0F);
-        BufferUploader.draw(builder.buildOrThrow());
+        MeshData meshData = builder.buildOrThrow();
+        BufferUploader.draw(meshData);
+        meshData.close();
     }
 
     private void renderCompositeQuad(
@@ -322,15 +322,16 @@ public final class GuiBlurRenderer {
         float cornerRadiusPx,
         float smoothRadiusPx,
         boolean useRounded,
-        int fallbackTint) {
+        int fallbackTint,
+        Window window
+    ) {
         if (compositeShader == null) {
             fallbackFill(graphics, x, y, width, height, fallbackTint);
             return;
         }
 
-        compositeShader.setSampler("BlurSampler", texture);
-        compositeShader.safeGetUniform("ModelViewMat").set(graphics.pose().last().pose());
-        compositeShader.safeGetUniform("ProjMat").set(RenderSystem.getProjectionMatrix());
+        compositeShader.setDefaultUniforms(VertexFormat.Mode.QUADS, graphics.pose().last().pose(), RenderSystem.getProjectionMatrix(), window);
+        compositeShader.setSampler("BlurSampler", texture.getColorTextureId());
         compositeShader.safeGetUniform("ColorTint").set(tintR, tintG, tintB, tintA);
         compositeShader.safeGetUniform("UVMin").set(uMin, vMin);
         compositeShader.safeGetUniform("UVMax").set(uMax, vMax);
@@ -358,7 +359,9 @@ public final class GuiBlurRenderer {
         builder.addVertex(poseMatrix, maxX, maxY, z).setUv(1.0F, 1.0F);
         builder.addVertex(poseMatrix, maxX, minY, z).setUv(1.0F, 0.0F);
         builder.addVertex(poseMatrix, minX, minY, z).setUv(0.0F, 0.0F);
-        BufferUploader.drawWithShader(Objects.requireNonNull(builder.build()));
+        MeshData meshData = builder.buildOrThrow();
+        BufferUploader.drawWithShader(meshData);
+        meshData.close();
 
         compositeShader.clear();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
