@@ -328,7 +328,7 @@ public final class GuiBlurRenderer {
             return;
         }
 
-        compositeShader.setSampler("BlurSampler", texture::getColorTextureId);
+        compositeShader.setSampler("BlurSampler", texture);
         compositeShader.safeGetUniform("ModelViewMat").set(graphics.pose().last().pose());
         compositeShader.safeGetUniform("ProjMat").set(RenderSystem.getProjectionMatrix());
         compositeShader.safeGetUniform("ColorTint").set(tintR, tintG, tintB, tintA);

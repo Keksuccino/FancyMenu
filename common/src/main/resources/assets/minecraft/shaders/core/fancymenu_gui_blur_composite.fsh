@@ -31,8 +31,8 @@ void main() {
         if (radius > 0.0) {
             float minDist = min(edgeDist.x, edgeDist.y);
             float delta = radius - minDist;
-            float smooth = max(SmoothRadius, 0.0001);
-            mask = 1.0 - smoothstep(0.0, smooth, delta);
+            float smoothing = max(SmoothRadius, 0.0001);
+            mask = 1.0 - smoothstep(0.0, smoothing, delta);
         }
         color.a *= clamp(mask, 0.0, 1.0);
     }
