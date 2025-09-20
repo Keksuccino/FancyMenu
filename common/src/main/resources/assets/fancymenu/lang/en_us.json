@@ -1942,5 +1942,9 @@
   "fancymenu.listeners.on_start_touching_fluid": "On Start Touching Fluid",
   "fancymenu.listeners.on_start_touching_fluid.desc": "This listener triggers once when the player starts touching a fluid.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$fluid_type §r= The resource location of the fluid the player touched",
   "fancymenu.listeners.on_stop_touching_fluid": "On Stop Touching Fluid",
-  "fancymenu.listeners.on_stop_touching_fluid.desc": "This listener triggers once when the player stops touching a fluid.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$fluid_type §r= The resource location of the fluid the player stopped touching"
+  "fancymenu.listeners.on_stop_touching_fluid.desc": "This listener triggers once when the player stops touching a fluid.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$fluid_type §r= The resource location of the fluid the player stopped touching",
+  "fancymenu.listeners.on_chat_message_received": "On Chat Message Received",
+  "fancymenu.listeners.on_chat_message_received.desc": "Triggers whenever the client displays a normal player chat message.\n\nProvides these variables:\n\n- §z$$chat_message_string §r= Plain text version of the received chat line\n- §z$$chat_message_component §r= Full component JSON of the received chat line\n- §z$$sender_uuid §r= UUID of the sender (or ERROR if unavailable)\n- §z$$sender_name §r= Plain name of the sender (or ERROR if unavailable)",
+  "fancymenu.listeners.on_chat_message_sent": "On Chat Message Sent",
+  "fancymenu.listeners.on_chat_message_sent.desc": "Triggers when the local player sends a chat message to the server.\n\nProvides these variables:\n\n- §z$$chat_message_string §r= Plain text version of the sent chat line\n- §z$$chat_message_component §r= Full component JSON of the sent chat line"
 }
