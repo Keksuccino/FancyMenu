@@ -13,6 +13,8 @@ public class Listeners {
     public static final OnMouseScrolledListener ON_MOUSE_SCROLLED = new OnMouseScrolledListener();
     public static final OnVariableUpdatedListener ON_VARIABLE_UPDATED = new OnVariableUpdatedListener();
     public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
+    public static final OnChatMessageReceivedListener ON_CHAT_MESSAGE_RECEIVED = new OnChatMessageReceivedListener();
+    public static final OnChatMessageSentListener ON_CHAT_MESSAGE_SENT = new OnChatMessageSentListener();
     public static final OnLookingAtBlockListener ON_LOOKING_AT_BLOCK = new OnLookingAtBlockListener();
     public static final OnEnterBiomeListener ON_ENTER_BIOME = new OnEnterBiomeListener();
     public static final OnLeaveBiomeListener ON_LEAVE_BIOME = new OnLeaveBiomeListener();
@@ -36,6 +38,8 @@ public class Listeners {
         ListenerRegistry.register(ON_MOUSE_SCROLLED);
         ListenerRegistry.register(ON_VARIABLE_UPDATED);
         ListenerRegistry.register(ON_FILE_DOWNLOADED);
+        ListenerRegistry.register(ON_CHAT_MESSAGE_RECEIVED);
+        ListenerRegistry.register(ON_CHAT_MESSAGE_SENT);
         ListenerRegistry.register(ON_LOOKING_AT_BLOCK);
         ListenerRegistry.register(ON_ENTER_BIOME);
         ListenerRegistry.register(ON_LEAVE_BIOME);

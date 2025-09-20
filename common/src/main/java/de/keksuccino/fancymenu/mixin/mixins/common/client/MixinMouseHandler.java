@@ -27,6 +27,9 @@ public class MixinMouseHandler {
     @Shadow private double accumulatedDY;
 
     @Unique private final Minecraft mcFancyMenu = Minecraft.getInstance();
+    @Unique private double lastGuiScaledMouseX_FancyMenu;
+    @Unique private double lastGuiScaledMouseY_FancyMenu;
+    @Unique private boolean hasGuiScaledMousePos_FancyMenu;
 
     @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDDD)Z"), cancellable = true)
     private void beforeMouseScrollScreenFancyMenu(long $$0, double scrollX, double scrollY, CallbackInfo info) {
@@ -72,12 +75,23 @@ public class MixinMouseHandler {
             return;
         }
 
-        double guiWidth = (double)this.mcFancyMenu.getWindow().getGuiScaledWidth();
-        double guiHeight = (double)this.mcFancyMenu.getWindow().getGuiScaledHeight();
-        double screenWidth = (double)this.mcFancyMenu.getWindow().getScreenWidth();
-        double screenHeight = (double)this.mcFancyMenu.getWindow().getScreenHeight();
-        double mouseX = this.xpos * guiWidth / screenWidth;
-        double mouseY = this.ypos * guiHeight / screenHeight;
+        double guiScale = this.mcFancyMenu.getWindow().getGuiScale();
+        if (guiScale <= 0.0D) {
+            guiScale = 1.0D;
+        }
+        double mouseX = this.xpos / guiScale;
+        double mouseY = this.ypos / guiScale;
+        if (!this.hasGuiScaledMousePos_FancyMenu) {
+            double guiWidth = (double)this.mcFancyMenu.getWindow().getGuiScaledWidth();
+            double guiHeight = (double)this.mcFancyMenu.getWindow().getGuiScaledHeight();
+            double screenWidth = (double)this.mcFancyMenu.getWindow().getScreenWidth();
+            double screenHeight = (double)this.mcFancyMenu.getWindow().getScreenHeight();
+            mouseX = this.xpos * guiWidth / screenWidth;
+            mouseY = this.ypos * guiHeight / screenHeight;
+        }
+        this.lastGuiScaledMouseX_FancyMenu = mouseX;
+        this.lastGuiScaledMouseY_FancyMenu = mouseY;
+        this.hasGuiScaledMousePos_FancyMenu = true;
 
         if (action == GLFW.GLFW_PRESS) {
             Listeners.ON_MOUSE_BUTTON_CLICKED.onMouseButtonClicked(button, mouseX, mouseY);
@@ -96,6 +110,9 @@ public class MixinMouseHandler {
         double mouseY = this.ypos * guiHeight / screenHeight;
         double deltaX = this.accumulatedDX * guiWidth / screenWidth;
         double deltaY = this.accumulatedDY * guiHeight / screenHeight;
+        this.lastGuiScaledMouseX_FancyMenu = mouseX;
+        this.lastGuiScaledMouseY_FancyMenu = mouseY;
+        this.hasGuiScaledMousePos_FancyMenu = true;
         EventHandler.INSTANCE.postEvent(new ScreenMouseMoveEvent(this.mcFancyMenu.screen, mouseX, mouseY, deltaX, deltaY));
         if (MCEFUtil.isMCEFLoaded()) BrowserHandler.mouseMoved(mouseX, mouseY);
     }
