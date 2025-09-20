@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseMoveEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -9,6 +10,7 @@ import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.screens.Screen;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -54,10 +56,33 @@ public class MixinMouseHandler {
     }
 
     @Inject(method = "onPress", at = @At(value = "HEAD"))
-    private void headOnPressFancyMenu(long window, int button, int $$2, int $$3, CallbackInfo info) {
+    private void headOnPressFancyMenu(long window, int button, int action, int modifiers, CallbackInfo info) {
         if (window == Minecraft.getInstance().getWindow().getWindow()) {
-            boolean clicked = $$2 == 1;
+            boolean clicked = action == GLFW.GLFW_PRESS;
             if (clicked && (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o)) o.mouseClicked(button);
+        }
+    }
+
+    /**
+     * @reason Fire FancyMenu's mouse button listeners after vanilla processing so they run once per press/release.
+     */
+    @Inject(method = "onPress", at = @At("RETURN"))
+    private void triggerMouseButtonListeners_FancyMenu(long window, int button, int action, int modifiers, CallbackInfo info) {
+        if (window != this.mcFancyMenu.getWindow().getWindow()) {
+            return;
+        }
+
+        double guiWidth = (double)this.mcFancyMenu.getWindow().getGuiScaledWidth();
+        double guiHeight = (double)this.mcFancyMenu.getWindow().getGuiScaledHeight();
+        double screenWidth = (double)this.mcFancyMenu.getWindow().getScreenWidth();
+        double screenHeight = (double)this.mcFancyMenu.getWindow().getScreenHeight();
+        double mouseX = this.xpos * guiWidth / screenWidth;
+        double mouseY = this.ypos * guiHeight / screenHeight;
+
+        if (action == GLFW.GLFW_PRESS) {
+            Listeners.ON_MOUSE_BUTTON_CLICKED.onMouseButtonClicked(button, mouseX, mouseY);
+        } else if (action == GLFW.GLFW_RELEASE) {
+            Listeners.ON_MOUSE_BUTTON_RELEASED.onMouseButtonReleased(button, mouseX, mouseY);
         }
     }
 

@@ -8,6 +8,8 @@ public class Listeners {
     public static final OnKeyReleasedListener ON_KEY_RELEASED = new OnKeyReleasedListener();
     public static final OnCharTypedListener ON_CHAR_TYPED = new OnCharTypedListener();
     public static final OnMouseMovedListener ON_MOUSE_MOVED = new OnMouseMovedListener();
+    public static final OnMouseButtonClickedListener ON_MOUSE_BUTTON_CLICKED = new OnMouseButtonClickedListener();
+    public static final OnMouseButtonReleasedListener ON_MOUSE_BUTTON_RELEASED = new OnMouseButtonReleasedListener();
     public static final OnMouseScrolledListener ON_MOUSE_SCROLLED = new OnMouseScrolledListener();
     public static final OnVariableUpdatedListener ON_VARIABLE_UPDATED = new OnVariableUpdatedListener();
     public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
@@ -29,6 +31,8 @@ public class Listeners {
         ListenerRegistry.register(ON_KEY_RELEASED);
         ListenerRegistry.register(ON_CHAR_TYPED);
         ListenerRegistry.register(ON_MOUSE_MOVED);
+        ListenerRegistry.register(ON_MOUSE_BUTTON_CLICKED);
+        ListenerRegistry.register(ON_MOUSE_BUTTON_RELEASED);
         ListenerRegistry.register(ON_MOUSE_SCROLLED);
         ListenerRegistry.register(ON_VARIABLE_UPDATED);
         ListenerRegistry.register(ON_FILE_DOWNLOADED);
