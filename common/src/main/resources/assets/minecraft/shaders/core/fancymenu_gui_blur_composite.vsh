@@ -13,3 +13,4 @@ void main() {
     vec4 worldPos = ModelViewMat * vec4(Position.xyz, 1.0);
     gl_Position = ProjMat * worldPos;
 }
+

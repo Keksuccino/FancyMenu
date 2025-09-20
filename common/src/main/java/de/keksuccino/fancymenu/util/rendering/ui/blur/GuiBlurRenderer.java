@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering;
+package de.keksuccino.fancymenu.util.rendering.ui.blur;
 
 import com.mojang.blaze3d.pipeline.RenderCall;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -92,7 +92,8 @@ public final class GuiBlurRenderer {
             return;
         }
 
-        float radius = Mth.clamp(intensity, 0.0F, GameRenderer.MAX_BLUR_RADIUS);
+        float radius = intensity <= 1.0F ? intensity * GameRenderer.MAX_BLUR_RADIUS : intensity;
+        radius = Mth.clamp(radius, 0.0F, GameRenderer.MAX_BLUR_RADIUS);
         if (radius < 0.05F) {
             fallbackFill(graphics, x, y, width, height, tintArgb);
             return;
@@ -171,6 +172,7 @@ public final class GuiBlurRenderer {
         int maxX = Mth.floor(x + width);
         int maxY = Mth.floor(y + height);
         graphics.fill(minX, minY, maxX, maxY, tintArgb);
+        LOGGER.warn("[FANCYMENU] Using fallback fill for blur area!");
     }
 
     private boolean ensureResources(Minecraft minecraft) {
@@ -204,6 +206,7 @@ public final class GuiBlurRenderer {
             if (target == null) {
                 target = new TextureTarget(width, height, false, Minecraft.ON_OSX);
                 target.setClearColor(0.0F, 0.0F, 0.0F, 0.0F);
+                target.setFilterMode(9729); // GL_LINEAR
                 if (primary) {
                     pingTarget = target;
                 } else {
@@ -212,6 +215,7 @@ public final class GuiBlurRenderer {
             } else if (target.width != width || target.height != height) {
                 target.resize(width, height, Minecraft.ON_OSX);
                 target.setClearColor(0.0F, 0.0F, 0.0F, 0.0F);
+                target.setFilterMode(9729); // GL_LINEAR
             }
             return target;
         } catch (RuntimeException error) {
@@ -326,11 +330,17 @@ public final class GuiBlurRenderer {
             return;
         }
 
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableDepthTest();
+
+        RenderSystem.setShader(() -> compositeShader);
         compositeShader.setSampler("BlurSampler", texture);
 
         LOGGER.info("Using blur sampler texture {} ({}x{})", texture.getColorTextureId(), texture.width, texture.height);
 
-        compositeShader.safeGetUniform("ModelViewMat").set(graphics.pose().last().pose());
+        Matrix4f poseMatrix = graphics.pose().last().pose();
+        compositeShader.safeGetUniform("ModelViewMat").set(poseMatrix);
         compositeShader.safeGetUniform("ProjMat").set(RenderSystem.getProjectionMatrix());
         compositeShader.safeGetUniform("ColorTint").set(tintR, tintG, tintB, tintA);
         compositeShader.safeGetUniform("UVMin").set(uMin, vMin);
@@ -341,13 +351,8 @@ public final class GuiBlurRenderer {
         compositeShader.safeGetUniform("SmoothRadius").set(smoothRadiusPx);
         compositeShader.safeGetUniform("Rounded").set(useRounded ? 1 : 0);
 
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableDepthTest();
-
         compositeShader.apply();
 
-        Matrix4f poseMatrix = graphics.pose().last().pose();
         float minX = x;
         float minY = y;
         float maxX = x + width;
@@ -360,12 +365,13 @@ public final class GuiBlurRenderer {
         builder.addVertex(poseMatrix, maxX, minY, z).setUv(1.0F, 0.0F);
         builder.addVertex(poseMatrix, minX, minY, z).setUv(0.0F, 0.0F);
         MeshData meshData = builder.buildOrThrow();
-        BufferUploader.drawWithShader(meshData);
+        BufferUploader.draw(meshData);
         meshData.close();
 
         compositeShader.clear();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.enableDepthTest();
     }
 
     public void resetResources() {
@@ -414,3 +420,34 @@ public final class GuiBlurRenderer {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -19,8 +19,10 @@ void main() {
     vec4 blurred = texture(BlurSampler, uv);
 
     float overlay = clamp(ColorTint.a, 0.0, 1.0);
-    vec3 tinted = mix(blurred.rgb, ColorTint.rgb, overlay);
-    vec4 color = vec4(tinted, blurred.a);
+    vec3 tintedSample = blurred.rgb * ColorTint.rgb;
+    vec3 colorRgb = mix(blurred.rgb, tintedSample, overlay);
+    float finalAlpha = max(blurred.a, overlay);
+    vec4 color = vec4(colorRgb, finalAlpha);
 
     if (Rounded == 1) {
         vec2 fragPos = gl_FragCoord.xy - AreaOrigin;
@@ -39,3 +41,5 @@ void main() {
 
     fragColor = color;
 }
+
+

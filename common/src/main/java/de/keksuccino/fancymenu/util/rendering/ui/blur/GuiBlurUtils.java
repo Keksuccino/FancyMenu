@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering;
+package de.keksuccino.fancymenu.util.rendering.ui.blur;
 
 import net.minecraft.client.gui.GuiGraphics;
 

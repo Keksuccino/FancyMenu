@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyReleasedEvent;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.blur.GuiBlurRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
