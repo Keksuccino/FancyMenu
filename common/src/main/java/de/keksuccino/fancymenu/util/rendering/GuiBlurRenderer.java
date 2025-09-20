@@ -4,7 +4,6 @@ import com.mojang.blaze3d.pipeline.RenderCall;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -67,7 +66,6 @@ public final class GuiBlurRenderer {
         RenderSystem.assertOnRenderThread();
 
         Minecraft minecraft = Minecraft.getInstance();
-        Window window = minecraft.getWindow();
         RenderTarget mainTarget = minecraft.getMainRenderTarget();
         if (mainTarget == null) {
             fallbackFill(graphics, x, y, width, height, tintArgb);
@@ -79,7 +77,7 @@ public final class GuiBlurRenderer {
             return;
         }
 
-        double guiScale = window.getGuiScale();
+        double guiScale = minecraft.getWindow().getGuiScale();
         int windowWidth = mainTarget.viewWidth;
         int windowHeight = mainTarget.viewHeight;
 
@@ -163,8 +161,7 @@ public final class GuiBlurRenderer {
             cornerRadiusPx,
             smoothRadiusPx,
             useRoundedOutline,
-            tintArgb,
-            window
+            tintArgb
         );
     }
 
@@ -322,16 +319,19 @@ public final class GuiBlurRenderer {
         float cornerRadiusPx,
         float smoothRadiusPx,
         boolean useRounded,
-        int fallbackTint,
-        Window window
+        int fallbackTint
     ) {
         if (compositeShader == null) {
             fallbackFill(graphics, x, y, width, height, fallbackTint);
             return;
         }
 
-        compositeShader.setDefaultUniforms(VertexFormat.Mode.QUADS, graphics.pose().last().pose(), RenderSystem.getProjectionMatrix(), window);
-        compositeShader.setSampler("BlurSampler", texture.getColorTextureId());
+        compositeShader.setSampler("BlurSampler", texture);
+
+        LOGGER.info("Using blur sampler texture {} ({}x{})", texture.getColorTextureId(), texture.width, texture.height);
+
+        compositeShader.safeGetUniform("ModelViewMat").set(graphics.pose().last().pose());
+        compositeShader.safeGetUniform("ProjMat").set(RenderSystem.getProjectionMatrix());
         compositeShader.safeGetUniform("ColorTint").set(tintR, tintG, tintB, tintA);
         compositeShader.safeGetUniform("UVMin").set(uMin, vMin);
         compositeShader.safeGetUniform("UVMax").set(uMax, vMax);
