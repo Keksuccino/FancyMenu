@@ -17,9 +17,13 @@ import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
@@ -49,6 +53,12 @@ public class MixinMinecraft {
 	@Unique private Screen lastScreen_FancyMenu = null;
 
 	@Shadow @Nullable public Screen screen;
+
+	@Shadow private boolean clientLevelTeardownInProgress;
+
+	@Shadow @Nullable public ClientLevel level;
+
+	@Shadow @Nullable public LocalPlayer player;
 
 	@Inject(method = "setOverlay", at = @At("HEAD"))
 	private void beforeSetOverlayFancyMenu(Overlay overlay, CallbackInfo info) {
@@ -110,13 +120,23 @@ public class MixinMinecraft {
 	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
 	private void before_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
 
+		// This is just for giving FM the correct screen identifiers for all possible scenarios
+		if ((screen == null) && (this.level == null)) {
+			screen = new TitleScreen();
+		} else if ((screen == null) && ((this.player != null) && this.player.isDeadOrDying())) {
+			if (this.player.shouldShowDeathScreen()) {
+				screen = new DeathScreen(null, this.level.getLevelData().isHardcore());
+			}
+		}
+		final Screen finalScreen = screen;
+
 		if ((Minecraft.getInstance().screen instanceof LayoutEditorScreen e) && !(screen instanceof LayoutEditorScreen)) {
 			e.layout.menuBackgrounds.forEach(menuBackground -> {
-				menuBackground.onCloseScreen(e, screen);
+				menuBackground.onCloseScreen(e, finalScreen);
 				menuBackground.onDisableOrRemove();
 			});
 			e.getAllElements().forEach(element -> {
-				element.element.onCloseScreen(e, screen);
+				element.element.onCloseScreen(e, finalScreen);
 				element.element.onDestroyElement();
 			});
 		}
@@ -141,6 +161,15 @@ public class MixinMinecraft {
 		if (overrideWith != null) {
 			info.cancel();
 			Minecraft.getInstance().setScreen(overrideWith);
+			return;
+		}
+
+		if ((screen != null) && (screen != this.screen)) {
+			Screen cachedCurrent = this.screen;
+			Listeners.ON_OPEN_SCREEN.onScreenOpened(screen);
+			if (cachedCurrent != this.screen) {
+				info.cancel();
+			}
 		}
 
 	}
@@ -201,14 +230,6 @@ public class MixinMinecraft {
 	private void beforeScreenAddedFancyMenu(Screen screen, CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.screen));
-	}
-
-	/** @reason Fire FancyMenu open screen listeners after the new screen was added. */
-	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;added()V", shift = At.Shift.AFTER))
-	private void afterScreenAddedFancyMenu(Screen screen, CallbackInfo info) {
-		if (this.screen != null) {
-			Listeners.ON_OPEN_SCREEN.onScreenOpened(this.screen);
-		}
 	}
 
 
