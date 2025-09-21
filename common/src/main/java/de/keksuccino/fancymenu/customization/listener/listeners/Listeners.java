@@ -30,6 +30,8 @@ public class Listeners {
     public static final OnStopTouchingFluidListener ON_STOP_TOUCHING_FLUID = new OnStopTouchingFluidListener();
     public static final OnServerJoinedListener ON_SERVER_JOINED = new OnServerJoinedListener();
     public static final OnServerLeftListener ON_SERVER_LEFT = new OnServerLeftListener();
+    public static final OnOtherPlayerJoinedWorldListener ON_OTHER_PLAYER_JOINED_WORLD = new OnOtherPlayerJoinedWorldListener();
+    public static final OnOtherPlayerLeftWorldListener ON_OTHER_PLAYER_LEFT_WORLD = new OnOtherPlayerLeftWorldListener();
 
     public static void registerAll() {
 
@@ -59,6 +61,8 @@ public class Listeners {
         ListenerRegistry.register(ON_STOP_TOUCHING_FLUID);
         ListenerRegistry.register(ON_SERVER_JOINED);
         ListenerRegistry.register(ON_SERVER_LEFT);
+        ListenerRegistry.register(ON_OTHER_PLAYER_JOINED_WORLD);
+        ListenerRegistry.register(ON_OTHER_PLAYER_LEFT_WORLD);
 
     }
 
