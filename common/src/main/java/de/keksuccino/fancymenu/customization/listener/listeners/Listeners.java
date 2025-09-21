@@ -13,6 +13,7 @@ public class Listeners {
     public static final OnMouseScrolledListener ON_MOUSE_SCROLLED = new OnMouseScrolledListener();
     public static final OnOpenScreenListener ON_OPEN_SCREEN = new OnOpenScreenListener();
     public static final OnCloseScreenListener ON_CLOSE_SCREEN = new OnCloseScreenListener();
+    public static final OnDeathListener ON_DEATH = new OnDeathListener();
     public static final OnVariableUpdatedListener ON_VARIABLE_UPDATED = new OnVariableUpdatedListener();
     public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
     public static final OnChatMessageReceivedListener ON_CHAT_MESSAGE_RECEIVED = new OnChatMessageReceivedListener();
@@ -32,6 +33,7 @@ public class Listeners {
     public static final OnServerLeftListener ON_SERVER_LEFT = new OnServerLeftListener();
     public static final OnOtherPlayerJoinedWorldListener ON_OTHER_PLAYER_JOINED_WORLD = new OnOtherPlayerJoinedWorldListener();
     public static final OnOtherPlayerLeftWorldListener ON_OTHER_PLAYER_LEFT_WORLD = new OnOtherPlayerLeftWorldListener();
+    public static final OnOtherPlayerDiedListener ON_OTHER_PLAYER_DIED = new OnOtherPlayerDiedListener();
 
     public static void registerAll() {
 
@@ -63,6 +65,8 @@ public class Listeners {
         ListenerRegistry.register(ON_SERVER_LEFT);
         ListenerRegistry.register(ON_OTHER_PLAYER_JOINED_WORLD);
         ListenerRegistry.register(ON_OTHER_PLAYER_LEFT_WORLD);
+        ListenerRegistry.register(ON_DEATH);
+        ListenerRegistry.register(ON_OTHER_PLAYER_DIED);
 
     }
 
