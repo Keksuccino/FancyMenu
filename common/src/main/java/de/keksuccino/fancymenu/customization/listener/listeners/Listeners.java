@@ -11,6 +11,8 @@ public class Listeners {
     public static final OnMouseButtonClickedListener ON_MOUSE_BUTTON_CLICKED = new OnMouseButtonClickedListener();
     public static final OnMouseButtonReleasedListener ON_MOUSE_BUTTON_RELEASED = new OnMouseButtonReleasedListener();
     public static final OnMouseScrolledListener ON_MOUSE_SCROLLED = new OnMouseScrolledListener();
+    public static final OnOpenScreenListener ON_OPEN_SCREEN = new OnOpenScreenListener();
+    public static final OnCloseScreenListener ON_CLOSE_SCREEN = new OnCloseScreenListener();
     public static final OnVariableUpdatedListener ON_VARIABLE_UPDATED = new OnVariableUpdatedListener();
     public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
     public static final OnChatMessageReceivedListener ON_CHAT_MESSAGE_RECEIVED = new OnChatMessageReceivedListener();
@@ -36,6 +38,8 @@ public class Listeners {
         ListenerRegistry.register(ON_MOUSE_BUTTON_CLICKED);
         ListenerRegistry.register(ON_MOUSE_BUTTON_RELEASED);
         ListenerRegistry.register(ON_MOUSE_SCROLLED);
+        ListenerRegistry.register(ON_OPEN_SCREEN);
+        ListenerRegistry.register(ON_CLOSE_SCREEN);
         ListenerRegistry.register(ON_VARIABLE_UPDATED);
         ListenerRegistry.register(ON_FILE_DOWNLOADED);
         ListenerRegistry.register(ON_CHAT_MESSAGE_RECEIVED);

@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
@@ -188,11 +189,28 @@ public class MixinMinecraft {
 		EventHandler.INSTANCE.postEvent(new CloseScreenEvent(this.screen, screen));
 	}
 
+	/** @reason Fire FancyMenu close screen listeners after the screen was removed. */
+	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;removed()V", shift = At.Shift.AFTER))
+	private void afterScreenRemovedFancyMenu(Screen screen, CallbackInfo info) {
+		if (this.lastScreen_FancyMenu != null) {
+			Listeners.ON_CLOSE_SCREEN.onScreenClosed(this.lastScreen_FancyMenu);
+		}
+	}
+
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;added()V"))
 	private void beforeScreenAddedFancyMenu(Screen screen, CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.screen));
 	}
+
+	/** @reason Fire FancyMenu open screen listeners after the new screen was added. */
+	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;added()V", shift = At.Shift.AFTER))
+	private void afterScreenAddedFancyMenu(Screen screen, CallbackInfo info) {
+		if (this.screen != null) {
+			Listeners.ON_OPEN_SCREEN.onScreenOpened(this.screen);
+		}
+	}
+
 
 	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(D)V", shift = At.Shift.AFTER))
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {
