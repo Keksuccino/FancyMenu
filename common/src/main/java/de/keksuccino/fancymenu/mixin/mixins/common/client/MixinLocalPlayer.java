@@ -5,12 +5,13 @@ import de.keksuccino.fancymenu.customization.listener.listeners.helpers.FluidCon
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
@@ -53,6 +54,15 @@ public class MixinLocalPlayer {
     private boolean steppingStateInitialized_FancyMenu;
 
     @Unique
+    private boolean ridingStateInitialized_FancyMenu;
+
+    @Unique
+    private boolean lastRidingState_FancyMenu;
+
+    @Unique
+    private Entity lastMountedEntity_FancyMenu;
+
+    @Unique
     private static final FluidContactInfo NO_FLUID_FANCYMENU = new FluidContactInfo(false, null);
 
     @Inject(method = "tick", at = @At("TAIL"))
@@ -61,6 +71,7 @@ public class MixinLocalPlayer {
 
         this.updateFluidListeners_FancyMenu(self);
         this.updateSteppingListener_FancyMenu(self);
+        this.updateRidingListeners_FancyMenu(self);
 
         ResourceKey<Biome> currentBiomeKey = null;
         if (self.level() instanceof ClientLevel clientLevel && clientLevel.hasChunkAt(self.getBlockX(), self.getBlockZ())) {
@@ -168,6 +179,53 @@ public class MixinLocalPlayer {
     }
 
     @Unique
+    private void updateRidingListeners_FancyMenu(LocalPlayer self) {
+        Entity vehicle = self.getVehicle();
+        boolean isRiding = vehicle != null;
+
+        if (!this.ridingStateInitialized_FancyMenu) {
+            this.ridingStateInitialized_FancyMenu = true;
+            if (isRiding) {
+                this.updateMountedEntityCache_FancyMenu(vehicle);
+                Listeners.ON_ENTITY_MOUNTED.onEntityMounted(vehicle);
+            }
+        } else {
+            if (!this.lastRidingState_FancyMenu && isRiding) {
+                this.updateMountedEntityCache_FancyMenu(vehicle);
+                Listeners.ON_ENTITY_MOUNTED.onEntityMounted(vehicle);
+            } else if (this.lastRidingState_FancyMenu && !isRiding) {
+                this.fireEntityUnmountedListener_FancyMenu();
+            } else if (isRiding) {
+                this.updateMountedEntityCache_FancyMenu(vehicle);
+            }
+        }
+
+        this.lastRidingState_FancyMenu = isRiding;
+        if (!isRiding) {
+            this.clearMountedEntityCache_FancyMenu();
+        }
+    }
+
+    @Unique
+    private void fireEntityUnmountedListener_FancyMenu() {
+        if (this.lastMountedEntity_FancyMenu != null) {
+            Listeners.ON_ENTITY_UNMOUNTED.onEntityUnmounted(this.lastMountedEntity_FancyMenu);
+        } else {
+            Listeners.ON_ENTITY_UNMOUNTED.onEntityUnmounted(null);
+        }
+    }
+
+    @Unique
+    private void updateMountedEntityCache_FancyMenu(Entity vehicle) {
+        this.lastMountedEntity_FancyMenu = vehicle;
+    }
+
+    @Unique
+    private void clearMountedEntityCache_FancyMenu() {
+        this.lastMountedEntity_FancyMenu = null;
+    }
+
+    @Unique
     private void resetSteppingState_FancyMenu() {
         this.steppingStateInitialized_FancyMenu = false;
         this.lastSteppedBlockPos_FancyMenu = null;
@@ -213,5 +271,4 @@ public class MixinLocalPlayer {
 
         return NO_FLUID_FANCYMENU;
     }
-
 }

@@ -54,6 +54,7 @@
     "client.MixinLocalPlayer",
     "client.MixinMinecraft",
     "client.MixinMouseHandler",
+    "client.MixinMultiPlayerGameMode",
     "client.MixinMusicManager",
     "client.MixinOnlineServerEntry",
     "client.MixinPauseScreen",
