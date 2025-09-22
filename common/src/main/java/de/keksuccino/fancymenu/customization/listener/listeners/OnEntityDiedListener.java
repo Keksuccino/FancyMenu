@@ -25,6 +25,9 @@ public class OnEntityDiedListener extends AbstractListener {
     private String cachedDeathPosZ;
     @Nullable
     private String cachedEntityUuid;
+    @Nullable
+    private String cachedDimensionKey;
+    private boolean isSameDimensionAsPlayer;
 
     public OnEntityDiedListener() {
         super("entity_died");
@@ -36,6 +39,7 @@ public class OnEntityDiedListener extends AbstractListener {
         this.cachedDeathPosX = Double.toString(posX);
         this.cachedDeathPosY = Double.toString(posY);
         this.cachedDeathPosZ = Double.toString(posZ);
+        this.cachedDimensionKey = levelKey;
         this.cachedDistanceToPlayer = this.computeDistanceToPlayer(posX, posY, posZ, levelKey);
         this.notifyAllInstances();
     }
@@ -44,10 +48,13 @@ public class OnEntityDiedListener extends AbstractListener {
     private String computeDistanceToPlayer(double posX, double posY, double posZ, @Nullable String levelKey) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null) {
+            this.isSameDimensionAsPlayer = false;
             return null;
         }
         String playerLevelKey = minecraft.player.level() != null ? minecraft.player.level().dimension().location().toString() : null;
-        if (levelKey != null && playerLevelKey != null && !playerLevelKey.equals(levelKey)) {
+        boolean sameDimension = (levelKey != null && playerLevelKey != null && playerLevelKey.equals(levelKey)) || (levelKey == null && playerLevelKey == null);
+        this.isSameDimensionAsPlayer = sameDimension;
+        if (!sameDimension) {
             return "-1";
         }
         Vec3 playerPos = minecraft.player.position();
@@ -66,6 +73,8 @@ public class OnEntityDiedListener extends AbstractListener {
         list.add(new CustomVariable("death_pos_y", () -> this.cachedDeathPosY != null ? this.cachedDeathPosY : "0"));
         list.add(new CustomVariable("death_pos_z", () -> this.cachedDeathPosZ != null ? this.cachedDeathPosZ : "0"));
         list.add(new CustomVariable("entity_uuid", () -> this.cachedEntityUuid != null ? this.cachedEntityUuid : "ERROR"));
+        list.add(new CustomVariable("dimension_key", () -> this.cachedDimensionKey != null ? this.cachedDimensionKey : "UNKNOWN"));
+        list.add(new CustomVariable("is_same_dimension_as_player", () -> Boolean.toString(this.isSameDimensionAsPlayer)));
     }
 
     @Override
