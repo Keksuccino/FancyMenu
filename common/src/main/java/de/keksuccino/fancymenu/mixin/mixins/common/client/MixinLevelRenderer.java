@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ClipContext;
@@ -54,6 +55,11 @@ public class MixinLevelRenderer {
 
     @Unique
     private static boolean isEntityVisibleForListener_FancyMenu(Entity entity, Vec3 cameraPosition, Vec3 entityPosition) {
+        double distanceToEntity = entityPosition.distanceTo(cameraPosition);
+        if (distanceToEntity > 200.0D) {
+            return false;
+        }
+
         Minecraft minecraft = Minecraft.getInstance();
         Entity cameraEntity = minecraft.getCameraEntity();
         if (cameraEntity == null) {
@@ -63,12 +69,20 @@ public class MixinLevelRenderer {
             return false;
         }
 
-        double distanceToEntity = entityPosition.distanceTo(cameraPosition);
         if (distanceToEntity <= 1.0E-8) {
             return false;
         }
 
-        BlockHitResult hitResult = entity.level().clip(new ClipContext(cameraPosition, entityPosition, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, cameraEntity));
+        BlockPos cameraBlockPos = BlockPos.containing(cameraPosition);
+        BlockState cameraBlockState = entity.level().getBlockState(cameraBlockPos);
+        if (cameraBlockState.canOcclude()) {
+            return false;
+        }
+
+        Vec3 direction = entityPosition.subtract(cameraPosition);
+        Vec3 start = cameraPosition.add(direction.normalize().scale(1.0E-3D));
+
+        BlockHitResult hitResult = entity.level().clip(new ClipContext(start, entityPosition, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, cameraEntity));
         if (hitResult.getType() != HitResult.Type.BLOCK) {
             return true;
         }
