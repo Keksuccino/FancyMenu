@@ -32,6 +32,8 @@
     "client.MixinAbstractSelectionList",
     "client.MixinAbstractSliderButton",
     "client.MixinAbstractWidget",
+    "client.MixinChatListener",
+    "client.MixinClientPacketListener",
     "client.MixinConnectScreen",
     "client.MixinCreateWorldScreen",
     "client.MixinCreateWorldScreen_GameTab",
@@ -42,13 +44,14 @@
     "client.MixinDisconnectedScreen",
     "client.MixinGameLoadCookie",
     "client.MixinGameRenderer",
-    "client.MixinKeyboardHandler",
     "client.MixinGenericMessageScreen",
     "client.MixinImageButton",
+    "client.MixinKeyboardHandler",
     "client.MixinLevelLoadingScreen",
+    "client.MixinLevelRenderer",
     "client.MixinLevelStorageAccess",
-    "client.MixinLocalPlayer",
     "client.MixinLoadingOverlay",
+    "client.MixinLocalPlayer",
     "client.MixinMinecraft",
     "client.MixinMouseHandler",
     "client.MixinMusicManager",
@@ -65,9 +68,7 @@
     "client.MixinSwitchGrid_SwitchBuilder",
     "client.MixinTabNavigationBar",
     "client.MixinTitleScreen",
-    "client.MixinWorldListEntry",
-    "client.MixinChatListener",
-    "client.MixinClientPacketListener"
+    "client.MixinWorldListEntry"
   ],
   "mixins": [
     "server.MixinServerPlayer"

@@ -20,6 +20,8 @@ public class Listeners {
     public static final OnChatMessageReceivedListener ON_CHAT_MESSAGE_RECEIVED = new OnChatMessageReceivedListener();
     public static final OnChatMessageSentListener ON_CHAT_MESSAGE_SENT = new OnChatMessageSentListener();
     public static final OnLookingAtBlockListener ON_LOOKING_AT_BLOCK = new OnLookingAtBlockListener();
+    public static final OnLookingAtEntityListener ON_LOOKING_AT_ENTITY = new OnLookingAtEntityListener();
+    public static final OnEntityInSightListener ON_ENTITY_IN_SIGHT = new OnEntityInSightListener();
     public static final OnSteppingOnBlockListener ON_STEPPING_ON_BLOCK = new OnSteppingOnBlockListener();
     public static final OnEnterBiomeListener ON_ENTER_BIOME = new OnEnterBiomeListener();
     public static final OnLeaveBiomeListener ON_LEAVE_BIOME = new OnLeaveBiomeListener();
@@ -54,6 +56,8 @@ public class Listeners {
         ListenerRegistry.register(ON_CHAT_MESSAGE_RECEIVED);
         ListenerRegistry.register(ON_CHAT_MESSAGE_SENT);
         ListenerRegistry.register(ON_LOOKING_AT_BLOCK);
+        ListenerRegistry.register(ON_LOOKING_AT_ENTITY);
+        ListenerRegistry.register(ON_ENTITY_IN_SIGHT);
         ListenerRegistry.register(ON_STEPPING_ON_BLOCK);
         ListenerRegistry.register(ON_ENTER_BIOME);
         ListenerRegistry.register(ON_LEAVE_BIOME);
@@ -75,4 +79,3 @@ public class Listeners {
     }
 
 }
-
