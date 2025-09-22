@@ -21,6 +21,8 @@ public class Listeners {
     public static final OnChatMessageSentListener ON_CHAT_MESSAGE_SENT = new OnChatMessageSentListener();
     public static final OnLookingAtBlockListener ON_LOOKING_AT_BLOCK = new OnLookingAtBlockListener();
     public static final OnLookingAtEntityListener ON_LOOKING_AT_ENTITY = new OnLookingAtEntityListener();
+    public static final OnEntitySpawnedListener ON_ENTITY_SPAWNED = new OnEntitySpawnedListener();
+    public static final OnEntityDiedListener ON_ENTITY_DIED = new OnEntityDiedListener();
     public static final OnEntityInSightListener ON_ENTITY_IN_SIGHT = new OnEntityInSightListener();
     public static final OnInteractedWithEntityListener ON_INTERACTED_WITH_ENTITY = new OnInteractedWithEntityListener();
     public static final OnEntityMountedListener ON_ENTITY_MOUNTED = new OnEntityMountedListener();
@@ -60,6 +62,8 @@ public class Listeners {
         ListenerRegistry.register(ON_CHAT_MESSAGE_SENT);
         ListenerRegistry.register(ON_LOOKING_AT_BLOCK);
         ListenerRegistry.register(ON_LOOKING_AT_ENTITY);
+        ListenerRegistry.register(ON_ENTITY_SPAWNED);
+        ListenerRegistry.register(ON_ENTITY_DIED);
         ListenerRegistry.register(ON_ENTITY_IN_SIGHT);
         ListenerRegistry.register(ON_INTERACTED_WITH_ENTITY);
         ListenerRegistry.register(ON_ENTITY_MOUNTED);

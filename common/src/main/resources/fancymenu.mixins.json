@@ -72,6 +72,8 @@
     "client.MixinWorldListEntry"
   ],
   "mixins": [
+    "server.MixinLivingEntity",
+    "server.MixinServerLevel",
     "server.MixinServerPlayer"
   ],
   "injectors": {
@@ -81,3 +83,4 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
+

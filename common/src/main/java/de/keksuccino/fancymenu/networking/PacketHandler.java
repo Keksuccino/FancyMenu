@@ -79,6 +79,16 @@ public class PacketHandler {
         }
     }
 
+    public static <T extends Packet> void sendToAllFancyMenuClients(@NotNull MinecraftServer server, @NotNull T packet) {
+        Objects.requireNonNull(server, "Server was NULL when broadcasting packet!");
+        Objects.requireNonNull(packet, "Packet was NULL when broadcasting!");
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (isFancyMenuClient(player)) {
+                sendToClient(player, packet);
+            }
+        }
+    }
+
     public static void setSendToServerLogic(Consumer<String> dataConsumer) {
         sendToServerDataConsumer = dataConsumer;
     }

@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.networking.packets.commands.variable.command.Vari
 import de.keksuccino.fancymenu.networking.packets.commands.variable.suggestions.VariableCommandSuggestionsPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.handshake.HandshakePacketCodec;
 import de.keksuccino.fancymenu.networking.packets.structures.StructureEventPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.entities.EntityEventPacketCodec;
 
 public class Packets {
 
@@ -20,6 +21,7 @@ public class Packets {
     public static final LayoutCommandPacketCodec LAYOUT_COMMAND_PACKET_CODEC = new LayoutCommandPacketCodec();
     public static final HandshakePacketCodec HANDSHAKE_PACKET_CODEC = new HandshakePacketCodec();
     public static final StructureEventPacketCodec STRUCTURE_EVENT_PACKET_CODEC = new StructureEventPacketCodec();
+    public static final EntityEventPacketCodec ENTITY_EVENT_PACKET_CODEC = new EntityEventPacketCodec();
 
     public static void registerAll() {
 
@@ -31,6 +33,7 @@ public class Packets {
         PacketRegistry.register(LAYOUT_COMMAND_SUGGESTIONS_PACKET_CODEC);
         PacketRegistry.register(HANDSHAKE_PACKET_CODEC);
         PacketRegistry.register(STRUCTURE_EVENT_PACKET_CODEC);
+        PacketRegistry.register(ENTITY_EVENT_PACKET_CODEC);
 
     }
 
