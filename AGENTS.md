@@ -21,14 +21,7 @@ Target Java 21 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matchi
 - The en_us.json file is pretty large, too large for you to read the full file, so if you need something from it, search for specific lines.
 - ALWAYS add new locals to the END OF THE FILE (without breaking the JSON syntax).
 - When you add something to a system that already has localizations available for other parts of the system, first read the existing localizations to understand how the new localizations should get formatted.
-- Always read and write en_us.json with an explicit UTF-8-without-BOM encoding:
-    ```
-	$path = 'common\src\main\resources\assets\fancymenu\lang\en_us.json'
-    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    $json = [System.IO.File]::ReadAllText($path, $utf8NoBom)
-    # …modify $json string…
-    [System.IO.File]::WriteAllText($path, $json, $utf8NoBom)
-	```
+- Always read and write en_us.json with an explicit UTF-8-without-BOM encoding
   - Never use plain Get-Content/Set-Content (or Add-Content) on this file; Windows PowerShell 5.x will mis-handle BOM-less UTF-8.
   - After editing, quickly sanity-check that sequences like `§z` still look correct (no stray `Â` characters) before proceeding.
 

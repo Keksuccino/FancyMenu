@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.listener.listeners.helpers.FluidCon
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
@@ -46,6 +47,12 @@ public class MixinLocalPlayer {
     private String lastTouchingFluidKey_FancyMenu;
 
     @Unique
+    private BlockPos lastSteppedBlockPos_FancyMenu;
+
+    @Unique
+    private boolean steppingStateInitialized_FancyMenu;
+
+    @Unique
     private static final FluidContactInfo NO_FLUID_FANCYMENU = new FluidContactInfo(false, null);
 
     @Inject(method = "tick", at = @At("TAIL"))
@@ -53,6 +60,7 @@ public class MixinLocalPlayer {
         LocalPlayer self = (LocalPlayer)(Object)this;
 
         this.updateFluidListeners_FancyMenu(self);
+        this.updateSteppingListener_FancyMenu(self);
 
         ResourceKey<Biome> currentBiomeKey = null;
         if (self.level() instanceof ClientLevel clientLevel && clientLevel.hasChunkAt(self.getBlockX(), self.getBlockZ())) {
@@ -126,6 +134,43 @@ public class MixinLocalPlayer {
         }
 
         this.lastSwimmingState_FancyMenu = isSwimming;
+    }
+
+    @Unique
+    private void updateSteppingListener_FancyMenu(LocalPlayer self) {
+        if (!(self.level() instanceof ClientLevel clientLevel)) {
+            this.resetSteppingState_FancyMenu();
+            return;
+        }
+
+        if (!self.onGround() || self.isSpectator()) {
+            this.resetSteppingState_FancyMenu();
+            return;
+        }
+
+        BlockPos onPos = self.getOnPos();
+        if (!clientLevel.hasChunkAt(onPos)) {
+            return;
+        }
+
+        BlockState blockState = clientLevel.getBlockState(onPos);
+        if (blockState.isAir()) {
+            return;
+        }
+
+        BlockPos immutablePos = onPos.immutable();
+
+        if (!this.steppingStateInitialized_FancyMenu || !immutablePos.equals(this.lastSteppedBlockPos_FancyMenu)) {
+            this.steppingStateInitialized_FancyMenu = true;
+            this.lastSteppedBlockPos_FancyMenu = immutablePos;
+            Listeners.ON_STEPPING_ON_BLOCK.onSteppedOnBlock(immutablePos, blockState);
+        }
+    }
+
+    @Unique
+    private void resetSteppingState_FancyMenu() {
+        this.steppingStateInitialized_FancyMenu = false;
+        this.lastSteppedBlockPos_FancyMenu = null;
     }
 
     @Unique
