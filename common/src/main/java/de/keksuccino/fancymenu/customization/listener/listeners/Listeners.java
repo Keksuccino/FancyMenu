@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.listener.listeners;
+﻿package de.keksuccino.fancymenu.customization.listener.listeners;
 
 import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
 
@@ -13,6 +13,7 @@ public class Listeners {
     public static final OnMouseScrolledListener ON_MOUSE_SCROLLED = new OnMouseScrolledListener();
     public static final OnOpenScreenListener ON_OPEN_SCREEN = new OnOpenScreenListener();
     public static final OnCloseScreenListener ON_CLOSE_SCREEN = new OnCloseScreenListener();
+    public static final OnQuitMinecraftListener ON_QUIT_MINECRAFT = new OnQuitMinecraftListener();
     public static final OnDeathListener ON_DEATH = new OnDeathListener();
     public static final OnVariableUpdatedListener ON_VARIABLE_UPDATED = new OnVariableUpdatedListener();
     public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
@@ -46,6 +47,7 @@ public class Listeners {
         ListenerRegistry.register(ON_MOUSE_SCROLLED);
         ListenerRegistry.register(ON_OPEN_SCREEN);
         ListenerRegistry.register(ON_CLOSE_SCREEN);
+        ListenerRegistry.register(ON_QUIT_MINECRAFT);
         ListenerRegistry.register(ON_VARIABLE_UPDATED);
         ListenerRegistry.register(ON_FILE_DOWNLOADED);
         ListenerRegistry.register(ON_CHAT_MESSAGE_RECEIVED);
@@ -71,3 +73,4 @@ public class Listeners {
     }
 
 }
+

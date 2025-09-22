@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+﻿package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeScreen;
@@ -60,14 +60,20 @@ public class MixinMinecraft {
 	@Unique private boolean hasActiveServerConnection_FancyMenu;
 	@Unique private boolean pendingServerJoinEvent_FancyMenu;
 	@Unique @Nullable private String lastServerIp_FancyMenu;
+	@Unique private boolean quitListenerFired_FancyMenu;
 
 	@Shadow @Nullable public Screen screen;
-
-	@Shadow private boolean clientLevelTeardownInProgress;
-
 	@Shadow @Nullable public ClientLevel level;
-
 	@Shadow @Nullable public LocalPlayer player;
+
+    @Inject(method = "stop", at = @At("HEAD"))
+    private void before_stop_FancyMenu(CallbackInfo info) {
+        if (!this.quitListenerFired_FancyMenu) {
+            this.quitListenerFired_FancyMenu = true;
+            Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
+        }
+    }
+
 
 	@Inject(method = "setOverlay", at = @At("HEAD"))
 	private void beforeSetOverlayFancyMenu(Overlay overlay, CallbackInfo info) {
@@ -387,3 +393,7 @@ public class MixinMinecraft {
 	}
 
 }
+
+
+
+

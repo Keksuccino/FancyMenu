@@ -1,4 +1,4 @@
-{
+﻿{
   "fancymenu.editor.add.image": "Image",
   "fancymenu.editor.add.image.desc": "A simple image.\nSupports local and web sources.",
   "fancymenu.editor.add.animation": "Animation",
@@ -1962,5 +1962,7 @@
   "fancymenu.listeners.on_death": "On Death",
   "fancymenu.listeners.on_death.desc": "Triggers right after the vanilla death screen opens for the local player.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$days_survived §r= In-game days survived (rounded down) since the last death\n- §z$$death_reason_string §r= Plain text description of the death reason\n- §z$$death_reason_component §r= Full component JSON of the death reason\n- §z$$death_pos_x §r= X coordinate where the player died\n- §z$$death_pos_y §r= Y coordinate where the player died\n- §z$$death_pos_z §r= Z coordinate where the player died",
   "fancymenu.listeners.on_other_player_died": "On Other Player Died",
-  "fancymenu.listeners.on_other_player_died.desc": "Triggers when another player in the current world dies.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$player_name §r= The plain name of the player who died\n- §z$$player_uuid §r= The UUID of the player who died\n- §z$$death_pos_x §r= X coordinate where the player died\n- §z$$death_pos_y §r= Y coordinate where the player died\n- §z$$death_pos_z §r= Z coordinate where the player died"
+  "fancymenu.listeners.on_other_player_died.desc": "Triggers when another player in the current world dies.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$player_name §r= The plain name of the player who died\n- §z$$player_uuid §r= The UUID of the player who died\n- §z$$death_pos_x §r= X coordinate where the player died\n- §z$$death_pos_y §r= Y coordinate where the player died\n- §z$$death_pos_z §r= Z coordinate where the player died",
+  "fancymenu.listeners.on_quit_minecraft": "On Quit Minecraft",
+  "fancymenu.listeners.on_quit_minecraft.desc": "This listener triggers once when the Minecraft client begins shutting down.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$timestamp_millis §r= Epoch milliseconds when the quit event fired\n- §z$$timestamp_iso §r= ISO-8601 timestamp representing the quit moment"
 }
