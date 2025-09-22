@@ -32,9 +32,8 @@ FancyMenu uses its own custom packet system. If you need to add packets for a fe
 You have access to the full Minecraft 1.21.1 sources in the `minecraft_cached_sources` folder. The folder contains source sets for Fabric (`fabric`), Forge (`forge`) and NeoForge (`neoforge`). Before starting a task, make sure to read sources you could need for the task, so you know how the current Minecraft code actually looks. Always do that, knowing how the actual Minecraft code looks is very important, especially when you work with mixins.
 Make sure to always compare Vanilla classes from all 3 modloaders (Fabric, Forge, NeoForge), since Forge and NeoForge often alter Vanilla classes, so mixins can't always get applied in `common` and instead need to get implemented for every launcher if the point to place the mixin differs between modloaders.
 
-## Writing to Files
-When writing files (edit or create), ALWAYS use UTF-8 (WITHOUT BOM) encoding! NEVER use any other encodings, such as UTF-8-BOM, etc.
-When you use PowerShell commands, generate PowerShell 5 compatible code to save files in UTF-8 without BOM, using System.Text.UTF8Encoding(false).
+## PowerShell
+You have access to PowerShell 7.5.3 via the `pwsh` command. ALWAYS USE POWERSHELL 7! The default one (v5) is too old and outdated.
 
 ## Git & Run/Compile
 NEVER try to run git commands or try to run/compile the project!
