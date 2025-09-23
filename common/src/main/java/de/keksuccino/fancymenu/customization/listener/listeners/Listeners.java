@@ -40,6 +40,8 @@ public class Listeners {
     public static final OnStopSwimmingListener ON_STOP_SWIMMING = new OnStopSwimmingListener();
     public static final OnStartTouchingFluidListener ON_START_TOUCHING_FLUID = new OnStartTouchingFluidListener();
     public static final OnStopTouchingFluidListener ON_STOP_TOUCHING_FLUID = new OnStopTouchingFluidListener();
+    public static final OnPositionChangedListener ON_POSITION_CHANGED = new OnPositionChangedListener();
+    public static final OnJumpListener ON_JUMP = new OnJumpListener();
     public static final OnServerJoinedListener ON_SERVER_JOINED = new OnServerJoinedListener();
     public static final OnServerLeftListener ON_SERVER_LEFT = new OnServerLeftListener();
     public static final OnOtherPlayerJoinedWorldListener ON_OTHER_PLAYER_JOINED_WORLD = new OnOtherPlayerJoinedWorldListener();
@@ -87,6 +89,8 @@ public class Listeners {
         ListenerRegistry.register(ON_STOP_SWIMMING);
         ListenerRegistry.register(ON_START_TOUCHING_FLUID);
         ListenerRegistry.register(ON_STOP_TOUCHING_FLUID);
+        ListenerRegistry.register(ON_POSITION_CHANGED);
+        ListenerRegistry.register(ON_JUMP);
         ListenerRegistry.register(ON_SERVER_JOINED);
         ListenerRegistry.register(ON_SERVER_LEFT);
         ListenerRegistry.register(ON_OTHER_PLAYER_JOINED_WORLD);
@@ -100,3 +104,5 @@ public class Listeners {
     }
 
 }
+
+

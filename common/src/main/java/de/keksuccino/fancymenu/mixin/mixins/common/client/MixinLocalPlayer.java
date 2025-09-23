@@ -52,6 +52,12 @@ public class MixinLocalPlayer {
     private String lastTouchingFluidKey_FancyMenu;
 
     @Unique
+    private boolean positionChangeInitialized_FancyMenu;
+
+    @Unique
+    private BlockPos lastKnownBlockPosition_FancyMenu;
+
+    @Unique
     private BlockPos lastSteppedBlockPos_FancyMenu;
 
     @Unique
@@ -74,6 +80,7 @@ public class MixinLocalPlayer {
         LocalPlayer self = (LocalPlayer)(Object)this;
 
         this.updateFluidListeners_FancyMenu(self);
+        this.updatePositionChangedListener_FancyMenu(self);
         this.updateSteppingListener_FancyMenu(self);
         this.updateRidingListeners_FancyMenu(self);
 
@@ -149,6 +156,31 @@ public class MixinLocalPlayer {
         }
 
         this.lastSwimmingState_FancyMenu = isSwimming;
+    }
+
+    @Unique
+    private void updatePositionChangedListener_FancyMenu(LocalPlayer self) {
+        if (!(self.level() instanceof ClientLevel clientLevel)) {
+            return;
+        }
+
+        BlockPos currentPos = self.blockPosition();
+        if (!clientLevel.hasChunkAt(currentPos.getX(), currentPos.getZ())) {
+            return;
+        }
+
+        BlockPos immutablePos = currentPos.immutable();
+        if (!this.positionChangeInitialized_FancyMenu) {
+            this.positionChangeInitialized_FancyMenu = true;
+            this.lastKnownBlockPosition_FancyMenu = immutablePos;
+            return;
+        }
+
+        if (!immutablePos.equals(this.lastKnownBlockPosition_FancyMenu)) {
+            BlockPos previousPos = this.lastKnownBlockPosition_FancyMenu;
+            this.lastKnownBlockPosition_FancyMenu = immutablePos;
+            Listeners.ON_POSITION_CHANGED.onPositionChanged(previousPos, immutablePos);
+        }
     }
 
     @Unique
@@ -288,3 +320,4 @@ public class MixinLocalPlayer {
         return removed;
     }
 }
+

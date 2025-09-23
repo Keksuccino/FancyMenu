@@ -22,9 +22,6 @@ Target Java 21 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matchi
 - ALWAYS add new locals to the END OF THE FILE (without breaking the JSON syntax).
 - When you add something to a system that already has localizations available for other parts of the system, first read the existing localizations to understand how the new localizations should get formatted.
 - Always read and write en_us.json with an explicit UTF-8-without-BOM encoding.
-- When appending to en_us.json, make sure the literal newline escape remains \n, not \\n. In PowerShell here-strings, type the
-  JSON fragment with single backslashes (e.g. \n) and avoid double-escaping. After writing, spot-check the file so sequences like §z and \n look exactly
-  as in existing entries.
 
 ## Networking & Packets
 FancyMenu uses its own custom packet system. If you need to add packets for a feature, make sure to analyze the `de.keksuccino.fancymenu.networking` package in the `common` module first, to understand how packets get implemented and registered.

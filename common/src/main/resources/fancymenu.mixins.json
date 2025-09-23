@@ -51,6 +51,7 @@
     "client.MixinLevelRenderer",
     "client.MixinLevelStorageAccess",
     "client.MixinLivingEntity",
+    "client.MixinPlayer",
     "client.MixinLoadingOverlay",
     "client.MixinLocalPlayer",
     "client.MixinMinecraft",
@@ -84,4 +85,6 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
+
+
 
