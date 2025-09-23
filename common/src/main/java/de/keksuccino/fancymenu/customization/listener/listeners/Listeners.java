@@ -27,6 +27,8 @@ public class Listeners {
     public static final OnInteractedWithEntityListener ON_INTERACTED_WITH_ENTITY = new OnInteractedWithEntityListener();
     public static final OnEntityMountedListener ON_ENTITY_MOUNTED = new OnEntityMountedListener();
     public static final OnEntityUnmountedListener ON_ENTITY_UNMOUNTED = new OnEntityUnmountedListener();
+    public static final OnBlockBrokeListener ON_BLOCK_BROKE = new OnBlockBrokeListener();
+    public static final OnBlockPlacedListener ON_BLOCK_PLACED = new OnBlockPlacedListener();
     public static final OnSteppingOnBlockListener ON_STEPPING_ON_BLOCK = new OnSteppingOnBlockListener();
     public static final OnEnterBiomeListener ON_ENTER_BIOME = new OnEnterBiomeListener();
     public static final OnLeaveBiomeListener ON_LEAVE_BIOME = new OnLeaveBiomeListener();
@@ -72,6 +74,8 @@ public class Listeners {
         ListenerRegistry.register(ON_INTERACTED_WITH_ENTITY);
         ListenerRegistry.register(ON_ENTITY_MOUNTED);
         ListenerRegistry.register(ON_ENTITY_UNMOUNTED);
+        ListenerRegistry.register(ON_BLOCK_BROKE);
+        ListenerRegistry.register(ON_BLOCK_PLACED);
         ListenerRegistry.register(ON_STEPPING_ON_BLOCK);
         ListenerRegistry.register(ON_ENTER_BIOME);
         ListenerRegistry.register(ON_LEAVE_BIOME);
