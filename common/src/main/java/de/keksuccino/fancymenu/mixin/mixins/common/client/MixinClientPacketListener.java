@@ -1,18 +1,26 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.network.protocol.game.ClientboundTakeItemEntityPacket;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.stats.Stats;
 import net.minecraft.stats.StatsCounter;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -113,4 +121,39 @@ public class MixinClientPacketListener {
         Vec3 deathPosition = minecraft.player.position();
         Listeners.ON_DEATH.onDeath(packet.message(), daysSurvived, deathPosition.x, deathPosition.y, deathPosition.z);
     }
+
+    /** @reason Fire FancyMenu listener when the local player picks up an item entity. */
+    @WrapOperation(method = "handleTakeItemEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
+    private void wrap_shrinkItem_FancyMenu(ItemStack stack, int amount, Operation<Void> operation, ClientboundTakeItemEntityPacket packet) {
+        Minecraft minecraft = Minecraft.getInstance();
+        LocalPlayer localPlayer = minecraft.player;
+        if (localPlayer == null) {
+            operation.call(stack, amount);
+            return;
+        }
+
+        ClientLevel level = minecraft.level;
+        Entity potentialCollector = level != null ? level.getEntity(packet.getPlayerId()) : null;
+        boolean isLocalCollector = potentialCollector == localPlayer;
+        if (!isLocalCollector && potentialCollector == null) {
+            isLocalCollector = packet.getPlayerId() == localPlayer.getId();
+        }
+
+        String itemKey = null;
+        if (!stack.isEmpty()) {
+            ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            if (itemLocation != null) {
+                itemKey = itemLocation.toString();
+            }
+        }
+
+        operation.call(stack, amount);
+
+        if (!isLocalCollector || itemKey == null) {
+            return;
+        }
+
+        Listeners.ON_ITEM_PICKED_UP.onItemPickedUp(itemKey);
+    }
+
 }

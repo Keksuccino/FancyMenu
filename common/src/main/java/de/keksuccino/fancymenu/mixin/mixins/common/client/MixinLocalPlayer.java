@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.helpers.FluidContactInfo;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -11,6 +13,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.material.FluidState;
@@ -270,5 +274,17 @@ public class MixinLocalPlayer {
         }
 
         return NO_FLUID_FANCYMENU;
+    }
+
+    /** @reason Fire FancyMenu listener when the local player drops an item. */
+    @WrapOperation(method = "drop", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;removeFromSelected(Z)Lnet/minecraft/world/item/ItemStack;"))
+    private ItemStack wrap_removeFromSelected_FancyMenu(Inventory inventory, boolean fullStack, Operation<ItemStack> operation) {
+        ItemStack removed = operation.call(inventory, fullStack);
+        if (!removed.isEmpty()) {
+            ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(removed.getItem());
+            String itemKey = itemLocation != null ? itemLocation.toString() : null;
+            Listeners.ON_ITEM_DROPPED.onItemDropped(itemKey);
+        }
+        return removed;
     }
 }

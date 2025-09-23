@@ -50,6 +50,7 @@
     "client.MixinLevelLoadingScreen",
     "client.MixinLevelRenderer",
     "client.MixinLevelStorageAccess",
+    "client.MixinLivingEntity",
     "client.MixinLoadingOverlay",
     "client.MixinLocalPlayer",
     "client.MixinMinecraft",

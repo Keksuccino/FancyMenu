@@ -44,6 +44,10 @@ public class Listeners {
     public static final OnOtherPlayerLeftWorldListener ON_OTHER_PLAYER_LEFT_WORLD = new OnOtherPlayerLeftWorldListener();
     public static final OnOtherPlayerDiedListener ON_OTHER_PLAYER_DIED = new OnOtherPlayerDiedListener();
 
+    public static final OnItemPickedUpListener ON_ITEM_PICKED_UP = new OnItemPickedUpListener();
+    public static final OnItemDroppedListener ON_ITEM_DROPPED = new OnItemDroppedListener();
+    public static final OnItemConsumedListener ON_ITEM_CONSUMED = new OnItemConsumedListener();
+
     public static void registerAll() {
 
         ListenerRegistry.register(ON_KEY_PRESSED);
@@ -85,6 +89,9 @@ public class Listeners {
         ListenerRegistry.register(ON_OTHER_PLAYER_LEFT_WORLD);
         ListenerRegistry.register(ON_DEATH);
         ListenerRegistry.register(ON_OTHER_PLAYER_DIED);
+        ListenerRegistry.register(ON_ITEM_PICKED_UP);
+        ListenerRegistry.register(ON_ITEM_DROPPED);
+        ListenerRegistry.register(ON_ITEM_CONSUMED);
 
     }
 
