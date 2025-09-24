@@ -162,6 +162,16 @@ public final class MusicTrackInfoHelper {
         return RegistryAccess.EMPTY;
     }
 
+    /**
+     * Example Json entry:
+     *
+     * {
+     *     "resource_location": "assets/minecraft/sounds/music/game/a_familiar_room.ogg",
+     *     "display_name": "A Familiar Room",
+     *     "artist": "Aaron Cherof",
+     *     "duration": "4:07"
+     *   }
+     */
     public static class MusicTrackInfo {
         public String resource_location; // the track resource location formatted as full asset path, like "assets/minecraft/sounds/music/menu/mutation.ogg"
         public String display_name; // the track display name
