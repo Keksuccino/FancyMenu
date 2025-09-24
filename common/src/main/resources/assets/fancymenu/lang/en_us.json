@@ -2006,5 +2006,9 @@
   "fancymenu.listeners.on_stopped_burning": "On Stopped Burning",
   "fancymenu.listeners.on_stopped_burning.desc": "This listener triggers once when the player stops burning.",
   "fancymenu.listeners.on_started_drowning": "On Started Drowning",
-  "fancymenu.listeners.on_started_drowning.desc": "This listener triggers once when the player begins taking drowning damage."
+  "fancymenu.listeners.on_started_drowning.desc": "This listener triggers once when the player begins taking drowning damage.",
+  "fancymenu.listeners.on_music_track_started": "On Music Track Started",
+  "fancymenu.listeners.on_music_track_started.desc": "This listener triggers once when a new music track starts playing.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$track_resource_location §r= The resource location of the track that started\n- §z$$display_name_string §r= Plain display name of the track or NONE when unavailable\n- §z$$display_name_component §r= Serialized JSON component of the display name or NONE when unavailable",
+  "fancymenu.listeners.on_music_track_stopped": "On Music Track Stopped",
+  "fancymenu.listeners.on_music_track_stopped.desc": "This listener triggers once when the current music track stops playing (naturally or because it was replaced).\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$track_resource_location §r= The resource location of the track that stopped\n- §z$$display_name_string §r= Plain display name of the track or NONE when unavailable\n- §z$$display_name_component §r= Serialized JSON component of the display name or NONE when unavailable"
 }

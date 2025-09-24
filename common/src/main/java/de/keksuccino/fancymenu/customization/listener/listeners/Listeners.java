@@ -42,6 +42,8 @@ public class Listeners {
     public static final OnStopSwimmingListener ON_STOP_SWIMMING = new OnStopSwimmingListener();
     public static final OnStartTouchingFluidListener ON_START_TOUCHING_FLUID = new OnStartTouchingFluidListener();
     public static final OnStopTouchingFluidListener ON_STOP_TOUCHING_FLUID = new OnStopTouchingFluidListener();
+    public static final OnMusicTrackStartedListener ON_MUSIC_TRACK_STARTED = new OnMusicTrackStartedListener();
+    public static final OnMusicTrackStoppedListener ON_MUSIC_TRACK_STOPPED = new OnMusicTrackStoppedListener();
     public static final OnStartedBurningListener ON_STARTED_BURNING = new OnStartedBurningListener();
     public static final OnStoppedBurningListener ON_STOPPED_BURNING = new OnStoppedBurningListener();
     public static final OnStartedDrowningListener ON_STARTED_DROWNING = new OnStartedDrowningListener();
@@ -97,6 +99,8 @@ public class Listeners {
         ListenerRegistry.register(ON_STOP_SWIMMING);
         ListenerRegistry.register(ON_START_TOUCHING_FLUID);
         ListenerRegistry.register(ON_STOP_TOUCHING_FLUID);
+        ListenerRegistry.register(ON_MUSIC_TRACK_STARTED);
+        ListenerRegistry.register(ON_MUSIC_TRACK_STOPPED);
         ListenerRegistry.register(ON_STARTED_BURNING);
         ListenerRegistry.register(ON_STOPPED_BURNING);
         ListenerRegistry.register(ON_STARTED_DROWNING);
