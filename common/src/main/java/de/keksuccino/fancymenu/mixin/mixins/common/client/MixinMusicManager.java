@@ -6,9 +6,11 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
@@ -31,22 +33,33 @@ public abstract class MixinMusicManager {
     private String currentTrackResourceLocation_FancyMenu;
 
     @Unique
+    @Nullable
+    private String currentTrackEventLocation_FancyMenu;
+
+    @Unique
     private void fireMusicTrackStartedFancyMenu(@Nullable SoundInstance soundInstance) {
+        String eventLocation = this.extractEventResourceLocationFancyMenu(soundInstance);
         String trackLocation = this.extractTrackResourceLocationFancyMenu(soundInstance);
         this.currentTrackResourceLocation_FancyMenu = trackLocation;
+        this.currentTrackEventLocation_FancyMenu = eventLocation;
         if (trackLocation != null) {
-            Listeners.ON_MUSIC_TRACK_STARTED.onMusicTrackStarted(trackLocation);
+            Listeners.ON_MUSIC_TRACK_STARTED.onMusicTrackStarted(trackLocation, eventLocation);
         }
     }
 
     @Unique
     private void fireMusicTrackStoppedFancyMenu(@Nullable SoundInstance soundInstance) {
+        String eventLocation = this.extractEventResourceLocationFancyMenu(soundInstance);
+        if (eventLocation == null) {
+            eventLocation = this.currentTrackEventLocation_FancyMenu;
+        }
         String trackLocation = this.extractTrackResourceLocationFancyMenu(soundInstance);
         if (trackLocation == null) {
             trackLocation = this.currentTrackResourceLocation_FancyMenu;
         }
         this.currentTrackResourceLocation_FancyMenu = null;
-        Listeners.ON_MUSIC_TRACK_STOPPED.onMusicTrackStopped(trackLocation);
+        this.currentTrackEventLocation_FancyMenu = null;
+        Listeners.ON_MUSIC_TRACK_STOPPED.onMusicTrackStopped(trackLocation, eventLocation);
     }
 
     @Unique
@@ -55,7 +68,25 @@ public abstract class MixinMusicManager {
         if (soundInstance == null) {
             return null;
         }
-        return soundInstance.getLocation().toString();
+        Sound sound = soundInstance.getSound();
+        if (sound != null && sound != SoundManager.EMPTY_SOUND && sound != SoundManager.INTENTIONALLY_EMPTY_SOUND) {
+            ResourceLocation resolvedLocation = sound.getLocation();
+            if (resolvedLocation != null) {
+                return resolvedLocation.toString();
+            }
+        }
+        ResourceLocation fallback = soundInstance.getLocation();
+        return (fallback != null) ? fallback.toString() : null;
+    }
+
+    @Unique
+    @Nullable
+    private String extractEventResourceLocationFancyMenu(@Nullable SoundInstance soundInstance) {
+        if (soundInstance == null) {
+            return null;
+        }
+        ResourceLocation location = soundInstance.getLocation();
+        return (location != null) ? location.toString() : null;
     }
 
     @Shadow
@@ -88,6 +119,7 @@ public abstract class MixinMusicManager {
             this.fireMusicTrackStartedFancyMenu(this.currentMusic);
         } else {
             this.currentTrackResourceLocation_FancyMenu = null;
+            this.currentTrackEventLocation_FancyMenu = null;
         }
     }
 
@@ -104,14 +136,18 @@ public abstract class MixinMusicManager {
         this.pendingStoppedMusic_FancyMenu = null;
     }
 
-    @WrapOperation(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/sounds/MusicManager;currentMusic:Lnet/minecraft/client/resources/sounds/SoundInstance;", opcode = Opcodes.PUTFIELD))
+    @WrapOperation(
+            method = "tick",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/sounds/MusicManager;currentMusic:Lnet/minecraft/client/resources/sounds/SoundInstance;", opcode = Opcodes.PUTFIELD)
+    )
     private void wrap_setCurrentMusicFancyMenu(MusicManager instance, SoundInstance value, Operation<Void> operation) {
         SoundInstance previous = this.currentMusic;
         operation.call(instance, value);
         if ((previous != null) && (value == null)) {
             this.fireMusicTrackStoppedFancyMenu(previous);
         } else if (value != null) {
-            this.currentTrackResourceLocation_FancyMenu = value.getLocation().toString();
+            this.currentTrackResourceLocation_FancyMenu = this.extractTrackResourceLocationFancyMenu(value);
+            this.currentTrackEventLocation_FancyMenu = this.extractEventResourceLocationFancyMenu(value);
         }
     }
 }
