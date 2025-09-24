@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.Mu
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.Sound;
+import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.client.sounds.SoundManager;
@@ -42,7 +43,7 @@ public abstract class MixinMusicManager {
         String trackLocation = this.extractTrackResourceLocationFancyMenu(soundInstance);
         this.currentTrackResourceLocation_FancyMenu = trackLocation;
         this.currentTrackEventLocation_FancyMenu = eventLocation;
-        if (trackLocation != null) {
+        if ((trackLocation != null) || (eventLocation != null)) {
             Listeners.ON_MUSIC_TRACK_STARTED.onMusicTrackStarted(trackLocation, eventLocation);
         }
     }
@@ -59,7 +60,9 @@ public abstract class MixinMusicManager {
         }
         this.currentTrackResourceLocation_FancyMenu = null;
         this.currentTrackEventLocation_FancyMenu = null;
-        Listeners.ON_MUSIC_TRACK_STOPPED.onMusicTrackStopped(trackLocation, eventLocation);
+        if ((trackLocation != null) || (eventLocation != null)) {
+            Listeners.ON_MUSIC_TRACK_STOPPED.onMusicTrackStopped(trackLocation, eventLocation);
+        }
     }
 
     @Unique
@@ -70,6 +73,10 @@ public abstract class MixinMusicManager {
         }
         Sound sound = soundInstance.getSound();
         if (sound != null && sound != SoundManager.EMPTY_SOUND && sound != SoundManager.INTENTIONALLY_EMPTY_SOUND) {
+            ResourceLocation resolvedPath = sound.getPath();
+            if (resolvedPath != null) {
+                return resolvedPath.toString();
+            }
             ResourceLocation resolvedLocation = sound.getLocation();
             if (resolvedLocation != null) {
                 return resolvedLocation.toString();

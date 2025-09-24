@@ -6,177 +6,197 @@ import com.google.gson.reflect.TypeToken;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.sounds.SoundManager;
-import net.minecraft.client.sounds.WeighedSoundEvents;
-import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.item.JukeboxSong;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import java.util.Locale;
 
+/**
+ * Utility that exposes FancyMenu\'s Minecraft music metadata for listeners.
+ */
 public final class MusicTrackInfoHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ResourceLocation MUSIC_TRACK_METADATA_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "metadata/minecraft_music_tracks.json");
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new GsonBuilder().create();
+    private static final Type MUSIC_TRACK_INFO_TYPE = new TypeToken<List<MusicTrackInfo>>() {}.getType();
 
-    private static String cachedMusicTrackMetadataJsonString = null;
-    private static List<MusicTrackInfo> cachedMusicTrackInfo = null;
+    private static String cachedMusicTrackMetadataJsonString;
+    private static List<MusicTrackInfo> cachedMusicTrackInfo;
 
     private MusicTrackInfoHelper() {}
 
+    /**
+     * @return all known music tracks, loading and caching the JSON payload on demand.
+     */
     @NotNull
-    public static String getMusicTrackMetadataString() {
+    public static List<MusicTrackInfo> getInfoForAllMusicTracks() {
+        if (cachedMusicTrackInfo == null) {
+            try {
+                String json = getMusicTrackMetadataString();
+                List<MusicTrackInfo> parsed = GSON.fromJson(json, MUSIC_TRACK_INFO_TYPE);
+                if (parsed == null) {
+                    parsed = Collections.emptyList();
+                }
+                parsed.forEach(MusicTrackInfo::initialize);
+                cachedMusicTrackInfo = Collections.unmodifiableList(parsed);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to parse Minecraft music track metadata!", ex);
+                cachedMusicTrackInfo = Collections.emptyList();
+            }
+        }
+        return cachedMusicTrackInfo;
+    }
+
+    /**
+     * Locates track metadata using the resolved audio resource (preferred) or the backing sound event.
+     */
+    @Nullable
+    public static MusicTrackInfo findTrackInfo(@Nullable String trackResourceLocation, @Nullable String eventResourceLocation) {
+        String normalizedTrack = normalizeResourceLocation(trackResourceLocation);
+        String normalizedEvent = normalizeEventLocation(eventResourceLocation);
+        for (MusicTrackInfo info : getInfoForAllMusicTracks()) {
+            if (info.matches(normalizedTrack, normalizedEvent)) {
+                return info;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Attempts to turn a {@link Sound} into the canonical resource path string used in metadata.
+     */
+    @Nullable
+    public static String extractTrackResourceLocation(@Nullable Sound sound) {
+        if (sound == null || sound == SoundManager.EMPTY_SOUND || sound == SoundManager.INTENTIONALLY_EMPTY_SOUND) {
+            return null;
+        }
+        ResourceLocation path = sound.getPath();
+        if (path != null) {
+            return path.toString();
+        }
+        ResourceLocation fallback = sound.getLocation();
+        return fallback != null ? fallback.toString() : null;
+    }
+
+    @NotNull
+    private static String getMusicTrackMetadataString() {
+        if (cachedMusicTrackMetadataJsonString != null) {
+            return cachedMusicTrackMetadataJsonString;
+        }
         InputStream in = null;
         try {
-            if (cachedMusicTrackMetadataJsonString == null) {
-                in = Minecraft.getInstance().getResourceManager().getResourceOrThrow(MUSIC_TRACK_METADATA_LOCATION).open();
-                final StringBuilder builder = new StringBuilder();
-                FileUtils.readTextLinesFrom(in).forEach(s -> builder.append(s).append("\n"));
-                cachedMusicTrackMetadataJsonString = builder.toString();
-            }
+            in = Minecraft.getInstance().getResourceManager().getResourceOrThrow(MUSIC_TRACK_METADATA_LOCATION).open();
+            StringBuilder builder = new StringBuilder();
+            FileUtils.readTextLinesFrom(in).forEach(line -> builder.append(line).append('\n'));
+            cachedMusicTrackMetadataJsonString = builder.toString();
         } catch (Exception ex) {
             cachedMusicTrackMetadataJsonString = "";
             LOGGER.error("[FANCYMENU] Failed to read Minecraft music track metadata from file!", ex);
         }
         CloseableUtils.closeQuietly(in);
-        return (cachedMusicTrackMetadataJsonString != null) ? cachedMusicTrackMetadataJsonString : "";
+        return cachedMusicTrackMetadataJsonString;
     }
 
-    @NotNull
-    public static List<MusicTrackInfo> getInfoForAllMusicTracks() {
-        try {
-            if (cachedMusicTrackInfo == null) {
-                cachedMusicTrackInfo = GSON.fromJson(getMusicTrackMetadataString(), ---type token here---);
+    private static String normalizeResourceLocation(@Nullable String location) {
+        if (location == null) return null;
+        String value = location.replace('\\', '/').trim();
+        if (value.isEmpty()) return null;
+        value = stripPrefix(value, "minecraft:");
+        value = stripPrefix(value, "assets/");
+        value = stripPrefix(value, "minecraft/");
+        value = stripPrefix(value, "sounds/");
+        if (value.startsWith("/")) {
+            value = value.substring(1);
+        }
+        return value.toLowerCase(Locale.ROOT);
+    }
+
+    private static String normalizeEventLocation(@Nullable String location) {
+        if (location == null) return null;
+        String value = location.trim();
+        if (value.isEmpty()) return null;
+        if (value.startsWith("minecraft:")) {
+            value = value.substring("minecraft:".length());
+        }
+        value = value.replace('.', '/');
+        return value.toLowerCase(Locale.ROOT);
+    }
+
+    private static String stripPrefix(String value, String prefix) {
+        return value.startsWith(prefix) ? value.substring(prefix.length()) : value;
+    }
+
+    /** Holds metadata for one track. */
+    public static final class MusicTrackInfo {
+        public String resource_location;
+        public String display_name;
+        public String artist;
+        public String duration;
+
+        private String normalizedResourcePath;
+        private long durationMillis;
+
+        private void initialize() {
+            this.normalizedResourcePath = normalizeResourceLocation(this.resource_location);
+            this.durationMillis = parseDurationMillis(this.duration);
+            if (this.display_name == null || this.display_name.isBlank()) {
+                this.display_name = "Unknown";
             }
-        } catch (Exception ex) {
-            cachedMusicTrackInfo = List.of();
-            LOGGER.error("[FANCYMENU] Failed to parse Minecraft music track info from Json!", ex);
-        }
-        return (cachedMusicTrackInfo != null) ? cachedMusicTrackInfo : List.of();
-    }
-
-    @Nullable
-    public static Component resolveDisplayName(@Nullable String trackResourceLocation, @Nullable String eventResourceLocation) {
-        ResourceLocation eventLocation = parseResourceLocation(eventResourceLocation);
-        Component component = resolveFromSoundManager(eventLocation);
-        if (component != null) {
-            return component;
-        }
-
-        component = resolveFromRegistries(eventLocation);
-        if (component != null) {
-            return component;
-        }
-
-        ResourceLocation trackLocation = parseResourceLocation(trackResourceLocation);
-        if (!Objects.equals(trackLocation, eventLocation)) {
-            Component altComponent = resolveFromSoundManager(trackLocation);
-            if (altComponent != null) {
-                return altComponent;
-            }
-            altComponent = resolveFromRegistries(trackLocation);
-            if (altComponent != null) {
-                return altComponent;
+            if (this.artist == null || this.artist.isBlank()) {
+                this.artist = "Unknown";
             }
         }
 
-        return null;
-    }
+        public String getDisplayName() {
+            return this.display_name;
+        }
 
-    @Nullable
-    public static String serializeComponent(@Nullable Component component) {
-        if (component == null) {
-            return null;
+        public String getArtist() {
+            return this.artist;
         }
-        RegistryAccess registryAccess = getCurrentRegistryAccess();
-        return Component.Serializer.toJson(component, registryAccess);
-    }
 
-    @Nullable
-    private static Component resolveFromSoundManager(@Nullable ResourceLocation resourceLocation) {
-        if (resourceLocation == null) {
-            return null;
+        public long getDurationMillis() {
+            return this.durationMillis;
         }
-        Minecraft minecraft = Minecraft.getInstance();
-        SoundManager soundManager = minecraft.getSoundManager();
-        WeighedSoundEvents events = soundManager.getSoundEvent(resourceLocation);
-        if (events == null) {
-            return null;
-        }
-        return events.getSubtitle();
-    }
 
-    @Nullable
-    private static Component resolveFromRegistries(@Nullable ResourceLocation resourceLocation) {
-        RegistryAccess registryAccess = getCurrentRegistryAccess();
-        Registry<JukeboxSong> registry = registryAccess.registry(Registries.JUKEBOX_SONG).orElse(null);
-        if (registry == null || resourceLocation == null) {
-            return null;
+        public String getNormalizedResourcePath() {
+            return this.normalizedResourcePath;
         }
-        return registry.stream()
-                .map(song -> matchSong(song, resourceLocation))
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElse(null);
-    }
 
-    @Nullable
-    private static Component matchSong(@NotNull JukeboxSong song, @NotNull ResourceLocation resourceLocation) {
-        if (!song.soundEvent().isBound()) {
-            return null;
+        private boolean matches(@Nullable String normalizedTrack, @Nullable String normalizedEvent) {
+            if (normalizedTrack != null && normalizedTrack.equals(this.normalizedResourcePath)) {
+                return true;
+            }
+            if (normalizedEvent != null && this.normalizedResourcePath != null && this.normalizedResourcePath.startsWith(normalizedEvent)) {
+                return true;
+            }
+            return false;
         }
-        SoundEvent soundEvent = song.soundEvent().value();
-        if (soundEvent.getLocation().equals(resourceLocation)) {
-            return song.description();
-        }
-        return null;
-    }
 
-    @Nullable
-    private static ResourceLocation parseResourceLocation(@Nullable String trackResourceLocation) {
-        if ((trackResourceLocation == null) || trackResourceLocation.isBlank()) {
-            return null;
+        private static long parseDurationMillis(@Nullable String duration) {
+            if (duration == null || duration.isBlank()) {
+                return 0L;
+            }
+            String[] parts = duration.trim().split(":");
+            long totalSeconds = 0L;
+            try {
+                for (String part : parts) {
+                    totalSeconds = (totalSeconds * 60L) + Long.parseLong(part.trim());
+                }
+                return totalSeconds * 1000L;
+            } catch (NumberFormatException ex) {
+                LOGGER.warn("[FANCYMENU] Invalid duration value in music metadata: {}", duration, ex);
+                return 0L;
+            }
         }
-        return ResourceLocation.tryParse(trackResourceLocation);
     }
-
-    @NotNull
-    private static RegistryAccess getCurrentRegistryAccess() {
-        Minecraft minecraft = Minecraft.getInstance();
-        if ((minecraft.level != null) && (minecraft.level.registryAccess() != null)) {
-            return minecraft.level.registryAccess();
-        }
-        if ((minecraft.getConnection() != null) && (minecraft.getConnection().registryAccess() != null)) {
-            return minecraft.getConnection().registryAccess();
-        }
-        return RegistryAccess.EMPTY;
-    }
-
-    /**
-     * Example Json entry:
-     *
-     * {
-     *     "resource_location": "assets/minecraft/sounds/music/game/a_familiar_room.ogg",
-     *     "display_name": "A Familiar Room",
-     *     "artist": "Aaron Cherof",
-     *     "duration": "4:07"
-     *   }
-     */
-    public static class MusicTrackInfo {
-        public String resource_location; // the track resource location formatted as full asset path, like "assets/minecraft/sounds/music/menu/mutation.ogg"
-        public String display_name; // the track display name
-        public String artist; // the artist display name
-        public String duration; // something like "5:34" (minutes:seconds)
-    }
-
 }

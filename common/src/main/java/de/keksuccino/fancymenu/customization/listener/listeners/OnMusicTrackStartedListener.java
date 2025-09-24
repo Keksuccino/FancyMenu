@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.listener.listeners;
 
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.helpers.MusicTrackInfoHelper;
+import de.keksuccino.fancymenu.customization.listener.listeners.helpers.MusicTrackInfoHelper.MusicTrackInfo;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -14,9 +15,10 @@ public class OnMusicTrackStartedListener extends AbstractListener {
     @Nullable
     private String cachedTrackResourceLocation;
     @Nullable
-    private String cachedDisplayNameString;
+    private String cachedTrackDisplayName;
     @Nullable
-    private String cachedDisplayNameComponent;
+    private String cachedTrackArtist;
+    private long cachedTrackDurationMs;
 
     public OnMusicTrackStartedListener() {
         super("music_track_started");
@@ -24,8 +26,8 @@ public class OnMusicTrackStartedListener extends AbstractListener {
 
     public void onMusicTrackStarted(@Nullable String trackResourceLocation, @Nullable String trackEventLocation) {
         this.cachedTrackResourceLocation = trackResourceLocation;
-        this.updateDisplayNameCache(trackResourceLocation, trackEventLocation);
-        if ((trackResourceLocation != null) && !trackResourceLocation.isBlank()) {
+        this.updateTrackInfoCache(trackResourceLocation, trackEventLocation);
+        if ((trackResourceLocation != null && !trackResourceLocation.isBlank()) || (trackEventLocation != null && !trackEventLocation.isBlank())) {
             this.notifyAllInstances();
         }
     }
@@ -33,18 +35,21 @@ public class OnMusicTrackStartedListener extends AbstractListener {
     @Override
     protected void buildCustomVariablesAndAddToList(List<CustomVariable> list) {
         list.add(new CustomVariable("track_resource_location", () -> this.cachedTrackResourceLocation != null ? this.cachedTrackResourceLocation : "ERROR"));
-        list.add(new CustomVariable("display_name_string", () -> this.cachedDisplayNameString != null ? this.cachedDisplayNameString : "NONE"));
-        list.add(new CustomVariable("display_name_component", () -> this.cachedDisplayNameComponent != null ? this.cachedDisplayNameComponent : "NONE"));
+        list.add(new CustomVariable("track_display_name", () -> this.cachedTrackDisplayName != null ? this.cachedTrackDisplayName : "UNKNOWN"));
+        list.add(new CustomVariable("track_artist", () -> this.cachedTrackArtist != null ? this.cachedTrackArtist : "UNKNOWN"));
+        list.add(new CustomVariable("track_duration_ms", () -> Long.toString(Math.max(this.cachedTrackDurationMs, 0L))));
     }
 
-    private void updateDisplayNameCache(@Nullable String trackResourceLocation, @Nullable String eventResourceLocation) {
-        Component displayName = MusicTrackInfoHelper.resolveDisplayName(trackResourceLocation, eventResourceLocation);
-        if (displayName != null) {
-            this.cachedDisplayNameString = displayName.getString();
-            this.cachedDisplayNameComponent = MusicTrackInfoHelper.serializeComponent(displayName);
+    private void updateTrackInfoCache(@Nullable String trackResourceLocation, @Nullable String eventResourceLocation) {
+        MusicTrackInfo info = MusicTrackInfoHelper.findTrackInfo(trackResourceLocation, eventResourceLocation);
+        if (info != null) {
+            this.cachedTrackDisplayName = info.getDisplayName();
+            this.cachedTrackArtist = info.getArtist();
+            this.cachedTrackDurationMs = info.getDurationMillis();
         } else {
-            this.cachedDisplayNameString = null;
-            this.cachedDisplayNameComponent = null;
+            this.cachedTrackDisplayName = null;
+            this.cachedTrackArtist = null;
+            this.cachedTrackDurationMs = 0L;
         }
     }
 
