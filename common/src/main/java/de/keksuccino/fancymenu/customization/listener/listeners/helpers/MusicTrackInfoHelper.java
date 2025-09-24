@@ -1,5 +1,10 @@
 package de.keksuccino.fancymenu.customization.listener.listeners.helpers;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import de.keksuccino.fancymenu.util.CloseableUtils;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
@@ -10,14 +15,55 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.JukeboxSong;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
+import java.io.InputStream;
+import java.util.List;
 import java.util.Objects;
 
 public final class MusicTrackInfoHelper {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final ResourceLocation MUSIC_TRACK_METADATA_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "metadata/minecraft_music_tracks.json");
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    private static String cachedMusicTrackMetadataJsonString = null;
+    private static List<MusicTrackInfo> cachedMusicTrackInfo = null;
+
     private MusicTrackInfoHelper() {}
+
+    @NotNull
+    public static String getMusicTrackMetadataString() {
+        InputStream in = null;
+        try {
+            if (cachedMusicTrackMetadataJsonString == null) {
+                in = Minecraft.getInstance().getResourceManager().getResourceOrThrow(MUSIC_TRACK_METADATA_LOCATION).open();
+                final StringBuilder builder = new StringBuilder();
+                FileUtils.readTextLinesFrom(in).forEach(s -> builder.append(s).append("\n"));
+                cachedMusicTrackMetadataJsonString = builder.toString();
+            }
+        } catch (Exception ex) {
+            cachedMusicTrackMetadataJsonString = "";
+            LOGGER.error("[FANCYMENU] Failed to read Minecraft music track metadata from file!", ex);
+        }
+        CloseableUtils.closeQuietly(in);
+        return (cachedMusicTrackMetadataJsonString != null) ? cachedMusicTrackMetadataJsonString : "";
+    }
+
+    @NotNull
+    public static List<MusicTrackInfo> getInfoForAllMusicTracks() {
+        try {
+            if (cachedMusicTrackInfo == null) {
+                cachedMusicTrackInfo = GSON.fromJson(getMusicTrackMetadataString(), ---type token here---);
+            }
+        } catch (Exception ex) {
+            cachedMusicTrackInfo = List.of();
+            LOGGER.error("[FANCYMENU] Failed to parse Minecraft music track info from Json!", ex);
+        }
+        return (cachedMusicTrackInfo != null) ? cachedMusicTrackInfo : List.of();
+    }
 
     @Nullable
     public static Component resolveDisplayName(@Nullable String trackResourceLocation, @Nullable String eventResourceLocation) {
@@ -115,4 +161,12 @@ public final class MusicTrackInfoHelper {
         }
         return RegistryAccess.EMPTY;
     }
+
+    public static class MusicTrackInfo {
+        public String resource_location; // the track resource location formatted as full asset path, like "assets/minecraft/sounds/music/menu/mutation.ogg"
+        public String display_name; // the track display name
+        public String artist; // the artist display name
+        public String duration; // something like "5:34" (minutes:seconds)
+    }
+
 }
