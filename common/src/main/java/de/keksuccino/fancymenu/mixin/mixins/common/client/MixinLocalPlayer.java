@@ -14,8 +14,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
@@ -24,6 +27,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
 
@@ -73,6 +77,21 @@ public class MixinLocalPlayer {
     private Entity lastMountedEntity_FancyMenu;
 
     @Unique
+    private ResourceKey<Level> lastDimensionKey_FancyMenu;
+
+    @Unique
+    private boolean dimensionInitialized_FancyMenu;
+
+    @Unique
+    private boolean burningStateInitialized_FancyMenu;
+
+    @Unique
+    private boolean lastBurningState_FancyMenu;
+
+    @Unique
+    private boolean drowningActive_FancyMenu;
+
+    @Unique
     private static final FluidContactInfo NO_FLUID_FANCYMENU = new FluidContactInfo(false, null);
 
     @Inject(method = "tick", at = @At("TAIL"))
@@ -82,6 +101,37 @@ public class MixinLocalPlayer {
         this.updateFluidListeners_FancyMenu(self);
         this.updatePositionChangedListener_FancyMenu(self);
         this.updateSteppingListener_FancyMenu(self);
+        if (self.level() != null) {
+            ResourceKey<Level> currentDimensionKey = self.level().dimension();
+            if (!this.dimensionInitialized_FancyMenu || !Objects.equals(this.lastDimensionKey_FancyMenu, currentDimensionKey)) {
+                this.dimensionInitialized_FancyMenu = true;
+                this.lastDimensionKey_FancyMenu = currentDimensionKey;
+                if (currentDimensionKey != null) {
+                    Listeners.ON_DIMENSION_ENTERED.onDimensionEntered(currentDimensionKey);
+                }
+            }
+        }
+
+        boolean isBurning = self.isOnFire();
+        if (!this.burningStateInitialized_FancyMenu) {
+            this.burningStateInitialized_FancyMenu = true;
+            this.lastBurningState_FancyMenu = isBurning;
+            if (isBurning) {
+                Listeners.ON_STARTED_BURNING.onStartedBurning();
+            }
+        } else {
+            if (!this.lastBurningState_FancyMenu && isBurning) {
+                Listeners.ON_STARTED_BURNING.onStartedBurning();
+            } else if (this.lastBurningState_FancyMenu && !isBurning) {
+                Listeners.ON_STOPPED_BURNING.onStoppedBurning();
+            }
+            this.lastBurningState_FancyMenu = isBurning;
+        }
+
+        if (self.getAirSupply() >= self.getMaxAirSupply()) {
+            this.drowningActive_FancyMenu = false;
+        }
+
         this.updateRidingListeners_FancyMenu(self);
 
         ResourceKey<Biome> currentBiomeKey = null;
@@ -103,6 +153,7 @@ public class MixinLocalPlayer {
 
         this.lastBiomeKey_FancyMenu = currentBiomeKey;
         Listeners.ON_ENTER_BIOME.onBiomeChanged(currentBiomeKey);
+
     }
 
     @Unique
@@ -306,6 +357,15 @@ public class MixinLocalPlayer {
         }
 
         return NO_FLUID_FANCYMENU;
+    }
+
+    /** @reason Fire FancyMenu listener when the local player takes drowning damage. */
+    @Inject(method = "hurt", at = @At("HEAD"))
+    private void before_hurt_FancyMenu(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if (source.is(DamageTypes.DROWN) && !this.drowningActive_FancyMenu) {
+            this.drowningActive_FancyMenu = true;
+            Listeners.ON_STARTED_DROWNING.onStartedDrowning();
+        }
     }
 
     /** @reason Fire FancyMenu listener when the local player drops an item. */

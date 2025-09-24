@@ -29,6 +29,7 @@ public class Listeners {
     public static final OnEntityUnmountedListener ON_ENTITY_UNMOUNTED = new OnEntityUnmountedListener();
     public static final OnBlockBrokeListener ON_BLOCK_BROKE = new OnBlockBrokeListener();
     public static final OnBlockPlacedListener ON_BLOCK_PLACED = new OnBlockPlacedListener();
+    public static final OnInteractedWithBlockListener ON_INTERACTED_WITH_BLOCK = new OnInteractedWithBlockListener();
     public static final OnSteppingOnBlockListener ON_STEPPING_ON_BLOCK = new OnSteppingOnBlockListener();
     public static final OnEnterBiomeListener ON_ENTER_BIOME = new OnEnterBiomeListener();
     public static final OnLeaveBiomeListener ON_LEAVE_BIOME = new OnLeaveBiomeListener();
@@ -36,10 +37,14 @@ public class Listeners {
     public static final OnLeaveStructureListener ON_LEAVE_STRUCTURE = new OnLeaveStructureListener();
     public static final OnEnterStructureHighPrecisionListener ON_ENTER_STRUCTURE_HIGH_PRECISION = new OnEnterStructureHighPrecisionListener();
     public static final OnLeaveStructureHighPrecisionListener ON_LEAVE_STRUCTURE_HIGH_PRECISION = new OnLeaveStructureHighPrecisionListener();
+    public static final OnDimensionEnteredListener ON_DIMENSION_ENTERED = new OnDimensionEnteredListener();
     public static final OnStartSwimmingListener ON_START_SWIMMING = new OnStartSwimmingListener();
     public static final OnStopSwimmingListener ON_STOP_SWIMMING = new OnStopSwimmingListener();
     public static final OnStartTouchingFluidListener ON_START_TOUCHING_FLUID = new OnStartTouchingFluidListener();
     public static final OnStopTouchingFluidListener ON_STOP_TOUCHING_FLUID = new OnStopTouchingFluidListener();
+    public static final OnStartedBurningListener ON_STARTED_BURNING = new OnStartedBurningListener();
+    public static final OnStoppedBurningListener ON_STOPPED_BURNING = new OnStoppedBurningListener();
+    public static final OnStartedDrowningListener ON_STARTED_DROWNING = new OnStartedDrowningListener();
     public static final OnPositionChangedListener ON_POSITION_CHANGED = new OnPositionChangedListener();
     public static final OnJumpListener ON_JUMP = new OnJumpListener();
     public static final OnServerJoinedListener ON_SERVER_JOINED = new OnServerJoinedListener();
@@ -51,6 +56,7 @@ public class Listeners {
     public static final OnItemPickedUpListener ON_ITEM_PICKED_UP = new OnItemPickedUpListener();
     public static final OnItemDroppedListener ON_ITEM_DROPPED = new OnItemDroppedListener();
     public static final OnItemConsumedListener ON_ITEM_CONSUMED = new OnItemConsumedListener();
+    public static final OnItemBrokeListener ON_ITEM_BROKE = new OnItemBrokeListener();
 
     public static void registerAll() {
 
@@ -78,6 +84,7 @@ public class Listeners {
         ListenerRegistry.register(ON_ENTITY_UNMOUNTED);
         ListenerRegistry.register(ON_BLOCK_BROKE);
         ListenerRegistry.register(ON_BLOCK_PLACED);
+        ListenerRegistry.register(ON_INTERACTED_WITH_BLOCK);
         ListenerRegistry.register(ON_STEPPING_ON_BLOCK);
         ListenerRegistry.register(ON_ENTER_BIOME);
         ListenerRegistry.register(ON_LEAVE_BIOME);
@@ -85,10 +92,14 @@ public class Listeners {
         ListenerRegistry.register(ON_LEAVE_STRUCTURE);
         ListenerRegistry.register(ON_ENTER_STRUCTURE_HIGH_PRECISION);
         ListenerRegistry.register(ON_LEAVE_STRUCTURE_HIGH_PRECISION);
+        ListenerRegistry.register(ON_DIMENSION_ENTERED);
         ListenerRegistry.register(ON_START_SWIMMING);
         ListenerRegistry.register(ON_STOP_SWIMMING);
         ListenerRegistry.register(ON_START_TOUCHING_FLUID);
         ListenerRegistry.register(ON_STOP_TOUCHING_FLUID);
+        ListenerRegistry.register(ON_STARTED_BURNING);
+        ListenerRegistry.register(ON_STOPPED_BURNING);
+        ListenerRegistry.register(ON_STARTED_DROWNING);
         ListenerRegistry.register(ON_POSITION_CHANGED);
         ListenerRegistry.register(ON_JUMP);
         ListenerRegistry.register(ON_SERVER_JOINED);
@@ -100,9 +111,8 @@ public class Listeners {
         ListenerRegistry.register(ON_ITEM_PICKED_UP);
         ListenerRegistry.register(ON_ITEM_DROPPED);
         ListenerRegistry.register(ON_ITEM_CONSUMED);
+        ListenerRegistry.register(ON_ITEM_BROKE);
 
     }
 
 }
-
-

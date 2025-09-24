@@ -1994,5 +1994,17 @@
   "fancymenu.listeners.on_position_changed": "On Position Changed",
   "fancymenu.listeners.on_position_changed.desc": "This listener triggers once whenever the local player's block position changes.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$old_pos_x §r= Previous block X coordinate\n- §z$old_pos_y §r= Previous block Y coordinate\n- §z$old_pos_z §r= Previous block Z coordinate\n- §z$new_pos_x §r= New block X coordinate\n- §z$new_pos_y §r= New block Y coordinate\n- §z$new_pos_z §r= New block Z coordinate",
   "fancymenu.listeners.on_jump": "On Jump",
-  "fancymenu.listeners.on_jump.desc": "This listener triggers once whenever the local player performs a jump action."
+  "fancymenu.listeners.on_jump.desc": "This listener triggers once whenever the local player performs a jump action.",
+  "fancymenu.listeners.on_dimension_entered": "On Dimension Entered",
+  "fancymenu.listeners.on_dimension_entered.desc": "This listener triggers once when the player enters a new dimension.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$dimension_key §r= The resource location of the entered dimension",
+  "fancymenu.listeners.on_item_broke": "On Item Broke",
+  "fancymenu.listeners.on_item_broke.desc": "This listener triggers once when an item in the player's inventory breaks.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$item_key §r= The resource location of the broken item\n- §z$$item_type §r= Category of the broken item (tool, armor, other)",
+  "fancymenu.listeners.on_interacted_with_block": "On Interacted With Block",
+  "fancymenu.listeners.on_interacted_with_block.desc": "This listener triggers once when the player successfully interacts with a block.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$block_key §r= The resource location of the interacted block\n- §z$$block_pos_x §r= The X coordinate of the block\n- §z$$block_pos_y §r= The Y coordinate of the block\n- §z$$block_pos_z §r= The Z coordinate of the block",
+  "fancymenu.listeners.on_started_burning": "On Started Burning",
+  "fancymenu.listeners.on_started_burning.desc": "This listener triggers once when the player starts burning.",
+  "fancymenu.listeners.on_stopped_burning": "On Stopped Burning",
+  "fancymenu.listeners.on_stopped_burning.desc": "This listener triggers once when the player stops burning.",
+  "fancymenu.listeners.on_started_drowning": "On Started Drowning",
+  "fancymenu.listeners.on_started_drowning.desc": "This listener triggers once when the player begins taking drowning damage."
 }

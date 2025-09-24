@@ -21,10 +21,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 
 @Mixin(MultiPlayerGameMode.class)
 public class MixinMultiPlayerGameMode {
@@ -36,6 +39,21 @@ public class MixinMultiPlayerGameMode {
         operation.call(block, level, pos, state);
         if (level != null && level.isClientSide()) {
             Listeners.ON_BLOCK_BROKE.onBlockBroke(pos, state, usedItemKey);
+        }
+    }
+
+    /** @reason Fire FancyMenu listener when the local player interacts with a block. */
+    @Inject(method = "performUseItemOn", at = @At("RETURN"))
+    private void after_performUseItemOn_FancyMenu(LocalPlayer player, InteractionHand hand, BlockHitResult hitResult, CallbackInfoReturnable<InteractionResult> cir) {
+        InteractionResult result = cir.getReturnValue();
+        if ((result != null) && result.consumesAction()) {
+            Minecraft minecraft = Minecraft.getInstance();
+            Level level = minecraft.level;
+            if (level != null && level.isLoaded(hitResult.getBlockPos())) {
+                BlockPos blockPos = hitResult.getBlockPos().immutable();
+                BlockState state = level.getBlockState(blockPos);
+                Listeners.ON_INTERACTED_WITH_BLOCK.onBlockInteracted(blockPos, state);
+            }
         }
     }
 
