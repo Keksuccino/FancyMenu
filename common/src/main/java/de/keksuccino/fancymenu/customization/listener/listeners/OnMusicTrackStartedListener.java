@@ -25,7 +25,7 @@ public class OnMusicTrackStartedListener extends AbstractListener {
     }
 
     public void onMusicTrackStarted(@Nullable String trackResourceLocation, @Nullable String trackEventLocation) {
-        this.cachedTrackResourceLocation = trackResourceLocation;
+        this.cachedTrackResourceLocation = (trackResourceLocation != null && !trackResourceLocation.isBlank()) ? trackResourceLocation : trackEventLocation;
         this.updateTrackInfoCache(trackResourceLocation, trackEventLocation);
         if ((trackResourceLocation != null && !trackResourceLocation.isBlank()) || (trackEventLocation != null && !trackEventLocation.isBlank())) {
             this.notifyAllInstances();

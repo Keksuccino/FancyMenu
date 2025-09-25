@@ -63,12 +63,17 @@ public final class MusicTrackInfoHelper {
     public static MusicTrackInfo findTrackInfo(@Nullable String trackResourceLocation, @Nullable String eventResourceLocation) {
         String normalizedTrack = normalizeResourceLocation(trackResourceLocation);
         String normalizedEvent = normalizeEventLocation(eventResourceLocation);
+
+        MusicTrackInfo fallback = null;
         for (MusicTrackInfo info : getInfoForAllMusicTracks()) {
-            if (info.matches(normalizedTrack, normalizedEvent)) {
+            if (info.matchesTrack(normalizedTrack)) {
                 return info;
             }
+            if (fallback == null && info.matchesEvent(normalizedEvent)) {
+                fallback = info;
+            }
         }
-        return null;
+        return fallback;
     }
 
     /**
@@ -172,14 +177,12 @@ public final class MusicTrackInfoHelper {
             return this.normalizedResourcePath;
         }
 
-        private boolean matches(@Nullable String normalizedTrack, @Nullable String normalizedEvent) {
-            if (normalizedTrack != null && normalizedTrack.equals(this.normalizedResourcePath)) {
-                return true;
-            }
-            if (normalizedEvent != null && this.normalizedResourcePath != null && this.normalizedResourcePath.startsWith(normalizedEvent)) {
-                return true;
-            }
-            return false;
+        private boolean matchesTrack(@Nullable String normalizedTrack) {
+            return normalizedTrack != null && this.normalizedResourcePath != null && this.normalizedResourcePath.equals(normalizedTrack);
+        }
+
+        private boolean matchesEvent(@Nullable String normalizedEvent) {
+            return normalizedEvent != null && this.normalizedResourcePath != null && this.normalizedResourcePath.startsWith(normalizedEvent);
         }
 
         private static long parseDurationMillis(@Nullable String duration) {
