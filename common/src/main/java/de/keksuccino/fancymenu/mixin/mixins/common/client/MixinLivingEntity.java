@@ -44,19 +44,6 @@ public abstract class MixinLivingEntity {
         Listeners.ON_EFFECT_GAINED.onEffectGained(effectKey, effectType, effectInstance.getDuration());
     }
 
-    /** @reason Fire FancyMenu listener when the local player loses a status effect. */
-    @Inject(method = "onEffectRemoved", at = @At("TAIL"))
-    private void after_onEffectRemoved_FancyMenu(MobEffectInstance effectInstance, CallbackInfo ci) {
-        LivingEntity self = (LivingEntity)(Object)this;
-        if (!(self instanceof LocalPlayer)) {
-            return;
-        }
-        Holder<MobEffect> effectHolder = effectInstance.getEffect();
-        String effectKey = this.resolveEffectKey_FancyMenu(effectHolder);
-        String effectType = this.resolveEffectTypeName_FancyMenu(effectHolder.value());
-        Listeners.ON_EFFECT_LOST.onEffectLost(effectKey, effectType);
-    }
-
     /** @reason Fire FancyMenu listener when the local player finishes consuming an item. */
     @WrapOperation(method = "completeUsingItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;finishUsingItem(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;)Lnet/minecraft/world/item/ItemStack;"))
     private ItemStack wrap_finishUsingItem_FancyMenu(ItemStack stack, Level level, LivingEntity living, Operation<ItemStack> operation) {
