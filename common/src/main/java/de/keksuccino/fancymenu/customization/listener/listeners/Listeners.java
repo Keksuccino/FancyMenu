@@ -19,6 +19,12 @@ public class Listeners {
     public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
     public static final OnChatMessageReceivedListener ON_CHAT_MESSAGE_RECEIVED = new OnChatMessageReceivedListener();
     public static final OnChatMessageSentListener ON_CHAT_MESSAGE_SENT = new OnChatMessageSentListener();
+    public static final OnEffectGainedListener ON_EFFECT_GAINED = new OnEffectGainedListener();
+    public static final OnEffectLostListener ON_EFFECT_LOST = new OnEffectLostListener();
+    public static final OnExperienceChangedListener ON_EXPERIENCE_CHANGED = new OnExperienceChangedListener();
+    public static final OnDamageTakenListener ON_DAMAGE_TAKEN = new OnDamageTakenListener();
+    public static final OnStartedFreezingListener ON_STARTED_FREEZING = new OnStartedFreezingListener();
+    public static final OnStoppedFreezingListener ON_STOPPED_FREEZING = new OnStoppedFreezingListener();
     public static final OnLookingAtBlockListener ON_LOOKING_AT_BLOCK = new OnLookingAtBlockListener();
     public static final OnLookingAtEntityListener ON_LOOKING_AT_ENTITY = new OnLookingAtEntityListener();
     public static final OnEntitySpawnedListener ON_ENTITY_SPAWNED = new OnEntitySpawnedListener();
@@ -76,6 +82,12 @@ public class Listeners {
         ListenerRegistry.register(ON_FILE_DOWNLOADED);
         ListenerRegistry.register(ON_CHAT_MESSAGE_RECEIVED);
         ListenerRegistry.register(ON_CHAT_MESSAGE_SENT);
+        ListenerRegistry.register(ON_EFFECT_GAINED);
+        ListenerRegistry.register(ON_EFFECT_LOST);
+        ListenerRegistry.register(ON_EXPERIENCE_CHANGED);
+        ListenerRegistry.register(ON_DAMAGE_TAKEN);
+        ListenerRegistry.register(ON_STARTED_FREEZING);
+        ListenerRegistry.register(ON_STOPPED_FREEZING);
         ListenerRegistry.register(ON_LOOKING_AT_BLOCK);
         ListenerRegistry.register(ON_LOOKING_AT_ENTITY);
         ListenerRegistry.register(ON_ENTITY_SPAWNED);
@@ -120,3 +132,5 @@ public class Listeners {
     }
 
 }
+
+

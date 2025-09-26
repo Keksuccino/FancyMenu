@@ -12,23 +12,23 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import java.util.Objects;
 
 @Mixin(LocalPlayer.class)
@@ -92,6 +92,30 @@ public class MixinLocalPlayer {
     private boolean drowningActive_FancyMenu;
 
     @Unique
+    private boolean freezingStateInitialized_FancyMenu;
+
+    @Unique
+    private boolean lastFreezingState_FancyMenu;
+
+    @Unique
+    private boolean experienceInitialized_FancyMenu;
+
+    @Unique
+    private boolean shouldEmitExperienceChange_FancyMenu;
+
+    @Unique
+    private int previousTotalExperience_FancyMenu;
+
+    @Unique
+    private int previousExperienceLevel_FancyMenu;
+
+    @Unique
+    private float previousHealthBeforeHurtTo_FancyMenu;
+
+    @Unique
+    private DamageSource lastReceivedDamageSource_FancyMenu;
+
+    @Unique
     private static final FluidContactInfo NO_FLUID_FANCYMENU = new FluidContactInfo(false, null);
 
     @Inject(method = "tick", at = @At("TAIL"))
@@ -131,6 +155,30 @@ public class MixinLocalPlayer {
         if (self.getAirSupply() >= self.getMaxAirSupply()) {
             this.drowningActive_FancyMenu = false;
         }
+
+        int ticksFrozen = self.getTicksFrozen();
+        int ticksRequiredToFreeze = self.getTicksRequiredToFreeze();
+        boolean isFreezing = ticksFrozen > 0;
+        float freezingIntensity = 0.0F;
+        if (ticksRequiredToFreeze > 0) {
+            freezingIntensity = Mth.clamp((float)ticksFrozen / (float)ticksRequiredToFreeze, 0.0F, 1.0F);
+        }
+
+        if (!this.freezingStateInitialized_FancyMenu) {
+            this.freezingStateInitialized_FancyMenu = true;
+            this.lastFreezingState_FancyMenu = isFreezing;
+            if (isFreezing) {
+                Listeners.ON_STARTED_FREEZING.onStartedFreezing(freezingIntensity);
+            }
+        } else {
+            if (!this.lastFreezingState_FancyMenu && isFreezing) {
+                Listeners.ON_STARTED_FREEZING.onStartedFreezing(freezingIntensity);
+            } else if (this.lastFreezingState_FancyMenu && !isFreezing) {
+                Listeners.ON_STOPPED_FREEZING.onStoppedFreezing();
+            }
+        }
+
+        this.lastFreezingState_FancyMenu = isFreezing;
 
         this.updateRidingListeners_FancyMenu(self);
 
@@ -359,6 +407,61 @@ public class MixinLocalPlayer {
         return NO_FLUID_FANCYMENU;
     }
 
+    @Inject(method = "setExperienceValues", at = @At("HEAD"))
+    private void before_setExperienceValues_FancyMenu(float currentXP, int totalExperience, int level, CallbackInfo ci) {
+        LocalPlayer self = (LocalPlayer)(Object)this;
+        this.shouldEmitExperienceChange_FancyMenu = this.experienceInitialized_FancyMenu;
+        this.previousTotalExperience_FancyMenu = self.totalExperience;
+        this.previousExperienceLevel_FancyMenu = self.experienceLevel;
+    }
+
+    @Inject(method = "setExperienceValues", at = @At("TAIL"))
+    private void after_setExperienceValues_FancyMenu(float currentXP, int totalExperience, int level, CallbackInfo ci) {
+        LocalPlayer self = (LocalPlayer)(Object)this;
+        if (!this.shouldEmitExperienceChange_FancyMenu) {
+            this.experienceInitialized_FancyMenu = true;
+            return;
+        }
+        this.shouldEmitExperienceChange_FancyMenu = false;
+        int newTotalExperience = self.totalExperience;
+        if (this.previousTotalExperience_FancyMenu != newTotalExperience) {
+            boolean levelUp = self.experienceLevel > this.previousExperienceLevel_FancyMenu;
+            Listeners.ON_EXPERIENCE_CHANGED.onExperienceChanged(this.previousTotalExperience_FancyMenu, newTotalExperience, levelUp);
+        }
+    }
+
+    @Inject(method = "hurtTo", at = @At("HEAD"))
+    private void before_hurtTo_FancyMenu(float health, CallbackInfo ci) {
+        LocalPlayer self = (LocalPlayer)(Object)this;
+        this.previousHealthBeforeHurtTo_FancyMenu = self.getHealth();
+        this.lastReceivedDamageSource_FancyMenu = self.getLastDamageSource();
+    }
+
+    @Inject(method = "hurtTo", at = @At("TAIL"))
+    private void after_hurtTo_FancyMenu(float health, CallbackInfo ci) {
+        LocalPlayer self = (LocalPlayer)(Object)this;
+        float newHealth = self.getHealth();
+        float damageTaken = this.previousHealthBeforeHurtTo_FancyMenu - newHealth;
+        if (damageTaken <= 0.0F) {
+            this.lastReceivedDamageSource_FancyMenu = null;
+            return;
+        }
+        String damageTypeKey = this.resolveDamageTypeKey_FancyMenu(this.lastReceivedDamageSource_FancyMenu);
+        boolean fatalDamage = newHealth <= 0.0F;
+        Listeners.ON_DAMAGE_TAKEN.onDamageTaken(damageTaken, damageTypeKey, fatalDamage);
+        this.lastReceivedDamageSource_FancyMenu = null;
+    }
+
+    @Unique
+    private String resolveDamageTypeKey_FancyMenu(@Nullable DamageSource damageSource) {
+        if (damageSource == null) {
+            return "unknown";
+        }
+        return damageSource.typeHolder().unwrapKey()
+                .map(key -> key.location().toString())
+                .orElse("unknown");
+    }
+
     /** @reason Fire FancyMenu listener when the local player takes drowning damage. */
     @Inject(method = "hurt", at = @At("HEAD"))
     private void before_hurt_FancyMenu(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
@@ -380,4 +483,15 @@ public class MixinLocalPlayer {
         return removed;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
 
