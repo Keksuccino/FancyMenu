@@ -9,11 +9,11 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.item.ItemStack;
@@ -110,10 +110,10 @@ public class MixinLocalPlayer {
     private int previousExperienceLevel_FancyMenu;
 
     @Unique
-    private float previousHealthBeforeHurtTo_FancyMenu;
+    private boolean healthInitialized_FancyMenu;
 
     @Unique
-    private DamageSource lastReceivedDamageSource_FancyMenu;
+    private float lastKnownHealth_FancyMenu;
 
     @Unique
     private static final FluidContactInfo NO_FLUID_FANCYMENU = new FluidContactInfo(false, null);
@@ -188,6 +188,17 @@ public class MixinLocalPlayer {
             currentBiomeKey = biomeHolder.unwrapKey().orElse(null);
         }
 
+        float currentHealth = self.getHealth();
+        if (!this.healthInitialized_FancyMenu) {
+            this.healthInitialized_FancyMenu = true;
+        } else if (currentHealth < this.lastKnownHealth_FancyMenu - 1.0E-4F) {
+            float damageTaken = this.lastKnownHealth_FancyMenu - currentHealth;
+            String damageTypeKey = this.resolveDamageTypeKey_FancyMenu(self.getLastDamageSource());
+            boolean fatalDamage = currentHealth <= 0.0F;
+            Listeners.ON_DAMAGE_TAKEN.onDamageTaken(damageTaken, damageTypeKey, fatalDamage);
+        }
+        this.lastKnownHealth_FancyMenu = currentHealth;
+
         if (Objects.equals(this.lastBiomeKey_FancyMenu, currentBiomeKey)) {
             if (currentBiomeKey == null) {
                 Listeners.ON_ENTER_BIOME.onBiomeChanged(null);
@@ -202,8 +213,9 @@ public class MixinLocalPlayer {
         this.lastBiomeKey_FancyMenu = currentBiomeKey;
         Listeners.ON_ENTER_BIOME.onBiomeChanged(currentBiomeKey);
 
-    }
 
+    }
+
     @Unique
     private void updateFluidListeners_FancyMenu(LocalPlayer self) {
         FluidContactInfo contactInfo = this.detectFluidContact_FancyMenu(self);
@@ -255,8 +267,9 @@ public class MixinLocalPlayer {
         }
 
         this.lastSwimmingState_FancyMenu = isSwimming;
-    }
 
+    }
+
     @Unique
     private void updatePositionChangedListener_FancyMenu(LocalPlayer self) {
         if (!(self.level() instanceof ClientLevel clientLevel)) {
@@ -280,8 +293,9 @@ public class MixinLocalPlayer {
             this.lastKnownBlockPosition_FancyMenu = immutablePos;
             Listeners.ON_POSITION_CHANGED.onPositionChanged(previousPos, immutablePos);
         }
-    }
 
+    }
+
     @Unique
     private void updateSteppingListener_FancyMenu(LocalPlayer self) {
         if (!(self.level() instanceof ClientLevel clientLevel)) {
@@ -311,8 +325,9 @@ public class MixinLocalPlayer {
             this.lastSteppedBlockPos_FancyMenu = immutablePos;
             Listeners.ON_STEPPING_ON_BLOCK.onSteppedOnBlock(immutablePos, blockState);
         }
-    }
 
+    }
+
     @Unique
     private void updateRidingListeners_FancyMenu(LocalPlayer self) {
         Entity vehicle = self.getVehicle();
@@ -339,8 +354,9 @@ public class MixinLocalPlayer {
         if (!isRiding) {
             this.clearMountedEntityCache_FancyMenu();
         }
-    }
 
+    }
+
     @Unique
     private void fireEntityUnmountedListener_FancyMenu() {
         if (this.lastMountedEntity_FancyMenu != null) {
@@ -348,24 +364,28 @@ public class MixinLocalPlayer {
         } else {
             Listeners.ON_ENTITY_UNMOUNTED.onEntityUnmounted(null);
         }
-    }
 
+    }
+
     @Unique
     private void updateMountedEntityCache_FancyMenu(Entity vehicle) {
         this.lastMountedEntity_FancyMenu = vehicle;
-    }
 
+    }
+
     @Unique
     private void clearMountedEntityCache_FancyMenu() {
         this.lastMountedEntity_FancyMenu = null;
-    }
 
+    }
+
     @Unique
     private void resetSteppingState_FancyMenu() {
         this.steppingStateInitialized_FancyMenu = false;
         this.lastSteppedBlockPos_FancyMenu = null;
-    }
 
+    }
+
     @Unique
     private FluidContactInfo detectFluidContact_FancyMenu(LocalPlayer self) {
         if (!(self.level() instanceof ClientLevel clientLevel)) {
@@ -405,16 +425,18 @@ public class MixinLocalPlayer {
         }
 
         return NO_FLUID_FANCYMENU;
-    }
 
+    }
+
     @Inject(method = "setExperienceValues", at = @At("HEAD"))
     private void before_setExperienceValues_FancyMenu(float currentXP, int totalExperience, int level, CallbackInfo ci) {
         LocalPlayer self = (LocalPlayer)(Object)this;
         this.shouldEmitExperienceChange_FancyMenu = this.experienceInitialized_FancyMenu;
         this.previousTotalExperience_FancyMenu = self.totalExperience;
         this.previousExperienceLevel_FancyMenu = self.experienceLevel;
-    }
 
+    }
+
     @Inject(method = "setExperienceValues", at = @At("TAIL"))
     private void after_setExperienceValues_FancyMenu(float currentXP, int totalExperience, int level, CallbackInfo ci) {
         LocalPlayer self = (LocalPlayer)(Object)this;
@@ -428,30 +450,9 @@ public class MixinLocalPlayer {
             boolean levelUp = self.experienceLevel > this.previousExperienceLevel_FancyMenu;
             Listeners.ON_EXPERIENCE_CHANGED.onExperienceChanged(this.previousTotalExperience_FancyMenu, newTotalExperience, levelUp);
         }
-    }
 
-    @Inject(method = "hurtTo", at = @At("HEAD"))
-    private void before_hurtTo_FancyMenu(float health, CallbackInfo ci) {
-        LocalPlayer self = (LocalPlayer)(Object)this;
-        this.previousHealthBeforeHurtTo_FancyMenu = self.getHealth();
-        this.lastReceivedDamageSource_FancyMenu = self.getLastDamageSource();
-    }
-
-    @Inject(method = "hurtTo", at = @At("TAIL"))
-    private void after_hurtTo_FancyMenu(float health, CallbackInfo ci) {
-        LocalPlayer self = (LocalPlayer)(Object)this;
-        float newHealth = self.getHealth();
-        float damageTaken = this.previousHealthBeforeHurtTo_FancyMenu - newHealth;
-        if (damageTaken <= 0.0F) {
-            this.lastReceivedDamageSource_FancyMenu = null;
-            return;
-        }
-        String damageTypeKey = this.resolveDamageTypeKey_FancyMenu(this.lastReceivedDamageSource_FancyMenu);
-        boolean fatalDamage = newHealth <= 0.0F;
-        Listeners.ON_DAMAGE_TAKEN.onDamageTaken(damageTaken, damageTypeKey, fatalDamage);
-        this.lastReceivedDamageSource_FancyMenu = null;
-    }
-
+    }
+
     @Unique
     private String resolveDamageTypeKey_FancyMenu(@Nullable DamageSource damageSource) {
         if (damageSource == null) {
@@ -460,8 +461,9 @@ public class MixinLocalPlayer {
         return damageSource.typeHolder().unwrapKey()
                 .map(key -> key.location().toString())
                 .orElse("unknown");
-    }
 
+    }
+
     /** @reason Fire FancyMenu listener when the local player takes drowning damage. */
     @Inject(method = "hurt", at = @At("HEAD"))
     private void before_hurt_FancyMenu(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
@@ -469,8 +471,9 @@ public class MixinLocalPlayer {
             this.drowningActive_FancyMenu = true;
             Listeners.ON_STARTED_DROWNING.onStartedDrowning();
         }
-    }
 
+    }
+
     /** @reason Fire FancyMenu listener when the local player drops an item. */
     @WrapOperation(method = "drop", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;removeFromSelected(Z)Lnet/minecraft/world/item/ItemStack;"))
     private ItemStack wrap_removeFromSelected_FancyMenu(Inventory inventory, boolean fullStack, Operation<ItemStack> operation) {
@@ -483,15 +486,3 @@ public class MixinLocalPlayer {
         return removed;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
