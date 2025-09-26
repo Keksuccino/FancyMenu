@@ -2018,9 +2018,12 @@
   "fancymenu.listeners.on_experience_changed": "On Experience Changed",
   "fancymenu.listeners.on_experience_changed.desc": "This listener triggers whenever the player's total experience amount changes (gaining or losing XP).\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$new_experience_amount §r= The player's total experience value after the change\n- §z$$old_experience_amount §r= The player's total experience value before the change\n- §z$$is_level_up §r= TRUE when the change increased the player's level",
   "fancymenu.listeners.on_damage_taken": "On Damage Taken",
-  "fancymenu.listeners.on_damage_taken.desc": "This listener triggers once when the player takes damage.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$damage_amount §r= The amount of health removed by the hit\n- §z$$damage_type §r= The resource location of the damage type\n- §z$$is_fatal_damage §r= TRUE when the hit reduced the player to zero health",
+  "fancymenu.listeners.on_damage_taken.desc": "This listener triggers once when the player takes damage.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$damage_amount §r= The amount of health removed by the hit\n- §z$$damage_type §r= The resource location of the damage type\n- §z$$is_fatal_damage §r= TRUE when the hit reduced the player to zero health\n- §z$$damage_source §r= The resource location of the entity that caused the damage or NONE when unavailable",
   "fancymenu.listeners.on_started_freezing": "On Started Freezing",
   "fancymenu.listeners.on_started_freezing.desc": "This listener triggers once when the player starts freezing.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$freezing_intensity §r= The current freezing intensity (0.0 = no freeze, 1.0 = fully frozen)",
   "fancymenu.listeners.on_stopped_freezing": "On Stopped Freezing",
   "fancymenu.listeners.on_stopped_freezing.desc": "This listener triggers once when the player stops freezing."
 }
+
+
+

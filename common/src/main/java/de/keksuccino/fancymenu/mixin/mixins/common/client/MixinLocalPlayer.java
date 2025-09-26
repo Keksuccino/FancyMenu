@@ -196,9 +196,11 @@ public class MixinLocalPlayer {
             this.healthInitialized_FancyMenu = true;
         } else if (currentHealth < this.lastKnownHealth_FancyMenu - 1.0E-4F) {
             float damageTaken = this.lastKnownHealth_FancyMenu - currentHealth;
-            String damageTypeKey = this.resolveDamageTypeKey_FancyMenu(self.getLastDamageSource());
+            DamageSource lastDamageSource = self.getLastDamageSource();
+            String damageTypeKey = this.resolveDamageTypeKey_FancyMenu(lastDamageSource);
+            String damageSourceKey = this.resolveDamageSourceKey_FancyMenu(lastDamageSource);
             boolean fatalDamage = currentHealth <= 0.0F;
-            Listeners.ON_DAMAGE_TAKEN.onDamageTaken(damageTaken, damageTypeKey, fatalDamage);
+            Listeners.ON_DAMAGE_TAKEN.onDamageTaken(damageTaken, damageTypeKey, fatalDamage, damageSourceKey);
         }
         this.lastKnownHealth_FancyMenu = currentHealth;
 
@@ -498,6 +500,24 @@ public class MixinLocalPlayer {
 
     }
 
+    @Unique
+    private @Nullable String resolveDamageSourceKey_FancyMenu(@Nullable DamageSource damageSource) {
+        if (damageSource == null) {
+            return null;
+        }
+        Entity causingEntity = damageSource.getEntity();
+        if (causingEntity != null) {
+            ResourceLocation entityLocation = BuiltInRegistries.ENTITY_TYPE.getKey(causingEntity.getType());
+            return entityLocation != null ? entityLocation.toString() : null;
+        }
+        Entity directEntity = damageSource.getDirectEntity();
+        if (directEntity != null) {
+            ResourceLocation entityLocation = BuiltInRegistries.ENTITY_TYPE.getKey(directEntity.getType());
+            return entityLocation != null ? entityLocation.toString() : null;
+        }
+        return null;
+    }
+
     /** @reason Fire FancyMenu listener when the local player takes drowning damage. */
     @Inject(method = "hurt", at = @At("HEAD"))
     private void before_hurt_FancyMenu(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
@@ -521,3 +541,5 @@ public class MixinLocalPlayer {
     }
 
 }
+
+
