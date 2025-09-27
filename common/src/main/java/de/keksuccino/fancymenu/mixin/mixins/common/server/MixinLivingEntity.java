@@ -46,7 +46,7 @@ public class MixinLivingEntity {
         packet.level_identifier = (levelLocation != null) ? levelLocation.toString() : null;
         packet.damage_type = this.resolveDamageTypeKey_FancyMenu(damageSource);
 
-        Entity killer = this.resolveKillerEntity_FancyMenu(damageSource);
+        Entity killer = this.resolveKillerEntity_FancyMenu(entity, damageSource);
         if (killer != null) {
             packet.killer_name = killer.getDisplayName().getString();
             packet.killer_uuid = killer.getUUID().toString();
@@ -66,12 +66,19 @@ public class MixinLivingEntity {
 
     @Unique
     @Nullable
-    private Entity resolveKillerEntity_FancyMenu(@Nullable DamageSource damageSource) {
-        if (damageSource == null) {
-            return null;
+    private Entity resolveKillerEntity_FancyMenu(@NotNull LivingEntity victim, @Nullable DamageSource damageSource) {
+        if (damageSource != null) {
+            Entity killer = damageSource.getEntity();
+            if (killer != null) {
+                return killer;
+            }
+            Entity directEntity = damageSource.getDirectEntity();
+            if (directEntity != null) {
+                return directEntity;
+            }
         }
-        Entity killer = damageSource.getEntity();
-        return (killer != null) ? killer : damageSource.getDirectEntity();
+        LivingEntity killCredit = victim.getKillCredit();
+        return killCredit != null ? killCredit : null;
     }
 
     @Unique
