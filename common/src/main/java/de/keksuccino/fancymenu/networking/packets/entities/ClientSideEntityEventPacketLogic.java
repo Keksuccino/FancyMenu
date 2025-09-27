@@ -35,7 +35,10 @@ public class ClientSideEntityEventPacketLogic {
                         packet.pos_x,
                         packet.pos_y,
                         packet.pos_z,
-                        packet.level_identifier
+                        packet.level_identifier,
+                        packet.killer_name,
+                        packet.killer_key,
+                        packet.killer_uuid
                 );
             }
             return true;
