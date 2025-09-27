@@ -38,7 +38,8 @@ public class ClientSideEntityEventPacketLogic {
                         packet.level_identifier,
                         packet.killer_name,
                         packet.killer_key,
-                        packet.killer_uuid
+                        packet.killer_uuid,
+                        packet.damage_type
                 );
             }
             return true;

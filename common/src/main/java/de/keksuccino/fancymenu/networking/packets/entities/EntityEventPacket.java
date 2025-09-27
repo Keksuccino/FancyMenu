@@ -12,6 +12,7 @@ public class EntityEventPacket extends Packet {
     public String killer_name;
     public String killer_key;
     public String killer_uuid;
+    public String damage_type;
     public double pos_x;
     public double pos_y;
     public double pos_z;

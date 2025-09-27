@@ -29,6 +29,8 @@ public class OnEntityDiedListener extends AbstractListener {
     private String cachedDimensionKey;
     private boolean isSameDimensionAsPlayer;
     @Nullable
+    private String cachedDamageType;
+    @Nullable
     private String cachedKillerName;
     @Nullable
     private String cachedKillerKey;
@@ -39,7 +41,7 @@ public class OnEntityDiedListener extends AbstractListener {
         super("entity_died");
     }
 
-    public void onEntityDied(@Nullable String entityKey, @Nullable UUID entityUuid, double posX, double posY, double posZ, @Nullable String levelKey, @Nullable String killerName, @Nullable String killerKey, @Nullable String killerUuid) {
+    public void onEntityDied(@Nullable String entityKey, @Nullable UUID entityUuid, double posX, double posY, double posZ, @Nullable String levelKey, @Nullable String killerName, @Nullable String killerKey, @Nullable String killerUuid, @Nullable String damageType) {
         this.cachedEntityKey = entityKey;
         this.cachedEntityUuid = (entityUuid != null) ? entityUuid.toString() : null;
         this.cachedDeathPosX = Double.toString(posX);
@@ -47,6 +49,7 @@ public class OnEntityDiedListener extends AbstractListener {
         this.cachedDeathPosZ = Double.toString(posZ);
         this.cachedDimensionKey = levelKey;
         this.cachedDistanceToPlayer = this.computeDistanceToPlayer(posX, posY, posZ, levelKey);
+        this.cachedDamageType = (damageType != null && !damageType.isBlank()) ? damageType : null;
         this.cachedKillerName = (killerName != null && !killerName.isBlank()) ? killerName : null;
         this.cachedKillerKey = (killerKey != null && !killerKey.isBlank()) ? killerKey : null;
         this.cachedKillerUuid = (killerUuid != null && !killerUuid.isBlank()) ? killerUuid : null;
@@ -83,6 +86,7 @@ public class OnEntityDiedListener extends AbstractListener {
         list.add(new CustomVariable("death_pos_z", () -> this.cachedDeathPosZ != null ? this.cachedDeathPosZ : "0"));
         list.add(new CustomVariable("entity_uuid", () -> this.cachedEntityUuid != null ? this.cachedEntityUuid : "ERROR"));
         list.add(new CustomVariable("dimension_key", () -> this.cachedDimensionKey != null ? this.cachedDimensionKey : "UNKNOWN"));
+        list.add(new CustomVariable("damage_type", () -> this.cachedDamageType != null ? this.cachedDamageType : "UNKNOWN"));
         list.add(new CustomVariable("is_same_dimension_as_player", () -> Boolean.toString(this.isSameDimensionAsPlayer)));
         list.add(new CustomVariable("entity_killed_by_name", () -> this.cachedKillerName != null ? this.cachedKillerName : "NONE"));
         list.add(new CustomVariable("entity_killed_by_key", () -> this.cachedKillerKey != null ? this.cachedKillerKey : "NONE"));

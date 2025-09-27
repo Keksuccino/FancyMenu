@@ -44,6 +44,7 @@ public class MixinLivingEntity {
         packet.pos_z = entity.getZ();
         ResourceLocation levelLocation = level.dimension().location();
         packet.level_identifier = (levelLocation != null) ? levelLocation.toString() : null;
+        packet.damage_type = this.resolveDamageTypeKey_FancyMenu(damageSource);
 
         Entity killer = this.resolveKillerEntity_FancyMenu(damageSource);
         if (killer != null) {
@@ -71,5 +72,16 @@ public class MixinLivingEntity {
         }
         Entity killer = damageSource.getEntity();
         return (killer != null) ? killer : damageSource.getDirectEntity();
+    }
+
+    @Unique
+    @NotNull
+    private String resolveDamageTypeKey_FancyMenu(@Nullable DamageSource damageSource) {
+        if (damageSource == null) {
+            return "unknown";
+        }
+        return damageSource.typeHolder().unwrapKey()
+                .map(key -> key.location().toString())
+                .orElse("unknown");
     }
 }
