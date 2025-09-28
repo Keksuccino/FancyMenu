@@ -45,7 +45,7 @@ public class OnItemUsedListener extends AbstractListener {
     @NotNull
     private String normalizeUsedOnType_FancyMenu(@NotNull String usedOnType) {
         return switch (usedOnType) {
-            case "entity", "block" -> usedOnType;
+            case "entity", "block", "self" -> usedOnType;
             default -> "none";
         };
     }
@@ -71,3 +71,4 @@ public class OnItemUsedListener extends AbstractListener {
         return List.of(LocalizationUtils.splitLocalizedLines("fancymenu.listeners.on_item_used.desc"));
     }
 }
+

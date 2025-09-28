@@ -129,12 +129,24 @@ public class MixinMultiPlayerGameMode {
     @Inject(method = "useItem", at = @At("RETURN"))
     private void after_useItem_FancyMenu(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         InteractionResult result = cir.getReturnValue();
-        if ((player instanceof LocalPlayer) && (result != null) && result.consumesAction()) {
+        if ((player instanceof LocalPlayer localPlayer) && (result != null) && result.consumesAction()) {
             String itemKey = this.capturedUseItemKey_FancyMenu;
             if (itemKey == null) {
                 itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
             }
-            Listeners.ON_ITEM_USED.onItemUsed(itemKey, "none", "", "", "-1", "-1", "-1");
+            String usedOnType = "none";
+            String entityKey = "";
+            String targetPosX = "-1";
+            String targetPosY = "-1";
+            String targetPosZ = "-1";
+            if (localPlayer.isUsingItem()) {
+                usedOnType = "self";
+                entityKey = this.resolveEntityKey_FancyMenu(localPlayer);
+                targetPosX = Double.toString(localPlayer.getX());
+                targetPosY = Double.toString(localPlayer.getY());
+                targetPosZ = Double.toString(localPlayer.getZ());
+            }
+            Listeners.ON_ITEM_USED.onItemUsed(itemKey, usedOnType, entityKey, "", targetPosX, targetPosY, targetPosZ);
         }
         this.capturedUseItemKey_FancyMenu = null;
     }
@@ -226,3 +238,4 @@ public class MixinMultiPlayerGameMode {
         return entityLocation != null ? entityLocation.toString() : "";
     }
 }
+
