@@ -66,6 +66,7 @@
     "client.MixinRenderSystem",
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
+    "client.MixinSoundManager",
     "client.MixinSoundEngine",
     "client.MixinStringDecomposer",
     "client.MixinSwitchGrid_SwitchBuilder",
@@ -85,6 +86,10 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
+
+
+
+
 
 
 
