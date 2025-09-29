@@ -25,8 +25,9 @@ public abstract class MixinSoundManager {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void afterInitFancyMenu(Options options, CallbackInfo info) {
         if (this.worldSoundEventBridge_FancyMenu == null) {
-            this.worldSoundEventBridge_FancyMenu = (sound, accessor, range) -> Listeners.ON_WORLD_SOUND_TRIGGERED.onWorldSoundTriggered(sound, range);
+            this.worldSoundEventBridge_FancyMenu = (sound, accessor, range) -> Listeners.ON_WORLD_SOUND_TRIGGERED.onWorldSoundTriggered(sound, accessor.getSubtitle(), range);
             this.soundEngine.addEventListener(this.worldSoundEventBridge_FancyMenu);
         }
     }
 }
+

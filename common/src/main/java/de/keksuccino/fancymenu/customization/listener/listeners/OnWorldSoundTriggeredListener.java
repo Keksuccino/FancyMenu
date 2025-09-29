@@ -21,6 +21,8 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
     @Nullable
     private String cachedSoundResourceLocation;
     @Nullable
+    private String cachedSoundDisplayName;
+    @Nullable
     private String cachedSoundOriginPosX;
     @Nullable
     private String cachedSoundOriginPosY;
@@ -35,7 +37,7 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
         super("world_sound_triggered");
     }
 
-    public void onWorldSoundTriggered(@NotNull SoundInstance sound, float audibleRange) {
+    public void onWorldSoundTriggered(@NotNull SoundInstance sound, @Nullable Component subtitle, float audibleRange) {
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if ((minecraft.level == null) || (player == null)) {
@@ -53,6 +55,7 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
         double distanceToPlayer = soundPosition.distanceTo(playerPosition);
 
         this.cachedSoundResourceLocation = this.resolveSoundResourceLocation(sound);
+        this.cachedSoundDisplayName = this.resolveDisplayName(subtitle, this.cachedSoundResourceLocation);
         this.cachedSoundOriginPosX = Double.toString(soundPosition.x);
         this.cachedSoundOriginPosY = Double.toString(soundPosition.y);
         this.cachedSoundOriginPosZ = Double.toString(soundPosition.z);
@@ -65,6 +68,7 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
     @Override
     protected void buildCustomVariablesAndAddToList(List<CustomVariable> list) {
         list.add(new CustomVariable("sound_resource_location", () -> this.cachedSoundResourceLocation != null ? this.cachedSoundResourceLocation : "ERROR"));
+        list.add(new CustomVariable("sound_display_name", () -> this.cachedSoundDisplayName != null ? this.cachedSoundDisplayName : "UNKNOWN"));
         list.add(new CustomVariable("sound_origin_pos_x", () -> this.cachedSoundOriginPosX != null ? this.cachedSoundOriginPosX : "0"));
         list.add(new CustomVariable("sound_origin_pos_y", () -> this.cachedSoundOriginPosY != null ? this.cachedSoundOriginPosY : "0"));
         list.add(new CustomVariable("sound_origin_pos_z", () -> this.cachedSoundOriginPosZ != null ? this.cachedSoundOriginPosZ : "0"));
@@ -99,6 +103,20 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
         return (fallback != null) ? fallback.toString() : null;
     }
 
+    @NotNull
+    private String resolveDisplayName(@Nullable Component subtitle, @Nullable String fallback) {
+        if (subtitle != null) {
+            String plain = subtitle.getString();
+            if (!plain.isBlank()) {
+                return plain;
+            }
+        }
+        if ((fallback != null) && !fallback.isBlank()) {
+            return fallback;
+        }
+        return "UNKNOWN";
+    }
+
     private double calculateDirectionDegrees(@NotNull LocalPlayer player, @NotNull Vec3 soundPosition) {
         Vec3 playerPosition = player.position();
         double deltaX = soundPosition.x - playerPosition.x;
@@ -115,3 +133,5 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
         return normalized;
     }
 }
+
+
