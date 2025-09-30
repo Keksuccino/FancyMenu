@@ -25,6 +25,7 @@ public class Listeners {
     public static final OnDamageTakenListener ON_DAMAGE_TAKEN = new OnDamageTakenListener();
     public static final OnStartedFreezingListener ON_STARTED_FREEZING = new OnStartedFreezingListener();
     public static final OnStoppedFreezingListener ON_STOPPED_FREEZING = new OnStoppedFreezingListener();
+    public static final OnFullyFrozenListener ON_FULLY_FROZEN = new OnFullyFrozenListener();
     public static final OnLookingAtBlockListener ON_LOOKING_AT_BLOCK = new OnLookingAtBlockListener();
     public static final OnLookingAtEntityListener ON_LOOKING_AT_ENTITY = new OnLookingAtEntityListener();
     public static final OnEntitySpawnedListener ON_ENTITY_SPAWNED = new OnEntitySpawnedListener();
@@ -51,10 +52,13 @@ public class Listeners {
     public static final OnMusicTrackStartedListener ON_MUSIC_TRACK_STARTED = new OnMusicTrackStartedListener();
     public static final OnMusicTrackStoppedListener ON_MUSIC_TRACK_STOPPED = new OnMusicTrackStoppedListener();
     public static final OnWorldSoundTriggeredListener ON_WORLD_SOUND_TRIGGERED = new OnWorldSoundTriggeredListener();
+    public static final OnWeatherChangedListener ON_WEATHER_CHANGED = new OnWeatherChangedListener();
     public static final OnStartedBurningListener ON_STARTED_BURNING = new OnStartedBurningListener();
     public static final OnStoppedBurningListener ON_STOPPED_BURNING = new OnStoppedBurningListener();
     public static final OnStartedDrowningListener ON_STARTED_DROWNING = new OnStartedDrowningListener();
     public static final OnPositionChangedListener ON_POSITION_CHANGED = new OnPositionChangedListener();
+    public static final OnStartedRunningListener ON_STARTED_RUNNING = new OnStartedRunningListener();
+    public static final OnStoppedRunningListener ON_STOPPED_RUNNING = new OnStoppedRunningListener();
     public static final OnJumpListener ON_JUMP = new OnJumpListener();
     public static final OnServerJoinedListener ON_SERVER_JOINED = new OnServerJoinedListener();
     public static final OnServerLeftListener ON_SERVER_LEFT = new OnServerLeftListener();
@@ -89,6 +93,7 @@ public class Listeners {
         ListenerRegistry.register(ON_DAMAGE_TAKEN);
         ListenerRegistry.register(ON_STARTED_FREEZING);
         ListenerRegistry.register(ON_STOPPED_FREEZING);
+        ListenerRegistry.register(ON_FULLY_FROZEN);
         ListenerRegistry.register(ON_LOOKING_AT_BLOCK);
         ListenerRegistry.register(ON_LOOKING_AT_ENTITY);
         ListenerRegistry.register(ON_ENTITY_SPAWNED);
@@ -115,10 +120,13 @@ public class Listeners {
         ListenerRegistry.register(ON_MUSIC_TRACK_STARTED);
         ListenerRegistry.register(ON_MUSIC_TRACK_STOPPED);
         ListenerRegistry.register(ON_WORLD_SOUND_TRIGGERED);
+        ListenerRegistry.register(ON_WEATHER_CHANGED);
         ListenerRegistry.register(ON_STARTED_BURNING);
         ListenerRegistry.register(ON_STOPPED_BURNING);
         ListenerRegistry.register(ON_STARTED_DROWNING);
         ListenerRegistry.register(ON_POSITION_CHANGED);
+        ListenerRegistry.register(ON_STARTED_RUNNING);
+        ListenerRegistry.register(ON_STOPPED_RUNNING);
         ListenerRegistry.register(ON_JUMP);
         ListenerRegistry.register(ON_SERVER_JOINED);
         ListenerRegistry.register(ON_SERVER_LEFT);
@@ -135,6 +143,7 @@ public class Listeners {
     }
 
 }
+
 
 
 

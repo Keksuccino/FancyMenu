@@ -44,6 +44,12 @@ public class MixinLocalPlayer {
     private boolean lastSwimmingState_FancyMenu;
 
     @Unique
+    private boolean runningStateInitialized_FancyMenu;
+
+    @Unique
+    private boolean lastRunningState_FancyMenu;
+
+    @Unique
     private boolean swimmingStateInitialized_FancyMenu;
 
     @Unique
@@ -101,6 +107,12 @@ public class MixinLocalPlayer {
     private boolean lastFreezingState_FancyMenu;
 
     @Unique
+    private boolean fullyFrozenStateInitialized_FancyMenu;
+
+    @Unique
+    private boolean lastFullyFrozenState_FancyMenu;
+
+    @Unique
     private boolean experienceInitialized_FancyMenu;
 
     @Unique
@@ -120,6 +132,18 @@ public class MixinLocalPlayer {
 
     @Unique
     private static final FluidContactInfo NO_FLUID_FANCYMENU = new FluidContactInfo(false, null);
+
+    @Unique
+    private boolean weatherStateInitialized_FancyMenu;
+
+    @Unique
+    private String lastWeatherType_FancyMenu;
+
+    @Unique
+    private boolean lastWeatherCanSnow_FancyMenu;
+
+    @Unique
+    private boolean lastWeatherCanRain_FancyMenu;
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void after_tick_FancyMenu(CallbackInfo info) {
@@ -183,13 +207,49 @@ public class MixinLocalPlayer {
 
         this.lastFreezingState_FancyMenu = isFreezing;
 
+        boolean isFullyFrozen = ticksRequiredToFreeze > 0 && ticksFrozen >= ticksRequiredToFreeze;
+        if (!this.fullyFrozenStateInitialized_FancyMenu) {
+            this.fullyFrozenStateInitialized_FancyMenu = true;
+            this.lastFullyFrozenState_FancyMenu = isFullyFrozen;
+            if (isFullyFrozen) {
+                Listeners.ON_FULLY_FROZEN.onFullyFrozen();
+            }
+        } else {
+            if (!this.lastFullyFrozenState_FancyMenu && isFullyFrozen) {
+                Listeners.ON_FULLY_FROZEN.onFullyFrozen();
+            }
+        }
+        this.lastFullyFrozenState_FancyMenu = isFullyFrozen;
+
+        boolean isRunning = self.isSprinting();
+        if (!this.runningStateInitialized_FancyMenu) {
+            this.runningStateInitialized_FancyMenu = true;
+            this.lastRunningState_FancyMenu = isRunning;
+            if (isRunning) {
+                Listeners.ON_STARTED_RUNNING.onStartedRunning();
+            }
+        } else {
+            if (!this.lastRunningState_FancyMenu && isRunning) {
+                Listeners.ON_STARTED_RUNNING.onStartedRunning();
+            } else if (this.lastRunningState_FancyMenu && !isRunning) {
+                Listeners.ON_STOPPED_RUNNING.onStoppedRunning();
+            }
+        }
+        this.lastRunningState_FancyMenu = isRunning;
+
         this.updateRidingListeners_FancyMenu(self);
 
         ResourceKey<Biome> currentBiomeKey = null;
-        if (self.level() instanceof ClientLevel clientLevel && clientLevel.hasChunkAt(self.getBlockX(), self.getBlockZ())) {
-            Holder<Biome> biomeHolder = clientLevel.getBiome(self.blockPosition());
-            currentBiomeKey = biomeHolder.unwrapKey().orElse(null);
+        ClientLevel cachedClientLevel = null;
+        if (self.level() instanceof ClientLevel clientLevel) {
+            cachedClientLevel = clientLevel;
+            if (clientLevel.hasChunkAt(self.getBlockX(), self.getBlockZ())) {
+                Holder<Biome> biomeHolder = clientLevel.getBiome(self.blockPosition());
+                currentBiomeKey = biomeHolder.unwrapKey().orElse(null);
+            }
         }
+
+        this.updateWeatherListener_FancyMenu(self, cachedClientLevel);
 
         float currentHealth = self.getHealth();
         if (!this.healthInitialized_FancyMenu) {
@@ -518,6 +578,49 @@ public class MixinLocalPlayer {
         return null;
     }
 
+    @Unique
+    private void updateWeatherListener_FancyMenu(LocalPlayer self, @Nullable ClientLevel clientLevel) {
+        if (clientLevel == null) {
+            this.weatherStateInitialized_FancyMenu = false;
+            this.lastWeatherType_FancyMenu = null;
+            return;
+        }
+
+        BlockPos playerPos = self.blockPosition();
+        if (!clientLevel.hasChunkAt(playerPos)) {
+            return;
+        }
+
+        boolean isThundering = clientLevel.isThundering();
+        boolean isRaining = clientLevel.isRaining();
+        String weatherType = isThundering ? "thunder" : (isRaining ? "rain" : "clear");
+
+        boolean canSnow = false;
+        boolean canRain = false;
+        if (isRaining) {
+            Holder<Biome> biomeHolder = clientLevel.getBiome(playerPos);
+            Biome biome = biomeHolder.value();
+            Biome.Precipitation precipitation = biome.getPrecipitationAt(playerPos);
+            if (precipitation == Biome.Precipitation.SNOW) {
+                canSnow = clientLevel.canSeeSky(playerPos);
+            } else if (precipitation == Biome.Precipitation.RAIN) {
+                canRain = clientLevel.isRainingAt(playerPos);
+            }
+        }
+
+        if (!this.weatherStateInitialized_FancyMenu
+                || !Objects.equals(this.lastWeatherType_FancyMenu, weatherType)
+                || this.lastWeatherCanSnow_FancyMenu != canSnow
+                || this.lastWeatherCanRain_FancyMenu != canRain) {
+            this.weatherStateInitialized_FancyMenu = true;
+            this.lastWeatherType_FancyMenu = weatherType;
+            this.lastWeatherCanSnow_FancyMenu = canSnow;
+            this.lastWeatherCanRain_FancyMenu = canRain;
+            Listeners.ON_WEATHER_CHANGED.onWeatherChanged(weatherType, canSnow, canRain);
+        }
+
+    }
+
     /** @reason Fire FancyMenu listener when the local player takes drowning damage. */
     @Inject(method = "hurt", at = @At("HEAD"))
     private void before_hurt_FancyMenu(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
@@ -541,5 +644,10 @@ public class MixinLocalPlayer {
     }
 
 }
+
+
+
+
+
 
 
