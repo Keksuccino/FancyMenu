@@ -57,10 +57,15 @@ public abstract class AbstractListener {
 
     protected abstract void buildCustomVariablesAndAddToList(List<CustomVariable> list);
 
-    protected void registerCustomVariablesToInstance(@NotNull ListenerInstance instance) {
+    @NotNull
+    public List<CustomVariable> getCustomVariables() {
         List<CustomVariable> variables = new ArrayList<>();
         this.buildCustomVariablesAndAddToList(variables);
-        for (CustomVariable v : variables) {
+        return variables;
+    }
+
+    protected void registerCustomVariablesToInstance(@NotNull ListenerInstance instance) {
+        for (CustomVariable v : this.getCustomVariables()) {
             instance.getActionScript().addValuePlaceholder(v.name(), v.valueSupplier());
         }
     }
@@ -74,3 +79,4 @@ public abstract class AbstractListener {
     public record CustomVariable(@NotNull String name, @NotNull Supplier<String> valueSupplier) {}
 
 }
+

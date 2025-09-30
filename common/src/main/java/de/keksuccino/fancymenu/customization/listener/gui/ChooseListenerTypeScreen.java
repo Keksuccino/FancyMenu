@@ -34,6 +34,7 @@ public class ChooseListenerTypeScreen extends Screen {
     protected ScrollArea listenersScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedEditBox searchBar;
+    protected ExtendedButton copyVariablesButton;
 
     public ChooseListenerTypeScreen(@NotNull Consumer<AbstractListener> callback) {
         super(Component.translatable("fancymenu.listeners.choose_type"));
@@ -74,6 +75,20 @@ public class ChooseListenerTypeScreen extends Screen {
         this.descriptionScrollArea.setY(50 + 15, true);
         this.descriptionScrollArea.horizontalScrollBar.active = false;
         this.addRenderableWidget(this.descriptionScrollArea);
+        
+        int copyButtonWidth = 200;
+        int copyButtonX = this.width - 20 - copyButtonWidth;
+        int copyButtonY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder() + 5);
+        this.copyVariablesButton = new ExtendedButton(
+                copyButtonX,
+                copyButtonY,
+                copyButtonWidth,
+                20,
+                Component.translatable("fancymenu.listeners.choose_type.copy_variables"),
+                button -> this.copyVariablesToClipboard()
+        ).setIsActiveSupplier(consumes -> this.selectedListener != null);
+        this.addRenderableWidget(this.copyVariablesButton);
+        UIBase.applyDefaultWidgetSkinTo(this.copyVariablesButton);
         
         // Done button
         ExtendedButton doneButton = new ExtendedButton(
@@ -208,6 +223,20 @@ public class ChooseListenerTypeScreen extends Screen {
         });
     }
 
+    protected void copyVariablesToClipboard() {
+        if (this.selectedListener == null) return;
+
+        List<AbstractListener.CustomVariable> variables = this.selectedListener.getCustomVariables();
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < variables.size(); i++) {
+            if (i > 0) {
+                builder.append(System.lineSeparator());
+            }
+            builder.append("$$").append(variables.get(i).name());
+        }
+        Minecraft.getInstance().keyboardHandler.setClipboard(builder.toString());
+    }
+
     protected boolean listenerFitsSearchValue(@NotNull AbstractListener listener, @Nullable String searchValue) {
         if ((searchValue == null) || searchValue.isBlank()) return true;
         searchValue = searchValue.toLowerCase();
@@ -267,3 +296,5 @@ public class ChooseListenerTypeScreen extends Screen {
     }
 
 }
+
+
