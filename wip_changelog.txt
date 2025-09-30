@@ -4,7 +4,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Added a new system: Listeners (#1247)
   - Listeners can make you, well, listen to specific game events like mouse movement, mouse clicks, keyboard key presses, menus getting opened/closed and even in-world events like entities dying, the player gaining an effect or spotting an entity and SO MUCH MORE!
   - You can add multiple listeners for the same event type and each listener can execute its own action script when triggered
-  - Listeners are the only system in FancyMenu that is constantly enabled, even when you are not in menus, which means listeners constantly listen to events and can trigger their action scripts, even when not in menus
+  - Listeners are the only system in FancyMenu that is constantly enabled, even when you are not in menus, which means listeners constantly listen to events and can trigger their action scripts, even if you have no menu open (while walking around in a world, for example)
   - To manage (add/edit/remove) listeners, click on "Customization -> Manage Listeners" in the menu bar when NOT IN THE EDITOR
 - Added rotation support for many element types, which means you can now freely rotate them (#1258)
   - In basic mode you can use the rotation grabber to easily rotate the element or you can set the rotation manually in the element's right-click menu
