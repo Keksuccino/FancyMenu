@@ -2038,5 +2038,8 @@
   "fancymenu.listeners.choose_type.copy_variables": "Copy Variables to Clipboard",
   "fancymenu.requirements.is_resource_pack_enabled": "Is Resource Pack Enabled",
   "fancymenu.requirements.is_resource_pack_enabled.desc": "Returns TRUE when the named resource pack is currently enabled. Use the display name shown in the Resource Packs screen.",
-  "fancymenu.requirements.is_resource_pack_enabled.valuename": "Resource Pack Name"
+  "fancymenu.requirements.is_resource_pack_enabled.valuename": "Resource Pack Name",
+  "fancymenu.requirements.world.has_player_permission_level": "Has Player Permission Level",
+  "fancymenu.requirements.world.has_player_permission_level.desc": "Returns TRUE when the current player has at least the specified permission level (0-4). Level 4 is the default level set via the OP command. Works in singleplayer worlds and multiplayer servers where permission data is available.",
+  "fancymenu.requirements.world.has_player_permission_level.valuename": "Permission Level"
 }

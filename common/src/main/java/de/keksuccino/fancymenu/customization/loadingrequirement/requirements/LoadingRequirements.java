@@ -53,6 +53,7 @@ public class LoadingRequirements {
     public static final IsServerIpRequirement IS_SERVER_IP = new IsServerIpRequirement();
     public static final IsServerOnlineRequirement IS_SERVER_ONLINE = new IsServerOnlineRequirement();
     public static final IsResourcePackEnabledRequirement IS_RESOURCE_PACK_ENABLED = new IsResourcePackEnabledRequirement();
+    public static final HasPlayerPermissionLevelRequirement HAS_PLAYER_PERMISSION_LEVEL = new HasPlayerPermissionLevelRequirement();
     public static final IsVariableValueRequirement IS_VARIABLE_VALUE = new IsVariableValueRequirement();
     public static final IsPlayerRunningRequirement IS_PLAYER_RUNNING = new IsPlayerRunningRequirement();
     public static final IsPlayerSneakingRequirement IS_PLAYER_SNEAKING = new IsPlayerSneakingRequirement();
@@ -168,6 +169,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_THUNDERING);
         LoadingRequirementRegistry.register(IS_CLEAR_WEATHER);
         LoadingRequirementRegistry.register(IS_SNOWING);
+        LoadingRequirementRegistry.register(HAS_PLAYER_PERMISSION_LEVEL);
         LoadingRequirementRegistry.register(IS_PLAYER_LEFT_HANDED);
         LoadingRequirementRegistry.register(IS_INVENTORY_SLOT_FILLED);
         LoadingRequirementRegistry.register(IS_HOTBAR_SLOT_ACTIVE);
@@ -188,5 +190,8 @@ public class LoadingRequirements {
     }
 
 }
+
+
+
 
 
