@@ -16,6 +16,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
   - In advanced mode, the tilt values support placeholders, which gives you maximum control over the element's vertical/horizontal tilt, but in this mode the tilt grabbers are disabled
   - It is possible to disable the tilt visual tilt controls in the editor settings (menu bar -> Window -> Element Tilt Controls) to not see the grabbers anymore
   - You can Shift-click the tilt grabbers to make them snap to 15 degree steps
+- Added "Is Resource Pack Enabled" requirement to check if a resource pack is enabled by its display name (#1002)
 - Added "Is Any Screen Open" requirement that returns true when ANY screen is open (useful for listeners, since they work outside menus) (#1275)
 - Added "Reload Resource Packs" action to reload resource packs just like when pressing F3 + T in-game (#1274)
 - Added "Delete File in Game Directory" action to delete files in the instance's game directory and the ".minecraft" directory (#1242)
