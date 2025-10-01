@@ -52,6 +52,7 @@ public class LoadingRequirements {
     public static final IsTextRequirement IS_TEXT = new IsTextRequirement();
     public static final IsServerIpRequirement IS_SERVER_IP = new IsServerIpRequirement();
     public static final IsServerOnlineRequirement IS_SERVER_ONLINE = new IsServerOnlineRequirement();
+    public static final IsResourcePackEnabledRequirement IS_RESOURCE_PACK_ENABLED = new IsResourcePackEnabledRequirement();
     public static final IsVariableValueRequirement IS_VARIABLE_VALUE = new IsVariableValueRequirement();
     public static final IsPlayerRunningRequirement IS_PLAYER_RUNNING = new IsPlayerRunningRequirement();
     public static final IsPlayerSneakingRequirement IS_PLAYER_SNEAKING = new IsPlayerSneakingRequirement();
@@ -178,6 +179,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_TEXT);
         LoadingRequirementRegistry.register(IS_SERVER_IP);
         LoadingRequirementRegistry.register(IS_SERVER_ONLINE);
+        LoadingRequirementRegistry.register(IS_RESOURCE_PACK_ENABLED);
         LoadingRequirementRegistry.register(IS_VARIABLE_VALUE);
         LoadingRequirementRegistry.register(ONLY_ONCE_PER_SESSION);
         LoadingRequirementRegistry.register(MOUSE_CLICKED);
@@ -186,3 +188,5 @@ public class LoadingRequirements {
     }
 
 }
+
+
