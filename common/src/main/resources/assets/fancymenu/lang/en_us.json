@@ -2044,5 +2044,22 @@
   "fancymenu.requirements.world.has_player_permission_level.valuename": "Permission Level",
   "fancymenu.actions.display_in_chat_client_side": "Display In Chat [Client-Side]",
   "fancymenu.actions.display_in_chat_client_side.desc": "Prints text directly to your local chat without contacting the server. Supports formatting codes using the '&' prefix and serialized JSON text components.",
-  "fancymenu.actions.display_in_chat_client_side.value": "Chat Message [Plain Text or Serialized JSON Component]"
+  "fancymenu.actions.display_in_chat_client_side.value": "Chat Message [Plain Text or Serialized JSON Component]",
+  "fancymenu.actions.manage_resource_pack": "Manage Resource Pack",
+  "fancymenu.actions.manage_resource_pack.desc": "Enable, disable, or toggle a resource pack by matching its display name.\nOptionally skip the automatic reload when you want to trigger it later.",
+  "fancymenu.actions.manage_resource_pack.edit_value": "Configure Resource Pack Action",
+  "fancymenu.actions.manage_resource_pack.edit.pack_name": "Target Resource Pack",
+  "fancymenu.actions.manage_resource_pack.edit.pack_name.desc": "Enter the display name exactly as shown in the Resource Packs screen. Placeholders are supported.",
+  "fancymenu.actions.manage_resource_pack.edit.mode.label": "Action Mode",
+  "fancymenu.actions.manage_resource_pack.edit.mode": "Action Mode: %s",
+  "fancymenu.actions.manage_resource_pack.edit.mode.desc": "Choose whether this action enables, disables, or toggles the selected pack.",
+  "fancymenu.actions.manage_resource_pack.edit.reload.label": "Reload Resources",
+  "fancymenu.actions.manage_resource_pack.edit.reload": "Reload Resources After Change: %s",
+  "fancymenu.actions.manage_resource_pack.edit.reload.desc": "Toggle whether FancyMenu should call the resource reload immediately after the selection changes.",
+  "fancymenu.actions.manage_resource_pack.mode.enable": "Enable",
+  "fancymenu.actions.manage_resource_pack.mode.disable": "Disable",
+  "fancymenu.actions.manage_resource_pack.mode.toggle": "Toggle"
 }
+
+
+
