@@ -19,6 +19,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Added "Has Player Permission Level" requirement to check if the player has a specific permission level (like level 4 for operator) (#1239)
 - Added "Is Resource Pack Enabled" requirement to check if a resource pack is enabled by its display name (#1002)
 - Added "Is Any Screen Open" requirement that returns true when ANY screen is open (useful for listeners, since they work outside menus) (#1275)
+- Added "Display in Chat [Client-Side]" action to print messages to the local chat (without sending them to the server) (#1286)
 - Added "Reload Resource Packs" action to reload resource packs just like when pressing F3 + T in-game (#1274)
 - Added "Delete File in Game Directory" action to delete files in the instance's game directory and the ".minecraft" directory (#1242)
 - Added "Create File in Game Directory" action to create new empty files in the instance's game directory and the ".minecraft" directory (#1242)
