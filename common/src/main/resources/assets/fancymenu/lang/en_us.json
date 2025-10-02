@@ -2041,5 +2041,8 @@
   "fancymenu.requirements.is_resource_pack_enabled.valuename": "Resource Pack Name",
   "fancymenu.requirements.world.has_player_permission_level": "Has Player Permission Level",
   "fancymenu.requirements.world.has_player_permission_level.desc": "Returns TRUE when the current player has at least the specified permission level (0-4). Level 4 is the default level set via the OP command. Works in singleplayer worlds and multiplayer servers where permission data is available.",
-  "fancymenu.requirements.world.has_player_permission_level.valuename": "Permission Level"
+  "fancymenu.requirements.world.has_player_permission_level.valuename": "Permission Level",
+  "fancymenu.actions.display_in_chat_client_side": "Display In Chat [Client-Side]",
+  "fancymenu.actions.display_in_chat_client_side.desc": "Prints text directly to your local chat without contacting the server. Supports formatting codes using the '&' prefix and serialized JSON text components.",
+  "fancymenu.actions.display_in_chat_client_side.value": "Chat Message [Plain Text or Serialized JSON Component]"
 }

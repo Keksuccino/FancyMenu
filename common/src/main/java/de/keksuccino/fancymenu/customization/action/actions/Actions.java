@@ -58,6 +58,7 @@ public class Actions {
     public static final ToggleVideoMenuBackgroundPauseStateAction TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE = new ToggleVideoMenuBackgroundPauseStateAction();
     public static final SendHttpRequestAction SEND_HTTP_REQUEST = new SendHttpRequestAction();
     public static final PrintToLogAction PRINT_TO_LOG = new PrintToLogAction();
+    public static final DisplayInChatClientSideAction DISPLAY_IN_CHAT_CLIENT_SIDE = new DisplayInChatClientSideAction();
     public static final DeleteFileAction DELETE_FILE = new DeleteFileAction();
     public static final MoveFileAction MOVE_FILE = new MoveFileAction();
     public static final CopyFileAction COPY_FILE = new CopyFileAction();
@@ -100,6 +101,7 @@ public class Actions {
         ActionRegistry.register(TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE);
         ActionRegistry.register(SEND_HTTP_REQUEST);
         ActionRegistry.register(PRINT_TO_LOG);
+        ActionRegistry.register(DISPLAY_IN_CHAT_CLIENT_SIDE);
         ActionRegistry.register(DELETE_FILE);
         ActionRegistry.register(MOVE_FILE);
         ActionRegistry.register(COPY_FILE);
@@ -112,3 +114,5 @@ public class Actions {
     }
 
 }
+
+
