@@ -46,6 +46,7 @@ public class Actions {
     public static final ReloadFancyMenuAction RELOAD_FANCYMENU = new ReloadFancyMenuAction();
     public static final CopyToClipboardAction COPY_TO_CLIPBOARD = new CopyToClipboardAction();
     public static final MimicButtonAction MIMIC_BUTTON = new MimicButtonAction();
+    public static final MimicKeybindAction MIMIC_KEYBIND = new MimicKeybindAction();
     public static final EditMinecraftOptionAction EDIT_MINECRAFT_OPTION = new EditMinecraftOptionAction();
     public static final SetAudioElementVolumeAction SET_AUDIO_ELEMENT_VOLUME = new SetAudioElementVolumeAction();
     public static final NextTrackAction NEXT_AUDIO_ELEMENT_TRACK = new NextTrackAction();
@@ -90,6 +91,7 @@ public class Actions {
         ActionRegistry.register(RELOAD_FANCYMENU);
         ActionRegistry.register(COPY_TO_CLIPBOARD);
         ActionRegistry.register(MIMIC_BUTTON);
+        ActionRegistry.register(MIMIC_KEYBIND);
         ActionRegistry.register(EDIT_MINECRAFT_OPTION);
         ActionRegistry.register(SET_AUDIO_ELEMENT_VOLUME);
         ActionRegistry.register(NEXT_AUDIO_ELEMENT_TRACK);
@@ -116,6 +118,7 @@ public class Actions {
     }
 
 }
+
 
 
 

@@ -2058,8 +2058,16 @@
   "fancymenu.actions.manage_resource_pack.edit.reload.desc": "Toggle whether FancyMenu should call the resource reload immediately after the selection changes.",
   "fancymenu.actions.manage_resource_pack.mode.enable": "Enable",
   "fancymenu.actions.manage_resource_pack.mode.disable": "Disable",
-  "fancymenu.actions.manage_resource_pack.mode.toggle": "Toggle"
+  "fancymenu.actions.manage_resource_pack.mode.toggle": "Toggle",
+  "fancymenu.actions.mimic_keybind": "Mimic Keybind",
+  "fancymenu.actions.mimic_keybind.desc": "Runs the selected Minecraft keybind as though it was pressed. Combine with placeholders to trigger controls remotely.",
+  "fancymenu.actions.mimic_keybind.error": "FancyMenu could not find the requested keybind. Double-check the identifier and try again.",
+  "fancymenu.actions.mimic_keybind.edit.title": "Configure Mimic Keybind",
+  "fancymenu.actions.mimic_keybind.edit.keybind": "Keybind Identifier",
+  "fancymenu.actions.mimic_keybind.edit.keybind_missing": "Keybind Not Found",
+  "fancymenu.actions.mimic_keybind.edit.keybind_preview": "Pressing: %s (%s)"
 }
+
 
 
 
