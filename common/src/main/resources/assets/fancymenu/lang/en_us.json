@@ -2067,6 +2067,7 @@
   "fancymenu.actions.mimic_keybind.edit.keybind_missing": "Keybind Not Found",
   "fancymenu.actions.mimic_keybind.edit.keybind_preview": "Pressing: %s (%s)",
   "fancymenu.actions.mimic_keybind.edit.keep_pressed": "Keep Pressed: %s",
+  "fancymenu.actions.mimic_keybind.edit.keep_pressed.label": "Keep Pressed",
   "fancymenu.actions.mimic_keybind.edit.keep_pressed.desc": "Hold the key for the specified duration by repeatedly re-triggering it if necessary.",
   "fancymenu.actions.mimic_keybind.edit.pressed_duration": "Pressed Duration (ms)",
   "fancymenu.actions.mimic_keybind.edit.pressed_duration.desc": "When Keep Pressed is enabled, the key stays down for this many milliseconds before being released."

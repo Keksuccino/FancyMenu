@@ -5,8 +5,8 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
-import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
@@ -25,9 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -55,14 +53,9 @@ public class MimicKeybindAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
+
         MimicKeybindConfig config = MimicKeybindConfig.parse(value);
         if (config.keybindName.isEmpty()) {
-            return;
-        }
-
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.options == null) {
-            LOGGER.warn("[FANCYMENU] Unable to mimic keybind because options are not initialized.");
             return;
         }
 
@@ -83,11 +76,12 @@ public class MimicKeybindAction extends Action {
             LOGGER.error("[FANCYMENU] MimicKeybindAction does not support key type '{}' for '{}'!", key.getType(), config.keybindName);
             handleMissingKeybind(config.keybindName);
         }
+
     }
 
     protected boolean triggerKeybind(@NotNull KeyMapping keyMapping, @NotNull InputConstants.Key key, @NotNull MimicKeybindConfig config) {
-        boolean keepPressed = config.keepPressed && (config.pressedDurationMs > 0L);
-        long holdDuration = keepPressed ? Math.max(config.pressedDurationMs, 1L) : 0L;
+        boolean keepPressed = config.keepPressed && !config.pressedDurationMs.isBlank();
+        long holdDuration = keepPressed ? Math.max(config.getPressedDurationAsLong(), 1L) : 0L;
 
         if (key.getType() == InputConstants.Type.MOUSE) {
             pressMouseKey(keyMapping, key, keepPressed, holdDuration);
@@ -114,9 +108,6 @@ public class MimicKeybindAction extends Action {
     private boolean pressKeyboardKey(@NotNull KeyMapping keyMapping, @NotNull InputConstants.Key key, boolean keepPressed, long holdDurationMs) {
         Minecraft minecraft = Minecraft.getInstance();
         KeyboardHandler handler = minecraft.keyboardHandler;
-        if (handler == null) {
-            return false;
-        }
 
         long window = minecraft.getWindow().getWindow();
         int keyCode;
@@ -124,9 +115,6 @@ public class MimicKeybindAction extends Action {
         if (key.getType() == InputConstants.Type.KEYSYM) {
             keyCode = key.getValue();
             scanCode = GLFW.glfwGetKeyScancode(keyCode);
-            if (scanCode == GLFW.GLFW_KEY_UNKNOWN) {
-                scanCode = -1;
-            }
         } else {
             keyCode = InputConstants.UNKNOWN.getValue();
             scanCode = key.getValue();
@@ -138,8 +126,7 @@ public class MimicKeybindAction extends Action {
         if (keepPressed) {
             startHoldThread(keyMapping, key, keyCode, scanCode, true, holdDurationMs);
         } else {
-            int finalScanCode = scanCode;
-            MainThreadTaskExecutor.executeInMainThread(() -> releaseKeyboardKey(key, keyCode, finalScanCode), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            MainThreadTaskExecutor.executeInMainThread(() -> releaseKeyboardKey(key, keyCode, scanCode), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }
         return true;
     }
@@ -147,9 +134,7 @@ public class MimicKeybindAction extends Action {
     private void releaseKeyboardKey(@NotNull InputConstants.Key key, int keyCode, int scanCode) {
         Minecraft minecraft = Minecraft.getInstance();
         KeyboardHandler handler = minecraft.keyboardHandler;
-        if (handler != null) {
-            handler.keyPress(minecraft.getWindow().getWindow(), keyCode, scanCode, 0, 0);
-        }
+        handler.keyPress(minecraft.getWindow().getWindow(), keyCode, scanCode, 0, 0);
         KeyMapping.set(key, false);
     }
 
@@ -159,10 +144,7 @@ public class MimicKeybindAction extends Action {
             long start = System.currentTimeMillis();
             while (minecraft.isRunning() && !Thread.currentThread().isInterrupted() && (System.currentTimeMillis() - start) < durationMs) {
                 if (!keyMapping.isDown()) {
-                    minecraft.execute(() -> {
-                        if (!minecraft.isRunning()) return;
-                        KeyMapping.set(key, true);
-                    });
+                    minecraft.execute(() -> KeyMapping.set(key, true));
                 }
                 try {
                     Thread.sleep(10L);
@@ -172,9 +154,6 @@ public class MimicKeybindAction extends Action {
                 }
             }
             minecraft.execute(() -> {
-                if (!minecraft.isRunning()) {
-                    return;
-                }
                 if (keyboard) {
                     releaseKeyboardKey(key, keyCode, scanCode);
                 } else {
@@ -182,7 +161,6 @@ public class MimicKeybindAction extends Action {
                 }
             });
         }, "FancyMenu-MimicKeybindHold-" + keyMapping.getName());
-        holdThread.setDaemon(true);
         holdThread.start();
     }
 
@@ -190,9 +168,6 @@ public class MimicKeybindAction extends Action {
     protected KeyMapping findKeyMapping(@NotNull String identifier) {
         String trimmedId = identifier.trim();
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.options == null) {
-            return null;
-        }
         for (KeyMapping keyMapping : minecraft.options.keyMappings) {
             if (keyMapping.getName().equals(trimmedId)) {
                 return keyMapping;
@@ -245,9 +220,6 @@ public class MimicKeybindAction extends Action {
     @NotNull
     protected static List<String> getAvailableKeybindNames() {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.options == null) {
-            return new ArrayList<>(Collections.singletonList("[NO KEYBINDS FOUND]"));
-        }
         List<String> names = new ArrayList<>();
         for (KeyMapping keyMapping : minecraft.options.keyMappings) {
             names.add(keyMapping.getName());
@@ -289,7 +261,7 @@ public class MimicKeybindAction extends Action {
 
             this.addCellGroupEndSpacerCell();
 
-            this.addLabelCell(Component.translatable("fancymenu.actions.mimic_keybind.edit.keep_pressed"));
+            this.addLabelCell(Component.translatable("fancymenu.actions.mimic_keybind.edit.keep_pressed.label"));
             WidgetCell keepPressedCell = this.addCycleButtonCell(
                     CommonCycles.cycleEnabledDisabled("fancymenu.actions.mimic_keybind.edit.keep_pressed", this.config.keepPressed),
                     true,
@@ -305,10 +277,11 @@ public class MimicKeybindAction extends Action {
             this.addCellGroupEndSpacerCell();
 
             this.addLabelCell(Component.translatable("fancymenu.actions.mimic_keybind.edit.pressed_duration"));
-            TextInputCell durationInput = this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
-                    .setEditListener(s -> this.config.pressedDurationMs = parseDuration(s))
-                    .setText(Long.toString(this.config.pressedDurationMs));
+            TextInputCell durationInput = this.addTextInputCell(null, true, true)
+                    .setEditListener(s -> this.config.pressedDurationMs = s)
+                    .setText(this.config.pressedDurationMs);
             durationInput.editBox.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fancymenu.actions.mimic_keybind.edit.pressed_duration.desc")));
+            durationInput.editBox.moveCursorToStart(true);
             this.durationCell = durationInput;
             updateDurationFieldState();
 
@@ -323,17 +296,12 @@ public class MimicKeybindAction extends Action {
 
         private void updateDurationFieldState() {
             if (this.durationCell != null) {
-                long displayValue = Math.max(1L, this.config.pressedDurationMs);
-                this.durationCell.editBox.setValue(Long.toString(displayValue));
+                this.durationCell.setText(this.config.pressedDurationMs);
                 this.durationCell.editBox.setEditable(this.config.keepPressed);
                 if (!this.config.keepPressed && this.durationCell.editBox.isFocused()) {
                     this.durationCell.editBox.setFocused(false);
                 }
             }
-        }
-
-        private long parseDuration(@Nullable String value) {
-            return MimicKeybindConfig.parseDurationValue(value);
         }
 
         @NotNull
@@ -350,9 +318,6 @@ public class MimicKeybindAction extends Action {
         @Nullable
         protected KeyMapping getKeyMapping(@NotNull String identifier) {
             Minecraft minecraft = Minecraft.getInstance();
-            if (minecraft.options == null) {
-                return null;
-            }
             for (KeyMapping keyMapping : minecraft.options.keyMappings) {
                 if (keyMapping.getName().equals(identifier.trim())) {
                     return keyMapping;
@@ -393,7 +358,7 @@ public class MimicKeybindAction extends Action {
 
         @Override
         public boolean allowDone() {
-            return !this.config.keybindName.trim().isEmpty() && (!this.config.keepPressed || this.config.pressedDurationMs > 0L);
+            return !this.config.keybindName.trim().isEmpty() && (!this.config.keepPressed || !this.config.pressedDurationMs.isBlank());
         }
 
         @Override
@@ -407,7 +372,8 @@ public class MimicKeybindAction extends Action {
 
         protected String keybindName = "";
         protected boolean keepPressed = false;
-        protected long pressedDurationMs = DEFAULT_KEEP_DURATION_MS;
+        @NotNull
+        protected String pressedDurationMs = "" + DEFAULT_KEEP_DURATION_MS;
 
         protected static MimicKeybindConfig parse(@Nullable String rawValue) {
             MimicKeybindConfig config = new MimicKeybindConfig();
@@ -421,24 +387,16 @@ public class MimicKeybindAction extends Action {
                 config.keepPressed = Boolean.parseBoolean(parts[1].trim());
             }
             if (parts.length > 2) {
-                config.pressedDurationMs = parseDurationValue(parts[2]);
+                config.pressedDurationMs = parts[2];
             }
             return config;
         }
-        protected static long parseDurationValue(@Nullable String value) {
-            if (value == null) {
-                return DEFAULT_KEEP_DURATION_MS;
+
+        public long getPressedDurationAsLong() {
+            if (MathUtils.isLong(this.pressedDurationMs.trim())) {
+                return Long.parseLong(this.pressedDurationMs.trim());
             }
-            String trimmed = value.trim();
-            if (trimmed.isEmpty()) {
-                return DEFAULT_KEEP_DURATION_MS;
-            }
-            try {
-                long parsed = Long.parseLong(trimmed);
-                return Math.max(1L, parsed);
-            } catch (NumberFormatException ex) {
-                return DEFAULT_KEEP_DURATION_MS;
-            }
+            return 0L;
         }
 
         protected String serialize() {
@@ -446,10 +404,11 @@ public class MimicKeybindAction extends Action {
             if (sanitizedName.isEmpty()) {
                 sanitizedName = "";
             }
-            long duration = Math.max(1L, this.pressedDurationMs);
-            return sanitizedName + VALUE_DELIMITER + this.keepPressed + VALUE_DELIMITER + duration;
+            return sanitizedName + VALUE_DELIMITER + this.keepPressed + VALUE_DELIMITER + this.pressedDurationMs;
         }
+
     }
+
 }
 
 
