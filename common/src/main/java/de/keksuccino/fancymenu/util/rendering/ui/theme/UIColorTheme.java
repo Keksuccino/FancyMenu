@@ -55,6 +55,12 @@ public class UIColorTheme {
     public DrawableColor actions_entry_background_color_while_hover = DrawableColor.of(new Color(45, 92, 82));
     public DrawableColor actions_entry_background_color_generic_block = DrawableColor.of(new Color(58, 59, 62));
     public DrawableColor actions_entry_background_color_generic_block_hover = DrawableColor.of(new Color(71, 72, 76));
+    public DrawableColor actions_chain_indicator_color = DrawableColor.of(new Color(88, 112, 150, 180));
+    public DrawableColor actions_chain_indicator_hovered_color = DrawableColor.of(new Color(100, 181, 246, 210));
+    public DrawableColor actions_chain_indicator_selected_color = DrawableColor.of(new Color(255, 193, 71, 220));
+    public DrawableColor actions_minimap_background_color = DrawableColor.of(new Color(24, 27, 32, 200));
+    public DrawableColor actions_minimap_border_color = DrawableColor.of(new Color(94, 99, 108, 220));
+    public DrawableColor actions_minimap_viewport_color = DrawableColor.of(new Color(255, 255, 255, 70));
     public DrawableColor text_editor_sidebar_color = DrawableColor.of(new Color(49, 51, 53));
     public DrawableColor text_editor_line_number_text_color_normal = DrawableColor.of(new Color(91, 92, 94));
     public DrawableColor text_editor_line_number_text_color_selected = DrawableColor.of(new Color(137, 147, 150));
@@ -118,3 +124,4 @@ public class UIColorTheme {
     }
     
 }
+

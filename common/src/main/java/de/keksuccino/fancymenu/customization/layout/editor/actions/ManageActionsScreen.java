@@ -42,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -71,6 +72,35 @@ public class ManageActionsScreen extends Screen {
     private final ExecutableEntry AFTER_LAST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
     protected int lastWidth = 0;
     protected int lastHeight = 0;
+    protected static final int LEFT_MARGIN = 20;
+    protected static final int RIGHT_MARGIN = 20;
+    protected static final int BUTTON_COLUMN_WIDTH = 150;
+    protected static final int MINIMAP_WIDTH = 64;
+    protected static final int MINIMAP_GAP = 8;
+    protected static final int MINIMAP_TO_BUTTON_GAP = 12;
+    protected static final int MINIMAP_PADDING = 4;
+    protected static final int MINIMAP_INDENT_STEP = 4;
+    protected static final int CHAIN_BAR_WIDTH = 3;
+    protected static final int CHAIN_BAR_OFFSET = 2;
+
+    @Nullable
+    protected ExecutableEntry hoveredEntry = null;
+    @Nullable
+    protected ExecutableEntry minimapHoveredEntry = null;
+    @Nullable
+    protected ExecutableEntry selectedEntry = null;
+    protected List<ExecutableEntry> hoveredStatementChainEntries = Collections.emptyList();
+    protected List<ExecutableEntry> minimapHoveredStatementChainEntries = Collections.emptyList();
+    protected List<ExecutableEntry> selectedStatementChainEntries = Collections.emptyList();
+    protected final List<MinimapEntrySegment> minimapSegments = new ArrayList<>();
+    protected int minimapX = 0;
+    protected int minimapY = 0;
+    protected int minimapHeight = 0;
+    protected int minimapContentX = 0;
+    protected int minimapContentY = 0;
+    protected int minimapContentWidth = 0;
+    protected int minimapContentHeight = 0;
+    protected int minimapTotalEntriesHeight = 0;
 
     public ManageActionsScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
 
@@ -380,20 +410,37 @@ public class ManageActionsScreen extends Screen {
             }
         }
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        graphics.fill(0, 0, this.width, this.height, theme.screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, theme.generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, theme.generic_text_base_color.getColorInt(), false);
 
-        graphics.drawString(this.font, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-
-        this.actionsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
+        int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - BUTTON_COLUMN_WIDTH - MINIMAP_WIDTH - MINIMAP_GAP - MINIMAP_TO_BUTTON_GAP);
+        this.actionsScrollArea.setWidth(scrollAreaWidth, true);
         this.actionsScrollArea.setHeight(this.height - 85, true);
-        this.actionsScrollArea.setX(20, true);
+        this.actionsScrollArea.setX(LEFT_MARGIN, true);
         this.actionsScrollArea.setY(50 + 15, true);
+
+        this.actionsScrollArea.updateScrollArea();
+        this.actionsScrollArea.updateEntries(null);
+
+        int buttonsLeftX = this.width - RIGHT_MARGIN - BUTTON_COLUMN_WIDTH;
+        this.minimapX = buttonsLeftX - MINIMAP_TO_BUTTON_GAP - MINIMAP_WIDTH;
+        this.minimapY = this.actionsScrollArea.getInnerY();
+        this.minimapHeight = this.actionsScrollArea.getInnerHeight();
+
+        this.selectedEntry = this.getSelectedEntry();
+        this.selectedStatementChainEntries = (this.selectedEntry != null) ? this.getStatementChainOf(this.selectedEntry) : Collections.emptyList();
+
+        this.hoveredEntry = this.getScrollAreaHoveredEntry();
+        this.hoveredStatementChainEntries = (this.hoveredEntry != null) ? this.getStatementChainOf(this.hoveredEntry) : Collections.emptyList();
+
+        this.rebuildMinimapSegments(mouseX, mouseY);
+
         this.actionsScrollArea.render(graphics, mouseX, mouseY, partial);
 
-        //Render line to visualize where the dragged entry gets dropped when stop dragging it
         if (this.renderTickDragHoveredEntry != null) {
             int dY = this.renderTickDragHoveredEntry.getY();
             int dH = this.renderTickDragHoveredEntry.getHeight();
@@ -405,8 +452,10 @@ public class ManageActionsScreen extends Screen {
                 dY = this.actionsScrollArea.getInnerY() + this.actionsScrollArea.getInnerHeight() - 1;
                 dH = 1;
             }
-            graphics.fill(this.actionsScrollArea.getInnerX(), dY + dH - 1, this.actionsScrollArea.getInnerX() + this.actionsScrollArea.getInnerWidth(), dY + dH, UIBase.getUIColorTheme().description_area_text_color.getColorInt());
+            graphics.fill(this.actionsScrollArea.getInnerX(), dY + dH - 1, this.actionsScrollArea.getInnerX() + this.actionsScrollArea.getInnerWidth(), dY + dH, theme.description_area_text_color.getColorInt());
         }
+
+        this.renderChainMinimap(graphics);
 
         this.doneButton.render(graphics, mouseX, mouseY, partial);
         this.cancelButton.render(graphics, mouseX, mouseY, partial);
@@ -423,9 +472,245 @@ public class ManageActionsScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partial);
 
     }
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if ((button == 0) && (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight)) {
+            ExecutableEntry entry = this.getMinimapEntryAt((int)mouseX, (int)mouseY);
+            if (entry != null) {
+                entry.setSelected(true);
+                this.scrollEntryIntoView(entry);
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
 
     @Override
     public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    }
+
+    @Nullable
+    protected ExecutableEntry getScrollAreaHoveredEntry() {
+        if (!this.actionsScrollArea.isMouseInsideArea()) {
+            return null;
+        }
+        int mouseX = MouseInput.getMouseX();
+        int mouseY = MouseInput.getMouseY();
+        for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
+            if (entry instanceof ExecutableEntry ee) {
+                if (UIBase.isXYInArea(mouseX, mouseY, ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight())) {
+                    return ee;
+                }
+            }
+        }
+        return null;
+    }
+
+    @NotNull
+    protected List<ExecutableEntry> getActiveHoveredChain() {
+        if (!this.minimapHoveredStatementChainEntries.isEmpty()) {
+            return this.minimapHoveredStatementChainEntries;
+        }
+        if (!this.hoveredStatementChainEntries.isEmpty()) {
+            return this.hoveredStatementChainEntries;
+        }
+        return Collections.emptyList();
+    }
+
+    @Nullable
+    protected ExecutableEntry getActiveHoveredEntry() {
+        if (this.minimapHoveredEntry != null) {
+            return this.minimapHoveredEntry;
+        }
+        return this.hoveredEntry;
+    }
+
+    @NotNull
+    protected Color getChainIndicatorColorFor(@NotNull ExecutableEntry entry) {
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        if (!this.selectedStatementChainEntries.isEmpty() && this.selectedStatementChainEntries.contains(entry)) {
+            return theme.actions_chain_indicator_selected_color.getColor();
+        }
+        List<ExecutableEntry> hoveredChain = this.getActiveHoveredChain();
+        if (!hoveredChain.isEmpty() && hoveredChain.contains(entry)) {
+            return theme.actions_chain_indicator_hovered_color.getColor();
+        }
+        return theme.actions_chain_indicator_color.getColor();
+    }
+
+    @NotNull
+    protected Color getMinimapEntryBaseColor(@NotNull ExecutableEntry entry) {
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        Color base;
+        if (entry.executable instanceof IfExecutableBlock) {
+            base = theme.actions_entry_background_color_if.getColor();
+        } else if (entry.executable instanceof ElseIfExecutableBlock) {
+            base = theme.actions_entry_background_color_else_if.getColor();
+        } else if (entry.executable instanceof ElseExecutableBlock) {
+            base = theme.actions_entry_background_color_else.getColor();
+        } else if (entry.executable instanceof WhileExecutableBlock) {
+            base = theme.actions_entry_background_color_while.getColor();
+        } else if (entry.executable instanceof AbstractExecutableBlock) {
+            base = theme.actions_entry_background_color_generic_block.getColor();
+        } else {
+            base = theme.actions_entry_background_color_action.getColor();
+        }
+        return withAlpha(base, 180);
+    }
+
+    protected void rebuildMinimapSegments(int mouseX, int mouseY) {
+        this.minimapSegments.clear();
+        this.minimapHoveredEntry = null;
+        this.minimapHoveredStatementChainEntries = Collections.emptyList();
+        this.minimapContentX = this.minimapX + MINIMAP_PADDING;
+        this.minimapContentY = this.minimapY + MINIMAP_PADDING;
+        this.minimapContentWidth = Math.max(1, MINIMAP_WIDTH - (MINIMAP_PADDING * 2));
+        this.minimapContentHeight = Math.max(1, this.minimapHeight - (MINIMAP_PADDING * 2));
+        this.minimapTotalEntriesHeight = 0;
+
+        List<ScrollAreaEntry> scrollEntries = this.actionsScrollArea.getEntries();
+        List<ExecutableEntry> execEntries = new ArrayList<>();
+        for (ScrollAreaEntry entry : scrollEntries) {
+            if (entry instanceof ExecutableEntry ee) {
+                execEntries.add(ee);
+            }
+        }
+        if (execEntries.isEmpty()) {
+            return;
+        }
+
+        for (ExecutableEntry entry : execEntries) {
+            this.minimapTotalEntriesHeight += entry.getHeight();
+        }
+        if (this.minimapTotalEntriesHeight <= 0) {
+            this.minimapTotalEntriesHeight = 1;
+        }
+
+        int offset = 0;
+        for (ExecutableEntry entry : execEntries) {
+            int entryHeight = entry.getHeight();
+            float startRatio = (float)offset / (float)this.minimapTotalEntriesHeight;
+            float endRatio = (float)(offset + entryHeight) / (float)this.minimapTotalEntriesHeight;
+            int top = this.minimapContentY + Math.round(startRatio * this.minimapContentHeight);
+            int bottom = this.minimapContentY + Math.round(endRatio * this.minimapContentHeight);
+            if (bottom <= top) {
+                bottom = top + 1;
+            }
+            int height = bottom - top;
+            int indentOffset = entry.indentLevel * MINIMAP_INDENT_STEP;
+            int maxIndent = Math.max(0, this.minimapContentWidth - 1);
+            if (indentOffset > maxIndent) {
+                indentOffset = maxIndent;
+            }
+            int segmentX = this.minimapContentX + indentOffset;
+            int segmentWidth = Math.max(1, this.minimapContentWidth - indentOffset);
+
+            MinimapEntrySegment segment = new MinimapEntrySegment(entry, segmentX, top, segmentWidth, height);
+            this.minimapSegments.add(segment);
+
+            if (UIBase.isXYInArea(mouseX, mouseY, segment.x, segment.y, segment.width, segment.height)) {
+                this.minimapHoveredEntry = entry;
+            }
+
+            offset += entryHeight;
+        }
+
+        if (this.minimapHoveredEntry != null) {
+            this.minimapHoveredStatementChainEntries = this.getStatementChainOf(this.minimapHoveredEntry);
+        }
+    }
+
+    protected void renderChainMinimap(@NotNull GuiGraphics graphics) {
+        if (this.minimapHeight <= 0) {
+            return;
+        }
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        RenderSystem.enableBlend();
+        graphics.fill(this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, theme.actions_minimap_background_color.getColorInt());
+        UIBase.renderBorder(graphics, this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, 1, theme.actions_minimap_border_color, true, true, true, true);
+
+        List<ExecutableEntry> hoverChain = this.getActiveHoveredChain();
+        ExecutableEntry activeHoverEntry = this.getActiveHoveredEntry();
+
+        for (MinimapEntrySegment segment : this.minimapSegments) {
+            ExecutableEntry entry = segment.entry;
+            graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, this.getMinimapEntryBaseColor(entry).getRGB());
+            if (!this.selectedStatementChainEntries.isEmpty() && this.selectedStatementChainEntries.contains(entry)) {
+                graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, theme.actions_chain_indicator_selected_color.getColorInt());
+            }
+            if (!hoverChain.isEmpty() && hoverChain.contains(entry)) {
+                graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, theme.actions_chain_indicator_hovered_color.getColorInt());
+            }
+            if (this.selectedEntry == entry) {
+                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_selected_color, true, true, true, true);
+            } else if (activeHoverEntry == entry) {
+                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_hovered_color, true, true, true, true);
+            }
+        }
+
+        this.renderMinimapViewport(graphics, theme);
+    }
+
+    protected void renderMinimapViewport(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
+        if (this.minimapTotalEntriesHeight <= 0 || this.minimapContentHeight <= 0) {
+            return;
+        }
+        int visibleHeight = this.actionsScrollArea.getInnerHeight();
+        if (this.minimapTotalEntriesHeight <= visibleHeight) {
+            return;
+        }
+        int maxScroll = Math.max(1, this.minimapTotalEntriesHeight - visibleHeight);
+        int scrollPixels = Math.round(this.actionsScrollArea.verticalScrollBar.getScroll() * maxScroll);
+        float topRatio = (float)scrollPixels / (float)this.minimapTotalEntriesHeight;
+        float heightRatio = (float)visibleHeight / (float)this.minimapTotalEntriesHeight;
+
+        int viewportTop = this.minimapContentY + Math.round(topRatio * this.minimapContentHeight);
+        int viewportHeight = Math.max(2, Math.round(heightRatio * this.minimapContentHeight));
+        int maxViewportBottom = this.minimapContentY + this.minimapContentHeight;
+        if (viewportTop + viewportHeight > maxViewportBottom) {
+            viewportHeight = maxViewportBottom - viewportTop;
+        }
+        graphics.fill(this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, theme.actions_minimap_viewport_color.getColorInt());
+        UIBase.renderBorder(graphics, this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, 1, theme.actions_chain_indicator_color, true, true, true, true);
+    }
+
+    @Nullable
+    protected ExecutableEntry getMinimapEntryAt(int mouseX, int mouseY) {
+        for (MinimapEntrySegment segment : this.minimapSegments) {
+            if (UIBase.isXYInArea(mouseX, mouseY, segment.x, segment.y, segment.width, segment.height)) {
+                return segment.entry;
+            }
+        }
+        return null;
+    }
+
+    protected void scrollEntryIntoView(@NotNull ExecutableEntry entry) {
+        List<ScrollAreaEntry> scrollEntries = this.actionsScrollArea.getEntries();
+        int totalHeight = 0;
+        for (ScrollAreaEntry e : scrollEntries) {
+            totalHeight += e.getHeight();
+        }
+        int visibleHeight = this.actionsScrollArea.getInnerHeight();
+        if (totalHeight <= visibleHeight) {
+            return;
+        }
+        int offset = 0;
+        for (ScrollAreaEntry e : scrollEntries) {
+            if (e == entry) {
+                break;
+            }
+            offset += e.getHeight();
+        }
+        int entryCenter = offset + (entry.getHeight() / 2);
+        int target = Math.max(0, entryCenter - (visibleHeight / 2));
+        int maxScroll = Math.max(1, totalHeight - visibleHeight);
+        float scroll = Math.min(1.0F, (float)target / (float)maxScroll);
+        this.actionsScrollArea.verticalScrollBar.setScroll(scroll);
+        this.actionsScrollArea.updateEntries(null);
+    }
+
+    private static Color withAlpha(@NotNull Color color, int alpha) {
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), Math.min(255, Math.max(0, alpha)));
     }
 
     protected boolean isContentOfStatementChain(@NotNull ExecutableEntry entry, @NotNull List<ExecutableEntry> statementChain) {
@@ -792,6 +1077,12 @@ public class ManageActionsScreen extends Screen {
 
     protected void updateActionInstanceScrollArea(boolean keepScroll) {
 
+        this.minimapSegments.clear();
+        this.minimapHoveredEntry = null;
+        this.minimapHoveredStatementChainEntries = Collections.emptyList();
+        this.hoveredEntry = null;
+        this.hoveredStatementChainEntries = Collections.emptyList();
+
         for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
             if (e instanceof ExecutableEntry ee) {
                 ee.leftMouseDownDragging = false;
@@ -963,10 +1254,16 @@ public class ManageActionsScreen extends Screen {
 
             super.render(graphics, mouseX, mouseY, partial);
 
+            RenderSystem.enableBlend();
+            List<ExecutableEntry> chainEntries = ManageActionsScreen.this.getStatementChainOf(this);
+            if (chainEntries.size() > 1) {
+                Color chainColor = ManageActionsScreen.this.getChainIndicatorColorFor(this);
+                this.renderChainBar(graphics, chainColor);
+            }
+
             int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
 
-            RenderSystem.enableBlend();
 
             int renderX = this.getX() + (INDENT_X_OFFSET * this.indentLevel);
 
@@ -985,6 +1282,17 @@ public class ManageActionsScreen extends Screen {
 
             }
 
+        }
+
+        private void renderChainBar(@NotNull GuiGraphics graphics, @NotNull Color color) {
+            int barX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + CHAIN_BAR_OFFSET;
+            int barTop = this.getY() + 1;
+            int barBottom = this.getY() + this.getHeight() - 1;
+            if (barBottom <= barTop) {
+                barBottom = barTop + 1;
+            }
+            int barWidth = CHAIN_BAR_WIDTH;
+            graphics.fill(barX, barTop, barX + barWidth, barBottom, color.getRGB());
         }
 
         protected void handleDragging() {
@@ -1037,4 +1345,21 @@ public class ManageActionsScreen extends Screen {
 
     }
 
+    protected static final class MinimapEntrySegment {
+        protected final ExecutableEntry entry;
+        protected final int x;
+        protected final int y;
+        protected final int width;
+        protected final int height;
+
+        protected MinimapEntrySegment(@NotNull ExecutableEntry entry, int x, int y, int width, int height) {
+            this.entry = entry;
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
 }
+

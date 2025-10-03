@@ -44,6 +44,12 @@ public class LightUIColorTheme extends UIColorTheme {
         actions_entry_background_color_while_hover = DrawableColor.of(new Color(188, 222, 212));
         actions_entry_background_color_generic_block = DrawableColor.of(new Color(229, 229, 229));
         actions_entry_background_color_generic_block_hover = DrawableColor.of(new Color(210, 210, 210));
+        actions_chain_indicator_color = DrawableColor.of(new Color(140, 170, 210, 150));
+        actions_chain_indicator_hovered_color = DrawableColor.of(new Color(104, 149, 215, 190));
+        actions_chain_indicator_selected_color = DrawableColor.of(new Color(220, 162, 54, 210));
+        actions_minimap_background_color = DrawableColor.of(new Color(236, 236, 236, 200));
+        actions_minimap_border_color = DrawableColor.of(new Color(172, 172, 172, 220));
+        actions_minimap_viewport_color = DrawableColor.of(new Color(80, 80, 80, 60));
         text_editor_sidebar_color = DrawableColor.of(new Color(164, 164, 164));
         text_editor_line_number_text_color_normal = DrawableColor.of(new Color(105, 105, 105));
         text_editor_line_number_text_color_selected = DrawableColor.of(new Color(70, 70, 70));
@@ -86,3 +92,4 @@ public class LightUIColorTheme extends UIColorTheme {
     }
 
 }
+
