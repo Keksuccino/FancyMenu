@@ -22,6 +22,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -39,6 +40,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -849,6 +851,7 @@ public class ManageActionsScreen extends Screen {
         public double leftMouseDownDraggingPosX = 0;
         public double leftMouseDownDraggingPosY = 0;
         public boolean dragging = false;
+        private String cachedThemeIdentifier = "";
 
         private final MutableComponent displayNameComponent;
         private final MutableComponent valueComponent;
@@ -910,6 +913,7 @@ public class ManageActionsScreen extends Screen {
                 this.valueComponent = Component.empty();
             }
 
+            this.applyThemeBackground(true);
             this.setWidth(this.calculateWidth());
             if (this.executable instanceof AbstractExecutableBlock) {
                 this.setHeight(lineHeight + (HEADER_FOOTER_HEIGHT * 2));
@@ -919,9 +923,42 @@ public class ManageActionsScreen extends Screen {
 
         }
 
+        private void applyThemeBackground(boolean force) {
+            UIColorTheme theme = UIBase.getUIColorTheme();
+            String themeIdentifier = theme.getIdentifier();
+            if (!force && themeIdentifier.equals(this.cachedThemeIdentifier)) {
+                return;
+            }
+            this.cachedThemeIdentifier = themeIdentifier;
+
+            Color idle = theme.actions_entry_background_color_action.getColor();
+            Color hover = theme.actions_entry_background_color_action_hover.getColor();
+
+            if (this.executable instanceof IfExecutableBlock) {
+                idle = theme.actions_entry_background_color_if.getColor();
+                hover = theme.actions_entry_background_color_if_hover.getColor();
+            } else if (this.executable instanceof ElseIfExecutableBlock) {
+                idle = theme.actions_entry_background_color_else_if.getColor();
+                hover = theme.actions_entry_background_color_else_if_hover.getColor();
+            } else if (this.executable instanceof ElseExecutableBlock) {
+                idle = theme.actions_entry_background_color_else.getColor();
+                hover = theme.actions_entry_background_color_else_hover.getColor();
+            } else if (this.executable instanceof WhileExecutableBlock) {
+                idle = theme.actions_entry_background_color_while.getColor();
+                hover = theme.actions_entry_background_color_while_hover.getColor();
+            } else if (this.executable instanceof AbstractExecutableBlock) {
+                idle = theme.actions_entry_background_color_generic_block.getColor();
+                hover = theme.actions_entry_background_color_generic_block_hover.getColor();
+            }
+
+            this.setBackgroundColorIdle(idle);
+            this.setBackgroundColorHover(hover);
+        }
+
         @Override
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+            this.applyThemeBackground(false);
             this.handleDragging();
 
             super.render(graphics, mouseX, mouseY, partial);
