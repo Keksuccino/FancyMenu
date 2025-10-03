@@ -35,7 +35,7 @@ import java.util.function.Consumer;
 public class MimicKeybindAction extends Action {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String VALUE_DELIMITER = ";";
+    private static final String VALUE_DELIMITER = "|||";
     private static final long DEFAULT_KEEP_DURATION_MS = 1000L;
     private static long lastErrorNotification = -1;
 
@@ -156,21 +156,12 @@ public class MimicKeybindAction extends Action {
     private void startHoldThread(@NotNull KeyMapping keyMapping, @NotNull InputConstants.Key key, int keyCode, int scanCode, boolean keyboard, long durationMs) {
         Thread holdThread = new Thread(() -> {
             Minecraft minecraft = Minecraft.getInstance();
-            long window = minecraft.getWindow().getWindow();
             long start = System.currentTimeMillis();
             while (minecraft.isRunning() && !Thread.currentThread().isInterrupted() && (System.currentTimeMillis() - start) < durationMs) {
                 if (!keyMapping.isDown()) {
                     minecraft.execute(() -> {
-                        if (keyboard) {
-                            KeyMapping.set(key, true);
-                            KeyboardHandler handler = minecraft.keyboardHandler;
-                            if (handler != null) {
-                                handler.keyPress(window, keyCode, scanCode, 1, 0);
-                            }
-                        } else {
-                            KeyMapping.set(key, true);
-                            KeyMapping.click(key);
-                        }
+                        if (!minecraft.isRunning()) return;
+                        KeyMapping.set(key, true);
                     });
                 }
                 try {
@@ -181,6 +172,9 @@ public class MimicKeybindAction extends Action {
                 }
             }
             minecraft.execute(() -> {
+                if (!minecraft.isRunning()) {
+                    return;
+                }
                 if (keyboard) {
                     releaseKeyboardKey(key, keyCode, scanCode);
                 } else {
@@ -234,7 +228,7 @@ public class MimicKeybindAction extends Action {
 
     @Override
     public String getValueExample() {
-        return "key.jump;false;1000";
+        return "key.jump|||false|||1000";
     }
 
     @Override
@@ -296,11 +290,17 @@ public class MimicKeybindAction extends Action {
             this.addCellGroupEndSpacerCell();
 
             this.addLabelCell(Component.translatable("fancymenu.actions.mimic_keybind.edit.keep_pressed"));
-            CycleButton<CommonCycles.CycleEnabledDisabled> keepPressedButton = new CycleButton<>(0, 0, 20, 20,
+            WidgetCell keepPressedCell = this.addCycleButtonCell(
                     CommonCycles.cycleEnabledDisabled("fancymenu.actions.mimic_keybind.edit.keep_pressed", this.config.keepPressed),
-                    (value, button) -> this.config.keepPressed = value.getAsBoolean());
+                    true,
+                    (value, button) -> {
+                        this.config.keepPressed = value.getAsBoolean();
+                        updateDurationFieldState();
+                    });
+            @SuppressWarnings("unchecked")
+            CycleButton<CommonCycles.CycleEnabledDisabled> keepPressedButton =
+                    (CycleButton<CommonCycles.CycleEnabledDisabled>) keepPressedCell.widget;
             keepPressedButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimic_keybind.edit.keep_pressed.desc")));
-            this.addWidgetCell(keepPressedButton, true);
 
             this.addCellGroupEndSpacerCell();
 
@@ -309,6 +309,8 @@ public class MimicKeybindAction extends Action {
                     .setEditListener(s -> this.config.pressedDurationMs = parseDuration(s))
                     .setText(Long.toString(this.config.pressedDurationMs));
             durationInput.editBox.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fancymenu.actions.mimic_keybind.edit.pressed_duration.desc")));
+            this.durationCell = durationInput;
+            updateDurationFieldState();
 
             this.addCellGroupEndSpacerCell();
 
@@ -317,16 +319,26 @@ public class MimicKeybindAction extends Action {
             this.addSpacerCell(20);
         }
 
+        private TextInputCell durationCell;
+
+        private void updateDurationFieldState() {
+            if (this.durationCell != null) {
+                long displayValue = Math.max(1L, this.config.pressedDurationMs);
+                this.durationCell.editBox.setValue(Long.toString(displayValue));
+                this.durationCell.editBox.setEditable(this.config.keepPressed);
+                if (!this.config.keepPressed && this.durationCell.editBox.isFocused()) {
+                    this.durationCell.editBox.setFocused(false);
+                }
+            }
+        }
+
         private long parseDuration(String value) {
             if (value == null || value.trim().isEmpty()) {
                 return DEFAULT_KEEP_DURATION_MS;
             }
             try {
                 long parsed = Long.parseLong(value.trim());
-                if (parsed < 0L) {
-                    parsed = 0L;
-                }
-                return parsed;
+                return Math.max(1L, parsed);
             } catch (NumberFormatException ex) {
                 return DEFAULT_KEEP_DURATION_MS;
             }
@@ -411,23 +423,40 @@ public class MimicKeybindAction extends Action {
                 return config;
             }
 
-            String[] parts = rawValue.split(VALUE_DELIMITER, -1);
-            if (parts.length >= 1) {
-                config.keybindName = parts[0];
-            }
-            if (parts.length >= 2) {
-                config.keepPressed = Boolean.parseBoolean(parts[1]);
-            }
-            if (parts.length >= 3) {
-                try {
-                    config.pressedDurationMs = Math.max(0L, Long.parseLong(parts[2].trim()));
-                } catch (NumberFormatException ignored) {
-                    config.pressedDurationMs = DEFAULT_KEEP_DURATION_MS;
+            if (rawValue.contains(VALUE_DELIMITER)) {
+                String[] parts = rawValue.split("\\Q" + VALUE_DELIMITER + "\\E", -1);
+                if (parts.length > 0) {
+                    config.keybindName = parts[0].trim();
                 }
-            }
-            if (parts.length == 1) {
-                config.keepPressed = false;
-                config.pressedDurationMs = DEFAULT_KEEP_DURATION_MS;
+                if (parts.length > 1) {
+                    config.keepPressed = Boolean.parseBoolean(parts[1]);
+                }
+                if (parts.length > 2) {
+                    try {
+                        long parsed = Long.parseLong(parts[2].trim());
+                        config.pressedDurationMs = Math.max(1L, parsed);
+                    } catch (NumberFormatException ignored) {
+                        config.pressedDurationMs = DEFAULT_KEEP_DURATION_MS;
+                    }
+                }
+            } else if (rawValue.contains(";")) {
+                String[] parts = rawValue.split(";", -1);
+                if (parts.length > 0) {
+                    config.keybindName = parts[0].trim();
+                }
+                if (parts.length > 1) {
+                    config.keepPressed = Boolean.parseBoolean(parts[1]);
+                }
+                if (parts.length > 2) {
+                    try {
+                        long parsed = Long.parseLong(parts[2].trim());
+                        config.pressedDurationMs = Math.max(1L, parsed);
+                    } catch (NumberFormatException ignored) {
+                        config.pressedDurationMs = DEFAULT_KEEP_DURATION_MS;
+                    }
+                }
+            } else {
+                config.keybindName = rawValue.trim();
             }
             return config;
         }
@@ -437,7 +466,7 @@ public class MimicKeybindAction extends Action {
             if (sanitizedName.isEmpty()) {
                 sanitizedName = "";
             }
-            long duration = Math.max(0L, this.pressedDurationMs);
+            long duration = Math.max(1L, this.pressedDurationMs);
             return sanitizedName + VALUE_DELIMITER + this.keepPressed + VALUE_DELIMITER + duration;
         }
     }
