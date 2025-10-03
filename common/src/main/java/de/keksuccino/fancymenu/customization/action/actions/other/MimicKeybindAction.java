@@ -305,7 +305,7 @@ public class MimicKeybindAction extends Action {
             this.addCellGroupEndSpacerCell();
 
             this.addLabelCell(Component.translatable("fancymenu.actions.mimic_keybind.edit.pressed_duration"));
-            TextInputCell durationInput = this.addTextInputCell(CharacterFilter.buildIntegerFiler(), true, true)
+            TextInputCell durationInput = this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
                     .setEditListener(s -> this.config.pressedDurationMs = parseDuration(s))
                     .setText(Long.toString(this.config.pressedDurationMs));
             durationInput.editBox.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fancymenu.actions.mimic_keybind.edit.pressed_duration.desc")));
@@ -332,16 +332,8 @@ public class MimicKeybindAction extends Action {
             }
         }
 
-        private long parseDuration(String value) {
-            if (value == null || value.trim().isEmpty()) {
-                return DEFAULT_KEEP_DURATION_MS;
-            }
-            try {
-                long parsed = Long.parseLong(value.trim());
-                return Math.max(1L, parsed);
-            } catch (NumberFormatException ex) {
-                return DEFAULT_KEEP_DURATION_MS;
-            }
+        private long parseDuration(@Nullable String value) {
+            return MimicKeybindConfig.parseDurationValue(value);
         }
 
         @NotNull
@@ -423,42 +415,30 @@ public class MimicKeybindAction extends Action {
                 return config;
             }
 
-            if (rawValue.contains(VALUE_DELIMITER)) {
-                String[] parts = rawValue.split("\\Q" + VALUE_DELIMITER + "\\E", -1);
-                if (parts.length > 0) {
-                    config.keybindName = parts[0].trim();
-                }
-                if (parts.length > 1) {
-                    config.keepPressed = Boolean.parseBoolean(parts[1]);
-                }
-                if (parts.length > 2) {
-                    try {
-                        long parsed = Long.parseLong(parts[2].trim());
-                        config.pressedDurationMs = Math.max(1L, parsed);
-                    } catch (NumberFormatException ignored) {
-                        config.pressedDurationMs = DEFAULT_KEEP_DURATION_MS;
-                    }
-                }
-            } else if (rawValue.contains(";")) {
-                String[] parts = rawValue.split(";", -1);
-                if (parts.length > 0) {
-                    config.keybindName = parts[0].trim();
-                }
-                if (parts.length > 1) {
-                    config.keepPressed = Boolean.parseBoolean(parts[1]);
-                }
-                if (parts.length > 2) {
-                    try {
-                        long parsed = Long.parseLong(parts[2].trim());
-                        config.pressedDurationMs = Math.max(1L, parsed);
-                    } catch (NumberFormatException ignored) {
-                        config.pressedDurationMs = DEFAULT_KEEP_DURATION_MS;
-                    }
-                }
-            } else {
-                config.keybindName = rawValue.trim();
+            String[] parts = rawValue.split("\\Q" + VALUE_DELIMITER + "\\E", -1);
+            config.keybindName = parts[0].trim();
+            if (parts.length > 1) {
+                config.keepPressed = Boolean.parseBoolean(parts[1].trim());
+            }
+            if (parts.length > 2) {
+                config.pressedDurationMs = parseDurationValue(parts[2]);
             }
             return config;
+        }
+        protected static long parseDurationValue(@Nullable String value) {
+            if (value == null) {
+                return DEFAULT_KEEP_DURATION_MS;
+            }
+            String trimmed = value.trim();
+            if (trimmed.isEmpty()) {
+                return DEFAULT_KEEP_DURATION_MS;
+            }
+            try {
+                long parsed = Long.parseLong(trimmed);
+                return Math.max(1L, parsed);
+            } catch (NumberFormatException ex) {
+                return DEFAULT_KEEP_DURATION_MS;
+            }
         }
 
         protected String serialize() {
@@ -471,3 +451,6 @@ public class MimicKeybindAction extends Action {
         }
     }
 }
+
+
+
