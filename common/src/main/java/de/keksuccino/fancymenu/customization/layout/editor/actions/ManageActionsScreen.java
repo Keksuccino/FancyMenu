@@ -43,6 +43,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -807,6 +808,29 @@ public class ManageActionsScreen extends Screen {
         return null;
     }
 
+    @NotNull
+    protected List<ExecutableEntry> getChainAnchorsFor(@NotNull ExecutableEntry entry) {
+        LinkedHashSet<ExecutableEntry> anchors = new LinkedHashSet<>();
+        ExecutableEntry cursor = entry;
+        while (cursor != null) {
+            ExecutableEntry anchor = this.getChainAnchor(cursor);
+            while (anchor != null) {
+                anchors.add(anchor);
+                if (anchor.appendParent != null) {
+                    anchor = this.findEntryForExecutable(anchor.appendParent);
+                } else {
+                    anchor = null;
+                }
+            }
+            if ((cursor.parentBlock != null) && (cursor.parentBlock != cursor.executable)) {
+                cursor = this.findEntryForExecutable(cursor.parentBlock);
+            } else {
+                cursor = null;
+            }
+        }
+        return new ArrayList<>(anchors);
+    }
+
     protected int getChainBarX(@NotNull ExecutableEntry entry) {
         ExecutableEntry anchor = this.getChainAnchor(entry);
         ExecutableEntry reference = (anchor != null) ? anchor : entry;
@@ -1305,10 +1329,13 @@ public class ManageActionsScreen extends Screen {
             super.render(graphics, mouseX, mouseY, partial);
 
             RenderSystem.enableBlend();
-            List<ExecutableEntry> chainEntries = ManageActionsScreen.this.getStatementChainOf(this);
-            if (chainEntries.size() > 1) {
-                Color chainColor = ManageActionsScreen.this.getChainIndicatorColorFor(this);
-                this.renderChainBar(graphics, chainColor);
+            List<ExecutableEntry> chainAnchors = ManageActionsScreen.this.getChainAnchorsFor(this);
+            for (ExecutableEntry anchorEntry : chainAnchors) {
+                List<ExecutableEntry> chainEntries = ManageActionsScreen.this.getStatementChainOf(anchorEntry);
+                if (chainEntries.size() > 1) {
+                    Color chainColor = ManageActionsScreen.this.getChainIndicatorColorFor(anchorEntry);
+                    this.renderChainColumn(graphics, chainColor, anchorEntry);
+                }
             }
 
             int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
@@ -1334,8 +1361,8 @@ public class ManageActionsScreen extends Screen {
 
         }
 
-        private void renderChainBar(@NotNull GuiGraphics graphics, @NotNull Color color) {
-            int barX = ManageActionsScreen.this.getChainBarX(this);
+        private void renderChainColumn(@NotNull GuiGraphics graphics, @NotNull Color color, @NotNull ExecutableEntry anchorEntry) {
+            int barX = ManageActionsScreen.this.getChainBarX(anchorEntry);
             int barTop = this.getY() + 1;
             int barBottom = this.getY() + this.getHeight() - 1;
             if (barBottom <= barTop) {
