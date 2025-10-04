@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.actions;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
@@ -83,6 +84,10 @@ public class ManageActionsScreen extends Screen {
     protected static final int MINIMAP_INDENT_STEP = 4;
     protected static final int CHAIN_BAR_WIDTH = 3;
     protected static final int CHAIN_BAR_OFFSET = 2;
+
+    protected static final float MINIMAP_TOOLTIP_SCALE = 0.5F;
+    protected static final int MINIMAP_TOOLTIP_PADDING = 4;
+    protected static final int MINIMAP_TOOLTIP_OFFSET = 12;
 
     @Nullable
     protected ExecutableEntry hoveredEntry = null;
@@ -474,6 +479,7 @@ public class ManageActionsScreen extends Screen {
         this.addActionButton.render(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
+        this.renderMinimapEntryTooltip(graphics, mouseX, mouseY);
 
     }
 
@@ -669,6 +675,7 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void renderChainMinimap(@NotNull GuiGraphics graphics) {
+
         if (this.minimapHeight <= 0) {
             return;
         }
@@ -693,6 +700,56 @@ public class ManageActionsScreen extends Screen {
             this.renderChainMinimapBorder(graphics, hoverChain, theme.actions_chain_indicator_hovered_color.getColorInt());
         }
         this.renderMinimapViewport(graphics, theme);
+    }
+
+    protected void renderMinimapEntryTooltip(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+        if (this.minimapHoveredEntry == null) {
+            return;
+        }
+        int entryWidth = this.minimapHoveredEntry.getWidth();
+        int entryHeight = this.minimapHoveredEntry.getHeight();
+        if ((entryWidth <= 0) || (entryHeight <= 0)) {
+            return;
+        }
+        int scaledWidth = Math.max(1, Math.round(entryWidth * MINIMAP_TOOLTIP_SCALE));
+        int scaledHeight = Math.max(1, Math.round(entryHeight * MINIMAP_TOOLTIP_SCALE));
+        int tooltipWidth = scaledWidth + (MINIMAP_TOOLTIP_PADDING * 2);
+        int tooltipHeight = scaledHeight + (MINIMAP_TOOLTIP_PADDING * 2);
+
+        int tooltipX = mouseX + MINIMAP_TOOLTIP_OFFSET;
+        int tooltipY = mouseY + MINIMAP_TOOLTIP_OFFSET;
+
+        if (tooltipX + tooltipWidth > this.width) {
+            tooltipX = Math.max(0, this.width - tooltipWidth);
+        }
+        if (tooltipY + tooltipHeight > this.height) {
+            tooltipY = Math.max(0, this.height - tooltipHeight);
+        }
+        if (tooltipX < 0) {
+            tooltipX = 0;
+        }
+        if (tooltipY < 0) {
+            tooltipY = 0;
+        }
+
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        Color backgroundColor = withAlpha(theme.screen_background_color.getColor(), 220);
+
+        PoseStack poseStack = graphics.pose();
+        poseStack.pushPose();
+        poseStack.translate(0.0F, 0.0F, 400.0F);
+
+        RenderSystem.enableBlend();
+        graphics.fill(tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, backgroundColor.getRGB());
+        UIBase.renderBorder(graphics, tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, 1, theme.actions_minimap_tooltip_border_color, true, true, true, true);
+
+        poseStack.translate(tooltipX + MINIMAP_TOOLTIP_PADDING, tooltipY + MINIMAP_TOOLTIP_PADDING, 0.0F);
+        poseStack.scale(MINIMAP_TOOLTIP_SCALE, MINIMAP_TOOLTIP_SCALE, 1.0F);
+        poseStack.translate(-this.minimapHoveredEntry.getX(), -this.minimapHoveredEntry.getY(), 0.0F);
+
+        this.minimapHoveredEntry.renderThumbnail(graphics);
+
+        poseStack.popPose();
     }
 
     protected void renderChainMinimapBorder(@NotNull GuiGraphics graphics, @NotNull List<ExecutableEntry> chainEntries, int color) {
@@ -1465,12 +1522,23 @@ public class ManageActionsScreen extends Screen {
 
         @Override
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            this.renderInternal(graphics, mouseX, mouseY, partial, true);
+        }
 
+        private void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean interactive) {
             this.applyThemeBackground(false);
-            this.handleDragging();
-
+            if (interactive) {
+                this.handleDragging();
+            }
             super.render(graphics, mouseX, mouseY, partial);
+            this.renderEntryDecorations(graphics);
+        }
 
+        public void renderThumbnail(@NotNull GuiGraphics graphics) {
+            this.renderInternal(graphics, Integer.MIN_VALUE, Integer.MIN_VALUE, 0.0F, false);
+        }
+
+        private void renderEntryDecorations(@NotNull GuiGraphics graphics) {
             RenderSystem.enableBlend();
             List<ExecutableEntry> chainAnchors = ManageActionsScreen.this.getChainAnchorsFor(this);
             for (ExecutableEntry anchorEntry : chainAnchors) {
@@ -1483,7 +1551,6 @@ public class ManageActionsScreen extends Screen {
 
             int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
-
 
             int renderX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
 
@@ -1501,7 +1568,6 @@ public class ManageActionsScreen extends Screen {
                 graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
             }
-
         }
 
         private void renderChainColumn(@NotNull GuiGraphics graphics, @NotNull Color color, @NotNull ExecutableEntry anchorEntry) {
@@ -1590,10 +1656,4 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
-
-
-
-
-
-
 
