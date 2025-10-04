@@ -647,9 +647,6 @@ public class ManageActionsScreen extends Screen {
         for (MinimapEntrySegment segment : this.minimapSegments) {
             ExecutableEntry entry = segment.entry;
             graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, this.getMinimapEntryBaseColor(entry).getRGB());
-            if (!this.selectedStatementChainEntries.isEmpty() && this.isEntryPartOfChain(entry, this.selectedStatementChainEntries)) {
-                graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, theme.actions_chain_indicator_selected_color.getColorInt());
-            }
             if (!hoverChain.isEmpty() && this.isEntryPartOfChain(entry, hoverChain)) {
                 graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, theme.actions_chain_indicator_hovered_color.getColorInt());
             }
@@ -1447,5 +1444,6 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
 
 
