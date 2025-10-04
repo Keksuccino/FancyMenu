@@ -41,6 +41,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -436,7 +437,7 @@ public class ManageActionsScreen extends Screen {
         this.selectedStatementChainEntries = (this.selectedEntry != null) ? this.getStatementChainOf(this.selectedEntry) : Collections.emptyList();
 
         this.hoveredEntry = this.getScrollAreaHoveredEntry();
-        this.hoveredStatementChainEntries = (this.hoveredEntry != null) ? this.getStatementChainOf(this.hoveredEntry) : Collections.emptyList();
+        this.hoveredStatementChainEntries = (this.hoveredEntry != null) ? this.collectChainWithSubChains(this.hoveredEntry) : Collections.emptyList();
 
         this.rebuildMinimapSegments(mouseX, mouseY);
 
@@ -646,7 +647,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         if (this.minimapHoveredEntry != null) {
-            this.minimapHoveredStatementChainEntries = this.getStatementChainOf(this.minimapHoveredEntry);
+            this.minimapHoveredStatementChainEntries = this.collectChainWithSubChains(this.minimapHoveredEntry);
         }
     }
 
@@ -886,7 +887,40 @@ public class ManageActionsScreen extends Screen {
             }
         }
     }
+    @NotNull
+    protected List<ExecutableEntry> collectChainWithSubChains(@NotNull ExecutableEntry entry) {
+        LinkedHashSet<ExecutableEntry> expanded = new LinkedHashSet<>();
+        ArrayDeque<ExecutableEntry> queue = new ArrayDeque<>();
+        this.enqueueChainEntries(entry, expanded, queue);
+        List<ScrollAreaEntry> scrollEntries = this.actionsScrollArea.getEntries();
+        while (!queue.isEmpty()) {
+            ExecutableEntry current = queue.poll();
+            for (ScrollAreaEntry raw : scrollEntries) {
+                if (!(raw instanceof ExecutableEntry candidate)) {
+                    continue;
+                }
+                if (expanded.contains(candidate)) {
+                    continue;
+                }
+                if (this.isEntryDescendantOf(candidate, current)) {
+                    if (candidate.executable instanceof AbstractExecutableBlock) {
+                        this.enqueueChainEntries(candidate, expanded, queue);
+                    } else {
+                        expanded.add(candidate);
+                    }
+                }
+            }
+        }
+        return new ArrayList<>(expanded);
+    }
 
+    protected void enqueueChainEntries(@NotNull ExecutableEntry source, @NotNull LinkedHashSet<ExecutableEntry> expanded, @NotNull ArrayDeque<ExecutableEntry> queue) {
+        for (ExecutableEntry chainEntry : this.getStatementChainOf(source)) {
+            if (expanded.add(chainEntry) && (chainEntry.executable instanceof AbstractExecutableBlock)) {
+                queue.add(chainEntry);
+            }
+        }
+    }
     protected boolean isEntryDescendantOf(@NotNull ExecutableEntry entry, @NotNull ExecutableEntry potentialAncestor) {
         AbstractExecutableBlock parentBlock = entry.parentBlock;
         while (parentBlock != null) {
@@ -1512,6 +1546,25 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
