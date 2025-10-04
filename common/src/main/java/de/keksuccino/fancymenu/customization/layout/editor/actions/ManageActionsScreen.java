@@ -525,14 +525,25 @@ public class ManageActionsScreen extends Screen {
         return this.hoveredEntry;
     }
 
+    protected boolean isEntryPartOfChain(@NotNull ExecutableEntry entry, @NotNull List<ExecutableEntry> chainEntries) {
+        if (chainEntries.isEmpty()) {
+            return false;
+        }
+        if (chainEntries.contains(entry)) {
+            return true;
+        }
+        ExecutableEntry anchor = this.getChainAnchor(entry);
+        return (anchor != null) && chainEntries.contains(anchor);
+    }
+
     @NotNull
     protected Color getChainIndicatorColorFor(@NotNull ExecutableEntry entry) {
         UIColorTheme theme = UIBase.getUIColorTheme();
-        if (!this.selectedStatementChainEntries.isEmpty() && this.selectedStatementChainEntries.contains(entry)) {
+        if (!this.selectedStatementChainEntries.isEmpty() && this.isEntryPartOfChain(entry, this.selectedStatementChainEntries)) {
             return theme.actions_chain_indicator_selected_color.getColor();
         }
         List<ExecutableEntry> hoveredChain = this.getActiveHoveredChain();
-        if (!hoveredChain.isEmpty() && hoveredChain.contains(entry)) {
+        if (!hoveredChain.isEmpty() && this.isEntryPartOfChain(entry, hoveredChain)) {
             return theme.actions_chain_indicator_hovered_color.getColor();
         }
         return theme.actions_chain_indicator_color.getColor();
@@ -635,10 +646,10 @@ public class ManageActionsScreen extends Screen {
         for (MinimapEntrySegment segment : this.minimapSegments) {
             ExecutableEntry entry = segment.entry;
             graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, this.getMinimapEntryBaseColor(entry).getRGB());
-            if (!this.selectedStatementChainEntries.isEmpty() && this.selectedStatementChainEntries.contains(entry)) {
+            if (!this.selectedStatementChainEntries.isEmpty() && this.isEntryPartOfChain(entry, this.selectedStatementChainEntries)) {
                 graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, theme.actions_chain_indicator_selected_color.getColorInt());
             }
-            if (!hoverChain.isEmpty() && hoverChain.contains(entry)) {
+            if (!hoverChain.isEmpty() && this.isEntryPartOfChain(entry, hoverChain)) {
                 graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, theme.actions_chain_indicator_hovered_color.getColorInt());
             }
             if (this.selectedEntry == entry) {
