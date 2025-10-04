@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.layout.editor.actions;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
@@ -672,11 +671,37 @@ public class ManageActionsScreen extends Screen {
             if (this.selectedEntry == entry) {
                 UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_selected_color, true, true, true, true);
             } else if (activeHoverEntry == entry) {
-                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.description_area_text_color, true, true, true, true);
+            UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.description_area_text_color, true, true, true, true);
             }
         }
-
+        if (!hoverChain.isEmpty()) {
+            this.renderChainMinimapBorder(graphics, hoverChain, theme.actions_chain_indicator_hovered_color.getColorInt());
+        }
         this.renderMinimapViewport(graphics, theme);
+    }
+
+    protected void renderChainMinimapBorder(@NotNull GuiGraphics graphics, @NotNull List<ExecutableEntry> chainEntries, int color) {
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        boolean found = false;
+        for (MinimapEntrySegment segment : this.minimapSegments) {
+            if (chainEntries.contains(segment.entry)) {
+                found = true;
+                minX = Math.min(minX, segment.x);
+                maxX = Math.max(maxX, segment.x + segment.width);
+                minY = Math.min(minY, segment.y);
+                maxY = Math.max(maxY, segment.y + segment.height);
+            }
+        }
+        if (!found) {
+            return;
+        }
+        if ((maxX <= minX) || (maxY <= minY)) {
+            return;
+        }
+        UIBase.renderBorder(graphics, minX, minY, maxX, maxY, 1, color, true, true, true, true);
     }
 
     protected void renderMinimapViewport(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
@@ -1546,6 +1571,15 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
+
+
+
+
+
+
+
 
 
 
