@@ -653,7 +653,7 @@ public class ManageActionsScreen extends Screen {
             if (this.selectedEntry == entry) {
                 UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_selected_color, true, true, true, true);
             } else if (activeHoverEntry == entry) {
-                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_hovered_color, true, true, true, true);
+                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.description_area_text_color, true, true, true, true);
             }
         }
 
@@ -679,7 +679,9 @@ public class ManageActionsScreen extends Screen {
         if (viewportTop + viewportHeight > maxViewportBottom) {
             viewportHeight = maxViewportBottom - viewportTop;
         }
-        graphics.fill(this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, theme.actions_minimap_viewport_color.getColorInt());
+        Color viewportBaseColor = theme.actions_minimap_viewport_color.getColor();
+        Color viewportColor = withAlpha(viewportBaseColor, Math.max(0, Math.min(255, viewportBaseColor.getAlpha() / 2)));
+        graphics.fill(this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, viewportColor.getRGB());
         UIBase.renderBorder(graphics, this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, 1, theme.actions_chain_indicator_color, true, true, true, true);
     }
 
@@ -1444,6 +1446,8 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
 
 
 
