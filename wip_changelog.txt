@@ -57,6 +57,8 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
 - Fixed missing localizations for some options of the new (1.21.4+) Player Entity element (#1276)
 - Fixed Discord Join button in menu bar does not work (#1263)
+- Fixed WHILE blocks cannot be moved via drag-and-drop or via buttons in the Edit Action Script screen
+  - I'm actually not sure if that is a bug that was public or if I just messed it up while working on the screen, but it's fixed now anyways lmao
  
 %changelog:end%
 
