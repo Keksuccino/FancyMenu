@@ -665,9 +665,6 @@ public class ManageActionsScreen extends Screen {
         for (MinimapEntrySegment segment : this.minimapSegments) {
             ExecutableEntry entry = segment.entry;
             graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, this.getMinimapEntryBaseColor(entry).getRGB());
-            if (!hoverChain.isEmpty() && this.isEntryPartOfChain(entry, hoverChain)) {
-                graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, theme.actions_chain_indicator_hovered_color.getColorInt());
-            }
             if (this.selectedEntry == entry) {
                 UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_selected_color, true, true, true, true);
             } else if (activeHoverEntry == entry) {
