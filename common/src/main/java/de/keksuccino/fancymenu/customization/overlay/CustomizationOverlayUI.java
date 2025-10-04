@@ -784,7 +784,7 @@ public class CustomizationOverlayUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("book"));
 
         helpMenu.addClickableEntry("join_the_discord", Component.translatable("fancymenu.overlay.menu_bar.help.discord"), (menu, entry) -> {
-            WebUtils.openWebLink("https://discord.gg/UzmeWkD");
+            WebUtils.openWebLink("https://discord.fancymenu.net/");
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.discord.tooltip")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));
 

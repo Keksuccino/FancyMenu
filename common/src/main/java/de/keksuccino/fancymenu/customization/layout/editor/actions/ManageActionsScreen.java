@@ -736,32 +736,70 @@ public class ManageActionsScreen extends Screen {
 
     @NotNull
     protected List<ExecutableEntry> getStatementChainOf(@NotNull ExecutableEntry entry) {
-        List<ExecutableEntry> entries = new ArrayList<>();
-        if (entry.executable instanceof AbstractExecutableBlock) {
-            List<ExecutableEntry> beforeEntry = new ArrayList<>();
-            ExecutableEntry e1 = entry;
-            while (e1 != null) {
-                e1 = (e1.appendParent != null) ? this.findEntryForExecutable(e1.appendParent) : null;
-                if (e1 != null) {
-                    beforeEntry.add(0, e1);
-                }
-            }
-            List<ExecutableEntry> afterEntry = new ArrayList<>();
-            ExecutableEntry e2 = entry;
-            while (e2 != null) {
-                if (e2.executable instanceof AbstractExecutableBlock b) {
-                    AbstractExecutableBlock appendChild = b.getAppendedBlock();
-                    e2 = (appendChild != null) ? this.findEntryForExecutable(appendChild) : null;
-                    if (e2 != null) {
-                        afterEntry.add(e2);
-                    }
-                }
-            }
-            entries.addAll(beforeEntry);
-            entries.add(entry);
-            entries.addAll(afterEntry);
+        ExecutableEntry anchor = this.getChainAnchor(entry);
+        if (anchor == null) {
+            return Collections.emptyList();
         }
+
+        List<ExecutableEntry> entries = new ArrayList<>();
+
+        List<ExecutableEntry> beforeEntry = new ArrayList<>();
+        ExecutableEntry e1 = anchor;
+        while (e1 != null) {
+            e1 = (e1.appendParent != null) ? this.findEntryForExecutable(e1.appendParent) : null;
+            if (e1 != null) {
+                beforeEntry.add(0, e1);
+            }
+        }
+
+        List<ExecutableEntry> afterEntry = new ArrayList<>();
+        ExecutableEntry e2 = anchor;
+        while (e2 != null) {
+            if (e2.executable instanceof AbstractExecutableBlock b) {
+                AbstractExecutableBlock appendChild = b.getAppendedBlock();
+                e2 = (appendChild != null) ? this.findEntryForExecutable(appendChild) : null;
+                if (e2 != null) {
+                    afterEntry.add(e2);
+                }
+            } else {
+                e2 = null;
+            }
+        }
+
+        entries.addAll(beforeEntry);
+        entries.add(anchor);
+        entries.addAll(afterEntry);
+
+        if ((anchor != entry) && (entry.parentBlock != null) && (entries.size() > 1)) {
+            ExecutableEntry lastStatement = entries.get(entries.size() - 1);
+            if (lastStatement.executable == entry.parentBlock) {
+                List<ExecutableEntry> extended = new ArrayList<>(entries);
+                extended.add(entry);
+                entries = extended;
+            }
+        }
+
         return entries;
+    }
+
+    @Nullable
+    protected ExecutableEntry getChainAnchor(@NotNull ExecutableEntry entry) {
+        if (entry.executable instanceof AbstractExecutableBlock) {
+            return entry;
+        }
+        if (entry.parentBlock != null) {
+            return this.findEntryForExecutable(entry.parentBlock);
+        }
+        if (entry.appendParent != null) {
+            return this.findEntryForExecutable(entry.appendParent);
+        }
+        return null;
+    }
+
+    protected int getChainBarX(@NotNull ExecutableEntry entry) {
+        ExecutableEntry anchor = this.getChainAnchor(entry);
+        ExecutableEntry reference = (anchor != null) ? anchor : entry;
+        return reference.getX() + (ExecutableEntry.INDENT_X_OFFSET * reference.indentLevel) + CHAIN_BAR_OFFSET;
     }
 
     @Nullable
@@ -1128,6 +1166,7 @@ public class ManageActionsScreen extends Screen {
 
         public static final int HEADER_FOOTER_HEIGHT = 3;
         public static final int INDENT_X_OFFSET = 20;
+        public static final int STATEMENT_CONTENT_OFFSET = 4;
 
         @NotNull
         public Executable executable;
@@ -1265,7 +1304,7 @@ public class ManageActionsScreen extends Screen {
             int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
 
 
-            int renderX = this.getX() + (INDENT_X_OFFSET * this.indentLevel);
+            int renderX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
 
             if (this.executable instanceof ActionInstance) {
 
@@ -1285,7 +1324,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         private void renderChainBar(@NotNull GuiGraphics graphics, @NotNull Color color) {
-            int barX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + CHAIN_BAR_OFFSET;
+            int barX = ManageActionsScreen.this.getChainBarX(this);
             int barTop = this.getY() + 1;
             int barBottom = this.getY() + this.getHeight() - 1;
             if (barBottom <= barTop) {
@@ -1316,6 +1355,13 @@ public class ManageActionsScreen extends Screen {
             }
         }
 
+        private int getContentOffset() {
+            if (this.executable instanceof AbstractExecutableBlock) {
+                return STATEMENT_CONTENT_OFFSET;
+            }
+            return 0;
+        }
+
         @NotNull
         public AbstractExecutableBlock getParentBlock() {
             if (this.parentBlock == null) {
@@ -1331,6 +1377,7 @@ public class ManageActionsScreen extends Screen {
                 w = w2;
             }
             w += INDENT_X_OFFSET * this.indentLevel;
+            w += this.getContentOffset();
             return w;
         }
 
