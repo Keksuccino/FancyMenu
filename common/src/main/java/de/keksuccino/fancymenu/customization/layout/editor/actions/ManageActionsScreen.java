@@ -474,6 +474,23 @@ public class ManageActionsScreen extends Screen {
 
     }
     @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if ((this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight)) {
+            if (scrollY != 0.0D) {
+                float scrollStep = 0.1F * this.actionsScrollArea.verticalScrollBar.getWheelScrollSpeed();
+                float totalOffset = scrollStep * (float)Math.abs(scrollY);
+                if (scrollY > 0.0D) {
+                    totalOffset = -totalOffset;
+                }
+                this.actionsScrollArea.verticalScrollBar.setScroll(this.actionsScrollArea.verticalScrollBar.getScroll() + totalOffset);
+                this.actionsScrollArea.updateEntries(null);
+            }
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if ((button == 0) && (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight)) {
             ExecutableEntry entry = this.getMinimapEntryAt((int)mouseX, (int)mouseY);
@@ -1446,6 +1463,10 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
+
+
 
 
 
