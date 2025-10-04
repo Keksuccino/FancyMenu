@@ -668,7 +668,7 @@ public class ManageActionsScreen extends Screen {
             if (this.selectedEntry == entry) {
                 UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_selected_color, true, true, true, true);
             } else if (activeHoverEntry == entry) {
-            UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.description_area_text_color, true, true, true, true);
+                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.description_area_text_color, true, true, true, true);
             }
         }
         if (!hoverChain.isEmpty()) {
@@ -899,9 +899,9 @@ public class ManageActionsScreen extends Screen {
                 break;
             }
             if (candidate.executable instanceof IfExecutableBlock ||
-                candidate.executable instanceof ElseIfExecutableBlock ||
-                candidate.executable instanceof ElseExecutableBlock ||
-                candidate.executable instanceof WhileExecutableBlock) {
+                    candidate.executable instanceof ElseIfExecutableBlock ||
+                    candidate.executable instanceof ElseExecutableBlock ||
+                    candidate.executable instanceof WhileExecutableBlock) {
                 continue;
             }
             if (!entries.contains(candidate)) {
@@ -909,6 +909,7 @@ public class ManageActionsScreen extends Screen {
             }
         }
     }
+
     @NotNull
     protected List<ExecutableEntry> collectChainWithSubChains(@NotNull ExecutableEntry entry) {
         LinkedHashSet<ExecutableEntry> expanded = new LinkedHashSet<>();
@@ -943,6 +944,7 @@ public class ManageActionsScreen extends Screen {
             }
         }
     }
+
     protected boolean isEntryDescendantOf(@NotNull ExecutableEntry entry, @NotNull ExecutableEntry potentialAncestor) {
         AbstractExecutableBlock parentBlock = entry.parentBlock;
         while (parentBlock != null) {
@@ -1568,46 +1570,3 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
