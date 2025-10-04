@@ -1020,7 +1020,7 @@ public class ManageActionsScreen extends Screen {
 
     protected void moveUp(ExecutableEntry entry) {
         if (entry != null) {
-            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock)) {
+            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock)) {
                 boolean manualUpdate = false;
                 if (this.actionsScrollArea.getEntries().indexOf(entry) == 1) {
                     this.moveAfter(entry, BEFORE_FIRST);
@@ -1094,7 +1094,7 @@ public class ManageActionsScreen extends Screen {
 
     protected void moveDown(ExecutableEntry entry) {
         if (entry != null) {
-            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock)) {
+            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock)) {
                 boolean manualUpdate = false;
                 if ((entry.getParentBlock() != this.executableBlock) && (entry.getParentBlock().getAppendedBlock() == null) && (entry.getParentBlock().getExecutables().indexOf(entry.executable) == entry.getParentBlock().getExecutables().size()-1)) {
                     ExecutableEntry parentBlock = this.findEntryForExecutable(entry.getParentBlock());
@@ -1386,7 +1386,7 @@ public class ManageActionsScreen extends Screen {
             if (this.leftMouseDownDragging) {
                 if ((this.leftMouseDownDraggingPosX != MouseInput.getMouseX()) || (this.leftMouseDownDraggingPosY != MouseInput.getMouseY())) {
                     //Only allow dragging for ActionInstances and If-Blocks
-                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock)) {
+                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock)) {
                         this.dragging = true;
                     }
                 }
