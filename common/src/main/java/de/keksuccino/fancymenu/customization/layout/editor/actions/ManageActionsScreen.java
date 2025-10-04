@@ -1424,6 +1424,7 @@ public class ManageActionsScreen extends Screen {
         public ExecutableEntry(@NotNull ScrollArea parentScrollArea, @NotNull Executable executable, int lineHeight, int indentLevel) {
 
             super(parentScrollArea, 100, 30);
+            this.setPlayClickSound(false);
             this.executable = executable;
             this.lineHeight = lineHeight;
             this.indentLevel = indentLevel;
