@@ -429,8 +429,8 @@ public class ManageActionsScreen extends Screen {
 
         int buttonsLeftX = this.width - RIGHT_MARGIN - BUTTON_COLUMN_WIDTH;
         this.minimapX = buttonsLeftX - MINIMAP_TO_BUTTON_GAP - MINIMAP_WIDTH;
-        this.minimapY = this.actionsScrollArea.getInnerY();
-        this.minimapHeight = this.actionsScrollArea.getInnerHeight();
+        this.minimapY = this.actionsScrollArea.getInnerY() - 1;
+        this.minimapHeight = this.actionsScrollArea.getInnerHeight() + 2;
 
         this.selectedEntry = this.getSelectedEntry();
         this.selectedStatementChainEntries = (this.selectedEntry != null) ? this.getStatementChainOf(this.selectedEntry) : Collections.emptyList();
@@ -1447,4 +1447,5 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
 
