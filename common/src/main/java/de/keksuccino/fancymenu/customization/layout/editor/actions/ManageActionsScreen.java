@@ -473,6 +473,7 @@ public class ManageActionsScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partial);
 
     }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if ((this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight)) {
@@ -798,6 +799,10 @@ public class ManageActionsScreen extends Screen {
         entries.add(anchor);
         entries.addAll(afterEntry);
 
+        if (anchor.executable instanceof WhileExecutableBlock) {
+            this.addWhileChainEntries(anchor, entries);
+        }
+
         if ((anchor != entry) && (entry.parentBlock != null) && (entries.size() > 1)) {
             ExecutableEntry lastStatement = entries.get(entries.size() - 1);
             if (lastStatement.executable == entry.parentBlock) {
@@ -851,6 +856,44 @@ public class ManageActionsScreen extends Screen {
         ExecutableEntry anchor = this.getChainAnchor(entry);
         ExecutableEntry reference = (anchor != null) ? anchor : entry;
         return reference.getX() + (ExecutableEntry.INDENT_X_OFFSET * reference.indentLevel) + CHAIN_BAR_OFFSET;
+    }
+
+    protected void addWhileChainEntries(@NotNull ExecutableEntry anchor, @NotNull List<ExecutableEntry> entries) {
+        if (!(anchor.executable instanceof WhileExecutableBlock)) {
+            return;
+        }
+        List<ScrollAreaEntry> scrollEntries = this.actionsScrollArea.getEntries();
+        int anchorIndex = scrollEntries.indexOf(anchor);
+        if (anchorIndex < 0) {
+            return;
+        }
+        for (int i = anchorIndex + 1; i < scrollEntries.size(); i++) {
+            ScrollAreaEntry raw = scrollEntries.get(i);
+            if (!(raw instanceof ExecutableEntry candidate)) {
+                continue;
+            }
+            if (!this.isEntryDescendantOf(candidate, anchor)) {
+                break;
+            }
+            if (!entries.contains(candidate)) {
+                entries.add(candidate);
+            }
+        }
+    }
+
+    protected boolean isEntryDescendantOf(@NotNull ExecutableEntry entry, @NotNull ExecutableEntry potentialAncestor) {
+        AbstractExecutableBlock parentBlock = entry.parentBlock;
+        while (parentBlock != null) {
+            ExecutableEntry parentEntry = this.findEntryForExecutable(parentBlock);
+            if (parentEntry == null) {
+                return false;
+            }
+            if (parentEntry == potentialAncestor) {
+                return true;
+            }
+            parentBlock = parentEntry.parentBlock;
+        }
+        return false;
     }
 
     @Nullable
@@ -1463,6 +1506,8 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
 
 
 
