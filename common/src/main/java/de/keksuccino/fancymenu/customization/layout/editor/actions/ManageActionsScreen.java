@@ -91,7 +91,9 @@ public class ManageActionsScreen extends Screen {
     @Nullable
     protected ExecutableEntry selectedEntry = null;
     protected List<ExecutableEntry> hoveredStatementChainEntries = Collections.emptyList();
+    protected List<ExecutableEntry> hoveredPrimaryChainEntries = Collections.emptyList();
     protected List<ExecutableEntry> minimapHoveredStatementChainEntries = Collections.emptyList();
+    protected List<ExecutableEntry> minimapHoveredPrimaryChainEntries = Collections.emptyList();
     protected List<ExecutableEntry> selectedStatementChainEntries = Collections.emptyList();
     protected final List<MinimapEntrySegment> minimapSegments = new ArrayList<>();
     protected int minimapX = 0;
@@ -436,6 +438,7 @@ public class ManageActionsScreen extends Screen {
         this.selectedStatementChainEntries = (this.selectedEntry != null) ? this.getStatementChainOf(this.selectedEntry) : Collections.emptyList();
 
         this.hoveredEntry = this.getScrollAreaHoveredEntry();
+        this.hoveredPrimaryChainEntries = (this.hoveredEntry != null) ? this.getStatementChainOf(this.hoveredEntry) : Collections.emptyList();
         this.hoveredStatementChainEntries = (this.hoveredEntry != null) ? this.collectChainWithSubChains(this.hoveredEntry) : Collections.emptyList();
 
         this.rebuildMinimapSegments(mouseX, mouseY);
@@ -535,7 +538,20 @@ public class ManageActionsScreen extends Screen {
         }
         return Collections.emptyList();
     }
-
+    @NotNull
+    protected List<ExecutableEntry> getHoveredChainForIndicator() {
+        if (!this.minimapHoveredPrimaryChainEntries.isEmpty()) {
+            return this.minimapHoveredPrimaryChainEntries;
+        }
+        if (!this.hoveredPrimaryChainEntries.isEmpty()) {
+            return this.hoveredPrimaryChainEntries;
+        }
+        ExecutableEntry active = this.getActiveHoveredEntry();
+        if (active != null) {
+            return this.getStatementChainOf(active);
+        }
+        return Collections.emptyList();
+    }
     @Nullable
     protected ExecutableEntry getActiveHoveredEntry() {
         if (this.minimapHoveredEntry != null) {
@@ -561,7 +577,7 @@ public class ManageActionsScreen extends Screen {
         if (!this.selectedStatementChainEntries.isEmpty() && this.isEntryPartOfChain(entry, this.selectedStatementChainEntries)) {
             return theme.actions_chain_indicator_selected_color.getColor();
         }
-        List<ExecutableEntry> hoveredChain = this.getActiveHoveredChain();
+        List<ExecutableEntry> hoveredChain = this.getHoveredChainForIndicator();
         if (!hoveredChain.isEmpty() && this.isEntryPartOfChain(entry, hoveredChain)) {
             return theme.actions_chain_indicator_hovered_color.getColor();
         }
@@ -591,6 +607,7 @@ public class ManageActionsScreen extends Screen {
     protected void rebuildMinimapSegments(int mouseX, int mouseY) {
         this.minimapSegments.clear();
         this.minimapHoveredEntry = null;
+        this.minimapHoveredPrimaryChainEntries = Collections.emptyList();
         this.minimapHoveredStatementChainEntries = Collections.emptyList();
         this.minimapContentX = this.minimapX + MINIMAP_PADDING;
         this.minimapContentY = this.minimapY + MINIMAP_PADDING;
@@ -646,6 +663,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         if (this.minimapHoveredEntry != null) {
+            this.minimapHoveredPrimaryChainEntries = this.getStatementChainOf(this.minimapHoveredEntry);
             this.minimapHoveredStatementChainEntries = this.collectChainWithSubChains(this.minimapHoveredEntry);
         }
     }
@@ -1275,8 +1293,10 @@ public class ManageActionsScreen extends Screen {
 
         this.minimapSegments.clear();
         this.minimapHoveredEntry = null;
+        this.minimapHoveredPrimaryChainEntries = Collections.emptyList();
         this.minimapHoveredStatementChainEntries = Collections.emptyList();
         this.hoveredEntry = null;
+        this.hoveredPrimaryChainEntries = Collections.emptyList();
         this.hoveredStatementChainEntries = Collections.emptyList();
 
         for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
@@ -1570,3 +1590,10 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
+
+
+
+
+
