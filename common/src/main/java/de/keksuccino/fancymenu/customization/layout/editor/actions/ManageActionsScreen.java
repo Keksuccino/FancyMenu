@@ -875,6 +875,12 @@ public class ManageActionsScreen extends Screen {
             if (!this.isEntryDescendantOf(candidate, anchor)) {
                 break;
             }
+            if (candidate.executable instanceof IfExecutableBlock ||
+                candidate.executable instanceof ElseIfExecutableBlock ||
+                candidate.executable instanceof ElseExecutableBlock ||
+                candidate.executable instanceof WhileExecutableBlock) {
+                continue;
+            }
             if (!entries.contains(candidate)) {
                 entries.add(candidate);
             }
@@ -1506,6 +1512,10 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
+
+
 
 
 
