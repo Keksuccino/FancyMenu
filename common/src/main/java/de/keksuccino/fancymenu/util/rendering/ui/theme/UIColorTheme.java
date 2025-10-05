@@ -60,8 +60,8 @@ public class UIColorTheme {
     public DrawableColor actions_chain_indicator_selected_color = DrawableColor.of(new Color(255, 193, 71, 220));
     public DrawableColor actions_minimap_background_color = DrawableColor.of(new Color(24, 27, 32, 200));
     public DrawableColor actions_minimap_border_color = DrawableColor.of(new Color(94, 99, 108, 220));
-    public DrawableColor actions_minimap_viewport_color = DrawableColor.of(new Color(255, 255, 255, 70));
-    public DrawableColor actions_minimap_viewport_border_color = DrawableColor.of(new Color(210, 222, 255, 200));
+    public DrawableColor actions_minimap_viewport_color = DrawableColor.of(new Color(255, 255, 255, 35));
+    public DrawableColor actions_minimap_viewport_border_color = DrawableColor.of(new Color(210, 222, 255, 100));
     public DrawableColor actions_minimap_tooltip_border_color = DrawableColor.of(new Color(120, 170, 220, 220));
     public DrawableColor text_editor_sidebar_color = DrawableColor.of(new Color(49, 51, 53));
     public DrawableColor text_editor_line_number_text_color_normal = DrawableColor.of(new Color(91, 92, 94));
