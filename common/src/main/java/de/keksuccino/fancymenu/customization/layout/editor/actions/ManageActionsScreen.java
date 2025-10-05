@@ -87,6 +87,7 @@ public class ManageActionsScreen extends Screen {
     protected static final int MINIMAP_INDENT_STEP = 4;
     protected static final int CHAIN_BAR_WIDTH = 3;
     protected static final int CHAIN_BAR_OFFSET = 2;
+    protected static final int INLINE_EDIT_RIGHT_MARGIN = 5;
 
     protected static final float MINIMAP_TOOLTIP_SCALE = 0.5F;
     protected static final int MINIMAP_TOOLTIP_PADDING = 4;
@@ -1848,8 +1849,10 @@ public class ManageActionsScreen extends Screen {
 
         protected int getValueFieldAvailableWidth() {
             int valueX = this.getValueFieldX();
-            int available = (this.getX() + this.getWidth()) - valueX - 5;
-            return Math.max(40, available);
+            ScrollArea scrollArea = ManageActionsScreen.this.actionsScrollArea;
+            int visibleRight = scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN;
+            int available = visibleRight - valueX;
+            return Math.max(1, available);
         }
 
         protected void updateValueComponent() {
