@@ -203,10 +203,15 @@ public class ManageActionsScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.addWhileButton);
 
         this.addActionButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.add_action"), (button) -> {
+            ExecutableEntry selectedOnCreate = this.getSelectedEntry();
             BuildActionScreen s = new BuildActionScreen(null, (call) -> {
                 if (call != null) {
-                    this.executableBlock.addExecutable(call);
+                    this.addExecutableRelativeToSelection(call, selectedOnCreate);
                     this.updateActionInstanceScrollArea(false);
+                    ExecutableEntry newEntry = this.findEntryForExecutable(call);
+                    if (newEntry != null) {
+                        newEntry.setSelected(true);
+                    }
                 }
                 Minecraft.getInstance().setScreen(this);
             });
@@ -1559,6 +1564,37 @@ public class ManageActionsScreen extends Screen {
             this.actionsScrollArea.horizontalScrollBar.setScroll(oldScrollHorizontal);
         }
 
+    }
+
+    protected void addExecutableRelativeToSelection(@NotNull Executable executable, @Nullable ExecutableEntry selectionReference) {
+        if (selectionReference == BEFORE_FIRST) {
+            this.executableBlock.addExecutable(executable);
+            List<Executable> rootExecutables = this.executableBlock.getExecutables();
+            if (rootExecutables.remove(executable)) {
+                rootExecutables.add(0, executable);
+            }
+            return;
+        }
+        if (selectionReference == AFTER_LAST) {
+            this.executableBlock.addExecutable(executable);
+            return;
+        }
+        if (selectionReference == null) {
+            this.executableBlock.addExecutable(executable);
+            return;
+        }
+        if (selectionReference.executable instanceof AbstractExecutableBlock block) {
+            block.addExecutable(executable);
+            return;
+        }
+        AbstractExecutableBlock parentBlock = selectionReference.getParentBlock();
+        List<Executable> executables = parentBlock.getExecutables();
+        int selectedIndex = executables.indexOf(selectionReference.executable);
+        parentBlock.addExecutable(executable);
+        if ((selectedIndex >= 0) && executables.remove(executable)) {
+            int insertIndex = Math.min(selectedIndex + 1, executables.size());
+            executables.add(insertIndex, executable);
+        }
     }
 
     protected void addExecutableToEntries(int level, Executable executable, @Nullable AbstractExecutableBlock appendParent, @Nullable AbstractExecutableBlock parentBlock) {
