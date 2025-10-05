@@ -24,7 +24,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
@@ -45,6 +47,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -89,12 +92,20 @@ public class ManageActionsScreen extends Screen {
     protected static final int MINIMAP_TOOLTIP_PADDING = 4;
     protected static final int MINIMAP_TOOLTIP_OFFSET = 12;
 
+    protected static final long VALUE_DOUBLE_CLICK_TIME_MS = 500L;
+
     @Nullable
     protected ExecutableEntry hoveredEntry = null;
     @Nullable
     protected ExecutableEntry minimapHoveredEntry = null;
     @Nullable
     protected ExecutableEntry selectedEntry = null;
+    @Nullable
+    protected ExtendedEditBox inlineValueEditBox = null;
+    @Nullable
+    protected ExecutableEntry inlineValueEntry = null;
+    @Nullable
+    protected String inlineValueOriginal = null;
     protected List<ExecutableEntry> hoveredStatementChainEntries = Collections.emptyList();
     protected List<ExecutableEntry> hoveredPrimaryChainEntries = Collections.emptyList();
     protected List<ExecutableEntry> minimapHoveredStatementChainEntries = Collections.emptyList();
@@ -398,6 +409,7 @@ public class ManageActionsScreen extends Screen {
 
     @Override
     public void onClose() {
+        this.finishInlineValueEditing(true);
         this.callback.accept(null);
     }
 
@@ -449,6 +461,7 @@ public class ManageActionsScreen extends Screen {
         this.rebuildMinimapSegments(mouseX, mouseY);
 
         this.actionsScrollArea.render(graphics, mouseX, mouseY, partial);
+        this.renderInlineValueEditor(graphics, mouseX, mouseY, partial);
 
         if (this.renderTickDragHoveredEntry != null) {
             int dY = this.renderTickDragHoveredEntry.getY();
@@ -500,8 +513,21 @@ public class ManageActionsScreen extends Screen {
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.isInlineValueEditing()) {
+            if (this.inlineValueEditBox != null) {
+                boolean insideEditor = UIBase.isXYInArea((int)mouseX, (int)mouseY, this.inlineValueEditBox.getX(), this.inlineValueEditBox.getY(), this.inlineValueEditBox.getWidth(), this.inlineValueEditBox.getHeight());
+                if (insideEditor && this.inlineValueEditBox.mouseClicked(mouseX, mouseY, button)) {
+                    return true;
+                }
+                if (!insideEditor) {
+                    this.finishInlineValueEditing(true);
+                }
+            }
+        }
+
         if ((button == 0) && (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight)) {
             ExecutableEntry entry = this.getMinimapEntryAt((int)mouseX, (int)mouseY);
             if (entry != null) {
@@ -510,7 +536,147 @@ public class ManageActionsScreen extends Screen {
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+
+        if (button == 0) {
+            ExecutableEntry hovered = this.getScrollAreaHoveredEntry();
+            if ((hovered != null) && hovered.canInlineEditValue() && hovered.isMouseOverValue((int)mouseX, (int)mouseY)) {
+                if (hovered.registerValueClick((int)mouseX, (int)mouseY)) {
+                    this.startInlineValueEditing(hovered);
+                    return true;
+                }
+            } else if (hovered != null) {
+                hovered.resetValueClickTimer();
+            }
+        }
+
+        boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        if ((button == 0) && !this.isInlineValueEditing()) {
+            ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
+            if ((hoveredAfter == null) || !hoveredAfter.isMouseOverValue((int)mouseX, (int)mouseY)) {
+                for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
+                    if (entry instanceof ExecutableEntry ee) {
+                        ee.resetValueClickTimer();
+                    }
+                }
+            }
+        }
+        return handled;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.inlineValueEditBox != null) {
+            if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
+                this.finishInlineValueEditing(true);
+                return true;
+            }
+            if (keyCode == InputConstants.KEY_ESCAPE) {
+                this.finishInlineValueEditing(false);
+                return true;
+            }
+            if (this.inlineValueEditBox.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.mouseReleased(mouseX, mouseY, button)) {
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    protected void renderInlineValueEditor(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (!this.isInlineValueEditing()) {
+            return;
+        }
+        if (!this.actionsScrollArea.getEntries().contains(this.inlineValueEntry)) {
+            this.finishInlineValueEditing(false);
+            return;
+        }
+        this.updateInlineValueEditorBounds();
+        if (this.inlineValueEditBox != null) {
+            this.inlineValueEditBox.render(graphics, mouseX, mouseY, partial);
+        }
+    }
+
+    protected void startInlineValueEditing(@NotNull ExecutableEntry entry) {
+        if (!(entry.executable instanceof ActionInstance instance) || !instance.action.hasValue()) {
+            return;
+        }
+        this.finishInlineValueEditing(true);
+        this.inlineValueEntry = entry;
+        this.inlineValueOriginal = instance.value;
+        this.inlineValueEditBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 10, 10, Component.empty());
+        this.inlineValueEditBox.setHeight(10);
+        this.inlineValueEditBox.setMaxLength(100000);
+        this.inlineValueEditBox.setValue(instance.value != null ? instance.value : "");
+        this.inlineValueEditBox.setCursorPosition(this.inlineValueEditBox.getValue().length());
+        this.inlineValueEditBox.setHighlightPos(0);
+        UIBase.applyDefaultWidgetSkinTo(this.inlineValueEditBox);
+        this.updateInlineValueEditorBounds();
+        this.inlineValueEditBox.setFocused(true);
+        this.setFocused(this.inlineValueEditBox);
+        entry.setSelected(true);
+        entry.leftMouseDownDragging = false;
+        entry.dragging = false;
+        entry.resetValueClickTimer();
+    }
+
+    protected void finishInlineValueEditing(boolean save) {
+        if (!this.isInlineValueEditing()) {
+            return;
+        }
+        ExecutableEntry entry = this.inlineValueEntry;
+        ExtendedEditBox editBox = this.inlineValueEditBox;
+        this.inlineValueEntry = null;
+        this.inlineValueEditBox = null;
+        this.setFocused(null);
+        if ((entry != null) && (entry.executable instanceof ActionInstance instance)) {
+            String result = editBox.getValue();
+            if (!save) {
+                instance.value = this.inlineValueOriginal;
+            } else {
+                String normalized = (result != null && !result.isEmpty()) ? result : null;
+                if (!Objects.equals(instance.value, normalized)) {
+                    instance.value = normalized;
+                }
+            }
+            entry.updateValueComponent();
+            entry.setWidth(entry.calculateWidth());
+            entry.resetValueClickTimer();
+        }
+        this.inlineValueOriginal = null;
+        this.actionsScrollArea.updateEntries(null);
+    }
+
+    private void updateInlineValueEditorBounds() {
+        if (!this.isInlineValueEditing() || this.inlineValueEditBox == null || this.inlineValueEntry == null) {
+            return;
+        }
+        ExecutableEntry entry = this.inlineValueEntry;
+        int valueX = entry.getValueFieldX();
+        int valueY = entry.getValueFieldY();
+        int availableWidth = entry.getValueFieldAvailableWidth();
+        this.inlineValueEditBox.setX(valueX);
+        this.inlineValueEditBox.setY(valueY);
+        this.inlineValueEditBox.setWidth(availableWidth);
+        this.inlineValueEditBox.setHeight(10);
+    }
+
+    private boolean isInlineValueEditing() {
+        return (this.inlineValueEditBox != null) && (this.inlineValueEntry != null);
     }
 
     @Override
@@ -1347,6 +1513,7 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void updateActionInstanceScrollArea(boolean keepScroll) {
+        this.finishInlineValueEditing(true);
 
         this.minimapSegments.clear();
         this.minimapHoveredEntry = null;
@@ -1419,7 +1586,8 @@ public class ManageActionsScreen extends Screen {
         private String cachedThemeIdentifier = "";
 
         private final MutableComponent displayNameComponent;
-        private final MutableComponent valueComponent;
+        private MutableComponent valueComponent;
+        private long lastValueClickTime = 0L;
 
         public ExecutableEntry(@NotNull ScrollArea parentScrollArea, @NotNull Executable executable, int lineHeight, int indentLevel) {
 
@@ -1431,9 +1599,7 @@ public class ManageActionsScreen extends Screen {
 
             if (this.executable instanceof ActionInstance i) {
                 this.displayNameComponent = i.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                String cachedValue = i.value;
-                String valueString = ((cachedValue != null) && i.action.hasValue()) ? cachedValue : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
-                this.valueComponent = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
+                this.updateValueComponent();
             } else if (this.executable instanceof IfExecutableBlock b) {
                 String requirements = "";
                 for (LoadingRequirementGroup g : b.condition.getGroups()) {
@@ -1496,6 +1662,10 @@ public class ManageActionsScreen extends Screen {
                 return;
             }
             this.cachedThemeIdentifier = themeIdentifier;
+
+            if (this.executable instanceof ActionInstance) {
+                this.updateValueComponent();
+            }
 
             Color idle = theme.actions_entry_background_color_action.getColor();
             Color hover = theme.actions_entry_background_color_action_hover.getColor();
@@ -1561,7 +1731,9 @@ public class ManageActionsScreen extends Screen {
                 graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
                 renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
-                graphics.drawString(this.font, this.valueComponent, (renderX + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
+                if (ManageActionsScreen.this.inlineValueEntry != this) {
+                    graphics.drawString(this.font, this.valueComponent, (renderX + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
+                }
 
             } else {
 
@@ -1627,6 +1799,67 @@ public class ManageActionsScreen extends Screen {
             w += INDENT_X_OFFSET * this.indentLevel;
             w += this.getContentOffset();
             return w;
+        }
+
+        protected boolean canInlineEditValue() {
+            return (this.executable instanceof ActionInstance i) && i.action.hasValue();
+        }
+
+        protected boolean isMouseOverValue(int mouseX, int mouseY) {
+            if (!this.canInlineEditValue()) {
+                return false;
+            }
+            int valueX = this.getValueFieldX();
+            int valueY = this.getValueFieldY();
+            int height = this.font.lineHeight;
+            int width = Math.max(1, this.font.width(this.valueComponent));
+            return UIBase.isXYInArea(mouseX, mouseY, valueX, valueY, Math.max(width, 6), height);
+        }
+
+        protected boolean registerValueClick(int mouseX, int mouseY) {
+            if (!this.isMouseOverValue(mouseX, mouseY)) {
+                this.lastValueClickTime = 0L;
+                return false;
+            }
+            long now = System.currentTimeMillis();
+            if ((now - this.lastValueClickTime) <= VALUE_DOUBLE_CLICK_TIME_MS) {
+                this.lastValueClickTime = 0L;
+                return true;
+            }
+            this.lastValueClickTime = now;
+            return false;
+        }
+
+        protected void resetValueClickTimer() {
+            this.lastValueClickTime = 0L;
+        }
+
+        protected int getValueFieldX() {
+            int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
+            return baseX + 5 + 4 + 3 + 4 + 3;
+        }
+
+        protected int getValueFieldY() {
+            int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
+            return centerYLine2 - (this.font.lineHeight / 2);
+        }
+
+        protected int getValueFieldAvailableWidth() {
+            int valueX = this.getValueFieldX();
+            int available = (this.getX() + this.getWidth()) - valueX - 5;
+            return Math.max(40, available);
+        }
+
+        protected void updateValueComponent() {
+            if (this.executable instanceof ActionInstance i) {
+                String cachedValue = i.value;
+                String valueString = ((cachedValue != null) && i.action.hasValue()) ? cachedValue : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
+                MutableComponent label = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+                MutableComponent value = Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+                this.valueComponent = label.append(value);
+            } else {
+                this.valueComponent = Component.empty();
+            }
         }
 
         @Override
