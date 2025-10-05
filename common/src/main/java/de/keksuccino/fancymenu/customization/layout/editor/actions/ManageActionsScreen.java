@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -463,6 +464,7 @@ public class ManageActionsScreen extends Screen {
 
         this.actionsScrollArea.render(graphics, mouseX, mouseY, partial);
         this.renderInlineValueEditor(graphics, mouseX, mouseY, partial);
+        this.updateCursor(mouseX, mouseY);
 
         if (this.renderTickDragHoveredEntry != null) {
             int dY = this.renderTickDragHoveredEntry.getY();
@@ -609,6 +611,18 @@ public class ManageActionsScreen extends Screen {
         this.updateInlineValueEditorBounds();
         if (this.inlineValueEditBox != null) {
             this.inlineValueEditBox.render(graphics, mouseX, mouseY, partial);
+        }
+    }
+    private void updateCursor(int mouseX, int mouseY) {
+        if (this.inlineValueEditBox != null) {
+            if (UIBase.isXYInArea(mouseX, mouseY, this.inlineValueEditBox.getX(), this.inlineValueEditBox.getY(), this.inlineValueEditBox.getWidth(), this.inlineValueEditBox.getHeight())) {
+                CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
+                return;
+            }
+        }
+        ExecutableEntry hovered = this.hoveredEntry;
+        if ((hovered != null) && hovered.canInlineEditValue() && hovered.isMouseOverValue(mouseX, mouseY)) {
+            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
         }
     }
 
