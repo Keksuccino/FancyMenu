@@ -710,6 +710,7 @@ public class ManageActionsScreen extends Screen {
         }
         return Collections.emptyList();
     }
+
     @NotNull
     protected List<ExecutableEntry> getHoveredChainForIndicator() {
         if (!this.minimapHoveredPrimaryChainEntries.isEmpty()) {
@@ -724,6 +725,7 @@ public class ManageActionsScreen extends Screen {
         }
         return Collections.emptyList();
     }
+
     @Nullable
     protected ExecutableEntry getActiveHoveredEntry() {
         if (this.minimapHoveredEntry != null) {
@@ -1874,6 +1876,7 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected static final class MinimapEntrySegment {
+
         protected final ExecutableEntry entry;
         protected final int x;
         protected final int y;
@@ -1887,6 +1890,7 @@ public class ManageActionsScreen extends Screen {
             this.width = width;
             this.height = height;
         }
+
     }
 
 }
