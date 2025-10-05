@@ -139,9 +139,10 @@ public class ManageActionsScreen extends Screen {
         this.addIfButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.if"), button -> {
             ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
                 if (container != null) {
-                    this.executableBlock.addExecutable(new IfExecutableBlock(container));
+                    IfExecutableBlock block = new IfExecutableBlock(container);
+                    this.executableBlock.addExecutable(block);
                     this.updateActionInstanceScrollArea(false);
-                    this.actionsScrollArea.verticalScrollBar.setScroll(1.0F);
+                    this.focusEntryForExecutable(block);
                 }
                 Minecraft.getInstance().setScreen(this);
             });
@@ -159,6 +160,7 @@ public class ManageActionsScreen extends Screen {
                         b.setAppendedBlock(((AbstractExecutableBlock)selected.executable).getAppendedBlock());
                         ((AbstractExecutableBlock)selected.executable).setAppendedBlock(b);
                         this.updateActionInstanceScrollArea(true);
+                        this.focusEntryForExecutable(b);
                     }
                     Minecraft.getInstance().setScreen(this);
                 });
@@ -179,6 +181,7 @@ public class ManageActionsScreen extends Screen {
                 b.setAppendedBlock(((AbstractExecutableBlock)selected.executable).getAppendedBlock());
                 ((AbstractExecutableBlock)selected.executable).setAppendedBlock(b);
                 this.updateActionInstanceScrollArea(true);
+                this.focusEntryForExecutable(b);
             }
         }).setIsActiveSupplier(consumes -> {
             ExecutableEntry selected = this.getSelectedEntry();
@@ -191,9 +194,10 @@ public class ManageActionsScreen extends Screen {
         this.addWhileButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.while"), button -> {
             ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
                 if (container != null) {
-                    this.executableBlock.addExecutable(new WhileExecutableBlock(container));
+                    WhileExecutableBlock block = new WhileExecutableBlock(container);
+                    this.executableBlock.addExecutable(block);
                     this.updateActionInstanceScrollArea(false);
-                    this.actionsScrollArea.verticalScrollBar.setScroll(1.0F);
+                    this.focusEntryForExecutable(block);
                 }
                 Minecraft.getInstance().setScreen(this);
             });
@@ -208,10 +212,7 @@ public class ManageActionsScreen extends Screen {
                 if (call != null) {
                     this.addExecutableRelativeToSelection(call, selectedOnCreate);
                     this.updateActionInstanceScrollArea(false);
-                    ExecutableEntry newEntry = this.findEntryForExecutable(call);
-                    if (newEntry != null) {
-                        newEntry.setSelected(true);
-                    }
+                    this.focusEntryForExecutable(call);
                 }
                 Minecraft.getInstance().setScreen(this);
             });
@@ -1281,6 +1282,14 @@ public class ManageActionsScreen extends Screen {
             }
         }
         return null;
+    }
+
+    protected void focusEntryForExecutable(@NotNull Executable executable) {
+        ExecutableEntry entry = this.findEntryForExecutable(executable);
+        if (entry != null) {
+            entry.setSelected(true);
+            this.scrollEntryIntoView(entry);
+        }
     }
 
     @Nullable
