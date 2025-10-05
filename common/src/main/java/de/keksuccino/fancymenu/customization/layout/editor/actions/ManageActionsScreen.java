@@ -981,7 +981,7 @@ public class ManageActionsScreen extends Screen {
         Color viewportBaseColor = theme.actions_minimap_viewport_color.getColor();
         Color viewportColor = withAlpha(viewportBaseColor, Math.max(0, Math.min(255, viewportBaseColor.getAlpha() / 2)));
         graphics.fill(this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, viewportColor.getRGB());
-        UIBase.renderBorder(graphics, this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, 1, theme.actions_chain_indicator_color, true, true, true, true);
+        UIBase.renderBorder(graphics, this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, 1, theme.actions_minimap_viewport_border_color, true, true, true, true);
     }
 
     @Nullable
