@@ -61,6 +61,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - You can now target the default ".minecraft" directory in the "File/Folder Exists" requirement by starting the target file path with ".minecraft/" (#1242)
 - It's now possible to use placeholders in the tint value of Image elements (#1271)
 - Updated the list of Patreon supporters in the Credits screen (Thanks so much to all the supporters and big sorry for updating the list so slowly, but I always forget that screen exists lmao)
+- The former "Get NBT Data" placeholder got optimized for working entirely client-side and got renamed to "Get NBT Data (Client-Side)"
 - Fixed "World Save Data" placeholder being in the wrong category
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
 - Fixed missing localizations for some options of the new (1.21.4+) Player Entity element (#1276)
@@ -68,6 +69,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed WHILE blocks cannot be moved via drag-and-drop or via buttons in the Edit Action Script screen
   - I'm actually not sure if that is a bug that was public or if I just messed it up while working on the screen, but it's fixed now anyways lmao
 - Fixed placeholder parser failing to replace placeholders in some edge case strings with lots of curly brackets outside placeholders (#1268)
+- Fixed "Get NBT Data" placeholder returning nothing in many cases (#1273)
  
 %changelog:end%
 
