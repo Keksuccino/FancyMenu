@@ -80,4 +80,10 @@ public abstract class Placeholder {
         return this.canRunAsync() || sameThread; // should parse placeholder
     }
 
+    /**
+     * Called right after the placeholder gets registered.
+     */
+    public void onRegistered() {
+    }
+
 }

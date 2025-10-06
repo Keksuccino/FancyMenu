@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.FolderExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
@@ -70,6 +71,7 @@ public class ManageActionsScreen extends Screen {
     protected ExtendedButton appendElseIfButton;
     protected ExtendedButton appendElseButton;
     protected ExtendedButton addWhileButton;
+    protected ExtendedButton addFolderButton;
     @Nullable
     protected ExecutableEntry renderTickDragHoveredEntry = null;
     @Nullable
@@ -95,6 +97,7 @@ public class ManageActionsScreen extends Screen {
     protected static final int MINIMAP_TOOLTIP_OFFSET = 12;
 
     protected static final long VALUE_DOUBLE_CLICK_TIME_MS = 500L;
+    protected static final long NAME_DOUBLE_CLICK_TIME_MS = 500L;
 
     @Nullable
     protected ExecutableEntry hoveredEntry = null;
@@ -108,6 +111,12 @@ public class ManageActionsScreen extends Screen {
     protected ExecutableEntry inlineValueEntry = null;
     @Nullable
     protected String inlineValueOriginal = null;
+    @Nullable
+    protected ExtendedEditBox inlineNameEditBox = null;
+    @Nullable
+    protected ExecutableEntry inlineNameEntry = null;
+    @Nullable
+    protected String inlineNameOriginal = null;
     protected List<ExecutableEntry> hoveredStatementChainEntries = Collections.emptyList();
     protected List<ExecutableEntry> hoveredPrimaryChainEntries = Collections.emptyList();
     protected List<ExecutableEntry> minimapHoveredStatementChainEntries = Collections.emptyList();
@@ -205,6 +214,16 @@ public class ManageActionsScreen extends Screen {
         });
         this.addWidget(this.addWhileButton);
         UIBase.applyDefaultWidgetSkinTo(this.addWhileButton);
+
+        this.addFolderButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.folder"), button -> {
+            ExecutableEntry selectedOnCreate = this.getSelectedEntry();
+            FolderExecutableBlock block = new FolderExecutableBlock();
+            this.addExecutableRelativeToSelection(block, selectedOnCreate);
+            this.updateActionInstanceScrollArea(false);
+            this.focusEntryForExecutable(block);
+        });
+        this.addWidget(this.addFolderButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addFolderButton);
 
         this.addActionButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.add_action"), (button) -> {
             ExecutableEntry selectedOnCreate = this.getSelectedEntry();
@@ -341,8 +360,10 @@ public class ManageActionsScreen extends Screen {
         this.addIfButton.setY(this.appendElseIfButton.getY() - 5 - 20);
         this.addWhileButton.setX(this.width - 20 - this.addWhileButton.getWidth());
         this.addWhileButton.setY(this.addIfButton.getY() - 5 - 20);
+        this.addFolderButton.setX(this.width - 20 - this.addFolderButton.getWidth());
+        this.addFolderButton.setY(this.addWhileButton.getY() - 5 - 20);
         this.addActionButton.setX(this.width - 20 - this.addActionButton.getWidth());
-        this.addActionButton.setY(this.addWhileButton.getY() - 5 - 20);
+        this.addActionButton.setY(this.addFolderButton.getY() - 5 - 20);
 
         AbstractWidget topRightSideWidget = this.addActionButton;
         Window window = Minecraft.getInstance().getWindow();
@@ -417,6 +438,8 @@ public class ManageActionsScreen extends Screen {
 
     @Override
     public void onClose() {
+        this.finishInlineNameEditing(true);
+        this.finishInlineNameEditing(true);
         this.finishInlineValueEditing(true);
         this.callback.accept(null);
     }
@@ -469,7 +492,7 @@ public class ManageActionsScreen extends Screen {
         this.rebuildMinimapSegments(mouseX, mouseY);
 
         this.actionsScrollArea.render(graphics, mouseX, mouseY, partial);
-        this.renderInlineValueEditor(graphics, mouseX, mouseY, partial);
+        this.renderInlineEditors(graphics, mouseX, mouseY, partial);
         this.updateCursor(mouseX, mouseY);
 
         if (this.renderTickDragHoveredEntry != null) {
@@ -525,6 +548,18 @@ public class ManageActionsScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.isInlineNameEditing()) {
+            if (this.inlineNameEditBox != null) {
+                boolean insideNameEditor = UIBase.isXYInArea((int)mouseX, (int)mouseY, this.inlineNameEditBox.getX(), this.inlineNameEditBox.getY(), this.inlineNameEditBox.getWidth(), this.inlineNameEditBox.getHeight());
+                if (insideNameEditor && this.inlineNameEditBox.mouseClicked(mouseX, mouseY, button)) {
+                    return true;
+                }
+                if (!insideNameEditor) {
+                    this.finishInlineNameEditing(true);
+                }
+            }
+        }
+
         if (this.isInlineValueEditing()) {
             if (this.inlineValueEditBox != null) {
                 boolean insideEditor = UIBase.isXYInArea((int)mouseX, (int)mouseY, this.inlineValueEditBox.getX(), this.inlineValueEditBox.getY(), this.inlineValueEditBox.getWidth(), this.inlineValueEditBox.getHeight());
@@ -548,13 +583,32 @@ public class ManageActionsScreen extends Screen {
 
         if (button == 0) {
             ExecutableEntry hovered = this.getScrollAreaHoveredEntry();
-            if ((hovered != null) && hovered.canInlineEditValue() && hovered.isMouseOverValue((int)mouseX, (int)mouseY)) {
-                if (hovered.registerValueClick((int)mouseX, (int)mouseY)) {
-                    this.startInlineValueEditing(hovered);
+            if (hovered != null) {
+                if (hovered.canToggleCollapse() && hovered.isMouseOverCollapseToggle((int)mouseX, (int)mouseY)) {
+                    this.finishInlineNameEditing(true);
+                    this.finishInlineValueEditing(true);
+                    hovered.toggleFolderCollapsed();
+                    this.updateActionInstanceScrollArea(true);
                     return true;
                 }
-            } else if (hovered != null) {
-                hovered.resetValueClickTimer();
+
+                if (hovered.canInlineEditName() && hovered.isMouseOverName((int)mouseX, (int)mouseY)) {
+                    if (hovered.registerNameClick((int)mouseX, (int)mouseY)) {
+                        this.startInlineNameEditing(hovered);
+                        return true;
+                    }
+                } else if (hovered.canInlineEditName()) {
+                    hovered.resetNameClickTimer();
+                }
+
+                if (hovered.canInlineEditValue() && hovered.isMouseOverValue((int)mouseX, (int)mouseY)) {
+                    if (hovered.registerValueClick((int)mouseX, (int)mouseY)) {
+                        this.startInlineValueEditing(hovered);
+                        return true;
+                    }
+                } else {
+                    hovered.resetValueClickTimer();
+                }
             }
         }
 
@@ -569,11 +623,37 @@ public class ManageActionsScreen extends Screen {
                 }
             }
         }
+
+        if ((button == 0) && !this.isInlineNameEditing()) {
+            ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
+            if ((hoveredAfter == null) || !hoveredAfter.isMouseOverName((int)mouseX, (int)mouseY)) {
+                for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
+                    if (entry instanceof ExecutableEntry ee && ee.canInlineEditName()) {
+                        ee.resetNameClickTimer();
+                    }
+                }
+            }
+        }
+
         return handled;
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.inlineNameEditBox != null) {
+            if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
+                this.finishInlineNameEditing(true);
+                return true;
+            }
+            if (keyCode == InputConstants.KEY_ESCAPE) {
+                this.finishInlineNameEditing(false);
+                return true;
+            }
+            if (this.inlineNameEditBox.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+        }
+
         if (this.inlineValueEditBox != null) {
             if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
                 this.finishInlineValueEditing(true);
@@ -592,6 +672,9 @@ public class ManageActionsScreen extends Screen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
+        if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.charTyped(codePoint, modifiers)) {
+            return true;
+        }
         if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.charTyped(codePoint, modifiers)) {
             return true;
         }
@@ -600,26 +683,44 @@ public class ManageActionsScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.mouseReleased(mouseX, mouseY, button)) {
+            return true;
+        }
         if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.mouseReleased(mouseX, mouseY, button)) {
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    protected void renderInlineValueEditor(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        if (!this.isInlineValueEditing()) {
-            return;
+    protected void renderInlineEditors(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (this.isInlineValueEditing()) {
+            if (!this.actionsScrollArea.getEntries().contains(this.inlineValueEntry)) {
+                this.finishInlineValueEditing(false);
+            } else {
+                this.updateInlineValueEditorBounds();
+                if (this.inlineValueEditBox != null) {
+                    this.inlineValueEditBox.render(graphics, mouseX, mouseY, partial);
+                }
+            }
         }
-        if (!this.actionsScrollArea.getEntries().contains(this.inlineValueEntry)) {
-            this.finishInlineValueEditing(false);
-            return;
-        }
-        this.updateInlineValueEditorBounds();
-        if (this.inlineValueEditBox != null) {
-            this.inlineValueEditBox.render(graphics, mouseX, mouseY, partial);
+        if (this.isInlineNameEditing()) {
+            if (!this.actionsScrollArea.getEntries().contains(this.inlineNameEntry)) {
+                this.finishInlineNameEditing(false);
+            } else {
+                this.updateInlineNameEditorBounds();
+                if (this.inlineNameEditBox != null) {
+                    this.inlineNameEditBox.render(graphics, mouseX, mouseY, partial);
+                }
+            }
         }
     }
     private void updateCursor(int mouseX, int mouseY) {
+        if (this.inlineNameEditBox != null) {
+            if (UIBase.isXYInArea(mouseX, mouseY, this.inlineNameEditBox.getX(), this.inlineNameEditBox.getY(), this.inlineNameEditBox.getWidth(), this.inlineNameEditBox.getHeight())) {
+                CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
+                return;
+            }
+        }
         if (this.inlineValueEditBox != null) {
             if (UIBase.isXYInArea(mouseX, mouseY, this.inlineValueEditBox.getX(), this.inlineValueEditBox.getY(), this.inlineValueEditBox.getWidth(), this.inlineValueEditBox.getHeight())) {
                 CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
@@ -627,6 +728,10 @@ public class ManageActionsScreen extends Screen {
             }
         }
         ExecutableEntry hovered = this.hoveredEntry;
+        if ((hovered != null) && hovered.canInlineEditName() && hovered.isMouseOverName(mouseX, mouseY)) {
+            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
+            return;
+        }
         if ((hovered != null) && hovered.canInlineEditValue() && hovered.isMouseOverValue(mouseX, mouseY)) {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
         }
@@ -698,6 +803,73 @@ public class ManageActionsScreen extends Screen {
 
     private boolean isInlineValueEditing() {
         return (this.inlineValueEditBox != null) && (this.inlineValueEntry != null);
+    }
+
+    protected void startInlineNameEditing(@NotNull ExecutableEntry entry) {
+        if (!(entry.executable instanceof FolderExecutableBlock folder)) {
+            return;
+        }
+        this.finishInlineNameEditing(true);
+        this.finishInlineValueEditing(true);
+        this.inlineNameEntry = entry;
+        this.inlineNameOriginal = folder.getName();
+        this.inlineNameEditBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 10, 10, Component.empty());
+        this.inlineNameEditBox.setHeight(10);
+        this.inlineNameEditBox.setMaxLength(256);
+        this.inlineNameEditBox.setValue(folder.getName());
+        this.inlineNameEditBox.setCursorPosition(this.inlineNameEditBox.getValue().length());
+        this.inlineNameEditBox.setHighlightPos(0);
+        UIBase.applyDefaultWidgetSkinTo(this.inlineNameEditBox);
+        this.updateInlineNameEditorBounds();
+        this.inlineNameEditBox.setFocused(true);
+        this.setFocused(this.inlineNameEditBox);
+        entry.setSelected(true);
+        entry.leftMouseDownDragging = false;
+        entry.dragging = false;
+        entry.resetNameClickTimer();
+    }
+
+    protected void finishInlineNameEditing(boolean save) {
+        if (!this.isInlineNameEditing()) {
+            return;
+        }
+        ExecutableEntry entry = this.inlineNameEntry;
+        ExtendedEditBox editBox = this.inlineNameEditBox;
+        this.inlineNameEntry = null;
+        this.inlineNameEditBox = null;
+        this.setFocused(null);
+        if ((entry != null) && (entry.executable instanceof FolderExecutableBlock folder)) {
+            String result = editBox.getValue();
+            if (!save) {
+                folder.setName(this.inlineNameOriginal != null ? this.inlineNameOriginal : FolderExecutableBlock.DEFAULT_NAME);
+            } else {
+                String normalized = (result != null) ? result.trim() : "";
+                folder.setName(normalized);
+            }
+            entry.rebuildComponents();
+            entry.setWidth(entry.calculateWidth());
+            entry.resetNameClickTimer();
+        }
+        this.inlineNameOriginal = null;
+        this.actionsScrollArea.updateEntries(null);
+    }
+
+    private void updateInlineNameEditorBounds() {
+        if (!this.isInlineNameEditing() || this.inlineNameEditBox == null || this.inlineNameEntry == null) {
+            return;
+        }
+        ExecutableEntry entry = this.inlineNameEntry;
+        int nameX = entry.getNameFieldX();
+        int nameY = entry.getNameFieldY();
+        int availableWidth = entry.getNameFieldAvailableWidth();
+        this.inlineNameEditBox.setX(nameX);
+        this.inlineNameEditBox.setY(nameY);
+        this.inlineNameEditBox.setWidth(availableWidth);
+        this.inlineNameEditBox.setHeight(10);
+    }
+
+    private boolean isInlineNameEditing() {
+        return (this.inlineNameEditBox != null) && (this.inlineNameEntry != null);
     }
 
     @Override
@@ -1544,6 +1716,7 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void updateActionInstanceScrollArea(boolean keepScroll) {
+        this.finishInlineNameEditing(true);
         this.finishInlineValueEditing(true);
 
         this.minimapSegments.clear();
@@ -1616,10 +1789,13 @@ public class ManageActionsScreen extends Screen {
         }
 
         if (executable instanceof AbstractExecutableBlock b) {
-            for (Executable e : b.getExecutables()) {
-                this.addExecutableToEntries(level+1, e, null, b);
+            boolean skipChildren = (b instanceof FolderExecutableBlock folder) && folder.isCollapsed();
+            if (!skipChildren) {
+                for (Executable e : b.getExecutables()) {
+                    this.addExecutableToEntries(level+1, e, null, b);
+                }
             }
-            if (b.getAppendedBlock() != null) {
+            if (!skipChildren && b.getAppendedBlock() != null) {
                 this.addExecutableToEntries(level, b.getAppendedBlock(), b, parentBlock);
             }
         }
@@ -1631,6 +1807,7 @@ public class ManageActionsScreen extends Screen {
         public static final int HEADER_FOOTER_HEIGHT = 3;
         public static final int INDENT_X_OFFSET = 20;
         public static final int STATEMENT_CONTENT_OFFSET = 4;
+        private static final int FOLDER_TOGGLE_SIZE = 8;
 
         @NotNull
         public Executable executable;
@@ -1647,9 +1824,10 @@ public class ManageActionsScreen extends Screen {
         public boolean dragging = false;
         private String cachedThemeIdentifier = "";
 
-        private final MutableComponent displayNameComponent;
+        private MutableComponent displayNameComponent;
         private MutableComponent valueComponent;
         private long lastValueClickTime = 0L;
+        private long lastNameClickTime = 0L;
 
         public ExecutableEntry(@NotNull ScrollArea parentScrollArea, @NotNull Executable executable, int lineHeight, int indentLevel) {
 
@@ -1659,53 +1837,7 @@ public class ManageActionsScreen extends Screen {
             this.lineHeight = lineHeight;
             this.indentLevel = indentLevel;
 
-            if (this.executable instanceof ActionInstance i) {
-                this.displayNameComponent = i.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                this.updateValueComponent();
-            } else if (this.executable instanceof IfExecutableBlock b) {
-                String requirements = "";
-                for (LoadingRequirementGroup g : b.condition.getGroups()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += g.identifier;
-                }
-                for (LoadingRequirementInstance i : b.condition.getInstances()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += i.requirement.getDisplayName();
-                }
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                this.valueComponent = Component.empty();
-            } else if (this.executable instanceof ElseIfExecutableBlock b) {
-                String requirements = "";
-                for (LoadingRequirementGroup g : b.condition.getGroups()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += g.identifier;
-                }
-                for (LoadingRequirementInstance i : b.condition.getInstances()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += i.requirement.getDisplayName();
-                }
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else_if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                this.valueComponent = Component.empty();
-            } else if (this.executable instanceof ElseExecutableBlock b) {
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                this.valueComponent = Component.empty();
-            } else if (this.executable instanceof WhileExecutableBlock b) {
-                String requirements = "";
-                for (LoadingRequirementGroup g : b.condition.getGroups()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += g.identifier;
-                }
-                for (LoadingRequirementInstance i : b.condition.getInstances()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += i.requirement.getDisplayName();
-                }
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.while", Component.literal(requirements))
-                        .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                this.valueComponent = Component.empty();
-            } else {
-                this.displayNameComponent = Component.literal("[UNKNOWN EXECUTABLE]").withStyle(ChatFormatting.RED);
-                this.valueComponent = Component.empty();
-            }
+            this.rebuildComponents();
 
             this.applyThemeBackground(true);
             this.setWidth(this.calculateWidth());
@@ -1724,10 +1856,7 @@ public class ManageActionsScreen extends Screen {
                 return;
             }
             this.cachedThemeIdentifier = themeIdentifier;
-
-            if (this.executable instanceof ActionInstance) {
-                this.updateValueComponent();
-            }
+            this.rebuildComponents();
 
             Color idle = theme.actions_entry_background_color_action.getColor();
             Color hover = theme.actions_entry_background_color_action_hover.getColor();
@@ -1753,9 +1882,71 @@ public class ManageActionsScreen extends Screen {
             this.setBackgroundColorHover(hover);
         }
 
+        private void rebuildComponents() {
+            UIColorTheme theme = UIBase.getUIColorTheme();
+            if (this.executable instanceof ActionInstance i) {
+                this.displayNameComponent = i.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.updateValueComponent();
+            } else if (this.executable instanceof IfExecutableBlock b) {
+                String requirements = "";
+                for (LoadingRequirementGroup g : b.condition.getGroups()) {
+                    if (!requirements.isEmpty()) requirements += ", ";
+                    requirements += g.identifier;
+                }
+                for (LoadingRequirementInstance i : b.condition.getInstances()) {
+                    if (!requirements.isEmpty()) requirements += ", ";
+                    requirements += i.requirement.getDisplayName();
+                }
+                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.valueComponent = Component.empty();
+            } else if (this.executable instanceof ElseIfExecutableBlock b) {
+                String requirements = "";
+                for (LoadingRequirementGroup g : b.condition.getGroups()) {
+                    if (!requirements.isEmpty()) requirements += ", ";
+                    requirements += g.identifier;
+                }
+                for (LoadingRequirementInstance i : b.condition.getInstances()) {
+                    if (!requirements.isEmpty()) requirements += ", ";
+                    requirements += i.requirement.getDisplayName();
+                }
+                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else_if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.valueComponent = Component.empty();
+            } else if (this.executable instanceof ElseExecutableBlock) {
+                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.valueComponent = Component.empty();
+            } else if (this.executable instanceof WhileExecutableBlock b) {
+                String requirements = "";
+                for (LoadingRequirementGroup g : b.condition.getGroups()) {
+                    if (!requirements.isEmpty()) requirements += ", ";
+                    requirements += g.identifier;
+                }
+                for (LoadingRequirementInstance i : b.condition.getInstances()) {
+                    if (!requirements.isEmpty()) requirements += ", ";
+                    requirements += i.requirement.getDisplayName();
+                }
+                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.while", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.valueComponent = Component.empty();
+            } else if (this.executable instanceof FolderExecutableBlock folder) {
+                MutableComponent nameComponent = Component.literal(folder.getName()).setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
+                MutableComponent base = Component.translatable("fancymenu.editor.actions.blocks.folder.display", nameComponent).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                if (folder.isCollapsed()) {
+                    base = base.append(Component.literal(" ")).append(Component.translatable("fancymenu.editor.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt())));
+                }
+                this.displayNameComponent = base;
+                this.valueComponent = Component.empty();
+            } else {
+                this.displayNameComponent = Component.literal("[UNKNOWN EXECUTABLE]").withStyle(ChatFormatting.RED);
+                this.valueComponent = Component.empty();
+            }
+        }
+
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.renderInternal(graphics, mouseX, mouseY, partial, true);
+        }
+
+        public void renderThumbnail(@NotNull GuiGraphics graphics) {
+            this.renderInternal(graphics, Integer.MIN_VALUE, Integer.MIN_VALUE, 0.0F, false);
         }
 
         private void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean interactive) {
@@ -1765,10 +1956,6 @@ public class ManageActionsScreen extends Screen {
             }
             super.render(graphics, mouseX, mouseY, partial);
             this.renderEntryDecorations(graphics);
-        }
-
-        public void renderThumbnail(@NotNull GuiGraphics graphics) {
-            this.renderInternal(graphics, Integer.MIN_VALUE, Integer.MIN_VALUE, 0.0F, false);
         }
 
         private void renderEntryDecorations(@NotNull GuiGraphics graphics) {
@@ -1787,21 +1974,25 @@ public class ManageActionsScreen extends Screen {
 
             int renderX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
 
-            if (this.executable instanceof ActionInstance) {
-
-                renderListingDot(graphics, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColor());
+            if (this.executable instanceof FolderExecutableBlock folder) {
+                int toggleX = renderX + 5;
+                int toggleY = centerYLine1 - (FOLDER_TOGGLE_SIZE / 2);
+                this.renderFolderToggle(graphics, toggleX, toggleY, folder.isCollapsed());
+                int textX = toggleX + FOLDER_TOGGLE_SIZE + 3;
+                if (ManageActionsScreen.this.inlineNameEntry != this) {
+                    graphics.drawString(this.font, this.displayNameComponent, textX, (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
+                }
+            } else if (this.executable instanceof ActionInstance) {
+                UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColor());
                 graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
-                renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
+                UIBase.renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
                 if (ManageActionsScreen.this.inlineValueEntry != this) {
                     graphics.drawString(this.font, this.valueComponent, (renderX + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
                 }
-
             } else {
-
-                renderListingDot(graphics, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().warning_text_color.getColor());
+                UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().warning_text_color.getColor());
                 graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
-
             }
         }
 
@@ -1830,7 +2021,7 @@ public class ManageActionsScreen extends Screen {
             if (this.leftMouseDownDragging) {
                 if ((this.leftMouseDownDraggingPosX != MouseInput.getMouseX()) || (this.leftMouseDownDraggingPosY != MouseInput.getMouseY())) {
                     //Only allow dragging for ActionInstances and If-Blocks
-                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock)) {
+                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof FolderExecutableBlock)) {
                         this.dragging = true;
                     }
                 }
@@ -1853,10 +2044,14 @@ public class ManageActionsScreen extends Screen {
         }
 
         private int calculateWidth() {
-            int w = 5 + 4 + 3 + this.font.width(this.displayNameComponent) + 5;
-            int w2 = 5 + 4 + 3 + 4 + 3 + this.font.width(this.valueComponent) + 5;
-            if (w2 > w) {
-                w = w2;
+            int w;
+            if (this.executable instanceof FolderExecutableBlock) {
+                int textWidth = this.font.width(this.displayNameComponent);
+                w = 5 + FOLDER_TOGGLE_SIZE + 3 + textWidth + 5;
+            } else {
+                int w1 = 5 + 4 + 3 + this.font.width(this.displayNameComponent) + 5;
+                int w2 = 5 + 4 + 3 + 4 + 3 + this.font.width(this.valueComponent) + 5;
+                w = Math.max(w1, w2);
             }
             w += INDENT_X_OFFSET * this.indentLevel;
             w += this.getContentOffset();
@@ -1896,6 +2091,55 @@ public class ManageActionsScreen extends Screen {
             this.lastValueClickTime = 0L;
         }
 
+        protected boolean canInlineEditName() {
+            return this.executable instanceof FolderExecutableBlock;
+        }
+
+        protected boolean isMouseOverName(int mouseX, int mouseY) {
+            if (!this.canInlineEditName()) {
+                return false;
+            }
+            int nameX = this.getNameFieldX();
+            int nameY = this.getNameFieldY();
+            int height = this.font.lineHeight;
+            int width = Math.max(1, this.font.width(this.displayNameComponent));
+            return UIBase.isXYInArea(mouseX, mouseY, nameX, nameY, Math.max(width, 6), height);
+        }
+
+        protected boolean registerNameClick(int mouseX, int mouseY) {
+            if (!this.isMouseOverName(mouseX, mouseY)) {
+                this.lastNameClickTime = 0L;
+                return false;
+            }
+            long now = System.currentTimeMillis();
+            if ((now - this.lastNameClickTime) <= ManageActionsScreen.NAME_DOUBLE_CLICK_TIME_MS) {
+                this.lastNameClickTime = 0L;
+                return true;
+            }
+            this.lastNameClickTime = now;
+            return false;
+        }
+
+        protected void resetNameClickTimer() {
+            this.lastNameClickTime = 0L;
+        }
+
+        protected int getNameFieldX() {
+            int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
+            return baseX + 5 + FOLDER_TOGGLE_SIZE + 3;
+        }
+
+        protected int getNameFieldY() {
+            int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
+            return centerYLine1 - (this.font.lineHeight / 2);
+        }
+
+        protected int getNameFieldAvailableWidth() {
+            ScrollArea scrollArea = ManageActionsScreen.this.actionsScrollArea;
+            int visibleRight = scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN;
+            return Math.max(1, visibleRight - this.getNameFieldX());
+        }
+
         protected int getValueFieldX() {
             int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
             return baseX + 5 + 4 + 3 + 4 + 3;
@@ -1912,6 +2156,51 @@ public class ManageActionsScreen extends Screen {
             int visibleRight = scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN;
             int available = visibleRight - valueX;
             return Math.max(1, available);
+        }
+
+        protected boolean canToggleCollapse() {
+            return this.executable instanceof FolderExecutableBlock;
+        }
+
+        protected boolean isMouseOverCollapseToggle(int mouseX, int mouseY) {
+            if (!this.canToggleCollapse()) {
+                return false;
+            }
+            int toggleX = this.getFolderToggleX();
+            int toggleY = this.getFolderToggleY();
+            return UIBase.isXYInArea(mouseX, mouseY, toggleX, toggleY, FOLDER_TOGGLE_SIZE, FOLDER_TOGGLE_SIZE);
+        }
+
+        private int getFolderToggleX() {
+            int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
+            return baseX + 5;
+        }
+
+        private int getFolderToggleY() {
+            int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
+            return centerYLine1 - (FOLDER_TOGGLE_SIZE / 2);
+        }
+
+        protected void toggleFolderCollapsed() {
+            if (this.executable instanceof FolderExecutableBlock folder) {
+                folder.setCollapsed(!folder.isCollapsed());
+                this.rebuildComponents();
+                this.setWidth(this.calculateWidth());
+            }
+        }
+
+        private void renderFolderToggle(@NotNull GuiGraphics graphics, int x, int y, boolean collapsed) {
+            UIColorTheme theme = UIBase.getUIColorTheme();
+            int size = FOLDER_TOGGLE_SIZE;
+            Color background = theme.actions_entry_background_color_generic_block.getColor();
+            graphics.fill(x, y, x + size, y + size, background.getRGB());
+            UIBase.renderBorder(graphics, x, y, x + size, y + size, 1, theme.actions_chain_indicator_color, true, true, true, true);
+            int midY = y + (size / 2);
+            graphics.fill(x + 2, midY - 1, x + size - 2, midY + 1, theme.description_area_text_color.getColorInt());
+            if (collapsed) {
+                int midX = x + (size / 2);
+                graphics.fill(midX - 1, y + 2, midX + 1, y + size - 2, theme.description_area_text_color.getColorInt());
+            }
         }
 
         protected void updateValueComponent() {
@@ -1956,4 +2245,25 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
