@@ -2076,5 +2076,7 @@
   "fancymenu.editor.actions.blocks.add.folder": "Add Folder",
   "fancymenu.editor.actions.blocks.folder.display": "Folder: %s",
   "fancymenu.editor.actions.blocks.folder.collapsed": "(collapsed)",
-  "fancymenu.actions.manage.folder_no_edit": "§xFolders only organize other actions, nothing to edit."
+  "fancymenu.actions.manage.folder_no_edit": "§xFolders only organize other actions, nothing to edit.",
+  "fancymenu.placeholders.nbt_data_get.client": "Get NBT Data (Client-Side)",
+  "fancymenu.placeholders.nbt_data_get.client.desc": "Reads NBT directly from the client's world state.\nSupports entity selectors with type/name/tag/limit/sort/distance/x/y/z/dx/dy/dz options,\nplus absolute or relative block positions, returning value,\nstring, or SNBT formats entirely client-side."
 }

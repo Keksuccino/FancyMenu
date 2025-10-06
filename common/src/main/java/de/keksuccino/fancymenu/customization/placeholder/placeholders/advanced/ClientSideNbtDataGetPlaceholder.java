@@ -47,11 +47,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class NbtDataGetPlaceholder extends Placeholder {
+public class ClientSideNbtDataGetPlaceholder extends Placeholder {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public NbtDataGetPlaceholder() {
+    public ClientSideNbtDataGetPlaceholder() {
         super("nbt_data_get");
     }
 
@@ -641,12 +641,12 @@ public class NbtDataGetPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.placeholders.nbt_data_get");
+        return I18n.get("fancymenu.placeholders.nbt_data_get.client");
     }
 
     @Override
     public @Nullable List<String> getDescription() {
-        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.nbt_data_get.desc"));
+        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.nbt_data_get.client.desc"));
     }
 
     @Override
@@ -727,6 +727,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
     }
 
 }
+
 
 
 

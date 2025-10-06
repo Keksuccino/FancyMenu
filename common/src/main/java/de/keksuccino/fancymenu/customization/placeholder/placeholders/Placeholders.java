@@ -166,7 +166,7 @@ public class Placeholders {
     public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
     public static final ClipboardContentPlaceholder CLIPBOARD_CONTENT = new ClipboardContentPlaceholder();
     public static final ScoreboardPlayerTeamPlaceholder SCOREBOARD_PLAYER_TEAM = new ScoreboardPlayerTeamPlaceholder();
-    public static final NbtDataGetPlaceholder NBT_DATA_GET = new NbtDataGetPlaceholder();
+    public static final ClientSideNbtDataGetPlaceholder NBT_DATA_GET = new ClientSideNbtDataGetPlaceholder();
     public static final WorldPlayersListPlaceholder WORLD_PLAYERS_LIST = new WorldPlayersListPlaceholder();
     public static final ScoreboardScorePlaceholder SCOREBOARD_SCORE = new ScoreboardScorePlaceholder();
     public static final ScoreboardObjectivesListPlaceholder SCOREBOARD_OBJECTIVES_LIST = new ScoreboardObjectivesListPlaceholder();
