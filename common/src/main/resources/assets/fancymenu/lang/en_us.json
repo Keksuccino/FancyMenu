@@ -2075,5 +2075,6 @@
   "fancymenu.placeholders.uptime_seconds.desc": "Returns the number of seconds that passed since the game got launched.",
   "fancymenu.editor.actions.blocks.add.folder": "Add Folder",
   "fancymenu.editor.actions.blocks.folder.display": "Folder: %s",
-  "fancymenu.editor.actions.blocks.folder.collapsed": "(collapsed)"
+  "fancymenu.editor.actions.blocks.folder.collapsed": "(collapsed)",
+  "fancymenu.actions.manage.folder_no_edit": "§xFolders only organize other actions, nothing to edit."
 }

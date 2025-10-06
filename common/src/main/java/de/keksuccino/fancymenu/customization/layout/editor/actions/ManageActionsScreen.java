@@ -287,6 +287,10 @@ public class ManageActionsScreen extends Screen {
                 consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
                 return false;
             }
+            if (selected.executable instanceof FolderExecutableBlock) {
+                consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.folder_no_edit")));
+                return false;
+            }
             if ((selected.executable instanceof ActionInstance i) && !i.action.hasValue()) {
                 consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.no_value_to_edit")));
                 return false;
