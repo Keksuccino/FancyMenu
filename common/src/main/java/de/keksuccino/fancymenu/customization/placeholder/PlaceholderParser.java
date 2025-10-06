@@ -238,19 +238,27 @@ public class PlaceholderParser {
     private static int findPlaceholderEndIndex(@NotNull String placeholderStartSubString, int startIndex) {
         int currentIndex = startIndex;
         int depth = 0;
-        boolean backslash = false;
+        boolean escaped = false;
+        boolean inQuotes = false;
         for (char c : placeholderStartSubString.toCharArray()) {
             if (currentIndex != startIndex) { //skip first char
-                if ((c == OPEN_CURLY_BRACKETS_CHAR) && !backslash) {
-                    depth++;
-                } else if ((c == CLOSE_CURLY_BRACKETS_CHAR) && !backslash) {
-                    if (depth <= 0) {
-                        return currentIndex;
-                    } else {
+                if (!escaped && (c == APOSTROPHE_CHAR)) { //toggle quoting so braces inside values stay ignored
+                    inQuotes = !inQuotes;
+                } else if (!inQuotes) {
+                    if (!escaped && (c == OPEN_CURLY_BRACKETS_CHAR)) {
+                        depth++;
+                    } else if (!escaped && (c == CLOSE_CURLY_BRACKETS_CHAR)) {
+                        if (depth <= 0) {
+                            return currentIndex;
+                        }
                         depth--;
                     }
                 }
-                backslash = (c == BACKSLASH_CHAR);
+            }
+            if (escaped) {
+                escaped = false;
+            } else {
+                escaped = (c == BACKSLASH_CHAR);
             }
             currentIndex++;
         }

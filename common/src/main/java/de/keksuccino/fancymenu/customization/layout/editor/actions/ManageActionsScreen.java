@@ -40,6 +40,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -588,8 +589,7 @@ public class ManageActionsScreen extends Screen {
                 if (hovered.canToggleCollapse() && hovered.isMouseOverCollapseToggle((int)mouseX, (int)mouseY)) {
                     this.finishInlineNameEditing(true);
                     this.finishInlineValueEditing(true);
-                    hovered.toggleCollapsed();
-                    this.updateActionInstanceScrollArea(true);
+                    this.toggleCollapseAndPreserveView(hovered);
                     return true;
                 }
 
@@ -742,6 +742,48 @@ public class ManageActionsScreen extends Screen {
         }
     }
 
+    private void toggleCollapseAndPreserveView(@NotNull ExecutableEntry entry) {
+        int desiredTop = entry.getY();
+        Executable executable = entry.executable;
+        entry.toggleCollapsed();
+        this.updateActionInstanceScrollArea(true);
+        this.restoreEntryTopPosition(executable, desiredTop);
+    }
+
+    private void restoreEntryTopPosition(@NotNull Executable executable, int desiredTop) {
+        ScrollArea scrollArea = this.actionsScrollArea;
+        int totalScrollHeight = scrollArea.getTotalScrollHeight();
+        if (totalScrollHeight <= 0) {
+            scrollArea.verticalScrollBar.setScroll(0.0F);
+            scrollArea.updateEntries(null);
+            return;
+        }
+        ExecutableEntry target = null;
+        for (ScrollAreaEntry scrollEntry : scrollArea.getEntries()) {
+            if ((scrollEntry instanceof ExecutableEntry ee) && (ee.executable == executable)) {
+                target = ee;
+                break;
+            }
+        }
+        if (target == null) {
+            return;
+        }
+        int innerY = scrollArea.getInnerY();
+        int maxTop = innerY + Math.max(0, scrollArea.getInnerHeight() - target.getHeight());
+        int clampedTop = Mth.clamp(desiredTop, innerY, maxTop);
+        int currentTop = target.getY();
+        if (currentTop == clampedTop) {
+            return;
+        }
+        float currentScroll = scrollArea.verticalScrollBar.getScroll();
+        float deltaScroll = (currentTop - clampedTop) / (float) totalScrollHeight;
+        float newScroll = Mth.clamp(currentScroll + deltaScroll, 0.0F, 1.0F);
+        if (Math.abs(newScroll - currentScroll) < 1.0E-4F) {
+            return;
+        }
+        scrollArea.verticalScrollBar.setScroll(newScroll);
+        scrollArea.updateEntries(null);
+    }
     protected void startInlineValueEditing(@NotNull ExecutableEntry entry) {
         if (!(entry.executable instanceof ActionInstance instance) || !instance.action.hasValue()) {
             return;
@@ -2370,6 +2412,8 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
 
 
 
