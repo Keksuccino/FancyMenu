@@ -2054,7 +2054,7 @@ public class ManageActionsScreen extends Screen {
             }
             if (this.leftMouseDownDragging) {
                 if ((this.leftMouseDownDraggingPosX != MouseInput.getMouseX()) || (this.leftMouseDownDraggingPosY != MouseInput.getMouseY())) {
-                    //Only allow dragging for ActionInstances and If-Blocks
+                    // Only allow dragging for specific entries
                     if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof FolderExecutableBlock)) {
                         this.dragging = true;
                     }
