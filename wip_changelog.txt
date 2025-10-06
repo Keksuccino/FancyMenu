@@ -67,6 +67,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed Discord Join button in menu bar does not work (#1263)
 - Fixed WHILE blocks cannot be moved via drag-and-drop or via buttons in the Edit Action Script screen
   - I'm actually not sure if that is a bug that was public or if I just messed it up while working on the screen, but it's fixed now anyways lmao
+- Fixed placeholder parser failing to replace placeholders in some edge case strings with lots of curly brackets outside placeholders (#1268)
  
 %changelog:end%
 
