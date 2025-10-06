@@ -743,46 +743,66 @@ public class ManageActionsScreen extends Screen {
     }
 
     private void toggleCollapseAndPreserveView(@NotNull ExecutableEntry entry) {
-        int desiredTop = entry.getY();
+        ScrollArea scrollArea = this.actionsScrollArea;
+        int desiredOffset = entry.getY() - scrollArea.getInnerY();
         Executable executable = entry.executable;
         entry.toggleCollapsed();
         this.updateActionInstanceScrollArea(true);
-        this.restoreEntryTopPosition(executable, desiredTop);
+        this.restoreEntryTopPosition(executable, desiredOffset);
     }
 
-    private void restoreEntryTopPosition(@NotNull Executable executable, int desiredTop) {
+    private void restoreEntryTopPosition(@NotNull Executable executable, int desiredOffset) {
         ScrollArea scrollArea = this.actionsScrollArea;
+        scrollArea.updateEntries(null);
+
+        ExecutableEntry target = null;
+        int cumulativeHeight = 0;
+        List<ScrollAreaEntry> entries = scrollArea.getEntries();
+        for (ScrollAreaEntry scrollEntry : entries) {
+            if (scrollEntry instanceof ExecutableEntry ee) {
+                if (ee.executable == executable) {
+                    target = ee;
+                    break;
+                }
+                cumulativeHeight += ee.getHeight();
+            } else {
+                cumulativeHeight += scrollEntry.getHeight();
+            }
+        }
+        if (target == null) {
+            return;
+        }
+
         int totalScrollHeight = scrollArea.getTotalScrollHeight();
         if (totalScrollHeight <= 0) {
             scrollArea.verticalScrollBar.setScroll(0.0F);
             scrollArea.updateEntries(null);
             return;
         }
-        ExecutableEntry target = null;
-        for (ScrollAreaEntry scrollEntry : scrollArea.getEntries()) {
-            if ((scrollEntry instanceof ExecutableEntry ee) && (ee.executable == executable)) {
-                target = ee;
+
+        int innerY = scrollArea.getInnerY();
+        int maxOffset = Math.max(0, scrollArea.getInnerHeight() - target.getHeight());
+        int minOffset = -target.getHeight();
+        int clampedOffset = Mth.clamp(desiredOffset, minOffset, maxOffset);
+        float targetScroll = (float)(cumulativeHeight - clampedOffset) / (float) totalScrollHeight;
+        float clampedScroll = Mth.clamp(targetScroll, 0.0F, 1.0F);
+        scrollArea.verticalScrollBar.setScroll(clampedScroll);
+        scrollArea.updateEntries(null);
+
+        for (int attempt = 0; attempt < 2; attempt++) {
+            int currentOffset = target.getY() - innerY;
+            int diff = currentOffset - clampedOffset;
+            if (Math.abs(diff) <= 1) {
                 break;
             }
+            float adjust = (float) diff / (float) totalScrollHeight;
+            float newScroll = Mth.clamp(scrollArea.verticalScrollBar.getScroll() + adjust, 0.0F, 1.0F);
+            if (Math.abs(newScroll - scrollArea.verticalScrollBar.getScroll()) < 1.0E-4F) {
+                break;
+            }
+            scrollArea.verticalScrollBar.setScroll(newScroll);
+            scrollArea.updateEntries(null);
         }
-        if (target == null) {
-            return;
-        }
-        int innerY = scrollArea.getInnerY();
-        int maxTop = innerY + Math.max(0, scrollArea.getInnerHeight() - target.getHeight());
-        int clampedTop = Mth.clamp(desiredTop, innerY, maxTop);
-        int currentTop = target.getY();
-        if (currentTop == clampedTop) {
-            return;
-        }
-        float currentScroll = scrollArea.verticalScrollBar.getScroll();
-        float deltaScroll = (currentTop - clampedTop) / (float) totalScrollHeight;
-        float newScroll = Mth.clamp(currentScroll + deltaScroll, 0.0F, 1.0F);
-        if (Math.abs(newScroll - currentScroll) < 1.0E-4F) {
-            return;
-        }
-        scrollArea.verticalScrollBar.setScroll(newScroll);
-        scrollArea.updateEntries(null);
     }
     protected void startInlineValueEditing(@NotNull ExecutableEntry entry) {
         if (!(entry.executable instanceof ActionInstance instance) || !instance.action.hasValue()) {
@@ -2412,6 +2432,8 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
 
 
 
