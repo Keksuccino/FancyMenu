@@ -588,7 +588,7 @@ public class ManageActionsScreen extends Screen {
                 if (hovered.canToggleCollapse() && hovered.isMouseOverCollapseToggle((int)mouseX, (int)mouseY)) {
                     this.finishInlineNameEditing(true);
                     this.finishInlineValueEditing(true);
-                    hovered.toggleFolderCollapsed();
+                    hovered.toggleCollapsed();
                     this.updateActionInstanceScrollArea(true);
                     return true;
                 }
@@ -1791,7 +1791,14 @@ public class ManageActionsScreen extends Screen {
         }
 
         if (executable instanceof AbstractExecutableBlock b) {
-            boolean skipChildren = (b instanceof FolderExecutableBlock folder) && folder.isCollapsed();
+            boolean skipChildren = false;
+            if (b instanceof FolderExecutableBlock folder && folder.isCollapsed()) {
+                skipChildren = true;
+            } else if (b instanceof IfExecutableBlock ifBlock && ifBlock.isCollapsed()) {
+                skipChildren = true;
+            } else if (b instanceof WhileExecutableBlock whileBlock && whileBlock.isCollapsed()) {
+                skipChildren = true;
+            }
             if (!skipChildren) {
                 for (Executable e : b.getExecutables()) {
                     this.addExecutableToEntries(level+1, e, null, b);
@@ -1809,7 +1816,7 @@ public class ManageActionsScreen extends Screen {
         public static final int HEADER_FOOTER_HEIGHT = 3;
         public static final int INDENT_X_OFFSET = 20;
         public static final int STATEMENT_CONTENT_OFFSET = 4;
-        private static final int FOLDER_TOGGLE_SIZE = 8;
+        private static final int COLLAPSE_TOGGLE_SIZE = 8;
 
         @NotNull
         public Executable executable;
@@ -1914,7 +1921,11 @@ public class ManageActionsScreen extends Screen {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent display = Component.translatable("fancymenu.editor.actions.blocks.if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                if (b.isCollapsed()) {
+                    display = display.append(this.createCollapsedSuffixComponent(theme));
+                }
+                this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof ElseIfExecutableBlock b) {
                 String requirements = "";
@@ -1941,7 +1952,11 @@ public class ManageActionsScreen extends Screen {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.while", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent display = Component.translatable("fancymenu.editor.actions.blocks.while", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                if (b.isCollapsed()) {
+                    display = display.append(this.createCollapsedSuffixComponent(theme));
+                }
+                this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof FolderExecutableBlock folder) {
                 MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.editor.actions.blocks.folder.display", "")).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
@@ -1950,7 +1965,7 @@ public class ManageActionsScreen extends Screen {
                 this.folderNameComponent = nameComponent;
                 MutableComponent display = labelComponent.copy().append(nameComponent.copy());
                 if (folder.isCollapsed()) {
-                    MutableComponent collapsedComponent = Component.literal(" ").append(Component.translatable("fancymenu.editor.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt())));
+                    MutableComponent collapsedComponent = this.createCollapsedSuffixComponent(theme);
                     this.folderCollapsedSuffixComponent = collapsedComponent;
                     display = display.append(collapsedComponent.copy());
                 }
@@ -1996,11 +2011,13 @@ public class ManageActionsScreen extends Screen {
 
             int renderX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
 
+            UIColorTheme theme = UIBase.getUIColorTheme();
+
             if (this.executable instanceof FolderExecutableBlock folder) {
                 int toggleX = renderX + 5;
-                int toggleY = centerYLine1 - (FOLDER_TOGGLE_SIZE / 2);
-                this.renderFolderToggle(graphics, toggleX, toggleY, folder.isCollapsed());
-                int textX = toggleX + FOLDER_TOGGLE_SIZE + 3;
+                int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
+                this.renderCollapseToggle(graphics, toggleX, toggleY, folder.isCollapsed());
+                int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
                 if (ManageActionsScreen.this.inlineNameEntry != this) {
                     graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
@@ -2013,11 +2030,39 @@ public class ManageActionsScreen extends Screen {
                         graphics.drawString(this.font, this.folderCollapsedSuffixComponent, suffixX, textY, -1, false);
                     }
                 }
+            } else if (this.executable instanceof IfExecutableBlock ifBlock) {
+                int toggleX = renderX + 5;
+                int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
+                this.renderCollapseToggle(graphics, toggleX, toggleY, ifBlock.isCollapsed());
+                int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
+                int textY = centerYLine1 - (this.font.lineHeight / 2);
+                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+            } else if (this.executable instanceof WhileExecutableBlock whileBlock) {
+                int toggleX = renderX + 5;
+                int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
+                this.renderCollapseToggle(graphics, toggleX, toggleY, whileBlock.isCollapsed());
+                int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
+                int textY = centerYLine1 - (this.font.lineHeight / 2);
+                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+            } else if (this.executable instanceof ElseIfExecutableBlock) {
+                int indicatorX = renderX + 5;
+                int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
+                this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.listing_dot_color_2.getColor());
+                int textX = indicatorX + COLLAPSE_TOGGLE_SIZE + 3;
+                int textY = centerYLine1 - (this.font.lineHeight / 2);
+                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+            } else if (this.executable instanceof ElseExecutableBlock) {
+                int indicatorX = renderX + 5;
+                int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
+                this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.listing_dot_color_1.getColor());
+                int textX = indicatorX + COLLAPSE_TOGGLE_SIZE + 3;
+                int textY = centerYLine1 - (this.font.lineHeight / 2);
+                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
             } else if (this.executable instanceof ActionInstance) {
-                UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColor());
+                UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, theme.listing_dot_color_2.getColor());
                 graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
-                UIBase.renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
+                UIBase.renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, theme.listing_dot_color_1.getColor());
                 int valueTextX = renderX + 5 + 4 + 3 + 4 + 3;
                 int valueTextY = centerYLine2 - (this.font.lineHeight / 2);
                 if (ManageActionsScreen.this.inlineValueEntry != this) {
@@ -2026,11 +2071,10 @@ public class ManageActionsScreen extends Screen {
                     graphics.drawString(this.font, this.valueLabelComponent, valueTextX, valueTextY, -1, false);
                 }
             } else {
-                UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().warning_text_color.getColor());
+                UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, theme.warning_text_color.getColor());
                 graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
             }
         }
-
         private void renderChainColumn(@NotNull GuiGraphics graphics, @NotNull Color color, @NotNull ExecutableEntry anchorEntry) {
             int barX = ManageActionsScreen.this.getChainBarX(anchorEntry);
             int barTop = this.getY() + 1;
@@ -2079,9 +2123,9 @@ public class ManageActionsScreen extends Screen {
 
         private int calculateWidth() {
             int w;
-            if (this.executable instanceof FolderExecutableBlock) {
+            if ((this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof ElseIfExecutableBlock) || (this.executable instanceof ElseExecutableBlock)) {
                 int textWidth = this.font.width(this.displayNameComponent);
-                w = 5 + FOLDER_TOGGLE_SIZE + 3 + textWidth + 5;
+                w = 5 + COLLAPSE_TOGGLE_SIZE + 3 + textWidth + 5;
             } else {
                 int w1 = 5 + 4 + 3 + this.font.width(this.displayNameComponent) + 5;
                 int w2 = 5 + 4 + 3 + 4 + 3 + this.font.width(this.valueComponent) + 5;
@@ -2160,7 +2204,7 @@ public class ManageActionsScreen extends Screen {
 
         protected int getNameFieldX() {
             int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
-            int nameX = baseX + 5 + FOLDER_TOGGLE_SIZE + 3;
+            int nameX = baseX + 5 + COLLAPSE_TOGGLE_SIZE + 3;
             if (this.folderLabelComponent != null) {
                 nameX += this.font.width(this.folderLabelComponent);
             }
@@ -2201,39 +2245,49 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected boolean canToggleCollapse() {
-            return this.executable instanceof FolderExecutableBlock;
+            return (this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock);
         }
 
         protected boolean isMouseOverCollapseToggle(int mouseX, int mouseY) {
             if (!this.canToggleCollapse()) {
                 return false;
             }
-            int toggleX = this.getFolderToggleX();
-            int toggleY = this.getFolderToggleY();
-            return UIBase.isXYInArea(mouseX, mouseY, toggleX, toggleY, FOLDER_TOGGLE_SIZE, FOLDER_TOGGLE_SIZE);
+            int toggleX = this.getCollapseToggleX();
+            int toggleY = this.getCollapseToggleY();
+            return UIBase.isXYInArea(mouseX, mouseY, toggleX, toggleY, COLLAPSE_TOGGLE_SIZE, COLLAPSE_TOGGLE_SIZE);
         }
 
-        private int getFolderToggleX() {
+        private int getCollapseToggleX() {
             int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
             return baseX + 5;
         }
 
-        private int getFolderToggleY() {
+        private int getCollapseToggleY() {
             int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
-            return centerYLine1 - (FOLDER_TOGGLE_SIZE / 2);
+            return centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
         }
 
-        protected void toggleFolderCollapsed() {
+        protected void toggleCollapsed() {
+            boolean toggled = false;
             if (this.executable instanceof FolderExecutableBlock folder) {
                 folder.setCollapsed(!folder.isCollapsed());
+                toggled = true;
+            } else if (this.executable instanceof IfExecutableBlock ifBlock) {
+                ifBlock.setCollapsed(!ifBlock.isCollapsed());
+                toggled = true;
+            } else if (this.executable instanceof WhileExecutableBlock whileBlock) {
+                whileBlock.setCollapsed(!whileBlock.isCollapsed());
+                toggled = true;
+            }
+            if (toggled) {
                 this.rebuildComponents();
                 this.setWidth(this.calculateWidth());
             }
         }
 
-        private void renderFolderToggle(@NotNull GuiGraphics graphics, int x, int y, boolean collapsed) {
+        private void renderCollapseToggle(@NotNull GuiGraphics graphics, int x, int y, boolean collapsed) {
             UIColorTheme theme = UIBase.getUIColorTheme();
-            int size = FOLDER_TOGGLE_SIZE;
+            int size = COLLAPSE_TOGGLE_SIZE;
             Color background = theme.actions_entry_background_color_generic_block.getColor();
             graphics.fill(x, y, x + size, y + size, background.getRGB());
             UIBase.renderBorder(graphics, x, y, x + size, y + size, 1, theme.actions_chain_indicator_color, true, true, true, true);
@@ -2243,6 +2297,20 @@ public class ManageActionsScreen extends Screen {
                 int midX = x + (size / 2);
                 graphics.fill(midX - 1, y + 2, midX + 1, y + size - 2, theme.description_area_text_color.getColorInt());
             }
+        }
+
+        private void renderStatementBadge(@NotNull GuiGraphics graphics, int x, int y, @NotNull Color fillColor) {
+            UIColorTheme theme = UIBase.getUIColorTheme();
+            int size = COLLAPSE_TOGGLE_SIZE;
+            Color background = theme.actions_entry_background_color_generic_block.getColor();
+            graphics.fill(x, y, x + size, y + size, background.getRGB());
+            UIBase.renderBorder(graphics, x, y, x + size, y + size, 1, theme.actions_chain_indicator_color, true, true, true, true);
+            int inset = 3;
+            graphics.fill(x + inset, y + inset, x + size - inset, y + size - inset, fillColor.getRGB());
+        }
+
+        private MutableComponent createCollapsedSuffixComponent(@NotNull UIColorTheme theme) {
+            return Component.literal(" ").append(Component.translatable("fancymenu.editor.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt())));
         }
 
         protected void updateValueComponent() {
