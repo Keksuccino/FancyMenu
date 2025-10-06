@@ -729,6 +729,10 @@ public class ManageActionsScreen extends Screen {
             }
         }
         ExecutableEntry hovered = this.hoveredEntry;
+        if ((hovered != null) && hovered.canToggleCollapse() && hovered.isMouseOverCollapseToggle(mouseX, mouseY)) {
+            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
+            return;
+        }
         if ((hovered != null) && hovered.canInlineEditName() && hovered.isMouseOverName(mouseX, mouseY)) {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
             return;
@@ -2054,7 +2058,7 @@ public class ManageActionsScreen extends Screen {
             } else if (this.executable instanceof ElseExecutableBlock) {
                 int indicatorX = renderX + 5;
                 int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
-                this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.listing_dot_color_1.getColor());
+                this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.listing_dot_color_2.getColor());
                 int textX = indicatorX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
                 graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
