@@ -521,6 +521,7 @@ public class ManageActionsScreen extends Screen {
         this.appendElseIfButton.render(graphics, mouseX, mouseY, partial);
         this.addIfButton.render(graphics, mouseX, mouseY, partial);
         this.addWhileButton.render(graphics, mouseX, mouseY, partial);
+        this.addFolderButton.render(graphics, mouseX, mouseY, partial);
         this.addActionButton.render(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
@@ -549,26 +550,22 @@ public class ManageActionsScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isInlineNameEditing()) {
-            if (this.inlineNameEditBox != null) {
-                boolean insideNameEditor = UIBase.isXYInArea((int)mouseX, (int)mouseY, this.inlineNameEditBox.getX(), this.inlineNameEditBox.getY(), this.inlineNameEditBox.getWidth(), this.inlineNameEditBox.getHeight());
-                if (insideNameEditor && this.inlineNameEditBox.mouseClicked(mouseX, mouseY, button)) {
-                    return true;
-                }
-                if (!insideNameEditor) {
-                    this.finishInlineNameEditing(true);
-                }
+            boolean insideNameEditor = UIBase.isXYInArea((int) mouseX, (int) mouseY, this.inlineNameEditBox.getX(), this.inlineNameEditBox.getY(), this.inlineNameEditBox.getWidth(), this.inlineNameEditBox.getHeight());
+            if (insideNameEditor && this.inlineNameEditBox.mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            }
+            if (!insideNameEditor) {
+                this.finishInlineNameEditing(true);
             }
         }
 
         if (this.isInlineValueEditing()) {
-            if (this.inlineValueEditBox != null) {
-                boolean insideEditor = UIBase.isXYInArea((int)mouseX, (int)mouseY, this.inlineValueEditBox.getX(), this.inlineValueEditBox.getY(), this.inlineValueEditBox.getWidth(), this.inlineValueEditBox.getHeight());
-                if (insideEditor && this.inlineValueEditBox.mouseClicked(mouseX, mouseY, button)) {
-                    return true;
-                }
-                if (!insideEditor) {
-                    this.finishInlineValueEditing(true);
-                }
+            boolean insideEditor = UIBase.isXYInArea((int) mouseX, (int) mouseY, this.inlineValueEditBox.getX(), this.inlineValueEditBox.getY(), this.inlineValueEditBox.getWidth(), this.inlineValueEditBox.getHeight());
+            if (insideEditor && this.inlineValueEditBox.mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            }
+            if (!insideEditor) {
+                this.finishInlineValueEditing(true);
             }
         }
 
@@ -747,7 +744,8 @@ public class ManageActionsScreen extends Screen {
         this.inlineValueEditBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 10, 10, Component.empty());
         this.inlineValueEditBox.setHeight(10);
         this.inlineValueEditBox.setMaxLength(100000);
-        this.inlineValueEditBox.setValue(instance.value != null ? instance.value : "");
+        String value = instance.value;
+        this.inlineValueEditBox.setValue((value != null) ? value : "");
         this.inlineValueEditBox.setCursorPosition(this.inlineValueEditBox.getValue().length());
         this.inlineValueEditBox.setHighlightPos(0);
         UIBase.applyDefaultWidgetSkinTo(this.inlineValueEditBox);
@@ -769,12 +767,12 @@ public class ManageActionsScreen extends Screen {
         this.inlineValueEntry = null;
         this.inlineValueEditBox = null;
         this.setFocused(null);
-        if ((entry != null) && (entry.executable instanceof ActionInstance instance)) {
+        if (entry.executable instanceof ActionInstance instance) {
             String result = editBox.getValue();
             if (!save) {
                 instance.value = this.inlineValueOriginal;
             } else {
-                String normalized = (result != null && !result.isEmpty()) ? result : null;
+                String normalized = ((result != null) && !result.isEmpty()) ? result : null;
                 if (!Objects.equals(instance.value, normalized)) {
                     instance.value = normalized;
                 }
@@ -788,7 +786,7 @@ public class ManageActionsScreen extends Screen {
     }
 
     private void updateInlineValueEditorBounds() {
-        if (!this.isInlineValueEditing() || this.inlineValueEditBox == null || this.inlineValueEntry == null) {
+        if (!this.isInlineValueEditing()) {
             return;
         }
         ExecutableEntry entry = this.inlineValueEntry;
@@ -838,7 +836,7 @@ public class ManageActionsScreen extends Screen {
         this.inlineNameEntry = null;
         this.inlineNameEditBox = null;
         this.setFocused(null);
-        if ((entry != null) && (entry.executable instanceof FolderExecutableBlock folder)) {
+        if (entry.executable instanceof FolderExecutableBlock folder) {
             String result = editBox.getValue();
             if (!save) {
                 folder.setName(this.inlineNameOriginal != null ? this.inlineNameOriginal : FolderExecutableBlock.DEFAULT_NAME);
@@ -855,7 +853,7 @@ public class ManageActionsScreen extends Screen {
     }
 
     private void updateInlineNameEditorBounds() {
-        if (!this.isInlineNameEditing() || this.inlineNameEditBox == null || this.inlineNameEntry == null) {
+        if (!this.isInlineNameEditing()) {
             return;
         }
         ExecutableEntry entry = this.inlineNameEntry;
@@ -2003,8 +2001,7 @@ public class ManageActionsScreen extends Screen {
             if (barBottom <= barTop) {
                 barBottom = barTop + 1;
             }
-            int barWidth = CHAIN_BAR_WIDTH;
-            graphics.fill(barX, barTop, barX + barWidth, barBottom, color.getRGB());
+            graphics.fill(barX, barTop, barX + CHAIN_BAR_WIDTH, barBottom, color.getRGB());
         }
 
         protected void handleDragging() {
@@ -2245,6 +2242,7 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
 
 
 
