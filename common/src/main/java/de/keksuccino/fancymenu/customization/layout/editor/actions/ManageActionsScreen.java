@@ -1824,6 +1824,16 @@ public class ManageActionsScreen extends Screen {
 
         private MutableComponent displayNameComponent;
         private MutableComponent valueComponent;
+        @Nullable
+        private MutableComponent folderLabelComponent;
+        @Nullable
+        private MutableComponent folderNameComponent;
+        @Nullable
+        private MutableComponent folderCollapsedSuffixComponent;
+        @Nullable
+        private MutableComponent valueLabelComponent;
+        @Nullable
+        private MutableComponent valueOnlyComponent;
         private long lastValueClickTime = 0L;
         private long lastNameClickTime = 0L;
 
@@ -1882,6 +1892,11 @@ public class ManageActionsScreen extends Screen {
 
         private void rebuildComponents() {
             UIColorTheme theme = UIBase.getUIColorTheme();
+            this.folderLabelComponent = null;
+            this.folderNameComponent = null;
+            this.folderCollapsedSuffixComponent = null;
+            this.valueLabelComponent = null;
+            this.valueOnlyComponent = null;
             if (this.executable instanceof ActionInstance i) {
                 this.displayNameComponent = i.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 this.updateValueComponent();
@@ -1925,12 +1940,17 @@ public class ManageActionsScreen extends Screen {
                 this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.while", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof FolderExecutableBlock folder) {
+                MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.editor.actions.blocks.folder.display", "")).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 MutableComponent nameComponent = Component.literal(folder.getName()).setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
-                MutableComponent base = Component.translatable("fancymenu.editor.actions.blocks.folder.display", nameComponent).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.folderLabelComponent = labelComponent;
+                this.folderNameComponent = nameComponent;
+                MutableComponent display = labelComponent.copy().append(nameComponent.copy());
                 if (folder.isCollapsed()) {
-                    base = base.append(Component.literal(" ")).append(Component.translatable("fancymenu.editor.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt())));
+                    MutableComponent collapsedComponent = Component.literal(" ").append(Component.translatable("fancymenu.editor.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt())));
+                    this.folderCollapsedSuffixComponent = collapsedComponent;
+                    display = display.append(collapsedComponent.copy());
                 }
-                this.displayNameComponent = base;
+                this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else {
                 this.displayNameComponent = Component.literal("[UNKNOWN EXECUTABLE]").withStyle(ChatFormatting.RED);
@@ -1977,16 +1997,29 @@ public class ManageActionsScreen extends Screen {
                 int toggleY = centerYLine1 - (FOLDER_TOGGLE_SIZE / 2);
                 this.renderFolderToggle(graphics, toggleX, toggleY, folder.isCollapsed());
                 int textX = toggleX + FOLDER_TOGGLE_SIZE + 3;
+                int textY = centerYLine1 - (this.font.lineHeight / 2);
                 if (ManageActionsScreen.this.inlineNameEntry != this) {
-                    graphics.drawString(this.font, this.displayNameComponent, textX, (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
+                    graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                } else {
+                    if (this.folderLabelComponent != null) {
+                        graphics.drawString(this.font, this.folderLabelComponent, textX, textY, -1, false);
+                    }
+                    if ((ManageActionsScreen.this.inlineNameEditBox != null) && (this.folderCollapsedSuffixComponent != null)) {
+                        int suffixX = ManageActionsScreen.this.inlineNameEditBox.getX() + ManageActionsScreen.this.inlineNameEditBox.getWidth() + 2;
+                        graphics.drawString(this.font, this.folderCollapsedSuffixComponent, suffixX, textY, -1, false);
+                    }
                 }
             } else if (this.executable instanceof ActionInstance) {
                 UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColor());
                 graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
                 UIBase.renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
+                int valueTextX = renderX + 5 + 4 + 3 + 4 + 3;
+                int valueTextY = centerYLine2 - (this.font.lineHeight / 2);
                 if (ManageActionsScreen.this.inlineValueEntry != this) {
-                    graphics.drawString(this.font, this.valueComponent, (renderX + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
+                    graphics.drawString(this.font, this.valueComponent, valueTextX, valueTextY, -1, false);
+                } else if (this.valueLabelComponent != null) {
+                    graphics.drawString(this.font, this.valueLabelComponent, valueTextX, valueTextY, -1, false);
                 }
             } else {
                 UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().warning_text_color.getColor());
@@ -2066,7 +2099,7 @@ public class ManageActionsScreen extends Screen {
             int valueX = this.getValueFieldX();
             int valueY = this.getValueFieldY();
             int height = this.font.lineHeight;
-            int width = Math.max(1, this.font.width(this.valueComponent));
+            int width = (this.valueOnlyComponent != null) ? this.font.width(this.valueOnlyComponent) : 0;
             return UIBase.isXYInArea(mouseX, mouseY, valueX, valueY, Math.max(width, 6), height);
         }
 
@@ -2099,7 +2132,7 @@ public class ManageActionsScreen extends Screen {
             int nameX = this.getNameFieldX();
             int nameY = this.getNameFieldY();
             int height = this.font.lineHeight;
-            int width = Math.max(1, this.font.width(this.displayNameComponent));
+            int width = (this.folderNameComponent != null) ? this.font.width(this.folderNameComponent) : 0;
             return UIBase.isXYInArea(mouseX, mouseY, nameX, nameY, Math.max(width, 6), height);
         }
 
@@ -2123,7 +2156,11 @@ public class ManageActionsScreen extends Screen {
 
         protected int getNameFieldX() {
             int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
-            return baseX + 5 + FOLDER_TOGGLE_SIZE + 3;
+            int nameX = baseX + 5 + FOLDER_TOGGLE_SIZE + 3;
+            if (this.folderLabelComponent != null) {
+                nameX += this.font.width(this.folderLabelComponent);
+            }
+            return nameX;
         }
 
         protected int getNameFieldY() {
@@ -2139,7 +2176,11 @@ public class ManageActionsScreen extends Screen {
 
         protected int getValueFieldX() {
             int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
-            return baseX + 5 + 4 + 3 + 4 + 3;
+            int valueX = baseX + 5 + 4 + 3 + 4 + 3;
+            if (this.valueLabelComponent != null) {
+                valueX += this.font.width(this.valueLabelComponent);
+            }
+            return valueX;
         }
 
         protected int getValueFieldY() {
@@ -2201,12 +2242,18 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected void updateValueComponent() {
+            this.valueLabelComponent = null;
+            this.valueOnlyComponent = null;
             if (this.executable instanceof ActionInstance i) {
+                UIColorTheme theme = UIBase.getUIColorTheme();
                 String cachedValue = i.value;
-                String valueString = ((cachedValue != null) && i.action.hasValue()) ? cachedValue : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
-                MutableComponent label = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                MutableComponent value = Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
-                this.valueComponent = label.append(value);
+                boolean hasValue = i.action.hasValue();
+                String valueString = ((cachedValue != null) && hasValue) ? cachedValue : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
+                MutableComponent label = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent value = Component.literal(valueString).setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
+                this.valueLabelComponent = label;
+                this.valueOnlyComponent = value;
+                this.valueComponent = label.copy().append(value.copy());
             } else {
                 this.valueComponent = Component.empty();
             }
