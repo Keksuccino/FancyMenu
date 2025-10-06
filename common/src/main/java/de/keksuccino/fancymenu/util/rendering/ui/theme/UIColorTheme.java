@@ -53,6 +53,8 @@ public class UIColorTheme {
     public DrawableColor actions_entry_background_color_else_hover = DrawableColor.of(new Color(95, 70, 45));
     public DrawableColor actions_entry_background_color_while = DrawableColor.of(new Color(35, 74, 66));
     public DrawableColor actions_entry_background_color_while_hover = DrawableColor.of(new Color(45, 92, 82));
+    public DrawableColor actions_entry_background_color_folder = DrawableColor.of(new Color(80, 48, 60));
+    public DrawableColor actions_entry_background_color_folder_hover = DrawableColor.of(new Color(97, 62, 77));
     public DrawableColor actions_entry_background_color_generic_block = DrawableColor.of(new Color(58, 59, 62));
     public DrawableColor actions_entry_background_color_generic_block_hover = DrawableColor.of(new Color(71, 72, 76));
     public DrawableColor actions_chain_indicator_color = DrawableColor.of(new Color(88, 112, 150, 180));

@@ -969,6 +969,8 @@ public class ManageActionsScreen extends Screen {
             base = theme.actions_entry_background_color_else.getColor();
         } else if (entry.executable instanceof WhileExecutableBlock) {
             base = theme.actions_entry_background_color_while.getColor();
+        } else if (entry.executable instanceof FolderExecutableBlock) {
+            base = theme.actions_entry_background_color_folder.getColor();
         } else if (entry.executable instanceof AbstractExecutableBlock) {
             base = theme.actions_entry_background_color_generic_block.getColor();
         } else {
@@ -1896,6 +1898,9 @@ public class ManageActionsScreen extends Screen {
             } else if (this.executable instanceof WhileExecutableBlock) {
                 idle = theme.actions_entry_background_color_while.getColor();
                 hover = theme.actions_entry_background_color_while_hover.getColor();
+            } else if (this.executable instanceof FolderExecutableBlock) {
+                idle = theme.actions_entry_background_color_folder.getColor();
+                hover = theme.actions_entry_background_color_folder_hover.getColor();
             } else if (this.executable instanceof AbstractExecutableBlock) {
                 idle = theme.actions_entry_background_color_generic_block.getColor();
                 hover = theme.actions_entry_background_color_generic_block_hover.getColor();
@@ -2314,7 +2319,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         private MutableComponent createCollapsedSuffixComponent(@NotNull UIColorTheme theme) {
-            return Component.literal(" ").append(Component.translatable("fancymenu.editor.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt())));
+            return Component.literal(" ").append(Component.translatable("fancymenu.editor.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.warning_text_color.getColorInt())));
         }
 
         protected void updateValueComponent() {
