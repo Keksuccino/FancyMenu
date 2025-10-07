@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;\r\nimport de.keksuccino.fancymenu.customization.listener.listeners.WorldSessionTracker;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
@@ -17,7 +17,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import java.net.SocketAddress;
+import java.net.SocketAddress;\r\nimport java.nio.file.Path;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.ReceivingLevelScreen;
@@ -27,16 +27,16 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.Connection;
+import net.minecraft.network.Connection;\r\nimport net.minecraft.server.WorldStem;\r\nimport net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.server.packs.resources.SimplePreparableReloadListener;\r\nimport net.minecraft.world.level.storage.LevelResource;\r\nimport net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;\r\nimport org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -75,6 +75,22 @@ public class MixinMinecraft {
     }
 
 
+	@Inject(method = "doWorldLoad(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/packs/repository/PackRepository;Lnet/minecraft/server/WorldStem;Z)V", at = @At("HEAD"))
+	private void before_doWorldLoad_FancyMenu(LevelStorageAccess levelStorage, PackRepository packRepository, WorldStem worldStem, boolean newWorld, CallbackInfo info) {
+		try {
+			if (levelStorage != null && worldStem != null) {
+				Path savePath = levelStorage.getLevelPath(LevelResource.ROOT).toAbsolutePath();
+				String iconPath = levelStorage.getIconFile().map(path -> path.toAbsolutePath().toString()).orElse(null);
+				String worldName = worldStem.worldData().getLevelName();
+				WorldSessionTracker.prepareSession(worldName, savePath.toString(), iconPath, newWorld);
+			} else {
+				WorldSessionTracker.clearSession();
+			}
+		} catch (Exception ex) {
+			LOGGER_FANCYMENU.error("[FANCYMENU] Failed to prepare world session data!", ex);
+			WorldSessionTracker.clearSession();
+		}
+	}
 	@Inject(method = "setOverlay", at = @At("HEAD"))
 	private void beforeSetOverlayFancyMenu(Overlay overlay, CallbackInfo info) {
 		if (!this.lateClientInitDoneFancyMenu) {
@@ -241,10 +257,15 @@ public class MixinMinecraft {
 		this.fireServerLeft_FancyMenu();
 	}
 
+	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;level:Lnet/minecraft/client/multiplayer/ClientLevel;", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.BEFORE))
+	private void beforeLevelClearedWorldLeftFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, CallbackInfo info) {
+		WorldSessionTracker.handleWorldLeft((Minecraft)(Object)this);
+	}
 	@Inject(method = "clearClientLevel", at = @At("HEAD"))
 	private void beforeClearClientLevelFancyMenu(Screen nextScreen, CallbackInfo info) {
-		this.fireServerLeft_FancyMenu();
-	}
+\t\tWorldSessionTracker.captureSnapshot((Minecraft)(Object)this);
+\t\tthis.fireServerLeft_FancyMenu();
+\t\tWorldSessionTracker.handleWorldLeft((Minecraft)(Object)this);
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V", shift = At.Shift.AFTER))
 	private void beforeInitCurrentScreenFancyMenu(Screen screen, CallbackInfo info) {
 		if (screen != null) {
@@ -393,6 +414,17 @@ public class MixinMinecraft {
 	}
 
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

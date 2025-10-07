@@ -49,6 +49,7 @@
     "client.MixinKeyboardHandler",
     "client.MixinLevelLoadingScreen",
     "client.MixinLevelRenderer",
+    "client.MixinLevelLoadStatusManager",
     "client.MixinLevelStorageAccess",
     "client.MixinLivingEntity",
     "client.MixinPlayer",
@@ -86,6 +87,7 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
+
 
 
 

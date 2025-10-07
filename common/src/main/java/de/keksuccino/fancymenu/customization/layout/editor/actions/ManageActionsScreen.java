@@ -376,10 +376,11 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void onAddIf() {
+        ExecutableEntry selectedOnCreate = this.getSelectedEntry();
         ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
             if (container != null) {
                 IfExecutableBlock block = new IfExecutableBlock(container);
-                this.executableBlock.addExecutable(block);
+                this.addExecutableRelativeToSelection(block, selectedOnCreate);
                 this.updateActionInstanceScrollArea(false);
                 this.focusEntryForExecutable(block);
             }
@@ -389,10 +390,11 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void onAddWhile() {
+        ExecutableEntry selectedOnCreate = this.getSelectedEntry();
         ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
             if (container != null) {
                 WhileExecutableBlock block = new WhileExecutableBlock(container);
-                this.executableBlock.addExecutable(block);
+                this.addExecutableRelativeToSelection(block, selectedOnCreate);
                 this.updateActionInstanceScrollArea(false);
                 this.focusEntryForExecutable(block);
             }

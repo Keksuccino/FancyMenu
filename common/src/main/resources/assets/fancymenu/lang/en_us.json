@@ -2078,5 +2078,15 @@
   "fancymenu.editor.actions.blocks.folder.collapsed": "(collapsed)",
   "fancymenu.actions.manage.folder_no_edit": "§xFolders only organize other actions, nothing to edit.",
   "fancymenu.placeholders.nbt_data_get.client": "Get NBT Data (Client-Side)",
-  "fancymenu.placeholders.nbt_data_get.client.desc": "Reads NBT directly from the client's world state.\nSupports entity selectors with type/name/tag/limit/sort/distance/x/y/z/dx/dy/dz options,\nplus absolute or relative block positions, returning value,\nstring, or SNBT formats entirely client-side."
+  "fancymenu.placeholders.nbt_data_get.client.desc": "Reads NBT directly from the client's world state.\nSupports entity selectors with type/name/tag/limit/sort/distance/x/y/z/dx/dy/dz options,\nplus absolute or relative block positions, returning value,\nstring, or SNBT formats entirely client-side.",
+  "fancymenu.listeners.on_world_entered": "World Entered",
+  "fancymenu.listeners.on_world_entered.desc": "Triggers after a singleplayer world finishes loading and the player regains control.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$world_name §r= Display name of the world\n- §z$$world_save_path §r= Absolute path to the world save folder\n- §z$$world_difficulty §r= Current game difficulty key\n- §z$$world_cheats_allowed §r= TRUE when cheats are enabled\n- §z$$world_icon_path §r= Absolute path to the world icon\n- §z$$world_is_first_join §r= TRUE when this is the very first visit after creation",
+  "fancymenu.listeners.on_world_left": "World Left",
+  "fancymenu.listeners.on_world_left.desc": "Runs after a singleplayer world closes and finishes saving.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$world_name §r= Display name of the world\n- §z$$world_save_path §r= Absolute path to the world save folder\n- §z$$world_difficulty §r= Last known game difficulty key\n- §z$$world_cheats_allowed §r= TRUE when cheats were enabled\n- §z$$world_icon_path §r= Absolute path to the world icon"
 }
+
+
+
+
+
+
