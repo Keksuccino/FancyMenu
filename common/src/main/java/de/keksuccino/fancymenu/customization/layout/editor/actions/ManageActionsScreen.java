@@ -2064,6 +2064,22 @@ public class ManageActionsScreen extends Screen {
         }
 
         @Override
+        public boolean isHovered() {
+            if (ManageActionsScreen.this.actionsContextMenu.isUserNavigatingInMenu()) return false;
+            return super.isHovered();
+        }
+
+        @SuppressWarnings({"removal"})
+        @Override
+        public void updateEntry() {
+            super.updateEntry();
+            // Make the entry not look like it is hovered when navigating in the context menu
+            if (!this.isSelected() && ManageActionsScreen.this.actionsContextMenu.isUserNavigatingInMenu()) {
+                this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, 1);
+            }
+        }
+
+        @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.renderInternal(graphics, mouseX, mouseY, partial, true);
         }
