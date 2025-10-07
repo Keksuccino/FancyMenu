@@ -61,7 +61,7 @@ public class Listeners {
     public static final OnStoppedRunningListener ON_STOPPED_RUNNING = new OnStoppedRunningListener();
     public static final OnJumpListener ON_JUMP = new OnJumpListener();
     public static final OnServerJoinedListener ON_SERVER_JOINED = new OnServerJoinedListener();
-    
+    public static final OnServerLeftListener ON_SERVER_LEFT = new OnServerLeftListener();
     public static final OnWorldEnteredListener ON_WORLD_ENTERED = new OnWorldEnteredListener();
     public static final OnWorldLeftListener ON_WORLD_LEFT = new OnWorldLeftListener();
     public static final OnOtherPlayerJoinedWorldListener ON_OTHER_PLAYER_JOINED_WORLD = new OnOtherPlayerJoinedWorldListener();
@@ -131,7 +131,7 @@ public class Listeners {
         ListenerRegistry.register(ON_STOPPED_RUNNING);
         ListenerRegistry.register(ON_JUMP);
         ListenerRegistry.register(ON_SERVER_JOINED);
-        
+        ListenerRegistry.register(ON_SERVER_LEFT);
         ListenerRegistry.register(ON_WORLD_ENTERED);
         ListenerRegistry.register(ON_WORLD_LEFT);
         ListenerRegistry.register(ON_OTHER_PLAYER_JOINED_WORLD);
@@ -147,6 +147,8 @@ public class Listeners {
     }
 
 }
+
+
 
 
 

@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import de.keksuccino.fancymenu.customization.listener.listeners.WorldSessionTracker;
+import de.keksuccino.fancymenu.customization.listener.listeners.helpers.WorldSessionTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.LevelLoadStatusManager;
 import org.spongepowered.asm.mixin.Mixin;

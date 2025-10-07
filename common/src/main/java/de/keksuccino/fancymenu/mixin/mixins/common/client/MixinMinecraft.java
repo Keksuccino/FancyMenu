@@ -6,7 +6,8 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;\r\nimport de.keksuccino.fancymenu.customization.listener.listeners.WorldSessionTracker;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.listener.listeners.helpers.WorldSessionTracker;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
@@ -17,7 +18,8 @@ import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import java.net.SocketAddress;\r\nimport java.nio.file.Path;
+import java.net.SocketAddress;
+import java.nio.file.Path;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.ReceivingLevelScreen;
@@ -27,16 +29,20 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.Connection;\r\nimport net.minecraft.server.WorldStem;\r\nimport net.minecraft.server.packs.repository.PackRepository;
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.Connection;
+import net.minecraft.server.WorldStem;
+import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.SimplePreparableReloadListener;\r\nimport net.minecraft.world.level.storage.LevelResource;\r\nimport net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
+import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.world.level.storage.LevelResource;
+import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;\r\nimport org.objectweb.asm.Opcodes;
+import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -263,9 +269,11 @@ public class MixinMinecraft {
 	}
 	@Inject(method = "clearClientLevel", at = @At("HEAD"))
 	private void beforeClearClientLevelFancyMenu(Screen nextScreen, CallbackInfo info) {
-\t\tWorldSessionTracker.captureSnapshot((Minecraft)(Object)this);
-\t\tthis.fireServerLeft_FancyMenu();
-\t\tWorldSessionTracker.handleWorldLeft((Minecraft)(Object)this);
+		WorldSessionTracker.captureSnapshot((Minecraft) (Object) this);
+		this.fireServerLeft_FancyMenu();
+		WorldSessionTracker.handleWorldLeft((Minecraft) (Object) this);
+	}
+
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V", shift = At.Shift.AFTER))
 	private void beforeInitCurrentScreenFancyMenu(Screen screen, CallbackInfo info) {
 		if (screen != null) {
