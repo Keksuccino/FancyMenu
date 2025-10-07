@@ -564,7 +564,13 @@ public class ManageActionsScreen extends Screen {
             }
         }
 
-        if (button == 1) {
+        boolean actionsMenuInteracting = this.actionsContextMenu.isUserNavigatingInMenu();
+
+        if ((button == 0) && !actionsMenuInteracting) {
+            this.actionsContextMenu.closeMenu();
+        }
+
+        if (!actionsMenuInteracting && (button == 1)) {
             if (this.isInsideActionsScrollArea((int)mouseX, (int)mouseY)) {
                 ExecutableEntry hovered = this.getScrollAreaHoveredEntry();
                 if ((hovered != null) && (hovered != BEFORE_FIRST) && (hovered != AFTER_LAST)) {
@@ -586,7 +592,7 @@ public class ManageActionsScreen extends Screen {
             }
         }
 
-        if (button == 0) {
+        if ((button == 0) && !actionsMenuInteracting) {
             ExecutableEntry hovered = this.getScrollAreaHoveredEntry();
             if (hovered != null) {
                 if (hovered.canToggleCollapse() && hovered.isMouseOverCollapseToggle((int)mouseX, (int)mouseY)) {
@@ -617,7 +623,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
-        if ((button == 0) && !this.isInlineValueEditing()) {
+        if (!actionsMenuInteracting && (button == 0) && !this.isInlineValueEditing()) {
             ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
             if ((hoveredAfter == null) || !hoveredAfter.isMouseOverValue((int)mouseX, (int)mouseY)) {
                 for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
@@ -628,7 +634,7 @@ public class ManageActionsScreen extends Screen {
             }
         }
 
-        if ((button == 0) && !this.isInlineNameEditing()) {
+        if (!actionsMenuInteracting && (button == 0) && !this.isInlineNameEditing()) {
             ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
             if ((hoveredAfter == null) || !hoveredAfter.isMouseOverName((int)mouseX, (int)mouseY)) {
                 for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
@@ -2052,6 +2058,12 @@ public class ManageActionsScreen extends Screen {
         }
 
         @Override
+        public void setSelected(boolean selected) {
+            if (ManageActionsScreen.this.actionsContextMenu.isUserNavigatingInMenu()) return;
+            super.setSelected(selected);
+        }
+
+        @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.renderInternal(graphics, mouseX, mouseY, partial, true);
         }
@@ -2160,6 +2172,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected void handleDragging() {
+            if (ManageActionsScreen.this.actionsContextMenu.isUserNavigatingInMenu()) return;
             if (!MouseInput.isLeftMouseDown()) {
                 if (this.dragging) {
                     ExecutableEntry hover = ManageActionsScreen.this.renderTickDragHoveredEntry;
@@ -2215,6 +2228,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected boolean isMouseOverValue(int mouseX, int mouseY) {
+            if (ManageActionsScreen.this.actionsContextMenu.isUserNavigatingInMenu()) return false;
             if (!this.canInlineEditValue()) {
                 return false;
             }
@@ -2248,6 +2262,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected boolean isMouseOverName(int mouseX, int mouseY) {
+            if (ManageActionsScreen.this.actionsContextMenu.isUserNavigatingInMenu()) return false;
             if (!this.canInlineEditName()) {
                 return false;
             }
@@ -2323,6 +2338,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected boolean isMouseOverCollapseToggle(int mouseX, int mouseY) {
+            if (ManageActionsScreen.this.actionsContextMenu.isUserNavigatingInMenu()) return false;
             if (!this.canToggleCollapse()) {
                 return false;
             }
@@ -2407,6 +2423,7 @@ public class ManageActionsScreen extends Screen {
 
         @Override
         public void onClick(ScrollAreaEntry entry) {
+            if (ManageActionsScreen.this.actionsContextMenu.isUserNavigatingInMenu()) return;
             if (this.parent.getEntries().contains(this)) {
                 this.leftMouseDownDragging = true;
                 this.leftMouseDownDraggingPosX = MouseInput.getMouseX();
