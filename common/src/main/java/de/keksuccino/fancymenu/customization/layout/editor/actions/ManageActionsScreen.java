@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.actions;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
@@ -17,12 +16,12 @@ import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.M
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -32,7 +31,6 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -56,38 +54,27 @@ import java.util.function.Consumer;
 
 public class ManageActionsScreen extends Screen {
 
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected GenericExecutableBlock executableBlock;
     protected Consumer<GenericExecutableBlock> callback;
     protected ScrollArea actionsScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected ExtendedButton addActionButton;
-    protected ExtendedButton moveUpButton;
-    protected ExtendedButton moveDownButton;
-    protected ExtendedButton editButton;
-    protected ExtendedButton removeButton;
+    protected ContextMenu actionsContextMenu;
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
-    protected ExtendedButton addIfButton;
-    protected ExtendedButton appendElseIfButton;
-    protected ExtendedButton appendElseButton;
-    protected ExtendedButton addWhileButton;
-    protected ExtendedButton addFolderButton;
     @Nullable
     protected ExecutableEntry renderTickDragHoveredEntry = null;
     @Nullable
     protected ExecutableEntry renderTickDraggedEntry = null;
     private final ExecutableEntry BEFORE_FIRST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
     private final ExecutableEntry AFTER_LAST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
-    protected int lastWidth = 0;
-    protected int lastHeight = 0;
     protected static final int LEFT_MARGIN = 20;
     protected static final int RIGHT_MARGIN = 20;
-    protected static final int BUTTON_COLUMN_WIDTH = 150;
     protected static final int MINIMAP_WIDTH = 64;
     protected static final int MINIMAP_GAP = 8;
-    protected static final int MINIMAP_TO_BUTTON_GAP = 12;
     protected static final int MINIMAP_PADDING = 4;
+    protected static final int ACTION_BUTTON_GAP = 5;
     protected static final int MINIMAP_INDENT_STEP = 4;
     protected static final int CHAIN_BAR_WIDTH = 3;
     protected static final int CHAIN_BAR_OFFSET = 2;
@@ -146,194 +133,10 @@ public class ManageActionsScreen extends Screen {
     @Override
     protected void init() {
 
-        this.addIfButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.if"), button -> {
-            ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
-                if (container != null) {
-                    IfExecutableBlock block = new IfExecutableBlock(container);
-                    this.executableBlock.addExecutable(block);
-                    this.updateActionInstanceScrollArea(false);
-                    this.focusEntryForExecutable(block);
-                }
-                Minecraft.getInstance().setScreen(this);
-            });
-            Minecraft.getInstance().setScreen(s);
-        });
-        this.addWidget(this.addIfButton);
-        UIBase.applyDefaultWidgetSkinTo(this.addIfButton);
+        this.updateActionsContextMenu();
+        this.addWidget(this.actionsContextMenu);
 
-        this.appendElseIfButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.else_if"), button -> {
-            ExecutableEntry selected = this.getSelectedEntry();
-            if ((selected != null) && ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock))) {
-                ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
-                    if (container != null) {
-                        ElseIfExecutableBlock b = new ElseIfExecutableBlock(container);
-                        b.setAppendedBlock(((AbstractExecutableBlock)selected.executable).getAppendedBlock());
-                        ((AbstractExecutableBlock)selected.executable).setAppendedBlock(b);
-                        this.updateActionInstanceScrollArea(true);
-                        this.focusEntryForExecutable(b);
-                    }
-                    Minecraft.getInstance().setScreen(this);
-                });
-                Minecraft.getInstance().setScreen(s);
-            }
-        }).setIsActiveSupplier(consumes -> {
-            ExecutableEntry selected = this.getSelectedEntry();
-            if (selected == null) return false;
-            return (selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock);
-        });
-        this.addWidget(this.appendElseIfButton);
-        UIBase.applyDefaultWidgetSkinTo(this.appendElseIfButton);
-
-        this.appendElseButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.else"), button -> {
-            ExecutableEntry selected = this.getSelectedEntry();
-            if ((selected != null) && ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock))) {
-                ElseExecutableBlock b = new ElseExecutableBlock();
-                b.setAppendedBlock(((AbstractExecutableBlock)selected.executable).getAppendedBlock());
-                ((AbstractExecutableBlock)selected.executable).setAppendedBlock(b);
-                this.updateActionInstanceScrollArea(true);
-                this.focusEntryForExecutable(b);
-            }
-        }).setIsActiveSupplier(consumes -> {
-            ExecutableEntry selected = this.getSelectedEntry();
-            if (selected == null) return false;
-            return (selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock);
-        });
-        this.addWidget(this.appendElseButton);
-        UIBase.applyDefaultWidgetSkinTo(this.appendElseButton);
-
-        this.addWhileButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.while"), button -> {
-            ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
-                if (container != null) {
-                    WhileExecutableBlock block = new WhileExecutableBlock(container);
-                    this.executableBlock.addExecutable(block);
-                    this.updateActionInstanceScrollArea(false);
-                    this.focusEntryForExecutable(block);
-                }
-                Minecraft.getInstance().setScreen(this);
-            });
-            Minecraft.getInstance().setScreen(s);
-        });
-        this.addWidget(this.addWhileButton);
-        UIBase.applyDefaultWidgetSkinTo(this.addWhileButton);
-
-        this.addFolderButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.folder"), button -> {
-            ExecutableEntry selectedOnCreate = this.getSelectedEntry();
-            FolderExecutableBlock block = new FolderExecutableBlock();
-            this.addExecutableRelativeToSelection(block, selectedOnCreate);
-            this.updateActionInstanceScrollArea(false);
-            this.focusEntryForExecutable(block);
-        });
-        this.addWidget(this.addFolderButton);
-        UIBase.applyDefaultWidgetSkinTo(this.addFolderButton);
-
-        this.addActionButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.add_action"), (button) -> {
-            ExecutableEntry selectedOnCreate = this.getSelectedEntry();
-            BuildActionScreen s = new BuildActionScreen(null, (call) -> {
-                if (call != null) {
-                    this.addExecutableRelativeToSelection(call, selectedOnCreate);
-                    this.updateActionInstanceScrollArea(false);
-                    this.focusEntryForExecutable(call);
-                }
-                Minecraft.getInstance().setScreen(this);
-            });
-            Minecraft.getInstance().setScreen(s);
-        });
-        this.addWidget(this.addActionButton);
-        this.addActionButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.add_action.desc")));
-        UIBase.applyDefaultWidgetSkinTo(this.addActionButton);
-
-        this.moveUpButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_up"), (button) -> {
-            this.moveUp(this.getSelectedEntry());
-        }) {
-            @Override
-            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
-                ManageActionsScreen s = ManageActionsScreen.this;
-                if (!s.isAnyExecutableSelected()) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
-                    this.active = false;
-                } else {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.move_action_up.desc")));
-                    this.active = true;
-                }
-                super.render(graphics, p_93658_, p_93659_, p_93660_);
-            }
-        };
-        this.addWidget(this.moveUpButton);
-        UIBase.applyDefaultWidgetSkinTo(this.moveUpButton);
-
-        this.moveDownButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_down"), (button) -> {
-            this.moveDown(this.getSelectedEntry());
-        }) {
-            @Override
-            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
-                ManageActionsScreen s = ManageActionsScreen.this;
-                if (!s.isAnyExecutableSelected()) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
-                    this.active = false;
-                } else {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.move_action_down.desc")));
-                    this.active = true;
-                }
-                super.render(graphics, p_93658_, p_93659_, p_93660_);
-            }
-        };
-        this.addWidget(this.moveDownButton);
-        UIBase.applyDefaultWidgetSkinTo(this.moveDownButton);
-
-        this.editButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.edit_action"), (button) -> {
-            this.onEdit();
-        }).setIsActiveSupplier(consumes -> {
-            ExecutableEntry selected = this.getSelectedEntry();
-            if ((selected == null) || (selected.executable instanceof ElseExecutableBlock)) {
-                consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
-                return false;
-            }
-            if (selected.executable instanceof FolderExecutableBlock) {
-                consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.folder_no_edit")));
-                return false;
-            }
-            if ((selected.executable instanceof ActionInstance i) && !i.action.hasValue()) {
-                consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.no_value_to_edit")));
-                return false;
-            }
-            consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.edit_action.desc")));
-            return true;
-        });
-        this.addWidget(this.editButton);
-        UIBase.applyDefaultWidgetSkinTo(this.editButton);
-
-        this.removeButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.remove_action"), (button) -> {
-            ExecutableEntry selected = this.getSelectedEntry();
-            if (selected != null) {
-                Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
-                    if (call) {
-                        if (selected.appendParent != null) {
-                            selected.appendParent.setAppendedBlock(null);
-                        }
-                        selected.getParentBlock().getExecutables().remove(selected.executable);
-                        this.updateActionInstanceScrollArea(true);
-                    }
-                    Minecraft.getInstance().setScreen(this);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.remove_action.confirm")));
-            }
-        }) {
-            @Override
-            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
-                ManageActionsScreen s = ManageActionsScreen.this;
-                if (!s.isAnyExecutableSelected()) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
-                    this.active = false;
-                } else {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.remove_action.desc")));
-                    this.active = true;
-                }
-                super.render(graphics, p_93658_, p_93659_, p_93660_);
-            }
-        };
-        this.addWidget(this.removeButton);
-        UIBase.applyDefaultWidgetSkinTo(this.removeButton);
-
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.executableBlock);
         });
         this.addWidget(this.doneButton);
@@ -345,50 +148,137 @@ public class ManageActionsScreen extends Screen {
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
-        this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
-        this.doneButton.setY(this.height - 20 - 20);
-        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
-        this.removeButton.setY(this.cancelButton.getY() - 15 - 20);
-        this.editButton.setX(this.width - 20 - this.editButton.getWidth());
-        this.editButton.setY(this.removeButton.getY() - 5 - 20);
-        this.moveDownButton.setX(this.width - 20 - this.moveDownButton.getWidth());
-        this.moveDownButton.setY(this.editButton.getY() - 5 - 20);
-        this.moveUpButton.setX(this.width - 20 - this.moveUpButton.getWidth());
-        this.moveUpButton.setY(this.moveDownButton.getY() - 5 - 20);
-        this.appendElseButton.setX(this.width - 20 - this.appendElseButton.getWidth());
-        this.appendElseButton.setY(this.moveUpButton.getY() - 15 - 20);
-        this.appendElseIfButton.setX(this.width - 20 - this.appendElseIfButton.getWidth());
-        this.appendElseIfButton.setY(this.appendElseButton.getY() - 5 - 20);
-        this.addIfButton.setX(this.width - 20 - this.addIfButton.getWidth());
-        this.addIfButton.setY(this.appendElseIfButton.getY() - 5 - 20);
-        this.addWhileButton.setX(this.width - 20 - this.addWhileButton.getWidth());
-        this.addWhileButton.setY(this.addIfButton.getY() - 5 - 20);
-        this.addFolderButton.setX(this.width - 20 - this.addFolderButton.getWidth());
-        this.addFolderButton.setY(this.addWhileButton.getY() - 5 - 20);
-        this.addActionButton.setX(this.width - 20 - this.addActionButton.getWidth());
-        this.addActionButton.setY(this.addFolderButton.getY() - 5 - 20);
+    }
 
-        AbstractWidget topRightSideWidget = this.addActionButton;
-        Window window = Minecraft.getInstance().getWindow();
-        boolean resized = (window.getScreenWidth() != this.lastWidth) || (window.getScreenHeight() != this.lastHeight);
-        this.lastWidth = window.getScreenWidth();
-        this.lastHeight = window.getScreenHeight();
+    protected void updateActionsContextMenu() {
 
-        //Adjust GUI scale to make all right-side buttons fit in the screen
-        if ((topRightSideWidget.getY() < 20) && (window.getGuiScale() > 1)) {
-            double newScale = window.getGuiScale();
-            newScale--;
-            if (newScale < 1) newScale = 1;
-            window.setGuiScale(newScale);
-            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
-        } else if ((topRightSideWidget.getY() >= 20) && resized) {
-            RenderingUtils.resetGuiScale();
-            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        if (this.actionsContextMenu != null) {
+            this.actionsContextMenu.closeMenu();
         }
+        this.actionsContextMenu = new ContextMenu();
+
+        this.actionsContextMenu.addClickableEntry("add_action", Component.translatable("fancymenu.editor.action.screens.add_action"), (menu, entry) -> {
+            menu.closeMenu();
+            this.onAddAction();
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.add_action.desc")));
+
+        this.actionsContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.editor.actions.blocks.add.folder"), (menu, entry) -> {
+            menu.closeMenu();
+            this.onAddFolder();
+        });
+
+        this.actionsContextMenu.addClickableEntry("add_if", Component.translatable("fancymenu.editor.actions.blocks.add.if"), (menu, entry) -> {
+            menu.closeMenu();
+            this.onAddIf();
+        });
+
+        this.actionsContextMenu.addClickableEntry("add_while", Component.translatable("fancymenu.editor.actions.blocks.add.while"), (menu, entry) -> {
+            menu.closeMenu();
+            this.onAddWhile();
+        });
+
+        this.actionsContextMenu.addSeparatorEntry("after_add");
+
+        this.actionsContextMenu.addClickableEntry("append_else_if", Component.translatable("fancymenu.editor.actions.blocks.add.else_if"), (menu, entry) -> {
+            menu.closeMenu();
+            this.onAppendElseIf();
+        }).setIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock());
+
+        this.actionsContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.editor.actions.blocks.add.else"), (menu, entry) -> {
+            menu.closeMenu();
+            this.onAppendElse();
+        }).setIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock());
+
+        this.actionsContextMenu.addSeparatorEntry("after_append");
+
+        this.actionsContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.editor.action.screens.move_action_up"), (menu, entry) -> {
+            menu.closeMenu();
+            this.moveUp(this.getSelectedEntry());
+        }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
+                .setTooltipSupplier((menu, entry) -> {
+                    if (!this.isAnyExecutableSelected()) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
+                    }
+                    return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.move_action_up.desc"));
+                });
+
+        this.actionsContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.editor.action.screens.move_action_down"), (menu, entry) -> {
+            menu.closeMenu();
+            this.moveDown(this.getSelectedEntry());
+        }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
+                .setTooltipSupplier((menu, entry) -> {
+                    if (!this.isAnyExecutableSelected()) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
+                    }
+                    return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.move_action_down.desc"));
+                });
+
+        this.actionsContextMenu.addSeparatorEntry("after_reorder");
+
+        this.actionsContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.editor.action.screens.edit_action"), (menu, entry) -> {
+            menu.closeMenu();
+            this.onEdit();
+        }).setIsActiveSupplier((menu, entry) -> this.canEditSelectedEntry())
+                .setTooltipSupplier((menu, entry) -> this.getEditTooltip());
+
+        this.actionsContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.editor.action.screens.remove_action"), (menu, entry) -> {
+            menu.closeMenu();
+            this.onRemove();
+        }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
+                .setTooltipSupplier((menu, entry) -> this.getRemoveTooltip());
 
     }
+
+    protected boolean isInsideActionsScrollArea(int mouseX, int mouseY) {
+        return UIBase.isXYInArea(mouseX, mouseY, this.actionsScrollArea.getXWithBorder(), this.actionsScrollArea.getYWithBorder(), this.actionsScrollArea.getWidthWithBorder(), this.actionsScrollArea.getHeightWithBorder());
+    }
+
+    protected boolean canAppendConditionalBlock() {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if (selected == null) {
+            return false;
+        }
+        return (selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock);
+    }
+
+    protected boolean canEditSelectedEntry() {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if ((selected == null) || (selected.executable instanceof ElseExecutableBlock)) {
+            return false;
+        }
+        if (selected.executable instanceof FolderExecutableBlock) {
+            return false;
+        }
+        if ((selected.executable instanceof ActionInstance i) && !i.action.hasValue()) {
+            return false;
+        }
+        return true;
+    }
+
+    @NotNull
+    protected Tooltip getEditTooltip() {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if ((selected == null) || (selected.executable instanceof ElseExecutableBlock)) {
+            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
+        }
+        if (selected.executable instanceof FolderExecutableBlock) {
+            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.folder_no_edit"));
+        }
+        if ((selected.executable instanceof ActionInstance i) && !i.action.hasValue()) {
+            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.no_value_to_edit"));
+        }
+        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.edit_action.desc"));
+    }
+
+    @NotNull
+    protected Tooltip getRemoveTooltip() {
+        if (!this.isAnyExecutableSelected()) {
+            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
+        }
+        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.remove_action.desc"));
+    }
+
+
 
     protected void onEdit() {
         ExecutableEntry selected = this.getSelectedEntry();
@@ -441,6 +331,105 @@ public class ManageActionsScreen extends Screen {
         }
     }
 
+    protected void onAddAction() {
+        ExecutableEntry selectedOnCreate = this.getSelectedEntry();
+        BuildActionScreen s = new BuildActionScreen(null, (call) -> {
+            if (call != null) {
+                this.addExecutableRelativeToSelection(call, selectedOnCreate);
+                this.updateActionInstanceScrollArea(false);
+                this.focusEntryForExecutable(call);
+            }
+            Minecraft.getInstance().setScreen(this);
+        });
+        Minecraft.getInstance().setScreen(s);
+    }
+
+    protected void onAddFolder() {
+        ExecutableEntry selectedOnCreate = this.getSelectedEntry();
+        FolderExecutableBlock block = new FolderExecutableBlock();
+        this.addExecutableRelativeToSelection(block, selectedOnCreate);
+        this.updateActionInstanceScrollArea(false);
+        this.focusEntryForExecutable(block);
+    }
+
+    protected void onAddIf() {
+        ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
+            if (container != null) {
+                IfExecutableBlock block = new IfExecutableBlock(container);
+                this.executableBlock.addExecutable(block);
+                this.updateActionInstanceScrollArea(false);
+                this.focusEntryForExecutable(block);
+            }
+            Minecraft.getInstance().setScreen(this);
+        });
+        Minecraft.getInstance().setScreen(s);
+    }
+
+    protected void onAddWhile() {
+        ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
+            if (container != null) {
+                WhileExecutableBlock block = new WhileExecutableBlock(container);
+                this.executableBlock.addExecutable(block);
+                this.updateActionInstanceScrollArea(false);
+                this.focusEntryForExecutable(block);
+            }
+            Minecraft.getInstance().setScreen(this);
+        });
+        Minecraft.getInstance().setScreen(s);
+    }
+
+    protected void onAppendElseIf() {
+        if (!this.canAppendConditionalBlock()) {
+            return;
+        }
+        ExecutableEntry selected = this.getSelectedEntry();
+        if ((selected == null) || !(selected.executable instanceof AbstractExecutableBlock block)) {
+            return;
+        }
+        ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
+            if (container != null) {
+                ElseIfExecutableBlock appended = new ElseIfExecutableBlock(container);
+                appended.setAppendedBlock(block.getAppendedBlock());
+                block.setAppendedBlock(appended);
+                this.updateActionInstanceScrollArea(true);
+                this.focusEntryForExecutable(appended);
+            }
+            Minecraft.getInstance().setScreen(this);
+        });
+        Minecraft.getInstance().setScreen(s);
+    }
+
+    protected void onAppendElse() {
+        if (!this.canAppendConditionalBlock()) {
+            return;
+        }
+        ExecutableEntry selected = this.getSelectedEntry();
+        if ((selected == null) || !(selected.executable instanceof AbstractExecutableBlock block)) {
+            return;
+        }
+        ElseExecutableBlock appended = new ElseExecutableBlock();
+        appended.setAppendedBlock(block.getAppendedBlock());
+        block.setAppendedBlock(appended);
+        this.updateActionInstanceScrollArea(true);
+        this.focusEntryForExecutable(appended);
+    }
+
+    protected void onRemove() {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if (selected != null) {
+            Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
+                if (call) {
+                    if (selected.appendParent != null) {
+                        selected.appendParent.setAppendedBlock(null);
+                    }
+                    selected.getParentBlock().getExecutables().remove(selected.executable);
+                    this.updateActionInstanceScrollArea(true);
+                }
+                Minecraft.getInstance().setScreen(this);
+            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.remove_action.confirm")));
+        }
+    }
+
     @Override
     public void onClose() {
         this.finishInlineNameEditing(true);
@@ -473,7 +462,7 @@ public class ManageActionsScreen extends Screen {
         graphics.drawString(this.font, titleComp, 20, 20, theme.generic_text_base_color.getColorInt(), false);
         graphics.drawString(this.font, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, theme.generic_text_base_color.getColorInt(), false);
 
-        int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - BUTTON_COLUMN_WIDTH - MINIMAP_WIDTH - MINIMAP_GAP - MINIMAP_TO_BUTTON_GAP);
+        int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - MINIMAP_WIDTH - MINIMAP_GAP);
         this.actionsScrollArea.setWidth(scrollAreaWidth, true);
         this.actionsScrollArea.setHeight(this.height - 85, true);
         this.actionsScrollArea.setX(LEFT_MARGIN, true);
@@ -482,8 +471,7 @@ public class ManageActionsScreen extends Screen {
         this.actionsScrollArea.updateScrollArea();
         this.actionsScrollArea.updateEntries(null);
 
-        int buttonsLeftX = this.width - RIGHT_MARGIN - BUTTON_COLUMN_WIDTH;
-        this.minimapX = buttonsLeftX - MINIMAP_TO_BUTTON_GAP - MINIMAP_WIDTH;
+        this.minimapX = this.actionsScrollArea.getXWithBorder() + this.actionsScrollArea.getWidthWithBorder() + MINIMAP_GAP;
         this.minimapY = this.actionsScrollArea.getInnerY() - 1;
         this.minimapHeight = this.actionsScrollArea.getInnerHeight() + 2;
 
@@ -495,6 +483,13 @@ public class ManageActionsScreen extends Screen {
         this.hoveredStatementChainEntries = (this.hoveredEntry != null) ? this.collectChainWithSubChains(this.hoveredEntry) : Collections.emptyList();
 
         this.rebuildMinimapSegments(mouseX, mouseY);
+
+        int buttonsRightEdge = this.width - RIGHT_MARGIN;
+        int buttonY = Math.max(20, this.actionsScrollArea.getYWithBorder() - this.doneButton.getHeight() - ACTION_BUTTON_GAP);
+        this.doneButton.setX(buttonsRightEdge - this.doneButton.getWidth());
+        this.doneButton.setY(buttonY);
+        this.cancelButton.setX(Math.max(LEFT_MARGIN, this.doneButton.getX() - ACTION_BUTTON_GAP - this.cancelButton.getWidth()));
+        this.cancelButton.setY(buttonY);
 
         this.actionsScrollArea.render(graphics, mouseX, mouseY, partial);
         this.renderInlineEditors(graphics, mouseX, mouseY, partial);
@@ -518,19 +513,14 @@ public class ManageActionsScreen extends Screen {
 
         this.doneButton.render(graphics, mouseX, mouseY, partial);
         this.cancelButton.render(graphics, mouseX, mouseY, partial);
-        this.removeButton.render(graphics, mouseX, mouseY, partial);
-        this.editButton.render(graphics, mouseX, mouseY, partial);
-        this.moveDownButton.render(graphics, mouseX, mouseY, partial);
-        this.moveUpButton.render(graphics, mouseX, mouseY, partial);
-        this.appendElseButton.render(graphics, mouseX, mouseY, partial);
-        this.appendElseIfButton.render(graphics, mouseX, mouseY, partial);
-        this.addIfButton.render(graphics, mouseX, mouseY, partial);
-        this.addWhileButton.render(graphics, mouseX, mouseY, partial);
-        this.addFolderButton.render(graphics, mouseX, mouseY, partial);
-        this.addActionButton.render(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
+
+        // Needs to render as late as possible
         this.renderMinimapEntryTooltip(graphics, mouseX, mouseY);
+
+        // Needs to render after everything else
+        this.actionsContextMenu.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -571,6 +561,19 @@ public class ManageActionsScreen extends Screen {
             }
             if (!insideEditor) {
                 this.finishInlineValueEditing(true);
+            }
+        }
+
+        if (button == 1) {
+            if (this.isInsideActionsScrollArea((int)mouseX, (int)mouseY)) {
+                ExecutableEntry hovered = this.getScrollAreaHoveredEntry();
+                if ((hovered != null) && (hovered != BEFORE_FIRST) && (hovered != AFTER_LAST)) {
+                    hovered.setSelected(true);
+                }
+                if (this.actionsContextMenu != null) {
+                    this.actionsContextMenu.openMenuAtMouse();
+                }
+                return true;
             }
         }
 
@@ -2432,6 +2435,19 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
