@@ -187,7 +187,7 @@ public class ManageActionsScreen extends Screen {
         this.actionsContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.editor.actions.blocks.add.else"), (menu, entry) -> {
             menu.closeMenu();
             this.onAppendElse();
-        }).setIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock());
+        }).setIsActiveSupplier((menu, entry) -> this.canAppendElseBlock());
 
         this.actionsContextMenu.addSeparatorEntry("after_append");
 
@@ -241,6 +241,31 @@ public class ManageActionsScreen extends Screen {
         return (selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock);
     }
 
+    protected boolean canAppendElseBlock() {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if ((selected == null) || !(selected.executable instanceof AbstractExecutableBlock block)) {
+            return false;
+        }
+        if (!(selected.executable instanceof IfExecutableBlock) && !(selected.executable instanceof ElseIfExecutableBlock)) {
+            return false;
+        }
+        return this.findAppendElseTarget(block) != null;
+    }
+
+    @Nullable
+    protected AbstractExecutableBlock findAppendElseTarget(@NotNull AbstractExecutableBlock block) {
+        AbstractExecutableBlock current = block;
+        AbstractExecutableBlock appended = current.getAppendedBlock();
+        while (appended != null) {
+            if (appended instanceof ElseExecutableBlock) {
+                return null;
+            }
+            current = appended;
+            appended = current.getAppendedBlock();
+        }
+        return current;
+    }
+
     protected boolean canEditSelectedEntry() {
         ExecutableEntry selected = this.getSelectedEntry();
         if ((selected == null) || (selected.executable instanceof ElseExecutableBlock)) {
@@ -277,8 +302,6 @@ public class ManageActionsScreen extends Screen {
         }
         return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.remove_action.desc"));
     }
-
-
 
     protected void onEdit() {
         ExecutableEntry selected = this.getSelectedEntry();
@@ -400,16 +423,19 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void onAppendElse() {
-        if (!this.canAppendConditionalBlock()) {
+        if (!this.canAppendElseBlock()) {
             return;
         }
         ExecutableEntry selected = this.getSelectedEntry();
         if ((selected == null) || !(selected.executable instanceof AbstractExecutableBlock block)) {
             return;
         }
+        AbstractExecutableBlock appendTarget = this.findAppendElseTarget(block);
+        if (appendTarget == null) {
+            return;
+        }
         ElseExecutableBlock appended = new ElseExecutableBlock();
-        appended.setAppendedBlock(block.getAppendedBlock());
-        block.setAppendedBlock(appended);
+        appendTarget.setAppendedBlock(appended);
         this.updateActionInstanceScrollArea(true);
         this.focusEntryForExecutable(appended);
     }
@@ -2473,43 +2499,3 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
