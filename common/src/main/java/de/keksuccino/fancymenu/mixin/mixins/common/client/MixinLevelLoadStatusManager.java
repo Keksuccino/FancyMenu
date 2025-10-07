@@ -11,20 +11,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelLoadStatusManager.class)
-public class MixinLevelLoadStatusManager {
-
-    @Shadow private LevelLoadStatusManager.Status status;
+public abstract class MixinLevelLoadStatusManager {
 
     @Unique private boolean worldEnteredNotified_FancyMenu;
+
+    @Shadow public abstract boolean levelReady();
 
     @Inject(method = "tick", at = @At("RETURN"))
     private void afterTick_FancyMenu(CallbackInfo info) {
         if (this.worldEnteredNotified_FancyMenu) {
             return;
         }
-        if (this.status == LevelLoadStatusManager.Status.LEVEL_READY && WorldSessionTracker.hasPendingEntry()) {
+        if (this.levelReady() && WorldSessionTracker.hasPendingEntry()) {
             this.worldEnteredNotified_FancyMenu = true;
             WorldSessionTracker.handleWorldEntered(Minecraft.getInstance());
         }
     }
+
 }
