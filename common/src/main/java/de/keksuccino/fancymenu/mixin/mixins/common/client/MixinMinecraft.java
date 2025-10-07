@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+﻿package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeScreen;
@@ -72,14 +72,13 @@ public class MixinMinecraft {
 	@Shadow @Nullable public ClientLevel level;
 	@Shadow @Nullable public LocalPlayer player;
 
-    @Inject(method = "stop", at = @At("HEAD"))
-    private void before_stop_FancyMenu(CallbackInfo info) {
-        if (!this.quitListenerFired_FancyMenu) {
-            this.quitListenerFired_FancyMenu = true;
-            Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
-        }
-    }
-
+	@Inject(method = "stop", at = @At("HEAD"))
+	private void before_stop_FancyMenu(CallbackInfo info) {
+		if (!this.quitListenerFired_FancyMenu) {
+			this.quitListenerFired_FancyMenu = true;
+			Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
+		}
+	}
 
 	@Inject(method = "doWorldLoad(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/packs/repository/PackRepository;Lnet/minecraft/server/WorldStem;Z)V", at = @At("HEAD"))
 	private void before_doWorldLoad_FancyMenu(LevelStorageAccess levelStorage, PackRepository packRepository, WorldStem worldStem, boolean newWorld, CallbackInfo info) {
@@ -97,6 +96,7 @@ public class MixinMinecraft {
 			WorldSessionTracker.clearSession();
 		}
 	}
+
 	@Inject(method = "setOverlay", at = @At("HEAD"))
 	private void beforeSetOverlayFancyMenu(Overlay overlay, CallbackInfo info) {
 		if (!this.lateClientInitDoneFancyMenu) {
@@ -172,7 +172,7 @@ public class MixinMinecraft {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new ScreenTickEvent.Post(this.screen));
 	}
-	
+
 	@Inject(at = @At(value = "HEAD"), method = "createTitle", cancellable = true)
 	private void changeWindowTitleFancyMenu(CallbackInfoReturnable<String> info) {
 		String title = WindowHandler.getCustomWindowTitle();
@@ -422,18 +422,3 @@ public class MixinMinecraft {
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -3,7 +3,10 @@ package de.keksuccino.fancymenu.customization.layout.editor.actions;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.layout.editor.actions.BuildActionScreen;
+import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
@@ -12,11 +15,13 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecut
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.LogicExecutorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -157,10 +162,11 @@ public class ManageActionsScreen extends Screen {
         }
         this.actionsContextMenu = new ContextMenu();
 
-        this.actionsContextMenu.addClickableEntry("add_action", Component.translatable("fancymenu.editor.action.screens.add_action"), (menu, entry) -> {
-            menu.closeMenu();
-            this.onAddAction();
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.add_action.desc")));
+        ContextMenu addActionSubMenu = this.buildAddActionSubMenu();
+        boolean hasActionEntries = !addActionSubMenu.getEntries().isEmpty();
+        this.actionsContextMenu.addSubMenuEntry("add_action", Component.translatable("fancymenu.editor.action.screens.add_action"), addActionSubMenu)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.add_action.desc")))
+                .setIsActiveSupplier((menu, entry) -> hasActionEntries);
 
         this.actionsContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.editor.actions.blocks.add.folder"), (menu, entry) -> {
             menu.closeMenu();
@@ -354,19 +360,66 @@ public class ManageActionsScreen extends Screen {
         }
     }
 
-    protected void onAddAction() {
-        ExecutableEntry selectedOnCreate = this.getSelectedEntry();
-        BuildActionScreen s = new BuildActionScreen(null, (call) -> {
-            if (call != null) {
-                this.addExecutableRelativeToSelection(call, selectedOnCreate);
-                this.updateActionInstanceScrollArea(false);
-                this.focusEntryForExecutable(call);
+    @NotNull
+    protected ContextMenu buildAddActionSubMenu() {
+        ContextMenu subMenu = new ContextMenu();
+        LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
+        for (Action action : ActionRegistry.getActions()) {
+            if ((editor != null) && !action.shouldShowUpInEditorActionMenu(editor)) {
+                continue;
             }
-            Minecraft.getInstance().setScreen(this);
-        });
-        Minecraft.getInstance().setScreen(s);
+            ContextMenu.ClickableContextMenuEntry<?> entry = subMenu.addClickableEntry("action_" + action.getIdentifier(), this.buildActionMenuLabel(action), (menu, contextMenuEntry) -> {
+                this.actionsContextMenu.closeMenu();
+                ExecutableEntry selectedOnCreate = this.getSelectedEntry();
+                this.onAddAction(action, selectedOnCreate);
+            });
+            if (action.getActionDescription() != null && action.getActionDescription().length > 0) {
+                entry.setTooltipSupplier((menu, contextMenuEntry) -> this.createActionTooltip(action));
+            }
+        }
+        return subMenu;
     }
 
+    protected void onAddAction(@NotNull Action action, @Nullable ExecutableEntry selectionReference) {
+        ActionInstance instance = new ActionInstance(action, null);
+        if (!action.hasValue()) {
+            this.finalizeActionAddition(instance, selectionReference);
+            return;
+        }
+        action.editValue(LogicExecutorScreen.build(() -> {
+            if (instance.value != null) {
+                this.finalizeActionAddition(instance, selectionReference);
+            }
+            Minecraft.getInstance().setScreen(this);
+        }), instance);
+    }
+
+    protected void finalizeActionAddition(@NotNull ActionInstance instance, @Nullable ExecutableEntry selectionReference) {
+        this.addExecutableRelativeToSelection(instance, selectionReference);
+        this.updateActionInstanceScrollArea(false);
+        this.focusEntryForExecutable(instance);
+    }
+
+    @NotNull
+    protected MutableComponent buildActionMenuLabel(@NotNull Action action) {
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        MutableComponent label = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
+        if (action.isDeprecated()) {
+            label = label.withStyle(Style.EMPTY.withStrikethrough(true));
+            label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
+            label = label.append(Component.translatable("fancymenu.editor.actions.deprecated").setStyle(Style.EMPTY.withColor(theme.error_text_color.getColorInt()).withStrikethrough(false)));
+        }
+        return label;
+    }
+
+    @Nullable
+    protected Tooltip createActionTooltip(@NotNull Action action) {
+        Component[] description = action.getActionDescription();
+        if ((description == null) || (description.length == 0)) {
+            return null;
+        }
+        return Tooltip.of(description);
+    }
     protected void onAddFolder() {
         ExecutableEntry selectedOnCreate = this.getSelectedEntry();
         FolderExecutableBlock block = new FolderExecutableBlock();
@@ -852,7 +905,7 @@ public class ManageActionsScreen extends Screen {
         this.inlineValueEditBox.setHeight(10);
         this.inlineValueEditBox.setMaxLength(100000);
         String value = instance.value;
-        this.inlineValueEditBox.setValue((value != null) ? value : "");
+        this.inlineValueEditBox.setValue((value != null) ? value : ");
         this.inlineValueEditBox.setCursorPosition(this.inlineValueEditBox.getValue().length());
         this.inlineValueEditBox.setHighlightPos(0);
         UIBase.applyDefaultWidgetSkinTo(this.inlineValueEditBox);
@@ -948,7 +1001,7 @@ public class ManageActionsScreen extends Screen {
             if (!save) {
                 folder.setName(this.inlineNameOriginal != null ? this.inlineNameOriginal : FolderExecutableBlock.DEFAULT_NAME);
             } else {
-                String normalized = (result != null) ? result.trim() : "";
+                String normalized = (result != null) ? result.trim() : ";
                 folder.setName(normalized);
             }
             entry.rebuildComponents();
@@ -1941,7 +1994,7 @@ public class ManageActionsScreen extends Screen {
         public double leftMouseDownDraggingPosX = 0;
         public double leftMouseDownDraggingPosY = 0;
         public boolean dragging = false;
-        private String cachedThemeIdentifier = "";
+        private String cachedThemeIdentifier = ";
 
         private MutableComponent displayNameComponent;
         private MutableComponent valueComponent;
@@ -2025,7 +2078,7 @@ public class ManageActionsScreen extends Screen {
                 this.displayNameComponent = i.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 this.updateValueComponent();
             } else if (this.executable instanceof IfExecutableBlock b) {
-                String requirements = "";
+                String requirements = ";
                 for (LoadingRequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
@@ -2041,7 +2094,7 @@ public class ManageActionsScreen extends Screen {
                 this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof ElseIfExecutableBlock b) {
-                String requirements = "";
+                String requirements = ";
                 for (LoadingRequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
@@ -2056,7 +2109,7 @@ public class ManageActionsScreen extends Screen {
                 this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof WhileExecutableBlock b) {
-                String requirements = "";
+                String requirements = ";
                 for (LoadingRequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
@@ -2072,7 +2125,7 @@ public class ManageActionsScreen extends Screen {
                 this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof FolderExecutableBlock folder) {
-                MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.editor.actions.blocks.folder.display", "")).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.editor.actions.blocks.folder.display", ")).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 MutableComponent nameComponent = Component.literal(folder.getName()).setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
                 this.folderLabelComponent = labelComponent;
                 this.folderNameComponent = nameComponent;
@@ -2501,3 +2554,8 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
+
+
+

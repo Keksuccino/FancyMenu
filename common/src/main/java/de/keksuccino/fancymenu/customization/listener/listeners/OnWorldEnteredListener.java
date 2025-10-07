@@ -80,4 +80,3 @@ public class OnWorldEnteredListener extends AbstractListener {
         return Boolean.toString(Boolean.parseBoolean(value));
     }
 }
-
