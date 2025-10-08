@@ -2082,8 +2082,12 @@
   "fancymenu.listeners.on_world_entered": "Singleplayer World Entered",
   "fancymenu.listeners.on_world_entered.desc": "Triggers after a singleplayer world finishes loading and the player regains control.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$world_name §r= Display name of the world\n- §z$$world_save_path §r= Absolute path to the world save folder\n- §z$$world_difficulty §r= Current game difficulty key\n- §z$$world_cheats_allowed §r= TRUE when cheats are enabled\n- §z$$world_icon_path §r= Absolute path to the world icon\n- §z$$world_is_first_join §r= TRUE when this is the very first visit after creation",
   "fancymenu.listeners.on_world_left": "Singleplayer World Left",
-  "fancymenu.listeners.on_world_left.desc": "Triggers after a singleplayer world closes and finishes saving.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$world_name §r= Display name of the world\n- §z$$world_save_path §r= Absolute path to the world save folder\n- §z$$world_difficulty §r= Last known game difficulty key\n- §z$$world_cheats_allowed §r= TRUE when cheats were enabled\n- §z$$world_icon_path §r= Absolute path to the world icon"
+  "fancymenu.listeners.on_world_left.desc": "Triggers after a singleplayer world closes and finishes saving.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$world_name §r= Display name of the world\n- §z$$world_save_path §r= Absolute path to the world save folder\n- §z$$world_difficulty §r= Last known game difficulty key\n- §z$$world_cheats_allowed §r= TRUE when cheats were enabled\n- §z$$world_icon_path §r= Absolute path to the world icon",
+  "fancymenu.editor.actions.open_action_chooser": "Open Action Chooser",
+  "fancymenu.editor.actions.open_action_chooser.desc": "Opens the fully Action Chooser screen with search bar for finding actions more easily."
 }
+
+
 
 
 

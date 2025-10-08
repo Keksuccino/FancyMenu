@@ -34,6 +34,8 @@ dependencies {
     modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
     modImplementation "curse.maven:xaeros-world-map-317780:6538360"
     modImplementation "curse.maven:xaeros-minimap-263420:6515046"
+    //modImplementation "maven.modrinth:drippy-loading-screen:3.0.12-1.21.1-fabric"
+    //modImplementation "maven.modrinth:spiffyhud:3.0.0-1.21.1-fabric"
 
 }
 

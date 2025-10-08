@@ -198,9 +198,9 @@ public class ManageActionsScreen extends Screen {
         this.actionsContextMenu.addSeparatorEntry("after_append");
 
         this.actionsContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.editor.action.screens.move_action_up"), (menu, entry) -> {
-            menu.closeMenu();
-            this.moveUp(this.getSelectedEntry());
-        }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
+                    menu.closeMenu();
+                    this.moveUp(this.getSelectedEntry());
+                }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
                 .setTooltipSupplier((menu, entry) -> {
                     if (!this.isAnyExecutableSelected()) {
                         return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
@@ -209,9 +209,9 @@ public class ManageActionsScreen extends Screen {
                 });
 
         this.actionsContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.editor.action.screens.move_action_down"), (menu, entry) -> {
-            menu.closeMenu();
-            this.moveDown(this.getSelectedEntry());
-        }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
+                    menu.closeMenu();
+                    this.moveDown(this.getSelectedEntry());
+                }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
                 .setTooltipSupplier((menu, entry) -> {
                     if (!this.isAnyExecutableSelected()) {
                         return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
@@ -222,15 +222,15 @@ public class ManageActionsScreen extends Screen {
         this.actionsContextMenu.addSeparatorEntry("after_reorder");
 
         this.actionsContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.editor.action.screens.edit_action"), (menu, entry) -> {
-            menu.closeMenu();
-            this.onEdit();
-        }).setIsActiveSupplier((menu, entry) -> this.canEditSelectedEntry())
+                    menu.closeMenu();
+                    this.onEdit();
+                }).setIsActiveSupplier((menu, entry) -> this.canEditSelectedEntry())
                 .setTooltipSupplier((menu, entry) -> this.getEditTooltip());
 
         this.actionsContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.editor.action.screens.remove_action"), (menu, entry) -> {
-            menu.closeMenu();
-            this.onRemove();
-        }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
+                    menu.closeMenu();
+                    this.onRemove();
+                }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
                 .setTooltipSupplier((menu, entry) -> this.getRemoveTooltip());
 
     }
@@ -364,10 +364,29 @@ public class ManageActionsScreen extends Screen {
     protected ContextMenu buildAddActionSubMenu() {
         ContextMenu subMenu = new ContextMenu();
         LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
+
+        List<Action> availableActions = new ArrayList<>();
         for (Action action : ActionRegistry.getActions()) {
             if ((editor != null) && !action.shouldShowUpInEditorActionMenu(editor)) {
                 continue;
             }
+            availableActions.add(action);
+        }
+
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        MutableComponent openChooserLabel = Component.translatable("fancymenu.editor.actions.open_action_chooser").setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
+        subMenu.addClickableEntry("open_action_chooser", openChooserLabel, (menu, contextMenuEntry) -> {
+                    this.actionsContextMenu.closeMenu();
+                    ExecutableEntry selectedOnCreate = this.getSelectedEntry();
+                    this.onOpenActionChooser(selectedOnCreate);
+                }).setIcon(ContextMenu.IconFactory.getIcon("pick"))
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.actions.open_action_chooser.desc")));
+
+        if (!availableActions.isEmpty()) {
+            subMenu.addSeparatorEntry("after_open_action_chooser");
+        }
+
+        for (Action action : availableActions) {
             ContextMenu.ClickableContextMenuEntry<?> entry = subMenu.addClickableEntry("action_" + action.getIdentifier(), this.buildActionMenuLabel(action), (menu, contextMenuEntry) -> {
                 this.actionsContextMenu.closeMenu();
                 ExecutableEntry selectedOnCreate = this.getSelectedEntry();
@@ -378,6 +397,16 @@ public class ManageActionsScreen extends Screen {
             }
         }
         return subMenu;
+    }
+
+    protected void onOpenActionChooser(@Nullable ExecutableEntry selectionReference) {
+        BuildActionScreen screen = new BuildActionScreen(null, call -> {
+            if (call != null) {
+                this.finalizeActionAddition(call, selectionReference);
+            }
+            Minecraft.getInstance().setScreen(this);
+        });
+        Minecraft.getInstance().setScreen(screen);
     }
 
     protected void onAddAction(@NotNull Action action, @Nullable ExecutableEntry selectionReference) {
@@ -420,6 +449,7 @@ public class ManageActionsScreen extends Screen {
         }
         return Tooltip.of(description);
     }
+
     protected void onAddFolder() {
         ExecutableEntry selectedOnCreate = this.getSelectedEntry();
         FolderExecutableBlock block = new FolderExecutableBlock();
@@ -2557,10 +2587,3 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
-
-
-
-
-
-
-
