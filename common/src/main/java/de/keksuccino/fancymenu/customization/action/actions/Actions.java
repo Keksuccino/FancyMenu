@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.customization.action.actions;
 
+import de.keksuccino.fancymenu.customization.action.actions.animation.DisableElementAnimatorAction;
+import de.keksuccino.fancymenu.customization.action.actions.animation.EnableElementAnimatorAction;
 import de.keksuccino.fancymenu.customization.action.actions.animation.ResetElementAnimatorAction;
+import de.keksuccino.fancymenu.customization.action.actions.animation.ToggleElementAnimatorAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.NextTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.PreviousTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.SetAudioElementVolumeAction;
@@ -58,6 +61,9 @@ public class Actions {
     public static final ToggleVideoElementPauseStateAction TOGGLE_VIDEO_ELEMENT_PAUSE_STATE = new ToggleVideoElementPauseStateAction();
     public static final SetVideoMenuBackgroundVolumeAction SET_VIDEO_MENU_BACKGROUND_VOLUME = new SetVideoMenuBackgroundVolumeAction();
     public static final ToggleVideoMenuBackgroundPauseStateAction TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE = new ToggleVideoMenuBackgroundPauseStateAction();
+    public static final ToggleElementAnimatorAction TOGGLE_ELEMENT_ANIMATOR = new ToggleElementAnimatorAction();
+    public static final EnableElementAnimatorAction ENABLE_ELEMENT_ANIMATOR = new EnableElementAnimatorAction();
+    public static final DisableElementAnimatorAction DISABLE_ELEMENT_ANIMATOR = new DisableElementAnimatorAction();
     public static final ResetElementAnimatorAction RESET_ELEMENT_ANIMATOR = new ResetElementAnimatorAction();
     public static final SendHttpRequestAction SEND_HTTP_REQUEST = new SendHttpRequestAction();
     public static final PrintToLogAction PRINT_TO_LOG = new PrintToLogAction();
@@ -104,6 +110,9 @@ public class Actions {
         ActionRegistry.register(TOGGLE_VIDEO_ELEMENT_PAUSE_STATE);
         ActionRegistry.register(SET_VIDEO_MENU_BACKGROUND_VOLUME);
         ActionRegistry.register(TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE);
+        ActionRegistry.register(TOGGLE_ELEMENT_ANIMATOR);
+        ActionRegistry.register(ENABLE_ELEMENT_ANIMATOR);
+        ActionRegistry.register(DISABLE_ELEMENT_ANIMATOR);
         ActionRegistry.register(RESET_ELEMENT_ANIMATOR);
         ActionRegistry.register(SEND_HTTP_REQUEST);
         ActionRegistry.register(PRINT_TO_LOG);

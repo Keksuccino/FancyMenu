@@ -2087,7 +2087,16 @@
   "fancymenu.editor.actions.open_action_chooser.desc": "Opens the full Action Chooser screen with search bar for finding actions more easily.",
   "fancymenu.actions.animation.reset_element_animator": "Reset Element Animator",
   "fancymenu.actions.animation.reset_element_animator.desc": "Resets the selected Element Animator and restarts its animation playback for all linked targets.",
-  "fancymenu.actions.animation.reset_element_animator.value.desc": "Element Animator Identifier"
+  "fancymenu.actions.animation.reset_element_animator.value.desc": "Element Animator Identifier",
+  "fancymenu.actions.animation.toggle_element_animator": "Toggle Element Animator",
+  "fancymenu.actions.animation.toggle_element_animator.desc": "Toggles whether the Element Animator plays its animation for linked targets. The state persists across sessions.",
+  "fancymenu.actions.animation.toggle_element_animator.value.desc": "Element Animator Identifier",
+  "fancymenu.actions.animation.enable_element_animator": "Enable Element Animator",
+  "fancymenu.actions.animation.enable_element_animator.desc": "Enables the Element Animator and restarts its animation playback for all assigned targets.",
+  "fancymenu.actions.animation.enable_element_animator.value.desc": "Element Animator Identifier",
+  "fancymenu.actions.animation.disable_element_animator": "Disable Element Animator",
+  "fancymenu.actions.animation.disable_element_animator.desc": "Disables the Element Animator and stops its animation for all assigned targets.",
+  "fancymenu.actions.animation.disable_element_animator.value.desc": "Element Animator Identifier"
 }
 
 

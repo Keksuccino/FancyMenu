@@ -49,6 +49,12 @@ public class AnimationControllerElement extends AbstractElement {
 
         } else {
 
+            boolean shouldPlay = AnimationControllerStateController.isPlaying(this.getInstanceIdentifier());
+            if (!shouldPlay) {
+                AnimationControllerHandler.resetController(this);
+                return;
+            }
+
             this.targetElements.forEach(targetElement -> {
                 if (this.shouldRender()) {
                     if (AnimationControllerHandler.wasAnimatedInThePast(targetElement.targetElementId) && AnimationControllerHandler.isFinished(targetElement.targetElementId) && !AnimationControllerHandler.isAnimating(targetElement.targetElementId)) {
