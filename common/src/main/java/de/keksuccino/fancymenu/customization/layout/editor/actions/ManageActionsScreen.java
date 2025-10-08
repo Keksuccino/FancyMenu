@@ -64,7 +64,7 @@ public class ManageActionsScreen extends Screen {
 
     protected GenericExecutableBlock executableBlock;
     protected Consumer<GenericExecutableBlock> callback;
-    protected ScrollArea actionsScrollArea = new ScrollArea(0, 0, 0, 0);
+    protected ScrollArea actionsScrollArea = new ScrollArea(0, 0, 0, 0).setAllowScrollWheelSupplier(() -> !this.isUserNavigatingInActionsContextMenu());
     protected ContextMenu actionsContextMenu;
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
@@ -72,6 +72,7 @@ public class ManageActionsScreen extends Screen {
     protected ExecutableEntry renderTickDragHoveredEntry = null;
     @Nullable
     protected ExecutableEntry renderTickDraggedEntry = null;
+    protected boolean allowContextMenuSelectionOverride = false;
     private final ExecutableEntry BEFORE_FIRST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
     private final ExecutableEntry AFTER_LAST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
     protected static final int LEFT_MARGIN = 20;
@@ -197,9 +198,11 @@ public class ManageActionsScreen extends Screen {
 
         this.actionsContextMenu.addSeparatorEntry("after_append");
 
-        this.actionsContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.editor.action.screens.move_action_up"), (menu, entry) -> {
-                    menu.closeMenu();
-                    this.moveUp(this.getSelectedEntry());
+        this.actionsContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.editor.action.screens.move_action_up"), (menu, contextMenuEntry) -> {
+                    ExecutableEntry selected = this.getSelectedEntry();
+                    if (selected != null) {
+                        this.handleContextMenuMove(selected, true);
+                    }
                 }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
                 .setTooltipSupplier((menu, entry) -> {
                     if (!this.isAnyExecutableSelected()) {
@@ -208,9 +211,11 @@ public class ManageActionsScreen extends Screen {
                     return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.move_action_up.desc"));
                 });
 
-        this.actionsContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.editor.action.screens.move_action_down"), (menu, entry) -> {
-                    menu.closeMenu();
-                    this.moveDown(this.getSelectedEntry());
+        this.actionsContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.editor.action.screens.move_action_down"), (menu, contextMenuEntry) -> {
+                    ExecutableEntry selected = this.getSelectedEntry();
+                    if (selected != null) {
+                        this.handleContextMenuMove(selected, false);
+                    }
                 }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
                 .setTooltipSupplier((menu, entry) -> {
                     if (!this.isAnyExecutableSelected()) {
@@ -637,7 +642,7 @@ public class ManageActionsScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if ((this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight)) {
+        if ((this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight) && !this.isUserNavigatingInActionsContextMenu()) {
             if (scrollY != 0.0D) {
                 float scrollStep = 0.1F * this.actionsScrollArea.verticalScrollBar.getWheelScrollSpeed();
                 float totalOffset = scrollStep * (float)Math.abs(scrollY);
@@ -1909,6 +1914,55 @@ public class ManageActionsScreen extends Screen {
         }
     }
 
+
+    protected void handleContextMenuMove(@NotNull ExecutableEntry entry, boolean moveUp) {
+        this.actionsScrollArea.updateEntries(null);
+        int previousEntryY = entry.getY();
+        Executable executable = entry.executable;
+        if (moveUp) {
+            this.moveUp(entry);
+        } else {
+            this.moveDown(entry);
+        }
+        ExecutableEntry newEntry = this.findEntryForExecutable(executable);
+        if (newEntry != null) {
+            this.adjustScrollToKeepEntryInPlace(previousEntryY, newEntry);
+            this.forceSelectEntryWhileMenuOpen(newEntry);
+        }
+    }
+
+    protected void adjustScrollToKeepEntryInPlace(int previousEntryY, @NotNull ExecutableEntry entry) {
+        this.actionsScrollArea.updateEntries(null);
+        if (previousEntryY == Integer.MIN_VALUE) {
+            return;
+        }
+        int newEntryY = entry.getY();
+        int delta = newEntryY - previousEntryY;
+        if (delta == 0) {
+            return;
+        }
+        float totalScrollHeight = (float) this.actionsScrollArea.getTotalScrollHeight();
+        if (totalScrollHeight <= 0.0F) {
+            return;
+        }
+        float currentScroll = this.actionsScrollArea.verticalScrollBar.getScroll();
+        float adjustedScroll = Mth.clamp(currentScroll + ((float) delta / totalScrollHeight), 0.0F, 1.0F);
+        if (adjustedScroll != currentScroll) {
+            this.actionsScrollArea.verticalScrollBar.setScroll(adjustedScroll);
+            this.actionsScrollArea.updateEntries(null);
+        }
+    }
+
+    protected void forceSelectEntryWhileMenuOpen(@NotNull ExecutableEntry entry) {
+        boolean previousOverride = this.allowContextMenuSelectionOverride;
+        this.allowContextMenuSelectionOverride = true;
+        try {
+            entry.setSelected(true);
+        } finally {
+            this.allowContextMenuSelectionOverride = previousOverride;
+        }
+        this.selectedEntry = entry;
+    }
     protected void updateActionInstanceScrollArea(boolean keepScroll) {
         this.finishInlineNameEditing(true);
         this.finishInlineValueEditing(true);
@@ -2178,7 +2232,7 @@ public class ManageActionsScreen extends Screen {
 
         @Override
         public void setSelected(boolean selected) {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return;
+            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu() && !ManageActionsScreen.this.allowContextMenuSelectionOverride) return;
             super.setSelected(selected);
         }
 
@@ -2307,7 +2361,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected void handleDragging() {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return;
+            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu() && !ManageActionsScreen.this.allowContextMenuSelectionOverride) return;
             if (!MouseInput.isLeftMouseDown()) {
                 if (this.dragging) {
                     ExecutableEntry hover = ManageActionsScreen.this.renderTickDragHoveredEntry;
@@ -2558,7 +2612,7 @@ public class ManageActionsScreen extends Screen {
 
         @Override
         public void onClick(ScrollAreaEntry entry) {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return;
+            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu() && !ManageActionsScreen.this.allowContextMenuSelectionOverride) return;
             if (this.parent.getEntries().contains(this)) {
                 this.leftMouseDownDragging = true;
                 this.leftMouseDownDraggingPosX = MouseInput.getMouseX();
@@ -2587,3 +2641,8 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
+
+
+
