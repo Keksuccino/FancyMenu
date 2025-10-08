@@ -905,7 +905,7 @@ public class ManageActionsScreen extends Screen {
         this.inlineValueEditBox.setHeight(10);
         this.inlineValueEditBox.setMaxLength(100000);
         String value = instance.value;
-        this.inlineValueEditBox.setValue((value != null) ? value : ");
+        this.inlineValueEditBox.setValue((value != null) ? value : "");
         this.inlineValueEditBox.setCursorPosition(this.inlineValueEditBox.getValue().length());
         this.inlineValueEditBox.setHighlightPos(0);
         UIBase.applyDefaultWidgetSkinTo(this.inlineValueEditBox);
@@ -1001,7 +1001,10 @@ public class ManageActionsScreen extends Screen {
             if (!save) {
                 folder.setName(this.inlineNameOriginal != null ? this.inlineNameOriginal : FolderExecutableBlock.DEFAULT_NAME);
             } else {
-                String normalized = (result != null) ? result.trim() : ";
+                String normalized = (result != null) ? result.trim() : "";
+                if (normalized.isEmpty()) {
+                    normalized = FolderExecutableBlock.DEFAULT_NAME;
+                }
                 folder.setName(normalized);
             }
             entry.rebuildComponents();
@@ -1994,7 +1997,7 @@ public class ManageActionsScreen extends Screen {
         public double leftMouseDownDraggingPosX = 0;
         public double leftMouseDownDraggingPosY = 0;
         public boolean dragging = false;
-        private String cachedThemeIdentifier = ";
+        private String cachedThemeIdentifier = "";
 
         private MutableComponent displayNameComponent;
         private MutableComponent valueComponent;
@@ -2078,7 +2081,7 @@ public class ManageActionsScreen extends Screen {
                 this.displayNameComponent = i.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 this.updateValueComponent();
             } else if (this.executable instanceof IfExecutableBlock b) {
-                String requirements = ";
+                String requirements = "";
                 for (LoadingRequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
@@ -2094,7 +2097,7 @@ public class ManageActionsScreen extends Screen {
                 this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof ElseIfExecutableBlock b) {
-                String requirements = ";
+                String requirements = "";
                 for (LoadingRequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
@@ -2109,7 +2112,7 @@ public class ManageActionsScreen extends Screen {
                 this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof WhileExecutableBlock b) {
-                String requirements = ";
+                String requirements = "";
                 for (LoadingRequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
@@ -2125,7 +2128,7 @@ public class ManageActionsScreen extends Screen {
                 this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof FolderExecutableBlock folder) {
-                MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.editor.actions.blocks.folder.display", ")).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.editor.actions.blocks.folder.display", "")).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 MutableComponent nameComponent = Component.literal(folder.getName()).setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
                 this.folderLabelComponent = labelComponent;
                 this.folderNameComponent = nameComponent;
@@ -2554,6 +2557,8 @@ public class ManageActionsScreen extends Screen {
     }
 
 }
+
+
 
 
 

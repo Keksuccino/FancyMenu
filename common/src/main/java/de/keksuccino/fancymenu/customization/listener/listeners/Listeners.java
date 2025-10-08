@@ -1,4 +1,4 @@
-﻿package de.keksuccino.fancymenu.customization.listener.listeners;
+package de.keksuccino.fancymenu.customization.listener.listeners;
 
 import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
 

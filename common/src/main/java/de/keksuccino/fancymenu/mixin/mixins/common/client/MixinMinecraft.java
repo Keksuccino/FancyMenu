@@ -1,4 +1,4 @@
-﻿package de.keksuccino.fancymenu.mixin.mixins.common.client;
+package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeScreen;
