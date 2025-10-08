@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.actions;
 
+import de.keksuccino.fancymenu.customization.action.actions.animation.ResetElementAnimatorAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.NextTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.PreviousTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.SetAudioElementVolumeAction;
@@ -57,6 +58,7 @@ public class Actions {
     public static final ToggleVideoElementPauseStateAction TOGGLE_VIDEO_ELEMENT_PAUSE_STATE = new ToggleVideoElementPauseStateAction();
     public static final SetVideoMenuBackgroundVolumeAction SET_VIDEO_MENU_BACKGROUND_VOLUME = new SetVideoMenuBackgroundVolumeAction();
     public static final ToggleVideoMenuBackgroundPauseStateAction TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE = new ToggleVideoMenuBackgroundPauseStateAction();
+    public static final ResetElementAnimatorAction RESET_ELEMENT_ANIMATOR = new ResetElementAnimatorAction();
     public static final SendHttpRequestAction SEND_HTTP_REQUEST = new SendHttpRequestAction();
     public static final PrintToLogAction PRINT_TO_LOG = new PrintToLogAction();
     public static final DisplayInChatClientSideAction DISPLAY_IN_CHAT_CLIENT_SIDE = new DisplayInChatClientSideAction();
@@ -102,6 +104,7 @@ public class Actions {
         ActionRegistry.register(TOGGLE_VIDEO_ELEMENT_PAUSE_STATE);
         ActionRegistry.register(SET_VIDEO_MENU_BACKGROUND_VOLUME);
         ActionRegistry.register(TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE);
+        ActionRegistry.register(RESET_ELEMENT_ANIMATOR);
         ActionRegistry.register(SEND_HTTP_REQUEST);
         ActionRegistry.register(PRINT_TO_LOG);
         ActionRegistry.register(DISPLAY_IN_CHAT_CLIENT_SIDE);

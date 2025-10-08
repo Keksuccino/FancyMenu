@@ -2084,7 +2084,10 @@
   "fancymenu.listeners.on_world_left": "Singleplayer World Left",
   "fancymenu.listeners.on_world_left.desc": "Triggers after a singleplayer world closes and finishes saving.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$world_name §r= Display name of the world\n- §z$$world_save_path §r= Absolute path to the world save folder\n- §z$$world_difficulty §r= Last known game difficulty key\n- §z$$world_cheats_allowed §r= TRUE when cheats were enabled\n- §z$$world_icon_path §r= Absolute path to the world icon",
   "fancymenu.editor.actions.open_action_chooser": "Open Action Chooser",
-  "fancymenu.editor.actions.open_action_chooser.desc": "Opens the full Action Chooser screen with search bar for finding actions more easily."
+  "fancymenu.editor.actions.open_action_chooser.desc": "Opens the full Action Chooser screen with search bar for finding actions more easily.",
+  "fancymenu.actions.animation.reset_element_animator": "Reset Element Animator",
+  "fancymenu.actions.animation.reset_element_animator.desc": "Resets the selected Element Animator and restarts its animation playback for all linked targets.",
+  "fancymenu.actions.animation.reset_element_animator.value.desc": "Element Animator Identifier"
 }
 
 

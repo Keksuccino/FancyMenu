@@ -15,49 +15,37 @@ import java.nio.file.Path;
 public final class WorldSessionTracker {
 
     private static @Nullable SessionData activeSession;
-    private static boolean pendingWorldEntry;
+    private static @Nullable SessionData pendingSession;
 
     private WorldSessionTracker() {}
 
     public static void prepareSession(@NotNull String worldName, @NotNull String worldSavePath, @Nullable String iconPath, boolean isFirstJoin) {
         String resolvedIconPath = resolveIconPath(worldSavePath, iconPath);
-        activeSession = new SessionData(worldName, worldSavePath, resolvedIconPath, isFirstJoin);
-        pendingWorldEntry = true;
+        pendingSession = new SessionData(worldName, worldSavePath, resolvedIconPath, isFirstJoin);
     }
 
     public static void clearSession() {
         activeSession = null;
-        pendingWorldEntry = false;
+        pendingSession = null;
     }
 
     public static boolean hasPendingEntry() {
-        return pendingWorldEntry && activeSession != null;
+        return pendingSession != null;
     }
 
     public static void captureSnapshot(@NotNull Minecraft minecraft) {
-        if (activeSession == null) {
-            return;
-        }
-
-        ClientLevel level = minecraft.level;
-        if (level != null) {
-            activeSession.lastDifficultyKey = level.getDifficulty().getKey();
-        }
-
-        IntegratedServer server = minecraft.getSingleplayerServer();
-        if (server != null) {
-            activeSession.lastCheatsAllowed = Boolean.toString(server.getWorldData().isAllowCommands());
-        }
+        captureSnapshotFor(minecraft, activeSession);
     }
 
     public static void handleWorldEntered(@NotNull Minecraft minecraft) {
-        if (!pendingWorldEntry || activeSession == null) {
+        if (pendingSession == null) {
             return;
         }
 
-        captureSnapshot(minecraft);
-        SessionData session = activeSession.copy();
-        pendingWorldEntry = false;
+        captureSnapshotFor(minecraft, pendingSession);
+        SessionData session = pendingSession.copy();
+        activeSession = pendingSession;
+        pendingSession = null;
         Listeners.ON_WORLD_ENTERED.onWorldEntered(
                 session.worldName,
                 session.worldSavePath,
@@ -75,7 +63,7 @@ public final class WorldSessionTracker {
 
         captureSnapshot(minecraft);
         SessionData session = activeSession.copy();
-        clearSession();
+        activeSession = null;
         Listeners.ON_WORLD_LEFT.onWorldLeft(
                 session.worldName,
                 session.worldSavePath,
@@ -83,6 +71,22 @@ public final class WorldSessionTracker {
                 session.lastCheatsAllowed,
                 session.iconPath
         );
+    }
+
+    private static void captureSnapshotFor(@NotNull Minecraft minecraft, @Nullable SessionData session) {
+        if (session == null) {
+            return;
+        }
+
+        ClientLevel level = minecraft.level;
+        if (level != null) {
+            session.lastDifficultyKey = level.getDifficulty().getKey();
+        }
+
+        IntegratedServer server = minecraft.getSingleplayerServer();
+        if (server != null) {
+            session.lastCheatsAllowed = Boolean.toString(server.getWorldData().isAllowCommands());
+        }
     }
 
     private static @NotNull String resolveIconPath(@NotNull String worldSavePath, @Nullable String iconPath) {
