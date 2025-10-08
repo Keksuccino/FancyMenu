@@ -13,6 +13,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
   - Double-clicking the value of an action lets you edit the value without going into the full value editing screen
   - Added folders that can hold actions and statement chains for easier organizing scripts (folders can be collapsed and renamed) (#1309)
   - IF statement chains (with appended ELSE/ELSE-IF statements) and WHILE loops can now be collapsed
+  - The sidebar with buttons for adding actions, etc. got replaced with a right-click context menu that opens when you right-click the script body (or an entry in there)
 - Added rotation support for many element types, which means you can now freely rotate them (#1258)
   - In basic mode you can use the rotation grabber to easily rotate the element or you can set the rotation manually in the element's right-click menu
   - In advanced mode, the rotation value supports placeholders, which gives you maximum control over the element's rotation, but in this mode the rotation grabber is disabled
