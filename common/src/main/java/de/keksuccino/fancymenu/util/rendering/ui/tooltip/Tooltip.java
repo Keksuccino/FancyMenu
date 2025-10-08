@@ -1,10 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.ComponentUtils;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
@@ -13,19 +14,19 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * A tooltip that gets rendered at the mouse position by default.<br>
@@ -279,7 +280,19 @@ public class Tooltip implements Renderable {
     }
 
     public Tooltip setTooltipText(List<Component> lines) {
-        this.textLines = (lines != null) ? lines : new ArrayList<>();
+        MutableComponent merged = Component.empty();
+        if (lines != null) {
+            boolean b = true;
+            for (Component c : lines) {
+                if (!b) merged.append("\n");
+                merged.append(c);
+                b = false;
+            }
+        }
+        this.textLines = new ArrayList<>();
+        for (FormattedText s : Minecraft.getInstance().font.getSplitter().splitLines(merged, 300, Style.EMPTY)) {
+            this.textLines.add(TextFormattingUtils.formattedTextToComponent(s));
+        }
         this.updateSize();
         return this;
     }

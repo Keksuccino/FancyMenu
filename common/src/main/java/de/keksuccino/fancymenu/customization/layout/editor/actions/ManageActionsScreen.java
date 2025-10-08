@@ -546,6 +546,10 @@ public class ManageActionsScreen extends Screen {
         }
     }
 
+    public boolean isMinimapHovered(int mouseX, int mouseY) {
+        return (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight);
+    }
+
     @Override
     public void onClose() {
         this.finishInlineNameEditing(true);
@@ -642,7 +646,7 @@ public class ManageActionsScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if ((this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight) && !this.isUserNavigatingInActionsContextMenu()) {
+        if (this.isMinimapHovered((int)mouseX, (int)mouseY) && !this.isUserNavigatingInActionsContextMenu()) {
             if (scrollY != 0.0D) {
                 float scrollStep = 0.1F * this.actionsScrollArea.verticalScrollBar.getWheelScrollSpeed();
                 float totalOffset = scrollStep * (float)Math.abs(scrollY);
@@ -660,6 +664,15 @@ public class ManageActionsScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+
+        // De-select the selected entry when clicking somewhere else
+        if ((this.hoveredEntry == null) && !this.isMinimapHovered((int)mouseX, (int)mouseY)) {
+            if (this.selectedEntry != null) {
+                this.selectedEntry.forceSetSelected(false);
+            }
+            this.selectedEntry = null;
+        }
+
         if (this.isInlineNameEditing()) {
             boolean insideNameEditor = UIBase.isXYInArea((int) mouseX, (int) mouseY, this.inlineNameEditBox.getX(), this.inlineNameEditBox.getY(), this.inlineNameEditBox.getWidth(), this.inlineNameEditBox.getHeight());
             if (insideNameEditor && this.inlineNameEditBox.mouseClicked(mouseX, mouseY, button)) {
@@ -1082,7 +1095,7 @@ public class ManageActionsScreen extends Screen {
         int mouseY = MouseInput.getMouseY();
         for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
             if (entry instanceof ExecutableEntry ee) {
-                if (UIBase.isXYInArea(mouseX, mouseY, ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight())) {
+                if (UIBase.isXYInArea(mouseX, mouseY, ee.getX(), ee.getY(), this.actionsScrollArea.getInnerWidth(), ee.getHeight())) {
                     return ee;
                 }
             }
@@ -2233,6 +2246,10 @@ public class ManageActionsScreen extends Screen {
         @Override
         public void setSelected(boolean selected) {
             if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu() && !ManageActionsScreen.this.allowContextMenuSelectionOverride) return;
+            super.setSelected(selected);
+        }
+
+        public void forceSetSelected(boolean selected) {
             super.setSelected(selected);
         }
 
