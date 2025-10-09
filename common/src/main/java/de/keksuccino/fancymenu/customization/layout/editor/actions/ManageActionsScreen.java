@@ -74,6 +74,9 @@ public class ManageActionsScreen extends Screen {
     protected boolean allowContextMenuSelectionOverride = false;
     private final ExecutableEntry BEFORE_FIRST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
     private final ExecutableEntry AFTER_LAST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
+    @Nullable
+    protected Executable pendingSelectionExecutable = null;
+    protected boolean pendingSelectionKeepViewAnchor = false;
     protected static final int LEFT_MARGIN = 20;
     protected static final int RIGHT_MARGIN = 20;
     protected static final int MINIMAP_WIDTH = 64;
@@ -415,13 +418,40 @@ public class ManageActionsScreen extends Screen {
 
     protected void onAddAction(@NotNull Action action, @Nullable ExecutableEntry selectionReference) {
         ActionInstance instance = new ActionInstance(action, action.hasValue() ? action.getValueExample() : null);
-        this.finalizeActionAddition(instance, selectionReference);
+        this.finalizeActionAddition(instance, selectionReference, true);
     }
 
     protected void finalizeActionAddition(@NotNull ActionInstance instance, @Nullable ExecutableEntry selectionReference) {
-        this.addExecutableRelativeToSelection(instance, selectionReference);
+        this.finalizeActionAddition(instance, selectionReference, false);
+    }
+
+    protected void finalizeActionAddition(@NotNull ActionInstance instance, @Nullable ExecutableEntry selectionReference, boolean preserveViewAnchor) {
+        this.finalizeExecutableAddition(instance, selectionReference, preserveViewAnchor);
+    }
+
+    protected void finalizeExecutableAddition(@NotNull Executable executable, @Nullable ExecutableEntry selectionReference, boolean preserveViewAnchor) {
+        Executable previousExecutable = null;
+        int previousEntryY = Integer.MIN_VALUE;
+        if (preserveViewAnchor) {
+            ExecutableEntry previouslySelected = this.getSelectedEntry();
+            if (previouslySelected != null) {
+                previousExecutable = previouslySelected.executable;
+                previousEntryY = previouslySelected.getY();
+            }
+        }
+
+        this.addExecutableRelativeToSelection(executable, selectionReference);
         this.updateActionInstanceScrollArea(false);
-        this.focusEntryForExecutable(instance);
+
+        boolean anchorActive = preserveViewAnchor && (previousExecutable != null) && (previousEntryY != Integer.MIN_VALUE);
+        if (anchorActive) {
+            ExecutableEntry previousEntry = this.findEntryForExecutable(previousExecutable);
+            if (previousEntry != null) {
+                this.adjustScrollToKeepEntryInPlace(previousEntryY, previousEntry);
+            }
+        }
+
+        this.focusEntryForExecutable(executable, anchorActive);
     }
 
     @NotNull
@@ -448,9 +478,7 @@ public class ManageActionsScreen extends Screen {
     protected void onAddFolder() {
         ExecutableEntry selectedOnCreate = this.getSelectedEntry();
         FolderExecutableBlock block = new FolderExecutableBlock();
-        this.addExecutableRelativeToSelection(block, selectedOnCreate);
-        this.updateActionInstanceScrollArea(false);
-        this.focusEntryForExecutable(block);
+        this.finalizeExecutableAddition(block, selectedOnCreate, true);
     }
 
     protected void onAddIf() {
@@ -458,9 +486,7 @@ public class ManageActionsScreen extends Screen {
         ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
             if (container != null) {
                 IfExecutableBlock block = new IfExecutableBlock(container);
-                this.addExecutableRelativeToSelection(block, selectedOnCreate);
-                this.updateActionInstanceScrollArea(false);
-                this.focusEntryForExecutable(block);
+                this.finalizeExecutableAddition(block, selectedOnCreate, true);
             }
             Minecraft.getInstance().setScreen(this);
         });
@@ -472,9 +498,7 @@ public class ManageActionsScreen extends Screen {
         ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
             if (container != null) {
                 WhileExecutableBlock block = new WhileExecutableBlock(container);
-                this.addExecutableRelativeToSelection(block, selectedOnCreate);
-                this.updateActionInstanceScrollArea(false);
-                this.focusEntryForExecutable(block);
+                this.finalizeExecutableAddition(block, selectedOnCreate, true);
             }
             Minecraft.getInstance().setScreen(this);
         });
@@ -495,7 +519,7 @@ public class ManageActionsScreen extends Screen {
                 appended.setAppendedBlock(block.getAppendedBlock());
                 block.setAppendedBlock(appended);
                 this.updateActionInstanceScrollArea(true);
-                this.focusEntryForExecutable(appended);
+                this.focusEntryForExecutable(appended, true);
             }
             Minecraft.getInstance().setScreen(this);
         });
@@ -517,7 +541,7 @@ public class ManageActionsScreen extends Screen {
         ElseExecutableBlock appended = new ElseExecutableBlock();
         appendTarget.setAppendedBlock(appended);
         this.updateActionInstanceScrollArea(true);
-        this.focusEntryForExecutable(appended);
+        this.focusEntryForExecutable(appended, true);
     }
 
     protected void onRemove() {
@@ -580,6 +604,7 @@ public class ManageActionsScreen extends Screen {
 
         this.actionsScrollArea.updateScrollArea();
         this.actionsScrollArea.updateEntries(null);
+        this.processPendingSelection();
 
         this.minimapX = this.actionsScrollArea.getXWithBorder() + this.actionsScrollArea.getWidthWithBorder() + MINIMAP_GAP;
         this.minimapY = this.actionsScrollArea.getInnerY() - 1;
@@ -1659,10 +1684,30 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void focusEntryForExecutable(@NotNull Executable executable) {
+        this.focusEntryForExecutable(executable, false, false);
+    }
+
+    protected void focusEntryForExecutable(@NotNull Executable executable, boolean keepViewAnchor) {
+        this.focusEntryForExecutable(executable, keepViewAnchor, false);
+    }
+
+    protected void focusEntryForExecutable(@NotNull Executable executable, boolean keepViewAnchor, boolean allowSelectionWhileMenuOpen) {
         ExecutableEntry entry = this.findEntryForExecutable(executable);
         if (entry != null) {
-            entry.setSelected(true);
-            this.scrollEntryIntoView(entry);
+            if (allowSelectionWhileMenuOpen) {
+                this.forceSelectEntryWhileMenuOpen(entry);
+                if (!keepViewAnchor) {
+                    this.scrollEntryIntoView(entry);
+                }
+            } else if (!this.isUserNavigatingInActionsContextMenu()) {
+                entry.setSelected(true);
+                if (!keepViewAnchor) {
+                    this.scrollEntryIntoView(entry);
+                }
+            } else {
+                this.pendingSelectionExecutable = executable;
+                this.pendingSelectionKeepViewAnchor = keepViewAnchor;
+            }
         }
     }
 
@@ -1931,6 +1976,22 @@ public class ManageActionsScreen extends Screen {
         if (newEntry != null) {
             this.adjustScrollToKeepEntryInPlace(previousEntryY, newEntry);
             this.forceSelectEntryWhileMenuOpen(newEntry);
+        }
+    }
+
+    protected void processPendingSelection() {
+        if ((this.pendingSelectionExecutable != null) && !this.isUserNavigatingInActionsContextMenu()) {
+            Executable pending = this.pendingSelectionExecutable;
+            boolean keep = this.pendingSelectionKeepViewAnchor;
+            this.pendingSelectionExecutable = null;
+            this.pendingSelectionKeepViewAnchor = false;
+            ExecutableEntry entry = this.findEntryForExecutable(pending);
+            if (entry != null) {
+                entry.setSelected(true);
+                if (!keep) {
+                    this.scrollEntryIntoView(entry);
+                }
+            }
         }
     }
 
