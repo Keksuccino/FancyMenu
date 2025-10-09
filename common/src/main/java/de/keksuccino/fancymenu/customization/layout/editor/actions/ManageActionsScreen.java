@@ -21,7 +21,6 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.LogicExecutorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -415,17 +414,8 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void onAddAction(@NotNull Action action, @Nullable ExecutableEntry selectionReference) {
-        ActionInstance instance = new ActionInstance(action, null);
-        if (!action.hasValue()) {
-            this.finalizeActionAddition(instance, selectionReference);
-            return;
-        }
-        action.editValue(LogicExecutorScreen.build(() -> {
-            if (instance.value != null) {
-                this.finalizeActionAddition(instance, selectionReference);
-            }
-            Minecraft.getInstance().setScreen(this);
-        }), instance);
+        ActionInstance instance = new ActionInstance(action, action.hasValue() ? action.getValueExample() : null);
+        this.finalizeActionAddition(instance, selectionReference);
     }
 
     protected void finalizeActionAddition(@NotNull ActionInstance instance, @Nullable ExecutableEntry selectionReference) {
