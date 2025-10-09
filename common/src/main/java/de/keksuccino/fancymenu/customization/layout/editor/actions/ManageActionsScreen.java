@@ -31,6 +31,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
@@ -71,12 +72,12 @@ public class ManageActionsScreen extends Screen {
     protected ExecutableEntry renderTickDragHoveredEntry = null;
     @Nullable
     protected ExecutableEntry renderTickDraggedEntry = null;
-    protected boolean allowContextMenuSelectionOverride = false;
     private final ExecutableEntry BEFORE_FIRST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
     private final ExecutableEntry AFTER_LAST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
     @Nullable
     protected Executable pendingSelectionExecutable = null;
     protected boolean pendingSelectionKeepViewAnchor = false;
+    protected boolean skipNextContextMenuSelection = false;
     protected static final int LEFT_MARGIN = 20;
     protected static final int RIGHT_MARGIN = 20;
     protected static final int MINIMAP_WIDTH = 64;
@@ -172,16 +173,19 @@ public class ManageActionsScreen extends Screen {
                 .setIsActiveSupplier((menu, entry) -> hasActionEntries);
 
         this.actionsContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.editor.actions.blocks.add.folder"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAddFolder();
         });
 
         this.actionsContextMenu.addClickableEntry("add_if", Component.translatable("fancymenu.editor.actions.blocks.add.if"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAddIf();
         });
 
         this.actionsContextMenu.addClickableEntry("add_while", Component.translatable("fancymenu.editor.actions.blocks.add.while"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAddWhile();
         });
@@ -189,11 +193,13 @@ public class ManageActionsScreen extends Screen {
         this.actionsContextMenu.addSeparatorEntry("after_add");
 
         this.actionsContextMenu.addClickableEntry("append_else_if", Component.translatable("fancymenu.editor.actions.blocks.add.else_if"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAppendElseIf();
         }).setIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock());
 
         this.actionsContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.editor.actions.blocks.add.else"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAppendElse();
         }).setIsActiveSupplier((menu, entry) -> this.canAppendElseBlock());
@@ -201,6 +207,7 @@ public class ManageActionsScreen extends Screen {
         this.actionsContextMenu.addSeparatorEntry("after_append");
 
         this.actionsContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.editor.action.screens.move_action_up"), (menu, contextMenuEntry) -> {
+                    this.markContextMenuActionSelectionSuppressed();
                     ExecutableEntry selected = this.getSelectedEntry();
                     if (selected != null) {
                         this.handleContextMenuMove(selected, true);
@@ -211,9 +218,10 @@ public class ManageActionsScreen extends Screen {
                         return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
                     }
                     return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.move_action_up.desc"));
-                });
+        });
 
         this.actionsContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.editor.action.screens.move_action_down"), (menu, contextMenuEntry) -> {
+                    this.markContextMenuActionSelectionSuppressed();
                     ExecutableEntry selected = this.getSelectedEntry();
                     if (selected != null) {
                         this.handleContextMenuMove(selected, false);
@@ -229,12 +237,14 @@ public class ManageActionsScreen extends Screen {
         this.actionsContextMenu.addSeparatorEntry("after_reorder");
 
         this.actionsContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.editor.action.screens.edit_action"), (menu, entry) -> {
+                    this.markContextMenuActionSelectionSuppressed();
                     menu.closeMenu();
                     this.onEdit();
                 }).setIsActiveSupplier((menu, entry) -> this.canEditSelectedEntry())
                 .setTooltipSupplier((menu, entry) -> this.getEditTooltip());
 
         this.actionsContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.editor.action.screens.remove_action"), (menu, entry) -> {
+                    this.markContextMenuActionSelectionSuppressed();
                     menu.closeMenu();
                     this.onRemove();
                 }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
@@ -383,6 +393,7 @@ public class ManageActionsScreen extends Screen {
         UIColorTheme theme = UIBase.getUIColorTheme();
         MutableComponent openChooserLabel = Component.translatable("fancymenu.editor.actions.open_action_chooser").setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
         subMenu.addClickableEntry("open_action_chooser", openChooserLabel, (menu, contextMenuEntry) -> {
+                    this.markContextMenuActionSelectionSuppressed();
                     this.actionsContextMenu.closeMenu();
                     ExecutableEntry selectedOnCreate = this.getSelectedEntry();
                     this.onOpenActionChooser(selectedOnCreate);
@@ -395,6 +406,7 @@ public class ManageActionsScreen extends Screen {
 
         for (Action action : availableActions) {
             ContextMenu.ClickableContextMenuEntry<?> entry = subMenu.addClickableEntry("action_" + action.getIdentifier(), this.buildActionMenuLabel(action), (menu, contextMenuEntry) -> {
+                this.markContextMenuActionSelectionSuppressed();
                 this.actionsContextMenu.closeMenu();
                 ExecutableEntry selectedOnCreate = this.getSelectedEntry();
                 this.onAddAction(action, selectedOnCreate);
@@ -451,7 +463,11 @@ public class ManageActionsScreen extends Screen {
             }
         }
 
-        this.focusEntryForExecutable(executable, anchorActive);
+        this.focusEntryForExecutable(executable, anchorActive, true);
+    }
+
+    protected void markContextMenuActionSelectionSuppressed() {
+        this.skipNextContextMenuSelection = true;
     }
 
     @NotNull
@@ -519,7 +535,7 @@ public class ManageActionsScreen extends Screen {
                 appended.setAppendedBlock(block.getAppendedBlock());
                 block.setAppendedBlock(appended);
                 this.updateActionInstanceScrollArea(true);
-                this.focusEntryForExecutable(appended, true);
+                this.focusEntryForExecutable(appended, true, true);
             }
             Minecraft.getInstance().setScreen(this);
         });
@@ -541,7 +557,7 @@ public class ManageActionsScreen extends Screen {
         ElseExecutableBlock appended = new ElseExecutableBlock();
         appendTarget.setAppendedBlock(appended);
         this.updateActionInstanceScrollArea(true);
-        this.focusEntryForExecutable(appended, true);
+        this.focusEntryForExecutable(appended, true, true);
     }
 
     protected void onRemove() {
@@ -680,8 +696,11 @@ public class ManageActionsScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
+        boolean skipSelection = this.skipNextContextMenuSelection;
+        this.skipNextContextMenuSelection = false;
+
         // De-select the selected entry when clicking somewhere else
-        if ((this.hoveredEntry == null) && !this.isMinimapHovered((int)mouseX, (int)mouseY)) {
+        if (!skipSelection && (this.hoveredEntry == null) && !this.isMinimapHovered((int)mouseX, (int)mouseY)) {
             if (this.selectedEntry != null) {
                 this.selectedEntry.forceSetSelected(false);
             }
@@ -710,7 +729,7 @@ public class ManageActionsScreen extends Screen {
 
         boolean actionsMenuInteracting = this.isUserNavigatingInActionsContextMenu();
 
-        if ((button == 0) && !actionsMenuInteracting) {
+        if ((button == 0) && !actionsMenuInteracting && !skipSelection) {
             this.actionsContextMenu.closeMenu();
         }
 
@@ -718,7 +737,9 @@ public class ManageActionsScreen extends Screen {
             if (this.isInsideActionsScrollArea((int)mouseX, (int)mouseY)) {
                 ExecutableEntry hovered = this.getScrollAreaHoveredEntry();
                 if ((hovered != null) && (hovered != BEFORE_FIRST) && (hovered != AFTER_LAST)) {
-                    hovered.setSelected(true);
+                    if (!skipSelection) {
+                        hovered.setSelected(true);
+                    }
                 }
                 if (this.actionsContextMenu != null) {
                     this.actionsContextMenu.openMenuAtMouse();
@@ -727,7 +748,7 @@ public class ManageActionsScreen extends Screen {
             }
         }
 
-        if ((button == 0) && (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight)) {
+        if (!skipSelection && (button == 0) && (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight)) {
             ExecutableEntry entry = this.getMinimapEntryAt((int)mouseX, (int)mouseY);
             if (entry != null) {
                 entry.setSelected(true);
@@ -736,7 +757,7 @@ public class ManageActionsScreen extends Screen {
             }
         }
 
-        if ((button == 0) && !actionsMenuInteracting) {
+        if ((button == 0) && !actionsMenuInteracting && !skipSelection) {
             ExecutableEntry hovered = this.getScrollAreaHoveredEntry();
             if (hovered != null) {
                 if (hovered.canToggleCollapse() && hovered.isMouseOverCollapseToggle((int)mouseX, (int)mouseY)) {
@@ -767,7 +788,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
-        if (!actionsMenuInteracting && (button == 0) && !this.isInlineValueEditing()) {
+        if (!skipSelection && !actionsMenuInteracting && (button == 0) && !this.isInlineValueEditing()) {
             ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
             if ((hoveredAfter == null) || !hoveredAfter.isMouseOverValue((int)mouseX, (int)mouseY)) {
                 for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
@@ -778,7 +799,7 @@ public class ManageActionsScreen extends Screen {
             }
         }
 
-        if (!actionsMenuInteracting && (button == 0) && !this.isInlineNameEditing()) {
+        if (!skipSelection && !actionsMenuInteracting && (button == 0) && !this.isInlineNameEditing()) {
             ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
             if ((hoveredAfter == null) || !hoveredAfter.isMouseOverName((int)mouseX, (int)mouseY)) {
                 for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
@@ -1692,14 +1713,13 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void focusEntryForExecutable(@NotNull Executable executable, boolean keepViewAnchor, boolean allowSelectionWhileMenuOpen) {
+        if (allowSelectionWhileMenuOpen) {
+            this.scheduleFocusEntryForExecutable(executable, keepViewAnchor);
+            return;
+        }
         ExecutableEntry entry = this.findEntryForExecutable(executable);
         if (entry != null) {
-            if (allowSelectionWhileMenuOpen) {
-                this.forceSelectEntryWhileMenuOpen(entry);
-                if (!keepViewAnchor) {
-                    this.scrollEntryIntoView(entry);
-                }
-            } else if (!this.isUserNavigatingInActionsContextMenu()) {
+            if (!this.isUserNavigatingInActionsContextMenu()) {
                 entry.setSelected(true);
                 if (!keepViewAnchor) {
                     this.scrollEntryIntoView(entry);
@@ -1709,6 +1729,14 @@ public class ManageActionsScreen extends Screen {
                 this.pendingSelectionKeepViewAnchor = keepViewAnchor;
             }
         }
+    }
+
+    protected void scheduleFocusEntryForExecutable(@NotNull Executable executable, boolean keepViewAnchor) {
+        MainThreadTaskExecutor.executeInMainThread(() -> {
+            if (Minecraft.getInstance().screen == this) {
+                this.focusEntryForExecutable(executable, keepViewAnchor, false);
+            }
+        }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
     }
 
     @Nullable
@@ -1975,7 +2003,7 @@ public class ManageActionsScreen extends Screen {
         ExecutableEntry newEntry = this.findEntryForExecutable(executable);
         if (newEntry != null) {
             this.adjustScrollToKeepEntryInPlace(previousEntryY, newEntry);
-            this.forceSelectEntryWhileMenuOpen(newEntry);
+            this.scheduleFocusEntryForExecutable(executable, true);
         }
     }
 
@@ -2017,16 +2045,6 @@ public class ManageActionsScreen extends Screen {
         }
     }
 
-    protected void forceSelectEntryWhileMenuOpen(@NotNull ExecutableEntry entry) {
-        boolean previousOverride = this.allowContextMenuSelectionOverride;
-        this.allowContextMenuSelectionOverride = true;
-        try {
-            entry.setSelected(true);
-        } finally {
-            this.allowContextMenuSelectionOverride = previousOverride;
-        }
-        this.selectedEntry = entry;
-    }
     protected void updateActionInstanceScrollArea(boolean keepScroll) {
         this.finishInlineNameEditing(true);
         this.finishInlineValueEditing(true);
@@ -2296,7 +2314,7 @@ public class ManageActionsScreen extends Screen {
 
         @Override
         public void setSelected(boolean selected) {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu() && !ManageActionsScreen.this.allowContextMenuSelectionOverride) return;
+            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return;
             super.setSelected(selected);
         }
 
@@ -2429,7 +2447,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected void handleDragging() {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu() && !ManageActionsScreen.this.allowContextMenuSelectionOverride) return;
+            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return;
             if (!MouseInput.isLeftMouseDown()) {
                 if (this.dragging) {
                     ExecutableEntry hover = ManageActionsScreen.this.renderTickDragHoveredEntry;
@@ -2680,7 +2698,7 @@ public class ManageActionsScreen extends Screen {
 
         @Override
         public void onClick(ScrollAreaEntry entry) {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu() && !ManageActionsScreen.this.allowContextMenuSelectionOverride) return;
+            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return;
             if (this.parent.getEntries().contains(this)) {
                 this.leftMouseDownDragging = true;
                 this.leftMouseDownDraggingPosX = MouseInput.getMouseX();
