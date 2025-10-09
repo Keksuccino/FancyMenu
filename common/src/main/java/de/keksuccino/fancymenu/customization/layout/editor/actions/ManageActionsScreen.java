@@ -388,6 +388,11 @@ public class ManageActionsScreen extends Screen {
             }
             availableActions.add(action);
         }
+        availableActions.sort((left, right) -> {
+            String leftName = left.getActionDisplayName().getString();
+            String rightName = right.getActionDisplayName().getString();
+            return String.CASE_INSENSITIVE_ORDER.compare(leftName, rightName);
+        });
 
         UIColorTheme theme = UIBase.getUIColorTheme();
         MutableComponent openChooserLabel = Component.translatable("fancymenu.editor.actions.open_action_chooser").setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
