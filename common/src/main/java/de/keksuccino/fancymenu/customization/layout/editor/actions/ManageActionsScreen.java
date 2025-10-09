@@ -26,6 +26,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.SubMenuContextMenuEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -68,6 +70,8 @@ public class ManageActionsScreen extends Screen {
     protected Consumer<GenericExecutableBlock> callback;
     protected ScrollArea actionsScrollArea = new ScrollArea(0, 0, 0, 0).setAllowScrollWheelSupplier(() -> !this.isUserNavigatingInActionsContextMenu());
     protected ContextMenu actionsContextMenu;
+    protected float actionsContextMenuLastOpenX = Float.NaN;
+    protected float actionsContextMenuLastOpenY = Float.NaN;
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
     @Nullable
@@ -167,6 +171,13 @@ public class ManageActionsScreen extends Screen {
     protected void updateActionsContextMenu(boolean reopen, @Nullable List<String> entryPath) {
 
         boolean wasOpen = (this.actionsContextMenu != null) && this.actionsContextMenu.isOpen();
+        List<String> resolvedEntryPath = null;
+        List<String> currentPath = (wasOpen && (this.actionsContextMenu != null)) ? this.findOpenContextMenuPath(this.actionsContextMenu) : null;
+        if (currentPath != null) {
+            resolvedEntryPath = currentPath;
+        } else if (entryPath != null) {
+            resolvedEntryPath = new ArrayList<>(entryPath);
+        }
 
         if (this.actionsContextMenu != null) {
             this.actionsContextMenu.closeMenu();
@@ -261,9 +272,44 @@ public class ManageActionsScreen extends Screen {
                 .setTooltipSupplier((menu, entry) -> this.getRemoveTooltip());
 
         if (reopen || wasOpen) {
-            this.actionsContextMenu.openMenuAtMouse(entryPath);
+            float reopenX = this.hasStoredActionsContextMenuPosition() ? this.actionsContextMenuLastOpenX : (float)MouseInput.getMouseX();
+            float reopenY = this.hasStoredActionsContextMenuPosition() ? this.actionsContextMenuLastOpenY : (float)MouseInput.getMouseY();
+            this.openActionsContextMenuAt(reopenX, reopenY, resolvedEntryPath);
         }
 
+    }
+
+    protected void openActionsContextMenuAt(float x, float y, @Nullable List<String> entryPath) {
+        if (this.actionsContextMenu == null) {
+            return;
+        }
+        this.actionsContextMenuLastOpenX = x;
+        this.actionsContextMenuLastOpenY = y;
+        List<String> path = (entryPath != null && !entryPath.isEmpty()) ? new ArrayList<>(entryPath) : null;
+        this.actionsContextMenu.openMenuAt(x, y, path);
+    }
+
+    protected boolean hasStoredActionsContextMenuPosition() {
+        return !Float.isNaN(this.actionsContextMenuLastOpenX) && !Float.isNaN(this.actionsContextMenuLastOpenY);
+    }
+
+    @Nullable
+    protected List<String> findOpenContextMenuPath(@NotNull ContextMenu menu) {
+        for (ContextMenuEntry<?> entry : menu.getEntries()) {
+            if (entry instanceof SubMenuContextMenuEntry subEntry) {
+                ContextMenu subMenu = subEntry.getSubContextMenu();
+                if (subMenu.isOpen()) {
+                    List<String> childPath = this.findOpenContextMenuPath(subMenu);
+                    List<String> path = new ArrayList<>();
+                    path.add(subEntry.getIdentifier());
+                    if (childPath != null) {
+                        path.addAll(childPath);
+                    }
+                    return path;
+                }
+            }
+        }
+        return null;
     }
 
     protected boolean isInsideActionsScrollArea(int mouseX, int mouseY) {
@@ -831,7 +877,7 @@ public class ManageActionsScreen extends Screen {
                     }
                 }
                 if (this.actionsContextMenu != null) {
-                    this.actionsContextMenu.openMenuAtMouse();
+                    this.openActionsContextMenuAt((float)mouseX, (float)mouseY, null);
                 }
                 return true;
             }
