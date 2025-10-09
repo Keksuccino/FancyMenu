@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.action.ActionFavoritesManager;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
@@ -51,7 +52,9 @@ import java.awt.Color;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.List;
 import java.util.function.Consumer;
@@ -141,8 +144,7 @@ public class ManageActionsScreen extends Screen {
     @Override
     protected void init() {
 
-        this.updateActionsContextMenu();
-        this.addWidget(this.actionsContextMenu);
+        this.updateActionsContextMenu(false, null);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.executableBlock);
@@ -159,11 +161,20 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void updateActionsContextMenu() {
+        this.updateActionsContextMenu(false, null);
+    }
+
+    protected void updateActionsContextMenu(boolean reopen, @Nullable List<String> entryPath) {
+
+        boolean wasOpen = (this.actionsContextMenu != null) && this.actionsContextMenu.isOpen();
 
         if (this.actionsContextMenu != null) {
             this.actionsContextMenu.closeMenu();
+            this.removeWidget(this.actionsContextMenu);
         }
+
         this.actionsContextMenu = new ContextMenu();
+        this.addWidget(this.actionsContextMenu);
 
         ContextMenu addActionSubMenu = this.buildAddActionSubMenu();
         boolean hasActionEntries = !addActionSubMenu.getEntries().isEmpty();
@@ -248,6 +259,10 @@ public class ManageActionsScreen extends Screen {
                     this.onRemove();
                 }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
                 .setTooltipSupplier((menu, entry) -> this.getRemoveTooltip());
+
+        if (reopen || wasOpen) {
+            this.actionsContextMenu.openMenuAtMouse(entryPath);
+        }
 
     }
 
@@ -381,14 +396,27 @@ public class ManageActionsScreen extends Screen {
         ContextMenu subMenu = new ContextMenu();
         LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
 
-        List<Action> availableActions = new ArrayList<>();
+        Map<String, Action> availableActions = new LinkedHashMap<>();
         for (Action action : ActionRegistry.getActions()) {
             if ((editor != null) && !action.shouldShowUpInEditorActionMenu(editor)) {
                 continue;
             }
-            availableActions.add(action);
+            availableActions.put(action.getIdentifier(), action);
         }
-        availableActions.sort((left, right) -> {
+
+        ActionFavoritesManager.retainFavorites(new LinkedHashSet<>(availableActions.keySet()));
+        List<String> favoriteIdentifiers = ActionFavoritesManager.getFavorites();
+
+        List<Action> favoriteActions = new ArrayList<>();
+        for (String identifier : favoriteIdentifiers) {
+            Action action = availableActions.remove(identifier);
+            if (action != null) {
+                favoriteActions.add(action);
+            }
+        }
+
+        List<Action> regularActions = new ArrayList<>(availableActions.values());
+        regularActions.sort((left, right) -> {
             String leftName = left.getActionDisplayName().getString();
             String rightName = right.getActionDisplayName().getString();
             return String.CASE_INSENSITIVE_ORDER.compare(leftName, rightName);
@@ -404,22 +432,32 @@ public class ManageActionsScreen extends Screen {
                 }).setIcon(ContextMenu.IconFactory.getIcon("pick"))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.actions.open_action_chooser.desc")));
 
-        if (!availableActions.isEmpty()) {
+        if (!favoriteActions.isEmpty() || !regularActions.isEmpty()) {
             subMenu.addSeparatorEntry("after_open_action_chooser");
         }
 
-        for (Action action : availableActions) {
-            ContextMenu.ClickableContextMenuEntry<?> entry = subMenu.addClickableEntry("action_" + action.getIdentifier(), this.buildActionMenuLabel(action), (menu, contextMenuEntry) -> {
-                this.markContextMenuActionSelectionSuppressed();
-                this.actionsContextMenu.closeMenu();
-                ExecutableEntry selectedOnCreate = this.getSelectedEntry();
-                this.onAddAction(action, selectedOnCreate);
-            });
-            if (action.getActionDescription() != null && action.getActionDescription().length > 0) {
-                entry.setTooltipSupplier((menu, contextMenuEntry) -> this.createActionTooltip(action));
-            }
+        for (Action action : favoriteActions) {
+            subMenu.addEntry(new FavoriteAwareActionEntry(subMenu, action));
+        }
+
+        if (!favoriteActions.isEmpty() && !regularActions.isEmpty()) {
+            subMenu.addSeparatorEntry("after_favorites");
+        }
+
+        for (Action action : regularActions) {
+            subMenu.addEntry(new FavoriteAwareActionEntry(subMenu, action));
         }
         return subMenu;
+    }
+
+    protected boolean isFavorite(@NotNull Action action) {
+        return ActionFavoritesManager.isFavorite(action.getIdentifier());
+    }
+
+    protected void toggleFavorite(@NotNull Action action) {
+        ActionFavoritesManager.toggleFavorite(action.getIdentifier());
+        this.markContextMenuActionSelectionSuppressed();
+        this.updateActionsContextMenu(true, Collections.singletonList("add_action"));
     }
 
     protected void onOpenActionChooser(@Nullable ExecutableEntry selectionReference) {
@@ -487,12 +525,59 @@ public class ManageActionsScreen extends Screen {
     }
 
     @Nullable
-    protected Tooltip createActionTooltip(@NotNull Action action) {
+    protected Tooltip createActionTooltip(@NotNull Action action, boolean isFavorite) {
+        List<Component> lines = new ArrayList<>();
         Component[] description = action.getActionDescription();
-        if ((description == null) || (description.length == 0)) {
-            return null;
+        if ((description != null) && (description.length > 0)) {
+            Collections.addAll(lines, description);
         }
-        return Tooltip.of(description);
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        Style hintStyle = Style.EMPTY
+                .withColor(theme.description_area_text_color.getColorInt())
+                .withItalic(true);
+        Component hint = Component.translatable(isFavorite ? "fancymenu.editor.actions.favorite.remove" : "fancymenu.editor.actions.favorite.add").setStyle(hintStyle);
+        if (!lines.isEmpty()) {
+            lines.add(Component.empty());
+        }
+        lines.add(hint);
+        return Tooltip.of(lines.toArray(new Component[0]));
+    }
+
+    protected class FavoriteAwareActionEntry extends ContextMenu.ClickableContextMenuEntry<FavoriteAwareActionEntry> {
+
+        @NotNull
+        private final Action action;
+
+        protected FavoriteAwareActionEntry(@NotNull ContextMenu parent, @NotNull Action action) {
+            super("action_" + action.getIdentifier(), parent, ManageActionsScreen.this.buildActionMenuLabel(action), (menu, entry) -> {
+                ManageActionsScreen.this.markContextMenuActionSelectionSuppressed();
+                menu.closeMenu();
+                ExecutableEntry selectedOnCreate = ManageActionsScreen.this.getSelectedEntry();
+                ManageActionsScreen.this.onAddAction(action, selectedOnCreate);
+            });
+            this.action = action;
+            this.setLabelSupplier((menu, entry) -> ManageActionsScreen.this.buildActionMenuLabel(action));
+            this.setTooltipSupplier((menu, entry) -> ManageActionsScreen.this.createActionTooltip(action, ManageActionsScreen.this.isFavorite(action)));
+            this.updateFavoriteIcon();
+        }
+
+        private void updateFavoriteIcon() {
+            if (ManageActionsScreen.this.isFavorite(this.action)) {
+                this.setIcon(ContextMenu.IconFactory.getIcon("favorite"));
+            } else {
+                this.setIcon(null);
+            }
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if ((button == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
+                ManageActionsScreen.this.toggleFavorite(this.action);
+                return true;
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+
     }
 
     protected void onAddFolder() {

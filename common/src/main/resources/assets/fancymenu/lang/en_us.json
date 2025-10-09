@@ -2096,7 +2096,9 @@
   "fancymenu.actions.animation.enable_element_animator.value.desc": "Element Animator Identifier",
   "fancymenu.actions.animation.disable_element_animator": "Disable Element Animator",
   "fancymenu.actions.animation.disable_element_animator.desc": "Disables the Element Animator and stops its animation for all assigned targets.",
-  "fancymenu.actions.animation.disable_element_animator.value.desc": "Element Animator Identifier"
+  "fancymenu.actions.animation.disable_element_animator.value.desc": "Element Animator Identifier",
+  "fancymenu.editor.actions.favorite.add": "Right-click to add to favorites",
+  "fancymenu.editor.actions.favorite.remove": "Right-click to remove from favorites"
 }
 
 
