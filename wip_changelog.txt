@@ -6,14 +6,6 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
   - You can add multiple listeners for the same event type and each listener can execute its own action script when triggered
   - Listeners are the only system in FancyMenu that is constantly enabled, even when you are not in menus, which means listeners constantly listen to events and can trigger their action scripts, even if you have no menu open (while walking around in a world, for example)
   - To manage (add/edit/remove) listeners, click on "Customization -> Manage Listeners" in the menu bar when NOT IN THE EDITOR
-- The action script editor got a complete overhaul
-  - Lots of visual QoL improvements to make editing scripts easier
-  - Added a minimap at the right side for easy navigation in longer scripts
-  - It now adds new actions, statements and loops below the selected entry
-  - Double-clicking the value of an action lets you edit the value without going into the full value editing screen
-  - Added folders that can hold actions and statement chains for easier organizing scripts (folders can be collapsed and renamed) (#1309)
-  - IF statement chains (with appended ELSE/ELSE-IF statements) and WHILE loops can now be collapsed
-  - The sidebar with buttons for adding actions, etc. got replaced with a right-click context menu that opens when you right-click the script body (or an entry in there)
 - Added rotation support for many element types, which means you can now freely rotate them (#1258)
   - In basic mode you can use the rotation grabber to easily rotate the element or you can set the rotation manually in the element's right-click menu
   - In advanced mode, the rotation value supports placeholders, which gives you maximum control over the element's rotation, but in this mode the rotation grabber is disabled
@@ -53,6 +45,14 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Added "Nether" FancyMenu theme (by Mowzy - Thanks so much for the great looking design!)
 - Added "Butter Dark" FancyMenu theme (by caelaThinx - Thanks so much for the great looking design!)
 - Added "Butter OLED" FancyMenu theme (by caelaThinx - Thanks so much for the great looking design!)
+- The action script editor got a complete overhaul
+  - Lots of visual QoL improvements to make editing scripts easier
+  - Added a minimap at the right side for easy navigation in longer scripts
+  - It now adds new actions, statements and loops below the selected entry
+  - Double-clicking the value of an action lets you edit the value without going into the full value editing screen
+  - Added folders that can hold actions and statement chains for easier organizing scripts (folders can be collapsed and renamed) (#1309)
+  - IF statement chains (with appended ELSE/ELSE-IF statements) and WHILE loops can now be collapsed
+  - The sidebar with buttons for adding actions, etc. got replaced with a right-click context menu that opens when you right-click the script body (or an entry in there)
 - Some placeholders now show an error when the user tries to use them in an asynchronous environment (like a Ticker element) when they can't safely get parsed asynchronously
 - Some actions now show an error when the user tries to use them in an asynchronous environment (like a Ticker element) when they can't safely execute asynchronously
 - Some requirements now show an error when the user tries to use them in an asynchronous environment (like a Ticker element) when they can't safely be used asynchronously
