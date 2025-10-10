@@ -59,6 +59,16 @@ public class OnDeathListener extends AbstractListener {
         return Double.toString(coordinate);
     }
 
+    @Nullable
+    public String getLastDeathReasonString() {
+        return this.cachedDeathReasonString;
+    }
+
+    @Nullable
+    public String getLastDeathReasonComponent() {
+        return this.cachedDeathReasonComponent;
+    }
+
     @Override
     protected void buildCustomVariablesAndAddToList(List<CustomVariable> list) {
         list.add(new CustomVariable("days_survived", () -> this.cachedDaysSurvived != null ? this.cachedDaysSurvived : "0"));

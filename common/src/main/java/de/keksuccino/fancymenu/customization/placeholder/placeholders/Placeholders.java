@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.server.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.MaxRamPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.PercentRamPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.UsedRamPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.LastDeathMessagePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerNamePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerUuidPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.background.VideoMenuBackgroundDurationPlaceholder;
@@ -50,6 +51,7 @@ public class Placeholders {
     public static final VanillaButtonLabelPlaceholder VANILLA_BUTTON_LABEL = new VanillaButtonLabelPlaceholder();
     public static final PlayerNamePlaceholder PLAYER_NAME = new PlayerNamePlaceholder();
     public static final PlayerUuidPlaceholder PLAYER_UUID = new PlayerUuidPlaceholder();
+    public static final LastDeathMessagePlaceholder LAST_DEATH_MESSAGE = new LastDeathMessagePlaceholder();
     public static final ServerMotdPlaceholder SERVER_MOTD = new ServerMotdPlaceholder();
     public static final ServerPingPlaceholder SERVER_PING = new ServerPingPlaceholder();
     public static final ServerVersionPlaceholder SERVER_VERSION = new ServerVersionPlaceholder();
@@ -216,6 +218,7 @@ public class Placeholders {
         //Player
         PlaceholderRegistry.register(PLAYER_NAME);
         PlaceholderRegistry.register(PLAYER_UUID);
+        PlaceholderRegistry.register(LAST_DEATH_MESSAGE);
 
         //World
         PlaceholderRegistry.register(ACTIVE_HOTBAR_SLOT);
