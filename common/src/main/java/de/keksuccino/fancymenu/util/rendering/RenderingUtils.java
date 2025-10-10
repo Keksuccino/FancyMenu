@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
@@ -238,7 +239,6 @@ public class RenderingUtils {
 
     }
 
-
     public static float getPartialTick() {
         return Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false);
     }
@@ -315,28 +315,21 @@ public class RenderingUtils {
     public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, float z, int color) {
         Matrix4f matrix4f = graphics.pose().last().pose();
         if (minX < maxX) {
-            float $$8 = minX;
+            float i = minX;
             minX = maxX;
-            maxX = $$8;
+            maxX = i;
         }
         if (minY < maxY) {
-            float $$9 = minY;
+            float i = minY;
             minY = maxY;
-            maxY = $$9;
+            maxY = i;
         }
-        float red = (float)FastColor.ARGB32.red(color) / 255.0F;
-        float green = (float)FastColor.ARGB32.green(color) / 255.0F;
-        float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
-        float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        RenderSystem.enableBlend();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        bufferBuilder.addVertex(matrix4f, minX, minY, z).setColor(red, green, blue, alpha);
-        bufferBuilder.addVertex(matrix4f, minX, maxY, z).setColor(red, green, blue, alpha);
-        bufferBuilder.addVertex(matrix4f, maxX, maxY, z).setColor(red, green, blue, alpha);
-        bufferBuilder.addVertex(matrix4f, maxX, minY, z).setColor(red, green, blue, alpha);
-        BufferUploader.drawWithShader(Objects.requireNonNull(bufferBuilder.build()));
-        RenderSystem.disableBlend();
+        VertexConsumer vertexConsumer = graphics.bufferSource().getBuffer(RenderType.gui());
+        vertexConsumer.addVertex(matrix4f, (float)minX, (float)minY, (float)z).setColor(color);
+        vertexConsumer.addVertex(matrix4f, (float)minX, (float)maxY, (float)z).setColor(color);
+        vertexConsumer.addVertex(matrix4f, (float)maxX, (float)maxY, (float)z).setColor(color);
+        vertexConsumer.addVertex(matrix4f, (float)maxX, (float)minY, (float)z).setColor(color);
+        graphics.flush();
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, ResourceLocation location, float x, float y, float f3, float f4, float width, float height, float width2, float height2, int color) {
@@ -383,6 +376,7 @@ public class RenderingUtils {
         $$11.addVertex($$10, $$2, $$4, $$5).setUv($$7, $$9);
         $$11.addVertex($$10, $$2, $$3, $$5).setUv($$7, $$8);
         BufferUploader.drawWithShader(Objects.requireNonNull($$11.build()));
+        graphics.flush();
     }
 
     public static void enableScissor(@NotNull GuiGraphics graphics, int minX, int minY, int maxX, int maxY) {
