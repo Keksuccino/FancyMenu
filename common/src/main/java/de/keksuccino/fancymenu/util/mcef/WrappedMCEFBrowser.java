@@ -227,12 +227,12 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
             this.browser.setFocus(true);
         }
         return false;
-    }
+	}
 
-    @Override
-    public boolean isMouseOver(double mouseX, double mouseY) {
-        return UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
-    }
+	@Override
+	public boolean isMouseOver(double mouseX, double mouseY) {
+		return this.interactable && UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
+	}
 
     @Override
     protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
