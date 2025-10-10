@@ -68,6 +68,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Updated the list of Patreon supporters in the Credits screen (Thanks so much to all the supporters and big sorry for updating the list so slowly, but I always forget that screen exists lmao)
 - The former "Get NBT Data" placeholder got optimized for working entirely client-side and got renamed to "Get NBT Data (Client-Side)"
 - Most of FancyMenu's UI tooltips (like in context menus, etc.) now have line wrapping, so tooltips don't get too long anymore in some cases (#1314)
+- The "Round (Math)" placeholder now has a "decimal" option to define what decimal place the number should get rounded to (existing placeholders keep working like before) (#1308)
 - Fixed "World Save Data" placeholder being in the wrong category
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
 - Fixed missing localizations for some options of the new (1.21.4+) Player Entity element (#1276)
