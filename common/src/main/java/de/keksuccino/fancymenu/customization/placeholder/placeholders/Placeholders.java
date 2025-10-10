@@ -143,6 +143,7 @@ public class Placeholders {
     public static final MathCeilPlaceholder MATH_CEIL = new MathCeilPlaceholder();
     public static final MathFloorPlaceholder MATH_FLOOR = new MathFloorPlaceholder();
     public static final MathRoundPlaceholder MATH_ROUND = new MathRoundPlaceholder();
+    public static final NumberBaseConvertPlaceholder NUMBER_BASE_CONVERT = new NumberBaseConvertPlaceholder();
     public static final MathSignPlaceholder MATH_SIGN = new MathSignPlaceholder();
     public static final SwitchCasePlaceholder SWITCH_CASE = new SwitchCasePlaceholder();
     public static final ReplaceTextPlaceholder REPLACE_TEXT = new ReplaceTextPlaceholder();
@@ -307,6 +308,7 @@ public class Placeholders {
         PlaceholderRegistry.register(MATH_CEIL);
         PlaceholderRegistry.register(MATH_FLOOR);
         PlaceholderRegistry.register(MATH_ROUND);
+        PlaceholderRegistry.register(NUMBER_BASE_CONVERT);
         PlaceholderRegistry.register(MATH_SIGN);
         PlaceholderRegistry.register(SWITCH_CASE);
         PlaceholderRegistry.register(REPLACE_TEXT);
