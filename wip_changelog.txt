@@ -85,6 +85,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed placeholder parser failing to replace placeholders in some edge case strings with lots of curly brackets outside placeholders (#1268)
 - Fixed "Get NBT Data" placeholder returning nothing in many cases (#1273)
 - Fixed "Browser" element consuming scroll events even when set to "interactable = false" (#1277)
+- Fixed enchanted items missing from Inventory NBT when trying to get it via the "Get NBT Data" placeholder (#1260)
  
 %changelog:end%
 
