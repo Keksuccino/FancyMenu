@@ -45,6 +45,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Added "Write File in Game Directory" action to write text content to files in the instance's game directory and the ".minecraft" directory (#1242)
 - Added "File Size" placeholder to get the size of a local file in bytes (#1244)
 - Added "File MD5" placeholder to get the MD5 hash of a local file
+- Added "Last Death Message" placeholder that returns the player's last death message if there is any (#1165)
 - Added "Number Base Converter" placeholder to convert a number between bases (supports decimals) (#1291)
 - Added "Uptime Duration" placeholder that returns the seconds or milliseconds that passed since the game got launched (#1306)
 - Added "Print to Game Log" action to print text to the game's log for debugging (#1267)
