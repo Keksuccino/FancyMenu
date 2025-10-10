@@ -73,6 +73,8 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - The information displayed at element borders (X/Y position, size, etc.) should be a lot easier to read now
   - Now uses FancyMenu's UI scale setting instead of a hardcoded scale (#1281)
   - The text has a half transparent dark background now
+- The "Manage Target Elements" screen of the "Element Animator" element now lets you delete targets in the same screen without going to a second screen first
+- The "Manage Target Elements" screen of the "Element Animator" element now has an option to remove targets by ID, so you can easily copy an element's ID in the editor and then remove it there without searching it in long target lists first
 - Fixed "World Save Data" placeholder being in the wrong category
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
 - Fixed missing localizations for some options of the new (1.21.4+) Player Entity element (#1276)
