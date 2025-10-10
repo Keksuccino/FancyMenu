@@ -94,7 +94,7 @@ public class Placeholders {
     public static final JvmNamePlaceholder JVM_NAME = new JvmNamePlaceholder();
     public static final OpenGLVersionPlaceholder OPEN_GL_VERSION = new OpenGLVersionPlaceholder();
     public static final OSNamePlaceholder OS_NAME = new OSNamePlaceholder();
-    public static final UptimeSecondsPlaceholder UPTIME_SECONDS = new UptimeSecondsPlaceholder();
+    public static final UptimeDurationPlaceholder UPTIME_DURATION = new UptimeDurationPlaceholder();
     public static final ActiveHotbarSlotPlaceholder ACTIVE_HOTBAR_SLOT = new ActiveHotbarSlotPlaceholder();
     public static final CurrentPlayerHealthPlaceholder CURRENT_PLAYER_HEALTH = new CurrentPlayerHealthPlaceholder();
     public static final GameTimePlaceholder GAME_TIME = new GameTimePlaceholder();
@@ -350,7 +350,7 @@ public class Placeholders {
         PlaceholderRegistry.register(JVM_NAME);
         PlaceholderRegistry.register(OPEN_GL_VERSION);
         PlaceholderRegistry.register(OS_NAME);
-        PlaceholderRegistry.register(UPTIME_SECONDS);
+        PlaceholderRegistry.register(UPTIME_DURATION);
         PlaceholderRegistry.register(TEXT_CHARACTER_COUNT);
         PlaceholderRegistry.register(TEXT_WIDTH);
         PlaceholderRegistry.register(CLIPBOARD_CONTENT);
