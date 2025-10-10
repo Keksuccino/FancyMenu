@@ -1228,10 +1228,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+		boolean handled = false;
 		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			return this.buddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+			handled = this.buddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
 		}
-		return false;
+		if (!handled && super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
+			return true;
+		}
+		return handled;
 	}
 
 	@Override
