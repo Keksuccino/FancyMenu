@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -80,11 +81,17 @@ public class EditorElementBorderDisplay implements Renderable {
 
         float scale = this.getScale();
         int lineY = y;
+        int backgroundColor = UIBase.getUIColorTheme().layout_editor_element_border_display_line_background_color.getColorInt();
+        int textColor = UIBase.getUIColorTheme().layout_editor_element_border_display_line_text_color.getColorInt();
         graphics.pose().pushPose();
         graphics.pose().scale(scale, scale, scale);
         for (Component c : this.renderLines) {
-            int lineX = leftAligned ? x : x + (this.getWidth() - (int)((float)this.font.width(c) * scale));
-            graphics.drawString(this.font, c, (int)(lineX / scale), (int)(lineY / scale), -1, this.textShadow);
+            int lineWidth = this.font.width(c);
+            int lineX = leftAligned ? x : x + (this.getWidth() - (int)((float)lineWidth * scale));
+            int scaledLineX = (int)(lineX / scale);
+            int scaledLineY = (int)(lineY / scale);
+            graphics.fill(scaledLineX, scaledLineY, scaledLineX + lineWidth, scaledLineY + this.font.lineHeight, backgroundColor);
+            graphics.drawString(this.font, c, scaledLineX, scaledLineY, textColor, this.textShadow);
             lineY += (this.font.lineHeight + 2) * scale;
         }
         graphics.pose().popPose();
@@ -127,7 +134,7 @@ public class EditorElementBorderDisplay implements Renderable {
     }
 
     protected float getScale() {
-        return !Minecraft.getInstance().isEnforceUnicode() ? 0.5F : 1.0F;
+        return UIBase.getFixedUIScale();
     }
 
     public int getWidth() {

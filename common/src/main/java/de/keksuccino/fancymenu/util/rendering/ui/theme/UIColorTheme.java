@@ -25,6 +25,8 @@ public class UIColorTheme {
     public DrawableColor layout_editor_element_border_vertical_tilting_controls_color = DrawableColor.of(new Color(255, 181, 43));
     public DrawableColor layout_editor_element_border_horizontal_tilting_controls_color = DrawableColor.of(new Color(145, 255, 43));
     public DrawableColor layout_editor_element_dragging_not_allowed_color = DrawableColor.of(new Color(232, 54, 9, 200));
+    public DrawableColor layout_editor_element_border_display_line_background_color = DrawableColor.of(new Color(0, 0, 0, 128));
+    public DrawableColor layout_editor_element_border_display_line_text_color = DrawableColor.of(-1);
     public DrawableColor layout_editor_anchor_point_overlay_color_base = DrawableColor.of(new Color(37, 180, 121));
     public DrawableColor layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(17, 79, 52));
     public DrawableColor layout_editor_close_icon_color = DrawableColor.of(new Color(218, 60, 30));
