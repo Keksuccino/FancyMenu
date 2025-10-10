@@ -1534,7 +1534,7 @@
   "fancymenu.placeholders.math_floor": "Floor (Math)",
   "fancymenu.placeholders.math_floor.desc": "Returns the largest integer less than or equal to the given number.\nFor example, floor(3.14) = 3 and floor(-3.14) = -4.",
   "fancymenu.placeholders.math_round": "Round (Math)",
-  "fancymenu.placeholders.math_round.desc": "Returns the closest integer to the given number.\nFor example, round(3.14) = 3 and round(3.54) = 4.",
+  "fancymenu.placeholders.math_round.desc": "Rounds a number.\nSet the optional 'decimals' value to control the decimal place (use 0 or -1 round to an integer).\nExample 1: num=3.14159 & decimals=2 -> 3.14.\nExample 2: num=3.14159 & decimals=0 -> 3.",
   "fancymenu.placeholders.math_sign": "Sign (Math)",
   "fancymenu.placeholders.math_sign.desc": "Returns:\n 1 if the number is positive\n-1 if the number is negative\n 0 if the number is zero",
   "fancymenu.placeholders.switch_case": "Switch Case",
