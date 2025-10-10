@@ -198,6 +198,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             finishDragOperation();
         }
 
+        // Always inform scroll bars about mouse release so they can reset their grabber state
+        this.scrollArea.verticalScrollBar.mouseReleased(translatedMouseX, translatedMouseY, button);
+        this.scrollArea.horizontalScrollBar.mouseReleased(translatedMouseX, translatedMouseY, button);
+
         // Reset drag state
         isDragging = false;
         draggedEntry = null;
@@ -215,6 +219,12 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     @Override
     protected boolean mouseDraggedComponent(double translatedMouseX, double translatedMouseY, int button, double d1, double d2) {
+
+        // Give scroll bars a chance to handle dragging their grabbers
+        if (this.scrollArea.verticalScrollBar.mouseDragged(translatedMouseX, translatedMouseY, button, d1, d2) ||
+                this.scrollArea.horizontalScrollBar.mouseDragged(translatedMouseX, translatedMouseY, button, d1, d2)) {
+            return true;
+        }
 
         if (isDragging && button == 0) {
             updateDragTarget(translatedMouseX, translatedMouseY, this.getRealMouseX(), this.getRealMouseY());
