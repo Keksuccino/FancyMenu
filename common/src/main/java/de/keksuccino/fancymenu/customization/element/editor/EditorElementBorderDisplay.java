@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -14,13 +16,15 @@ import java.util.function.Supplier;
 
 public class EditorElementBorderDisplay implements Renderable {
 
+    private static final int LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU = 2;
+    private static final int LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU = 1;
+
     public final AbstractEditorElement editorElement;
     public Font font = Minecraft.getInstance().font;
     public final DisplayPosition defaultPosition;
     public final List<DisplayPosition> alternativePositions = new ArrayList<>();
     public DisplayPosition currentPosition;
     protected final Map<String, Supplier<Component>> lines = new LinkedHashMap<>();
-    public boolean textShadow = true;
     protected List<Component> renderLines = new ArrayList<>();
     protected int width = 0;
     protected int height = 0;
@@ -90,8 +94,12 @@ public class EditorElementBorderDisplay implements Renderable {
             int lineX = leftAligned ? x : x + (this.getWidth() - (int)((float)lineWidth * scale));
             int scaledLineX = (int)(lineX / scale);
             int scaledLineY = (int)(lineY / scale);
-            graphics.fill(scaledLineX, scaledLineY, scaledLineX + lineWidth, scaledLineY + this.font.lineHeight, backgroundColor);
-            graphics.drawString(this.font, c, scaledLineX, scaledLineY, textColor, this.textShadow);
+            int backgroundLeft = scaledLineX - LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU;
+            int backgroundTop = scaledLineY - LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU;
+            int backgroundRight = scaledLineX + lineWidth + LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU;
+            int backgroundBottom = scaledLineY + this.font.lineHeight + LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU;
+            graphics.fill(backgroundLeft, backgroundTop, backgroundRight, backgroundBottom, backgroundColor);
+            graphics.drawString(this.font, c, scaledLineX, scaledLineY, textColor, false);
             lineY += (this.font.lineHeight + 2) * scale;
         }
         graphics.pose().popPose();
