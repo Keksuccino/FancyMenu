@@ -87,6 +87,8 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed "Get NBT Data" placeholder returning nothing in many cases (#1273)
 - Fixed "Browser" element consuming scroll events even when set to "interactable = false" (#1277)
 - Fixed enchanted items missing from Inventory NBT when trying to get it via the "Get NBT Data" placeholder (#1260)
+- Fixed Layers widget in Layout Editor screen sometimes not fully interactable (unable to click on visibility icon, unable to drag scroll grabber, etc.) (#1154)
+  - I'm actually not sure if I fully fixed that, since the bug(s) trigger randomly, so it's super hard to tell if it actually got fixed..
  
 %changelog:end%
 
