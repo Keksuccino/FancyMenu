@@ -2100,7 +2100,9 @@
   "fancymenu.editor.actions.favorite.add": "Right-click to add to favorites",
   "fancymenu.editor.actions.favorite.remove": "Right-click to remove from favorites",
   "fancymenu.placeholders.number_base_convert": "Number Base Converter",
-  "fancymenu.placeholders.number_base_convert.desc": "Converts a number between bases (supports decimals).\nValues: input, from_base (2-36), to_base (2-36).\nUp to 16 fractional digits are generated in the target base.\nExample: input=67, from_base=10, to_base=2 -> 1000011."
+  "fancymenu.placeholders.number_base_convert.desc": "Converts a number between bases (supports decimals).\nValues: input, from_base (2-36), to_base (2-36).\nUp to 16 fractional digits are generated in the target base.\nExample: input=67, from_base=10, to_base=2 -> 1000011.",
+  "fancymenu.elements.animation_controller.manage_targets.remove_by_id": "Remove Target By ID",
+  "fancymenu.elements.animation_controller.manage_targets.remove_by_id.input": "Enter Target Element ID"
 }
 
 

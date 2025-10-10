@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -90,7 +91,24 @@ public class TargetElementManagerScreen extends CellScreen {
             );
             Minecraft.getInstance().setScreen(selector);
         });
+        this.addRightSideDefaultSpacer();
 
+        this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id"), button -> {
+            TextInputScreen inputScreen = TextInputScreen.build(Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id.input"), null, result -> {
+                boolean removed = false;
+                if (result != null) {
+                    String trimmed = result.trim();
+                    if (!trimmed.isEmpty()) {
+                        removed = TargetElementManagerScreen.this.targets.removeIf(target -> target.targetElementId.equals(trimmed));
+                    }
+                }
+                Minecraft.getInstance().setScreen(this);
+                if (removed) {
+                    TargetElementManagerScreen.this.rebuild();
+                }
+            });
+            Minecraft.getInstance().setScreen(inputScreen);
+        });
         this.addRightSideDefaultSpacer();
     }
 
