@@ -864,7 +864,7 @@ public class ManageActionsScreen extends Screen {
 
         boolean actionsMenuInteracting = this.isUserNavigatingInActionsContextMenu();
 
-        if ((button == 0) && !actionsMenuInteracting && !skipSelection) {
+        if ((button == 0) && !actionsMenuInteracting) {
             this.actionsContextMenu.closeMenu();
         }
 
