@@ -67,7 +67,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - You can now target the default ".minecraft" directory in the "File Text" placeholder by starting the target file path with ".minecraft/" (#1242)
 - You can now target the default ".minecraft" directory in the "File/Folder Exists" requirement by starting the target file path with ".minecraft/" (#1242)
 - It's now possible to use placeholders in the tint value of Image elements (#1271)
-- The Markdown renderer now has basic character escaping support to make force formatting-related characters to render as literal characters, like underscores, ticks, brackets, etc. (#1319)
+- The Markdown renderer now has basic character escaping support via leading backslash to make formatting-related characters render as literal characters, like underscores, ticks, brackets, etc. (#1319)
   - This finally makes it possible to print player names with underscores (if you get the player name via placeholder, use the "Replace Text" placeholder to replace "_" with "\_")
 - Updated the list of Patreon supporters in the Credits screen (Thanks so much to all the supporters and big sorry for updating the list so slowly, but I always forget that screen exists lmao)
 - The former "Get NBT Data" placeholder got optimized for working entirely client-side and got renamed to "Get NBT Data (Client-Side)"
