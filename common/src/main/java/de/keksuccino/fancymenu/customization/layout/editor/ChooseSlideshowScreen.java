@@ -54,7 +54,7 @@ public class ChooseSlideshowScreen extends Screen {
     @Override
     protected void init() {
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(this.selectedSlideshowName);
         }) {
             @Override
@@ -71,7 +71,7 @@ public class ChooseSlideshowScreen extends Screen {
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);

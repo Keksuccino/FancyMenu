@@ -70,7 +70,7 @@ public class IsPlayerInDimensionRequirement extends LoadingRequirement {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.world");
+        return I18n.get("fancymenu.requirements.categories.world");
     }
 
     @Override
@@ -121,7 +121,7 @@ public class IsPlayerInDimensionRequirement extends LoadingRequirement {
         protected EditBoxSuggestions suggestions;
 
         protected IsPlayerInDimensionValueConfigScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
+            super(Component.translatable("fancymenu.elements.requirements.edit_value"), callback);
             this.value = value;
         }
 

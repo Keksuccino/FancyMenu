@@ -34,22 +34,22 @@ public class FileExistsRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.loadingrequirement.file_exists");
+        return I18n.get("fancymenu.requirements.file_exists");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.loadingrequirement.file_exists.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.file_exists.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.system");
+        return I18n.get("fancymenu.requirements.categories.system");
     }
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.loadingrequirement.file_exists.value_name");
+        return I18n.get("fancymenu.requirements.file_exists.value_name");
     }
 
     @Override

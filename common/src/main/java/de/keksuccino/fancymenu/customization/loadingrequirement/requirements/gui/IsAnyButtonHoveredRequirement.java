@@ -62,17 +62,17 @@ public class IsAnyButtonHoveredRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_any_button_hovered");
+        return I18n.get("fancymenu.requirements.is_any_button_hovered");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.is_any_button_hovered.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_any_button_hovered.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override

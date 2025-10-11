@@ -41,17 +41,17 @@ public class EnterWorldAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.loadworld");
+        return Component.translatable("fancymenu.actions.loadworld");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.loadworld.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.loadworld.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.loadworld.desc.value");
+        return Component.translatable("fancymenu.actions.loadworld.desc.value");
     }
 
     @Override

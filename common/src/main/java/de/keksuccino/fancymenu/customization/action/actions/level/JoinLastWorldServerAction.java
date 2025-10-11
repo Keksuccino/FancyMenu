@@ -79,12 +79,12 @@ public class JoinLastWorldServerAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.join_last_world");
+        return Component.translatable("fancymenu.actions.join_last_world");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.join_last_world.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.join_last_world.desc");
     }
 
     @Override

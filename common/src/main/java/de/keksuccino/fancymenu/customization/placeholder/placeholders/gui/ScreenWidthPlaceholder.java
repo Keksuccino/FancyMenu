@@ -37,17 +37,17 @@ public class ScreenWidthPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiwidth");
+        return I18n.get("fancymenu.placeholders.guiwidth");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiwidth.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.guiwidth.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override

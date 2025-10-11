@@ -47,7 +47,7 @@ public class ScreenIdentifierPlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override

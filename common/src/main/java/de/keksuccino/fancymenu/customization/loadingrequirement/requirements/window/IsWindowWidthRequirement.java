@@ -56,22 +56,22 @@ public class IsWindowWidthRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.windowwidth");
+        return I18n.get("fancymenu.requirements.windowwidth");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.windowwidth.desc", "" + Minecraft.getInstance().getWindow().getWidth(), "" + Minecraft.getInstance().getWindow().getHeight()));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.windowwidth.desc", "" + Minecraft.getInstance().getWindow().getWidth(), "" + Minecraft.getInstance().getWindow().getHeight()));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.window");
+        return I18n.get("fancymenu.requirements.categories.window");
     }
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.windowwidth.valuename");
+        return I18n.get("fancymenu.requirements.windowwidth.value_name");
     }
 
     @Override

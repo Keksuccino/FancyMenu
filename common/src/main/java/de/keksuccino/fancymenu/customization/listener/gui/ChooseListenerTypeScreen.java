@@ -95,7 +95,7 @@ public class ChooseListenerTypeScreen extends Screen {
                 this.width - 20 - 150, 
                 this.height - 20 - 20, 
                 150, 20, 
-                Component.translatable("fancymenu.guicomponents.done"), 
+                Component.translatable("fancymenu.common_components.done"), 
                 button -> {
                     this.callback.accept(this.selectedListener);
                 }
@@ -108,7 +108,7 @@ public class ChooseListenerTypeScreen extends Screen {
                 this.width - 20 - 150,
                 this.height - 20 - 20 - 5 - 20,
                 150, 20,
-                Component.translatable("fancymenu.guicomponents.cancel"),
+                Component.translatable("fancymenu.common_components.cancel"),
                 button -> {
                     this.callback.accept(null);
                 }

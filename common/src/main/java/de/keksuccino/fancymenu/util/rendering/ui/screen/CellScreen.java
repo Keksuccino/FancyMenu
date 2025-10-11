@@ -318,11 +318,11 @@ public abstract class CellScreen extends Screen {
 
         this.addRightSideDefaultSpacer();
 
-        this.cancelButton = this.addRightSideButton(20, Component.translatable("fancymenu.guicomponents.cancel"), button -> {
+        this.cancelButton = this.addRightSideButton(20, Component.translatable("fancymenu.common_components.cancel"), button -> {
             this.onCancel();
         });
 
-        this.doneButton = this.addRightSideButton(20, Component.translatable("fancymenu.guicomponents.done"), button -> {
+        this.doneButton = this.addRightSideButton(20, Component.translatable("fancymenu.common_components.done"), button -> {
             if (this.allowDone()) this.onDone();
         }).setIsActiveSupplier(consumes -> this.allowDone());
 

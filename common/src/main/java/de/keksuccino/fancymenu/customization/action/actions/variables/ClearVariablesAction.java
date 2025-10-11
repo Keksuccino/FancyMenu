@@ -29,12 +29,12 @@ public class ClearVariablesAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.helper.buttonaction.variables.clearall");
+        return Component.translatable("fancymenu.actions.variables.clearall");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.buttonaction.variables.clearall.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.variables.clearall.desc");
     }
 
     @Override

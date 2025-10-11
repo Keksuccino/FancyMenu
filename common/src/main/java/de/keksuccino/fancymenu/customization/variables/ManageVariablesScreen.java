@@ -143,7 +143,7 @@ public class ManageVariablesScreen extends Screen {
         this.addRenderableWidget(toggleResetOnLaunchButton);
         UIBase.applyDefaultWidgetSkinTo(toggleResetOnLaunchButton);
 
-        ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, buttonWidth, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, buttonWidth, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(VariableHandler.getVariables());
         });
         this.addRenderableWidget(doneButton);

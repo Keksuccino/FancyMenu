@@ -133,13 +133,13 @@ public class DualTextInputScreen extends Screen {
             })));
         }
 
-        this.cancelButton = new ExtendedButton((this.width / 2) - 5 - 100, centerY + 90, 100, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton((this.width / 2) - 5 - 100, centerY + 90, 100, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.onClose();
         });
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
         this.addRenderableWidget(this.cancelButton);
 
-        this.doneButton = new ExtendedButton((this.width / 2) + 5, centerY + 90, 100, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton((this.width / 2) + 5, centerY + 90, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             if (this.isTextValid()) this.onDone();
         }).setIsActiveSupplier(consumes -> this.isTextValid())
                 .setTooltipSupplier(consumes -> {

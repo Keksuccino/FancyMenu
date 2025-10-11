@@ -52,12 +52,12 @@ public class IsServerIpRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.visibilityrequirement.is_server_ip");
+        return I18n.get("fancymenu.requirements.is_server_ip");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.visibilityrequirement.is_server_ip.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_server_ip.desc"));
     }
 
     @Override
@@ -67,7 +67,7 @@ public class IsServerIpRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.visibilityrequirement.is_server_ip.value.desc");
+        return I18n.get("fancymenu.requirements.is_server_ip.value.desc");
     }
 
     @Override

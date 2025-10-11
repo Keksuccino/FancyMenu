@@ -82,7 +82,7 @@ public class ConfirmationScreen extends Screen {
     @Override
     protected void init() {
 
-        this.confirmButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
+        this.confirmButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.ok"), (button) -> {
             this.callback.accept(true);
         }).setForceDefaultTooltipStyle(true).setTooltipSupplier(consumes -> {
             if (!consumes.active) {
@@ -94,7 +94,7 @@ public class ConfirmationScreen extends Screen {
         this.addWidget(this.confirmButton);
         UIBase.applyDefaultWidgetSkinTo(this.confirmButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(false);
         });
         this.addWidget(this.cancelButton);

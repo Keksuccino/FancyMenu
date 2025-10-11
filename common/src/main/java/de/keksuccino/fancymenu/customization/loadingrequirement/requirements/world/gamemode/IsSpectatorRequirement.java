@@ -53,17 +53,17 @@ public class IsSpectatorRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.visibilityrequirement.gamemode.is_spectator");
+        return I18n.get("fancymenu.requirements.gamemode.is_spectator");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.visibilityrequirement.gamemode.is_spectator.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.gamemode.is_spectator.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.world");
+        return I18n.get("fancymenu.requirements.categories.world");
     }
 
     @Override

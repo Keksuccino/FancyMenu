@@ -60,7 +60,7 @@ public abstract class MixinTitleScreen extends Screen {
                             logo.renderLogoAtPosition(graphics, x, y, renderer.getAlpha());
                         }))
                 .setWidgetIdentifierFancyMenu("minecraft_logo_widget")
-                .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.logo"));
+                .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.logo"));
 
         MinecraftSplashRenderer splash = MinecraftSplashRenderer.DEFAULT_INSTANCE;
         this.addRenderableWidget(new RendererWidget(splash.getDefaultPositionX(this.width) - 50, splash.getDefaultPositionY() - 20, 100, 40,
@@ -69,7 +69,7 @@ public abstract class MixinTitleScreen extends Screen {
                             splash.renderAt(graphics, x + (width / 2), y + (height / 2), Minecraft.getInstance().font, splashColor);
                         }))
                 .setWidgetIdentifierFancyMenu("minecraft_splash_widget")
-                .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash"));
+                .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.splash"));
 
         if (this.realmsNotificationsScreen != null) {
             RealmsNotificationRenderer notifications = new RealmsNotificationRenderer(this.realmsNotificationsScreen, this.width, this.height);
@@ -80,7 +80,7 @@ public abstract class MixinTitleScreen extends Screen {
                                 notifications.renderIcons(graphics, x, y, DrawableColor.WHITE.getColorIntWithAlpha(renderer.getAlpha()));
                             }))
                     .setWidgetIdentifierFancyMenu("minecraft_realms_notification_icons_widget")
-                    .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.realmsnotification"));
+                    .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.realmsnotification"));
         }
 
         BrandingRenderer branding = new BrandingRenderer(this.height);
@@ -90,7 +90,7 @@ public abstract class MixinTitleScreen extends Screen {
                             branding.render(graphics, x, y);
                         }))
                 .setWidgetIdentifierFancyMenu("minecraft_branding_widget")
-                .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.branding"));
+                .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.branding"));
 
     }
 

@@ -505,7 +505,7 @@ public class LayoutEditorUI {
 						Minecraft.getInstance().setScreen(editor);
 					});
 					Minecraft.getInstance().setScreen(s);
-				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")))
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
 		menu.addValueCycleEntry("keep_background_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect", editor.layout.preserveBackgroundAspectRatio).addCycleListener(cycle -> {
@@ -579,7 +579,7 @@ public class LayoutEditorUI {
 		menu.addValueCycleEntry("random_mode", CommonCycles.cycleEnabledDisabled("fancymenu.fancymenu.editor.layoutoptions.randommode", editor.layout.randomMode).addCycleListener(cycle -> {
 					editor.history.saveSnapshot();
 					editor.layout.randomMode = cycle.getAsBoolean();
-				})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.btn.desc")))
+				})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("random"));
 
 		menu.addClickableEntry("random_mode_group", Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), (menu1, entry) -> {
@@ -594,14 +594,14 @@ public class LayoutEditorUI {
 						Minecraft.getInstance().setScreen(editor);
 					}).setText(editor.layout.randomGroup));
 				}).setIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
-				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.btn.desc")))
+				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("group"));
 
 		menu.addValueCycleEntry("random_mode_first_time", CommonCycles.cycleEnabledDisabled("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime", editor.layout.randomOnlyFirstTime).addCycleListener(cycle -> {
 					editor.history.saveSnapshot();
 					editor.layout.randomOnlyFirstTime = cycle.getAsBoolean();
 				})).setIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
-				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.btn.desc")))
+				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("random_once"));
 
 		menu.addSeparatorEntry("separator_after_random_mode_first_time");
@@ -635,7 +635,7 @@ public class LayoutEditorUI {
 				.setIsActiveSupplier((menu1, entry) -> (editor.layout.forcedScale != 0))
 				.setTooltipSupplier((menu1, entry) -> {
 					if (entry.isActive()) {
-						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.btn.desc"));
+						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.desc"));
 					}
 					return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.forced_scale_needed"));
 				})
@@ -665,7 +665,7 @@ public class LayoutEditorUI {
 								}
 							}
 							return null;
-						}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")))
+						}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("measure"))
 				.setIsActiveSupplier((menu1, entry) -> editor.layout.autoScalingWidth == 0)
 				.setTooltipSupplier((menu1, entry) -> entry.isActive() ? null : Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.auto_scaling.disable_forced_scale_first")));
@@ -698,14 +698,14 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_close_audio");
 
-		menu.addClickableEntry("layout_wide_requirements", Component.translatable("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (menu1, entry) -> {
+		menu.addClickableEntry("layout_wide_requirements", Component.translatable("fancymenu.requirements.layouts.loading_requirements"), (menu1, entry) -> {
 					Minecraft.getInstance().setScreen(new ManageRequirementsScreen(editor.layout.layoutWideLoadingRequirementContainer.copy(false), (call) -> {
 						if (call != null) {
 							editor.layout.layoutWideLoadingRequirementContainer = call;
 						}
 						Minecraft.getInstance().setScreen(editor);
 					}));
-				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")))
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.layouts.loading_requirements.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("check_list"));
 
 		menu.addSeparatorEntry("separator_after_layout_wide_requirements");
@@ -748,7 +748,7 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_paste_elements");
 
-		menu.addSubMenuEntry("add_element", Component.translatable("fancymenu.editor.layoutproperties.newelement"), buildElementContextMenu(editor))
+		menu.addSubMenuEntry("add_element", Component.translatable("fancymenu.editor.layout.settings.new_element"), buildElementContextMenu(editor))
 				.setIcon(ContextMenu.IconFactory.getIcon("add"));
 
 		return menu;

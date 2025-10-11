@@ -42,22 +42,22 @@ public class IsLayoutEnabledRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.visibilityrequirement.is_layout_enabled");
+        return I18n.get("fancymenu.requirements.is_layout_enabled");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.visibilityrequirement.is_layout_enabled.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_layout_enabled.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.visibilityrequirement.is_layout_enabled.value.desc");
+        return I18n.get("fancymenu.requirements.is_layout_enabled.value.desc");
     }
 
     @Override

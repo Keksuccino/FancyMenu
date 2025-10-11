@@ -115,7 +115,7 @@ public class EditMinecraftOptionAction extends Action {
 
         @SuppressWarnings("all")
         protected EditMinecraftOptionActionValueScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.actions.generic_edit_value"), callback);
+            super(Component.translatable("fancymenu.actions.generic_edit_value"), callback);
             if (value.contains(":")) {
                 this.name = value.split(":", 2)[0];
                 this.setTo = value.split(":", 2)[1];

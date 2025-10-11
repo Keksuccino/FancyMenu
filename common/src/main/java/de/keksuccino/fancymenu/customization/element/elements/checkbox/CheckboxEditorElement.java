@@ -25,7 +25,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
         
         super.init();
         
-        this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.actions.screens.manage_screen.manage"), (menu, entry) -> {
                     ManageActionsScreen s = new ManageActionsScreen(this.getElement().getExecutableBlock(), (call) -> {
                         if (call != null) {
                             this.editor.history.saveSnapshot();
@@ -35,7 +35,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                     });
                     Minecraft.getInstance().setScreen(s);
                 })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.checkbox.manage_actions.desc")))
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
 
@@ -63,7 +63,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().hoverSound,
                         (checkboxEditorElement, supplier) -> checkboxEditorElement.getElement().hoverSound = supplier,
-                        Component.translatable("fancymenu.editor.items.button.hoversound"), true, null, true, true, true)
+                        Component.translatable("fancymenu.elements.button.hoversound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "click_sound",
@@ -71,7 +71,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().clickSound,
                         (checkboxEditorElement, supplier) -> checkboxEditorElement.getElement().clickSound = supplier,
-                        Component.translatable("fancymenu.editor.items.button.clicksound"), true, null, true, true, true)
+                        Component.translatable("fancymenu.elements.button.clicksound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.rightClickMenu.addSeparatorEntry("checkbox_separator_5").setStackable(true);
@@ -89,10 +89,10 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                             }
                             ((CheckboxElement)element1.element).tooltip = s;
                         },
-                        null, true, true, Component.translatable("fancymenu.editor.items.button.btndescription"),
+                        null, true, true, Component.translatable("fancymenu.elements.button.tooltip"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.tooltip.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));
 
         this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");

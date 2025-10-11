@@ -199,13 +199,13 @@ public class TextEditorScreen extends Screen {
         this.horizontalScrollBarPlaceholderMenu.idleBarColor = this.scrollGrabberIdleColor;
         this.horizontalScrollBarPlaceholderMenu.hoverBarColor = this.scrollGrabberHoverColor;
 
-        this.cancelButton = new ExtendedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.onClose();
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
-        this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             if (this.isTextValid()) this.callback.accept(this.getText());
         });
         this.addWidget(this.doneButton);
@@ -223,7 +223,7 @@ public class TextEditorScreen extends Screen {
                     extendedPlaceholderMenu = true;
                 }
                 this.rebuildWidgets();
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.dynamicvariabletextfield.variables.desc")));
+            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.placeholders.desc")));
             this.addWidget(this.placeholderButton);
             UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
         } else {
@@ -536,7 +536,7 @@ public class TextEditorScreen extends Screen {
 
         Map<String, List<Placeholder>> categories = this.getPlaceholdersOrderedByCategories();
         if (!categories.isEmpty()) {
-            List<Placeholder> otherCategory = categories.get(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"));
+            List<Placeholder> otherCategory = categories.get(I18n.get("fancymenu.requirements.categories.other"));
             if (otherCategory != null) {
 
                 if (category == null) {
@@ -553,7 +553,7 @@ public class TextEditorScreen extends Screen {
                         }
                     }
                     //Add placeholder entries of the "Other" category to the end of the categories list (because other = no category)
-                    this.updatePlaceholderEntries(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"), false, false);
+                    this.updatePlaceholderEntries(I18n.get("fancymenu.requirements.categories.other"), false, false);
 
                 } else {
 
@@ -608,7 +608,7 @@ public class TextEditorScreen extends Screen {
             if (!p.shouldShowUpInPlaceholderMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             String cat = p.getCategory();
             if (cat == null) {
-                cat = I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");
+                cat = I18n.get("fancymenu.requirements.categories.other");
             }
             List<Placeholder> l = categories.get(cat);
             if (l == null) {
@@ -618,10 +618,10 @@ public class TextEditorScreen extends Screen {
             l.add(p);
         }
         //Move the Other category to the end
-        List<Placeholder> otherCategory = categories.get(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"));
+        List<Placeholder> otherCategory = categories.get(I18n.get("fancymenu.requirements.categories.other"));
         if (otherCategory != null) {
-            categories.remove(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"));
-            categories.put(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"), otherCategory);
+            categories.remove(I18n.get("fancymenu.requirements.categories.other"));
+            categories.put(I18n.get("fancymenu.requirements.categories.other"), otherCategory);
         }
         return categories;
     }

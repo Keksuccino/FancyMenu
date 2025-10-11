@@ -88,7 +88,7 @@ public class NotificationScreen extends Screen {
     @Override
     protected void init() {
 
-        this.okayButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
+        this.okayButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.ok"), (button) -> {
             this.callback.accept(true);
         });
         this.addWidget(this.okayButton);

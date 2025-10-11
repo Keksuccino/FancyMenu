@@ -40,7 +40,7 @@ public class ItemEditorElement extends AbstractEditorElement {
 
             subMenuEntry.getSubContextMenu().removeEntry("input_value");
 
-            subMenuEntry.getSubContextMenu().addClickableEntryAt(0, "input_value", Component.translatable("fancymenu.guicomponents.set"), (menu, entry) ->
+            subMenuEntry.getSubContextMenu().addClickableEntryAt(0, "input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) ->
             {
                 if (entry.getStackMeta().isFirstInStack()) {
                     Screen inputScreen = new ItemKeyScreen(itemKeyTargetFieldGetter.get(this), callback -> {

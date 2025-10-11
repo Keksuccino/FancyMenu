@@ -77,17 +77,17 @@ public class ServerMotdPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.servermotd");
+        return I18n.get("fancymenu.placeholders.servermotd");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.servermotd.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.servermotd.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.server");
+        return I18n.get("fancymenu.requirements.categories.server");
     }
 
     @Override

@@ -29,17 +29,17 @@ public class GuiScalePlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.placeholder.guiscale");
+        return I18n.get("fancymenu.placeholders.guiscale");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.placeholder.guiscale.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.guiscale.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override

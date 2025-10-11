@@ -43,7 +43,7 @@ public class BuildActionScreen extends Screen {
 
     public BuildActionScreen(@Nullable ActionInstance instanceToEdit, @NotNull Consumer<ActionInstance> callback) {
 
-        super((instanceToEdit != null) ? Component.translatable("fancymenu.editor.action.screens.edit_action") : Component.translatable("fancymenu.editor.action.screens.add_action"));
+        super((instanceToEdit != null) ? Component.translatable("fancymenu.actions.screens.edit_action") : Component.translatable("fancymenu.actions.screens.add_action"));
 
         this.isEdit = (instanceToEdit != null);
 
@@ -97,11 +97,11 @@ public class BuildActionScreen extends Screen {
         // Create buttons with proper positions in constructors
         ExtendedButton doneOrNextButton = new ExtendedButton(doneButtonX, doneButtonY, 150, 20, Component.empty(), (button) -> {
             this.onNextStep();
-        }).setLabelSupplier(consumes -> this.needsValueFirst() ? Component.translatable("fancymenu.ui.generic.next_step") : Component.translatable("fancymenu.guicomponents.done"));
+        }).setLabelSupplier(consumes -> this.needsValueFirst() ? Component.translatable("fancymenu.ui.generic.next_step") : Component.translatable("fancymenu.common_components.done"));
         this.addRenderableWidget(doneOrNextButton);
         UIBase.applyDefaultWidgetSkinTo(doneOrNextButton);
 
-        ExtendedButton cancelButton = new ExtendedButton(cancelButtonX, cancelButtonY, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        ExtendedButton cancelButton = new ExtendedButton(cancelButtonX, cancelButtonY, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addRenderableWidget(cancelButton);
@@ -168,9 +168,9 @@ public class BuildActionScreen extends Screen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.build_screen.available_actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        Component descLabel = Component.translatable("fancymenu.editor.action.screens.build_screen.action_description");
+        Component descLabel = Component.translatable("fancymenu.actions.screens.build_screen.action_description");
         int descLabelWidth = this.font.width(descLabel);
         graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
@@ -289,7 +289,7 @@ public class BuildActionScreen extends Screen {
             if (action.isDeprecated()) {
                 c = c.withStyle(Style.EMPTY.withStrikethrough(true));
                 c = c.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
-                c = c.append(Component.translatable("fancymenu.editor.actions.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()).withStrikethrough(false)));
+                c = c.append(Component.translatable("fancymenu.actions.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()).withStrikethrough(false)));
             }
             return c;
         }

@@ -41,7 +41,7 @@ public class BuildRequirementGroupScreen extends Screen {
 
     public BuildRequirementGroupScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementGroup groupToEdit, @NotNull Consumer<LoadingRequirementGroup> callback) {
 
-        super((groupToEdit != null) ? Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.edit_group")) : Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.add_group")));
+        super((groupToEdit != null) ? Component.literal(I18n.get("fancymenu.requirements.screens.edit_group")) : Component.literal(I18n.get("fancymenu.requirements.screens.add_group")));
 
         this.parentScreen = parentScreen;
         this.parent = parent;
@@ -81,18 +81,18 @@ public class BuildRequirementGroupScreen extends Screen {
             @Override
             public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.group.mode == LoadingRequirementGroup.GroupMode.AND) {
-                    this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.and"));
+                    this.setLabel(I18n.get("fancymenu.requirements.screens.build_group_screen.mode.and"));
                 } else {
-                    this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.or"));
+                    this.setLabel(I18n.get("fancymenu.requirements.screens.build_group_screen.mode.or"));
                 }
                 super.render(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.groupModeButton);
-        this.groupModeButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.desc")));
+        this.groupModeButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.mode.desc")));
         UIBase.applyDefaultWidgetSkinTo(this.groupModeButton);
 
-        this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.add_requirement"), (button) -> {
+        this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.add_requirement"), (button) -> {
             BuildRequirementScreen s = new BuildRequirementScreen(this, this.parent, null, (call) -> {
                 if (call != null) {
                     this.group.addInstance(call);
@@ -102,10 +102,10 @@ public class BuildRequirementGroupScreen extends Screen {
             Minecraft.getInstance().setScreen(s);
         });
         this.addWidget(this.addRequirementButton);
-        this.addRequirementButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.add_requirement.desc")));
+        this.addRequirementButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.add_requirement.desc")));
         UIBase.applyDefaultWidgetSkinTo(this.addRequirementButton);
 
-        this.editRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.edit_requirement"), (button) -> {
+        this.editRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.edit_requirement"), (button) -> {
             LoadingRequirementInstance i = this.getSelectedInstance();
             if (i != null) {
                 BuildRequirementScreen s = new BuildRequirementScreen(this, this.parent, i, (call) -> {
@@ -119,7 +119,7 @@ public class BuildRequirementGroupScreen extends Screen {
             @Override
             public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.getSelectedInstance() == null) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.no_requirement_selected")));
+                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.no_requirement_selected")));
                     this.active = false;
                 } else {
                     this.setTooltip((Tooltip) null);
@@ -129,10 +129,10 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         };
         this.addWidget(this.editRequirementButton);
-        this.editRequirementButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.edit_requirement.desc")));
+        this.editRequirementButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.edit_requirement.desc")));
         UIBase.applyDefaultWidgetSkinTo(this.editRequirementButton);
 
-        this.removeRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.remove_requirement"), (button) -> {
+        this.removeRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.remove_requirement"), (button) -> {
             LoadingRequirementInstance i = this.getSelectedInstance();
             if (i != null) {
                 Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
@@ -141,13 +141,13 @@ public class BuildRequirementGroupScreen extends Screen {
                         this.updateRequirementsScrollArea();
                     }
                     Minecraft.getInstance().setScreen(this);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.remove_requirement.confirm")));
+                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.remove_requirement.confirm")));
             }
         }) {
             @Override
             public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.getSelectedInstance() == null) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.no_requirement_selected")));
+                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.no_requirement_selected")));
                     this.active = false;
                 } else {
                     this.setTooltip((Tooltip) null);
@@ -157,10 +157,10 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         };
         this.addWidget(this.removeRequirementButton);
-        this.removeRequirementButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.remove_requirement.desc")));
+        this.removeRequirementButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.remove_requirement.desc")));
         UIBase.applyDefaultWidgetSkinTo(this.removeRequirementButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.done"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.group);
         }) {
@@ -168,13 +168,13 @@ public class BuildRequirementGroupScreen extends Screen {
             public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
                 BuildRequirementGroupScreen s = BuildRequirementGroupScreen.this;
                 if (s.group.getInstances().isEmpty()) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.finish.no_requirements_added")));
+                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.finish.no_requirements_added")));
                     this.active = false;
                 } else if ((s.parent.getGroup(s.group.identifier) != null) && (s.parent.getGroup(s.group.identifier) != s.group)) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.finish.identifier_already_used")));
+                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.finish.identifier_already_used")));
                     this.active = false;
                 } else if ((s.group.identifier == null) || (s.group.identifier.replace(" ", "").length() == 0)) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.finish.identifier_too_short")));
+                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.finish.identifier_too_short")));
                     this.active = false;
                 } else {
                     this.setTooltip((Tooltip) null);
@@ -186,7 +186,7 @@ public class BuildRequirementGroupScreen extends Screen {
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.cancel"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             if (this.isEdit) {
                 this.callback.accept(this.group);
@@ -217,7 +217,7 @@ public class BuildRequirementGroupScreen extends Screen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        graphics.drawString(this.font, I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.group_requirements"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.build_group_screen.group_requirements"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
@@ -257,7 +257,7 @@ public class BuildRequirementGroupScreen extends Screen {
         this.groupIdentifierTextField.setY(this.groupModeButton.getY() - 15 - 20);
         this.groupIdentifierTextField.render(graphics, mouseX, mouseY, partial);
 
-        String idLabel = I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.group_identifier");
+        String idLabel = I18n.get("fancymenu.requirements.screens.build_group_screen.group_identifier");
         int idLabelWidth = this.font.width(idLabel);
         graphics.drawString(this.font, idLabel, this.width - 20 - idLabelWidth, this.groupIdentifierTextField.getY() - 15, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 

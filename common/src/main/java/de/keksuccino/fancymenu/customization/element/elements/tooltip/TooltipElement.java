@@ -271,7 +271,7 @@ public class TooltipElement extends AbstractElement {
 
             if (linesRaw.isEmpty()) {
                 if (isEditor()) {
-                    linesRaw.add(I18n.get("fancymenu.customization.items.text.status.unable_to_load"));
+                    linesRaw.add(I18n.get("fancymenu.elements.text.status.unable_to_load"));
                 } else {
                     linesRaw.add("");
                 }

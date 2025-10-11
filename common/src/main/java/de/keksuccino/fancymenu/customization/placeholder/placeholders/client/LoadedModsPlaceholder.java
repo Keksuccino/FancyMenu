@@ -48,17 +48,17 @@ public class LoadedModsPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.loadedmods");
+        return I18n.get("fancymenu.placeholders.loaded_mods");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.dynamicvariabletextfield.variables.loadedmods.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.loaded_mods.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.client");
+        return I18n.get("fancymenu.requirements.categories.client");
     }
 
     @Override

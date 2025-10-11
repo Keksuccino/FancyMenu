@@ -235,7 +235,7 @@ public class ManageListenersScreen extends CellScreen {
             String indent = "  ".repeat(Math.max(0, indentLevel));
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().listing_dot_color_1.getColorInt()))
-                    .append(Component.translatable("fancymenu.editor.action.screens.manage_screen.info.value.none")
+                    .append(Component.translatable("fancymenu.actions.screens.manage_screen.info.value.none")
                             .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()))));
         }
         
@@ -258,10 +258,10 @@ public class ManageListenersScreen extends CellScreen {
             String cachedValue = actionInstance.value;
             String valueString = ((cachedValue != null) && actionInstance.action.hasValue()) 
                     ? cachedValue 
-                    : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
+                    : I18n.get("fancymenu.actions.screens.manage_screen.info.value.none");
             lines.add(Component.literal(indent + "    ◦ ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().listing_dot_color_1.getColorInt()))
-                    .append(Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ")
+                    .append(Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ")
                             .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())))
                     .append(Component.literal(valueString)
                             .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
@@ -270,7 +270,7 @@ public class ManageListenersScreen extends CellScreen {
             String requirements = this.buildRequirementsString(ifBlock);
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.editor.actions.blocks.if", Component.literal(requirements))
+                    .append(Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements))
                             .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
             
             // Add nested executables
@@ -289,7 +289,7 @@ public class ManageListenersScreen extends CellScreen {
             String requirements = this.buildRequirementsString(whileBlock);
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.editor.actions.blocks.while", Component.literal(requirements))
+                    .append(Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements))
                             .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
             
             // Add nested executables
@@ -317,7 +317,7 @@ public class ManageListenersScreen extends CellScreen {
             String requirements = this.buildRequirementsString(elseIfBlock);
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.editor.actions.blocks.else_if", Component.literal(requirements))
+                    .append(Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements))
                             .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
             
             // Add nested executables
@@ -328,7 +328,7 @@ public class ManageListenersScreen extends CellScreen {
         } else if (block instanceof ElseExecutableBlock elseBlock) {
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.editor.actions.blocks.else")
+                    .append(Component.translatable("fancymenu.actions.blocks.else")
                             .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
             
             // Add nested executables

@@ -76,17 +76,17 @@ public class OpenScreenAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.opengui");
+        return Component.translatable("fancymenu.actions.opengui");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.opengui.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.opengui.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.opengui.desc.value");
+        return Component.translatable("fancymenu.actions.opengui.desc.value");
     }
 
     @Override

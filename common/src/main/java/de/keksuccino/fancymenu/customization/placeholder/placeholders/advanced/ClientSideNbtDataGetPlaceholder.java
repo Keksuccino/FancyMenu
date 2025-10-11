@@ -651,7 +651,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.advanced");
+        return I18n.get("fancymenu.requirements.categories.advanced");
     }
 
     @Override

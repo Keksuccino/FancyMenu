@@ -31,7 +31,7 @@ public class AsyncPlaceholderErrorScreen extends QueueableScreen {
 
         this.renderText = this.font.split(Component.translatable("fancymenu.placeholders.async.cant_run_async", this.placeholderName), this.width - 60);
 
-        UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(centerX - 100, this.height - 50, 200, 20, Component.translatable("fancymenu.guicomponents.ok"), button -> {
+        UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(centerX - 100, this.height - 50, 200, 20, Component.translatable("fancymenu.common_components.ok"), button -> {
             this.onClose();
         })));
 

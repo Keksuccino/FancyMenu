@@ -53,17 +53,17 @@ public class IsSurvivalRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.visibilityrequirement.gamemode.is_survival");
+        return I18n.get("fancymenu.requirements.gamemode.is_survival");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.visibilityrequirement.gamemode.is_survival.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.gamemode.is_survival.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.world");
+        return I18n.get("fancymenu.requirements.categories.world");
     }
 
     @Override

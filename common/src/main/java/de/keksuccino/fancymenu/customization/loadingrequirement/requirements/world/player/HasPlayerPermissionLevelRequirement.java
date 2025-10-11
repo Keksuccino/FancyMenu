@@ -77,12 +77,12 @@ public class HasPlayerPermissionLevelRequirement extends LoadingRequirement {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.world");
+        return I18n.get("fancymenu.requirements.categories.world");
     }
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.world.has_player_permission_level.valuename");
+        return I18n.get("fancymenu.requirements.world.has_player_permission_level.value_name");
     }
 
     @Override

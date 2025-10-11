@@ -41,17 +41,17 @@ public class GetVariablePlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.placeholder.get_variable");
+        return I18n.get("fancymenu.placeholders.get_variable");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.placeholder.get_variable.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.get_variable.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.advanced");
+        return I18n.get("fancymenu.requirements.categories.advanced");
     }
 
     @Override

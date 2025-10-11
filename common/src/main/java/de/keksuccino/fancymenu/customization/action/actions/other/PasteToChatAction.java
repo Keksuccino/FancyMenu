@@ -68,12 +68,12 @@ public class PasteToChatAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.helper.buttonaction.paste_to_chat");
+        return Component.translatable("fancymenu.actions.paste_to_chat");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.buttonaction.paste_to_chat.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.paste_to_chat.desc");
     }
 
     @Override
@@ -103,7 +103,7 @@ public class PasteToChatAction extends Action {
         protected String msg = "";
 
         protected PasteToChatActionValueScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.actions.generic_edit_value"), callback);
+            super(Component.translatable("fancymenu.actions.generic_edit_value"), callback);
             if (value.contains(":")) {
                 this.msg = value.split(":", 2)[1];
                 String appendString = value.split(":", 2)[0];
@@ -116,14 +116,14 @@ public class PasteToChatAction extends Action {
 
             this.addSpacerCell(20);
 
-            this.addLabelCell(Component.translatable("fancymenu.editor.actions.paste_to_chat.text"));
+            this.addLabelCell(Component.translatable("fancymenu.actions.paste_to_chat.text"));
             this.addTextInputCell(null, true, true).setEditListener(s -> this.msg = s).setText(this.msg);
 
             this.addCellGroupEndSpacerCell();
 
-            this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.editor.actions.paste_to_chat.append", this.append), (value, button) -> {
+            this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.actions.paste_to_chat.append", this.append), (value, button) -> {
                 this.append = value.getAsBoolean();
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.actions.paste_to_chat.append.desc"))), true);
+            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.paste_to_chat.append.desc"))), true);
 
             this.addSpacerCell(20);
 

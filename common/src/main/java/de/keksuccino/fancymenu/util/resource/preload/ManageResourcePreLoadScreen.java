@@ -42,9 +42,9 @@ public class ManageResourcePreLoadScreen extends CellScreen {
 
             String sourceString;
             if (source instanceof ResourcePreLoader.CubicPanoramaSource) {
-                sourceString = "[" + I18n.get("fancymenu.background.panorama") + "] " + source.getSourceWithoutPrefix();
+                sourceString = "[" + I18n.get("fancymenu.backgrounds.panorama") + "] " + source.getSourceWithoutPrefix();
             } else if (source instanceof ResourcePreLoader.SlideshowSource) {
-                sourceString = "[" + I18n.get("fancymenu.background.slideshow") + "] " + source.getSourceWithoutPrefix();
+                sourceString = "[" + I18n.get("fancymenu.backgrounds.slideshow") + "] " + source.getSourceWithoutPrefix();
             } else {
                 sourceString = ResourceSourceType.getWithoutSourcePrefix(source.getSerializationSource());
             }

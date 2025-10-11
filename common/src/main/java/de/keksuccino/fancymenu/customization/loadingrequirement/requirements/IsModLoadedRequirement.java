@@ -77,12 +77,12 @@ public class IsModLoadedRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.modloaded");
+        return I18n.get("fancymenu.requirements.is_mod_loaded");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.modloaded.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_mod_loaded.desc"));
     }
 
     @Override
@@ -125,7 +125,7 @@ public class IsModLoadedRequirement extends LoadingRequirement {
         protected EditBoxSuggestions modIdSuggestions;
 
         protected IsModLoadedValueConfigScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename"), callback);
+            super(Component.translatable("fancymenu.requirements.is_mod_loaded.value_name"), callback);
             this.modId = value;
         }
 
@@ -135,7 +135,7 @@ public class IsModLoadedRequirement extends LoadingRequirement {
             this.addSpacerCell(20);
 
             String id = this.getModIdString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_mod_loaded.mod_id"));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_mod_loaded.mod_id"));
             this.modIdCell = this.addTextInputCell(null, true, true).setText(id);
 
             this.modIdSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.modIdCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, Services.PLATFORM.getLoadedModIds());

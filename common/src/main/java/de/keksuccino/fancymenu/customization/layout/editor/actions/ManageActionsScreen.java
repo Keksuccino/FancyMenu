@@ -137,7 +137,7 @@ public class ManageActionsScreen extends Screen {
 
     public ManageActionsScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
 
-        super(Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"));
+        super(Component.translatable("fancymenu.actions.screens.manage_screen.manage"));
 
         this.executableBlock = executableBlock.copy(false);
         this.callback = callback;
@@ -150,13 +150,13 @@ public class ManageActionsScreen extends Screen {
 
         this.updateActionsContextMenu(false, null);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(this.executableBlock);
         });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);
@@ -189,23 +189,23 @@ public class ManageActionsScreen extends Screen {
 
         ContextMenu addActionSubMenu = this.buildAddActionSubMenu();
         boolean hasActionEntries = !addActionSubMenu.getEntries().isEmpty();
-        this.actionsContextMenu.addSubMenuEntry("add_action", Component.translatable("fancymenu.editor.action.screens.add_action"), addActionSubMenu)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.add_action.desc")))
+        this.actionsContextMenu.addSubMenuEntry("add_action", Component.translatable("fancymenu.actions.screens.add_action"), addActionSubMenu)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.add_action.desc")))
                 .setIsActiveSupplier((menu, entry) -> hasActionEntries);
 
-        this.actionsContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.editor.actions.blocks.add.folder"), (menu, entry) -> {
+        this.actionsContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAddFolder();
         });
 
-        this.actionsContextMenu.addClickableEntry("add_if", Component.translatable("fancymenu.editor.actions.blocks.add.if"), (menu, entry) -> {
+        this.actionsContextMenu.addClickableEntry("add_if", Component.translatable("fancymenu.actions.blocks.add.if"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAddIf();
         });
 
-        this.actionsContextMenu.addClickableEntry("add_while", Component.translatable("fancymenu.editor.actions.blocks.add.while"), (menu, entry) -> {
+        this.actionsContextMenu.addClickableEntry("add_while", Component.translatable("fancymenu.actions.blocks.add.while"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAddWhile();
@@ -213,13 +213,13 @@ public class ManageActionsScreen extends Screen {
 
         this.actionsContextMenu.addSeparatorEntry("after_add");
 
-        this.actionsContextMenu.addClickableEntry("append_else_if", Component.translatable("fancymenu.editor.actions.blocks.add.else_if"), (menu, entry) -> {
+        this.actionsContextMenu.addClickableEntry("append_else_if", Component.translatable("fancymenu.actions.blocks.add.else_if"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAppendElseIf();
         }).setIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock());
 
-        this.actionsContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.editor.actions.blocks.add.else"), (menu, entry) -> {
+        this.actionsContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.actions.blocks.add.else"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAppendElse();
@@ -227,7 +227,7 @@ public class ManageActionsScreen extends Screen {
 
         this.actionsContextMenu.addSeparatorEntry("after_append");
 
-        this.actionsContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.editor.action.screens.move_action_up"), (menu, contextMenuEntry) -> {
+        this.actionsContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.actions.screens.move_action_up"), (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     ExecutableEntry selected = this.getSelectedEntry();
                     if (selected != null) {
@@ -236,12 +236,12 @@ public class ManageActionsScreen extends Screen {
                 }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
                 .setTooltipSupplier((menu, entry) -> {
                     if (!this.isAnyExecutableSelected()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
                     }
-                    return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.move_action_up.desc"));
+                    return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_up.desc"));
         });
 
-        this.actionsContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.editor.action.screens.move_action_down"), (menu, contextMenuEntry) -> {
+        this.actionsContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.actions.screens.move_action_down"), (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     ExecutableEntry selected = this.getSelectedEntry();
                     if (selected != null) {
@@ -250,21 +250,21 @@ public class ManageActionsScreen extends Screen {
                 }).setIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
                 .setTooltipSupplier((menu, entry) -> {
                     if (!this.isAnyExecutableSelected()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
                     }
-                    return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.move_action_down.desc"));
+                    return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_down.desc"));
                 });
 
         this.actionsContextMenu.addSeparatorEntry("after_reorder");
 
-        this.actionsContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.editor.action.screens.edit_action"), (menu, entry) -> {
+        this.actionsContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.actions.screens.edit_action"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     menu.closeMenu();
                     this.onEdit();
                 }).setIsActiveSupplier((menu, entry) -> this.canEditSelectedEntry())
                 .setTooltipSupplier((menu, entry) -> this.getEditTooltip());
 
-        this.actionsContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.editor.action.screens.remove_action"), (menu, entry) -> {
+        this.actionsContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.actions.screens.remove_action"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     menu.closeMenu();
                     this.onRemove();
@@ -367,7 +367,7 @@ public class ManageActionsScreen extends Screen {
     protected Tooltip getEditTooltip() {
         ExecutableEntry selected = this.getSelectedEntry();
         if ((selected == null) || (selected.executable instanceof ElseExecutableBlock)) {
-            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
+            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
         }
         if (selected.executable instanceof FolderExecutableBlock) {
             return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.folder_no_edit"));
@@ -375,15 +375,15 @@ public class ManageActionsScreen extends Screen {
         if ((selected.executable instanceof ActionInstance i) && !i.action.hasValue()) {
             return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.no_value_to_edit"));
         }
-        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.edit_action.desc"));
+        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.edit_action.desc"));
     }
 
     @NotNull
     protected Tooltip getRemoveTooltip() {
         if (!this.isAnyExecutableSelected()) {
-            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected"));
+            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
         }
-        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.remove_action.desc"));
+        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.remove_action.desc"));
     }
 
     protected void onEdit() {
@@ -469,14 +469,14 @@ public class ManageActionsScreen extends Screen {
         });
 
         UIColorTheme theme = UIBase.getUIColorTheme();
-        MutableComponent openChooserLabel = Component.translatable("fancymenu.editor.actions.open_action_chooser").setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
+        MutableComponent openChooserLabel = Component.translatable("fancymenu.actions.open_action_chooser").setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
         subMenu.addClickableEntry("open_action_chooser", openChooserLabel, (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     this.actionsContextMenu.closeMenu();
                     ExecutableEntry selectedOnCreate = this.getSelectedEntry();
                     this.onOpenActionChooser(selectedOnCreate);
                 }).setIcon(ContextMenu.IconFactory.getIcon("pick"))
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.actions.open_action_chooser.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_action_chooser.desc")));
 
         if (!favoriteActions.isEmpty() || !regularActions.isEmpty()) {
             subMenu.addSeparatorEntry("after_open_action_chooser");
@@ -565,7 +565,7 @@ public class ManageActionsScreen extends Screen {
         if (action.isDeprecated()) {
             label = label.withStyle(Style.EMPTY.withStrikethrough(true));
             label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
-            label = label.append(Component.translatable("fancymenu.editor.actions.deprecated").setStyle(Style.EMPTY.withColor(theme.error_text_color.getColorInt()).withStrikethrough(false)));
+            label = label.append(Component.translatable("fancymenu.actions.deprecated").setStyle(Style.EMPTY.withColor(theme.error_text_color.getColorInt()).withStrikethrough(false)));
         }
         return label;
     }
@@ -581,7 +581,7 @@ public class ManageActionsScreen extends Screen {
         Style hintStyle = Style.EMPTY
                 .withColor(theme.description_area_text_color.getColorInt())
                 .withItalic(true);
-        Component hint = Component.translatable(isFavorite ? "fancymenu.editor.actions.favorite.remove" : "fancymenu.editor.actions.favorite.add").setStyle(hintStyle);
+        Component hint = Component.translatable(isFavorite ? "fancymenu.actions.favorite.remove" : "fancymenu.actions.favorite.add").setStyle(hintStyle);
         if (!lines.isEmpty()) {
             lines.add(Component.empty());
         }
@@ -707,7 +707,7 @@ public class ManageActionsScreen extends Screen {
                     this.updateActionInstanceScrollArea(true);
                 }
                 Minecraft.getInstance().setScreen(this);
-            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.remove_action.confirm")));
+            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.remove_action.confirm")));
         }
     }
 
@@ -745,7 +745,7 @@ public class ManageActionsScreen extends Screen {
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, theme.generic_text_base_color.getColorInt(), false);
-        graphics.drawString(this.font, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, theme.generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, I18n.get("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.generic_text_base_color.getColorInt(), false);
 
         int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - MINIMAP_WIDTH - MINIMAP_GAP);
         this.actionsScrollArea.setWidth(scrollAreaWidth, true);
@@ -2391,7 +2391,7 @@ public class ManageActionsScreen extends Screen {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
-                MutableComponent display = Component.translatable("fancymenu.editor.actions.blocks.if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent display = Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
                 }
@@ -2407,10 +2407,10 @@ public class ManageActionsScreen extends Screen {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else_if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof ElseExecutableBlock) {
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof WhileExecutableBlock b) {
                 String requirements = "";
@@ -2422,14 +2422,14 @@ public class ManageActionsScreen extends Screen {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
-                MutableComponent display = Component.translatable("fancymenu.editor.actions.blocks.while", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent display = Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
                 }
                 this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof FolderExecutableBlock folder) {
-                MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.editor.actions.blocks.folder.display", "")).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.actions.blocks.folder.display", "")).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 MutableComponent nameComponent = Component.literal(folder.getName()).setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
                 this.folderLabelComponent = labelComponent;
                 this.folderNameComponent = nameComponent;
@@ -2810,7 +2810,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         private MutableComponent createCollapsedSuffixComponent(@NotNull UIColorTheme theme) {
-            return Component.literal(" ").append(Component.translatable("fancymenu.editor.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.warning_text_color.getColorInt())));
+            return Component.literal(" ").append(Component.translatable("fancymenu.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.warning_text_color.getColorInt())));
         }
 
         protected void updateValueComponent() {
@@ -2820,8 +2820,8 @@ public class ManageActionsScreen extends Screen {
                 UIColorTheme theme = UIBase.getUIColorTheme();
                 String cachedValue = i.value;
                 boolean hasValue = i.action.hasValue();
-                String valueString = ((cachedValue != null) && hasValue) ? cachedValue : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
-                MutableComponent label = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                String valueString = ((cachedValue != null) && hasValue) ? cachedValue : I18n.get("fancymenu.actions.screens.manage_screen.info.value.none");
+                MutableComponent label = Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 MutableComponent value = Component.literal(valueString).setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
                 this.valueLabelComponent = label;
                 this.valueOnlyComponent = value;

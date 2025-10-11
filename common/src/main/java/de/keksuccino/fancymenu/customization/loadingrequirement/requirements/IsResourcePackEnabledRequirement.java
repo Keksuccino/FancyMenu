@@ -59,7 +59,7 @@ public class IsResourcePackEnabledRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.is_resource_pack_enabled.valuename");
+        return I18n.get("fancymenu.requirements.is_resource_pack_enabled.value_name");
     }
 
     @Override
