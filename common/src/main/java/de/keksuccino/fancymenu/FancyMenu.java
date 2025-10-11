@@ -11,7 +11,6 @@ import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
-import de.keksuccino.fancymenu.util.rendering.BlurRenderUtils;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
@@ -54,8 +53,6 @@ public class FancyMenu {
 		WebUtils.init();
 
 		if (Services.PLATFORM.isOnClient()) {
-
-			BlurRenderUtils.init();
 
 			FileTypes.registerAll();
 
