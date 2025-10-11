@@ -15,7 +15,7 @@ public class Test {
     @EventListener(priority = EventPriority.VERY_LOW)
     public void onRenderPost(RenderScreenEvent.Post e) {
 
-        BlurRenderUtils.renderBlurArea(e.getGraphics(), 50, 50, 200, 200, 6);
+        BlurRenderUtils.renderBlurArea(e.getGraphics(), 50, 50, 200, 200, 12);
 
         e.getGraphics().drawString(Minecraft.getInstance().font, "This is a test.", 70, 70, -1);
 
