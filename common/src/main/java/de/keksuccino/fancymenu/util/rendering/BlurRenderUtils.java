@@ -69,7 +69,14 @@ public final class BlurRenderUtils {
     }
 
     /**
-     * Convenience helper to render a blurred rectangle with default settings.
+     * Renders a blurred rectangle using default tint, opacity, and corner settings.
+     *
+     * @param graphics    GUI rendering context the blur should draw into.
+     * @param x           Left edge in GUI coordinates.
+     * @param y           Top edge in GUI coordinates.
+     * @param width       Width of the blur area in GUI units.
+     * @param height      Height of the blur area in GUI units.
+     * @param blurRadius  Blur radius in GUI units (0 disables blur; 4-12 provides a soft background blur without heavy cost).
      */
     public static void renderBlurArea(@NotNull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius) {
         try (BlurLayer layer = beginLayer(graphics)) {
@@ -78,7 +85,15 @@ public final class BlurRenderUtils {
     }
 
     /**
-     * Convenience helper to render a blurred rectangle with rounded corners.
+     * Renders a blurred rectangle and applies rounded corners without tinting.
+     *
+     * @param graphics     GUI rendering context the blur should draw into.
+     * @param x            Left edge in GUI coordinates.
+     * @param y            Top edge in GUI coordinates.
+     * @param width        Width of the blur area in GUI units.
+     * @param height       Height of the blur area in GUI units.
+     * @param blurRadius   Blur radius in GUI units (0 disables blur; 4-12 is a good baseline).
+     * @param cornerRadius Corner radius in GUI units (0 disables rounding).
      */
     public static void renderBlurArea(@NotNull GuiGraphics graphics,
                                       float x, float y, float width, float height,
@@ -90,10 +105,16 @@ public final class BlurRenderUtils {
     }
 
     /**
-     * Convenience helper to render a blurred rectangle with tint.
+     * Renders a blurred rectangle and mixes in a tint while keeping square corners.
      *
-     * @param tintColor     ARGB color used for tinting.
-     * @param tintStrength  How strongly the tint should mix with the blurred content (0.0 - 1.0).
+     * @param graphics     GUI rendering context the blur should draw into.
+     * @param x            Left edge in GUI coordinates.
+     * @param y            Top edge in GUI coordinates.
+     * @param width        Width of the blur area in GUI units.
+     * @param height       Height of the blur area in GUI units.
+     * @param blurRadius   Blur radius in GUI units (0 disables blur; increase above 12 for stronger diffusion at higher GPU cost).
+     * @param tintColor    ARGB tint colour applied to the blurred pixels.
+     * @param tintStrength Tint mix factor between 0 (no tint) and 1 (full tint).
      */
     public static void renderBlurArea(@NotNull GuiGraphics graphics,
                                       float x, float y, float width, float height,
@@ -106,12 +127,18 @@ public final class BlurRenderUtils {
     }
 
     /**
-     * Convenience helper to render a blurred rectangle with all supported parameters.
+     * Renders a blurred rectangle with full control over tint, opacity, and rounded corners.
      *
-     * @param tintColor     ARGB color used for tinting.
-     * @param tintStrength  Tint mixing factor (0.0 - 1.0).
-     * @param opacity       Output alpha multiplier (0.0 - 1.0).
-     * @param cornerRadius  Corner rounding radius in GUI units.
+     * @param graphics     GUI rendering context the blur should draw into.
+     * @param x            Left edge in GUI coordinates.
+     * @param y            Top edge in GUI coordinates.
+     * @param width        Width of the blur area in GUI units.
+     * @param height       Height of the blur area in GUI units.
+     * @param blurRadius   Blur radius in GUI units (0 disables blur; 4-12 balances clarity and smoothness).
+     * @param tintColor    ARGB tint colour applied to the blurred pixels.
+     * @param tintStrength Tint mix factor between 0 (no tint) and 1 (full tint).
+     * @param opacity      Alpha multiplier between 0 (transparent) and 1 (opaque).
+     * @param cornerRadius Corner radius in GUI units (0 disables rounding).
      */
     public static void renderBlurArea(@NotNull GuiGraphics graphics,
                                       float x, float y, float width, float height,
@@ -308,19 +335,62 @@ public final class BlurRenderUtils {
             captureBackground(graphics);
         }
 
+        /**
+         * Renders a blur within this layer using default tint, opacity, and corner settings.
+         *
+         * @param x          Left edge in GUI coordinates.
+         * @param y          Top edge in GUI coordinates.
+         * @param width      Width of the blur area in GUI units.
+         * @param height     Height of the blur area in GUI units.
+         * @param blurRadius Blur radius in GUI units (0 disables blur; 4-12 provides a soft background blur).
+         */
         public void renderBlurArea(float x, float y, float width, float height, float blurRadius) {
             this.renderBlurArea(x, y, width, height, blurRadius, DEFAULT_TINT_COLOR, 0.0F, 1.0F, 0.0F);
         }
 
+        /**
+         * Renders a blur within this layer using rounded corners and default tint settings.
+         *
+         * @param x            Left edge in GUI coordinates.
+         * @param y            Top edge in GUI coordinates.
+         * @param width        Width of the blur area in GUI units.
+         * @param height       Height of the blur area in GUI units.
+         * @param blurRadius   Blur radius in GUI units (0 disables blur; 4-12 is a good baseline).
+         * @param cornerRadius Corner radius in GUI units (0 disables rounding).
+         */
         public void renderBlurArea(float x, float y, float width, float height, float blurRadius, float cornerRadius) {
             this.renderBlurArea(x, y, width, height, blurRadius, DEFAULT_TINT_COLOR, 0.0F, 1.0F, cornerRadius);
         }
 
+        /**
+         * Renders a tinted blur within this layer while keeping square corners.
+         *
+         * @param x            Left edge in GUI coordinates.
+         * @param y            Top edge in GUI coordinates.
+         * @param width        Width of the blur area in GUI units.
+         * @param height       Height of the blur area in GUI units.
+         * @param blurRadius   Blur radius in GUI units (0 disables blur; increase above 12 for stronger diffusion at higher GPU cost).
+         * @param tintColor    ARGB tint colour applied to the blurred pixels.
+         * @param tintStrength Tint mix factor between 0 (no tint) and 1 (full tint).
+         */
         public void renderBlurArea(float x, float y, float width, float height,
                                    float blurRadius, int tintColor, float tintStrength) {
             this.renderBlurArea(x, y, width, height, blurRadius, tintColor, tintStrength, 1.0F, 0.0F);
         }
 
+        /**
+         * Renders a blur within this layer with complete control over tinting, opacity, and corner rounding.
+         *
+         * @param x            Left edge in GUI coordinates.
+         * @param y            Top edge in GUI coordinates.
+         * @param width        Width of the blur area in GUI units.
+         * @param height       Height of the blur area in GUI units.
+         * @param blurRadius   Blur radius in GUI units (0 disables blur; 4-12 balances clarity and smoothness).
+         * @param tintColor    ARGB tint colour applied to the blurred pixels.
+         * @param tintStrength Tint mix factor between 0 (no tint) and 1 (full tint).
+         * @param opacity      Alpha multiplier between 0 (transparent) and 1 (opaque).
+         * @param cornerRadius Corner radius in GUI units (0 disables rounding).
+         */
         public void renderBlurArea(float x, float y, float width, float height,
                                    float blurRadius, int tintColor, float tintStrength, float opacity, float cornerRadius) {
             if (this.closed) {

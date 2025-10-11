@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.rendering.BlurRenderUtils;
+import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,7 +15,9 @@ public class Test {
     @EventListener(priority = EventPriority.VERY_LOW)
     public void onRenderPost(RenderScreenEvent.Post e) {
 
-        BlurRenderUtils.renderBlurArea(e.getGraphics(), 50, 50, 200, 200, 1.0F);
+        BlurRenderUtils.renderBlurArea(e.getGraphics(), 50, 50, 200, 200, 6);
+
+        e.getGraphics().drawString(Minecraft.getInstance().font, "This is a test.", 70, 70, -1);
 
     }
 
