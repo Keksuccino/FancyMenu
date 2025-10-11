@@ -101,6 +101,11 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
 
+            if (!this.ensureVideoManagerReady()) {
+                graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorIntWithAlpha(this.opacity));
+                return;
+            }
+
             if (!this.triedRestore) {
                 this.triedRestore = true;
                 this.tryRestoreFromMemory();
@@ -352,6 +357,14 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     @Override
     public float getPlayTime() {
         return this.cachedPlayTime.get();
+    }
+
+    protected boolean ensureVideoManagerReady() {
+        if (this.videoManager != null) return true;
+        if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) return false;
+        if (!MCEFVideoManager.initialized) return false;
+        this.videoManager = MCEFVideoManager.getInstance();
+        return (this.videoManager != null);
     }
 
 }

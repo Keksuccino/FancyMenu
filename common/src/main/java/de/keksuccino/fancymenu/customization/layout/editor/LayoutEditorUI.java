@@ -388,12 +388,24 @@ public class LayoutEditorUI {
 		ContextMenu menu = new ContextMenu();
 		int i = 0;
 		for (AbstractLayoutEditorWidget w : editor.layoutEditorWidgets) {
-			menu.addClickableEntry("widget_" + i, w.getDisplayLabel(), (menu1, entry) -> {
-				w.setVisible(true);
+			ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("widget_" + i, Component.empty(), (menu1, entry1) -> {
+				w.setVisible(!w.isVisible());
 			});
+			entry.setLabelSupplier((menu1, entry1) -> buildEditorWidgetToggleLabel(w));
 			i++;
 		}
 		return menu;
+	}
+
+	private static MutableComponent buildEditorWidgetToggleLabel(@NotNull AbstractLayoutEditorWidget widget) {
+		boolean visible = widget.isVisible();
+		int color = visible ? UIBase.getUIColorTheme().success_text_color.getColorInt() : UIBase.getUIColorTheme().error_text_color.getColorInt();
+		String symbol = visible ? "✔" : "✖";
+		MutableComponent label = Component.empty();
+		label.append(Component.literal(symbol).withStyle(Style.EMPTY.withColor(color)));
+		label.append(Component.literal(" "));
+		label.append(widget.getDisplayLabel().copy());
+		return label;
 	}
 
 	@NotNull
