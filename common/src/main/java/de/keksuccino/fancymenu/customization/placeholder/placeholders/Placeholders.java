@@ -40,7 +40,7 @@ public class Placeholders {
     public static final MinecraftOptionValuePlaceholder MINECRAFT_OPTION_VALUE = new MinecraftOptionValuePlaceholder();
     public static final ScreenWidthPlaceholder SCREEN_WIDTH = new ScreenWidthPlaceholder();
     public static final ScreenHeightPlaceholder SCREEN_HEIGHT = new ScreenHeightPlaceholder();
-    public static final ScreenIdentifierPlaceholder SCREEN_IDENTIFIER = new ScreenIdentifierPlaceholder();
+    public static final CurrentScreenIdentifierPlaceholder CURRENT_SCREEN_IDENTIFIER = new CurrentScreenIdentifierPlaceholder();
     public static final ElementWidthPlaceholder ELEMENT_WIDTH = new ElementWidthPlaceholder();
     public static final ElementHeightPlaceholder ELEMENT_HEIGHT = new ElementHeightPlaceholder();
     public static final ElementPosXPlaceholder ELEMENT_POS_X = new ElementPosXPlaceholder();
@@ -205,7 +205,7 @@ public class Placeholders {
         //GUI
         PlaceholderRegistry.register(SCREEN_WIDTH);
         PlaceholderRegistry.register(SCREEN_HEIGHT);
-        PlaceholderRegistry.register(SCREEN_IDENTIFIER);
+        PlaceholderRegistry.register(CURRENT_SCREEN_IDENTIFIER);
         PlaceholderRegistry.register(ELEMENT_WIDTH);
         PlaceholderRegistry.register(ELEMENT_HEIGHT);
         PlaceholderRegistry.register(ELEMENT_POS_X);

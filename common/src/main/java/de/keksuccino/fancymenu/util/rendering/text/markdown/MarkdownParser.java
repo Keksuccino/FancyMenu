@@ -42,6 +42,7 @@ public class MarkdownParser {
     private static final char ASTERISK_CHAR = '*';
     private static final String FORMATTING_CODE_BOLD_PREFIX_SUFFIX = "**";
     private static final char UNDERSCORE_CHAR = '_';
+    private static final char BACKSLASH_CHAR = '\\';
     private static final char TILDE_CHAR = '~';
     private static final char EXCLAMATION_MARK_CHAR = '!';
     private static final String FORMATTING_CODE_IMAGE_PREFIX = "![";
@@ -178,6 +179,19 @@ public class MarkdownParser {
 
             if (parseMarkdown) {
 
+                //Handle Escapes
+                if ((c == BACKSLASH_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
+                    int nextIndex = index + 1;
+                    if (nextIndex < markdownText.length()) {
+                        char nextChar = markdownText.charAt(nextIndex);
+                        if (isEscapableMarkdownCharacter(nextChar)) {
+                            builder.text.append(nextChar);
+                            charsToSkip = 1;
+                            continue;
+                        }
+                    }
+                }
+
                 //Handle Headline
                 if (isStartOfLine && (c == HASHTAG_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
                     if (builder.headlineType == HeadlineType.NONE) {
@@ -260,7 +274,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Bold
-                if (c == ASTERISK_CHAR) {
+                if ((c == ASTERISK_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     if (!builder.bold && (builder.codeBlockContext == null) && !builder.plainText) {
                         String s2 = StringUtils.substring(markdownText, Math.min(markdownText.length(), index+2));
                         if (StringUtils.startsWith(subText, FORMATTING_CODE_BOLD_PREFIX_SUFFIX) && StringUtils.contains(s2, FORMATTING_CODE_BOLD_PREFIX_SUFFIX)) {
@@ -285,7 +299,7 @@ public class MarkdownParser {
                 int indexPlusOne = Math.min(markdownText.length(), index + 1);
 
                 //Handle Italic Underscore
-                if (c == UNDERSCORE_CHAR) {
+                if ((c == UNDERSCORE_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     if (!builder.italic && (builder.codeBlockContext == null) && !builder.plainText) {
                         String s = StringUtils.substring(markdownText, indexPlusOne);
                         if (StringUtils.contains(s, UNDERSCORE_CHAR)) {
@@ -306,7 +320,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Italic Asterisk
-                if (c == ASTERISK_CHAR) {
+                if ((c == ASTERISK_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     if (!builder.italic && (builder.codeBlockContext == null) && !builder.plainText) {
                         String s2 = StringUtils.substring(markdownText, indexPlusOne);
                         if (!StringUtils.startsWith(subText, FORMATTING_CODE_BOLD_PREFIX_SUFFIX) && StringUtils.contains(s2, ASTERISK_CHAR)) {
@@ -341,7 +355,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Strikethrough
-                if (c == TILDE_CHAR) {
+                if ((c == TILDE_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     if (!builder.strikethrough && (builder.codeBlockContext == null) && !builder.plainText) {
                         String s = StringUtils.substring(markdownText, indexPlusOne);
                         if (StringUtils.contains(s, TILDE_CHAR)) {
@@ -631,6 +645,23 @@ public class MarkdownParser {
     protected static MarkdownTextFragment addFragment(List<MarkdownTextFragment> fragments, MarkdownTextFragment fragment) {
         fragments.add(fragment);
         return fragment;
+    }
+
+    protected static boolean isEscapableMarkdownCharacter(char character) {
+        return (character == BACKSLASH_CHAR) || (character == ASTERISK_CHAR) || (character == UNDERSCORE_CHAR) || (character == TILDE_CHAR);
+    }
+
+    protected static boolean isCharacterEscaped(@NotNull String markdownText, int index) {
+        if (index <= 0) return false;
+        int backslashCount = 0;
+        for (int i = index - 1; i >= 0; i--) {
+            if (markdownText.charAt(i) == BACKSLASH_CHAR) {
+                backslashCount++;
+            } else {
+                break;
+            }
+        }
+        return (backslashCount % 2) == 1;
     }
 
     protected static void setImageToBuilder(@NotNull FragmentBuilder builder, @NotNull String imageSource) {
