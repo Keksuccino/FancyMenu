@@ -62,6 +62,7 @@
     "client.MixinOnlineServerEntry",
     "client.MixinPauseScreen",
     "client.MixinProgressScreen",
+    "client.MixinQuickPlay",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
     "client.MixinRenderSystem",

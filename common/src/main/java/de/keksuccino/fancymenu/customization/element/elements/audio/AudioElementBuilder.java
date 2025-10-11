@@ -47,10 +47,7 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
         //Stop all audios if screen is null
         if ((Minecraft.getInstance().screen == null) && !screenIsNull) {
             screenIsNull = true;
-            CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> {
-                if (resourceSupplierIAudioPair.getSecond().isReady()) resourceSupplierIAudioPair.getSecond().stop();
-            });
-            CURRENT_AUDIO_CACHE.clear();
+            stopAllActiveAudios();
         }
     }
 
@@ -87,19 +84,34 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
                 CURRENT_AUDIO_CACHE.remove(s);
             }
         } else {
-            CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> {
-                if (resourceSupplierIAudioPair.getSecond().isReady()) resourceSupplierIAudioPair.getSecond().stop();
-            });
-            CURRENT_AUDIO_CACHE.clear();
+            stopAllActiveAudios();
         }
     }
 
     @EventListener
     public void onModReload(ModReloadEvent e) {
         LOGGER.info("[FANCYMENU] Clearing Audio element cache..");
-        CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> {
-            if (resourceSupplierIAudioPair.getSecond().isReady()) resourceSupplierIAudioPair.getSecond().stop();
+        stopAllActiveAudios();
+    }
+
+    public static void stopAllActiveAudios() {
+        if (CURRENT_AUDIO_CACHE.isEmpty()) {
+            return;
+        }
+        List<IAudio> audiosToStop = new ArrayList<>();
+        CURRENT_AUDIO_CACHE.values().forEach(record -> {
+            IAudio audio = record.getSecond();
+            if (audio != null) {
+                audiosToStop.add(audio);
+            }
         });
+        for (IAudio audio : audiosToStop) {
+            try {
+                audio.stop();
+            } catch (Exception ex) {
+                LOGGER.warn("[FANCYMENU] Failed to stop audio instance!", ex);
+            }
+        }
         CURRENT_AUDIO_CACHE.clear();
     }
 
