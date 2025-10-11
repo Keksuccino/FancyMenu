@@ -726,11 +726,15 @@ public class CustomizationOverlayUI {
         customizationMenu.addSeparatorEntry("separator_before_hide_menu_bar");
 
         customizationMenu.addClickableEntry("hide_menu_bar", Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay"), (menu, entry) -> {
+            menuBar.closeAllContextMenus();
             Minecraft.getInstance().setScreen(ConfirmationScreen.critical((call) -> {
-                if (call) {
-                    FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
-                }
                 Minecraft.getInstance().setScreen(screen);
+                if (call) {
+                    MainThreadTaskExecutor.executeInMainThread(() -> {
+                        FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
+                        ScreenCustomization.reInitCurrentScreen();
+                    }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                }
             }, LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.hide_overlay.confirm")).setDelay(4000));
         }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay.shortcut"))
                 .setIcon(ContextMenu.IconFactory.getIcon("close"));
