@@ -768,7 +768,7 @@ public class ManageActionsScreen extends Screen {
             return false;
         }
         ActionInstance instance = this.clipboardActionInstance.copy(true);
-        this.finalizeActionAddition(instance, selectionReference, true);
+        this.finalizeActionAddition(instance, selectionReference);
         return true;
     }
 
