@@ -96,7 +96,12 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed MCEF Video menu backgrounds sometimes fail to load, causing the GUI to look glitchy (#1317, #1252)
 - Fixed Audio elements don't stop playing when joining a world via quick-play (#1270)
 - Fixed some elements stop working when hiding the menu bar via "Hide Menu Bar" option in context menu (#1236)
- 
+
+
+KNOWN ISSUES:
+
+- In the action script editor, adding/removing and action to/from the favorites in the right-click context menu is still a bit clunky (will make this more smooth in the future)
+
 %changelog:end%
 
 
