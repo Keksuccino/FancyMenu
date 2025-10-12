@@ -92,6 +92,7 @@ public class ActionScriptEditorScreen extends Screen {
     protected Executable pendingSelectionExecutable = null;
     protected boolean pendingSelectionKeepViewAnchor = false;
     protected boolean skipNextContextMenuSelection = false;
+    protected boolean contextMenuSelectionOverrideActive = false;
     protected static final int LEFT_MARGIN = 20;
     protected static final int RIGHT_MARGIN = 20;
     protected static final int MINIMAP_WIDTH = 64;
@@ -2436,6 +2437,24 @@ public class ActionScriptEditorScreen extends Screen {
         }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
     }
 
+    protected void withContextMenuSelectionOverride(@NotNull Runnable action) {
+        boolean previous = this.contextMenuSelectionOverrideActive;
+        this.contextMenuSelectionOverrideActive = true;
+        try {
+            action.run();
+        } finally {
+            this.contextMenuSelectionOverrideActive = previous;
+        }
+    }
+
+    protected void setEntrySelectedRespectingContextMenu(@NotNull ExecutableEntry entry) {
+        if (this.isUserNavigatingInRightClickContextMenu()) {
+            this.withContextMenuSelectionOverride(() -> entry.setSelected(true));
+        } else {
+            entry.setSelected(true);
+        }
+    }
+
     @Nullable
     protected ExecutableEntry getSelectedEntry() {
         ScrollAreaEntry e = this.scriptEntriesScrollArea.getFocusedEntry();
@@ -2549,7 +2568,7 @@ public class ActionScriptEditorScreen extends Screen {
         this.updateActionInstanceScrollArea(true);
         ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
         if (newEntry != null) {
-            newEntry.setSelected(true);
+            this.setEntrySelectedRespectingContextMenu(newEntry);
         }
         return true;
     }
@@ -2602,7 +2621,7 @@ public class ActionScriptEditorScreen extends Screen {
                     //Re-select entry after updating scroll area
                     ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
                     if (newEntry != null) {
-                        newEntry.setSelected(true);
+                        this.setEntrySelectedRespectingContextMenu(newEntry);
                     }
                 }
                 return;
@@ -2626,7 +2645,7 @@ public class ActionScriptEditorScreen extends Screen {
             //Re-select entry after updating scroll area
             ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
             if (newEntry != null) {
-                newEntry.setSelected(true);
+                this.setEntrySelectedRespectingContextMenu(newEntry);
             }
         }
     }
@@ -2665,7 +2684,7 @@ public class ActionScriptEditorScreen extends Screen {
                     //Re-select entry after updating scroll area
                     ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
                     if (newEntry != null) {
-                        newEntry.setSelected(true);
+                        this.setEntrySelectedRespectingContextMenu(newEntry);
                     }
                 }
                 return;
@@ -2684,7 +2703,7 @@ public class ActionScriptEditorScreen extends Screen {
             //Re-select entry after updating scroll area
             ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
             if (newEntry != null) {
-                newEntry.setSelected(true);
+                this.setEntrySelectedRespectingContextMenu(newEntry);
             }
         }
     }
@@ -2702,6 +2721,7 @@ public class ActionScriptEditorScreen extends Screen {
         ExecutableEntry newEntry = this.findEntryForExecutable(executable);
         if (newEntry != null) {
             this.adjustScrollToKeepEntryInPlace(previousEntryY, newEntry);
+            this.setEntrySelectedRespectingContextMenu(newEntry);
             this.scheduleFocusEntryForExecutable(executable, true);
         }
     }
@@ -3013,7 +3033,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         @Override
         public void setSelected(boolean selected) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu() && !ActionScriptEditorScreen.this.contextMenuSelectionOverrideActive) return;
             super.setSelected(selected);
         }
 
