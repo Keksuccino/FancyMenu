@@ -58,6 +58,7 @@ import java.awt.Color;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -144,6 +145,11 @@ public class ActionScriptEditorScreen extends Screen {
     private static final long ILLEGAL_ACTION_FADE_DURATION_MS = 300L;
     private static final float ILLEGAL_ACTION_MAX_ALPHA = 0.5F;
     protected long illegalActionIndicatorStartTime = -1L;
+
+    private static final int HISTORY_LIMIT = 100;
+    private final Deque<ScriptSnapshot> undoHistory = new ArrayDeque<>();
+    private final Deque<ScriptSnapshot> redoHistory = new ArrayDeque<>();
+    private boolean suppressHistoryCapture = false;
 
     public ActionScriptEditorScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
 
@@ -243,6 +249,22 @@ public class ActionScriptEditorScreen extends Screen {
         }).setIsActiveSupplier((menu, entry) -> this.canAppendElseBlock());
 
         this.rightClickContextMenu.addSeparatorEntry("after_append");
+
+        this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
+                    this.markContextMenuActionSelectionSuppressed();
+                    menu.closeMenu();
+                    this.undo();
+                }).setIsActiveSupplier((menu, entry) -> this.canUndo())
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.shortcuts.undo")));
+
+        this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
+                    this.markContextMenuActionSelectionSuppressed();
+                    menu.closeMenu();
+                    this.redo();
+                }).setIsActiveSupplier((menu, entry) -> this.canRedo())
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.shortcuts.redo")));
+
+        this.rightClickContextMenu.addSeparatorEntry("after_history");
 
         this.rightClickContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.actions.screens.move_action_up"), (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
@@ -411,14 +433,19 @@ public class ActionScriptEditorScreen extends Screen {
                 if (!i.action.hasValue()) return; // If action has no value to edit, do nothing
                 ChooseActionScreen s = new ChooseActionScreen(i.copy(false), (call) -> {
                     if (call != null) {
-                        int index = block.getExecutables().indexOf(selected.executable);
-                        block.getExecutables().remove(selected.executable);
-                        if (index != -1) {
-                            block.getExecutables().add(index, call);
-                        } else {
-                            block.getExecutables().add(call);
+                        boolean changed = (call.action != i.action) || !Objects.equals(call.value, i.value);
+                        if (changed) {
+                            this.createUndoPoint();
+                            int index = block.getExecutables().indexOf(selected.executable);
+                            block.getExecutables().remove(selected.executable);
+                            if (index != -1) {
+                                block.getExecutables().add(index, call);
+                            } else {
+                                block.getExecutables().add(call);
+                            }
+                            this.updateActionInstanceScrollArea(false);
+                            this.focusEntryForExecutable(call, true, true);
                         }
-                        this.updateActionInstanceScrollArea(false);
                     }
                     Minecraft.getInstance().setScreen(this);
                 });
@@ -426,8 +453,12 @@ public class ActionScriptEditorScreen extends Screen {
             } else if (selected.executable instanceof IfExecutableBlock b) {
                 ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
                     if (container != null) {
-                        b.condition = container;
-                        this.updateActionInstanceScrollArea(true);
+                        if (!container.equals(b.condition)) {
+                            this.createUndoPoint();
+                            b.condition = container;
+                            this.updateActionInstanceScrollArea(true);
+                            this.focusEntryForExecutable(b, true, true);
+                        }
                     }
                     Minecraft.getInstance().setScreen(this);
                 });
@@ -435,8 +466,12 @@ public class ActionScriptEditorScreen extends Screen {
             } else if (selected.executable instanceof ElseIfExecutableBlock b) {
                 ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
                     if (container != null) {
-                        b.condition = container;
-                        this.updateActionInstanceScrollArea(true);
+                        if (!container.equals(b.condition)) {
+                            this.createUndoPoint();
+                            b.condition = container;
+                            this.updateActionInstanceScrollArea(true);
+                            this.focusEntryForExecutable(b, true, true);
+                        }
                     }
                     Minecraft.getInstance().setScreen(this);
                 });
@@ -444,8 +479,12 @@ public class ActionScriptEditorScreen extends Screen {
             } else if (selected.executable instanceof WhileExecutableBlock b) {
                 ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
                     if (container != null) {
-                        b.condition = container;
-                        this.updateActionInstanceScrollArea(true);
+                        if (!container.equals(b.condition)) {
+                            this.createUndoPoint();
+                            b.condition = container;
+                            this.updateActionInstanceScrollArea(true);
+                            this.focusEntryForExecutable(b, true, true);
+                        }
                     }
                     Minecraft.getInstance().setScreen(this);
                 });
@@ -547,6 +586,8 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void finalizeExecutableAddition(@NotNull Executable executable, @Nullable ExecutableEntry selectionReference, boolean preserveViewAnchor) {
+        this.createUndoPoint();
+
         Executable previousExecutable = null;
         int previousEntryY = Integer.MIN_VALUE;
         if (preserveViewAnchor) {
@@ -569,6 +610,165 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         this.focusEntryForExecutable(executable, anchorActive, true);
+    }
+
+    private boolean canUndo() {
+        return !this.undoHistory.isEmpty();
+    }
+
+    private boolean canRedo() {
+        return !this.redoHistory.isEmpty();
+    }
+
+    private boolean undo() {
+        if (!this.canUndo()) {
+            return false;
+        }
+        ScriptSnapshot snapshot = this.undoHistory.pop();
+        this.redoHistory.push(this.captureCurrentState());
+        this.trimHistory(this.redoHistory);
+        this.applySnapshot(snapshot);
+        return true;
+    }
+
+    private boolean redo() {
+        if (!this.canRedo()) {
+            return false;
+        }
+        ScriptSnapshot snapshot = this.redoHistory.pop();
+        this.undoHistory.push(this.captureCurrentState());
+        this.trimHistory(this.undoHistory);
+        this.applySnapshot(snapshot);
+        return true;
+    }
+
+    private void createUndoPoint() {
+        if (this.suppressHistoryCapture) {
+            return;
+        }
+        ScriptSnapshot snapshot = this.captureCurrentState();
+        this.undoHistory.push(snapshot);
+        this.trimHistory(this.undoHistory);
+        this.redoHistory.clear();
+    }
+
+    private void trimHistory(@NotNull Deque<ScriptSnapshot> history) {
+        while (history.size() > HISTORY_LIMIT) {
+            history.removeLast();
+        }
+    }
+
+    @NotNull
+    private ScriptSnapshot captureCurrentState() {
+        GenericExecutableBlock snapshotBlock = this.executableBlock.copy(false);
+        float verticalScroll = this.scriptEntriesScrollArea.verticalScrollBar.getScroll();
+        float horizontalScroll = this.scriptEntriesScrollArea.horizontalScrollBar.getScroll();
+        ExecutableEntry selected = this.getSelectedEntry();
+        String selectedId = (selected != null) ? selected.executable.getIdentifier() : null;
+        return new ScriptSnapshot(snapshotBlock, verticalScroll, horizontalScroll, selectedId);
+    }
+
+    private void applySnapshot(@NotNull ScriptSnapshot snapshot) {
+        this.suppressHistoryCapture = true;
+        try {
+            this.executableBlock = snapshot.block.copy(false);
+            this.updateActionInstanceScrollArea(false);
+            this.scriptEntriesScrollArea.verticalScrollBar.setScroll(Mth.clamp(snapshot.verticalScroll, 0.0F, 1.0F));
+            this.scriptEntriesScrollArea.horizontalScrollBar.setScroll(Mth.clamp(snapshot.horizontalScroll, 0.0F, 1.0F));
+            this.scriptEntriesScrollArea.updateEntries(null);
+            if (snapshot.selectedExecutableId != null) {
+                Executable executable = this.findExecutableByIdentifier(this.executableBlock, snapshot.selectedExecutableId);
+                if (executable != null) {
+                    this.focusEntryForExecutable(executable, true, false);
+                }
+            }
+        } finally {
+            this.suppressHistoryCapture = false;
+        }
+    }
+
+    @Nullable
+    private Executable findExecutableByIdentifier(@NotNull AbstractExecutableBlock start, @NotNull String identifier) {
+        if (identifier.equals(start.getIdentifier())) {
+            return start;
+        }
+        for (Executable executable : start.getExecutables()) {
+            if (identifier.equals(executable.getIdentifier())) {
+                return executable;
+            }
+            if (executable instanceof AbstractExecutableBlock block) {
+                Executable nested = this.findExecutableByIdentifier(block, identifier);
+                if (nested != null) {
+                    return nested;
+                }
+            }
+        }
+        AbstractExecutableBlock appended = start.getAppendedBlock();
+        if (appended != null) {
+            Executable nested = this.findExecutableByIdentifier(appended, identifier);
+            if (nested != null) {
+                return nested;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private MoveTarget calculateMoveTarget(@NotNull ExecutableEntry entry, @NotNull ExecutableEntry moveAfter) {
+        AbstractExecutableBlock currentParent = entry.getParentBlock();
+        List<Executable> currentList = currentParent.getExecutables();
+        int currentIndex = currentList.indexOf(entry.executable);
+        if (currentIndex < 0) {
+            return null;
+        }
+
+        AbstractExecutableBlock targetParent;
+        int targetIndex;
+
+        if (moveAfter == BEFORE_FIRST) {
+            targetParent = this.executableBlock;
+            targetIndex = 0;
+        } else if (moveAfter == AFTER_LAST) {
+            targetParent = this.executableBlock;
+            targetIndex = this.executableBlock.getExecutables().size();
+        } else if (moveAfter.executable instanceof AbstractExecutableBlock block) {
+            targetParent = block;
+            targetIndex = 0;
+        } else {
+            targetParent = moveAfter.getParentBlock();
+            List<Executable> targetList = targetParent.getExecutables();
+            int moveAfterIndex = targetList.indexOf(moveAfter.executable);
+            targetIndex = (moveAfterIndex >= 0) ? moveAfterIndex + 1 : targetList.size();
+        }
+
+        if (targetParent == currentParent) {
+            if (targetIndex > currentIndex) {
+                targetIndex--;
+            }
+            if (targetIndex == currentIndex) {
+                return null;
+            }
+        }
+
+        return new MoveTarget(targetParent, Math.max(0, targetIndex));
+    }
+
+    private static final class ScriptSnapshot {
+        private final GenericExecutableBlock block;
+        private final float verticalScroll;
+        private final float horizontalScroll;
+        @Nullable
+        private final String selectedExecutableId;
+
+        private ScriptSnapshot(@NotNull GenericExecutableBlock block, float verticalScroll, float horizontalScroll, @Nullable String selectedExecutableId) {
+            this.block = block;
+            this.verticalScroll = verticalScroll;
+            this.horizontalScroll = horizontalScroll;
+            this.selectedExecutableId = selectedExecutableId;
+        }
+    }
+
+    private record MoveTarget(AbstractExecutableBlock parent, int index) {
     }
 
     protected void markContextMenuActionSelectionSuppressed() {
@@ -683,6 +883,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
         ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
             if (container != null) {
+                this.createUndoPoint();
                 ElseIfExecutableBlock appended = new ElseIfExecutableBlock(container);
                 appended.setAppendedBlock(block.getAppendedBlock());
                 block.setAppendedBlock(appended);
@@ -707,6 +908,7 @@ public class ActionScriptEditorScreen extends Screen {
             return;
         }
         ElseExecutableBlock appended = new ElseExecutableBlock();
+        this.createUndoPoint();
         appendTarget.setAppendedBlock(appended);
         this.updateActionInstanceScrollArea(true);
         this.focusEntryForExecutable(appended, true, true);
@@ -717,6 +919,7 @@ public class ActionScriptEditorScreen extends Screen {
         if (selected != null) {
             Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
                 if (call) {
+                    this.createUndoPoint();
                     if (selected.appendParent != null) {
                         selected.appendParent.setAppendedBlock(null);
                     }
@@ -754,6 +957,7 @@ public class ActionScriptEditorScreen extends Screen {
                 }
             }
         }
+        this.createUndoPoint();
         if (selected.appendParent != null) {
             selected.appendParent.setAppendedBlock(null);
         }
@@ -1166,6 +1370,24 @@ public class ActionScriptEditorScreen extends Screen {
                 }
             }
 
+            if ("z".equals(keyName) && ctrlDown && shiftDown) {
+                if (this.redo()) {
+                    return true;
+                }
+            }
+
+            if ("z".equals(keyName) && ctrlDown && !shiftDown) {
+                if (this.undo()) {
+                    return true;
+                }
+            }
+
+            if ("y".equals(keyName) && ctrlDown) {
+                if (this.redo()) {
+                    return true;
+                }
+            }
+
             if ("c".equals(keyName) && ctrlDown) {
                 if (this.copySelectedAction()) {
                     return true;
@@ -1276,6 +1498,10 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     private void toggleCollapseAndPreserveView(@NotNull ExecutableEntry entry) {
+        if (!entry.canToggleCollapse()) {
+            return;
+        }
+        this.createUndoPoint();
         ScrollArea scrollArea = this.scriptEntriesScrollArea;
         int desiredOffset = entry.getY() - scrollArea.getInnerY();
         Executable executable = entry.executable;
@@ -1377,6 +1603,7 @@ public class ActionScriptEditorScreen extends Screen {
             } else {
                 String normalized = ((result != null) && !result.isEmpty()) ? result : null;
                 if (!Objects.equals(instance.value, normalized)) {
+                    this.createUndoPoint();
                     instance.value = normalized;
                 }
             }
@@ -1448,7 +1675,10 @@ public class ActionScriptEditorScreen extends Screen {
                 if (normalized.isEmpty()) {
                     normalized = FolderExecutableBlock.DEFAULT_NAME;
                 }
-                folder.setName(normalized);
+                if (!Objects.equals(folder.getName(), normalized)) {
+                    this.createUndoPoint();
+                    folder.setName(normalized);
+                }
             }
             entry.rebuildComponents();
             entry.setWidth(entry.calculateWidth());
@@ -2197,26 +2427,23 @@ public class ActionScriptEditorScreen extends Screen {
         return null;
     }
 
-    protected void moveAfter(@NotNull ExecutableEntry entry, @NotNull ExecutableEntry moveAfter) {
-        entry.getParentBlock().getExecutables().remove(entry.executable);
-        int moveAfterIndex = Math.max(0, moveAfter.getParentBlock().getExecutables().indexOf(moveAfter.executable));
-        if (moveAfter == BEFORE_FIRST) {
-            this.executableBlock.getExecutables().add(0, entry.executable);
-        } else if (moveAfter == AFTER_LAST) {
-            this.executableBlock.getExecutables().add(entry.executable);
-        } else {
-            if (moveAfter.executable instanceof AbstractExecutableBlock b) {
-                b.getExecutables().add(0, entry.executable);
-            } else {
-                moveAfter.getParentBlock().getExecutables().add(moveAfterIndex+1, entry.executable);
-            }
+    protected boolean moveAfter(@NotNull ExecutableEntry entry, @NotNull ExecutableEntry moveAfter) {
+        MoveTarget target = this.calculateMoveTarget(entry, moveAfter);
+        if (target == null) {
+            return false;
         }
+
+        this.createUndoPoint();
+
+        entry.getParentBlock().getExecutables().remove(entry.executable);
+        target.parent().getExecutables().add(target.index(), entry.executable);
+
         this.updateActionInstanceScrollArea(true);
-        //Re-select entry after updating scroll area
         ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
         if (newEntry != null) {
             newEntry.setSelected(true);
         }
+        return true;
     }
 
     protected void moveUp(ExecutableEntry entry) {
@@ -2228,20 +2455,22 @@ public class ActionScriptEditorScreen extends Screen {
                 } else {
                     if ((entry.getParentBlock() != this.executableBlock) && ((entry.getParentBlock() instanceof ElseIfExecutableBlock) || (entry.getParentBlock() instanceof ElseExecutableBlock)) && (entry.getParentBlock().getExecutables().indexOf(entry.executable) == 0)) {
                         ExecutableEntry parentBlock = this.findEntryForExecutable(entry.getParentBlock());
-                        if (parentBlock != null) {
+                        if ((parentBlock != null) && (parentBlock.appendParent != null)) {
+                            this.createUndoPoint();
                             entry.getParentBlock().getExecutables().remove(entry.executable);
-                            if (parentBlock.appendParent != null) {
-                                parentBlock.appendParent.getExecutables().add(entry.executable);
-                                manualUpdate = true;
-                            }
+                            parentBlock.appendParent.getExecutables().add(entry.executable);
+                            manualUpdate = true;
                         }
                     } else if ((entry.getParentBlock() != this.executableBlock) && (entry.getParentBlock() instanceof IfExecutableBlock) && (entry.getParentBlock().getExecutables().indexOf(entry.executable) == 0)) {
                         ExecutableEntry parentBlock = this.findEntryForExecutable(entry.getParentBlock());
                         if (parentBlock != null) {
                             int parentIndex = Math.max(0, parentBlock.getParentBlock().getExecutables().indexOf(parentBlock.executable));
-                            entry.getParentBlock().getExecutables().remove(entry.executable);
-                            parentBlock.getParentBlock().getExecutables().add(parentIndex, entry.executable);
-                            manualUpdate = true;
+                            if (parentIndex >= 0) {
+                                this.createUndoPoint();
+                                entry.getParentBlock().getExecutables().remove(entry.executable);
+                                parentBlock.getParentBlock().getExecutables().add(parentIndex, entry.executable);
+                                manualUpdate = true;
+                            }
                         }
                     } else {
                         ExecutableEntry before = this.getValidMoveToEntryBefore(entry, false);
@@ -2277,6 +2506,7 @@ public class ActionScriptEditorScreen extends Screen {
                     if (appendParentEntry != null) {
                         AbstractExecutableBlock parentOfParent = appendParentEntry.appendParent;
                         if (parentOfParent != null) {
+                            this.createUndoPoint();
                             entryAppendParent.setAppendedBlock(ei.getAppendedBlock());
                             ei.setAppendedBlock(entryAppendParent);
                             parentOfParent.setAppendedBlock(ei);
@@ -2310,6 +2540,7 @@ public class ActionScriptEditorScreen extends Screen {
                             }
                         }
                         if (parentIndex != -1) {
+                            this.createUndoPoint();
                             entry.getParentBlock().getExecutables().remove(entry.executable);
                             parentBlock.getParentBlock().getExecutables().add(parentIndex+1, entry.executable);
                             manualUpdate = true;
@@ -2335,6 +2566,7 @@ public class ActionScriptEditorScreen extends Screen {
                 AbstractExecutableBlock entryAppendChild = ei.getAppendedBlock();
                 AbstractExecutableBlock entryAppendParent = entry.appendParent;
                 if ((entryAppendChild instanceof ElseIfExecutableBlock) && (entryAppendParent != null)) {
+                    this.createUndoPoint();
                     ei.setAppendedBlock(entryAppendChild.getAppendedBlock());
                     entryAppendChild.setAppendedBlock(ei);
                     entryAppendParent.setAppendedBlock(entryAppendChild);
