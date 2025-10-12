@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement;
 
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
-import de.keksuccino.fancymenu.customization.placeholder.AsyncPlaceholderErrorScreen;
+import de.keksuccino.fancymenu.customization.loadingrequirement.ui.AsyncRequirementErrorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;

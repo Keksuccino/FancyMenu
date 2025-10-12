@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.action;
+package de.keksuccino.fancymenu.customization.loadingrequirement.ui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -9,17 +9,18 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
-public class AsyncActionErrorScreen extends QueueableScreen {
+public class AsyncRequirementErrorScreen extends QueueableScreen {
 
     @NotNull
-    protected Component actionName;
+    protected Component requirementName;
     protected List<FormattedCharSequence> renderText;
 
-    protected AsyncActionErrorScreen(@NotNull Component actionName) {
+    protected AsyncRequirementErrorScreen(@NotNull Component requirementName) {
         super(Component.empty());
-        this.actionName = actionName.copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+        this.requirementName = requirementName.copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
     }
 
     @Override
@@ -29,7 +30,7 @@ public class AsyncActionErrorScreen extends QueueableScreen {
 
         super.init();
 
-        this.renderText = this.font.split(Component.translatable("fancymenu.actions.async.cant_run_async", this.actionName), this.width - 60);
+        this.renderText = this.font.split(Component.translatable("fancymenu.requirements.async.cant_run_async", this.requirementName), this.width - 60);
 
         UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(centerX - 100, this.height - 50, 200, 20, Component.translatable("fancymenu.common_components.ok"), button -> {
             this.onClose();

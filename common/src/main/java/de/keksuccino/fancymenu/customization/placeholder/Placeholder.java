@@ -5,7 +5,6 @@
 
 package de.keksuccino.fancymenu.customization.placeholder;
 
-import de.keksuccino.fancymenu.customization.action.AsyncActionErrorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import net.minecraft.client.Minecraft;
