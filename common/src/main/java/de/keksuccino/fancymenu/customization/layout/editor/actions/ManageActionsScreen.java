@@ -35,6 +35,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -45,6 +47,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -138,6 +141,12 @@ public class ManageActionsScreen extends Screen {
     protected int minimapTotalEntriesHeight = 0;
     @Nullable
     protected ActionInstance clipboardActionInstance = null;
+    private static final ResourceLocation ILLEGAL_ACTION_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/not_allowed.png");
+    private static final AspectRatio ILLEGAL_ACTION_ICON_RATIO = new AspectRatio(32, 32);
+    private static final long ILLEGAL_ACTION_VISIBLE_DURATION_MS = 1500L;
+    private static final long ILLEGAL_ACTION_FADE_DURATION_MS = 300L;
+    private static final float ILLEGAL_ACTION_MAX_ALPHA = 0.5F;
+    protected long illegalActionIndicatorStartTime = -1L;
 
     public ManageActionsScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
 
@@ -168,6 +177,11 @@ public class ManageActionsScreen extends Screen {
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
+    }
+
+    @Override
+    public boolean shouldCloseOnEsc() {
+        return false;
     }
 
     protected void updateActionsContextMenu() {
@@ -837,6 +851,43 @@ public class ManageActionsScreen extends Screen {
         return (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight);
     }
 
+    protected void showIllegalActionIndicator() {
+        this.illegalActionIndicatorStartTime = System.currentTimeMillis();
+    }
+
+    protected void renderIllegalActionIndicator(@NotNull GuiGraphics graphics, float partial) {
+        if (this.illegalActionIndicatorStartTime <= 0L) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        long elapsed = now - this.illegalActionIndicatorStartTime;
+        long totalDuration = ILLEGAL_ACTION_VISIBLE_DURATION_MS + ILLEGAL_ACTION_FADE_DURATION_MS;
+        if (elapsed >= totalDuration) {
+            this.illegalActionIndicatorStartTime = -1L;
+            return;
+        }
+
+        float alpha = ILLEGAL_ACTION_MAX_ALPHA;
+        if (elapsed > ILLEGAL_ACTION_VISIBLE_DURATION_MS) {
+            long fadeElapsed = elapsed - ILLEGAL_ACTION_VISIBLE_DURATION_MS;
+            float fadeProgress = (float)fadeElapsed / (float)ILLEGAL_ACTION_FADE_DURATION_MS;
+            alpha = ILLEGAL_ACTION_MAX_ALPHA * (1.0F - Mth.clamp(fadeProgress, 0.0F, 1.0F));
+        }
+
+        RenderSystem.enableBlend();
+        int targetHeight = Math.max(1, Math.round(this.height / 3.0F));
+        int[] size = ILLEGAL_ACTION_ICON_RATIO.getAspectRatioSizeByMaximumSize(Math.max(1, this.width), targetHeight);
+        int iconWidth = size[0];
+        int iconHeight = size[1];
+        int iconX = (this.width - iconWidth) / 2;
+        int iconY = (this.height - iconHeight) / 2;
+
+        UIBase.setShaderColor(graphics, UIBase.getUIColorTheme().ui_texture_color, alpha);
+        graphics.blit(ILLEGAL_ACTION_ICON, iconX, iconY, 0.0F, 0.0F, iconWidth, iconHeight, iconWidth, iconHeight);
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
     @Override
     public void onClose() {
         this.finishInlineNameEditing(true);
@@ -923,6 +974,8 @@ public class ManageActionsScreen extends Screen {
         this.cancelButton.render(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
+
+        this.renderIllegalActionIndicator(graphics, partial);
 
         // Needs to render as late as possible
         this.renderMinimapEntryTooltip(graphics, mouseX, mouseY);
@@ -1117,6 +1170,10 @@ public class ManageActionsScreen extends Screen {
 
             if ("c".equals(keyName) && ctrlDown) {
                 if (this.copySelectedAction()) {
+                    return true;
+                }
+                if (selected != null) {
+                    this.showIllegalActionIndicator();
                     return true;
                 }
             }
