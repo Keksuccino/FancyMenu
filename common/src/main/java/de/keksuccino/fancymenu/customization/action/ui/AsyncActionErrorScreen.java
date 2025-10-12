@@ -17,7 +17,7 @@ public class AsyncActionErrorScreen extends QueueableScreen {
     protected Component actionName;
     protected List<FormattedCharSequence> renderText;
 
-    protected AsyncActionErrorScreen(@NotNull Component actionName) {
+    public AsyncActionErrorScreen(@NotNull Component actionName) {
         super(Component.empty());
         this.actionName = actionName.copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
     }

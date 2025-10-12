@@ -1151,8 +1151,9 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         boolean contextMenuActive = this.isUserNavigatingInRightClickContextMenu() || ((this.rightClickContextMenu != null) && this.rightClickContextMenu.isOpen());
+        boolean inlineEditingActive = this.isInlineNameEditing() || this.isInlineValueEditing();
 
-        if (!contextMenuActive) {
+        if (!contextMenuActive && !inlineEditingActive) {
             ExecutableEntry selected = this.getSelectedEntry();
             boolean ctrlDown = hasControlDown();
             boolean shiftDown = hasShiftDown();

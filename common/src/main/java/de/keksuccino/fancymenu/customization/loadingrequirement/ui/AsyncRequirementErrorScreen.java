@@ -18,7 +18,7 @@ public class AsyncRequirementErrorScreen extends QueueableScreen {
     protected Component requirementName;
     protected List<FormattedCharSequence> renderText;
 
-    protected AsyncRequirementErrorScreen(@NotNull Component requirementName) {
+    public AsyncRequirementErrorScreen(@NotNull Component requirementName) {
         super(Component.empty());
         this.requirementName = requirementName.copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
     }
