@@ -78,6 +78,8 @@ public class ActionScriptEditorScreen extends Screen {
     protected ContextMenu rightClickContextMenu;
     protected float rightClickContextMenuLastOpenX = Float.NaN;
     protected float rightClickContextMenuLastOpenY = Float.NaN;
+    @Nullable
+    protected Executable contextMenuTargetExecutable = null;
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
     @Nullable
@@ -217,35 +219,40 @@ public class ActionScriptEditorScreen extends Screen {
 
         this.rightClickContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
             menu.closeMenu();
-            this.onAddFolder();
+            this.onAddFolder(target);
         });
 
         this.rightClickContextMenu.addClickableEntry("add_if", Component.translatable("fancymenu.actions.blocks.add.if"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
             menu.closeMenu();
-            this.onAddIf();
+            this.onAddIf(target);
         });
 
         this.rightClickContextMenu.addClickableEntry("add_while", Component.translatable("fancymenu.actions.blocks.add.while"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
             menu.closeMenu();
-            this.onAddWhile();
+            this.onAddWhile(target);
         });
 
         this.rightClickContextMenu.addSeparatorEntry("after_add");
 
         this.rightClickContextMenu.addClickableEntry("append_else_if", Component.translatable("fancymenu.actions.blocks.add.else_if"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
             menu.closeMenu();
-            this.onAppendElseIf();
-        }).addIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock());
+            this.onAppendElseIf(target);
+        }).addIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock(this.getContextMenuTargetEntry()));
 
         this.rightClickContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.actions.blocks.add.else"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
             menu.closeMenu();
-            this.onAppendElse();
-        }).addIsActiveSupplier((menu, entry) -> this.canAppendElseBlock());
+            this.onAppendElse(target);
+        }).addIsActiveSupplier((menu, entry) -> this.canAppendElseBlock(this.getContextMenuTargetEntry()));
 
         this.rightClickContextMenu.addSeparatorEntry("after_append");
 
@@ -267,13 +274,13 @@ public class ActionScriptEditorScreen extends Screen {
 
         this.rightClickContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.actions.screens.move_action_up"), (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
-                    ExecutableEntry selected = this.getSelectedEntry();
-                    if (selected != null) {
-                        this.handleContextMenuMove(selected, true);
+                    ExecutableEntry target = this.getContextMenuTargetEntry();
+                    if (target != null) {
+                        this.handleContextMenuMove(target, true);
                     }
-                }).addIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
+                }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetEntry() != null)
                 .setTooltipSupplier((menu, entry) -> {
-                    if (!this.isAnyExecutableSelected()) {
+                    if (this.getContextMenuTargetEntry() == null) {
                         return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
                     }
                     return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_up.desc"));
@@ -282,13 +289,13 @@ public class ActionScriptEditorScreen extends Screen {
 
         this.rightClickContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.actions.screens.move_action_down"), (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
-                    ExecutableEntry selected = this.getSelectedEntry();
-                    if (selected != null) {
-                        this.handleContextMenuMove(selected, false);
+                    ExecutableEntry target = this.getContextMenuTargetEntry();
+                    if (target != null) {
+                        this.handleContextMenuMove(target, false);
                     }
-                }).addIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
+                }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetEntry() != null)
                 .setTooltipSupplier((menu, entry) -> {
-                    if (!this.isAnyExecutableSelected()) {
+                    if (this.getContextMenuTargetEntry() == null) {
                         return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
                     }
                     return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_down.desc"));
@@ -299,17 +306,19 @@ public class ActionScriptEditorScreen extends Screen {
 
         this.rightClickContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.actions.screens.edit_action"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
+                    ExecutableEntry target = this.getContextMenuTargetEntry();
                     menu.closeMenu();
-                    this.onEdit();
-                }).addIsActiveSupplier((menu, entry) -> this.canEditSelectedEntry())
-                .setTooltipSupplier((menu, entry) -> this.getEditTooltip());
+                    this.onEdit(target);
+                }).addIsActiveSupplier((menu, entry) -> this.canEditEntry(this.getContextMenuTargetEntry()))
+                .setTooltipSupplier((menu, entry) -> this.getEditTooltip(this.getContextMenuTargetEntry()));
 
         this.rightClickContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.actions.screens.remove_action"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
+                    ExecutableEntry target = this.getContextMenuTargetEntry();
                     menu.closeMenu();
-                    this.onRemove();
-                }).addIsActiveSupplier((menu, entry) -> this.isAnyExecutableSelected())
-                .setTooltipSupplier((menu, entry) -> this.getRemoveTooltip())
+                    this.onRemove(target);
+                }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetEntry() != null)
+                .setTooltipSupplier((menu, entry) -> this.getRemoveTooltip(this.getContextMenuTargetEntry()))
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"));
 
         if (reopen || wasOpen) {
@@ -328,6 +337,14 @@ public class ActionScriptEditorScreen extends Screen {
         this.rightClickContextMenuLastOpenY = y;
         List<String> path = (entryPath != null && !entryPath.isEmpty()) ? new ArrayList<>(entryPath) : null;
         this.rightClickContextMenu.openMenuAt(x, y, path);
+    }
+
+    @Nullable
+    protected ExecutableEntry getContextMenuTargetEntry() {
+        if (this.contextMenuTargetExecutable == null) {
+            return null;
+        }
+        return this.findEntryForExecutable(this.contextMenuTargetExecutable);
     }
 
     protected boolean hasStoredRightClickContextMenuPosition() {
@@ -358,19 +375,25 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected boolean canAppendConditionalBlock() {
-        ExecutableEntry selected = this.getSelectedEntry();
-        if (selected == null) {
+        return this.canAppendConditionalBlock(this.getSelectedEntry());
+    }
+
+    protected boolean canAppendConditionalBlock(@Nullable ExecutableEntry entry) {
+        if (entry == null) {
             return false;
         }
-        return (selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock);
+        return (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof ElseIfExecutableBlock);
     }
 
     protected boolean canAppendElseBlock() {
-        ExecutableEntry selected = this.getSelectedEntry();
-        if ((selected == null) || !(selected.executable instanceof AbstractExecutableBlock block)) {
+        return this.canAppendElseBlock(this.getSelectedEntry());
+    }
+
+    protected boolean canAppendElseBlock(@Nullable ExecutableEntry entry) {
+        if ((entry == null) || !(entry.executable instanceof AbstractExecutableBlock block)) {
             return false;
         }
-        if (!(selected.executable instanceof IfExecutableBlock) && !(selected.executable instanceof ElseIfExecutableBlock)) {
+        if (!(entry.executable instanceof IfExecutableBlock) && !(entry.executable instanceof ElseIfExecutableBlock)) {
             return false;
         }
         return this.findAppendElseTarget(block) != null;
@@ -391,14 +414,17 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected boolean canEditSelectedEntry() {
-        ExecutableEntry selected = this.getSelectedEntry();
-        if ((selected == null) || (selected.executable instanceof ElseExecutableBlock)) {
+        return this.canEditEntry(this.getSelectedEntry());
+    }
+
+    protected boolean canEditEntry(@Nullable ExecutableEntry entry) {
+        if ((entry == null) || (entry.executable instanceof ElseExecutableBlock)) {
             return false;
         }
-        if (selected.executable instanceof FolderExecutableBlock) {
+        if (entry.executable instanceof FolderExecutableBlock) {
             return false;
         }
-        if ((selected.executable instanceof ActionInstance i) && !i.action.hasValue()) {
+        if ((entry.executable instanceof ActionInstance i) && !i.action.hasValue()) {
             return false;
         }
         return true;
@@ -406,14 +432,18 @@ public class ActionScriptEditorScreen extends Screen {
 
     @NotNull
     protected Tooltip getEditTooltip() {
-        ExecutableEntry selected = this.getSelectedEntry();
-        if ((selected == null) || (selected.executable instanceof ElseExecutableBlock)) {
+        return this.getEditTooltip(this.getSelectedEntry());
+    }
+
+    @NotNull
+    protected Tooltip getEditTooltip(@Nullable ExecutableEntry entry) {
+        if ((entry == null) || (entry.executable instanceof ElseExecutableBlock)) {
             return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
         }
-        if (selected.executable instanceof FolderExecutableBlock) {
+        if (entry.executable instanceof FolderExecutableBlock) {
             return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.folder_no_edit"));
         }
-        if ((selected.executable instanceof ActionInstance i) && !i.action.hasValue()) {
+        if ((entry.executable instanceof ActionInstance i) && !i.action.hasValue()) {
             return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.no_value_to_edit"));
         }
         return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.edit_action.desc"));
@@ -421,77 +451,107 @@ public class ActionScriptEditorScreen extends Screen {
 
     @NotNull
     protected Tooltip getRemoveTooltip() {
-        if (!this.isAnyExecutableSelected()) {
+        return this.getRemoveTooltip(this.getSelectedEntry());
+    }
+
+    @NotNull
+    protected Tooltip getRemoveTooltip(@Nullable ExecutableEntry entry) {
+        if (entry == null) {
             return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
         }
         return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.remove_action.desc"));
     }
 
     protected void onEdit() {
-        ExecutableEntry selected = this.getSelectedEntry();
-        if (selected != null) {
-            AbstractExecutableBlock block = selected.getParentBlock();
-            if (selected.executable instanceof ActionInstance i) {
-                if (!i.action.hasValue()) return; // If action has no value to edit, do nothing
-                ChooseActionScreen s = new ChooseActionScreen(i.copy(false), (call) -> {
-                    if (call != null) {
-                        boolean changed = (call.action != i.action) || !Objects.equals(call.value, i.value);
+        this.onEdit(this.getSelectedEntry());
+    }
+
+    protected void onEdit(@Nullable ExecutableEntry entry) {
+        if (!this.canEditEntry(entry)) {
+            return;
+        }
+        if (entry == null) {
+            return;
+        }
+        final Executable targetExecutable = entry.executable;
+        if (targetExecutable instanceof ActionInstance instance) {
+            if (!instance.action.hasValue()) {
+                return;
+            }
+            ChooseActionScreen s = new ChooseActionScreen(instance.copy(false), call -> {
+                if (call != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(targetExecutable);
+                    if ((currentEntry != null) && (currentEntry.getParentBlock() != null)) {
+                        AbstractExecutableBlock parentBlock = currentEntry.getParentBlock();
+                        boolean changed = (call.action != instance.action) || !Objects.equals(call.value, instance.value);
                         if (changed) {
                             this.createUndoPoint();
-                            int index = block.getExecutables().indexOf(selected.executable);
-                            block.getExecutables().remove(selected.executable);
+                            int index = parentBlock.getExecutables().indexOf(currentEntry.executable);
+                            parentBlock.getExecutables().remove(currentEntry.executable);
                             if (index != -1) {
-                                block.getExecutables().add(index, call);
+                                parentBlock.getExecutables().add(index, call);
                             } else {
-                                block.getExecutables().add(call);
+                                parentBlock.getExecutables().add(call);
                             }
                             this.updateActionInstanceScrollArea(false);
                             this.focusEntryForExecutable(call, true, true);
                         }
                     }
-                    Minecraft.getInstance().setScreen(this);
-                });
-                Minecraft.getInstance().setScreen(s);
-            } else if (selected.executable instanceof IfExecutableBlock b) {
-                ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
-                    if (container != null) {
-                        if (!container.equals(b.condition)) {
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        } else if (targetExecutable instanceof IfExecutableBlock) {
+            IfExecutableBlock block = (IfExecutableBlock) targetExecutable;
+            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
+                if (container != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
+                    if ((currentEntry != null) && (currentEntry.executable instanceof IfExecutableBlock currentBlock)) {
+                        if (!container.equals(currentBlock.condition)) {
                             this.createUndoPoint();
-                            b.condition = container;
+                            currentBlock.condition = container;
                             this.updateActionInstanceScrollArea(true);
-                            this.focusEntryForExecutable(b, true, true);
+                            this.focusEntryForExecutable(currentBlock, true, true);
                         }
                     }
-                    Minecraft.getInstance().setScreen(this);
-                });
-                Minecraft.getInstance().setScreen(s);
-            } else if (selected.executable instanceof ElseIfExecutableBlock b) {
-                ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
-                    if (container != null) {
-                        if (!container.equals(b.condition)) {
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        } else if (targetExecutable instanceof ElseIfExecutableBlock) {
+            ElseIfExecutableBlock block = (ElseIfExecutableBlock) targetExecutable;
+            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
+                if (container != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
+                    if ((currentEntry != null) && (currentEntry.executable instanceof ElseIfExecutableBlock currentBlock)) {
+                        if (!container.equals(currentBlock.condition)) {
                             this.createUndoPoint();
-                            b.condition = container;
+                            currentBlock.condition = container;
                             this.updateActionInstanceScrollArea(true);
-                            this.focusEntryForExecutable(b, true, true);
+                            this.focusEntryForExecutable(currentBlock, true, true);
                         }
                     }
-                    Minecraft.getInstance().setScreen(this);
-                });
-                Minecraft.getInstance().setScreen(s);
-            } else if (selected.executable instanceof WhileExecutableBlock b) {
-                ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
-                    if (container != null) {
-                        if (!container.equals(b.condition)) {
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        } else if (targetExecutable instanceof WhileExecutableBlock) {
+            WhileExecutableBlock block = (WhileExecutableBlock) targetExecutable;
+            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
+                if (container != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
+                    if ((currentEntry != null) && (currentEntry.executable instanceof WhileExecutableBlock currentBlock)) {
+                        if (!container.equals(currentBlock.condition)) {
                             this.createUndoPoint();
-                            b.condition = container;
+                            currentBlock.condition = container;
                             this.updateActionInstanceScrollArea(true);
-                            this.focusEntryForExecutable(b, true, true);
+                            this.focusEntryForExecutable(currentBlock, true, true);
                         }
                     }
-                    Minecraft.getInstance().setScreen(this);
-                });
-                Minecraft.getInstance().setScreen(s);
-            }
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
         }
     }
 
@@ -530,9 +590,9 @@ public class ActionScriptEditorScreen extends Screen {
         MutableComponent openChooserLabel = Component.translatable("fancymenu.actions.open_action_chooser").setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
         subMenu.addClickableEntry("open_action_chooser", openChooserLabel, (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
+                    ExecutableEntry selectionReference = this.getContextMenuTargetEntry();
                     this.rightClickContextMenu.closeMenu();
-                    ExecutableEntry selectedOnCreate = this.getSelectedEntry();
-                    this.onOpenActionChooser(selectedOnCreate);
+                    this.onOpenActionChooser(selectionReference);
                 }).setIcon(ContextMenu.IconFactory.getIcon("pick"))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_action_chooser.desc")));
 
@@ -565,9 +625,11 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void onOpenActionChooser(@Nullable ExecutableEntry selectionReference) {
+        final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
         ChooseActionScreen screen = new ChooseActionScreen(null, call -> {
             if (call != null) {
-                this.finalizeActionAddition(call, selectionReference);
+                ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
+                this.finalizeActionAddition(call, resolvedReference);
             }
             Minecraft.getInstance().setScreen(this);
         });
@@ -575,8 +637,9 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void onAddAction(@NotNull Action action, @Nullable ExecutableEntry selectionReference) {
+        ExecutableEntry resolvedReference = (selectionReference != null) ? this.findEntryForExecutable(selectionReference.executable) : null;
         ActionInstance instance = new ActionInstance(action, action.hasValue() ? action.getValueExample() : null);
-        this.finalizeActionAddition(instance, selectionReference, true);
+        this.finalizeActionAddition(instance, resolvedReference, true);
     }
 
     protected void finalizeActionAddition(@NotNull ActionInstance instance, @Nullable ExecutableEntry selectionReference) {
@@ -816,9 +879,9 @@ public class ActionScriptEditorScreen extends Screen {
         protected FavoriteAwareActionEntry(@NotNull ContextMenu parent, @NotNull Action action) {
             super("action_" + action.getIdentifier(), parent, ActionScriptEditorScreen.this.buildActionMenuLabel(action), (menu, entry) -> {
                 ActionScriptEditorScreen.this.markContextMenuActionSelectionSuppressed();
+                ExecutableEntry selectionReference = ActionScriptEditorScreen.this.getContextMenuTargetEntry();
                 menu.closeMenu();
-                ExecutableEntry selectedOnCreate = ActionScriptEditorScreen.this.getSelectedEntry();
-                ActionScriptEditorScreen.this.onAddAction(action, selectedOnCreate);
+                ActionScriptEditorScreen.this.onAddAction(action, selectionReference);
             });
             this.action = action;
             this.setLabelSupplier((menu, entry) -> ActionScriptEditorScreen.this.buildActionMenuLabel(action));
@@ -846,17 +909,26 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void onAddFolder() {
-        ExecutableEntry selectedOnCreate = this.getSelectedEntry();
+        this.onAddFolder(this.getSelectedEntry());
+    }
+
+    protected void onAddFolder(@Nullable ExecutableEntry selectionReference) {
+        ExecutableEntry resolvedReference = (selectionReference != null) ? this.findEntryForExecutable(selectionReference.executable) : null;
         FolderExecutableBlock block = new FolderExecutableBlock();
-        this.finalizeExecutableAddition(block, selectedOnCreate, true);
+        this.finalizeExecutableAddition(block, resolvedReference, true);
     }
 
     protected void onAddIf() {
-        ExecutableEntry selectedOnCreate = this.getSelectedEntry();
+        this.onAddIf(this.getSelectedEntry());
+    }
+
+    protected void onAddIf(@Nullable ExecutableEntry selectionReference) {
+        final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
         ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
             if (container != null) {
+                ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 IfExecutableBlock block = new IfExecutableBlock(container);
-                this.finalizeExecutableAddition(block, selectedOnCreate, true);
+                this.finalizeExecutableAddition(block, resolvedReference, true);
             }
             Minecraft.getInstance().setScreen(this);
         });
@@ -864,11 +936,16 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void onAddWhile() {
-        ExecutableEntry selectedOnCreate = this.getSelectedEntry();
+        this.onAddWhile(this.getSelectedEntry());
+    }
+
+    protected void onAddWhile(@Nullable ExecutableEntry selectionReference) {
+        final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
         ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
             if (container != null) {
+                ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 WhileExecutableBlock block = new WhileExecutableBlock(container);
-                this.finalizeExecutableAddition(block, selectedOnCreate, true);
+                this.finalizeExecutableAddition(block, resolvedReference, true);
             }
             Minecraft.getInstance().setScreen(this);
         });
@@ -876,19 +953,28 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void onAppendElseIf() {
-        if (!this.canAppendConditionalBlock()) {
+        this.onAppendElseIf(this.getSelectedEntry());
+    }
+
+    protected void onAppendElseIf(@Nullable ExecutableEntry targetEntry) {
+        if (!this.canAppendConditionalBlock(targetEntry)) {
             return;
         }
-        ExecutableEntry selected = this.getSelectedEntry();
-        if ((selected == null) || !(selected.executable instanceof AbstractExecutableBlock block)) {
+        if ((targetEntry == null) || !(targetEntry.executable instanceof AbstractExecutableBlock)) {
             return;
         }
+        final Executable targetExecutable = targetEntry.executable;
         ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
             if (container != null) {
+                ExecutableEntry resolvedEntry = (targetExecutable != null) ? this.findEntryForExecutable(targetExecutable) : null;
+                if ((resolvedEntry == null) || !(resolvedEntry.executable instanceof AbstractExecutableBlock resolvedBlock)) {
+                    Minecraft.getInstance().setScreen(this);
+                    return;
+                }
                 this.createUndoPoint();
                 ElseIfExecutableBlock appended = new ElseIfExecutableBlock(container);
-                appended.setAppendedBlock(block.getAppendedBlock());
-                block.setAppendedBlock(appended);
+                appended.setAppendedBlock(resolvedBlock.getAppendedBlock());
+                resolvedBlock.setAppendedBlock(appended);
                 this.updateActionInstanceScrollArea(true);
                 this.focusEntryForExecutable(appended, true, true);
             }
@@ -898,11 +984,19 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void onAppendElse() {
-        if (!this.canAppendElseBlock()) {
+        this.onAppendElse(this.getSelectedEntry());
+    }
+
+    protected void onAppendElse(@Nullable ExecutableEntry targetEntry) {
+        if (!this.canAppendElseBlock(targetEntry)) {
             return;
         }
-        ExecutableEntry selected = this.getSelectedEntry();
-        if ((selected == null) || !(selected.executable instanceof AbstractExecutableBlock block)) {
+        if ((targetEntry == null) || !(targetEntry.executable instanceof AbstractExecutableBlock)) {
+            return;
+        }
+        final Executable targetExecutable = targetEntry.executable;
+        ExecutableEntry resolvedEntry = (targetExecutable != null) ? this.findEntryForExecutable(targetExecutable) : null;
+        if ((resolvedEntry == null) || !(resolvedEntry.executable instanceof AbstractExecutableBlock block)) {
             return;
         }
         AbstractExecutableBlock appendTarget = this.findAppendElseTarget(block);
@@ -917,20 +1011,28 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void onRemove() {
-        ExecutableEntry selected = this.getSelectedEntry();
-        if (selected != null) {
-            Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
-                if (call) {
+        this.onRemove(this.getSelectedEntry());
+    }
+
+    protected void onRemove(@Nullable ExecutableEntry entry) {
+        if (entry == null) {
+            return;
+        }
+        final Executable targetExecutable = entry.executable;
+        Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
+            if (call) {
+                ExecutableEntry currentEntry = this.findEntryForExecutable(targetExecutable);
+                if (currentEntry != null) {
                     this.createUndoPoint();
-                    if (selected.appendParent != null) {
-                        selected.appendParent.setAppendedBlock(null);
+                    if (currentEntry.appendParent != null) {
+                        currentEntry.appendParent.setAppendedBlock(null);
                     }
-                    selected.getParentBlock().getExecutables().remove(selected.executable);
+                    currentEntry.getParentBlock().getExecutables().remove(currentEntry.executable);
                     this.updateActionInstanceScrollArea(true);
                 }
-                Minecraft.getInstance().setScreen(this);
-            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.remove_action.confirm")));
-        }
+            }
+            Minecraft.getInstance().setScreen(this);
+        }, LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.remove_action.confirm")));
     }
 
     protected boolean deleteSelectedEntryDirectly() {
@@ -1244,16 +1346,20 @@ public class ActionScriptEditorScreen extends Screen {
 
         if ((button == 0) && !actionsMenuInteracting) {
             this.rightClickContextMenu.closeMenu();
+            this.contextMenuTargetExecutable = null;
         }
 
         if (!actionsMenuInteracting && (button == 1)) {
             if (this.isInsideActionsScrollArea((int)mouseX, (int)mouseY)) {
                 ExecutableEntry hovered = this.getScrollAreaHoveredEntry();
+                ExecutableEntry target = null;
                 if ((hovered != null) && (hovered != BEFORE_FIRST) && (hovered != AFTER_LAST)) {
+                    target = hovered;
                     if (!skipSelection) {
                         hovered.setSelected(true);
                     }
                 }
+                this.contextMenuTargetExecutable = (target != null) ? target.executable : null;
                 if (this.rightClickContextMenu != null) {
                     this.openRightClickContextMenuAt((float)mouseX, (float)mouseY, null);
                 }
