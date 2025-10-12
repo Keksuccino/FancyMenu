@@ -2091,6 +2091,6 @@
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft Logo",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms Notification Icons",
   "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text",
-  "fancymenu.actions.script_editor.shortcuts.shift_arrow_up": "SHIFT + ARROW UP",
-  "fancymenu.actions.script_editor.shortcuts.shift_arrow_down": "SHIFT + ARROW DOWN"
+  "fancymenu.actions.script_editor.shortcuts.shift_arrow_up": "Shift + Up",
+  "fancymenu.actions.script_editor.shortcuts.shift_arrow_down": "Shift + Down"
 }
