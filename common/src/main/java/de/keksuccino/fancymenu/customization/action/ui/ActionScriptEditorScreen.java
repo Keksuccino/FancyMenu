@@ -259,14 +259,12 @@ public class ActionScriptEditorScreen extends Screen {
 
         this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
-                    menu.closeMenu();
                     this.undo();
                 }).addIsActiveSupplier((menu, entry) -> this.canUndo())
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"));
 
         this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
-                    menu.closeMenu();
                     this.redo();
                 }).addIsActiveSupplier((menu, entry) -> this.canRedo())
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"));
@@ -731,7 +729,8 @@ public class ActionScriptEditorScreen extends Screen {
         float horizontalScroll = this.scriptEntriesScrollArea.horizontalScrollBar.getScroll();
         ExecutableEntry selected = this.getSelectedEntry();
         String selectedId = (selected != null) ? selected.executable.getIdentifier() : null;
-        return new ScriptSnapshot(snapshotBlock, verticalScroll, horizontalScroll, selectedId);
+        String targetId = (this.contextMenuTargetExecutable != null) ? this.contextMenuTargetExecutable.getIdentifier() : null;
+        return new ScriptSnapshot(snapshotBlock, verticalScroll, horizontalScroll, selectedId, targetId);
     }
 
     private void applySnapshot(@NotNull ScriptSnapshot snapshot) {
@@ -747,6 +746,12 @@ public class ActionScriptEditorScreen extends Screen {
                 if (executable != null) {
                     this.focusEntryForExecutable(executable, true, false);
                 }
+            }
+            if (snapshot.contextMenuTargetExecutableId != null) {
+                Executable targetExecutable = this.findExecutableByIdentifier(this.executableBlock, snapshot.contextMenuTargetExecutableId);
+                this.contextMenuTargetExecutable = targetExecutable;
+            } else {
+                this.contextMenuTargetExecutable = null;
             }
         } finally {
             this.suppressHistoryCapture = false;
@@ -825,12 +830,15 @@ public class ActionScriptEditorScreen extends Screen {
         private final float horizontalScroll;
         @Nullable
         private final String selectedExecutableId;
+        @Nullable
+        private final String contextMenuTargetExecutableId;
 
-        private ScriptSnapshot(@NotNull GenericExecutableBlock block, float verticalScroll, float horizontalScroll, @Nullable String selectedExecutableId) {
+        private ScriptSnapshot(@NotNull GenericExecutableBlock block, float verticalScroll, float horizontalScroll, @Nullable String selectedExecutableId, @Nullable String contextMenuTargetExecutableId) {
             this.block = block;
             this.verticalScroll = verticalScroll;
             this.horizontalScroll = horizontalScroll;
             this.selectedExecutableId = selectedExecutableId;
+            this.contextMenuTargetExecutableId = contextMenuTargetExecutableId;
         }
     }
 
