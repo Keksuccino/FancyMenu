@@ -73,18 +73,18 @@ public class ActionScriptEditorScreen extends Screen {
 
     protected GenericExecutableBlock executableBlock;
     protected Consumer<GenericExecutableBlock> callback;
-    protected ScrollArea actionsScrollArea = new ScrollArea(0, 0, 0, 0).setAllowScrollWheelSupplier(() -> !this.isUserNavigatingInActionsContextMenu());
-    protected ContextMenu actionsContextMenu;
-    protected float actionsContextMenuLastOpenX = Float.NaN;
-    protected float actionsContextMenuLastOpenY = Float.NaN;
+    protected ScrollArea scriptEntriesScrollArea = new ScrollArea(0, 0, 0, 0).setAllowScrollWheelSupplier(() -> !this.isUserNavigatingInRightClickContextMenu());
+    protected ContextMenu rightClickContextMenu;
+    protected float rightClickContextMenuLastOpenX = Float.NaN;
+    protected float rightClickContextMenuLastOpenY = Float.NaN;
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
     @Nullable
     protected ExecutableEntry renderTickDragHoveredEntry = null;
     @Nullable
     protected ExecutableEntry renderTickDraggedEntry = null;
-    private final ExecutableEntry BEFORE_FIRST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
-    private final ExecutableEntry AFTER_LAST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
+    private final ExecutableEntry BEFORE_FIRST = new ExecutableEntry(this.scriptEntriesScrollArea, new GenericExecutableBlock(), 1, 0);
+    private final ExecutableEntry AFTER_LAST = new ExecutableEntry(this.scriptEntriesScrollArea, new GenericExecutableBlock(), 1, 0);
     @Nullable
     protected Executable pendingSelectionExecutable = null;
     protected boolean pendingSelectionKeepViewAnchor = false;
@@ -99,14 +99,11 @@ public class ActionScriptEditorScreen extends Screen {
     protected static final int CHAIN_BAR_WIDTH = 3;
     protected static final int CHAIN_BAR_OFFSET = 2;
     protected static final int INLINE_EDIT_RIGHT_MARGIN = 5;
-
     protected static final float MINIMAP_TOOLTIP_SCALE = 0.5F;
     protected static final int MINIMAP_TOOLTIP_PADDING = 4;
     protected static final int MINIMAP_TOOLTIP_OFFSET = 12;
-
     protected static final long VALUE_DOUBLE_CLICK_TIME_MS = 500L;
     protected static final long NAME_DOUBLE_CLICK_TIME_MS = 500L;
-
     @Nullable
     protected ExecutableEntry hoveredEntry = null;
     @Nullable
@@ -161,7 +158,7 @@ public class ActionScriptEditorScreen extends Screen {
     @Override
     protected void init() {
 
-        this.updateActionsContextMenu(false, null);
+        this.updateRightClickContextMenu(false, null);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(this.executableBlock);
@@ -184,70 +181,70 @@ public class ActionScriptEditorScreen extends Screen {
         return false;
     }
 
-    protected void updateActionsContextMenu() {
-        this.updateActionsContextMenu(false, null);
+    protected void updateRightClickContextMenu() {
+        this.updateRightClickContextMenu(false, null);
     }
 
-    protected void updateActionsContextMenu(boolean reopen, @Nullable List<String> entryPath) {
+    protected void updateRightClickContextMenu(boolean reopen, @Nullable List<String> entryPath) {
 
-        boolean wasOpen = (this.actionsContextMenu != null) && this.actionsContextMenu.isOpen();
+        boolean wasOpen = (this.rightClickContextMenu != null) && this.rightClickContextMenu.isOpen();
         List<String> resolvedEntryPath = null;
-        List<String> currentPath = (wasOpen && (this.actionsContextMenu != null)) ? this.findOpenContextMenuPath(this.actionsContextMenu) : null;
+        List<String> currentPath = (wasOpen && (this.rightClickContextMenu != null)) ? this.findOpenContextMenuPath(this.rightClickContextMenu) : null;
         if (currentPath != null) {
             resolvedEntryPath = currentPath;
         } else if (entryPath != null) {
             resolvedEntryPath = new ArrayList<>(entryPath);
         }
 
-        if (this.actionsContextMenu != null) {
-            this.actionsContextMenu.closeMenu();
-            this.removeWidget(this.actionsContextMenu);
+        if (this.rightClickContextMenu != null) {
+            this.rightClickContextMenu.closeMenu();
+            this.removeWidget(this.rightClickContextMenu);
         }
 
-        this.actionsContextMenu = new ContextMenu();
-        this.addWidget(this.actionsContextMenu);
+        this.rightClickContextMenu = new ContextMenu();
+        this.addWidget(this.rightClickContextMenu);
 
         ContextMenu addActionSubMenu = this.buildAddActionSubMenu();
         boolean hasActionEntries = !addActionSubMenu.getEntries().isEmpty();
-        this.actionsContextMenu.addSubMenuEntry("add_action", Component.translatable("fancymenu.actions.screens.add_action"), addActionSubMenu)
+        this.rightClickContextMenu.addSubMenuEntry("add_action", Component.translatable("fancymenu.actions.screens.add_action"), addActionSubMenu)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.add_action.desc")))
                 .setIsActiveSupplier((menu, entry) -> hasActionEntries);
 
-        this.actionsContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAddFolder();
         });
 
-        this.actionsContextMenu.addClickableEntry("add_if", Component.translatable("fancymenu.actions.blocks.add.if"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("add_if", Component.translatable("fancymenu.actions.blocks.add.if"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAddIf();
         });
 
-        this.actionsContextMenu.addClickableEntry("add_while", Component.translatable("fancymenu.actions.blocks.add.while"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("add_while", Component.translatable("fancymenu.actions.blocks.add.while"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAddWhile();
         });
 
-        this.actionsContextMenu.addSeparatorEntry("after_add");
+        this.rightClickContextMenu.addSeparatorEntry("after_add");
 
-        this.actionsContextMenu.addClickableEntry("append_else_if", Component.translatable("fancymenu.actions.blocks.add.else_if"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("append_else_if", Component.translatable("fancymenu.actions.blocks.add.else_if"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAppendElseIf();
         }).setIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock());
 
-        this.actionsContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.actions.blocks.add.else"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.actions.blocks.add.else"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             menu.closeMenu();
             this.onAppendElse();
         }).setIsActiveSupplier((menu, entry) -> this.canAppendElseBlock());
 
-        this.actionsContextMenu.addSeparatorEntry("after_append");
+        this.rightClickContextMenu.addSeparatorEntry("after_append");
 
-        this.actionsContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.actions.screens.move_action_up"), (menu, contextMenuEntry) -> {
+        this.rightClickContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.actions.screens.move_action_up"), (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     ExecutableEntry selected = this.getSelectedEntry();
                     if (selected != null) {
@@ -261,7 +258,7 @@ public class ActionScriptEditorScreen extends Screen {
                     return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_up.desc"));
         });
 
-        this.actionsContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.actions.screens.move_action_down"), (menu, contextMenuEntry) -> {
+        this.rightClickContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.actions.screens.move_action_down"), (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     ExecutableEntry selected = this.getSelectedEntry();
                     if (selected != null) {
@@ -275,16 +272,16 @@ public class ActionScriptEditorScreen extends Screen {
                     return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_down.desc"));
                 });
 
-        this.actionsContextMenu.addSeparatorEntry("after_reorder");
+        this.rightClickContextMenu.addSeparatorEntry("after_reorder");
 
-        this.actionsContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.actions.screens.edit_action"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.actions.screens.edit_action"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     menu.closeMenu();
                     this.onEdit();
                 }).setIsActiveSupplier((menu, entry) -> this.canEditSelectedEntry())
                 .setTooltipSupplier((menu, entry) -> this.getEditTooltip());
 
-        this.actionsContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.actions.screens.remove_action"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.actions.screens.remove_action"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     menu.closeMenu();
                     this.onRemove();
@@ -292,25 +289,25 @@ public class ActionScriptEditorScreen extends Screen {
                 .setTooltipSupplier((menu, entry) -> this.getRemoveTooltip());
 
         if (reopen || wasOpen) {
-            float reopenX = this.hasStoredActionsContextMenuPosition() ? this.actionsContextMenuLastOpenX : (float)MouseInput.getMouseX();
-            float reopenY = this.hasStoredActionsContextMenuPosition() ? this.actionsContextMenuLastOpenY : (float)MouseInput.getMouseY();
-            this.openActionsContextMenuAt(reopenX, reopenY, resolvedEntryPath);
+            float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)MouseInput.getMouseX();
+            float reopenY = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenY : (float)MouseInput.getMouseY();
+            this.openRightClickContextMenuAt(reopenX, reopenY, resolvedEntryPath);
         }
 
     }
 
-    protected void openActionsContextMenuAt(float x, float y, @Nullable List<String> entryPath) {
-        if (this.actionsContextMenu == null) {
+    protected void openRightClickContextMenuAt(float x, float y, @Nullable List<String> entryPath) {
+        if (this.rightClickContextMenu == null) {
             return;
         }
-        this.actionsContextMenuLastOpenX = x;
-        this.actionsContextMenuLastOpenY = y;
+        this.rightClickContextMenuLastOpenX = x;
+        this.rightClickContextMenuLastOpenY = y;
         List<String> path = (entryPath != null && !entryPath.isEmpty()) ? new ArrayList<>(entryPath) : null;
-        this.actionsContextMenu.openMenuAt(x, y, path);
+        this.rightClickContextMenu.openMenuAt(x, y, path);
     }
 
-    protected boolean hasStoredActionsContextMenuPosition() {
-        return !Float.isNaN(this.actionsContextMenuLastOpenX) && !Float.isNaN(this.actionsContextMenuLastOpenY);
+    protected boolean hasStoredRightClickContextMenuPosition() {
+        return !Float.isNaN(this.rightClickContextMenuLastOpenX) && !Float.isNaN(this.rightClickContextMenuLastOpenY);
     }
 
     @Nullable
@@ -333,7 +330,7 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected boolean isInsideActionsScrollArea(int mouseX, int mouseY) {
-        return UIBase.isXYInArea(mouseX, mouseY, this.actionsScrollArea.getXWithBorder(), this.actionsScrollArea.getYWithBorder(), this.actionsScrollArea.getWidthWithBorder(), this.actionsScrollArea.getHeightWithBorder());
+        return UIBase.isXYInArea(mouseX, mouseY, this.scriptEntriesScrollArea.getXWithBorder(), this.scriptEntriesScrollArea.getYWithBorder(), this.scriptEntriesScrollArea.getWidthWithBorder(), this.scriptEntriesScrollArea.getHeightWithBorder());
     }
 
     protected boolean canAppendConditionalBlock() {
@@ -492,7 +489,7 @@ public class ActionScriptEditorScreen extends Screen {
         MutableComponent openChooserLabel = Component.translatable("fancymenu.actions.open_action_chooser").setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
         subMenu.addClickableEntry("open_action_chooser", openChooserLabel, (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
-                    this.actionsContextMenu.closeMenu();
+                    this.rightClickContextMenu.closeMenu();
                     ExecutableEntry selectedOnCreate = this.getSelectedEntry();
                     this.onOpenActionChooser(selectedOnCreate);
                 }).setIcon(ContextMenu.IconFactory.getIcon("pick"))
@@ -523,7 +520,7 @@ public class ActionScriptEditorScreen extends Screen {
     protected void toggleFavorite(@NotNull Action action) {
         ActionFavoritesManager.toggleFavorite(action.getIdentifier());
         this.markContextMenuActionSelectionSuppressed();
-        this.updateActionsContextMenu(true, Collections.singletonList("add_action"));
+        this.updateRightClickContextMenu(true, Collections.singletonList("add_action"));
     }
 
     protected void onOpenActionChooser(@Nullable ExecutableEntry selectionReference) {
@@ -737,7 +734,7 @@ public class ActionScriptEditorScreen extends Screen {
             return false;
         }
         Executable nextExecutable = null;
-        List<ScrollAreaEntry> currentEntries = this.actionsScrollArea.getEntries();
+        List<ScrollAreaEntry> currentEntries = this.scriptEntriesScrollArea.getEntries();
         int selectedIndex = currentEntries.indexOf(selected);
         if (selectedIndex != -1) {
             for (int i = selectedIndex + 1; i < currentEntries.size(); i++) {
@@ -796,7 +793,7 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected boolean selectAdjacentEntry(boolean moveDown) {
-        List<ScrollAreaEntry> entries = this.actionsScrollArea.getEntries();
+        List<ScrollAreaEntry> entries = this.scriptEntriesScrollArea.getEntries();
         if (entries.isEmpty()) {
             return false;
         }
@@ -904,12 +901,12 @@ public class ActionScriptEditorScreen extends Screen {
 
         //Auto-scroll scroll area vertically if dragged and out-of-area
         if (this.renderTickDraggedEntry != null) {
-            float scrollOffset = 0.1F * this.actionsScrollArea.verticalScrollBar.getWheelScrollSpeed();
-            if (MouseInput.getMouseY() <= this.actionsScrollArea.getInnerY()) {
-                this.actionsScrollArea.verticalScrollBar.setScroll(this.actionsScrollArea.verticalScrollBar.getScroll() - scrollOffset);
+            float scrollOffset = 0.1F * this.scriptEntriesScrollArea.verticalScrollBar.getWheelScrollSpeed();
+            if (MouseInput.getMouseY() <= this.scriptEntriesScrollArea.getInnerY()) {
+                this.scriptEntriesScrollArea.verticalScrollBar.setScroll(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() - scrollOffset);
             }
-            if (MouseInput.getMouseY() >= (this.actionsScrollArea.getInnerY() + this.actionsScrollArea.getInnerHeight())) {
-                this.actionsScrollArea.verticalScrollBar.setScroll(this.actionsScrollArea.verticalScrollBar.getScroll() + scrollOffset);
+            if (MouseInput.getMouseY() >= (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) {
+                this.scriptEntriesScrollArea.verticalScrollBar.setScroll(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() + scrollOffset);
             }
         }
 
@@ -921,18 +918,18 @@ public class ActionScriptEditorScreen extends Screen {
         graphics.drawString(this.font, I18n.get("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.generic_text_base_color.getColorInt(), false);
 
         int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - MINIMAP_WIDTH - MINIMAP_GAP);
-        this.actionsScrollArea.setWidth(scrollAreaWidth, true);
-        this.actionsScrollArea.setHeight(this.height - 85, true);
-        this.actionsScrollArea.setX(LEFT_MARGIN, true);
-        this.actionsScrollArea.setY(50 + 15, true);
+        this.scriptEntriesScrollArea.setWidth(scrollAreaWidth, true);
+        this.scriptEntriesScrollArea.setHeight(this.height - 85, true);
+        this.scriptEntriesScrollArea.setX(LEFT_MARGIN, true);
+        this.scriptEntriesScrollArea.setY(50 + 15, true);
 
-        this.actionsScrollArea.updateScrollArea();
-        this.actionsScrollArea.updateEntries(null);
+        this.scriptEntriesScrollArea.updateScrollArea();
+        this.scriptEntriesScrollArea.updateEntries(null);
         this.processPendingSelection();
 
-        this.minimapX = this.actionsScrollArea.getXWithBorder() + this.actionsScrollArea.getWidthWithBorder() + MINIMAP_GAP;
-        this.minimapY = this.actionsScrollArea.getInnerY() - 1;
-        this.minimapHeight = this.actionsScrollArea.getInnerHeight() + 2;
+        this.minimapX = this.scriptEntriesScrollArea.getXWithBorder() + this.scriptEntriesScrollArea.getWidthWithBorder() + MINIMAP_GAP;
+        this.minimapY = this.scriptEntriesScrollArea.getInnerY() - 1;
+        this.minimapHeight = this.scriptEntriesScrollArea.getInnerHeight() + 2;
 
         this.selectedEntry = this.getSelectedEntry();
         this.selectedStatementChainEntries = (this.selectedEntry != null) ? this.getStatementChainOf(this.selectedEntry) : Collections.emptyList();
@@ -944,13 +941,13 @@ public class ActionScriptEditorScreen extends Screen {
         this.rebuildMinimapSegments(mouseX, mouseY);
 
         int buttonsRightEdge = this.width - RIGHT_MARGIN;
-        int buttonY = Math.max(20, this.actionsScrollArea.getYWithBorder() - this.doneButton.getHeight() - ACTION_BUTTON_GAP);
+        int buttonY = Math.max(20, this.scriptEntriesScrollArea.getYWithBorder() - this.doneButton.getHeight() - ACTION_BUTTON_GAP);
         this.doneButton.setX(buttonsRightEdge - this.doneButton.getWidth());
         this.doneButton.setY(buttonY);
         this.cancelButton.setX(Math.max(LEFT_MARGIN, this.doneButton.getX() - ACTION_BUTTON_GAP - this.cancelButton.getWidth()));
         this.cancelButton.setY(buttonY);
 
-        this.actionsScrollArea.render(graphics, mouseX, mouseY, partial);
+        this.scriptEntriesScrollArea.render(graphics, mouseX, mouseY, partial);
         this.renderInlineEditors(graphics, mouseX, mouseY, partial);
         this.updateCursor(mouseX, mouseY);
 
@@ -958,14 +955,14 @@ public class ActionScriptEditorScreen extends Screen {
             int dY = this.renderTickDragHoveredEntry.getY();
             int dH = this.renderTickDragHoveredEntry.getHeight();
             if (this.renderTickDragHoveredEntry == BEFORE_FIRST) {
-                dY = this.actionsScrollArea.getInnerY();
+                dY = this.scriptEntriesScrollArea.getInnerY();
                 dH = 1;
             }
             if (this.renderTickDragHoveredEntry == AFTER_LAST) {
-                dY = this.actionsScrollArea.getInnerY() + this.actionsScrollArea.getInnerHeight() - 1;
+                dY = this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight() - 1;
                 dH = 1;
             }
-            graphics.fill(this.actionsScrollArea.getInnerX(), dY + dH - 1, this.actionsScrollArea.getInnerX() + this.actionsScrollArea.getInnerWidth(), dY + dH, theme.description_area_text_color.getColorInt());
+            graphics.fill(this.scriptEntriesScrollArea.getInnerX(), dY + dH - 1, this.scriptEntriesScrollArea.getInnerX() + this.scriptEntriesScrollArea.getInnerWidth(), dY + dH, theme.description_area_text_color.getColorInt());
         }
 
         this.renderChainMinimap(graphics);
@@ -981,21 +978,21 @@ public class ActionScriptEditorScreen extends Screen {
         this.renderMinimapEntryTooltip(graphics, mouseX, mouseY);
 
         // Needs to render after everything else
-        this.actionsContextMenu.render(graphics, mouseX, mouseY, partial);
+        this.rightClickContextMenu.render(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (this.isMinimapHovered((int)mouseX, (int)mouseY) && !this.isUserNavigatingInActionsContextMenu()) {
+        if (this.isMinimapHovered((int)mouseX, (int)mouseY) && !this.isUserNavigatingInRightClickContextMenu()) {
             if (scrollY != 0.0D) {
-                float scrollStep = 0.1F * this.actionsScrollArea.verticalScrollBar.getWheelScrollSpeed();
+                float scrollStep = 0.1F * this.scriptEntriesScrollArea.verticalScrollBar.getWheelScrollSpeed();
                 float totalOffset = scrollStep * (float)Math.abs(scrollY);
                 if (scrollY > 0.0D) {
                     totalOffset = -totalOffset;
                 }
-                this.actionsScrollArea.verticalScrollBar.setScroll(this.actionsScrollArea.verticalScrollBar.getScroll() + totalOffset);
-                this.actionsScrollArea.updateEntries(null);
+                this.scriptEntriesScrollArea.verticalScrollBar.setScroll(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() + totalOffset);
+                this.scriptEntriesScrollArea.updateEntries(null);
             }
             return true;
         }
@@ -1037,10 +1034,10 @@ public class ActionScriptEditorScreen extends Screen {
             }
         }
 
-        boolean actionsMenuInteracting = this.isUserNavigatingInActionsContextMenu();
+        boolean actionsMenuInteracting = this.isUserNavigatingInRightClickContextMenu();
 
         if ((button == 0) && !actionsMenuInteracting) {
-            this.actionsContextMenu.closeMenu();
+            this.rightClickContextMenu.closeMenu();
         }
 
         if (!actionsMenuInteracting && (button == 1)) {
@@ -1051,8 +1048,8 @@ public class ActionScriptEditorScreen extends Screen {
                         hovered.setSelected(true);
                     }
                 }
-                if (this.actionsContextMenu != null) {
-                    this.openActionsContextMenuAt((float)mouseX, (float)mouseY, null);
+                if (this.rightClickContextMenu != null) {
+                    this.openRightClickContextMenuAt((float)mouseX, (float)mouseY, null);
                 }
                 return true;
             }
@@ -1101,7 +1098,7 @@ public class ActionScriptEditorScreen extends Screen {
         if (!skipSelection && !actionsMenuInteracting && (button == 0) && !this.isInlineValueEditing()) {
             ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
             if ((hoveredAfter == null) || !hoveredAfter.isMouseOverValue((int)mouseX, (int)mouseY)) {
-                for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
+                for (ScrollAreaEntry entry : this.scriptEntriesScrollArea.getEntries()) {
                     if (entry instanceof ExecutableEntry ee) {
                         ee.resetValueClickTimer();
                     }
@@ -1112,7 +1109,7 @@ public class ActionScriptEditorScreen extends Screen {
         if (!skipSelection && !actionsMenuInteracting && (button == 0) && !this.isInlineNameEditing()) {
             ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
             if ((hoveredAfter == null) || !hoveredAfter.isMouseOverName((int)mouseX, (int)mouseY)) {
-                for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
+                for (ScrollAreaEntry entry : this.scriptEntriesScrollArea.getEntries()) {
                     if (entry instanceof ExecutableEntry ee && ee.canInlineEditName()) {
                         ee.resetNameClickTimer();
                     }
@@ -1153,7 +1150,7 @@ public class ActionScriptEditorScreen extends Screen {
             }
         }
 
-        boolean contextMenuActive = this.isUserNavigatingInActionsContextMenu() || ((this.actionsContextMenu != null) && this.actionsContextMenu.isOpen());
+        boolean contextMenuActive = this.isUserNavigatingInRightClickContextMenu() || ((this.rightClickContextMenu != null) && this.rightClickContextMenu.isOpen());
 
         if (!contextMenuActive) {
             ExecutableEntry selected = this.getSelectedEntry();
@@ -1230,7 +1227,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     protected void renderInlineEditors(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (this.isInlineValueEditing()) {
-            if (!this.actionsScrollArea.getEntries().contains(this.inlineValueEntry)) {
+            if (!this.scriptEntriesScrollArea.getEntries().contains(this.inlineValueEntry)) {
                 this.finishInlineValueEditing(false);
             } else {
                 this.updateInlineValueEditorBounds();
@@ -1240,7 +1237,7 @@ public class ActionScriptEditorScreen extends Screen {
             }
         }
         if (this.isInlineNameEditing()) {
-            if (!this.actionsScrollArea.getEntries().contains(this.inlineNameEntry)) {
+            if (!this.scriptEntriesScrollArea.getEntries().contains(this.inlineNameEntry)) {
                 this.finishInlineNameEditing(false);
             } else {
                 this.updateInlineNameEditorBounds();
@@ -1278,7 +1275,7 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     private void toggleCollapseAndPreserveView(@NotNull ExecutableEntry entry) {
-        ScrollArea scrollArea = this.actionsScrollArea;
+        ScrollArea scrollArea = this.scriptEntriesScrollArea;
         int desiredOffset = entry.getY() - scrollArea.getInnerY();
         Executable executable = entry.executable;
         entry.toggleCollapsed();
@@ -1287,7 +1284,7 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     private void restoreEntryTopPosition(@NotNull Executable executable, int desiredOffset) {
-        ScrollArea scrollArea = this.actionsScrollArea;
+        ScrollArea scrollArea = this.scriptEntriesScrollArea;
         scrollArea.updateEntries(null);
 
         ExecutableEntry target = null;
@@ -1387,7 +1384,7 @@ public class ActionScriptEditorScreen extends Screen {
             entry.resetValueClickTimer();
         }
         this.inlineValueOriginal = null;
-        this.actionsScrollArea.updateEntries(null);
+        this.scriptEntriesScrollArea.updateEntries(null);
     }
 
     private void updateInlineValueEditorBounds() {
@@ -1457,7 +1454,7 @@ public class ActionScriptEditorScreen extends Screen {
             entry.resetNameClickTimer();
         }
         this.inlineNameOriginal = null;
-        this.actionsScrollArea.updateEntries(null);
+        this.scriptEntriesScrollArea.updateEntries(null);
     }
 
     private void updateInlineNameEditorBounds() {
@@ -1484,15 +1481,15 @@ public class ActionScriptEditorScreen extends Screen {
 
     @Nullable
     protected ExecutableEntry getScrollAreaHoveredEntry() {
-        if (this.isUserNavigatingInActionsContextMenu()) return null;
-        if (!this.actionsScrollArea.isMouseInsideArea()) {
+        if (this.isUserNavigatingInRightClickContextMenu()) return null;
+        if (!this.scriptEntriesScrollArea.isMouseInsideArea()) {
             return null;
         }
         int mouseX = MouseInput.getMouseX();
         int mouseY = MouseInput.getMouseY();
-        for (ScrollAreaEntry entry : this.actionsScrollArea.getEntries()) {
+        for (ScrollAreaEntry entry : this.scriptEntriesScrollArea.getEntries()) {
             if (entry instanceof ExecutableEntry ee) {
-                if (UIBase.isXYInArea(mouseX, mouseY, ee.getX(), ee.getY(), this.actionsScrollArea.getInnerWidth(), ee.getHeight())) {
+                if (UIBase.isXYInArea(mouseX, mouseY, ee.getX(), ee.getY(), this.scriptEntriesScrollArea.getInnerWidth(), ee.getHeight())) {
                     return ee;
                 }
             }
@@ -1591,7 +1588,7 @@ public class ActionScriptEditorScreen extends Screen {
         this.minimapContentHeight = Math.max(1, this.minimapHeight - (MINIMAP_PADDING * 2));
         this.minimapTotalEntriesHeight = 0;
 
-        List<ScrollAreaEntry> scrollEntries = this.actionsScrollArea.getEntries();
+        List<ScrollAreaEntry> scrollEntries = this.scriptEntriesScrollArea.getEntries();
         List<ExecutableEntry> execEntries = new ArrayList<>();
         for (ScrollAreaEntry entry : scrollEntries) {
             if (entry instanceof ExecutableEntry ee) {
@@ -1750,12 +1747,12 @@ public class ActionScriptEditorScreen extends Screen {
         if (this.minimapTotalEntriesHeight <= 0 || this.minimapContentHeight <= 0) {
             return;
         }
-        int visibleHeight = this.actionsScrollArea.getInnerHeight();
+        int visibleHeight = this.scriptEntriesScrollArea.getInnerHeight();
         if (this.minimapTotalEntriesHeight <= visibleHeight) {
             return;
         }
         int maxScroll = Math.max(1, this.minimapTotalEntriesHeight - visibleHeight);
-        int scrollPixels = Math.round(this.actionsScrollArea.verticalScrollBar.getScroll() * maxScroll);
+        int scrollPixels = Math.round(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() * maxScroll);
         float topRatio = (float)scrollPixels / (float)this.minimapTotalEntriesHeight;
         float heightRatio = (float)visibleHeight / (float)this.minimapTotalEntriesHeight;
 
@@ -1782,12 +1779,12 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void scrollEntryIntoView(@NotNull ExecutableEntry entry) {
-        List<ScrollAreaEntry> scrollEntries = this.actionsScrollArea.getEntries();
+        List<ScrollAreaEntry> scrollEntries = this.scriptEntriesScrollArea.getEntries();
         int totalHeight = 0;
         for (ScrollAreaEntry e : scrollEntries) {
             totalHeight += e.getHeight();
         }
-        int visibleHeight = this.actionsScrollArea.getInnerHeight();
+        int visibleHeight = this.scriptEntriesScrollArea.getInnerHeight();
         if (totalHeight <= visibleHeight) {
             return;
         }
@@ -1802,8 +1799,8 @@ public class ActionScriptEditorScreen extends Screen {
         int target = Math.max(0, entryCenter - (visibleHeight / 2));
         int maxScroll = Math.max(1, totalHeight - visibleHeight);
         float scroll = Math.min(1.0F, (float)target / (float)maxScroll);
-        this.actionsScrollArea.verticalScrollBar.setScroll(scroll);
-        this.actionsScrollArea.updateEntries(null);
+        this.scriptEntriesScrollArea.verticalScrollBar.setScroll(scroll);
+        this.scriptEntriesScrollArea.updateEntries(null);
     }
 
     private static Color withAlpha(@NotNull Color color, int alpha) {
@@ -1930,7 +1927,7 @@ public class ActionScriptEditorScreen extends Screen {
         if (!(anchor.executable instanceof WhileExecutableBlock)) {
             return;
         }
-        List<ScrollAreaEntry> scrollEntries = this.actionsScrollArea.getEntries();
+        List<ScrollAreaEntry> scrollEntries = this.scriptEntriesScrollArea.getEntries();
         int anchorIndex = scrollEntries.indexOf(anchor);
         if (anchorIndex < 0) {
             return;
@@ -1960,7 +1957,7 @@ public class ActionScriptEditorScreen extends Screen {
         LinkedHashSet<ExecutableEntry> expanded = new LinkedHashSet<>();
         ArrayDeque<ExecutableEntry> queue = new ArrayDeque<>();
         this.enqueueChainEntries(entry, expanded, queue);
-        List<ScrollAreaEntry> scrollEntries = this.actionsScrollArea.getEntries();
+        List<ScrollAreaEntry> scrollEntries = this.scriptEntriesScrollArea.getEntries();
         while (!queue.isEmpty()) {
             ExecutableEntry current = queue.poll();
             for (ScrollAreaEntry raw : scrollEntries) {
@@ -2009,18 +2006,18 @@ public class ActionScriptEditorScreen extends Screen {
     protected ExecutableEntry getDragHoveredEntry() {
         ExecutableEntry draggedEntry = this.getDraggedEntry();
         if (draggedEntry != null) {
-            if ((MouseInput.getMouseY() <= this.actionsScrollArea.getInnerY()) && (this.actionsScrollArea.verticalScrollBar.getScroll() == 0.0F)) {
+            if ((MouseInput.getMouseY() <= this.scriptEntriesScrollArea.getInnerY()) && (this.scriptEntriesScrollArea.verticalScrollBar.getScroll() == 0.0F)) {
                 return BEFORE_FIRST;
             }
-            if ((MouseInput.getMouseY() >= (this.actionsScrollArea.getInnerY() + this.actionsScrollArea.getInnerHeight())) && (this.actionsScrollArea.verticalScrollBar.getScroll() == 1.0F)) {
+            if ((MouseInput.getMouseY() >= (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) && (this.scriptEntriesScrollArea.verticalScrollBar.getScroll() == 1.0F)) {
                 return AFTER_LAST;
             }
-            for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
+            for (ScrollAreaEntry e : this.scriptEntriesScrollArea.getEntries()) {
                 if (e instanceof ExecutableEntry ee) {
-                    if ((e.getY() + e.getHeight()) > (this.actionsScrollArea.getInnerY() + this.actionsScrollArea.getInnerHeight())) {
+                    if ((e.getY() + e.getHeight()) > (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) {
                         continue;
                     }
-                    if ((ee != draggedEntry) && UIBase.isXYInArea(MouseInput.getMouseX(), MouseInput.getMouseY(), ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight()) && this.actionsScrollArea.isMouseInsideArea()) {
+                    if ((ee != draggedEntry) && UIBase.isXYInArea(MouseInput.getMouseX(), MouseInput.getMouseY(), ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight()) && this.scriptEntriesScrollArea.isMouseInsideArea()) {
                         List<ExecutableEntry> statementChain = new ArrayList<>();
                         if (draggedEntry.executable instanceof AbstractExecutableBlock) {
                             statementChain = this.getStatementChainOf(draggedEntry);
@@ -2047,7 +2044,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     @Nullable
     protected ExecutableEntry getDraggedEntry() {
-        for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
+        for (ScrollAreaEntry e : this.scriptEntriesScrollArea.getEntries()) {
             if (e instanceof ExecutableEntry ee) {
                 if (ee.dragging) return ee;
             }
@@ -2057,7 +2054,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     @Nullable
     protected ExecutableEntry findEntryForExecutable(Executable executable) {
-        for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
+        for (ScrollAreaEntry e : this.scriptEntriesScrollArea.getEntries()) {
             if (e instanceof ExecutableEntry ee) {
                 if (ee.executable == executable) return ee;
             }
@@ -2080,7 +2077,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
         ExecutableEntry entry = this.findEntryForExecutable(executable);
         if (entry != null) {
-            if (!this.isUserNavigatingInActionsContextMenu()) {
+            if (!this.isUserNavigatingInRightClickContextMenu()) {
                 entry.setSelected(true);
                 if (!keepViewAnchor) {
                     this.scrollEntryIntoView(entry);
@@ -2102,7 +2099,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     @Nullable
     protected ExecutableEntry getSelectedEntry() {
-        ScrollAreaEntry e = this.actionsScrollArea.getFocusedEntry();
+        ScrollAreaEntry e = this.scriptEntriesScrollArea.getFocusedEntry();
         if (e instanceof ExecutableEntry ee) {
             return ee;
         }
@@ -2116,10 +2113,10 @@ public class ActionScriptEditorScreen extends Screen {
     @Nullable
     protected ExecutableEntry getValidMoveToEntryBefore(@NotNull ExecutableEntry entry, boolean ignoreValidityChecks) {
         if (entry == BEFORE_FIRST) return BEFORE_FIRST;
-        int index = this.actionsScrollArea.getEntries().size();
+        int index = this.scriptEntriesScrollArea.getEntries().size();
         boolean foundEntry = false;
         boolean foundValidMoveTo = false;
-        for (ScrollAreaEntry e : Lists.reverse(this.actionsScrollArea.getEntries())) {
+        for (ScrollAreaEntry e : Lists.reverse(this.scriptEntriesScrollArea.getEntries())) {
             if (e instanceof ExecutableEntry ee) {
                 index--;
                 if (e == entry) {
@@ -2151,7 +2148,7 @@ public class ActionScriptEditorScreen extends Screen {
             }
         }
         if (!foundValidMoveTo) return null;
-        ScrollAreaEntry e = this.actionsScrollArea.getEntry(index);
+        ScrollAreaEntry e = this.scriptEntriesScrollArea.getEntry(index);
         if (e instanceof ExecutableEntry ee) return ee;
         return null;
     }
@@ -2162,7 +2159,7 @@ public class ActionScriptEditorScreen extends Screen {
         int index = -1;
         boolean foundEntry = false;
         boolean foundValidMoveTo = false;
-        for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
+        for (ScrollAreaEntry e : this.scriptEntriesScrollArea.getEntries()) {
             if (e instanceof ExecutableEntry ee) {
                 index++;
                 if (e == entry) {
@@ -2194,7 +2191,7 @@ public class ActionScriptEditorScreen extends Screen {
             }
         }
         if (!foundValidMoveTo) return null;
-        ScrollAreaEntry e = this.actionsScrollArea.getEntry(index);
+        ScrollAreaEntry e = this.scriptEntriesScrollArea.getEntry(index);
         if (e instanceof ExecutableEntry ee) return ee;
         return null;
     }
@@ -2225,7 +2222,7 @@ public class ActionScriptEditorScreen extends Screen {
         if (entry != null) {
             if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock)) {
                 boolean manualUpdate = false;
-                if (this.actionsScrollArea.getEntries().indexOf(entry) == 1) {
+                if (this.scriptEntriesScrollArea.getEntries().indexOf(entry) == 1) {
                     this.moveAfter(entry, BEFORE_FIRST);
                 } else {
                     if ((entry.getParentBlock() != this.executableBlock) && ((entry.getParentBlock() instanceof ElseIfExecutableBlock) || (entry.getParentBlock() instanceof ElseExecutableBlock)) && (entry.getParentBlock().getExecutables().indexOf(entry.executable) == 0)) {
@@ -2353,7 +2350,7 @@ public class ActionScriptEditorScreen extends Screen {
 
 
     protected void handleContextMenuMove(@NotNull ExecutableEntry entry, boolean moveUp) {
-        this.actionsScrollArea.updateEntries(null);
+        this.scriptEntriesScrollArea.updateEntries(null);
         int previousEntryY = entry.getY();
         Executable executable = entry.executable;
         if (moveUp) {
@@ -2369,7 +2366,7 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void processPendingSelection() {
-        if ((this.pendingSelectionExecutable != null) && !this.isUserNavigatingInActionsContextMenu()) {
+        if ((this.pendingSelectionExecutable != null) && !this.isUserNavigatingInRightClickContextMenu()) {
             Executable pending = this.pendingSelectionExecutable;
             boolean keep = this.pendingSelectionKeepViewAnchor;
             this.pendingSelectionExecutable = null;
@@ -2385,7 +2382,7 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     protected void adjustScrollToKeepEntryInPlace(int previousEntryY, @NotNull ExecutableEntry entry) {
-        this.actionsScrollArea.updateEntries(null);
+        this.scriptEntriesScrollArea.updateEntries(null);
         if (previousEntryY == Integer.MIN_VALUE) {
             return;
         }
@@ -2394,15 +2391,15 @@ public class ActionScriptEditorScreen extends Screen {
         if (delta == 0) {
             return;
         }
-        float totalScrollHeight = (float) this.actionsScrollArea.getTotalScrollHeight();
+        float totalScrollHeight = (float) this.scriptEntriesScrollArea.getTotalScrollHeight();
         if (totalScrollHeight <= 0.0F) {
             return;
         }
-        float currentScroll = this.actionsScrollArea.verticalScrollBar.getScroll();
+        float currentScroll = this.scriptEntriesScrollArea.verticalScrollBar.getScroll();
         float adjustedScroll = Mth.clamp(currentScroll + ((float) delta / totalScrollHeight), 0.0F, 1.0F);
         if (adjustedScroll != currentScroll) {
-            this.actionsScrollArea.verticalScrollBar.setScroll(adjustedScroll);
-            this.actionsScrollArea.updateEntries(null);
+            this.scriptEntriesScrollArea.verticalScrollBar.setScroll(adjustedScroll);
+            this.scriptEntriesScrollArea.updateEntries(null);
         }
     }
 
@@ -2418,23 +2415,23 @@ public class ActionScriptEditorScreen extends Screen {
         this.hoveredPrimaryChainEntries = Collections.emptyList();
         this.hoveredStatementChainEntries = Collections.emptyList();
 
-        for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
+        for (ScrollAreaEntry e : this.scriptEntriesScrollArea.getEntries()) {
             if (e instanceof ExecutableEntry ee) {
                 ee.leftMouseDownDragging = false;
                 ee.dragging = false;
             }
         }
 
-        float oldScrollVertical = this.actionsScrollArea.verticalScrollBar.getScroll();
-        float oldScrollHorizontal = this.actionsScrollArea.horizontalScrollBar.getScroll();
+        float oldScrollVertical = this.scriptEntriesScrollArea.verticalScrollBar.getScroll();
+        float oldScrollHorizontal = this.scriptEntriesScrollArea.horizontalScrollBar.getScroll();
 
-        this.actionsScrollArea.clearEntries();
+        this.scriptEntriesScrollArea.clearEntries();
 
         this.addExecutableToEntries(-1, this.executableBlock, null, null);
 
         if (keepScroll) {
-            this.actionsScrollArea.verticalScrollBar.setScroll(oldScrollVertical);
-            this.actionsScrollArea.horizontalScrollBar.setScroll(oldScrollHorizontal);
+            this.scriptEntriesScrollArea.verticalScrollBar.setScroll(oldScrollVertical);
+            this.scriptEntriesScrollArea.horizontalScrollBar.setScroll(oldScrollHorizontal);
         }
 
     }
@@ -2473,10 +2470,10 @@ public class ActionScriptEditorScreen extends Screen {
     protected void addExecutableToEntries(int level, Executable executable, @Nullable AbstractExecutableBlock appendParent, @Nullable AbstractExecutableBlock parentBlock) {
 
         if (level >= 0) {
-            ExecutableEntry entry = new ExecutableEntry(this.actionsScrollArea, executable, 14, level);
+            ExecutableEntry entry = new ExecutableEntry(this.scriptEntriesScrollArea, executable, 14, level);
             entry.appendParent = appendParent;
             entry.parentBlock = parentBlock;
-            this.actionsScrollArea.addEntry(entry);
+            this.scriptEntriesScrollArea.addEntry(entry);
         }
 
         if (executable instanceof AbstractExecutableBlock b) {
@@ -2500,8 +2497,8 @@ public class ActionScriptEditorScreen extends Screen {
 
     }
 
-    public boolean isUserNavigatingInActionsContextMenu() {
-        return (this.actionsContextMenu != null) && this.actionsContextMenu.isUserNavigatingInMenu();
+    public boolean isUserNavigatingInRightClickContextMenu() {
+        return (this.rightClickContextMenu != null) && this.rightClickContextMenu.isUserNavigatingInMenu();
     }
 
     public class ExecutableEntry extends ScrollAreaEntry {
@@ -2675,7 +2672,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         @Override
         public void setSelected(boolean selected) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return;
             super.setSelected(selected);
         }
 
@@ -2685,7 +2682,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         @Override
         public boolean isHovered() {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return false;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return false;
             return super.isHovered();
         }
 
@@ -2694,7 +2691,7 @@ public class ActionScriptEditorScreen extends Screen {
         public void updateEntry() {
             super.updateEntry();
             // Make the entry not look like it is hovered when navigating in the context menu
-            if (!this.isSelected() && ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) {
+            if (!this.isSelected() && ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) {
                 this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, 1);
             }
         }
@@ -2808,7 +2805,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         protected void handleDragging() {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return;
             if (!MouseInput.isLeftMouseDown()) {
                 if (this.dragging) {
                     ExecutableEntry hover = ActionScriptEditorScreen.this.renderTickDragHoveredEntry;
@@ -2864,7 +2861,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         protected boolean isMouseOverValue(int mouseX, int mouseY) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return false;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return false;
             if (!this.canInlineEditValue()) {
                 return false;
             }
@@ -2898,7 +2895,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         protected boolean isMouseOverName(int mouseX, int mouseY) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return false;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return false;
             if (!this.canInlineEditName()) {
                 return false;
             }
@@ -2942,7 +2939,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         protected int getNameFieldAvailableWidth() {
-            ScrollArea scrollArea = ActionScriptEditorScreen.this.actionsScrollArea;
+            ScrollArea scrollArea = ActionScriptEditorScreen.this.scriptEntriesScrollArea;
             int visibleRight = scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN;
             return Math.max(1, visibleRight - this.getNameFieldX());
         }
@@ -2963,7 +2960,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         protected int getValueFieldAvailableWidth() {
             int valueX = this.getValueFieldX();
-            ScrollArea scrollArea = ActionScriptEditorScreen.this.actionsScrollArea;
+            ScrollArea scrollArea = ActionScriptEditorScreen.this.scriptEntriesScrollArea;
             int visibleRight = scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN;
             int available = visibleRight - valueX;
             return Math.max(1, available);
@@ -2974,7 +2971,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         protected boolean isMouseOverCollapseToggle(int mouseX, int mouseY) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return false;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return false;
             if (!this.canToggleCollapse()) {
                 return false;
             }
@@ -3059,7 +3056,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         @Override
         public void onClick(ScrollAreaEntry entry) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return;
             if (this.parent.getEntries().contains(this)) {
                 this.leftMouseDownDragging = true;
                 this.leftMouseDownDraggingPosX = MouseInput.getMouseX();
