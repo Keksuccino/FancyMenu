@@ -33,15 +33,15 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -50,15 +50,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import java.awt.Color;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.List;
 import java.util.function.Consumer;
 
 public class ManageActionsScreen extends Screen {
@@ -134,6 +136,8 @@ public class ManageActionsScreen extends Screen {
     protected int minimapContentWidth = 0;
     protected int minimapContentHeight = 0;
     protected int minimapTotalEntriesHeight = 0;
+    @Nullable
+    protected ActionInstance clipboardActionInstance = null;
 
     public ManageActionsScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
 
@@ -153,12 +157,14 @@ public class ManageActionsScreen extends Screen {
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(this.executableBlock);
         });
+        this.doneButton.setNavigatable(false);
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(null);
         });
+        this.cancelButton.setNavigatable(false);
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
@@ -711,6 +717,122 @@ public class ManageActionsScreen extends Screen {
         }
     }
 
+    protected boolean deleteSelectedEntryDirectly() {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if (selected == null) {
+            return false;
+        }
+        Executable nextExecutable = null;
+        List<ScrollAreaEntry> currentEntries = this.actionsScrollArea.getEntries();
+        int selectedIndex = currentEntries.indexOf(selected);
+        if (selectedIndex != -1) {
+            for (int i = selectedIndex + 1; i < currentEntries.size(); i++) {
+                ScrollAreaEntry entry = currentEntries.get(i);
+                if ((entry instanceof ExecutableEntry ee) && (ee != selected)) {
+                    nextExecutable = ee.executable;
+                    break;
+                }
+            }
+            if (nextExecutable == null) {
+                for (int i = selectedIndex - 1; i >= 0; i--) {
+                    ScrollAreaEntry entry = currentEntries.get(i);
+                    if ((entry instanceof ExecutableEntry ee) && (ee != selected)) {
+                        nextExecutable = ee.executable;
+                        break;
+                    }
+                }
+            }
+        }
+        if (selected.appendParent != null) {
+            selected.appendParent.setAppendedBlock(null);
+        }
+        selected.getParentBlock().getExecutables().remove(selected.executable);
+        this.updateActionInstanceScrollArea(true);
+        if (nextExecutable != null) {
+            this.focusEntryForExecutable(nextExecutable, true);
+        }
+        return true;
+    }
+
+    protected boolean copySelectedAction() {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if ((selected == null) || !(selected.executable instanceof ActionInstance instance)) {
+            return false;
+        }
+        this.clipboardActionInstance = instance.copy(true);
+        return true;
+    }
+
+    protected boolean pasteCopiedAction(@Nullable ExecutableEntry selectionReference) {
+        if (this.clipboardActionInstance == null) {
+            return false;
+        }
+        ActionInstance instance = this.clipboardActionInstance.copy(true);
+        this.finalizeActionAddition(instance, selectionReference, true);
+        return true;
+    }
+
+    protected boolean moveSelectedEntry(boolean moveUp) {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if (selected == null) {
+            return false;
+        }
+        this.handleContextMenuMove(selected, moveUp);
+        return true;
+    }
+
+    protected boolean selectAdjacentEntry(boolean moveDown) {
+        List<ScrollAreaEntry> entries = this.actionsScrollArea.getEntries();
+        if (entries.isEmpty()) {
+            return false;
+        }
+        ExecutableEntry selected = this.getSelectedEntry();
+        int targetIndex;
+        if (selected == null) {
+            targetIndex = moveDown ? 0 : entries.size() - 1;
+        } else {
+            int currentIndex = entries.indexOf(selected);
+            if (currentIndex == -1) {
+                return false;
+            }
+            int desiredIndex = currentIndex + (moveDown ? 1 : -1);
+            desiredIndex = Mth.clamp(desiredIndex, 0, entries.size() - 1);
+            if (desiredIndex == currentIndex) {
+                return false;
+            }
+            targetIndex = desiredIndex;
+        }
+        ScrollAreaEntry target = entries.get(targetIndex);
+        if (target instanceof ExecutableEntry entry) {
+            entry.setSelected(true);
+            this.scrollEntryIntoView(entry);
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean handleEnterShortcut(@Nullable ExecutableEntry selected) {
+        if (selected == null) {
+            return false;
+        }
+        if (selected.executable instanceof ActionInstance instance) {
+            if (!instance.action.hasValue()) {
+                return false;
+            }
+            this.startInlineValueEditing(selected);
+            return true;
+        }
+        if (selected.executable instanceof FolderExecutableBlock) {
+            this.startInlineNameEditing(selected);
+            return true;
+        }
+        if ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock) || (selected.executable instanceof WhileExecutableBlock)) {
+            this.onEdit();
+            return true;
+        }
+        return false;
+    }
+
     public boolean isMinimapHovered(int mouseX, int mouseY) {
         return (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight);
     }
@@ -977,6 +1099,53 @@ public class ManageActionsScreen extends Screen {
                 return true;
             }
         }
+
+        boolean contextMenuActive = this.isUserNavigatingInActionsContextMenu() || ((this.actionsContextMenu != null) && this.actionsContextMenu.isOpen());
+
+        if (!contextMenuActive) {
+            ExecutableEntry selected = this.getSelectedEntry();
+            boolean ctrlDown = hasControlDown();
+            boolean shiftDown = hasShiftDown();
+            String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
+            keyName = (keyName != null) ? keyName.toLowerCase(Locale.ROOT) : "";
+
+            if (keyCode == InputConstants.KEY_DELETE) {
+                if (this.deleteSelectedEntryDirectly()) {
+                    return true;
+                }
+            }
+
+            if ("c".equals(keyName) && ctrlDown) {
+                if (this.copySelectedAction()) {
+                    return true;
+                }
+            }
+
+            if ("v".equals(keyName) && ctrlDown) {
+                if (this.pasteCopiedAction(selected)) {
+                    return true;
+                }
+            }
+
+            if ((keyCode == InputConstants.KEY_UP) || (keyCode == InputConstants.KEY_DOWN)) {
+                if (shiftDown) {
+                    if (this.moveSelectedEntry(keyCode == InputConstants.KEY_UP)) {
+                        return true;
+                    }
+                } else {
+                    if (this.selectAdjacentEntry(keyCode == InputConstants.KEY_DOWN)) {
+                        return true;
+                    }
+                }
+            }
+
+            if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
+                if (this.handleEnterShortcut(selected)) {
+                    return true;
+                }
+            }
+        }
+
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
