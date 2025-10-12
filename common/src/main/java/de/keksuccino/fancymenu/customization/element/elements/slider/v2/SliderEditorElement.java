@@ -1,10 +1,9 @@
 package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -117,7 +116,7 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.actions.screens.manage_screen.manage"),
                         (menu, entry) -> {
-                            ManageActionsScreen s = new ManageActionsScreen(((SliderElement)this.element).getExecutableBlock(), call -> {
+                            ActionScriptEditorScreen s = new ActionScriptEditorScreen(((SliderElement)this.element).getExecutableBlock(), call -> {
                                 if (call != null) {
                                     this.editor.history.saveSnapshot();
                                     ((SliderElement)this.element).executableBlock = call;

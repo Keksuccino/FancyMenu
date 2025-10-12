@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.layout.editor.actions;
+package de.keksuccino.fancymenu.customization.action.ui;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class BuildActionScreen extends Screen {
+public class ChooseActionScreen extends Screen {
 
     protected final ActionInstance instance;
     protected Consumer<ActionInstance> callback;
@@ -41,7 +41,7 @@ public class BuildActionScreen extends Screen {
 
     public boolean isEdit;
 
-    public BuildActionScreen(@Nullable ActionInstance instanceToEdit, @NotNull Consumer<ActionInstance> callback) {
+    public ChooseActionScreen(@Nullable ActionInstance instanceToEdit, @NotNull Consumer<ActionInstance> callback) {
 
         super((instanceToEdit != null) ? Component.translatable("fancymenu.actions.screens.edit_action") : Component.translatable("fancymenu.actions.screens.add_action"));
 
@@ -301,8 +301,8 @@ public class BuildActionScreen extends Screen {
             // Check if this is a double-click
             if (currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) {
                 // Double-click detected
-                if (BuildActionScreen.this.instance.action == this.action) {
-                    BuildActionScreen.this.onNextStep();
+                if (ChooseActionScreen.this.instance.action == this.action) {
+                    ChooseActionScreen.this.onNextStep();
                     this.lastClickTime = 0; // Reset to prevent triple clicks
                     return;
                 }

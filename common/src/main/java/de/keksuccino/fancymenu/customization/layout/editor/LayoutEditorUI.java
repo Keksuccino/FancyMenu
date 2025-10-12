@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
@@ -14,7 +15,6 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidg
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
@@ -723,7 +723,7 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_layout_wide_requirements");
 
 		menu.addClickableEntry("manage_open_screen_actions", Component.translatable("fancymenu.layout.editor.edit_open_screen_action_script"), (menu1, entry) -> {
-					ManageActionsScreen s = new ManageActionsScreen(editor.layout.openScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.openScreenExecutableBlocks.getFirst().copy(false), (call) -> {
+					ActionScriptEditorScreen s = new ActionScriptEditorScreen(editor.layout.openScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.openScreenExecutableBlocks.getFirst().copy(false), (call) -> {
 						if (call != null) {
 							editor.history.saveSnapshot();
 							editor.layout.openScreenExecutableBlocks.clear();
@@ -737,7 +737,7 @@ public class LayoutEditorUI {
 				.setStackable(false);
 
 		menu.addClickableEntry("manage_close_screen_actions", Component.translatable("fancymenu.layout.editor.edit_close_screen_action_script"), (menu1, entry) -> {
-					ManageActionsScreen s = new ManageActionsScreen(editor.layout.closeScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.closeScreenExecutableBlocks.getFirst().copy(false), (call) -> {
+					ActionScriptEditorScreen s = new ActionScriptEditorScreen(editor.layout.closeScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.closeScreenExecutableBlocks.getFirst().copy(false), (call) -> {
 						if (call != null) {
 							editor.history.saveSnapshot();
 							editor.layout.closeScreenExecutableBlocks.clear();

@@ -8,9 +8,9 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecut
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
 import de.keksuccino.fancymenu.customization.listener.ListenerInstance;
-import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -96,7 +96,7 @@ public class ManageListenersScreen extends CellScreen {
                 if (listener != null) {
                     // Create new instance and open action editor
                     ListenerInstance newInstance = listener.createFreshInstance();
-                    ManageActionsScreen actionsScreen = new ManageActionsScreen(newInstance.getActionScript(), updatedScript -> {
+                    ActionScriptEditorScreen actionsScreen = new ActionScriptEditorScreen(newInstance.getActionScript(), updatedScript -> {
                         if (updatedScript != null) {
                             newInstance.setActionScript(updatedScript);
                             this.tempInstances.add(newInstance);
@@ -117,7 +117,7 @@ public class ManageListenersScreen extends CellScreen {
         // Edit listener button
         this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.edit"), button -> {
             if (this.selectedInstance != null) {
-                ManageActionsScreen actionsScreen = new ManageActionsScreen(this.selectedInstance.getActionScript(), updatedScript -> {
+                ActionScriptEditorScreen actionsScreen = new ActionScriptEditorScreen(this.selectedInstance.getActionScript(), updatedScript -> {
                     if (updatedScript != null) {
                         this.selectedInstance.setActionScript(updatedScript);
                     }

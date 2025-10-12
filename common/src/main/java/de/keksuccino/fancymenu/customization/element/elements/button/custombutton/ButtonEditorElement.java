@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custombutton;
 
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -34,7 +34,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
         boolean isSlider = (this.getElement().getWidget() instanceof CustomizableSlider);
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.actions.screens.manage_screen.manage"), (menu, entry) -> {
-                    ManageActionsScreen s = new ManageActionsScreen(this.getElement().getExecutableBlock(), (call) -> {
+                    ActionScriptEditorScreen s = new ActionScriptEditorScreen(this.getElement().getExecutableBlock(), (call) -> {
                         if (call != null) {
                             this.editor.history.saveSnapshot();
                             this.getElement().actionExecutor = call;

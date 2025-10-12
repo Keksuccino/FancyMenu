@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.layout.editor.actions;
+package de.keksuccino.fancymenu.customization.action.ui;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -66,7 +66,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class ManageActionsScreen extends Screen {
+public class ActionScriptEditorScreen extends Screen {
 
     @SuppressWarnings("unused")
     private static final Logger LOGGER = LogManager.getLogger();
@@ -148,7 +148,7 @@ public class ManageActionsScreen extends Screen {
     private static final float ILLEGAL_ACTION_MAX_ALPHA = 0.5F;
     protected long illegalActionIndicatorStartTime = -1L;
 
-    public ManageActionsScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
+    public ActionScriptEditorScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
 
         super(Component.translatable("fancymenu.actions.screens.manage_screen.manage"));
 
@@ -412,7 +412,7 @@ public class ManageActionsScreen extends Screen {
             AbstractExecutableBlock block = selected.getParentBlock();
             if (selected.executable instanceof ActionInstance i) {
                 if (!i.action.hasValue()) return; // If action has no value to edit, do nothing
-                BuildActionScreen s = new BuildActionScreen(i.copy(false), (call) -> {
+                ChooseActionScreen s = new ChooseActionScreen(i.copy(false), (call) -> {
                     if (call != null) {
                         int index = block.getExecutables().indexOf(selected.executable);
                         block.getExecutables().remove(selected.executable);
@@ -527,7 +527,7 @@ public class ManageActionsScreen extends Screen {
     }
 
     protected void onOpenActionChooser(@Nullable ExecutableEntry selectionReference) {
-        BuildActionScreen screen = new BuildActionScreen(null, call -> {
+        ChooseActionScreen screen = new ChooseActionScreen(null, call -> {
             if (call != null) {
                 this.finalizeActionAddition(call, selectionReference);
             }
@@ -615,20 +615,20 @@ public class ManageActionsScreen extends Screen {
         private final Action action;
 
         protected FavoriteAwareActionEntry(@NotNull ContextMenu parent, @NotNull Action action) {
-            super("action_" + action.getIdentifier(), parent, ManageActionsScreen.this.buildActionMenuLabel(action), (menu, entry) -> {
-                ManageActionsScreen.this.markContextMenuActionSelectionSuppressed();
+            super("action_" + action.getIdentifier(), parent, ActionScriptEditorScreen.this.buildActionMenuLabel(action), (menu, entry) -> {
+                ActionScriptEditorScreen.this.markContextMenuActionSelectionSuppressed();
                 menu.closeMenu();
-                ExecutableEntry selectedOnCreate = ManageActionsScreen.this.getSelectedEntry();
-                ManageActionsScreen.this.onAddAction(action, selectedOnCreate);
+                ExecutableEntry selectedOnCreate = ActionScriptEditorScreen.this.getSelectedEntry();
+                ActionScriptEditorScreen.this.onAddAction(action, selectedOnCreate);
             });
             this.action = action;
-            this.setLabelSupplier((menu, entry) -> ManageActionsScreen.this.buildActionMenuLabel(action));
-            this.setTooltipSupplier((menu, entry) -> ManageActionsScreen.this.createActionTooltip(action, ManageActionsScreen.this.isFavorite(action)));
+            this.setLabelSupplier((menu, entry) -> ActionScriptEditorScreen.this.buildActionMenuLabel(action));
+            this.setTooltipSupplier((menu, entry) -> ActionScriptEditorScreen.this.createActionTooltip(action, ActionScriptEditorScreen.this.isFavorite(action)));
             this.updateFavoriteIcon();
         }
 
         private void updateFavoriteIcon() {
-            if (ManageActionsScreen.this.isFavorite(this.action)) {
+            if (ActionScriptEditorScreen.this.isFavorite(this.action)) {
                 this.setIcon(ContextMenu.IconFactory.getIcon("favorite"));
             } else {
                 this.setIcon(null);
@@ -638,7 +638,7 @@ public class ManageActionsScreen extends Screen {
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if ((button == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
-                ManageActionsScreen.this.toggleFavorite(this.action);
+                ActionScriptEditorScreen.this.toggleFavorite(this.action);
                 return true;
             }
             return super.mouseClicked(mouseX, mouseY, button);
@@ -2675,7 +2675,7 @@ public class ManageActionsScreen extends Screen {
 
         @Override
         public void setSelected(boolean selected) {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return;
             super.setSelected(selected);
         }
 
@@ -2685,7 +2685,7 @@ public class ManageActionsScreen extends Screen {
 
         @Override
         public boolean isHovered() {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return false;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return false;
             return super.isHovered();
         }
 
@@ -2694,7 +2694,7 @@ public class ManageActionsScreen extends Screen {
         public void updateEntry() {
             super.updateEntry();
             // Make the entry not look like it is hovered when navigating in the context menu
-            if (!this.isSelected() && ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) {
+            if (!this.isSelected() && ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) {
                 this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, 1);
             }
         }
@@ -2719,11 +2719,11 @@ public class ManageActionsScreen extends Screen {
 
         private void renderEntryDecorations(@NotNull GuiGraphics graphics) {
             RenderSystem.enableBlend();
-            List<ExecutableEntry> chainAnchors = ManageActionsScreen.this.getChainAnchorsFor(this);
+            List<ExecutableEntry> chainAnchors = ActionScriptEditorScreen.this.getChainAnchorsFor(this);
             for (ExecutableEntry anchorEntry : chainAnchors) {
-                List<ExecutableEntry> chainEntries = ManageActionsScreen.this.getStatementChainOf(anchorEntry);
+                List<ExecutableEntry> chainEntries = ActionScriptEditorScreen.this.getStatementChainOf(anchorEntry);
                 if (chainEntries.size() > 1) {
-                    Color chainColor = ManageActionsScreen.this.getChainIndicatorColorFor(anchorEntry);
+                    Color chainColor = ActionScriptEditorScreen.this.getChainIndicatorColorFor(anchorEntry);
                     this.renderChainColumn(graphics, chainColor, anchorEntry);
                 }
             }
@@ -2741,14 +2741,14 @@ public class ManageActionsScreen extends Screen {
                 this.renderCollapseToggle(graphics, toggleX, toggleY, folder.isCollapsed());
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
-                if (ManageActionsScreen.this.inlineNameEntry != this) {
+                if (ActionScriptEditorScreen.this.inlineNameEntry != this) {
                     graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
                 } else {
                     if (this.folderLabelComponent != null) {
                         graphics.drawString(this.font, this.folderLabelComponent, textX, textY, -1, false);
                     }
-                    if ((ManageActionsScreen.this.inlineNameEditBox != null) && (this.folderCollapsedSuffixComponent != null)) {
-                        int suffixX = ManageActionsScreen.this.inlineNameEditBox.getX() + ManageActionsScreen.this.inlineNameEditBox.getWidth() + 2;
+                    if ((ActionScriptEditorScreen.this.inlineNameEditBox != null) && (this.folderCollapsedSuffixComponent != null)) {
+                        int suffixX = ActionScriptEditorScreen.this.inlineNameEditBox.getX() + ActionScriptEditorScreen.this.inlineNameEditBox.getWidth() + 2;
                         graphics.drawString(this.font, this.folderCollapsedSuffixComponent, suffixX, textY, -1, false);
                     }
                 }
@@ -2787,7 +2787,7 @@ public class ManageActionsScreen extends Screen {
                 UIBase.renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, theme.listing_dot_color_1.getColor());
                 int valueTextX = renderX + 5 + 4 + 3 + 4 + 3;
                 int valueTextY = centerYLine2 - (this.font.lineHeight / 2);
-                if (ManageActionsScreen.this.inlineValueEntry != this) {
+                if (ActionScriptEditorScreen.this.inlineValueEntry != this) {
                     graphics.drawString(this.font, this.valueComponent, valueTextX, valueTextY, -1, false);
                 } else if (this.valueLabelComponent != null) {
                     graphics.drawString(this.font, this.valueLabelComponent, valueTextX, valueTextY, -1, false);
@@ -2798,7 +2798,7 @@ public class ManageActionsScreen extends Screen {
             }
         }
         private void renderChainColumn(@NotNull GuiGraphics graphics, @NotNull Color color, @NotNull ExecutableEntry anchorEntry) {
-            int barX = ManageActionsScreen.this.getChainBarX(anchorEntry);
+            int barX = ActionScriptEditorScreen.this.getChainBarX(anchorEntry);
             int barTop = this.getY() + 1;
             int barBottom = this.getY() + this.getHeight() - 1;
             if (barBottom <= barTop) {
@@ -2808,12 +2808,12 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected void handleDragging() {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return;
             if (!MouseInput.isLeftMouseDown()) {
                 if (this.dragging) {
-                    ExecutableEntry hover = ManageActionsScreen.this.renderTickDragHoveredEntry;
-                    if ((hover != null) && (ManageActionsScreen.this.renderTickDraggedEntry == this)) {
-                        ManageActionsScreen.this.moveAfter(this, hover);
+                    ExecutableEntry hover = ActionScriptEditorScreen.this.renderTickDragHoveredEntry;
+                    if ((hover != null) && (ActionScriptEditorScreen.this.renderTickDraggedEntry == this)) {
+                        ActionScriptEditorScreen.this.moveAfter(this, hover);
                     }
                 }
                 this.leftMouseDownDragging = false;
@@ -2839,7 +2839,7 @@ public class ManageActionsScreen extends Screen {
         @NotNull
         public AbstractExecutableBlock getParentBlock() {
             if (this.parentBlock == null) {
-                return ManageActionsScreen.this.executableBlock;
+                return ActionScriptEditorScreen.this.executableBlock;
             }
             return this.parentBlock;
         }
@@ -2864,7 +2864,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected boolean isMouseOverValue(int mouseX, int mouseY) {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return false;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return false;
             if (!this.canInlineEditValue()) {
                 return false;
             }
@@ -2898,7 +2898,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected boolean isMouseOverName(int mouseX, int mouseY) {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return false;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return false;
             if (!this.canInlineEditName()) {
                 return false;
             }
@@ -2915,7 +2915,7 @@ public class ManageActionsScreen extends Screen {
                 return false;
             }
             long now = System.currentTimeMillis();
-            if ((now - this.lastNameClickTime) <= ManageActionsScreen.NAME_DOUBLE_CLICK_TIME_MS) {
+            if ((now - this.lastNameClickTime) <= ActionScriptEditorScreen.NAME_DOUBLE_CLICK_TIME_MS) {
                 this.lastNameClickTime = 0L;
                 return true;
             }
@@ -2942,7 +2942,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected int getNameFieldAvailableWidth() {
-            ScrollArea scrollArea = ManageActionsScreen.this.actionsScrollArea;
+            ScrollArea scrollArea = ActionScriptEditorScreen.this.actionsScrollArea;
             int visibleRight = scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN;
             return Math.max(1, visibleRight - this.getNameFieldX());
         }
@@ -2963,7 +2963,7 @@ public class ManageActionsScreen extends Screen {
 
         protected int getValueFieldAvailableWidth() {
             int valueX = this.getValueFieldX();
-            ScrollArea scrollArea = ManageActionsScreen.this.actionsScrollArea;
+            ScrollArea scrollArea = ActionScriptEditorScreen.this.actionsScrollArea;
             int visibleRight = scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN;
             int available = visibleRight - valueX;
             return Math.max(1, available);
@@ -2974,7 +2974,7 @@ public class ManageActionsScreen extends Screen {
         }
 
         protected boolean isMouseOverCollapseToggle(int mouseX, int mouseY) {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return false;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return false;
             if (!this.canToggleCollapse()) {
                 return false;
             }
@@ -3059,7 +3059,7 @@ public class ManageActionsScreen extends Screen {
 
         @Override
         public void onClick(ScrollAreaEntry entry) {
-            if (ManageActionsScreen.this.isUserNavigatingInActionsContextMenu()) return;
+            if (ActionScriptEditorScreen.this.isUserNavigatingInActionsContextMenu()) return;
             if (this.parent.getEntries().contains(this)) {
                 this.leftMouseDownDragging = true;
                 this.leftMouseDownDraggingPosX = MouseInput.getMouseX();

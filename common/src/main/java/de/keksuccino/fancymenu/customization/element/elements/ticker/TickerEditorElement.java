@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -29,7 +29,7 @@ public class TickerEditorElement extends AbstractEditorElement {
         super.init();
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.actions.screens.manage_screen.manage"), (menu, entry) -> {
-            ManageActionsScreen s = new ManageActionsScreen(this.getElement().actionExecutor, (call) -> {
+            ActionScriptEditorScreen s = new ActionScriptEditorScreen(this.getElement().actionExecutor, (call) -> {
                 if (call != null) {
                     this.editor.history.saveSnapshot();
                     this.getElement().actionExecutor = call;
