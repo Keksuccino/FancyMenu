@@ -1,16 +1,23 @@
 package de.keksuccino.fancymenu.util.rendering.text;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 public class TextFormattingUtils {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String FORMATTING_CODE_BLACK = "0";
     private static final String FORMATTING_CODE_DARK_BLUE = "1";
@@ -63,7 +70,10 @@ public class TextFormattingUtils {
         return in;
     }
 
-    public static String textComponentToString(@NotNull Component textComponent) {
+    /**
+     * Converts a {@link Component} to a string while trying to preserve as much formatting as possible.
+     */
+    public static String convertComponentToString(@NotNull Component textComponent) {
         StringBuilder sb = new StringBuilder();
         appendComponent(sb, textComponent, textComponent.getStyle());
         return sb.toString();
@@ -102,13 +112,32 @@ public class TextFormattingUtils {
     }
 
     @NotNull
-    public static MutableComponent formattedTextToComponent(@NotNull FormattedText text) {
-        MutableComponent component = Component.empty();
+    public static MutableComponent convertFormattedTextToComponent(@NotNull FormattedText text) {
+        MutableComponent component = Component.literal("");
         text.visit((style, string) -> {
             component.append(Component.literal(string).withStyle(style));
             return Optional.empty(); // Continue visiting
         }, Style.EMPTY);
         return component;
+    }
+
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapComponents(@NotNull List<C> lines, int maxLength) {
+        List<MutableComponent> wrappedLines = new ArrayList<>();
+        for (Component line : lines) {
+            if (line.getString().isBlank()) line = Component.literal(" ");
+            LOGGER.info("############# LINE WRAP COMPONENTS IN: " + line.getString());
+            for (FormattedText text : Minecraft.getInstance().font.getSplitter().splitLines(line, maxLength, Style.EMPTY)) {
+                LOGGER.info("############# LINE WRAP COMPONENTS OUT: " + text.getString());
+                wrappedLines.add(convertFormattedTextToComponent(text));
+            }
+        }
+        return wrappedLines;
+    }
+
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapComponents(@NotNull C lines, int maxLength) {
+        return lineWrapComponents(List.of(lines), maxLength);
     }
 
 }

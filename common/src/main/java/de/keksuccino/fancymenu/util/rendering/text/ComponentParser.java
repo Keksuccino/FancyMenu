@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ComponentUtils {
+public class ComponentParser {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -30,6 +30,11 @@ public class ComponentUtils {
             } catch (Exception ignore) {}
             return Component.literal(serializedComponentOrPlainText);
         }
+    }
+
+    @NotNull
+    public static String toJson(@NotNull Component component) {
+        return ComponentSerialization.CODEC.encodeStart(JsonOps.INSTANCE, component).getOrThrow(JsonParseException::new).toString();
     }
 
     private static @Nullable MutableComponent deserializeComponentFromJson(@NotNull String json) {
@@ -49,11 +54,6 @@ public class ComponentUtils {
         } else {
             throw new IllegalStateException("Deserialized component was not a MutableComponent!");
         }
-    }
-
-    @NotNull
-    public static String toJson(@NotNull Component component) {
-        return ComponentSerialization.CODEC.encodeStart(JsonOps.INSTANCE, component).getOrThrow(JsonParseException::new).toString();
     }
 
 }

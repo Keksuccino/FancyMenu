@@ -22,6 +22,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -151,6 +152,7 @@ public class ActionScriptEditorScreen extends Screen {
     private final Deque<ScriptSnapshot> undoHistory = new ArrayDeque<>();
     private final Deque<ScriptSnapshot> redoHistory = new ArrayDeque<>();
     private boolean suppressHistoryCapture = false;
+    private boolean actionsMenuRightClickConsumedByEntry = false;
 
     public ActionScriptEditorScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
         super(Component.translatable("fancymenu.actions.screens.manage_screen.manage"));
@@ -169,10 +171,22 @@ public class ActionScriptEditorScreen extends Screen {
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> this.callback.accept(null));
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
+            Minecraft.getInstance().setScreen(
+                    ConfirmationScreen.critical(callback -> {
+                        if (callback) {
+                            this.callback.accept(null);
+                        } else {
+                            Minecraft.getInstance().setScreen(this);
+                        }
+                    }, Component.translatable("fancymenu.actions.script_editor.cancel_warning"))
+            );
+        });
         this.cancelButton.setNavigatable(false);
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+
+        this.actionsMenuRightClickConsumedByEntry = false;
 
     }
 
@@ -208,64 +222,32 @@ public class ActionScriptEditorScreen extends Screen {
         this.rightClickContextMenu = new ContextMenu();
         this.addWidget(this.rightClickContextMenu);
 
-        ContextMenu addActionSubMenu = this.buildAddActionSubMenu();
-        boolean hasActionEntries = !addActionSubMenu.getEntries().isEmpty();
-        this.rightClickContextMenu.addSubMenuEntry("add_action", Component.translatable("fancymenu.actions.screens.add_action"), addActionSubMenu)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.add_action.desc")))
-                .addIsActiveSupplier((menu, entry) -> hasActionEntries);
-
-        this.rightClickContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
-            this.markContextMenuActionSelectionSuppressed();
-            ExecutableEntry target = this.getContextMenuTargetEntry();
-            menu.closeMenu();
-            this.onAddFolder(target);
-        });
-
-        this.rightClickContextMenu.addClickableEntry("add_if", Component.translatable("fancymenu.actions.blocks.add.if"), (menu, entry) -> {
-            this.markContextMenuActionSelectionSuppressed();
-            ExecutableEntry target = this.getContextMenuTargetEntry();
-            menu.closeMenu();
-            this.onAddIf(target);
-        });
-
-        this.rightClickContextMenu.addClickableEntry("add_while", Component.translatable("fancymenu.actions.blocks.add.while"), (menu, entry) -> {
-            this.markContextMenuActionSelectionSuppressed();
-            ExecutableEntry target = this.getContextMenuTargetEntry();
-            menu.closeMenu();
-            this.onAddWhile(target);
-        });
-
-        this.rightClickContextMenu.addSeparatorEntry("after_add");
-
-        this.rightClickContextMenu.addClickableEntry("append_else_if", Component.translatable("fancymenu.actions.blocks.add.else_if"), (menu, entry) -> {
-            this.markContextMenuActionSelectionSuppressed();
-            ExecutableEntry target = this.getContextMenuTargetEntry();
-            menu.closeMenu();
-            this.onAppendElseIf(target);
-        }).addIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock(this.getContextMenuTargetEntry()));
-
-        this.rightClickContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.actions.blocks.add.else"), (menu, entry) -> {
-            this.markContextMenuActionSelectionSuppressed();
-            ExecutableEntry target = this.getContextMenuTargetEntry();
-            menu.closeMenu();
-            this.onAppendElse(target);
-        }).addIsActiveSupplier((menu, entry) -> this.canAppendElseBlock(this.getContextMenuTargetEntry()));
-
-        this.rightClickContextMenu.addSeparatorEntry("after_append");
-
-        this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.actions.screens.edit_action"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
-                    this.undo();
-                }).addIsActiveSupplier((menu, entry) -> this.canUndo())
-                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"));
+                    ExecutableEntry target = this.getContextMenuTargetEntry();
+                    menu.closeMenu();
+                    this.onEdit(target);
+                }).addIsActiveSupplier((menu, entry) -> this.canEditEntry(this.getContextMenuTargetEntry()))
+                .setIcon(ContextMenu.IconFactory.getIcon("edit"));
 
-        this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_edit");
+
+        this.rightClickContextMenu.addClickableEntry("delete", Component.translatable("fancymenu.actions.screens.remove_action"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
-                    this.redo();
-                }).addIsActiveSupplier((menu, entry) -> this.canRedo())
-                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"));
+                    ExecutableEntry target = this.getContextMenuTargetEntry();
+                    menu.closeMenu();
+                    this.onRemove(target);
+                }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetEntry() != null)
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"))
+                .setIcon(ContextMenu.IconFactory.getIcon("delete"));
 
-        this.rightClickContextMenu.addSeparatorEntry("after_history");
+        if (reopen || wasOpen) {
+            float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)MouseInput.getMouseX();
+            float reopenY = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenY : (float)MouseInput.getMouseY();
+            this.openRightClickContextMenuAt(reopenX, reopenY, resolvedEntryPath);
+        }
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_remove");
 
         this.rightClickContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.actions.screens.move_action_up"), (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
@@ -280,7 +262,8 @@ public class ActionScriptEditorScreen extends Screen {
                     }
                     return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_up.desc"));
                 })
-                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.shift_arrow_up"));
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.shift_arrow_up"))
+                .setIcon(ContextMenu.IconFactory.getIcon("arrow_up"));
 
         this.rightClickContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.actions.screens.move_action_down"), (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
@@ -295,39 +278,93 @@ public class ActionScriptEditorScreen extends Screen {
                     }
                     return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_down.desc"));
                 })
-                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.shift_arrow_down"));
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.shift_arrow_down"))
+                .setIcon(ContextMenu.IconFactory.getIcon("arrow_down"));
 
-        this.rightClickContextMenu.addSeparatorEntry("after_reorder");
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_reorder");
 
-        this.rightClickContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.actions.screens.edit_action"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
+                    this.markContextMenuActionSelectionSuppressed();
+                    this.undo();
+                }).addIsActiveSupplier((menu, entry) -> this.canUndo())
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
+                .setIcon(ContextMenu.IconFactory.getIcon("undo"));
+
+        this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
+                    this.markContextMenuActionSelectionSuppressed();
+                    this.redo();
+                }).addIsActiveSupplier((menu, entry) -> this.canRedo())
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
+                .setIcon(ContextMenu.IconFactory.getIcon("redo"));
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_history");
+
+        ContextMenu addActionSubMenu = this.buildAddActionSubMenu(null);
+        boolean hasActionEntries = !addActionSubMenu.getEntries().isEmpty();
+        this.rightClickContextMenu.addSubMenuEntry("add_action", Component.translatable("fancymenu.actions.screens.add_action"), addActionSubMenu)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.add_action.desc")))
+                .addIsActiveSupplier((menu, entry) -> hasActionEntries)
+                .setIcon(ContextMenu.IconFactory.getIcon("add"));
+
+        this.rightClickContextMenu.addClickableEntry("add_if", Component.translatable("fancymenu.actions.blocks.add.if"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
+            menu.closeMenu();
+            this.onAddIf(target);
+        }).setIcon(ContextMenu.IconFactory.getIcon("add"));
+
+        this.rightClickContextMenu.addClickableEntry("add_while", Component.translatable("fancymenu.actions.blocks.add.while"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
+            menu.closeMenu();
+            this.onAddWhile(target);
+        }).setIcon(ContextMenu.IconFactory.getIcon("add"));
+
+        this.rightClickContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
+            menu.closeMenu();
+            this.onAddFolder(target);
+        }).setIcon(ContextMenu.IconFactory.getIcon("add"));
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_add");
+
+        this.rightClickContextMenu.addClickableEntry("append_else_if", Component.translatable("fancymenu.actions.blocks.add.else_if"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     ExecutableEntry target = this.getContextMenuTargetEntry();
                     menu.closeMenu();
-                    this.onEdit(target);
-                }).addIsActiveSupplier((menu, entry) -> this.canEditEntry(this.getContextMenuTargetEntry()))
-                .setTooltipSupplier((menu, entry) -> this.getEditTooltip(this.getContextMenuTargetEntry()));
+                    this.onAppendElseIf(target);
+                }).addIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock(this.getContextMenuTargetEntry()))
+                .setIcon(ContextMenu.IconFactory.getIcon("link"));
 
-        this.rightClickContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.actions.screens.remove_action"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.actions.blocks.add.else"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     ExecutableEntry target = this.getContextMenuTargetEntry();
                     menu.closeMenu();
-                    this.onRemove(target);
-                }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetEntry() != null)
-                .setTooltipSupplier((menu, entry) -> this.getRemoveTooltip(this.getContextMenuTargetEntry()))
-                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"));
-
-        if (reopen || wasOpen) {
-            float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)MouseInput.getMouseX();
-            float reopenY = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenY : (float)MouseInput.getMouseY();
-            this.openRightClickContextMenuAt(reopenX, reopenY, resolvedEntryPath);
-        }
+                    this.onAppendElse(target);
+                }).addIsActiveSupplier((menu, entry) -> this.canAppendElseBlock(this.getContextMenuTargetEntry()))
+                .setIcon(ContextMenu.IconFactory.getIcon("link"));
 
     }
 
     @NotNull
-    protected ContextMenu buildAddActionSubMenu() {
-        ContextMenu subMenu = new ContextMenu();
+    protected ContextMenu buildAddActionSubMenu(@Nullable ContextMenu updateContent) {
+
         LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
+
+        ContextMenu subMenu = (updateContent != null) ? updateContent : new ContextMenu() {
+            // This rebuilds the context menu on right-click without closing it
+            @Override
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                boolean b = super.mouseClicked(mouseX, mouseY, button); // Do this first, so the action entries can do their thing (toggle favorites) before the menu gets rebuilt
+                if (this.isUserNavigatingInMenu() && (button == 1)) {
+                    this.entries.clear();
+                    buildAddActionSubMenu(this);
+                    return true;
+                }
+                return b;
+            }
+        };
 
         Map<String, Action> availableActions = new LinkedHashMap<>();
         for (Action action : ActionRegistry.getActions()) {
@@ -384,28 +421,6 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     @NotNull
-    protected Tooltip getEditTooltip(@Nullable ExecutableEntry entry) {
-        if ((entry == null) || (entry.executable instanceof ElseExecutableBlock)) {
-            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
-        }
-        if (entry.executable instanceof FolderExecutableBlock) {
-            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.folder_no_edit"));
-        }
-        if ((entry.executable instanceof ActionInstance i) && !i.action.hasValue()) {
-            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.no_value_to_edit"));
-        }
-        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.edit_action.desc"));
-    }
-
-    @NotNull
-    protected Tooltip getRemoveTooltip(@Nullable ExecutableEntry entry) {
-        if (entry == null) {
-            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
-        }
-        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.remove_action.desc"));
-    }
-
-    @NotNull
     protected MutableComponent buildActionMenuLabel(@NotNull Action action) {
         UIColorTheme theme = UIBase.getUIColorTheme();
         MutableComponent label = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
@@ -446,8 +461,6 @@ public class ActionScriptEditorScreen extends Screen {
 
     protected void toggleFavorite(@NotNull Action action) {
         ActionFavoritesManager.toggleFavorite(action.getIdentifier());
-        this.markContextMenuActionSelectionSuppressed();
-        this.updateRightClickContextMenu(true, Collections.singletonList("add_action"));
     }
 
     @Nullable
@@ -1244,6 +1257,23 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 1) {
+            // Because of some client tick shenanigans it's important to delay the reset of the click consume var some ticks
+            MainThreadTaskExecutor.executeInMainThread(() ->
+                    MainThreadTaskExecutor.executeInMainThread(() -> this.actionsMenuRightClickConsumedByEntry = false,
+                            MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK), MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+        }
+        if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.mouseReleased(mouseX, mouseY, button)) {
+            return true;
+        }
+        if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.mouseReleased(mouseX, mouseY, button)) {
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.inlineNameEditBox != null) {
             if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
@@ -1376,17 +1406,6 @@ public class ActionScriptEditorScreen extends Screen {
             return true;
         }
         return super.charTyped(codePoint, modifiers);
-    }
-
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.mouseReleased(mouseX, mouseY, button)) {
-            return true;
-        }
-        if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.mouseReleased(mouseX, mouseY, button)) {
-            return true;
-        }
-        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     private void updateCursor(int mouseX, int mouseY) {
@@ -3348,8 +3367,9 @@ public class ActionScriptEditorScreen extends Screen {
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
+            if ((button == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered && !actionsMenuRightClickConsumedByEntry) {
                 ActionScriptEditorScreen.this.toggleFavorite(this.action);
+                actionsMenuRightClickConsumedByEntry = true;
                 return true;
             }
             return super.mouseClicked(mouseX, mouseY, button);

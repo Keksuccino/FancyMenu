@@ -26,6 +26,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -117,9 +118,10 @@ public class ManageListenersScreen extends CellScreen {
         // Edit listener button
         this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.edit"), button -> {
             if (this.selectedInstance != null) {
-                ActionScriptEditorScreen actionsScreen = new ActionScriptEditorScreen(this.selectedInstance.getActionScript(), updatedScript -> {
+                ListenerInstance cached = this.selectedInstance;
+                ActionScriptEditorScreen actionsScreen = new ActionScriptEditorScreen(cached.getActionScript(), updatedScript -> {
                     if (updatedScript != null) {
-                        this.selectedInstance.setActionScript(updatedScript);
+                        cached.setActionScript(updatedScript);
                     }
                     Minecraft.getInstance().setScreen(this);
                 });
@@ -189,8 +191,25 @@ public class ManageListenersScreen extends CellScreen {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
         this.updateSelectedInstance();
+
         super.render(graphics, mouseX, mouseY, partial);
+
+        if (this.descriptionScrollArea != null) {
+            int descW = (int) this.descriptionScrollArea.getWidthWithBorder();
+            int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
+            int descEndY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder());
+            List<FormattedCharSequence> text = this.font.split(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()).withItalic(true)), descW);
+            int lineY = descEndY + 4;
+            for (FormattedCharSequence line : text) {
+                int lineWidth = this.font.width(line);
+                int lineX = descEndX - lineWidth;
+                graphics.drawString(this.font, line, lineX, lineY, -1);
+                lineY += this.font.lineHeight + 2;
+            }
+        }
+
     }
 
     @Override

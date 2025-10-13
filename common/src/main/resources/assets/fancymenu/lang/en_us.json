@@ -87,8 +87,6 @@
   "fancymenu.actions.loadworld": "Enter World",
   "fancymenu.actions.loadworld.desc": "Enter a Minecraft world.",
   "fancymenu.actions.loadworld.desc.value": "World Folder Name",
-  "fancymenu.actions.manage.folder_no_edit": "§xFolders only organize other actions, nothing to edit.",
-  "fancymenu.actions.manage.no_value_to_edit": "§xThe selected action has no value to edit.",
   "fancymenu.actions.manage_resource_pack": "Manage Resource Pack",
   "fancymenu.actions.manage_resource_pack.desc": "Enable, disable, or toggle a resource pack by matching its display name.\nOptionally skip the automatic reload when you want to trigger it later.",
   "fancymenu.actions.manage_resource_pack.edit.mode": "Action Mode: %s",
@@ -162,8 +160,6 @@
   "fancymenu.actions.screens.build_screen.edit_value.desc.normal": "Edit the value of this action.",
   "fancymenu.actions.screens.build_screen.finish.no_value_set": "§xYou need to edit the action value first!",
   "fancymenu.actions.screens.edit_action": "Edit",
-  "fancymenu.actions.screens.edit_action.desc": "Edit the selected entry.",
-  "fancymenu.actions.screens.finish.no_action_selected": "§xYou need to select an action first!",
   "fancymenu.actions.screens.manage_screen.actions": "Script Body",
   "fancymenu.actions.screens.manage_screen.info.value": "Value:",
   "fancymenu.actions.screens.manage_screen.info.value.none": "NONE",
@@ -172,8 +168,7 @@
   "fancymenu.actions.screens.move_action_down.desc": "Moves the selected entry down in the\nlist, so it gets executed later.\nThis is more precise than using\ndrag-&-drop to move entries.",
   "fancymenu.actions.screens.move_action_up": "Move Up",
   "fancymenu.actions.screens.move_action_up.desc": "Moves the selected entry up in the\nlist, so it gets executed earlier.\nThis is more precise than using\ndrag-&-drop to move entries.",
-  "fancymenu.actions.screens.remove_action": "Remove",
-  "fancymenu.actions.screens.remove_action.desc": "Remove the selected entry.",
+  "fancymenu.actions.screens.remove_action": "Delete",
   "fancymenu.actions.send_http_request": "Send HTTP Request",
   "fancymenu.actions.send_http_request.auth.api_key": "API Key",
   "fancymenu.actions.send_http_request.auth.basic": "Basic Authentication",
@@ -2091,5 +2086,7 @@
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms Notification Icons",
   "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text",
   "fancymenu.actions.script_editor.shortcuts.shift_arrow_up": "Shift + Up",
-  "fancymenu.actions.script_editor.shortcuts.shift_arrow_down": "Shift + Down"
+  "fancymenu.actions.script_editor.shortcuts.shift_arrow_down": "Shift + Down",
+  "fancymenu.actions.script_editor.cancel_warning": "Are you sure?\n\nDo you really want to cancel the script editing?\n\n§xThis will undo everything you've done in here!",
+  "fancymenu.listeners.manage.rename_tip": "Rename listeners by double-clicking their display name."
 }

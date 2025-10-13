@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.ComponentUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -19,7 +18,6 @@ import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FormattedCharSequence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -291,7 +289,7 @@ public class Tooltip implements Renderable {
         }
         this.textLines = new ArrayList<>();
         for (FormattedText s : Minecraft.getInstance().font.getSplitter().splitLines(merged, 300, Style.EMPTY)) {
-            this.textLines.add(TextFormattingUtils.formattedTextToComponent(s));
+            this.textLines.add(TextFormattingUtils.convertFormattedTextToComponent(s));
         }
         this.updateSize();
         return this;

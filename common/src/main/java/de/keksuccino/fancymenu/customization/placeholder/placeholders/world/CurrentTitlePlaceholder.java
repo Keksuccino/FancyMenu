@@ -38,7 +38,7 @@ public class CurrentTitlePlaceholder extends Placeholder {
                 if (asJson) {
                     return Component.Serializer.toJson(component, level.registryAccess());
                 } else {
-                    return TextFormattingUtils.textComponentToString(component);
+                    return TextFormattingUtils.convertComponentToString(component);
                 }
             }
         }

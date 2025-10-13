@@ -42,7 +42,7 @@ public class BossNamePlaceholder extends Placeholder {
                         if (asJson) {
                             return Component.Serializer.toJson(m.getValue().getName(), level.registryAccess());
                         } else {
-                            return TextFormattingUtils.textComponentToString(m.getValue().getName());
+                            return TextFormattingUtils.convertComponentToString(m.getValue().getName());
                         }
                     }
                     i++;

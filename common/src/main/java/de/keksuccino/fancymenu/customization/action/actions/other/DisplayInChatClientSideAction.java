@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.text.ComponentUtils;
+import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -62,7 +62,7 @@ public class DisplayInChatClientSideAction extends Action {
     }
 
     private Component deserializeComponent(@NotNull String raw) {
-        return ComponentUtils.fromJsonOrPlainText(raw);
+        return ComponentParser.fromJsonOrPlainText(raw);
     }
 
 }

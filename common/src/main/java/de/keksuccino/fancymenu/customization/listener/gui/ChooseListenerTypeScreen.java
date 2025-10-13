@@ -208,7 +208,7 @@ public class ChooseListenerTypeScreen extends Screen {
         int maxWidth = (int)(this.descriptionScrollArea.getInnerWidth() - 15F);
         if (this.font.width(line) > maxWidth) {
             this.font.getSplitter().splitLines(line, maxWidth, Style.EMPTY).forEach(formatted -> {
-                lines.add(TextFormattingUtils.formattedTextToComponent(formatted));
+                lines.add(TextFormattingUtils.convertFormattedTextToComponent(formatted));
             });
         } else {
             lines.add(line);
