@@ -173,7 +173,6 @@
   "fancymenu.actions.screens.move_action_up": "Move Up",
   "fancymenu.actions.screens.move_action_up.desc": "Moves the selected entry up in the\nlist, so it gets executed earlier.\nThis is more precise than using\ndrag-&-drop to move entries.",
   "fancymenu.actions.screens.remove_action": "Remove",
-  "fancymenu.actions.screens.remove_action.confirm": "§x§lAre you sure?\n\nDo you really want to §xremove §rthe selected action?\nThis cannot be undone!",
   "fancymenu.actions.screens.remove_action.desc": "Remove the selected entry.",
   "fancymenu.actions.send_http_request": "Send HTTP Request",
   "fancymenu.actions.send_http_request.auth.api_key": "API Key",

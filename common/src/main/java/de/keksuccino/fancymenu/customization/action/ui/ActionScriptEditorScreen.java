@@ -20,7 +20,6 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.ui.ManageRequire
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -154,13 +153,10 @@ public class ActionScriptEditorScreen extends Screen {
     private boolean suppressHistoryCapture = false;
 
     public ActionScriptEditorScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
-
         super(Component.translatable("fancymenu.actions.screens.manage_screen.manage"));
-
         this.executableBlock = executableBlock.copy(false);
         this.callback = callback;
         this.updateActionInstanceScrollArea(false);
-
     }
 
     @Override
@@ -168,16 +164,12 @@ public class ActionScriptEditorScreen extends Screen {
 
         this.updateRightClickContextMenu(false, null);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
-            this.callback.accept(this.executableBlock);
-        });
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> this.callback.accept(this.executableBlock));
         this.doneButton.setNavigatable(false);
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
-            this.callback.accept(null);
-        });
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> this.callback.accept(null));
         this.cancelButton.setNavigatable(false);
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
@@ -189,8 +181,12 @@ public class ActionScriptEditorScreen extends Screen {
         return false;
     }
 
-    protected void updateRightClickContextMenu() {
-        this.updateRightClickContextMenu(false, null);
+    @Override
+    public void onClose() {
+        this.finishInlineNameEditing(true);
+        this.finishInlineNameEditing(true);
+        this.finishInlineValueEditing(true);
+        this.callback.accept(null);
     }
 
     protected void updateRightClickContextMenu(boolean reopen, @Nullable List<String> entryPath) {
@@ -328,232 +324,6 @@ public class ActionScriptEditorScreen extends Screen {
 
     }
 
-    protected void openRightClickContextMenuAt(float x, float y, @Nullable List<String> entryPath) {
-        if (this.rightClickContextMenu == null) {
-            return;
-        }
-        this.rightClickContextMenuLastOpenX = x;
-        this.rightClickContextMenuLastOpenY = y;
-        List<String> path = (entryPath != null && !entryPath.isEmpty()) ? new ArrayList<>(entryPath) : null;
-        this.rightClickContextMenu.openMenuAt(x, y, path);
-    }
-
-    @Nullable
-    protected ExecutableEntry getContextMenuTargetEntry() {
-        if (this.contextMenuTargetExecutable == null) {
-            return null;
-        }
-        return this.findEntryForExecutable(this.contextMenuTargetExecutable);
-    }
-
-    protected boolean hasStoredRightClickContextMenuPosition() {
-        return !Float.isNaN(this.rightClickContextMenuLastOpenX) && !Float.isNaN(this.rightClickContextMenuLastOpenY);
-    }
-
-    @Nullable
-    protected List<String> findOpenContextMenuPath(@NotNull ContextMenu menu) {
-        for (ContextMenuEntry<?> entry : menu.getEntries()) {
-            if (entry instanceof SubMenuContextMenuEntry subEntry) {
-                ContextMenu subMenu = subEntry.getSubContextMenu();
-                if (subMenu.isOpen()) {
-                    List<String> childPath = this.findOpenContextMenuPath(subMenu);
-                    List<String> path = new ArrayList<>();
-                    path.add(subEntry.getIdentifier());
-                    if (childPath != null) {
-                        path.addAll(childPath);
-                    }
-                    return path;
-                }
-            }
-        }
-        return null;
-    }
-
-    protected boolean isInsideActionsScrollArea(int mouseX, int mouseY) {
-        return UIBase.isXYInArea(mouseX, mouseY, this.scriptEntriesScrollArea.getXWithBorder(), this.scriptEntriesScrollArea.getYWithBorder(), this.scriptEntriesScrollArea.getWidthWithBorder(), this.scriptEntriesScrollArea.getHeightWithBorder());
-    }
-
-    protected boolean canAppendConditionalBlock() {
-        return this.canAppendConditionalBlock(this.getSelectedEntry());
-    }
-
-    protected boolean canAppendConditionalBlock(@Nullable ExecutableEntry entry) {
-        if (entry == null) {
-            return false;
-        }
-        return (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof ElseIfExecutableBlock);
-    }
-
-    protected boolean canAppendElseBlock() {
-        return this.canAppendElseBlock(this.getSelectedEntry());
-    }
-
-    protected boolean canAppendElseBlock(@Nullable ExecutableEntry entry) {
-        if ((entry == null) || !(entry.executable instanceof AbstractExecutableBlock block)) {
-            return false;
-        }
-        if (!(entry.executable instanceof IfExecutableBlock) && !(entry.executable instanceof ElseIfExecutableBlock)) {
-            return false;
-        }
-        return this.findAppendElseTarget(block) != null;
-    }
-
-    @Nullable
-    protected AbstractExecutableBlock findAppendElseTarget(@NotNull AbstractExecutableBlock block) {
-        AbstractExecutableBlock current = block;
-        AbstractExecutableBlock appended = current.getAppendedBlock();
-        while (appended != null) {
-            if (appended instanceof ElseExecutableBlock) {
-                return null;
-            }
-            current = appended;
-            appended = current.getAppendedBlock();
-        }
-        return current;
-    }
-
-    protected boolean canEditSelectedEntry() {
-        return this.canEditEntry(this.getSelectedEntry());
-    }
-
-    protected boolean canEditEntry(@Nullable ExecutableEntry entry) {
-        if ((entry == null) || (entry.executable instanceof ElseExecutableBlock)) {
-            return false;
-        }
-        if (entry.executable instanceof FolderExecutableBlock) {
-            return false;
-        }
-        if ((entry.executable instanceof ActionInstance i) && !i.action.hasValue()) {
-            return false;
-        }
-        return true;
-    }
-
-    @NotNull
-    protected Tooltip getEditTooltip() {
-        return this.getEditTooltip(this.getSelectedEntry());
-    }
-
-    @NotNull
-    protected Tooltip getEditTooltip(@Nullable ExecutableEntry entry) {
-        if ((entry == null) || (entry.executable instanceof ElseExecutableBlock)) {
-            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
-        }
-        if (entry.executable instanceof FolderExecutableBlock) {
-            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.folder_no_edit"));
-        }
-        if ((entry.executable instanceof ActionInstance i) && !i.action.hasValue()) {
-            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.no_value_to_edit"));
-        }
-        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.edit_action.desc"));
-    }
-
-    @NotNull
-    protected Tooltip getRemoveTooltip() {
-        return this.getRemoveTooltip(this.getSelectedEntry());
-    }
-
-    @NotNull
-    protected Tooltip getRemoveTooltip(@Nullable ExecutableEntry entry) {
-        if (entry == null) {
-            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
-        }
-        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.remove_action.desc"));
-    }
-
-    protected void onEdit() {
-        this.onEdit(this.getSelectedEntry());
-    }
-
-    protected void onEdit(@Nullable ExecutableEntry entry) {
-        if (!this.canEditEntry(entry)) {
-            return;
-        }
-        if (entry == null) {
-            return;
-        }
-        final Executable targetExecutable = entry.executable;
-        if (targetExecutable instanceof ActionInstance instance) {
-            if (!instance.action.hasValue()) {
-                return;
-            }
-            ChooseActionScreen s = new ChooseActionScreen(instance.copy(false), call -> {
-                if (call != null) {
-                    ExecutableEntry currentEntry = this.findEntryForExecutable(targetExecutable);
-                    if ((currentEntry != null) && (currentEntry.getParentBlock() != null)) {
-                        AbstractExecutableBlock parentBlock = currentEntry.getParentBlock();
-                        boolean changed = (call.action != instance.action) || !Objects.equals(call.value, instance.value);
-                        if (changed) {
-                            this.createUndoPoint();
-                            int index = parentBlock.getExecutables().indexOf(currentEntry.executable);
-                            parentBlock.getExecutables().remove(currentEntry.executable);
-                            if (index != -1) {
-                                parentBlock.getExecutables().add(index, call);
-                            } else {
-                                parentBlock.getExecutables().add(call);
-                            }
-                            this.updateActionInstanceScrollArea(false);
-                            this.focusEntryForExecutable(call, true, true);
-                        }
-                    }
-                }
-                Minecraft.getInstance().setScreen(this);
-            });
-            Minecraft.getInstance().setScreen(s);
-        } else if (targetExecutable instanceof IfExecutableBlock) {
-            IfExecutableBlock block = (IfExecutableBlock) targetExecutable;
-            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
-                if (container != null) {
-                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
-                    if ((currentEntry != null) && (currentEntry.executable instanceof IfExecutableBlock currentBlock)) {
-                        if (!container.equals(currentBlock.condition)) {
-                            this.createUndoPoint();
-                            currentBlock.condition = container;
-                            this.updateActionInstanceScrollArea(true);
-                            this.focusEntryForExecutable(currentBlock, true, true);
-                        }
-                    }
-                }
-                Minecraft.getInstance().setScreen(this);
-            });
-            Minecraft.getInstance().setScreen(s);
-        } else if (targetExecutable instanceof ElseIfExecutableBlock) {
-            ElseIfExecutableBlock block = (ElseIfExecutableBlock) targetExecutable;
-            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
-                if (container != null) {
-                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
-                    if ((currentEntry != null) && (currentEntry.executable instanceof ElseIfExecutableBlock currentBlock)) {
-                        if (!container.equals(currentBlock.condition)) {
-                            this.createUndoPoint();
-                            currentBlock.condition = container;
-                            this.updateActionInstanceScrollArea(true);
-                            this.focusEntryForExecutable(currentBlock, true, true);
-                        }
-                    }
-                }
-                Minecraft.getInstance().setScreen(this);
-            });
-            Minecraft.getInstance().setScreen(s);
-        } else if (targetExecutable instanceof WhileExecutableBlock) {
-            WhileExecutableBlock block = (WhileExecutableBlock) targetExecutable;
-            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
-                if (container != null) {
-                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
-                    if ((currentEntry != null) && (currentEntry.executable instanceof WhileExecutableBlock currentBlock)) {
-                        if (!container.equals(currentBlock.condition)) {
-                            this.createUndoPoint();
-                            currentBlock.condition = container;
-                            this.updateActionInstanceScrollArea(true);
-                            this.focusEntryForExecutable(currentBlock, true, true);
-                        }
-                    }
-                }
-                Minecraft.getInstance().setScreen(this);
-            });
-            Minecraft.getInstance().setScreen(s);
-        }
-    }
-
     @NotNull
     protected ContextMenu buildAddActionSubMenu() {
         ContextMenu subMenu = new ContextMenu();
@@ -613,6 +383,63 @@ public class ActionScriptEditorScreen extends Screen {
         return subMenu;
     }
 
+    @NotNull
+    protected Tooltip getEditTooltip(@Nullable ExecutableEntry entry) {
+        if ((entry == null) || (entry.executable instanceof ElseExecutableBlock)) {
+            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
+        }
+        if (entry.executable instanceof FolderExecutableBlock) {
+            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.folder_no_edit"));
+        }
+        if ((entry.executable instanceof ActionInstance i) && !i.action.hasValue()) {
+            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.manage.no_value_to_edit"));
+        }
+        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.edit_action.desc"));
+    }
+
+    @NotNull
+    protected Tooltip getRemoveTooltip(@Nullable ExecutableEntry entry) {
+        if (entry == null) {
+            return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
+        }
+        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.remove_action.desc"));
+    }
+
+    @NotNull
+    protected MutableComponent buildActionMenuLabel(@NotNull Action action) {
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        MutableComponent label = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
+        if (action.isDeprecated()) {
+            label = label.withStyle(Style.EMPTY.withStrikethrough(true));
+            label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
+            label = label.append(Component.translatable("fancymenu.actions.deprecated").setStyle(Style.EMPTY.withColor(theme.error_text_color.getColorInt()).withStrikethrough(false)));
+        }
+        return label;
+    }
+
+    @Nullable
+    protected Tooltip createActionTooltip(@NotNull Action action, boolean isFavorite) {
+        List<Component> lines = new ArrayList<>();
+        Component[] description = action.getActionDescription();
+        if ((description != null) && (description.length > 0)) {
+            Collections.addAll(lines, description);
+        }
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        Style hintStyle = Style.EMPTY
+                .withColor(theme.description_area_text_color.getColorInt())
+                .withItalic(true);
+        Component hint = Component.translatable(isFavorite ? "fancymenu.actions.favorite.remove" : "fancymenu.actions.favorite.add").setStyle(hintStyle);
+        if (!lines.isEmpty()) {
+            lines.add(Component.empty());
+        }
+        lines.add(hint);
+        return Tooltip.of(lines.toArray(new Component[0]));
+    }
+
+    protected void markContextMenuActionSelectionSuppressed() {
+        this.skipNextContextMenuSelection = true;
+    }
+
     protected boolean isFavorite(@NotNull Action action) {
         return ActionFavoritesManager.isFavorite(action.getIdentifier());
     }
@@ -621,6 +448,124 @@ public class ActionScriptEditorScreen extends Screen {
         ActionFavoritesManager.toggleFavorite(action.getIdentifier());
         this.markContextMenuActionSelectionSuppressed();
         this.updateRightClickContextMenu(true, Collections.singletonList("add_action"));
+    }
+
+    @Nullable
+    protected ExecutableEntry getContextMenuTargetEntry() {
+        if (this.contextMenuTargetExecutable == null) {
+            return null;
+        }
+        return this.findEntryForExecutable(this.contextMenuTargetExecutable);
+    }
+
+    protected boolean hasStoredRightClickContextMenuPosition() {
+        return !Float.isNaN(this.rightClickContextMenuLastOpenX) && !Float.isNaN(this.rightClickContextMenuLastOpenY);
+    }
+
+    @Nullable
+    protected List<String> findOpenContextMenuPath(@NotNull ContextMenu menu) {
+        for (ContextMenuEntry<?> entry : menu.getEntries()) {
+            if (entry instanceof SubMenuContextMenuEntry subEntry) {
+                ContextMenu subMenu = subEntry.getSubContextMenu();
+                if (subMenu.isOpen()) {
+                    List<String> childPath = this.findOpenContextMenuPath(subMenu);
+                    List<String> path = new ArrayList<>();
+                    path.add(subEntry.getIdentifier());
+                    if (childPath != null) {
+                        path.addAll(childPath);
+                    }
+                    return path;
+                }
+            }
+        }
+        return null;
+    }
+
+    protected void onEdit(@Nullable ExecutableEntry entry) {
+        if (!this.canEditEntry(entry)) {
+            return;
+        }
+        if (entry == null) {
+            return;
+        }
+        final Executable targetExecutable = entry.executable;
+        if (targetExecutable instanceof ActionInstance instance) {
+            if (!instance.action.hasValue()) {
+                return;
+            }
+            ChooseActionScreen s = new ChooseActionScreen(instance.copy(false), call -> {
+                if (call != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(targetExecutable);
+                    if (currentEntry != null) {
+                        currentEntry.getParentBlock();
+                        AbstractExecutableBlock parentBlock = currentEntry.getParentBlock();
+                        boolean changed = (call.action != instance.action) || !Objects.equals(call.value, instance.value);
+                        if (changed) {
+                            this.createUndoPoint();
+                            int index = parentBlock.getExecutables().indexOf(currentEntry.executable);
+                            parentBlock.getExecutables().remove(currentEntry.executable);
+                            if (index != -1) {
+                                parentBlock.getExecutables().add(index, call);
+                            } else {
+                                parentBlock.getExecutables().add(call);
+                            }
+                            this.updateActionInstanceScrollArea(false);
+                            this.focusEntryForExecutable(call, true, true);
+                        }
+                    }
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        } else if (targetExecutable instanceof IfExecutableBlock block) {
+            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
+                if (container != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
+                    if ((currentEntry != null) && (currentEntry.executable instanceof IfExecutableBlock currentBlock)) {
+                        if (!container.equals(currentBlock.condition)) {
+                            this.createUndoPoint();
+                            currentBlock.condition = container;
+                            this.updateActionInstanceScrollArea(true);
+                            this.focusEntryForExecutable(currentBlock, true, true);
+                        }
+                    }
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        } else if (targetExecutable instanceof ElseIfExecutableBlock block) {
+            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
+                if (container != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
+                    if ((currentEntry != null) && (currentEntry.executable instanceof ElseIfExecutableBlock currentBlock)) {
+                        if (!container.equals(currentBlock.condition)) {
+                            this.createUndoPoint();
+                            currentBlock.condition = container;
+                            this.updateActionInstanceScrollArea(true);
+                            this.focusEntryForExecutable(currentBlock, true, true);
+                        }
+                    }
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        } else if (targetExecutable instanceof WhileExecutableBlock block) {
+            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
+                if (container != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
+                    if ((currentEntry != null) && (currentEntry.executable instanceof WhileExecutableBlock currentBlock)) {
+                        if (!container.equals(currentBlock.condition)) {
+                            this.createUndoPoint();
+                            currentBlock.condition = container;
+                            this.updateActionInstanceScrollArea(true);
+                            this.focusEntryForExecutable(currentBlock, true, true);
+                        }
+                    }
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        }
     }
 
     protected void onOpenActionChooser(@Nullable ExecutableEntry selectionReference) {
@@ -676,259 +621,10 @@ public class ActionScriptEditorScreen extends Screen {
         this.focusEntryForExecutable(executable, anchorActive, true);
     }
 
-    private boolean canUndo() {
-        return !this.undoHistory.isEmpty();
-    }
-
-    private boolean canRedo() {
-        return !this.redoHistory.isEmpty();
-    }
-
-    private boolean undo() {
-        if (!this.canUndo()) {
-            return false;
-        }
-        ScriptSnapshot snapshot = this.undoHistory.pop();
-        this.redoHistory.push(this.captureCurrentState());
-        this.trimHistory(this.redoHistory);
-        this.applySnapshot(snapshot);
-        return true;
-    }
-
-    private boolean redo() {
-        if (!this.canRedo()) {
-            return false;
-        }
-        ScriptSnapshot snapshot = this.redoHistory.pop();
-        this.undoHistory.push(this.captureCurrentState());
-        this.trimHistory(this.undoHistory);
-        this.applySnapshot(snapshot);
-        return true;
-    }
-
-    private void createUndoPoint() {
-        if (this.suppressHistoryCapture) {
-            return;
-        }
-        ScriptSnapshot snapshot = this.captureCurrentState();
-        this.undoHistory.push(snapshot);
-        this.trimHistory(this.undoHistory);
-        this.redoHistory.clear();
-    }
-
-    private void trimHistory(@NotNull Deque<ScriptSnapshot> history) {
-        while (history.size() > HISTORY_LIMIT) {
-            history.removeLast();
-        }
-    }
-
-    @NotNull
-    private ScriptSnapshot captureCurrentState() {
-        GenericExecutableBlock snapshotBlock = this.executableBlock.copy(false);
-        float verticalScroll = this.scriptEntriesScrollArea.verticalScrollBar.getScroll();
-        float horizontalScroll = this.scriptEntriesScrollArea.horizontalScrollBar.getScroll();
-        ExecutableEntry selected = this.getSelectedEntry();
-        String selectedId = (selected != null) ? selected.executable.getIdentifier() : null;
-        String targetId = (this.contextMenuTargetExecutable != null) ? this.contextMenuTargetExecutable.getIdentifier() : null;
-        return new ScriptSnapshot(snapshotBlock, verticalScroll, horizontalScroll, selectedId, targetId);
-    }
-
-    private void applySnapshot(@NotNull ScriptSnapshot snapshot) {
-        this.suppressHistoryCapture = true;
-        try {
-            this.executableBlock = snapshot.block.copy(false);
-            this.updateActionInstanceScrollArea(false);
-            this.scriptEntriesScrollArea.verticalScrollBar.setScroll(Mth.clamp(snapshot.verticalScroll, 0.0F, 1.0F));
-            this.scriptEntriesScrollArea.horizontalScrollBar.setScroll(Mth.clamp(snapshot.horizontalScroll, 0.0F, 1.0F));
-            this.scriptEntriesScrollArea.updateEntries(null);
-            if (snapshot.selectedExecutableId != null) {
-                Executable executable = this.findExecutableByIdentifier(this.executableBlock, snapshot.selectedExecutableId);
-                if (executable != null) {
-                    this.focusEntryForExecutable(executable, true, false);
-                }
-            }
-            if (snapshot.contextMenuTargetExecutableId != null) {
-                Executable targetExecutable = this.findExecutableByIdentifier(this.executableBlock, snapshot.contextMenuTargetExecutableId);
-                this.contextMenuTargetExecutable = targetExecutable;
-            } else {
-                this.contextMenuTargetExecutable = null;
-            }
-        } finally {
-            this.suppressHistoryCapture = false;
-        }
-    }
-
-    @Nullable
-    private Executable findExecutableByIdentifier(@NotNull AbstractExecutableBlock start, @NotNull String identifier) {
-        if (identifier.equals(start.getIdentifier())) {
-            return start;
-        }
-        for (Executable executable : start.getExecutables()) {
-            if (identifier.equals(executable.getIdentifier())) {
-                return executable;
-            }
-            if (executable instanceof AbstractExecutableBlock block) {
-                Executable nested = this.findExecutableByIdentifier(block, identifier);
-                if (nested != null) {
-                    return nested;
-                }
-            }
-        }
-        AbstractExecutableBlock appended = start.getAppendedBlock();
-        if (appended != null) {
-            Executable nested = this.findExecutableByIdentifier(appended, identifier);
-            if (nested != null) {
-                return nested;
-            }
-        }
-        return null;
-    }
-
-    @Nullable
-    private MoveTarget calculateMoveTarget(@NotNull ExecutableEntry entry, @NotNull ExecutableEntry moveAfter) {
-        AbstractExecutableBlock currentParent = entry.getParentBlock();
-        List<Executable> currentList = currentParent.getExecutables();
-        int currentIndex = currentList.indexOf(entry.executable);
-        if (currentIndex < 0) {
-            return null;
-        }
-
-        AbstractExecutableBlock targetParent;
-        int targetIndex;
-
-        if (moveAfter == BEFORE_FIRST) {
-            targetParent = this.executableBlock;
-            targetIndex = 0;
-        } else if (moveAfter == AFTER_LAST) {
-            targetParent = this.executableBlock;
-            targetIndex = this.executableBlock.getExecutables().size();
-        } else if (moveAfter.executable instanceof AbstractExecutableBlock block) {
-            targetParent = block;
-            targetIndex = 0;
-        } else {
-            targetParent = moveAfter.getParentBlock();
-            List<Executable> targetList = targetParent.getExecutables();
-            int moveAfterIndex = targetList.indexOf(moveAfter.executable);
-            targetIndex = (moveAfterIndex >= 0) ? moveAfterIndex + 1 : targetList.size();
-        }
-
-        if (targetParent == currentParent) {
-            if (targetIndex > currentIndex) {
-                targetIndex--;
-            }
-            if (targetIndex == currentIndex) {
-                return null;
-            }
-        }
-
-        return new MoveTarget(targetParent, Math.max(0, targetIndex));
-    }
-
-    private static final class ScriptSnapshot {
-        private final GenericExecutableBlock block;
-        private final float verticalScroll;
-        private final float horizontalScroll;
-        @Nullable
-        private final String selectedExecutableId;
-        @Nullable
-        private final String contextMenuTargetExecutableId;
-
-        private ScriptSnapshot(@NotNull GenericExecutableBlock block, float verticalScroll, float horizontalScroll, @Nullable String selectedExecutableId, @Nullable String contextMenuTargetExecutableId) {
-            this.block = block;
-            this.verticalScroll = verticalScroll;
-            this.horizontalScroll = horizontalScroll;
-            this.selectedExecutableId = selectedExecutableId;
-            this.contextMenuTargetExecutableId = contextMenuTargetExecutableId;
-        }
-    }
-
-    private record MoveTarget(AbstractExecutableBlock parent, int index) {
-    }
-
-    protected void markContextMenuActionSelectionSuppressed() {
-        this.skipNextContextMenuSelection = true;
-    }
-
-    @NotNull
-    protected MutableComponent buildActionMenuLabel(@NotNull Action action) {
-        UIColorTheme theme = UIBase.getUIColorTheme();
-        MutableComponent label = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
-        if (action.isDeprecated()) {
-            label = label.withStyle(Style.EMPTY.withStrikethrough(true));
-            label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
-            label = label.append(Component.translatable("fancymenu.actions.deprecated").setStyle(Style.EMPTY.withColor(theme.error_text_color.getColorInt()).withStrikethrough(false)));
-        }
-        return label;
-    }
-
-    @Nullable
-    protected Tooltip createActionTooltip(@NotNull Action action, boolean isFavorite) {
-        List<Component> lines = new ArrayList<>();
-        Component[] description = action.getActionDescription();
-        if ((description != null) && (description.length > 0)) {
-            Collections.addAll(lines, description);
-        }
-        UIColorTheme theme = UIBase.getUIColorTheme();
-        Style hintStyle = Style.EMPTY
-                .withColor(theme.description_area_text_color.getColorInt())
-                .withItalic(true);
-        Component hint = Component.translatable(isFavorite ? "fancymenu.actions.favorite.remove" : "fancymenu.actions.favorite.add").setStyle(hintStyle);
-        if (!lines.isEmpty()) {
-            lines.add(Component.empty());
-        }
-        lines.add(hint);
-        return Tooltip.of(lines.toArray(new Component[0]));
-    }
-
-    protected class FavoriteAwareActionEntry extends ContextMenu.ClickableContextMenuEntry<FavoriteAwareActionEntry> {
-
-        @NotNull
-        private final Action action;
-
-        protected FavoriteAwareActionEntry(@NotNull ContextMenu parent, @NotNull Action action) {
-            super("action_" + action.getIdentifier(), parent, ActionScriptEditorScreen.this.buildActionMenuLabel(action), (menu, entry) -> {
-                ActionScriptEditorScreen.this.markContextMenuActionSelectionSuppressed();
-                ExecutableEntry selectionReference = ActionScriptEditorScreen.this.getContextMenuTargetEntry();
-                menu.closeMenu();
-                ActionScriptEditorScreen.this.onAddAction(action, selectionReference);
-            });
-            this.action = action;
-            this.setLabelSupplier((menu, entry) -> ActionScriptEditorScreen.this.buildActionMenuLabel(action));
-            this.setTooltipSupplier((menu, entry) -> ActionScriptEditorScreen.this.createActionTooltip(action, ActionScriptEditorScreen.this.isFavorite(action)));
-            this.updateFavoriteIcon();
-        }
-
-        private void updateFavoriteIcon() {
-            if (ActionScriptEditorScreen.this.isFavorite(this.action)) {
-                this.setIcon(ContextMenu.IconFactory.getIcon("favorite"));
-            } else {
-                this.setIcon(null);
-            }
-        }
-
-        @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
-                ActionScriptEditorScreen.this.toggleFavorite(this.action);
-                return true;
-            }
-            return super.mouseClicked(mouseX, mouseY, button);
-        }
-
-    }
-
-    protected void onAddFolder() {
-        this.onAddFolder(this.getSelectedEntry());
-    }
-
     protected void onAddFolder(@Nullable ExecutableEntry selectionReference) {
         ExecutableEntry resolvedReference = (selectionReference != null) ? this.findEntryForExecutable(selectionReference.executable) : null;
         FolderExecutableBlock block = new FolderExecutableBlock();
         this.finalizeExecutableAddition(block, resolvedReference, true);
-    }
-
-    protected void onAddIf() {
-        this.onAddIf(this.getSelectedEntry());
     }
 
     protected void onAddIf(@Nullable ExecutableEntry selectionReference) {
@@ -944,10 +640,6 @@ public class ActionScriptEditorScreen extends Screen {
         Minecraft.getInstance().setScreen(s);
     }
 
-    protected void onAddWhile() {
-        this.onAddWhile(this.getSelectedEntry());
-    }
-
     protected void onAddWhile(@Nullable ExecutableEntry selectionReference) {
         final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
         ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
@@ -961,10 +653,6 @@ public class ActionScriptEditorScreen extends Screen {
         Minecraft.getInstance().setScreen(s);
     }
 
-    protected void onAppendElseIf() {
-        this.onAppendElseIf(this.getSelectedEntry());
-    }
-
     protected void onAppendElseIf(@Nullable ExecutableEntry targetEntry) {
         if (!this.canAppendConditionalBlock(targetEntry)) {
             return;
@@ -975,7 +663,7 @@ public class ActionScriptEditorScreen extends Screen {
         final Executable targetExecutable = targetEntry.executable;
         ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
             if (container != null) {
-                ExecutableEntry resolvedEntry = (targetExecutable != null) ? this.findEntryForExecutable(targetExecutable) : null;
+                ExecutableEntry resolvedEntry = this.findEntryForExecutable(targetExecutable);
                 if ((resolvedEntry == null) || !(resolvedEntry.executable instanceof AbstractExecutableBlock resolvedBlock)) {
                     Minecraft.getInstance().setScreen(this);
                     return;
@@ -992,10 +680,6 @@ public class ActionScriptEditorScreen extends Screen {
         Minecraft.getInstance().setScreen(s);
     }
 
-    protected void onAppendElse() {
-        this.onAppendElse(this.getSelectedEntry());
-    }
-
     protected void onAppendElse(@Nullable ExecutableEntry targetEntry) {
         if (!this.canAppendElseBlock(targetEntry)) {
             return;
@@ -1004,7 +688,7 @@ public class ActionScriptEditorScreen extends Screen {
             return;
         }
         final Executable targetExecutable = targetEntry.executable;
-        ExecutableEntry resolvedEntry = (targetExecutable != null) ? this.findEntryForExecutable(targetExecutable) : null;
+        ExecutableEntry resolvedEntry = this.findEntryForExecutable(targetExecutable);
         if ((resolvedEntry == null) || !(resolvedEntry.executable instanceof AbstractExecutableBlock block)) {
             return;
         }
@@ -1019,195 +703,20 @@ public class ActionScriptEditorScreen extends Screen {
         this.focusEntryForExecutable(appended, true, true);
     }
 
-    protected void onRemove() {
-        this.onRemove(this.getSelectedEntry());
-    }
-
     protected void onRemove(@Nullable ExecutableEntry entry) {
         if (entry == null) {
             return;
         }
         final Executable targetExecutable = entry.executable;
-        Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
-            if (call) {
-                ExecutableEntry currentEntry = this.findEntryForExecutable(targetExecutable);
-                if (currentEntry != null) {
-                    this.createUndoPoint();
-                    if (currentEntry.appendParent != null) {
-                        currentEntry.appendParent.setAppendedBlock(null);
-                    }
-                    currentEntry.getParentBlock().getExecutables().remove(currentEntry.executable);
-                    this.updateActionInstanceScrollArea(true);
-                }
+        ExecutableEntry currentEntry = this.findEntryForExecutable(targetExecutable);
+        if (currentEntry != null) {
+            this.createUndoPoint();
+            if (currentEntry.appendParent != null) {
+                currentEntry.appendParent.setAppendedBlock(null);
             }
-            Minecraft.getInstance().setScreen(this);
-        }, LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.remove_action.confirm")));
-    }
-
-    protected boolean deleteSelectedEntryDirectly() {
-        ExecutableEntry selected = this.getSelectedEntry();
-        if (selected == null) {
-            return false;
+            currentEntry.getParentBlock().getExecutables().remove(currentEntry.executable);
+            this.updateActionInstanceScrollArea(true);
         }
-        Executable nextExecutable = null;
-        List<ScrollAreaEntry> currentEntries = this.scriptEntriesScrollArea.getEntries();
-        int selectedIndex = currentEntries.indexOf(selected);
-        if (selectedIndex != -1) {
-            for (int i = selectedIndex + 1; i < currentEntries.size(); i++) {
-                ScrollAreaEntry entry = currentEntries.get(i);
-                if ((entry instanceof ExecutableEntry ee) && (ee != selected)) {
-                    nextExecutable = ee.executable;
-                    break;
-                }
-            }
-            if (nextExecutable == null) {
-                for (int i = selectedIndex - 1; i >= 0; i--) {
-                    ScrollAreaEntry entry = currentEntries.get(i);
-                    if ((entry instanceof ExecutableEntry ee) && (ee != selected)) {
-                        nextExecutable = ee.executable;
-                        break;
-                    }
-                }
-            }
-        }
-        this.createUndoPoint();
-        if (selected.appendParent != null) {
-            selected.appendParent.setAppendedBlock(null);
-        }
-        selected.getParentBlock().getExecutables().remove(selected.executable);
-        this.updateActionInstanceScrollArea(true);
-        if (nextExecutable != null) {
-            this.focusEntryForExecutable(nextExecutable, true);
-        }
-        return true;
-    }
-
-    protected boolean copySelectedAction() {
-        ExecutableEntry selected = this.getSelectedEntry();
-        if ((selected == null) || !(selected.executable instanceof ActionInstance instance)) {
-            return false;
-        }
-        this.clipboardActionInstance = instance.copy(true);
-        return true;
-    }
-
-    protected boolean pasteCopiedAction(@Nullable ExecutableEntry selectionReference) {
-        if (this.clipboardActionInstance == null) {
-            return false;
-        }
-        ActionInstance instance = this.clipboardActionInstance.copy(true);
-        this.finalizeActionAddition(instance, selectionReference);
-        return true;
-    }
-
-    protected boolean moveSelectedEntry(boolean moveUp) {
-        ExecutableEntry selected = this.getSelectedEntry();
-        if (selected == null) {
-            return false;
-        }
-        this.handleContextMenuMove(selected, moveUp);
-        return true;
-    }
-
-    protected boolean selectAdjacentEntry(boolean moveDown) {
-        List<ScrollAreaEntry> entries = this.scriptEntriesScrollArea.getEntries();
-        if (entries.isEmpty()) {
-            return false;
-        }
-        ExecutableEntry selected = this.getSelectedEntry();
-        int targetIndex;
-        if (selected == null) {
-            targetIndex = moveDown ? 0 : entries.size() - 1;
-        } else {
-            int currentIndex = entries.indexOf(selected);
-            if (currentIndex == -1) {
-                return false;
-            }
-            int desiredIndex = currentIndex + (moveDown ? 1 : -1);
-            desiredIndex = Mth.clamp(desiredIndex, 0, entries.size() - 1);
-            if (desiredIndex == currentIndex) {
-                return false;
-            }
-            targetIndex = desiredIndex;
-        }
-        ScrollAreaEntry target = entries.get(targetIndex);
-        if (target instanceof ExecutableEntry entry) {
-            entry.setSelected(true);
-            this.scrollEntryIntoView(entry);
-            return true;
-        }
-        return false;
-    }
-
-    protected boolean handleEnterShortcut(@Nullable ExecutableEntry selected) {
-        if (selected == null) {
-            return false;
-        }
-        if (selected.executable instanceof ActionInstance instance) {
-            if (!instance.action.hasValue()) {
-                return false;
-            }
-            this.startInlineValueEditing(selected);
-            return true;
-        }
-        if (selected.executable instanceof FolderExecutableBlock) {
-            this.startInlineNameEditing(selected);
-            return true;
-        }
-        if ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock) || (selected.executable instanceof WhileExecutableBlock)) {
-            this.onEdit();
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isMinimapHovered(int mouseX, int mouseY) {
-        return (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight);
-    }
-
-    protected void showIllegalActionIndicator() {
-        this.illegalActionIndicatorStartTime = System.currentTimeMillis();
-    }
-
-    protected void renderIllegalActionIndicator(@NotNull GuiGraphics graphics, float partial) {
-        if (this.illegalActionIndicatorStartTime <= 0L) {
-            return;
-        }
-
-        long now = System.currentTimeMillis();
-        long elapsed = now - this.illegalActionIndicatorStartTime;
-        long totalDuration = ILLEGAL_ACTION_VISIBLE_DURATION_MS + ILLEGAL_ACTION_FADE_DURATION_MS;
-        if (elapsed >= totalDuration) {
-            this.illegalActionIndicatorStartTime = -1L;
-            return;
-        }
-
-        float alpha = ILLEGAL_ACTION_MAX_ALPHA;
-        if (elapsed > ILLEGAL_ACTION_VISIBLE_DURATION_MS) {
-            long fadeElapsed = elapsed - ILLEGAL_ACTION_VISIBLE_DURATION_MS;
-            float fadeProgress = (float)fadeElapsed / (float)ILLEGAL_ACTION_FADE_DURATION_MS;
-            alpha = ILLEGAL_ACTION_MAX_ALPHA * (1.0F - Mth.clamp(fadeProgress, 0.0F, 1.0F));
-        }
-
-        RenderSystem.enableBlend();
-        int targetHeight = Math.max(1, Math.round(this.height / 3.0F));
-        int[] size = ILLEGAL_ACTION_ICON_RATIO.getAspectRatioSizeByMaximumSize(Math.max(1, this.width), targetHeight);
-        int iconWidth = size[0];
-        int iconHeight = size[1];
-        int iconX = (this.width - iconWidth) / 2;
-        int iconY = (this.height - iconHeight) / 2;
-
-        UIBase.setShaderColor(graphics, UIBase.getUIColorTheme().ui_texture_color, alpha);
-        graphics.blit(ILLEGAL_ACTION_ICON, iconX, iconY, 0.0F, 0.0F, iconWidth, iconHeight, iconWidth, iconHeight);
-        RenderingUtils.resetShaderColor(graphics);
-    }
-
-    @Override
-    public void onClose() {
-        this.finishInlineNameEditing(true);
-        this.finishInlineNameEditing(true);
-        this.finishInlineValueEditing(true);
-        this.callback.accept(null);
     }
 
     @Override
@@ -1232,7 +741,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, theme.generic_text_base_color.getColorInt(), false);
-        graphics.drawString(this.font, I18n.get("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.generic_text_base_color.getColorInt(), false);
 
         int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - MINIMAP_WIDTH - MINIMAP_GAP);
         this.scriptEntriesScrollArea.setWidth(scrollAreaWidth, true);
@@ -1289,7 +798,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         super.render(graphics, mouseX, mouseY, partial);
 
-        this.renderIllegalActionIndicator(graphics, partial);
+        this.renderIllegalActionIndicator(graphics);
 
         // Needs to render as late as possible
         this.renderMinimapEntryTooltip(graphics, mouseX, mouseY);
@@ -1297,6 +806,299 @@ public class ActionScriptEditorScreen extends Screen {
         // Needs to render after everything else
         this.rightClickContextMenu.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
+    protected void renderInlineEditors(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (this.isInlineValueEditing()) {
+            if (!this.scriptEntriesScrollArea.getEntries().contains(this.inlineValueEntry)) {
+                this.finishInlineValueEditing(false);
+            } else {
+                this.updateInlineValueEditorBounds();
+                if (this.inlineValueEditBox != null) {
+                    this.inlineValueEditBox.render(graphics, mouseX, mouseY, partial);
+                }
+            }
+        }
+        if (this.isInlineNameEditing()) {
+            if (!this.scriptEntriesScrollArea.getEntries().contains(this.inlineNameEntry)) {
+                this.finishInlineNameEditing(false);
+            } else {
+                this.updateInlineNameEditorBounds();
+                if (this.inlineNameEditBox != null) {
+                    this.inlineNameEditBox.render(graphics, mouseX, mouseY, partial);
+                }
+            }
+        }
+    }
+
+    protected void renderIllegalActionIndicator(@NotNull GuiGraphics graphics) {
+
+        if (this.illegalActionIndicatorStartTime <= 0L) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        long elapsed = now - this.illegalActionIndicatorStartTime;
+        long totalDuration = ILLEGAL_ACTION_VISIBLE_DURATION_MS + ILLEGAL_ACTION_FADE_DURATION_MS;
+        if (elapsed >= totalDuration) {
+            this.illegalActionIndicatorStartTime = -1L;
+            return;
+        }
+
+        float alpha = ILLEGAL_ACTION_MAX_ALPHA;
+        if (elapsed > ILLEGAL_ACTION_VISIBLE_DURATION_MS) {
+            long fadeElapsed = elapsed - ILLEGAL_ACTION_VISIBLE_DURATION_MS;
+            float fadeProgress = (float)fadeElapsed / (float)ILLEGAL_ACTION_FADE_DURATION_MS;
+            alpha = ILLEGAL_ACTION_MAX_ALPHA * (1.0F - Mth.clamp(fadeProgress, 0.0F, 1.0F));
+        }
+
+        RenderSystem.enableBlend();
+        int targetHeight = Math.max(1, Math.round(this.height / 3.0F));
+        int[] size = ILLEGAL_ACTION_ICON_RATIO.getAspectRatioSizeByMaximumSize(Math.max(1, this.width), targetHeight);
+        int iconWidth = size[0];
+        int iconHeight = size[1];
+        int iconX = (this.width - iconWidth) / 2;
+        int iconY = (this.height - iconHeight) / 2;
+
+        UIBase.setShaderColor(graphics, UIBase.getUIColorTheme().ui_texture_color, alpha);
+        graphics.blit(ILLEGAL_ACTION_ICON, iconX, iconY, 0.0F, 0.0F, iconWidth, iconHeight, iconWidth, iconHeight);
+        RenderingUtils.resetShaderColor(graphics);
+
+    }
+
+    protected void showIllegalActionIndicator() {
+        this.illegalActionIndicatorStartTime = System.currentTimeMillis();
+    }
+
+    protected void renderChainMinimap(@NotNull GuiGraphics graphics) {
+
+        if (this.minimapHeight <= 0) {
+            return;
+        }
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        RenderSystem.enableBlend();
+        graphics.fill(this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, theme.actions_minimap_background_color.getColorInt());
+        UIBase.renderBorder(graphics, this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, 1, theme.actions_minimap_border_color, true, true, true, true);
+
+        List<ExecutableEntry> hoverChain = this.getActiveHoveredChain();
+        ExecutableEntry activeHoverEntry = this.getActiveHoveredEntry();
+
+        for (MinimapEntrySegment segment : this.minimapSegments) {
+            ExecutableEntry entry = segment.entry;
+            graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, this.getMinimapEntryBaseColor(entry).getRGB());
+            if (this.selectedEntry == entry) {
+                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_selected_color, true, true, true, true);
+            } else if (activeHoverEntry == entry) {
+                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.description_area_text_color, true, true, true, true);
+            }
+        }
+        if (!hoverChain.isEmpty()) {
+            this.renderChainMinimapBorder(graphics, hoverChain, theme.actions_chain_indicator_hovered_color.getColorInt());
+        }
+        this.renderMinimapViewport(graphics, theme);
+    }
+
+    protected void renderMinimapEntryTooltip(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+        if (this.minimapHoveredEntry == null) {
+            return;
+        }
+        int entryWidth = this.minimapHoveredEntry.getWidth();
+        int entryHeight = this.minimapHoveredEntry.getHeight();
+        if ((entryWidth <= 0) || (entryHeight <= 0)) {
+            return;
+        }
+        int scaledWidth = Math.max(1, Math.round(entryWidth * MINIMAP_TOOLTIP_SCALE));
+        int scaledHeight = Math.max(1, Math.round(entryHeight * MINIMAP_TOOLTIP_SCALE));
+        int tooltipWidth = scaledWidth + (MINIMAP_TOOLTIP_PADDING * 2);
+        int tooltipHeight = scaledHeight + (MINIMAP_TOOLTIP_PADDING * 2);
+
+        int tooltipX = mouseX + MINIMAP_TOOLTIP_OFFSET;
+        int tooltipY = mouseY + MINIMAP_TOOLTIP_OFFSET;
+
+        if (tooltipX + tooltipWidth > this.width) {
+            tooltipX = Math.max(0, this.width - tooltipWidth);
+        }
+        if (tooltipY + tooltipHeight > this.height) {
+            tooltipY = Math.max(0, this.height - tooltipHeight);
+        }
+        if (tooltipX < 0) {
+            tooltipX = 0;
+        }
+        if (tooltipY < 0) {
+            tooltipY = 0;
+        }
+
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        Color backgroundColor = withAlpha(theme.screen_background_color.getColor(), 220);
+
+        PoseStack poseStack = graphics.pose();
+        poseStack.pushPose();
+        poseStack.translate(0.0F, 0.0F, 400.0F);
+
+        RenderSystem.enableBlend();
+        graphics.fill(tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, backgroundColor.getRGB());
+        UIBase.renderBorder(graphics, tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, 1, theme.actions_minimap_tooltip_border_color, true, true, true, true);
+
+        poseStack.translate(tooltipX + MINIMAP_TOOLTIP_PADDING, tooltipY + MINIMAP_TOOLTIP_PADDING, 0.0F);
+        poseStack.scale(MINIMAP_TOOLTIP_SCALE, MINIMAP_TOOLTIP_SCALE, 1.0F);
+        poseStack.translate(-this.minimapHoveredEntry.getX(), -this.minimapHoveredEntry.getY(), 0.0F);
+
+        this.minimapHoveredEntry.renderThumbnail(graphics);
+
+        poseStack.popPose();
+    }
+
+    protected void renderChainMinimapBorder(@NotNull GuiGraphics graphics, @NotNull List<ExecutableEntry> chainEntries, int color) {
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        boolean found = false;
+        for (MinimapEntrySegment segment : this.minimapSegments) {
+            if (chainEntries.contains(segment.entry)) {
+                found = true;
+                minX = Math.min(minX, segment.x);
+                maxX = Math.max(maxX, segment.x + segment.width);
+                minY = Math.min(minY, segment.y);
+                maxY = Math.max(maxY, segment.y + segment.height);
+            }
+        }
+        if (!found) {
+            return;
+        }
+        if ((maxX <= minX) || (maxY <= minY)) {
+            return;
+        }
+        UIBase.renderBorder(graphics, minX, minY, maxX, maxY, 1, color, true, true, true, true);
+    }
+
+    protected void renderMinimapViewport(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
+        if (this.minimapTotalEntriesHeight <= 0 || this.minimapContentHeight <= 0) {
+            return;
+        }
+        int visibleHeight = this.scriptEntriesScrollArea.getInnerHeight();
+        if (this.minimapTotalEntriesHeight <= visibleHeight) {
+            return;
+        }
+        int maxScroll = Math.max(1, this.minimapTotalEntriesHeight - visibleHeight);
+        int scrollPixels = Math.round(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() * maxScroll);
+        float topRatio = (float)scrollPixels / (float)this.minimapTotalEntriesHeight;
+        float heightRatio = (float)visibleHeight / (float)this.minimapTotalEntriesHeight;
+
+        int viewportTop = this.minimapContentY + Math.round(topRatio * this.minimapContentHeight);
+        int viewportHeight = Math.max(2, Math.round(heightRatio * this.minimapContentHeight));
+        int maxViewportBottom = this.minimapContentY + this.minimapContentHeight;
+        if (viewportTop + viewportHeight > maxViewportBottom) {
+            viewportHeight = maxViewportBottom - viewportTop;
+        }
+        Color viewportBaseColor = theme.actions_minimap_viewport_color.getColor();
+        Color viewportColor = withAlpha(viewportBaseColor, Math.max(0, Math.min(255, viewportBaseColor.getAlpha() / 2)));
+        graphics.fill(this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, viewportColor.getRGB());
+        UIBase.renderBorder(graphics, this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, 1, theme.actions_minimap_viewport_border_color, true, true, true, true);
+    }
+
+    @NotNull
+    protected Color getMinimapEntryBaseColor(@NotNull ExecutableEntry entry) {
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        Color base;
+        if (entry.executable instanceof IfExecutableBlock) {
+            base = theme.actions_entry_background_color_if.getColor();
+        } else if (entry.executable instanceof ElseIfExecutableBlock) {
+            base = theme.actions_entry_background_color_else_if.getColor();
+        } else if (entry.executable instanceof ElseExecutableBlock) {
+            base = theme.actions_entry_background_color_else.getColor();
+        } else if (entry.executable instanceof WhileExecutableBlock) {
+            base = theme.actions_entry_background_color_while.getColor();
+        } else if (entry.executable instanceof FolderExecutableBlock) {
+            base = theme.actions_entry_background_color_folder.getColor();
+        } else if (entry.executable instanceof AbstractExecutableBlock) {
+            base = theme.actions_entry_background_color_generic_block.getColor();
+        } else {
+            base = theme.actions_entry_background_color_action.getColor();
+        }
+        return withAlpha(base, 180);
+    }
+
+    protected void rebuildMinimapSegments(int mouseX, int mouseY) {
+        this.minimapSegments.clear();
+        this.minimapHoveredEntry = null;
+        this.minimapHoveredPrimaryChainEntries = Collections.emptyList();
+        this.minimapHoveredStatementChainEntries = Collections.emptyList();
+        this.minimapContentX = this.minimapX + MINIMAP_PADDING;
+        this.minimapContentY = this.minimapY + MINIMAP_PADDING;
+        this.minimapContentWidth = Math.max(1, MINIMAP_WIDTH - (MINIMAP_PADDING * 2));
+        this.minimapContentHeight = Math.max(1, this.minimapHeight - (MINIMAP_PADDING * 2));
+        this.minimapTotalEntriesHeight = 0;
+
+        List<ScrollAreaEntry> scrollEntries = this.scriptEntriesScrollArea.getEntries();
+        List<ExecutableEntry> execEntries = new ArrayList<>();
+        for (ScrollAreaEntry entry : scrollEntries) {
+            if (entry instanceof ExecutableEntry ee) {
+                execEntries.add(ee);
+            }
+        }
+        if (execEntries.isEmpty()) {
+            return;
+        }
+
+        for (ExecutableEntry entry : execEntries) {
+            this.minimapTotalEntriesHeight += entry.getHeight();
+        }
+        if (this.minimapTotalEntriesHeight <= 0) {
+            this.minimapTotalEntriesHeight = 1;
+        }
+
+        int offset = 0;
+        for (ExecutableEntry entry : execEntries) {
+            int entryHeight = entry.getHeight();
+            float startRatio = (float)offset / (float)this.minimapTotalEntriesHeight;
+            float endRatio = (float)(offset + entryHeight) / (float)this.minimapTotalEntriesHeight;
+            int top = this.minimapContentY + Math.round(startRatio * this.minimapContentHeight);
+            int bottom = this.minimapContentY + Math.round(endRatio * this.minimapContentHeight);
+            if (bottom <= top) {
+                bottom = top + 1;
+            }
+            int height = bottom - top;
+            int indentOffset = entry.indentLevel * MINIMAP_INDENT_STEP;
+            int maxIndent = Math.max(0, this.minimapContentWidth - 1);
+            if (indentOffset > maxIndent) {
+                indentOffset = maxIndent;
+            }
+            int segmentX = this.minimapContentX + indentOffset;
+            int segmentWidth = Math.max(1, this.minimapContentWidth - indentOffset);
+
+            MinimapEntrySegment segment = new MinimapEntrySegment(entry, segmentX, top, segmentWidth, height);
+            this.minimapSegments.add(segment);
+
+            if (UIBase.isXYInArea(mouseX, mouseY, segment.x, segment.y, segment.width, segment.height)) {
+                this.minimapHoveredEntry = entry;
+            }
+
+            offset += entryHeight;
+        }
+
+        if (this.minimapHoveredEntry != null) {
+            this.minimapHoveredPrimaryChainEntries = this.getStatementChainOf(this.minimapHoveredEntry);
+            this.minimapHoveredStatementChainEntries = this.collectChainWithSubChains(this.minimapHoveredEntry);
+        }
+    }
+
+    @Nullable
+    protected ExecutableEntry getMinimapEntryAt(int mouseX, int mouseY) {
+        for (MinimapEntrySegment segment : this.minimapSegments) {
+            if (UIBase.isXYInArea(mouseX, mouseY, segment.x, segment.y, segment.width, segment.height)) {
+                return segment.entry;
+            }
+        }
+        return null;
+    }
+
+    public boolean isMinimapHovered(int mouseX, int mouseY) {
+        return (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight);
     }
 
     @Override
@@ -1543,6 +1345,28 @@ public class ActionScriptEditorScreen extends Screen {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
+    protected boolean handleEnterShortcut(@Nullable ExecutableEntry selected) {
+        if (selected == null) {
+            return false;
+        }
+        if (selected.executable instanceof ActionInstance instance) {
+            if (!instance.action.hasValue()) {
+                return false;
+            }
+            this.startInlineValueEditing(selected);
+            return true;
+        }
+        if (selected.executable instanceof FolderExecutableBlock) {
+            this.startInlineNameEditing(selected);
+            return true;
+        }
+        if ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock) || (selected.executable instanceof WhileExecutableBlock)) {
+            this.onEdit(this.getSelectedEntry());
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
         if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.charTyped(codePoint, modifiers)) {
@@ -1565,28 +1389,6 @@ public class ActionScriptEditorScreen extends Screen {
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    protected void renderInlineEditors(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        if (this.isInlineValueEditing()) {
-            if (!this.scriptEntriesScrollArea.getEntries().contains(this.inlineValueEntry)) {
-                this.finishInlineValueEditing(false);
-            } else {
-                this.updateInlineValueEditorBounds();
-                if (this.inlineValueEditBox != null) {
-                    this.inlineValueEditBox.render(graphics, mouseX, mouseY, partial);
-                }
-            }
-        }
-        if (this.isInlineNameEditing()) {
-            if (!this.scriptEntriesScrollArea.getEntries().contains(this.inlineNameEntry)) {
-                this.finishInlineNameEditing(false);
-            } else {
-                this.updateInlineNameEditorBounds();
-                if (this.inlineNameEditBox != null) {
-                    this.inlineNameEditBox.render(graphics, mouseX, mouseY, partial);
-                }
-            }
-        }
-    }
     private void updateCursor(int mouseX, int mouseY) {
         if (this.inlineNameEditBox != null) {
             if (UIBase.isXYInArea(mouseX, mouseY, this.inlineNameEditBox.getX(), this.inlineNameEditBox.getY(), this.inlineNameEditBox.getWidth(), this.inlineNameEditBox.getHeight())) {
@@ -1714,11 +1516,11 @@ public class ActionScriptEditorScreen extends Screen {
         this.inlineValueEditBox = null;
         this.setFocused(null);
         if (entry.executable instanceof ActionInstance instance) {
-            String result = editBox.getValue();
+            String result = Objects.requireNonNullElse(editBox.getValue(), "");
             if (!save) {
                 instance.value = this.inlineValueOriginal;
             } else {
-                String normalized = ((result != null) && !result.isEmpty()) ? result : null;
+                String normalized = !result.isEmpty() ? result : null;
                 if (!Objects.equals(instance.value, normalized)) {
                     this.createUndoPoint();
                     instance.value = normalized;
@@ -1784,11 +1586,11 @@ public class ActionScriptEditorScreen extends Screen {
         this.inlineNameEditBox = null;
         this.setFocused(null);
         if (entry.executable instanceof FolderExecutableBlock folder) {
-            String result = editBox.getValue();
+            String result = Objects.requireNonNullElse(editBox.getValue(), "");
             if (!save) {
                 folder.setName(this.inlineNameOriginal != null ? this.inlineNameOriginal : FolderExecutableBlock.DEFAULT_NAME);
             } else {
-                String normalized = (result != null) ? result.trim() : "";
+                String normalized = result.trim();
                 if (normalized.isEmpty()) {
                     normalized = FolderExecutableBlock.DEFAULT_NAME;
                 }
@@ -1821,10 +1623,6 @@ public class ActionScriptEditorScreen extends Screen {
 
     private boolean isInlineNameEditing() {
         return (this.inlineNameEditBox != null) && (this.inlineNameEntry != null);
-    }
-
-    @Override
-    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
     }
 
     @Nullable
@@ -1901,229 +1699,6 @@ public class ActionScriptEditorScreen extends Screen {
             return theme.actions_chain_indicator_hovered_color.getColor();
         }
         return theme.actions_chain_indicator_color.getColor();
-    }
-
-    @NotNull
-    protected Color getMinimapEntryBaseColor(@NotNull ExecutableEntry entry) {
-        UIColorTheme theme = UIBase.getUIColorTheme();
-        Color base;
-        if (entry.executable instanceof IfExecutableBlock) {
-            base = theme.actions_entry_background_color_if.getColor();
-        } else if (entry.executable instanceof ElseIfExecutableBlock) {
-            base = theme.actions_entry_background_color_else_if.getColor();
-        } else if (entry.executable instanceof ElseExecutableBlock) {
-            base = theme.actions_entry_background_color_else.getColor();
-        } else if (entry.executable instanceof WhileExecutableBlock) {
-            base = theme.actions_entry_background_color_while.getColor();
-        } else if (entry.executable instanceof FolderExecutableBlock) {
-            base = theme.actions_entry_background_color_folder.getColor();
-        } else if (entry.executable instanceof AbstractExecutableBlock) {
-            base = theme.actions_entry_background_color_generic_block.getColor();
-        } else {
-            base = theme.actions_entry_background_color_action.getColor();
-        }
-        return withAlpha(base, 180);
-    }
-
-    protected void rebuildMinimapSegments(int mouseX, int mouseY) {
-        this.minimapSegments.clear();
-        this.minimapHoveredEntry = null;
-        this.minimapHoveredPrimaryChainEntries = Collections.emptyList();
-        this.minimapHoveredStatementChainEntries = Collections.emptyList();
-        this.minimapContentX = this.minimapX + MINIMAP_PADDING;
-        this.minimapContentY = this.minimapY + MINIMAP_PADDING;
-        this.minimapContentWidth = Math.max(1, MINIMAP_WIDTH - (MINIMAP_PADDING * 2));
-        this.minimapContentHeight = Math.max(1, this.minimapHeight - (MINIMAP_PADDING * 2));
-        this.minimapTotalEntriesHeight = 0;
-
-        List<ScrollAreaEntry> scrollEntries = this.scriptEntriesScrollArea.getEntries();
-        List<ExecutableEntry> execEntries = new ArrayList<>();
-        for (ScrollAreaEntry entry : scrollEntries) {
-            if (entry instanceof ExecutableEntry ee) {
-                execEntries.add(ee);
-            }
-        }
-        if (execEntries.isEmpty()) {
-            return;
-        }
-
-        for (ExecutableEntry entry : execEntries) {
-            this.minimapTotalEntriesHeight += entry.getHeight();
-        }
-        if (this.minimapTotalEntriesHeight <= 0) {
-            this.minimapTotalEntriesHeight = 1;
-        }
-
-        int offset = 0;
-        for (ExecutableEntry entry : execEntries) {
-            int entryHeight = entry.getHeight();
-            float startRatio = (float)offset / (float)this.minimapTotalEntriesHeight;
-            float endRatio = (float)(offset + entryHeight) / (float)this.minimapTotalEntriesHeight;
-            int top = this.minimapContentY + Math.round(startRatio * this.minimapContentHeight);
-            int bottom = this.minimapContentY + Math.round(endRatio * this.minimapContentHeight);
-            if (bottom <= top) {
-                bottom = top + 1;
-            }
-            int height = bottom - top;
-            int indentOffset = entry.indentLevel * MINIMAP_INDENT_STEP;
-            int maxIndent = Math.max(0, this.minimapContentWidth - 1);
-            if (indentOffset > maxIndent) {
-                indentOffset = maxIndent;
-            }
-            int segmentX = this.minimapContentX + indentOffset;
-            int segmentWidth = Math.max(1, this.minimapContentWidth - indentOffset);
-
-            MinimapEntrySegment segment = new MinimapEntrySegment(entry, segmentX, top, segmentWidth, height);
-            this.minimapSegments.add(segment);
-
-            if (UIBase.isXYInArea(mouseX, mouseY, segment.x, segment.y, segment.width, segment.height)) {
-                this.minimapHoveredEntry = entry;
-            }
-
-            offset += entryHeight;
-        }
-
-        if (this.minimapHoveredEntry != null) {
-            this.minimapHoveredPrimaryChainEntries = this.getStatementChainOf(this.minimapHoveredEntry);
-            this.minimapHoveredStatementChainEntries = this.collectChainWithSubChains(this.minimapHoveredEntry);
-        }
-    }
-
-    protected void renderChainMinimap(@NotNull GuiGraphics graphics) {
-
-        if (this.minimapHeight <= 0) {
-            return;
-        }
-        UIColorTheme theme = UIBase.getUIColorTheme();
-        RenderSystem.enableBlend();
-        graphics.fill(this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, theme.actions_minimap_background_color.getColorInt());
-        UIBase.renderBorder(graphics, this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, 1, theme.actions_minimap_border_color, true, true, true, true);
-
-        List<ExecutableEntry> hoverChain = this.getActiveHoveredChain();
-        ExecutableEntry activeHoverEntry = this.getActiveHoveredEntry();
-
-        for (MinimapEntrySegment segment : this.minimapSegments) {
-            ExecutableEntry entry = segment.entry;
-            graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, this.getMinimapEntryBaseColor(entry).getRGB());
-            if (this.selectedEntry == entry) {
-                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_selected_color, true, true, true, true);
-            } else if (activeHoverEntry == entry) {
-                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.description_area_text_color, true, true, true, true);
-            }
-        }
-        if (!hoverChain.isEmpty()) {
-            this.renderChainMinimapBorder(graphics, hoverChain, theme.actions_chain_indicator_hovered_color.getColorInt());
-        }
-        this.renderMinimapViewport(graphics, theme);
-    }
-
-    protected void renderMinimapEntryTooltip(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
-        if (this.minimapHoveredEntry == null) {
-            return;
-        }
-        int entryWidth = this.minimapHoveredEntry.getWidth();
-        int entryHeight = this.minimapHoveredEntry.getHeight();
-        if ((entryWidth <= 0) || (entryHeight <= 0)) {
-            return;
-        }
-        int scaledWidth = Math.max(1, Math.round(entryWidth * MINIMAP_TOOLTIP_SCALE));
-        int scaledHeight = Math.max(1, Math.round(entryHeight * MINIMAP_TOOLTIP_SCALE));
-        int tooltipWidth = scaledWidth + (MINIMAP_TOOLTIP_PADDING * 2);
-        int tooltipHeight = scaledHeight + (MINIMAP_TOOLTIP_PADDING * 2);
-
-        int tooltipX = mouseX + MINIMAP_TOOLTIP_OFFSET;
-        int tooltipY = mouseY + MINIMAP_TOOLTIP_OFFSET;
-
-        if (tooltipX + tooltipWidth > this.width) {
-            tooltipX = Math.max(0, this.width - tooltipWidth);
-        }
-        if (tooltipY + tooltipHeight > this.height) {
-            tooltipY = Math.max(0, this.height - tooltipHeight);
-        }
-        if (tooltipX < 0) {
-            tooltipX = 0;
-        }
-        if (tooltipY < 0) {
-            tooltipY = 0;
-        }
-
-        UIColorTheme theme = UIBase.getUIColorTheme();
-        Color backgroundColor = withAlpha(theme.screen_background_color.getColor(), 220);
-
-        PoseStack poseStack = graphics.pose();
-        poseStack.pushPose();
-        poseStack.translate(0.0F, 0.0F, 400.0F);
-
-        RenderSystem.enableBlend();
-        graphics.fill(tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, backgroundColor.getRGB());
-        UIBase.renderBorder(graphics, tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, 1, theme.actions_minimap_tooltip_border_color, true, true, true, true);
-
-        poseStack.translate(tooltipX + MINIMAP_TOOLTIP_PADDING, tooltipY + MINIMAP_TOOLTIP_PADDING, 0.0F);
-        poseStack.scale(MINIMAP_TOOLTIP_SCALE, MINIMAP_TOOLTIP_SCALE, 1.0F);
-        poseStack.translate(-this.minimapHoveredEntry.getX(), -this.minimapHoveredEntry.getY(), 0.0F);
-
-        this.minimapHoveredEntry.renderThumbnail(graphics);
-
-        poseStack.popPose();
-    }
-
-    protected void renderChainMinimapBorder(@NotNull GuiGraphics graphics, @NotNull List<ExecutableEntry> chainEntries, int color) {
-        int minX = Integer.MAX_VALUE;
-        int maxX = Integer.MIN_VALUE;
-        int minY = Integer.MAX_VALUE;
-        int maxY = Integer.MIN_VALUE;
-        boolean found = false;
-        for (MinimapEntrySegment segment : this.minimapSegments) {
-            if (chainEntries.contains(segment.entry)) {
-                found = true;
-                minX = Math.min(minX, segment.x);
-                maxX = Math.max(maxX, segment.x + segment.width);
-                minY = Math.min(minY, segment.y);
-                maxY = Math.max(maxY, segment.y + segment.height);
-            }
-        }
-        if (!found) {
-            return;
-        }
-        if ((maxX <= minX) || (maxY <= minY)) {
-            return;
-        }
-        UIBase.renderBorder(graphics, minX, minY, maxX, maxY, 1, color, true, true, true, true);
-    }
-
-    protected void renderMinimapViewport(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
-        if (this.minimapTotalEntriesHeight <= 0 || this.minimapContentHeight <= 0) {
-            return;
-        }
-        int visibleHeight = this.scriptEntriesScrollArea.getInnerHeight();
-        if (this.minimapTotalEntriesHeight <= visibleHeight) {
-            return;
-        }
-        int maxScroll = Math.max(1, this.minimapTotalEntriesHeight - visibleHeight);
-        int scrollPixels = Math.round(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() * maxScroll);
-        float topRatio = (float)scrollPixels / (float)this.minimapTotalEntriesHeight;
-        float heightRatio = (float)visibleHeight / (float)this.minimapTotalEntriesHeight;
-
-        int viewportTop = this.minimapContentY + Math.round(topRatio * this.minimapContentHeight);
-        int viewportHeight = Math.max(2, Math.round(heightRatio * this.minimapContentHeight));
-        int maxViewportBottom = this.minimapContentY + this.minimapContentHeight;
-        if (viewportTop + viewportHeight > maxViewportBottom) {
-            viewportHeight = maxViewportBottom - viewportTop;
-        }
-        Color viewportBaseColor = theme.actions_minimap_viewport_color.getColor();
-        Color viewportColor = withAlpha(viewportBaseColor, Math.max(0, Math.min(255, viewportBaseColor.getAlpha() / 2)));
-        graphics.fill(this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, viewportColor.getRGB());
-        UIBase.renderBorder(graphics, this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, 1, theme.actions_minimap_viewport_border_color, true, true, true, true);
-    }
-
-    @Nullable
-    protected ExecutableEntry getMinimapEntryAt(int mouseX, int mouseY) {
-        for (MinimapEntrySegment segment : this.minimapSegments) {
-            if (UIBase.isXYInArea(mouseX, mouseY, segment.x, segment.y, segment.width, segment.height)) {
-                return segment.entry;
-            }
-        }
-        return null;
     }
 
     protected void scrollEntryIntoView(@NotNull ExecutableEntry entry) {
@@ -2410,10 +1985,6 @@ public class ActionScriptEditorScreen extends Screen {
         return null;
     }
 
-    protected void focusEntryForExecutable(@NotNull Executable executable) {
-        this.focusEntryForExecutable(executable, false, false);
-    }
-
     protected void focusEntryForExecutable(@NotNull Executable executable, boolean keepViewAnchor) {
         this.focusEntryForExecutable(executable, keepViewAnchor, false);
     }
@@ -2472,8 +2043,44 @@ public class ActionScriptEditorScreen extends Screen {
         return null;
     }
 
-    protected boolean isAnyExecutableSelected() {
-        return this.getSelectedEntry() != null;
+    @Nullable
+    private MoveTarget calculateMoveTarget(@NotNull ExecutableEntry entry, @NotNull ExecutableEntry moveAfter) {
+        AbstractExecutableBlock currentParent = entry.getParentBlock();
+        List<Executable> currentList = currentParent.getExecutables();
+        int currentIndex = currentList.indexOf(entry.executable);
+        if (currentIndex < 0) {
+            return null;
+        }
+
+        AbstractExecutableBlock targetParent;
+        int targetIndex;
+
+        if (moveAfter == BEFORE_FIRST) {
+            targetParent = this.executableBlock;
+            targetIndex = 0;
+        } else if (moveAfter == AFTER_LAST) {
+            targetParent = this.executableBlock;
+            targetIndex = this.executableBlock.getExecutables().size();
+        } else if (moveAfter.executable instanceof AbstractExecutableBlock block) {
+            targetParent = block;
+            targetIndex = 0;
+        } else {
+            targetParent = moveAfter.getParentBlock();
+            List<Executable> targetList = targetParent.getExecutables();
+            int moveAfterIndex = targetList.indexOf(moveAfter.executable);
+            targetIndex = (moveAfterIndex >= 0) ? moveAfterIndex + 1 : targetList.size();
+        }
+
+        if (targetParent == currentParent) {
+            if (targetIndex > currentIndex) {
+                targetIndex--;
+            }
+            if (targetIndex == currentIndex) {
+                return null;
+            }
+        }
+
+        return new MoveTarget(targetParent, Math.max(0, targetIndex));
     }
 
     @Nullable
@@ -2716,7 +2323,6 @@ public class ActionScriptEditorScreen extends Screen {
         }
     }
 
-
     protected void handleContextMenuMove(@NotNull ExecutableEntry entry, boolean moveUp) {
         this.scriptEntriesScrollArea.updateEntries(null);
         int previousEntryY = entry.getY();
@@ -2866,8 +2472,268 @@ public class ActionScriptEditorScreen extends Screen {
 
     }
 
+    @Nullable
+    private Executable findExecutableByIdentifier(@NotNull AbstractExecutableBlock start, @NotNull String identifier) {
+        if (identifier.equals(start.getIdentifier())) {
+            return start;
+        }
+        for (Executable executable : start.getExecutables()) {
+            if (identifier.equals(executable.getIdentifier())) {
+                return executable;
+            }
+            if (executable instanceof AbstractExecutableBlock block) {
+                Executable nested = this.findExecutableByIdentifier(block, identifier);
+                if (nested != null) {
+                    return nested;
+                }
+            }
+        }
+        AbstractExecutableBlock appended = start.getAppendedBlock();
+        if (appended != null) {
+            Executable nested = this.findExecutableByIdentifier(appended, identifier);
+            if (nested != null) {
+                return nested;
+            }
+        }
+        return null;
+    }
+
+    protected void openRightClickContextMenuAt(float x, float y, @Nullable List<String> entryPath) {
+        if (this.rightClickContextMenu == null) {
+            return;
+        }
+        this.rightClickContextMenuLastOpenX = x;
+        this.rightClickContextMenuLastOpenY = y;
+        List<String> path = (entryPath != null && !entryPath.isEmpty()) ? new ArrayList<>(entryPath) : null;
+        this.rightClickContextMenu.openMenuAt(x, y, path);
+    }
+
+    protected boolean isInsideActionsScrollArea(int mouseX, int mouseY) {
+        return UIBase.isXYInArea(mouseX, mouseY, this.scriptEntriesScrollArea.getXWithBorder(), this.scriptEntriesScrollArea.getYWithBorder(), this.scriptEntriesScrollArea.getWidthWithBorder(), this.scriptEntriesScrollArea.getHeightWithBorder());
+    }
+
+    protected boolean canAppendConditionalBlock(@Nullable ExecutableEntry entry) {
+        if (entry == null) {
+            return false;
+        }
+        return (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof ElseIfExecutableBlock);
+    }
+
+    protected boolean canAppendElseBlock(@Nullable ExecutableEntry entry) {
+        if ((entry == null) || !(entry.executable instanceof AbstractExecutableBlock block)) {
+            return false;
+        }
+        if (!(entry.executable instanceof IfExecutableBlock) && !(entry.executable instanceof ElseIfExecutableBlock)) {
+            return false;
+        }
+        return this.findAppendElseTarget(block) != null;
+    }
+
+    @Nullable
+    protected AbstractExecutableBlock findAppendElseTarget(@NotNull AbstractExecutableBlock block) {
+        AbstractExecutableBlock current = block;
+        AbstractExecutableBlock appended = current.getAppendedBlock();
+        while (appended != null) {
+            if (appended instanceof ElseExecutableBlock) {
+                return null;
+            }
+            current = appended;
+            appended = current.getAppendedBlock();
+        }
+        return current;
+    }
+
+    protected boolean canEditEntry(@Nullable ExecutableEntry entry) {
+        if ((entry == null) || (entry.executable instanceof ElseExecutableBlock)) {
+            return false;
+        }
+        if (entry.executable instanceof FolderExecutableBlock) {
+            return false;
+        }
+        if ((entry.executable instanceof ActionInstance i) && !i.action.hasValue()) {
+            return false;
+        }
+        return true;
+    }
+
+    protected boolean deleteSelectedEntryDirectly() {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if (selected == null) {
+            return false;
+        }
+        Executable nextExecutable = null;
+        List<ScrollAreaEntry> currentEntries = this.scriptEntriesScrollArea.getEntries();
+        int selectedIndex = currentEntries.indexOf(selected);
+        if (selectedIndex != -1) {
+            for (int i = selectedIndex + 1; i < currentEntries.size(); i++) {
+                ScrollAreaEntry entry = currentEntries.get(i);
+                if ((entry instanceof ExecutableEntry ee) && (ee != selected)) {
+                    nextExecutable = ee.executable;
+                    break;
+                }
+            }
+            if (nextExecutable == null) {
+                for (int i = selectedIndex - 1; i >= 0; i--) {
+                    ScrollAreaEntry entry = currentEntries.get(i);
+                    if ((entry instanceof ExecutableEntry ee) && (ee != selected)) {
+                        nextExecutable = ee.executable;
+                        break;
+                    }
+                }
+            }
+        }
+        this.createUndoPoint();
+        if (selected.appendParent != null) {
+            selected.appendParent.setAppendedBlock(null);
+        }
+        selected.getParentBlock().getExecutables().remove(selected.executable);
+        this.updateActionInstanceScrollArea(true);
+        if (nextExecutable != null) {
+            this.focusEntryForExecutable(nextExecutable, true);
+        }
+        return true;
+    }
+
+    protected boolean copySelectedAction() {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if ((selected == null) || !(selected.executable instanceof ActionInstance instance)) {
+            return false;
+        }
+        this.clipboardActionInstance = instance.copy(true);
+        return true;
+    }
+
+    protected boolean pasteCopiedAction(@Nullable ExecutableEntry selectionReference) {
+        if (this.clipboardActionInstance == null) {
+            return false;
+        }
+        ActionInstance instance = this.clipboardActionInstance.copy(true);
+        this.finalizeActionAddition(instance, selectionReference);
+        return true;
+    }
+
+    protected boolean moveSelectedEntry(boolean moveUp) {
+        ExecutableEntry selected = this.getSelectedEntry();
+        if (selected == null) {
+            return false;
+        }
+        this.handleContextMenuMove(selected, moveUp);
+        return true;
+    }
+
+    protected boolean selectAdjacentEntry(boolean moveDown) {
+        List<ScrollAreaEntry> entries = this.scriptEntriesScrollArea.getEntries();
+        if (entries.isEmpty()) {
+            return false;
+        }
+        ExecutableEntry selected = this.getSelectedEntry();
+        int targetIndex;
+        if (selected == null) {
+            targetIndex = moveDown ? 0 : entries.size() - 1;
+        } else {
+            int currentIndex = entries.indexOf(selected);
+            if (currentIndex == -1) {
+                return false;
+            }
+            int desiredIndex = currentIndex + (moveDown ? 1 : -1);
+            desiredIndex = Mth.clamp(desiredIndex, 0, entries.size() - 1);
+            if (desiredIndex == currentIndex) {
+                return false;
+            }
+            targetIndex = desiredIndex;
+        }
+        ScrollAreaEntry target = entries.get(targetIndex);
+        if (target instanceof ExecutableEntry entry) {
+            entry.setSelected(true);
+            this.scrollEntryIntoView(entry);
+            return true;
+        }
+        return false;
+    }
+
     public boolean isUserNavigatingInRightClickContextMenu() {
         return (this.rightClickContextMenu != null) && this.rightClickContextMenu.isUserNavigatingInMenu();
+    }
+
+    private boolean canUndo() {
+        return !this.undoHistory.isEmpty();
+    }
+
+    private boolean canRedo() {
+        return !this.redoHistory.isEmpty();
+    }
+
+    private boolean undo() {
+        if (!this.canUndo()) {
+            return false;
+        }
+        ScriptSnapshot snapshot = this.undoHistory.pop();
+        this.redoHistory.push(this.captureCurrentState());
+        this.trimHistory(this.redoHistory);
+        this.applySnapshot(snapshot);
+        return true;
+    }
+
+    private boolean redo() {
+        if (!this.canRedo()) {
+            return false;
+        }
+        ScriptSnapshot snapshot = this.redoHistory.pop();
+        this.undoHistory.push(this.captureCurrentState());
+        this.trimHistory(this.undoHistory);
+        this.applySnapshot(snapshot);
+        return true;
+    }
+
+    private void createUndoPoint() {
+        if (this.suppressHistoryCapture) {
+            return;
+        }
+        ScriptSnapshot snapshot = this.captureCurrentState();
+        this.undoHistory.push(snapshot);
+        this.trimHistory(this.undoHistory);
+        this.redoHistory.clear();
+    }
+
+    private void trimHistory(@NotNull Deque<ScriptSnapshot> history) {
+        while (history.size() > HISTORY_LIMIT) {
+            history.removeLast();
+        }
+    }
+
+    @NotNull
+    private ScriptSnapshot captureCurrentState() {
+        GenericExecutableBlock snapshotBlock = this.executableBlock.copy(false);
+        float verticalScroll = this.scriptEntriesScrollArea.verticalScrollBar.getScroll();
+        float horizontalScroll = this.scriptEntriesScrollArea.horizontalScrollBar.getScroll();
+        ExecutableEntry selected = this.getSelectedEntry();
+        String selectedId = (selected != null) ? selected.executable.getIdentifier() : null;
+        String targetId = (this.contextMenuTargetExecutable != null) ? this.contextMenuTargetExecutable.getIdentifier() : null;
+        return new ScriptSnapshot(snapshotBlock, verticalScroll, horizontalScroll, selectedId, targetId);
+    }
+
+    private void applySnapshot(@NotNull ScriptSnapshot snapshot) {
+        this.suppressHistoryCapture = true;
+        try {
+            this.executableBlock = snapshot.block.copy(false);
+            this.updateActionInstanceScrollArea(false);
+            this.scriptEntriesScrollArea.verticalScrollBar.setScroll(Mth.clamp(snapshot.verticalScroll, 0.0F, 1.0F));
+            this.scriptEntriesScrollArea.horizontalScrollBar.setScroll(Mth.clamp(snapshot.horizontalScroll, 0.0F, 1.0F));
+            this.scriptEntriesScrollArea.updateEntries(null);
+            if (snapshot.selectedExecutableId != null) {
+                Executable executable = this.findExecutableByIdentifier(this.executableBlock, snapshot.selectedExecutableId);
+                if (executable != null) {
+                    this.focusEntryForExecutable(executable, true, false);
+                }
+            }
+            if (snapshot.contextMenuTargetExecutableId != null) {
+                this.contextMenuTargetExecutable = this.findExecutableByIdentifier(this.executableBlock, snapshot.contextMenuTargetExecutableId);
+            } else {
+                this.contextMenuTargetExecutable = null;
+            }
+        } finally {
+            this.suppressHistoryCapture = false;
+        }
     }
 
     public class ExecutableEntry extends ScrollAreaEntry {
@@ -2963,6 +2829,7 @@ public class ActionScriptEditorScreen extends Screen {
             this.setBackgroundColorHover(hover);
         }
 
+        @SuppressWarnings("all")
         private void rebuildComponents() {
             UIColorTheme theme = UIBase.getUIColorTheme();
             this.folderLabelComponent = null;
@@ -3451,6 +3318,66 @@ public class ActionScriptEditorScreen extends Screen {
             this.height = height;
         }
 
+    }
+
+    protected class FavoriteAwareActionEntry extends ContextMenu.ClickableContextMenuEntry<FavoriteAwareActionEntry> {
+
+        @NotNull
+        private final Action action;
+
+        protected FavoriteAwareActionEntry(@NotNull ContextMenu parent, @NotNull Action action) {
+            super("action_" + action.getIdentifier(), parent, ActionScriptEditorScreen.this.buildActionMenuLabel(action), (menu, entry) -> {
+                ActionScriptEditorScreen.this.markContextMenuActionSelectionSuppressed();
+                ExecutableEntry selectionReference = ActionScriptEditorScreen.this.getContextMenuTargetEntry();
+                menu.closeMenu();
+                ActionScriptEditorScreen.this.onAddAction(action, selectionReference);
+            });
+            this.action = action;
+            this.setLabelSupplier((menu, entry) -> ActionScriptEditorScreen.this.buildActionMenuLabel(action));
+            this.setTooltipSupplier((menu, entry) -> ActionScriptEditorScreen.this.createActionTooltip(action, ActionScriptEditorScreen.this.isFavorite(action)));
+            this.updateFavoriteIcon();
+        }
+
+        private void updateFavoriteIcon() {
+            if (ActionScriptEditorScreen.this.isFavorite(this.action)) {
+                this.setIcon(ContextMenu.IconFactory.getIcon("favorite"));
+            } else {
+                this.setIcon(null);
+            }
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if ((button == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
+                ActionScriptEditorScreen.this.toggleFavorite(this.action);
+                return true;
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+    }
+
+    private static final class ScriptSnapshot {
+
+        private final GenericExecutableBlock block;
+        private final float verticalScroll;
+        private final float horizontalScroll;
+        @Nullable
+        private final String selectedExecutableId;
+        @Nullable
+        private final String contextMenuTargetExecutableId;
+
+        private ScriptSnapshot(@NotNull GenericExecutableBlock block, float verticalScroll, float horizontalScroll, @Nullable String selectedExecutableId, @Nullable String contextMenuTargetExecutableId) {
+            this.block = block;
+            this.verticalScroll = verticalScroll;
+            this.horizontalScroll = horizontalScroll;
+            this.selectedExecutableId = selectedExecutableId;
+            this.contextMenuTargetExecutableId = contextMenuTargetExecutableId;
+        }
+
+    }
+
+    private record MoveTarget(AbstractExecutableBlock parent, int index) {
     }
 
 }
