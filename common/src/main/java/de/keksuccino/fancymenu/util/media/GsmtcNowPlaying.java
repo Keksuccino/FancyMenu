@@ -4,21 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import de.keksuccino.fancymenu.util.terminal.CommandResult;
+import de.keksuccino.fancymenu.util.terminal.PowerShellUtils;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Base64;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -345,10 +336,10 @@ public final class GsmtcNowPlaying {
      */
     public static Optional<MediaInfo> getCurrentSession() throws IOException, InterruptedException {
         CommandResult result = runScript(false);
-        if (result.exitCode == 0) {
-            return Optional.ofNullable(parseMediaInfo(result.output));
+        if (result.exitCode() == 0) {
+            return Optional.ofNullable(parseMediaInfo(result.output()));
         }
-        if (result.exitCode == 2) {
+        if (result.exitCode() == 2) {
             return Optional.empty();
         }
         throw new IOException(buildErrorMessage(result));
@@ -443,29 +434,14 @@ public final class GsmtcNowPlaying {
         return module.toString();
     }
 
-    private static String locatePowerShell() {
-        String systemRoot = System.getenv("SystemRoot");
-        if (systemRoot == null || systemRoot.isBlank()) {
-            systemRoot = System.getenv("WINDIR");
-        }
-        if (systemRoot != null && !systemRoot.isBlank()) {
-            Path ps = Paths.get(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
-            if (Files.isRegularFile(ps)) {
-                return ps.toString();
-            }
-        }
-        return "powershell.exe";
-    }
-
     private static String buildErrorMessage(CommandResult result) {
-        return "PowerShell exited with " + result.exitCode + (result.output.isBlank() ? "" : " Output: " + result.output.trim());
+        return "PowerShell exited with " + result.exitCode() + (result.output().isBlank() ? "" : " Output: " + result.output().trim());
     }
-
-    private record CommandResult(int exitCode, String output) {}
 
     /**
      * DTO representing the media info JSON returned by the PowerShell script.
      */
+    @SuppressWarnings("unused")
     public static final class MediaInfo {
 
         private String appId;
@@ -600,30 +576,30 @@ public final class GsmtcNowPlaying {
 
     }
 
-    private static final class PersistentPowerShell {
+    private static class PersistentPowerShell {
 
-        private static final String READY_MARKER = "__READY__";
-        private static final String END_MARKER = "__END__";
+        public static final String READY_MARKER = "__READY__";
+        public static final String END_MARKER = "__END__";
 
-        private Process process;
-        private BufferedWriter writer;
-        private BufferedReader reader;
+        public Process process;
+        public BufferedWriter writer;
+        public BufferedReader reader;
 
-        synchronized CommandResult invoke(boolean allSessions) throws IOException, InterruptedException {
+        public synchronized CommandResult invoke(boolean allSessions) throws IOException, InterruptedException {
             ensureStarted();
             String command = buildInvocation(allSessions);
             writer.write(command);
             writer.flush();
-            PersistentEnvelope envelope = readEnvelope();
+            PersistentPowerShell.PersistentEnvelope envelope = readEnvelope();
             String output = envelope.output == null ? "" : envelope.output;
             return new CommandResult(envelope.exitCode, output);
         }
 
-        synchronized void invalidate() {
+        public synchronized void invalidate() {
             close();
         }
 
-        synchronized void close() {
+        public synchronized void close() {
             if (writer != null) {
                 try {
                     writer.write("exit\n");
@@ -647,17 +623,17 @@ public final class GsmtcNowPlaying {
             reader = null;
         }
 
-        private void ensureStarted() throws IOException {
+        public void ensureStarted() throws IOException {
             if (process != null && process.isAlive()) {
                 return;
             }
             startProcess();
         }
 
-        private void startProcess() throws IOException {
+        public void startProcess() throws IOException {
             close();
             List<String> command = new ArrayList<>();
-            command.add(locatePowerShell());
+            command.add(PowerShellUtils.locatePowerShell());
             command.add("-NoLogo");
             command.add("-NoProfile");
             command.add("-ExecutionPolicy");
@@ -673,7 +649,8 @@ public final class GsmtcNowPlaying {
             initialize();
         }
 
-        private void initialize() throws IOException {
+        public void initialize() throws IOException {
+
             String scriptBase64 = Base64.getEncoder().encodeToString(PERSISTENT_MODULE_SCRIPT.getBytes(StandardCharsets.UTF_8));
             writer.write("[Console]::InputEncoding = [System.Text.Encoding]::UTF8\n");
             writer.write("[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n");
@@ -695,7 +672,7 @@ public final class GsmtcNowPlaying {
             throw new IOException("Failed to initialise persistent PowerShell host.");
         }
 
-        private String buildInvocation(boolean allSessions) {
+        public String buildInvocation(boolean allSessions) {
             String allSessionsFlag = allSessions ? "$true" : "$false";
             return "$__gsmtc_result = Invoke-GsmtcNowPlayingRunner -AllSessions:" + allSessionsFlag + " -Json:$true\n"
                     + "$__gsmtc_json = $__gsmtc_result | ConvertTo-Json -Compress\n"
@@ -703,7 +680,7 @@ public final class GsmtcNowPlaying {
                     + "Write-Output '" + END_MARKER + "'\n";
         }
 
-        private PersistentEnvelope readEnvelope() throws IOException {
+        public PersistentPowerShell.PersistentEnvelope readEnvelope() throws IOException {
             StringBuilder buffer = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -723,7 +700,7 @@ public final class GsmtcNowPlaying {
                 throw new IOException("Persistent PowerShell host returned empty payload.");
             }
             try {
-                PersistentEnvelope envelope = GSON.fromJson(json, PersistentEnvelope.class);
+                PersistentPowerShell.PersistentEnvelope envelope = GSON.fromJson(json, PersistentPowerShell.PersistentEnvelope.class);
                 if (envelope == null) {
                     throw new IOException("Unable to parse persistent PowerShell response.");
                 }
@@ -733,7 +710,7 @@ public final class GsmtcNowPlaying {
             }
         }
 
-        private static void closeQuietly(AutoCloseable closeable) {
+        public static void closeQuietly(AutoCloseable closeable) {
             if (closeable == null) {
                 return;
             }
@@ -744,7 +721,7 @@ public final class GsmtcNowPlaying {
             }
         }
 
-        private static final class PersistentEnvelope {
+        public static final class PersistentEnvelope {
             @SerializedName("ExitCode")
             int exitCode;
 
