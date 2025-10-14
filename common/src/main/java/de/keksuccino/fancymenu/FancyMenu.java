@@ -11,7 +11,6 @@ import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
-import de.keksuccino.fancymenu.util.media.GsmtcNowPlaying;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
@@ -44,37 +43,6 @@ public class FancyMenu {
 	private static Options options;
 
 	public static void init() {
-
-		new Thread(() -> {
-			try {
-				while (true) {
-					GsmtcNowPlaying.getCurrentSession().ifPresent(mediaInfo -> {
-						LOGGER.info("############# NOW PLAYING ################\n"
-								+ "App ID: " + mediaInfo.getAppId() + "\n"
-								+ "Title: " + mediaInfo.getTitle() + "\n"
-								+ "Artist: " + mediaInfo.getArtist() + "\n"
-								+ "Album: " + mediaInfo.getAlbum() + "\n"
-								+ "Album Artist: " + mediaInfo.getAlbumArtist() + "\n"
-								+ "Genres: " + mediaInfo.getGenres() + "\n"
-								+ "Track #: " + mediaInfo.getTrackNumber() + "\n"
-								+ "Playback: " + mediaInfo.getPlayback() + "\n"
-								+ "Playing: " + mediaInfo.isPlaying() + "\n"
-								+ "Position (s): " + mediaInfo.getPositionSeconds() + "\n"
-								+ "Duration (s): " + mediaInfo.getDurationSeconds() + "\n"
-								+ "Thumbnail: " + mediaInfo.getThumbnail() + "\n"
-								+ "Thumbnail Content-Type: " + mediaInfo.getThumbnailContentType() + "\n"
-								+ "Thumbnail Bytes: " + mediaInfo.getThumbnailBytes() + "\n"
-								+ "Playback Rate: " + mediaInfo.getPlaybackRate() + "\n"
-								+ "Last Updated (raw): " + mediaInfo.getLastUpdatedRaw() + "\n"
-								+ "Last Updated (Instant): " + mediaInfo.getLastUpdatedInstant() + "\n"
-								+ "##########################################");
-					});
-					Thread.sleep(1000);
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}).start();
 
 		if (Services.PLATFORM.isOnClient()) {
 			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");
