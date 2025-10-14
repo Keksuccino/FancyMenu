@@ -55,17 +55,17 @@ public class DisableElementAnimatorAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.actions.animation.disable_element_animator");
+        return Component.translatable("fancymenu.actions.disable_element_animator");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.animation.disable_element_animator.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.disable_element_animator.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.actions.animation.disable_element_animator.value.desc");
+        return Component.translatable("fancymenu.actions.disable_element_animator.value.desc");
     }
 
     @Override

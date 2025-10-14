@@ -55,17 +55,17 @@ public class ToggleElementAnimatorAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.actions.animation.toggle_element_animator");
+        return Component.translatable("fancymenu.actions.toggle_element_animator");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.animation.toggle_element_animator.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.toggle_element_animator.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.actions.animation.toggle_element_animator.value.desc");
+        return Component.translatable("fancymenu.actions.toggle_element_animator.value.desc");
     }
 
     @Override

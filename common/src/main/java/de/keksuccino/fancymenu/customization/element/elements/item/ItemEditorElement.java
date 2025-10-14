@@ -34,6 +34,7 @@ public class ItemEditorElement extends AbstractEditorElement {
                         itemKeyTargetFieldSetter,
                         null, false, true, Component.translatable("fancymenu.elements.item.key"),
                         true, "" + BuiltInRegistries.ITEM.getKey(Items.BARRIER), null, null)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.key.desc")))
                 .setStackable(false);
 
         if (itemKeyEntry instanceof ContextMenu.SubMenuContextMenuEntry subMenuEntry) {
