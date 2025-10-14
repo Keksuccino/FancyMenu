@@ -302,7 +302,6 @@ public class ActionScriptEditorScreen extends Screen {
         ContextMenu addActionSubMenu = this.buildAddActionSubMenu(null);
         boolean hasActionEntries = !addActionSubMenu.getEntries().isEmpty();
         this.rightClickContextMenu.addSubMenuEntry("add_action", Component.translatable("fancymenu.actions.screens.add_action"), addActionSubMenu)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.add_action.desc")))
                 .addIsActiveSupplier((menu, entry) -> hasActionEntries)
                 .setIcon(ContextMenu.IconFactory.getIcon("add"));
 
