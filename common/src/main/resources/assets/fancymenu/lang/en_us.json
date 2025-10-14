@@ -2088,5 +2088,7 @@
   "fancymenu.actions.script_editor.shortcuts.shift_arrow_up": "Shift + Up",
   "fancymenu.actions.script_editor.shortcuts.shift_arrow_down": "Shift + Down",
   "fancymenu.actions.script_editor.cancel_warning": "Are you sure?\n\nDo you really want to cancel the script editing?\n\n§xThis will undo everything you've done in here!",
-  "fancymenu.listeners.manage.rename_tip": "Rename listeners by double-clicking their display name."
+  "fancymenu.listeners.manage.rename_tip": "Rename listeners by double-clicking their display name.",
+  "fancymenu.editor.elements.player_entity.pose.body_z_rot": "Body Z Rotation: %s",
+  "fancymenu.editor.elements.player_entity.pose.advanced.body_z_rot": "Set Body Z Rotation"
 }
