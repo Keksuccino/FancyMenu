@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.customization.listener;
 
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +11,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public abstract class AbstractListener {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @NotNull
     protected final String identifier;
@@ -52,7 +56,13 @@ public abstract class AbstractListener {
     }
 
     protected void notifyAllInstances() {
-        this.instances.forEach((s, instance) -> instance.getActionScript().execute());
+        this.instances.forEach((s, instance) -> {
+            try {
+                instance.getActionScript().execute();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Error while trying to execute action script of listener instance!", ex);
+            }
+        });
     }
 
     protected abstract void buildCustomVariablesAndAddToList(List<CustomVariable> list);
