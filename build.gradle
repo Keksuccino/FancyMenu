@@ -80,6 +80,13 @@ subprojects {
                 includeGroup 'com.cinemamod'
             }
         }
+        maven {
+            name = 'ParchmentMC Maven'
+            url = 'https://maven.parchmentmc.org'
+            content {
+                includeGroupByRegex 'org\\.parchmentmc(\\..*)?'
+            }
+        }
         // Crystal Nest repository where Fancy Entity Renderer is hosted.
         exclusiveContent {
             forRepository {
@@ -108,7 +115,9 @@ subprojects {
                         'net.minecraftforge',
                         'net.neoforged',
                         'org.spongepowered',
-                        'com.cinemamod'
+                        'com.cinemamod',
+                        'org.parchmentmc',
+                        'org.parchmentmc.data'
                 ]
                 if (id.group in stableGroups) {
                     component.changing = false
