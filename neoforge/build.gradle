@@ -29,7 +29,7 @@ runs {
     server {
         workingDirectory project.file('../run_server')
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        programArgument '--nogui'
+        arguments.add('--nogui')
     }
 }
 
