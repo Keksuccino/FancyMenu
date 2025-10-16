@@ -26,11 +26,11 @@ dependencies {
     //compileOnly fileTree('libs') { include '*.jar' }
     compileOnly 'com.github.Keksuccino:japng:0.5.3'
     compileOnly 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7'
-    compileOnly "maven.modrinth:melody:1.0.12-1.21.6-forge"
-    compileOnly "maven.modrinth:konkrete:1.9.12-1.21.6-forge"
+    compileOnly "maven.modrinth:melody:1.0.13-1.21.10-neoforge"
+    compileOnly "maven.modrinth:konkrete:1.9.13-1.21.10-neoforge"
     compileOnly 'com.cinemamod:mcef:2.1.6-1.21.4'
-    //implementation "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
-    compileOnly "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
+    implementation "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
+    //compileOnly "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.7'
 }
