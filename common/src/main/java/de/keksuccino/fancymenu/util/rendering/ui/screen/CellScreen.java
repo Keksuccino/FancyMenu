@@ -29,6 +29,8 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -304,11 +306,11 @@ public abstract class CellScreen extends Screen {
      * This restores the old click logic.
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         for (GuiEventListener listener : this.children()) {
-            if (listener.mouseClicked(mouseX, mouseY, button)) {
+            if (listener.mouseClicked(event, isDoubleClick)) {
                 this.setFocused(listener);
-                if (button == 0) {
+                if (event.button() == 0) {
                     this.setDragging(true);
                 }
                 return true;
@@ -318,14 +320,14 @@ public abstract class CellScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
 
-        if (keycode == InputConstants.KEY_ENTER) {
+        if (event.key() == InputConstants.KEY_ENTER) {
             if (this.allowDone()) this.onDone();
             return true;
         }
 
-        return super.keyPressed(keycode, scancode, modifiers);
+        return super.keyPressed(event);
 
     }
 
@@ -335,7 +337,7 @@ public abstract class CellScreen extends Screen {
     }
 
     @Override
-    public FocusNavigationEvent.TabNavigation createTabEvent() {
+    protected FocusNavigationEvent.TabNavigation createTabEvent(boolean $$0) {
         return null;
     }
 
@@ -755,7 +757,7 @@ public abstract class CellScreen extends Screen {
         }
 
         @Override
-        public boolean mouseClicked(double $$0, double $$1, int $$2) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
             if (CellScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
                 return false;
             }
@@ -767,23 +769,23 @@ public abstract class CellScreen extends Screen {
             } else {
                 this.selected = false;
             }
-            return super.mouseClicked($$0, $$1, $$2);
+            return super.mouseClicked(event, isDoubleClick);
         }
 
         @Override
-        public boolean mouseDragged(double $$0, double $$1, int $$2, double $$3, double $$4) {
+        public boolean mouseDragged(MouseButtonEvent event, double $$3, double $$4) {
             if (CellScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
                 return false;
             }
-            return super.mouseDragged($$0, $$1, $$2, $$3, $$4);
+            return super.mouseDragged(event, $$3, $$4);
         }
 
         @Override
-        public boolean mouseReleased(double $$0, double $$1, int $$2) {
+        public boolean mouseReleased(MouseButtonEvent event) {
             if (CellScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
                 return false;
             }
-            return super.mouseReleased($$0, $$1, $$2);
+            return super.mouseReleased(event);
         }
 
     }

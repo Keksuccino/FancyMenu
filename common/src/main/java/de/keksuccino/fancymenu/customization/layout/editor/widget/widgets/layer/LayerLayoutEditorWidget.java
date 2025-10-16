@@ -18,6 +18,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -177,8 +179,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             if (super.mouseClickedComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, button)) return true;
             if (this.isExpanded()) {
                 //Override original mouseClicked of ScrollArea, to use a combination of real and translated mouse coordinates
-                if (this.scrollArea.verticalScrollBar.mouseClicked(translatedMouseX, translatedMouseY, button)) return true;
-                if (this.scrollArea.horizontalScrollBar.mouseClicked(translatedMouseX, translatedMouseY, button)) return true;
+                if (this.scrollArea.verticalScrollBar.mouseClicked(buildMouseButtonEvent(translatedMouseX, translatedMouseY, button), false)) return true;
+                if (this.scrollArea.horizontalScrollBar.mouseClicked(buildMouseButtonEvent(translatedMouseX, translatedMouseY, button), false)) return true;
                 for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
                     if (entry.mouseClicked(realMouseX, realMouseY, button)) return true;
                 }
@@ -637,14 +639,14 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.selectOnClick = false;
             this.editLayerNameBox = new ExtendedEditBox(this.font, 0, 0, 0, 0, Component.empty()) {
                 @Override
-                public boolean keyPressed(int keycode, int scancode, int modifiers) {
+                public boolean keyPressed(KeyEvent event) {
                     if (this.isVisible() && LayerElementEntry.this.displayEditLayerNameBox) {
-                        if (keycode == InputConstants.KEY_ENTER) {
+                        if (event.key() == InputConstants.KEY_ENTER) {
                             LayerElementEntry.this.stopEditingLayerName();
                             return true;
                         }
                     }
-                    return super.keyPressed(keycode, scancode, modifiers);
+                    return super.keyPressed(event);
                 }
             };
             this.editLayerNameBox.setVisible(false);
@@ -846,6 +848,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
+            MouseButtonEvent event = buildMouseButtonEvent(mouseX, mouseY, button);
             if (button == 0) {
                 if (this.isMoveUpButtonHovered()) {
                     if (this.layerWidget.editor.canMoveLayerUp(this.element)) {
@@ -877,7 +880,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                     if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
 
                     // Proper multi-selection with CTRL handling
-                    boolean ctrlDown = Screen.hasControlDown();
+                    boolean ctrlDown = event.hasControlDown();
 
                     if (!ctrlDown) {
                         // Without CTRL, deselect all others first

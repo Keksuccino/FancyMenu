@@ -20,7 +20,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -29,6 +31,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1310,14 +1313,14 @@ public class TextEditorScreen extends Screen {
     }
 
     @Override
-    public boolean charTyped(char character, int modifiers) {
+    public boolean charTyped(CharacterEvent event) {
 
         if (this.indentGuideRenderer != null) {
             this.indentGuideRenderer.markDirty();
         }
 
         if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
-            return this.searchBar.charTyped(character, modifiers);
+            return this.searchBar.charTyped(event);
         }
 
         if (this.isLineFocused()) {
@@ -1325,44 +1328,44 @@ public class TextEditorScreen extends Screen {
         }
 
         for (TextEditorLine l : this.textFieldLines) {
-            l.charTyped(character, modifiers);
+            l.charTyped(event);
         }
 
-        return super.charTyped(character, modifiers);
+        return super.charTyped(event);
 
     }
 
 
     @Override
-    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
 
         if (this.indentGuideRenderer != null) {
             this.indentGuideRenderer.markDirty();
         }
 
         if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
-            return this.searchBar.keyPressed(keycode, scancode, modifiers);
+            return this.searchBar.keyPressed(event);
         }
 
         for (TextEditorLine l : new ArrayList<>(this.textFieldLines)) {
-            l.keyPressed(keycode, scancode, modifiers);
+            l.keyPressed(event);
         }
 
-        String key = GLFW.glfwGetKeyName(keycode, scancode);
+        String key = GLFW.glfwGetKeyName(event.key(), event.scancode());
         if (key == null) key = "";
 
         //CTRL + Z | STEP BACK
-        if (Screen.hasControlDown() && (key.equals("z"))) {
+        if (event.hasControlDown() && (key.equals("z"))) {
             this.history.stepBack();
             return true;
         }
         //CTRL + Y | STEP FORWARD
-        if (Screen.hasControlDown() && (key.equals("y"))) {
+        if (event.hasControlDown() && (key.equals("y"))) {
             this.history.stepForward();
             return true;
         }
         //ENTER
-        if (keycode == InputConstants.KEY_ENTER) {
+        if (event.key() == InputConstants.KEY_ENTER) {
             if (!this.isInMouseHighlightingMode()) {
                 if (this.isLineFocused()) {
                     this.history.saveSnapshot();
@@ -1374,7 +1377,7 @@ public class TextEditorScreen extends Screen {
             return true;
         }
         //ARROW UP
-        if (keycode == InputConstants.KEY_UP) {
+        if (event.key() == InputConstants.KEY_UP) {
             if (!this.isInMouseHighlightingMode()) {
                 this.resetHighlighting();
                 this.goUpLine();
@@ -1383,7 +1386,7 @@ public class TextEditorScreen extends Screen {
             return true;
         }
         //ARROW DOWN
-        if (keycode == InputConstants.KEY_DOWN) {
+        if (event.key() == InputConstants.KEY_DOWN) {
             if (!this.isInMouseHighlightingMode()) {
                 this.resetHighlighting();
                 this.goDownLine(false);
@@ -1393,7 +1396,7 @@ public class TextEditorScreen extends Screen {
         }
 
         //BACKSPACE
-        if (keycode == InputConstants.KEY_BACKSPACE) {
+        if (event.key() == InputConstants.KEY_BACKSPACE) {
             if (!this.isInMouseHighlightingMode()) {
                 if (this.isTextHighlighted()) {
                     this.history.saveSnapshot();
@@ -1402,7 +1405,7 @@ public class TextEditorScreen extends Screen {
                     if (this.isLineFocused()) {
                         if (!this.getText().isEmpty()) this.history.saveSnapshot();
                         TextEditorLine focused = this.getFocusedLine();
-                        focused.getAsAccessor().invokeDeleteTextFancyMenu(-1);
+                        focused.getAsAccessor().invokeDeleteTextFancyMenu(-1, event.hasControlDown());
                     }
                 }
                 this.resetHighlighting();
@@ -1410,18 +1413,18 @@ public class TextEditorScreen extends Screen {
             return true;
         }
         //CTRL + C
-        if (Screen.isCopy(keycode)) {
+        if (event.isCopy()) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
             return true;
         }
         //CTRL + V
-        if (Screen.isPaste(keycode)) {
+        if (event.isPaste()) {
             this.history.saveSnapshot();
             this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
             return true;
         }
         //CTRL + A
-        if (Screen.isSelectAll(keycode)) {
+        if (event.isSelectAll()) {
             for (TextEditorLine t : new ArrayList<>(this.textFieldLines)) {
                 t.setHighlightPos(0);
                 t.setCursorPosition(t.getValue().length());
@@ -1432,61 +1435,61 @@ public class TextEditorScreen extends Screen {
             return true;
         }
         //CTRL + U
-        if (Screen.isCut(keycode)) {
+        if (event.isCut()) {
             this.history.saveSnapshot();
             Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
             this.resetHighlighting();
             return true;
         }
         //Reset highlighting when pressing left/right arrow keys
-        if ((keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT)) {
+        if ((event.key() == InputConstants.KEY_RIGHT) || (event.key() == InputConstants.KEY_LEFT)) {
             this.resetHighlighting();
             return true;
         }
 
-        return super.keyPressed(keycode, scancode, modifiers);
+        return super.keyPressed(event);
 
     }
 
     @Override
-    public boolean keyReleased(int i1, int i2, int i3) {
+    public boolean keyReleased(KeyEvent event) {
 
         if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
-            return this.searchBar.keyReleased(i1, i2, i3);
+            return this.searchBar.keyReleased(event);
         }
 
         for (TextEditorLine l : this.textFieldLines) {
-            l.keyReleased(i1, i2, i3);
+            l.keyReleased(event);
         }
 
-        return super.keyReleased(i1, i2, i3);
+        return super.keyReleased(event);
 
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
 
         this.setFocused(null);
 
-        if (super.mouseClicked(mouseX, mouseY, button)) return true;
+        if (super.mouseClicked(event, isDoubleClick)) return true;
 
         this.selectedHoveredOnRightClickMenuOpen = false;
 
         if (!this.isMouseInteractingWithGrabbers()) {
 
             for (TextEditorLine l : this.textFieldLines) {
-                l.mouseClicked(mouseX, mouseY, button);
+                l.mouseClicked(event, isDoubleClick);
             }
 
             if (this.isMouseInsideEditorArea()) {
-                if (button == 1) {
+                if (event.button() == 1) {
                     this.rightClickContextMenu.closeMenu();
                 }
-                if ((button == 0) || (button == 1)) {
+                if ((event.button() == 0) || (event.button() == 1)) {
                     boolean isHighlightedHovered = this.isHighlightedTextHovered();
                     TextEditorLine hoveredLine = this.getHoveredLine();
                     if (!this.rightClickContextMenu.isOpen()) {
-                        if ((button == 0) || !isHighlightedHovered) {
+                        if ((event.button() == 0) || !isHighlightedHovered) {
                             this.resetHighlighting();
                         }
                         if (hoveredLine == null) {
@@ -1500,7 +1503,7 @@ public class TextEditorScreen extends Screen {
                             this.setFocusedLine(this.getLineIndex(focus));
                             this.getFocusedLine().moveCursorToEnd(false);
                             this.correctYScroll(0);
-                        } else if ((button == 1) && !isHighlightedHovered) {
+                        } else if ((event.button() == 1) && !isHighlightedHovered) {
                             //Focus focusedLineIndex in case it is right-clicked
                             this.setFocusedLine(this.getLineIndex(hoveredLine));
                             //Set cursor in case focusedLineIndex is right-clicked
@@ -1508,17 +1511,17 @@ public class TextEditorScreen extends Screen {
                             hoveredLine.moveCursorTo(this.font.plainSubstrByWidth(s, MouseInput.getMouseX() - hoveredLine.getX()).length() + hoveredLine.getAsAccessor().getDisplayPosFancyMenu(), false);
                         }
                     }
-                    if (button == 1) {
+                    if (event.button() == 1) {
                         this.selectedHoveredOnRightClickMenuOpen = this.isHighlightedTextHovered();
                         this.rightClickContextMenu.openMenuAtMouse();
                     } else if (this.rightClickContextMenu.isOpen() && !this.rightClickContextMenu.isHovered()) {
                         this.rightClickContextMenu.closeMenu();
                         //Call mouseClicked of lines after closing the menu, so the focused focusedLineIndex and cursor pos gets updated
                         this.textFieldLines.forEach((line) -> {
-                            line.mouseClicked(mouseX, mouseY, button);
+                            line.mouseClicked(event, isDoubleClick);
                         });
                         //Call mouseClicked of editor again to do everything that would happen when clicked without the context menu opened
-                        this.mouseClicked(mouseX, mouseY, button);
+                        this.mouseClicked(event, isDoubleClick);
                     }
                 }
             }
@@ -1527,7 +1530,7 @@ public class TextEditorScreen extends Screen {
 
         List<PlaceholderMenuEntry> entries = new ArrayList<>(this.placeholderMenuEntries);
         for (PlaceholderMenuEntry e : entries) {
-            e.buttonBase.mouseClicked(mouseX, mouseY, button);
+            e.buttonBase.mouseClicked(event, isDoubleClick);
         }
 
         return false;
@@ -1569,7 +1572,7 @@ public class TextEditorScreen extends Screen {
             int j1 = l;
             if (!s.isEmpty()) {
                 String s1 = flag ? s.substring(0, j) : s;
-                j1 += this.font.width(b.getFormatterFancyMenu().apply(s1, b.getDisplayPosFancyMenu()));
+                j1 += this.font.width(this.applyFormatToEditBoxString(editBox, s1, b.getDisplayPosFancyMenu()));
             }
             int k1 = j1;
             if (!flag) {
@@ -1583,6 +1586,16 @@ public class TextEditorScreen extends Screen {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    private FormattedCharSequence applyFormatToEditBoxString(EditBox editBox, String $$0, int $$1) {
+        for(EditBox.TextFormatter $$2 : ((IMixinEditBox)editBox).get_formatters_FancyMenu()) {
+            FormattedCharSequence $$3 = $$2.format($$0, $$1);
+            if ($$3 != null) {
+                return $$3;
+            }
+        }
+        return FormattedCharSequence.forward($$0, Style.EMPTY);
     }
 
     public void scrollToLine(int lineIndex, boolean bottom) {
@@ -1803,11 +1816,11 @@ public class TextEditorScreen extends Screen {
                     return super.isHoveredOrFocused();
                 }
                 @Override
-                public void onClick(double p_93371_, double p_93372_) {
+                public void onClick(MouseButtonEvent event, boolean isDoubleClick) {
                     if (PlaceholderMenuEntry.this.parent.isMouseInteractingWithPlaceholderGrabbers()) {
                         return;
                     }
-                    super.onClick(p_93371_, p_93372_);
+                    super.onClick(event, isDoubleClick);
                 }
                 @Override
                 public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {

@@ -9,6 +9,8 @@ import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -202,17 +204,17 @@ public class TextEditorLine extends ExtendedEditBox {
     }
 
     @Override
-    public boolean keyPressed(int keycode, int i1, int i2) {
-        if (Screen.isCopy(keycode) || Screen.isPaste(keycode) || Screen.isSelectAll(keycode) || Screen.isCut(keycode)) {
+    public boolean keyPressed(KeyEvent event) {
+        if (event.isCopy() || event.isPaste() || event.isSelectAll() || event.isCut()) {
             return false;
         }
-        if (keycode == InputConstants.KEY_BACKSPACE) {
+        if (event.key() == InputConstants.KEY_BACKSPACE) {
             return false;
         }
-        if (((keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT)) && this.parent.isInMouseHighlightingMode()) {
+        if (((event.key() == InputConstants.KEY_RIGHT) || (event.key() == InputConstants.KEY_LEFT)) && this.parent.isInMouseHighlightingMode()) {
             return false;
         }
-        if (keycode == InputConstants.KEY_LEFT) {
+        if (event.key() == InputConstants.KEY_LEFT) {
             if (!leftRightArrowWasDown) {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() <= 0) && (this.parent.getLineIndex(this) > 0)) {
                     leftRightArrowWasDown = true;
@@ -225,7 +227,7 @@ public class TextEditorLine extends ExtendedEditBox {
                 return true;
             }
         }
-        if (keycode == InputConstants.KEY_RIGHT) {
+        if (event.key() == InputConstants.KEY_RIGHT) {
             if (!leftRightArrowWasDown) {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() >= this.getValue().length()) && (this.parent.getLineIndex(this) < this.parent.getLineCount() - 1)) {
                     leftRightArrowWasDown = true;
@@ -238,7 +240,7 @@ public class TextEditorLine extends ExtendedEditBox {
                 return true;
             }
         }
-        return super.keyPressed(keycode, i1, i2);
+        return super.keyPressed(event);
     }
 
     @Override
@@ -264,25 +266,25 @@ public class TextEditorLine extends ExtendedEditBox {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (!this.parent.isMouseInsideEditorArea() || this.parent.rightClickContextMenu.isOpen()) {
             return false;
         }
 
-        if ((mouseButton == 0) && this.isHovered() && !this.isInMouseHighlightingMode && this.isVisible()) {
+        if ((event.button() == 0) && this.isHovered() && !this.isInMouseHighlightingMode && this.isVisible()) {
             if (!this.parent.isAtLeastOneLineInHighlightMode()) {
                 this.parent.startHighlightLine = this;
             }
             this.isInMouseHighlightingMode = true;
             this.parent.setFocusedLine(Math.max(0, this.parent.getLineIndex(this)));
-            super.mouseClicked(mouseX, mouseY, mouseButton);
+            super.mouseClicked(event, isDoubleClick);
             this.setHighlightPos(this.getCursorPosition());
-        } else if ((mouseButton == 0) && !this.isHovered()) {
+        } else if ((event.button() == 0) && !this.isHovered()) {
             this.setHighlightPos(this.getCursorPosition());
         }
 
-        if (!this.isInMouseHighlightingMode && (mouseButton == 0)) {
-            return super.mouseClicked(mouseX, mouseY, mouseButton);
+        if (!this.isInMouseHighlightingMode && (event.button() == 0)) {
+            return super.mouseClicked(event, isDoubleClick);
         }
         return true;
     }

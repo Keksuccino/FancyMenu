@@ -11,6 +11,7 @@ import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -168,9 +169,9 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        this.markdownRenderer.mouseReleased(mouseX, mouseY, button);
-        this.scrollArea.mouseReleased(mouseX, mouseY, button);
+    public boolean mouseReleased(MouseButtonEvent event) {
+        this.markdownRenderer.mouseReleased(event);
+        this.scrollArea.mouseReleased(event);
         return false;
     }
 
@@ -178,11 +179,11 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
      * This restores the old click logic.
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         for (GuiEventListener listener : this.children()) {
-            if (listener.mouseClicked(mouseX, mouseY, button)) {
+            if (listener.mouseClicked(event, isDoubleClick)) {
                 this.setFocused(listener);
-                if (button == 0) {
+                if (event.button() == 0) {
                     this.setDragging(true);
                 }
                 return true;

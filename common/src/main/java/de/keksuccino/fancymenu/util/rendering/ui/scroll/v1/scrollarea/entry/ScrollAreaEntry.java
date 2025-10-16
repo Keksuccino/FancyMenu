@@ -8,6 +8,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.sounds.SoundManager;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
@@ -65,11 +67,11 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
                 return super.isHoveredOrFocused();
             }
             @Override
-            public void onClick(double p_93371_, double p_93372_) {
+            public void onClick(MouseButtonEvent event, boolean isDoubleClick) {
                 if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers() || !ScrollAreaEntry.this.parent.isMouseInsideArea()) {
                     return;
                 }
-                super.onClick(p_93371_, p_93372_);
+                super.onClick(event, isDoubleClick);
             }
         };
         this.updateEntry();
@@ -83,7 +85,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
 
         if (MouseInput.isLeftMouseDown() && !leftMouseDown && this.isHovered()) {
             leftMouseDown = true;
-            this.buttonBase.onClick(mouseX, mouseY);
+            this.buttonBase.onClick(new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(0, -1)), false);
         }
         if (!MouseInput.isLeftMouseDown()) leftMouseDown = false;
 

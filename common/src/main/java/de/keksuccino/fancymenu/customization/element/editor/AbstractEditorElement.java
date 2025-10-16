@@ -43,6 +43,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
@@ -900,19 +901,19 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	}
 
 	@Override
-	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+	public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
 
 		if (this.element.layerHiddenInEditor) return false;
 
 		if (!this.isSelected()) {
 			return false;
 		}
-		if (button == 0) {
+		if (event.button() == 0) {
 			if (!this.rightClickMenu.isUserNavigatingInMenu()) {
 				this.activeResizeGrabber = !this.isMultiSelected() ? this.getHoveredResizeGrabber() : null;
 				if (this.isHovered() || (this.isMultiSelected() && !this.editor.getHoveredElements().isEmpty()) || this.isGettingResized()) {
 					this.leftMouseDown = true;
-					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
+					this.updateLeftMouseDownCachedValues((int) event.x(), (int) event.y());
 					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
 					if (this.element.autoSizingWidth > 0) this.element.baseWidth = this.element.autoSizingWidth;
 					if (this.element.autoSizingHeight > 0) this.element.baseHeight = this.element.autoSizingHeight;
@@ -927,8 +928,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	}
 
 	@Override
-	public boolean mouseReleased(double mouseX, double mouseY, int button) {
-		if (button == 0) {
+	public boolean mouseReleased(MouseButtonEvent event) {
+		if (event.button() == 0) {
 			this.leftMouseDown = false;
 			this.activeResizeGrabber = null;
 			this.element.updateAutoSizing(true);
@@ -940,24 +941,22 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	}
 
 	/**
-	 * @param mouseX The X coordinate of the mouse.
-	 * @param mouseY The Y coordinate of the mouse.
-	 * @param button The button that is being dragged.
+	 * @param event The mouse button event with access to mouseX, mouseY, button, etc.
 	 * @param dragX The X distance of the drag (mouse move distance per tick; mostly values between 0.3 and 5).
 	 * @param dragY The Y distance of the drag (mouse move distance per tick; mostly values between 0.3 and 5).
 	 */
 	@Override
-	public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
 
 		if (this.element.layerHiddenInEditor) return false;
 
 		if (!this.isSelected()) {
 			return false;
 		}
-		if (button == 0) {
+		if (event.button() == 0) {
 			if (this.leftMouseDown && !this.isGettingResized() && this.movingCrumpleZonePassed) { // MOVE ELEMENT
-				int diffX = (int)-(this.movingStartPosX - mouseX);
-				int diffY = (int)-(this.movingStartPosY - mouseY);
+				int diffX = (int)-(this.movingStartPosX - event.x());
+				int diffY = (int)-(this.movingStartPosY - event.y());
 				if (this.editor.allSelectedElementsMovable()) {
 					if (!this.isMultiSelected() || !this.isElementAnchorAndParentIsSelected()) {
 						// Calculate new positions
@@ -1119,8 +1118,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				}
 			}
 			if (this.leftMouseDown && this.isGettingResized()) { // RESIZE ELEMENT
-				int diffX = (int)-(this.resizingStartPosX - mouseX);
-				int diffY = (int)-(this.resizingStartPosY - mouseY);
+				int diffX = (int)-(this.resizingStartPosX - event.x());
+				int diffY = (int)-(this.resizingStartPosY - event.y());
 				if ((diffX > 0) || (diffY > 0)) this.recentlyResized = true;
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
 					int newWidth = (this.activeResizeGrabber.type == ResizeGrabberType.LEFT) ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
@@ -1135,7 +1134,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						if (this.element.stickyAnchor) {
 							this.element.posOffsetX += this.element.anchorPoint.getStickyResizePositionCorrectionX(this.element, diffX, cachedOldOffsetX, this.element.posOffsetX, cachedOldPosX, this.element.getAbsoluteX(), cachedOldWidth, this.element.getAbsoluteWidth(), this.activeResizeGrabber.type);
 						}
-						if (Screen.hasShiftDown()) {
+						if (event.hasShiftDown()) {
 							this.element.baseHeight = this.resizeAspectRatio.getAspectRatioHeight(this.element.baseWidth);
 						}
 					}
@@ -1153,7 +1152,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						if (this.element.stickyAnchor) {
 							this.element.posOffsetY += this.element.anchorPoint.getStickyResizePositionCorrectionY(this.element, diffY, cachedOldOffsetY, this.element.posOffsetY, cachedOldPosY, this.element.getAbsoluteY(), cachedOldHeight, this.element.baseHeight, this.activeResizeGrabber.type);
 						}
-						if (Screen.hasShiftDown()) {
+						if (event.hasShiftDown()) {
 							this.element.baseWidth = this.resizeAspectRatio.getAspectRatioWidth(this.element.baseHeight);
 						}
 					}

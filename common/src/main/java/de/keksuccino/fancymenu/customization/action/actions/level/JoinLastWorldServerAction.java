@@ -36,7 +36,7 @@ public class JoinLastWorldServerAction extends Action {
                 File f = new File(LastWorldHandler.getLastWorld());
                 if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
                     Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
-                    Minecraft.getInstance().forceSetScreen(new GenericMessageScreen(Component.translatable("selectWorld.data_read")));
+                    Minecraft.getInstance().setScreen(new GenericMessageScreen(Component.translatable("selectWorld.data_read")));
                     Minecraft.getInstance().createWorldOpenFlows().openWorld(f.getName(), () -> {
                         Minecraft.getInstance().setScreen(current);
                     });

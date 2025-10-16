@@ -23,6 +23,8 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderType;
@@ -202,11 +204,11 @@ public class EditBoxSuggestions extends CommandSuggestions {
     }
 
     @Override
-    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (!this.input.isFocused()) return false;
-        if ((this.getSuggestions() != null) && this.getSuggestions().keyPressed(keycode, scancode, modifiers)) {
+        if ((this.getSuggestions() != null) && this.getSuggestions().keyPressed(event)) {
             return true;
-        } else if (keycode == 258) {
+        } else if (event.key() == 258) {
             this.showSuggestions(true);
             return true;
         } else {
@@ -215,9 +217,9 @@ public class EditBoxSuggestions extends CommandSuggestions {
     }
 
     @Override
-    public boolean mouseClicked(double $$0, double $$1, int $$2) {
+    public boolean mouseClicked(MouseButtonEvent event) {
         if (!this.input.isFocused()) return false;
-        return super.mouseClicked($$0, $$1, $$2);
+        return super.mouseClicked(event);
     }
 
     @Override

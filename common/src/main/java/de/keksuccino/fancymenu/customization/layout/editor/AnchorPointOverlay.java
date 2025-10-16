@@ -18,6 +18,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Style;
@@ -419,37 +421,37 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
 
         this.resetAreaHoverCache();
         this.lastTickDraggedEmpty = true;
         this.setLastCompletedHoverArea(null);
 
-        return GuiEventListener.super.mouseReleased(mouseX, mouseY, button);
+        return GuiEventListener.super.mouseReleased(event);
 
     }
 
     @Override
-    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
 
-        String key = GLFW.glfwGetKeyName(keycode, scancode);
+        String key = GLFW.glfwGetKeyName(event.key(), event.scancode());
         if (key == null) key = "";
 
         if (key.equals("o")) this.overlayVisibilityKeybindPressed = true;
 
-        return GuiEventListener.super.keyPressed(keycode, scancode, modifiers);
+        return GuiEventListener.super.keyPressed(event);
 
     }
 
     @Override
-    public boolean keyReleased(int keycode, int scancode, int modifiers) {
+    public boolean keyReleased(KeyEvent event) {
 
-        String key = GLFW.glfwGetKeyName(keycode, scancode);
+        String key = GLFW.glfwGetKeyName(event.key(), event.scancode());
         if (key == null) key = "";
 
         if (key.equals("o")) this.overlayVisibilityKeybindPressed = false;
 
-        return GuiEventListener.super.keyReleased(keycode, scancode, modifiers);
+        return GuiEventListener.super.keyReleased(event);
 
     }
 

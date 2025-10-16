@@ -21,6 +21,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -860,14 +861,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (this.isUserNavigatingInMenu()) {
             float scale = UIBase.calculateFixedScale(this.scale);
-            int scaledMouseX = (int) ((float)mouseX / scale);
-            int scaledMouseY = (int) ((float)mouseY / scale);
+            int scaledMouseX = (int) ((float)event.x() / scale);
+            int scaledMouseY = (int) ((float)event.y() / scale);
 
             // Check if click is on scroll arrow areas first
-            if (button == 0 && this.needsScrolling && this.isMouseOverMenu(mouseX, mouseY)) {
+            if (event.button() == 0 && this.needsScrolling && this.isMouseOverMenu(event.x(), event.y())) {
                 float scaledX = (float)((float)this.getActualX()/scale) + this.getBorderThickness();
                 float scaledY = (float)((float)this.getActualY()/scale) + this.getBorderThickness();
                 
@@ -905,19 +906,20 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             // Process entries only if they're visible in the scroll area
             for (ContextMenuEntry<?> entry : this.entries) {
                 if (!this.needsScrolling || isEntryVisible(entry)) {
-                    entry.mouseClicked(scaledMouseX, scaledMouseY, button);
+                    MouseButtonEvent scaledEvent = new MouseButtonEvent(scaledMouseX, scaledMouseY, event.buttonInfo());
+                    entry.mouseClicked(scaledEvent, isDoubleClick);
                 }
             }
 
             //Handle click for sub context menus
             for (ContextMenuEntry<?> e : this.entries) {
                 if (e instanceof SubMenuContextMenuEntry s) {
-                    s.subContextMenu.mouseClicked(mouseX, mouseY, button);
+                    s.subContextMenu.mouseClicked(event, isDoubleClick);
                 }
             }
             return true;
         }
-        return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
+        return GuiEventListener.super.mouseClicked(event, isDoubleClick);
     }
 
     @Override
@@ -1284,8 +1286,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         public abstract ContextMenuEntry<?> copy();
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            return GuiEventListener.super.mouseClicked(event, isDoubleClick);
         }
 
         @FunctionalInterface
@@ -1497,15 +1499,15 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            if ((event.button() == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue() && this.enableClickSound) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
                 this.clickAction.onClick(this.parent, this);
                 return true;
             }
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(event, isDoubleClick);
         }
 
         @FunctionalInterface
@@ -1716,12 +1718,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
             //Close sub menu when left-clicking outside the menu
-            if ((button == 0) && this.subContextMenu.isOpen() && !this.subContextMenu.isUserNavigatingInMenu()) {
+            if ((event.button() == 0) && this.subContextMenu.isOpen() && !this.subContextMenu.isUserNavigatingInMenu()) {
                 this.subContextMenu.closeMenu();
             }
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(event, isDoubleClick);
         }
 
         @Override

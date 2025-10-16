@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -187,15 +188,15 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (event.button() == 0) {
             if (!this.active) {
                 return false;
             }
             if (this.isGrabberHovered()) {
                 this.leftMouseDownOnGrabber = true;
-                this.leftMouseDownOnGrabberAtMouseX = mouseX;
-                this.leftMouseDownOnGrabberAtMouseY = mouseY;
+                this.leftMouseDownOnGrabberAtMouseX = event.x();
+                this.leftMouseDownOnGrabberAtMouseY = event.y();
                 this.leftMouseDownOnGrabberAtScroll = this.scroll;
                 return true;
             }
@@ -204,7 +205,7 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
 
         this.leftMouseDownOnGrabber = false;
 
@@ -213,15 +214,15 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
+    public boolean mouseDragged(MouseButtonEvent event, double $$3, double $$4) {
 
         if (this.leftMouseDownOnGrabber) {
 
             float usableAreaWidth = this.scrollAreaEndX - this.scrollAreaStartX - this.grabberWidth;
             float usableAreaHeight = this.scrollAreaEndY - this.scrollAreaStartY - this.grabberHeight;
 
-            float offsetX = (float) (mouseX - this.leftMouseDownOnGrabberAtMouseX);
-            float offsetY = (float) (mouseY - this.leftMouseDownOnGrabberAtMouseY);
+            float offsetX = (float) (event.x() - this.leftMouseDownOnGrabberAtMouseX);
+            float offsetY = (float) (event.y() - this.leftMouseDownOnGrabberAtMouseY);
 
             float scrollOffset;
             if (this.direction == ScrollBarDirection.VERTICAL) {

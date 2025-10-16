@@ -13,6 +13,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
@@ -129,9 +131,12 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
             }
 
             if (this.handleClick) {
+                boolean leftClick = this.leftDownThis || leftDownGlobal;
+                MouseButtonInfo mouseButtonInfo = new MouseButtonInfo(leftClick ? 0 : 1, -1);
+                MouseButtonEvent mouseButtonEvent = new MouseButtonEvent(mouseX, mouseY, mouseButtonInfo);
                 if (this.isHoveredOrFocused() && (MouseInput.isLeftMouseDown() || (this.enableRightClick && MouseInput.isRightMouseDown())) && (!leftDownGlobal || this.ignoreGlobalLeftMouseDown) && !leftDownNotHovered && !this.isInputBlocked() && this.active && this.visible) {
                     if (!this.leftDownThis) {
-                        this.onClick(mouseX, mouseY);
+                        this.onClick(mouseButtonEvent, false);
                         leftDownGlobal = true;
                         this.leftDownThis = true;
                     }
@@ -139,12 +144,12 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
                 if (!MouseInput.isLeftMouseDown() && !(MouseInput.isRightMouseDown() && this.enableRightClick)) {
                     leftDownGlobal = false;
                     if (this.leftDownThis) {
-                        this.onRelease(mouseX, mouseY);
+                        this.onRelease(mouseButtonEvent);
                     }
                     this.leftDownThis = false;
                 }
                 if (this.leftDownThis) {
-                    this.onDrag(mouseX, mouseY, 0, 0);
+                    this.onDrag(mouseButtonEvent, 0, 0);
                 }
             }
 
@@ -249,18 +254,18 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     }
 
     @Override
-    protected void onDrag(double mouseX, double mouseY, double d1, double d2) {
-        super.onDrag(mouseX, mouseY, d1, d2);
+    protected void onDrag(MouseButtonEvent event, double d1, double d2) {
+        super.onDrag(event, d1, d2);
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
-        super.onClick(mouseX, mouseY);
+    public void onClick(MouseButtonEvent event, boolean isDoubleClick) {
+        super.onClick(event, isDoubleClick);
     }
 
     @Override
-    public void onRelease(double mouseX, double mouseY) {
-        super.onRelease(mouseX, mouseY);
+    public void onRelease(MouseButtonEvent event) {
+        super.onRelease(event);
     }
 
     @Override

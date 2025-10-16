@@ -77,7 +77,6 @@ public class UniversalScreenIdentifierRegistry {
         register("demo_intro_screen", DemoIntroScreen.class.getName());
         register("direct_join_server_screen", DirectJoinServerScreen.class.getName());
         register("disconnected_screen", DisconnectedScreen.class.getName());
-        register("edit_server_screen", EditServerScreen.class.getName());
         register("error_screen", ErrorScreen.class.getName());
         register("generic_dirt_message_screen", GenericMessageScreen.class.getName());
         register("generic_waiting_screen", GenericWaitingScreen.class.getName());
@@ -93,7 +92,6 @@ public class UniversalScreenIdentifierRegistry {
         register("popup_screen", PopupScreen.class.getName());
         register("preset_flat_world_screen", PresetFlatWorldScreen.class.getName());
         register("progress_screen", ProgressScreen.class.getName());
-        register("receiving_level_screen", ReceivingLevelScreen.class.getName());
         register("share_to_lan_screen", ShareToLanScreen.class.getName());
         register("skin_customization_screen", SkinCustomizationScreen.class.getName());
         register("sound_options_screen", SoundOptionsScreen.class.getName());

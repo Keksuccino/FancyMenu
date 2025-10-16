@@ -10,6 +10,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +37,7 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         //Auto-click the vanilla button on menu load
         if (!isEditor() && !this.automatedButtonClicksDone && (this.automatedButtonClicks > 0)) {
             for (int i = 0; i < this.automatedButtonClicks; i++) {
-                if (this.getWidget() != null) this.getWidget().onClick(this.getWidget().getX() + 1, this.getWidget().getY() + 1);
+                if (this.getWidget() != null) this.getWidget().onClick(new MouseButtonEvent(this.getWidget().getX() + 1, this.getWidget().getY() + 1, new MouseButtonInfo(0, -1)), false);
             }
             this.automatedButtonClicksDone = true;
         }

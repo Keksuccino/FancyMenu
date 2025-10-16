@@ -48,6 +48,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
@@ -1029,14 +1031,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	//Called before mouseDragged
 	@Override
-	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+	public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
 
-		this.leftMouseDownPosX = (int) mouseX;
-		this.leftMouseDownPosY = (int) mouseY;
+		this.leftMouseDownPosX = (int) event.x();
+		this.leftMouseDownPosY = (int) event.y();
 
 		boolean menuBarContextOpen = (this.menuBar != null) && this.menuBar.isEntryContextMenuOpen();
 
-		if (super.mouseClicked(mouseX, mouseY, button)) {
+		if (super.mouseClicked(event, isDoubleClick)) {
 			this.closeRightClickMenu();
 			this.closeActiveElementMenu();
 			return true;
@@ -1061,20 +1063,20 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		boolean canStartMouseSelection = true;
 		//Handle mouse click for elements
 		for (AbstractEditorElement e : this.getAllElements()) {
-			e.mouseClicked(mouseX, mouseY, button);
+			e.mouseClicked(event, isDoubleClick);
 			if (e.isHovered() || e.isGettingResized() || (e.getHoveredResizeGrabber() != null)) {
 				canStartMouseSelection = false;
 			}
 		}
 		//Handle mouse selection
-		if ((button == 0) && canStartMouseSelection) {
+		if ((event.button() == 0) && canStartMouseSelection) {
 			this.isMouseSelection = true;
-			this.mouseSelectionStartX = (int) mouseX;
-			this.mouseSelectionStartY = (int) mouseY;
+			this.mouseSelectionStartX = (int) event.x();
+			this.mouseSelectionStartY = (int) event.y();
 		}
 		//Deselect all elements
-		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !hasControlDown()) {
-			if ((button == 0) || ((button == 1) && ((topHoverElement == null) || topHoverGotSelected))) {
+		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !event.hasControlDown()) {
+			if ((event.button() == 0) || ((event.button() == 1) && ((topHoverElement == null) || topHoverGotSelected))) {
 				for (AbstractEditorElement e : this.getAllElements()) {
 					if (!e.isGettingResized() && ((topHoverElement == null) || (e != topHoverElement))) e.setSelected(false);
 				}
@@ -1083,18 +1085,18 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//Close active element context menu
 		this.closeActiveElementMenu();
 		//Close background right-click context menu
-		if ((button == 0) && !this.rightClickMenu.isUserNavigatingInMenu()) {
+		if ((event.button() == 0) && !this.rightClickMenu.isUserNavigatingInMenu()) {
 			this.closeRightClickMenu();
 		}
 		//Open background right-click context menu
 		if (topHoverElement == null) {
-			if (button == 1) {
-				this.openRightClickMenuAtMouse((int) mouseX, (int) mouseY);
+			if (event.button() == 1) {
+				this.openRightClickMenuAtMouse((int) event.x(), (int) event.y());
 			}
 		} else if (!topHoverElement.element.layerHiddenInEditor) {
 			this.closeRightClickMenu();
 			//Set and open active element context menu
-			if (button == 1) {
+			if (event.button() == 1) {
 				this.openElementContextMenuAtMouseIfPossible();
 			}
 		}
@@ -1105,9 +1107,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	//Called after mouseDragged
 	@Override
-	public boolean mouseReleased(double mouseX, double mouseY, int button) {
+	public boolean mouseReleased(MouseButtonEvent event) {
 
-		this.anchorPointOverlay.mouseReleased(mouseX, mouseY, button);
+		this.anchorPointOverlay.mouseReleased(event);
 
 		boolean cachedMovingStarted = this.elementMovingStarted;
 
@@ -1119,21 +1121,21 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.mouseDraggingStarted = false;
 
 		boolean cachedMouseSelection = this.isMouseSelection;
-		if (button == 0) {
+		if (event.button() == 0) {
 			this.isMouseSelection = false;
 		}
 
 		//Imitate super.mouseReleased in a way that doesn't suck
 		this.setDragging(false);
 		for(GuiEventListener child : this.children()) {
-			if (child.mouseReleased(mouseX, mouseY, button)) return true;
+			if (child.mouseReleased(event)) return true;
 		}
 
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
 		AbstractEditorElement topHoverElement = !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
 
 		//Deselect hovered element on left-click if CTRL pressed
-		if (!mouseWasInDraggingMode && !cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {
+		if (!mouseWasInDraggingMode && !cachedMouseSelection && (event.button() == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && event.hasControlDown()) {
 			topHoverElement.setSelected(false);
 		}
 
@@ -1142,7 +1144,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//Handle mouse released for all elements
 		for (AbstractEditorElement e : this.getAllElements()) {
 			if (e.recentlyMovedByDragging) elementRecentlyMovedByDragging = true;
-			e.mouseReleased(mouseX, mouseY, button);
+			e.mouseReleased(event);
 			e.recentlyLeftClickSelected = false;
 		}
 
@@ -1157,21 +1159,21 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@Override
-	public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
+	public boolean mouseDragged(MouseButtonEvent event, double $$3, double $$4) {
 
-		if (super.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
+		if (super.mouseDragged(event, $$3, $$4)) return true;
 
 		if (this.isMouseSelection) {
 			for (AbstractEditorElement e : this.getAllElements()) {
 				if (e.element.layerHiddenInEditor) continue;
-				boolean b = this.isElementOverlappingArea(e, Math.min(this.mouseSelectionStartX, (int)mouseX), Math.min(this.mouseSelectionStartY, (int)mouseY), Math.max(this.mouseSelectionStartX, (int)mouseX), Math.max(this.mouseSelectionStartY, (int)mouseY));
-				if (!b && hasControlDown()) continue; //skip deselect if CTRL pressed
+				boolean b = this.isElementOverlappingArea(e, Math.min(this.mouseSelectionStartX, (int)event.x()), Math.min(this.mouseSelectionStartY, (int)event.y()), Math.max(this.mouseSelectionStartX, (int)event.x()), Math.max(this.mouseSelectionStartY, (int)event.y()));
+				if (!b && event.hasControlDown()) continue; //skip deselect if CTRL pressed
 				e.setSelected(b);
 			}
 		}
 
-		int draggingDiffX = (int) (mouseX - this.leftMouseDownPosX);
-		int draggingDiffY = (int) (mouseY - this.leftMouseDownPosY);
+		int draggingDiffX = (int) (event.y() - this.leftMouseDownPosX);
+		int draggingDiffY = (int) (event.y() - this.leftMouseDownPosY);
 		if ((draggingDiffX != 0) || (draggingDiffY != 0)) {
 			this.mouseDraggingStarted = true;
 		}
@@ -1179,7 +1181,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		List<AbstractEditorElement> allElements = this.getAllElements();
 
 		if (!this.elementResizingStarted) {
-			allElements.forEach(element -> element.updateResizingStartPos((int)mouseX, (int)mouseY));
+			allElements.forEach(element -> element.updateResizingStartPos((int)event.x(), (int)event.y()));
 		}
 		this.elementResizingStarted = true;
 
@@ -1190,7 +1192,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					this.preDragElementSnapshot = this.history.createSnapshot();
 				}
 				allElements.forEach(element -> {
-					element.updateMovingStartPos((int)mouseX, (int)mouseY);
+					element.updateMovingStartPos((int)event.x(), (int)event.y());
 					element.movingCrumpleZonePassed = true;
 				});
 				if (this.allSelectedElementsMovable()) {
@@ -1200,7 +1202,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.elementMovingStarted = true;
 		}
 		for (AbstractEditorElement e : allElements) {
-			if (e.mouseDragged(mouseX, mouseY, button, $$3, $$4)) {
+			if (e.mouseDragged(event, $$3, $$4)) {
 				break;
 			}
 		}
@@ -1218,81 +1220,81 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@Override
-	public boolean keyPressed(int keycode, int scancode, int modifiers) {
+	public boolean keyPressed(KeyEvent event) {
 
-		this.anchorPointOverlay.keyPressed(keycode, scancode, modifiers);
+		this.anchorPointOverlay.keyPressed(event);
 
-		if (super.keyPressed(keycode, scancode, modifiers)) return true;
+		if (super.keyPressed(event)) return true;
 
 		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
 			if (abstractEditorElement.element.layerHiddenInEditor) continue;
-			if (abstractEditorElement.keyPressed(keycode, scancode, modifiers)) return true;
+			if (abstractEditorElement.keyPressed(event)) return true;
 		}
 
-		String key = GLFW.glfwGetKeyName(keycode, scancode);
+		String key = GLFW.glfwGetKeyName(event.key(), event.scancode());
 		if (key == null) key = "";
 
 		//ARROW LEFT
-		if (keycode == InputConstants.KEY_LEFT) {
+		if (event.key() == InputConstants.KEY_LEFT) {
 			this.moveSelectedElementsByXYOffset(-1, 0);
 			return true;
 		}
 
 		//ARROW UP
-		if (keycode == InputConstants.KEY_UP) {
+		if (event.key() == InputConstants.KEY_UP) {
 			this.moveSelectedElementsByXYOffset(0, -1);
 			return true;
 		}
 
 		//ARROW RIGHT
-		if (keycode == InputConstants.KEY_RIGHT) {
+		if (event.key() == InputConstants.KEY_RIGHT) {
 			this.moveSelectedElementsByXYOffset(1, 0);
 			return true;
 		}
 
 		//ARROW DOWN
-		if (keycode == InputConstants.KEY_DOWN) {
+		if (event.key() == InputConstants.KEY_DOWN) {
 			this.moveSelectedElementsByXYOffset(0, 1);
 			return true;
 		}
 
 		//CTRL + A
-		if (key.equals("a") && hasControlDown()) {
+		if (key.equals("a") && event.hasControlDown()) {
 			this.selectAllElements();
 		}
 
 		//CTRL + C
-		if (key.equals("c") && hasControlDown()) {
+		if (key.equals("c") && event.hasControlDown()) {
 			this.copyElementsToClipboard(this.getSelectedElements().toArray(new AbstractEditorElement[0]));
 			return true;
 		}
 
 		//CTRL + V
-		if (key.equals("v") && hasControlDown()) {
+		if (key.equals("v") && event.hasControlDown()) {
 			this.pasteElementsFromClipboard();
 			return true;
 		}
 
 		//CTRL + S
-		if (key.equals("s") && hasControlDown()) {
+		if (key.equals("s") && event.hasControlDown()) {
 			this.saveLayout();
 			return true;
 		}
 
 		//CTRL + Z
-		if (key.equals("z") && hasControlDown()) {
+		if (key.equals("z") && event.hasControlDown()) {
 			this.history.stepBack();
 			return true;
 		}
 
 		//CTRL + Y
-		if (key.equals("y") && hasControlDown()) {
+		if (key.equals("y") && event.hasControlDown()) {
 			this.history.stepForward();
 			return true;
 		}
 
 		//CTRL + G
-		if (key.equals("g") && hasControlDown()) {
+		if (key.equals("g") && event.hasControlDown()) {
 			try {
 				FancyMenu.getOptions().showLayoutEditorGrid.setValue(!FancyMenu.getOptions().showLayoutEditorGrid.getValue());
 			} catch (Exception e) {
@@ -1302,7 +1304,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 
 		//DEL
-		if (keycode == InputConstants.KEY_DELETE) {
+		if (event.key() == InputConstants.KEY_DELETE) {
 			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				if (e.element.layerHiddenInEditor) continue;
@@ -1311,20 +1313,20 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			return true;
 		}
 
-		return super.keyPressed(keycode, scancode, modifiers);
+		return super.keyPressed(event);
 
 	}
 
 	@Override
-	public boolean keyReleased(int keycode, int scancode, int modifiers) {
+	public boolean keyReleased(KeyEvent event) {
 
-		this.anchorPointOverlay.keyReleased(keycode, scancode, modifiers);
+		this.anchorPointOverlay.keyReleased(event);
 
 		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
-			if (abstractEditorElement.keyReleased(keycode, scancode, modifiers)) return true;
+			if (abstractEditorElement.keyReleased(event)) return true;
 		}
 
-		return super.keyReleased(keycode, scancode, modifiers);
+		return super.keyReleased(event);
 
 	}
 

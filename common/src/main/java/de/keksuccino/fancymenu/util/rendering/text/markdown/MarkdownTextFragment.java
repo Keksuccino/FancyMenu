@@ -14,9 +14,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
@@ -348,7 +350,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     protected Component buildRenderComponent(boolean forWidthCalculation) {
         Style style = Style.EMPTY;
         if (this.font != null) {
-            style = style.withFont(this.font);
+            style = style.withFont(new FontDescription.Resource(this.font));
         }
         if (this.italic) {
             style = style.withItalic(true);
@@ -582,14 +584,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         // Handle clicks on table cells
         if (this.isTable() && this.tableContext != null) {
             // Check all cell fragments for clicks
             for (TableRow row : this.tableContext.rows) {
                 for (TableCell cell : row.cells) {
                     for (MarkdownTextFragment fragment : cell.fragments) {
-                        if (fragment.isMouseOver(mouseX, mouseY) && fragment.mouseClicked(mouseX, mouseY, button)) {
+                        if (fragment.isMouseOver(event.x(), event.y()) && fragment.mouseClicked(event, isDoubleClick)) {
                             return true;
                         }
                     }

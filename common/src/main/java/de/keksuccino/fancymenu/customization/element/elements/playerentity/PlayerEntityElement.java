@@ -12,13 +12,15 @@ import de.keksuccino.fancymenu.util.rendering.entity.FancyEntityRendererUtils;
 import de.keksuccino.fancymenu.util.rendering.entity.WrappedFancyPlayerWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.core.ClientAsset;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.entity.player.PlayerModelType;
+import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -246,7 +248,9 @@ public class PlayerEntityElement extends AbstractElement {
             capeLoc = this.capeTextureSupplier.getCapeLocation();
             if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
         }
-        this.widget.setSkin(new PlayerSkin(skinLoc, null, capeLoc, null, this.slim ? PlayerSkin.Model.SLIM : PlayerSkin.Model.WIDE, false));
+        ClientAsset.ResourceTexture skinTex = new ClientAsset.Texture.ResourceTexture(skinLoc);
+        ClientAsset.ResourceTexture capeTex = (capeLoc != null) ? new ClientAsset.ResourceTexture(capeLoc) : null;
+        this.widget.setSkin(new PlayerSkin(skinTex, null, capeTex, this.slim ? PlayerModelType.SLIM : PlayerModelType.WIDE, false));
     }
 
     public void setCopyClientPlayer(boolean copyClientPlayer) {

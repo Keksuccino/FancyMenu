@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.dragger;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -34,21 +35,21 @@ public class DraggerWidget extends AbstractWidget {
     }
 
     @Override
-    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-        this.draggingCallback.onDrag(mouseX, mouseY, dragX, dragY);
-        super.onDrag(mouseX, mouseY, dragX, dragY);
+    protected void onDrag(MouseButtonEvent event, double dragX, double dragY) {
+        this.draggingCallback.onDrag(event.x(), event.y(), dragX, dragY);
+        super.onDrag(event, dragX, dragY);
     }
 
     @Override
-    public void onClick(double $$0, double $$1) {
-        this.mouseCallback.onClickOrRelease($$0, $$1, false);
-        super.onClick($$0, $$1);
+    public void onClick(MouseButtonEvent event, boolean isDoubleClick) {
+        this.mouseCallback.onClickOrRelease(event.x(), event.y(), false);
+        super.onClick(event, isDoubleClick);
     }
 
     @Override
-    public void onRelease(double $$0, double $$1) {
-        this.mouseCallback.onClickOrRelease($$0, $$1, true);
-        super.onRelease($$0, $$1);
+    public void onRelease(MouseButtonEvent event) {
+        this.mouseCallback.onClickOrRelease(event.x(), event.y(), true);
+        super.onRelease(event);
     }
 
     @FunctionalInterface

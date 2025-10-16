@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -516,15 +517,15 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 0) && this.isMouseOver()) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            if ((event.button() == 0) && this.isMouseOver()) {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
                 this.clickAction.accept(this);
                 return true;
             }
-            return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
+            return GuiEventListener.super.mouseClicked(event, isDoubleClick);
         }
 
         public boolean isMouseOver() {

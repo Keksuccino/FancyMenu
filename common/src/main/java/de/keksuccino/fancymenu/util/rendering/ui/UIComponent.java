@@ -6,6 +6,8 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -176,7 +178,7 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
 
     protected boolean mouseClickedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
         for(GuiEventListener child : this.children()) {
-            if (child.mouseClicked(realMouseX, realMouseY, button)) {
+            if (child.mouseClicked(buildMouseButtonEvent(realMouseX, realMouseY, button), false)) {
                 this.setFocused(child);
                 if (button == 0) {
                     this.setDragging(true);
@@ -189,14 +191,14 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
 
     @Deprecated
     @Override
-    public boolean mouseClicked(double ignoredMouseX, double ignoredMouseY, int button) {
-        return this.mouseClickedComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), button);
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        return this.mouseClickedComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), event.button());
     }
 
     protected boolean mouseReleasedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
         this.setDragging(false);
         for(GuiEventListener child : this.children()) {
-            if (child.mouseReleased(realMouseX, realMouseY, button)) {
+            if (child.mouseReleased(buildMouseButtonEvent(realMouseX, realMouseY, button))) {
                 return true;
             }
         }
@@ -205,8 +207,8 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
 
     @Deprecated
     @Override
-    public boolean mouseReleased(double ignoredMouseX, double ignoredMouseY, int button) {
-        return this.mouseReleasedComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), button);
+    public boolean mouseReleased(MouseButtonEvent event) {
+        return this.mouseReleasedComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), event.button());
     }
 
     /**
@@ -215,7 +217,7 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
     protected boolean mouseDraggedComponent(double translatedMouseX, double translatedMouseY, int button, double d1, double d2) {
         if (this.isDragging() && (button == 0)) {
             for (GuiEventListener child : this.children()) {
-                if (child.mouseDragged(this.getRealMouseX(), this.getRealMouseY(), button, d1, d2)) return true;
+                if (child.mouseDragged(buildMouseButtonEvent(this.getRealMouseX(), this.getRealMouseY(), button), d1, d2)) return true;
             }
         }
         return false;
@@ -223,8 +225,8 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
 
     @Deprecated
     @Override
-    public boolean mouseDragged(double ignoredMouseX, double ignoredMouseY, int button, double d1, double d2) {
-        return this.mouseDraggedComponent(this.getTranslatedMouseX(), this.getTranslatedMouseY(), button, d1, d2);
+    public boolean mouseDragged(MouseButtonEvent event, double d1, double d2) {
+        return this.mouseDraggedComponent(this.getTranslatedMouseX(), this.getTranslatedMouseY(), event.button(), d1, d2);
     }
 
     @Override
@@ -286,6 +288,16 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
 
     @Override
     public void updateNarration(@NotNull NarrationElementOutput var1) {
+    }
+
+    @NotNull
+    public static MouseButtonEvent buildMouseButtonEvent(double mouseX, double mouseY, int button, int modifiers) {
+        return new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, modifiers));
+    }
+
+    @NotNull
+    public static MouseButtonEvent buildMouseButtonEvent(double mouseX, double mouseY, int button) {
+        return buildMouseButtonEvent(mouseX, mouseY, button, -1);
     }
 
 }

@@ -17,6 +17,7 @@ import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
@@ -67,13 +68,13 @@ public class TextElement extends AbstractElement {
                 }
             }
             @Override
-            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
                 if (isEditor()) {
-                    if (this.verticalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
-                    if (this.horizontalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+                    if (this.verticalScrollBar.mouseClicked(event, isDoubleClick)) return true;
+                    if (this.horizontalScrollBar.mouseClicked(event, isDoubleClick)) return true;
                     return false;
                 }
-                return super.mouseClicked(mouseX, mouseY, button);
+                return super.mouseClicked(event, isDoubleClick);
             }
             @Override
             public boolean isMouseOver(double mouseX, double mouseY) {

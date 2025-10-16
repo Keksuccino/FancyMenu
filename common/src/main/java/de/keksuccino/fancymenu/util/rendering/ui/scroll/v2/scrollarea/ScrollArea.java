@@ -10,10 +10,13 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -458,26 +461,26 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.verticalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
-        if (this.horizontalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (this.verticalScrollBar.mouseClicked(event, isDoubleClick)) return true;
+        if (this.horizontalScrollBar.mouseClicked(event, isDoubleClick)) return true;
         for (ScrollAreaEntry entry : this.entries) {
-            if (entry.mouseClicked(mouseX, mouseY, button)) return true;
+            if (entry.mouseClicked(event.x(), event.y(), event.button())) return true;
         }
         return false;
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (this.verticalScrollBar.mouseReleased(mouseX, mouseY, button)) return true;
-        if (this.horizontalScrollBar.mouseReleased(mouseX, mouseY, button)) return true;
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (this.verticalScrollBar.mouseReleased(event)) return true;
+        if (this.horizontalScrollBar.mouseReleased(event)) return true;
         return false;
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
-        if (this.verticalScrollBar.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
-        if (this.horizontalScrollBar.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
+    public boolean mouseDragged(MouseButtonEvent event, double $$3, double $$4) {
+        if (this.verticalScrollBar.mouseDragged(event, $$3, $$4)) return true;
+        if (this.horizontalScrollBar.mouseDragged(event, $$3, $$4)) return true;
         return false;
     }
 

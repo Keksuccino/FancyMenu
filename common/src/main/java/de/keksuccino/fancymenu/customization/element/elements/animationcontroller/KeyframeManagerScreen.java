@@ -27,6 +27,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -855,16 +857,16 @@ public class KeyframeManagerScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
 
         this.lastCtrlClickedFrameForDeselect = null;
         this.framesGotMoved = false;
 
-        if (super.mouseClicked(mouseX, mouseY, button)) return true;
+        if (super.mouseClicked(event, isDoubleClick)) return true;
 
         if (this.isShowingSmoothingInput) {
             // Check if click is outside the input box
-            if (!this.smoothingDistanceInput.isMouseOver(mouseX, mouseY)) {
+            if (!this.smoothingDistanceInput.isMouseOver(event.x(), event.y())) {
                 this.lastSmoothingInputValue = this.smoothingDistanceInput.getValue();
                 this.isShowingSmoothingInput = false;
             }
@@ -872,28 +874,28 @@ public class KeyframeManagerScreen extends Screen {
 
         if (this.isShowingTimestampInput) {
             // Check if click is outside the input box
-            if (!this.timestampInput.isMouseOver(mouseX, mouseY)) {
+            if (!this.timestampInput.isMouseOver(event.x(), event.y())) {
                 this.isShowingTimestampInput = false;
             }
         }
 
-        if (this.previewEditorElement.mouseClicked(mouseX, mouseY, button)) return true;
+        if (this.previewEditorElement.mouseClicked(event, isDoubleClick)) return true;
 
         // Handle clicking progress line
-        if (isOverProgressLine((int)mouseX, (int)mouseY) && (!this.isRecording || this.isRecordingPaused)) {
+        if (isOverProgressLine((int) event.x(), (int) event.y()) && (!this.isRecording || this.isRecordingPaused)) {
             isDraggingProgress = true;
             return true;
         }
-        if (isOverProgressLine((int)mouseX, (int)mouseY) && this.isRecording && !this.isRecordingPaused) {
+        if (isOverProgressLine((int) event.x(), (int) event.y()) && this.isRecording && !this.isRecordingPaused) {
             this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_drag_progress")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), 6000);
             return true;
         }
 
         // Handle clicking keyframe lines
-        int clickedIndex = getKeyframeIndexAtPosition((int)mouseX, (int)mouseY);
+        int clickedIndex = getKeyframeIndexAtPosition((int) event.x(), (int) event.y());
         // Handle clicking empty timeline area to deselect frames
-        if (!Screen.hasControlDown() && isInTimelineArea((int)mouseX, (int)mouseY) && (clickedIndex == -1)) {
+        if (!event.hasControlDown() && isInTimelineArea((int) event.x(), (int) event.y()) && (clickedIndex == -1)) {
             this.selectKeyframeClearOldSelection(null);
             return true;
         }
@@ -903,15 +905,15 @@ public class KeyframeManagerScreen extends Screen {
             return true;
         }
         if (clickedIndex >= 0) {
-            initialDragClickX = (int)mouseX;
+            initialDragClickX = (int)event.x();
             hasMovedFromClickPosition = false;
             draggingKeyframeIndex = clickedIndex;
             AnimationKeyframe keyframe = this.workingKeyframes.get(draggingKeyframeIndex);
-            if (Screen.hasControlDown() && this.selectedKeyframes.contains(keyframe)) {
+            if (event.hasControlDown() && this.selectedKeyframes.contains(keyframe)) {
                 this.lastCtrlClickedFrameForDeselect = keyframe;
             } else {
                 // Handle CTRL-click for multi-select
-                this.selectKeyframe(workingKeyframes.get(clickedIndex), Screen.hasControlDown());
+                this.selectKeyframe(workingKeyframes.get(clickedIndex), event.hasControlDown());
             }
             return true;
         }
@@ -921,13 +923,13 @@ public class KeyframeManagerScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         isDraggingProgress = false;
         draggingKeyframeIndex = -1;
         hasMovedFromClickPosition = false;
         boolean previewGotResized = this.previewEditorElement.recentlyResized;
         boolean previewGotMoved = this.previewEditorElement.recentlyMovedByDragging;
-        this.previewEditorElement.mouseReleased(mouseX, mouseY, button);
+        this.previewEditorElement.mouseReleased(event);
         if (this.previewEditorElement.isSelected() && (previewGotResized || previewGotMoved) && (this.selectedKeyframes.size() == 1) && (!this.isRecording || this.isRecordingPaused) && !this.isPlaying) {
             saveState();
             this.applyElementValuesToKeyframe(this.previewElement, this.selectedKeyframes.getFirst());
@@ -946,18 +948,20 @@ public class KeyframeManagerScreen extends Screen {
         }
         this.lastCtrlClickedFrameForDeselect = null;
         this.framesGotMoved = false;
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
 
-        String key = GLFW.glfwGetKeyName(keyCode, scanCode);
+        int keyCode = event.key();
+
+        String key = GLFW.glfwGetKeyName(event.key(), event.scancode());
         if (key == null) key = "";
         key = key.toLowerCase();
 
         // Handle undo/redo keyboard shortcuts
-        if (Screen.hasControlDown()) {
+        if (event.hasControlDown()) {
             if (key.equals("z")) {
                 undo();
                 return true;
@@ -997,7 +1001,7 @@ public class KeyframeManagerScreen extends Screen {
 
         // Select all keyframes
         if (!this.isRecording || this.isRecordingPaused) {
-            if (Screen.hasControlDown() && (keyCode == InputConstants.KEY_A)) {
+            if (event.hasControlDown() && (keyCode == InputConstants.KEY_A)) {
                 this.selectKeyframeClearOldSelection(null);
                 this.workingKeyframes.forEach(keyframe -> this.selectKeyframe(keyframe, true));
             }
@@ -1092,14 +1096,14 @@ public class KeyframeManagerScreen extends Screen {
             return true;
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
 
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (super.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
-        return this.previewEditorElement.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (super.mouseDragged(event, dragX, dragY)) return true;
+        return this.previewEditorElement.mouseDragged(event, dragX, dragY);
     }
 
     protected void applyElementValuesToKeyframe(@NotNull PreviewElement element, @NotNull AnimationKeyframe keyframe) {
@@ -1604,27 +1608,27 @@ public class KeyframeManagerScreen extends Screen {
         }
 
         @Override
-        public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-            int draggingDiffX = (int) (mouseX - this.leftMouseDownMouseX);
-            int draggingDiffY = (int) (mouseY - this.leftMouseDownMouseY);
+        public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+            int draggingDiffX = (int) (event.x() - this.leftMouseDownMouseX);
+            int draggingDiffY = (int) (event.y() - this.leftMouseDownMouseY);
             this.movingCrumpleZonePassed = (Math.abs(draggingDiffX) >= ELEMENT_DRAG_CRUMPLE_ZONE) || (Math.abs(draggingDiffY) >= ELEMENT_DRAG_CRUMPLE_ZONE);
             if (this.movingCrumpleZonePassed && !this.elementMovingStarted) {
-                this.updateMovingStartPos((int)mouseX, (int)mouseY);
+                this.updateMovingStartPos((int)event.x(), (int)event.y());
                 this.elementMovingStarted = true;
             }
             if (!this.resizingStarted) {
-                this.updateResizingStartPos((int)mouseX, (int)mouseY);
+                this.updateResizingStartPos((int)event.x(), (int)event.y());
                 this.resizingStarted = true;
             }
-            return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+            return super.mouseDragged(event, dragX, dragY);
         }
 
         @Override
-        public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        public boolean mouseReleased(MouseButtonEvent event) {
             this.movingCrumpleZonePassed = false;
             this.elementMovingStarted = false;
             this.resizingStarted = false;
-            return super.mouseReleased(mouseX, mouseY, button);
+            return super.mouseReleased(event);
         }
 
     }

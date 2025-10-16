@@ -17,6 +17,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -1339,13 +1340,13 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
 
         if (!isDisabled) return false;
         
         // First handle the leveling screen if it's visible (highest priority)
         if (statusScreen.isVisible()) {
-            return statusScreen.mouseClicked(mouseX, mouseY, button);
+            return statusScreen.mouseClicked(event.x(), event.y(), event.button());
         }
 
         if ((droppedFood != null) && !droppedFood.justCreated) {
@@ -1377,10 +1378,10 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         }
 
         // Always handle poop clicks regardless of buddy visibility
-        if (button == 0) { // Left click
+        if (event.button() == 0) { // Left click
             // Check if clicked on a poop
             for (Poop poop : new ArrayList<>(poops)) {
-                if (poop.isMouseOver(mouseX, mouseY)) {
+                if (poop.isMouseOver(event.x(), event.y())) {
                     poop.startCleaning();
                     // Increase happiness slightly for cleaning up poop
                     happiness = Math.min(100, happiness + 2.5f); // Reduced from 5
@@ -1397,16 +1398,16 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             }
         }
 
-        if (button == 1) { // Right click
+        if (event.button() == 1) { // Right click
             // If clicked on buddy, open the stats screen directly (only if awakened)
-            if (isMouseOverBuddy(mouseX, mouseY) && hasBeenAwakened) {
+            if (isMouseOverBuddy(event.x(), event.y()) && hasBeenAwakened) {
                 statusScreen.show(screenWidth, screenHeight);
                 LOGGER.debug("Opening buddy stats screen (on right-click)");
                 return true;
             }
-        } else if (button == 0) { // Left click
+        } else if (event.button() == 0) { // Left click
             // Normal petting if menu isn't open
-            if (isMouseOverBuddy(mouseX, mouseY)) {
+            if (isMouseOverBuddy(event.x(), event.y())) {
                 // If buddy is peeking, stop peeking and start walking
                 if (isPeeking && isActivelyPeeking) {
                     isPeeking = false;
@@ -1451,15 +1452,15 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             }
 
             // Check if clicked on food (only if awakened)
-            if (hasBeenAwakened && droppedFood != null && droppedFood.isMouseOver(mouseX, mouseY)) {
-                droppedFood.pickup((int)mouseX, (int)mouseY);
+            if (hasBeenAwakened && droppedFood != null && droppedFood.isMouseOver(event.x(), event.y())) {
+                droppedFood.pickup((int)event.x(), (int)event.y());
                 return true;
             }
 
             // Check if clicked on play ball (only if awakened)
-            if (hasBeenAwakened && playBall != null && playBall.isMouseOver(mouseX, mouseY)) {
+            if (hasBeenAwakened && playBall != null && playBall.isMouseOver(event.x(), event.y())) {
                 // Start dragging ball instead of just kicking it
-                playBall.pickup((int)mouseX, (int)mouseY);
+                playBall.pickup((int)event.x(), (int)event.y());
 
                 // If buddy was holding the ball, it's not anymore
                 if (isHoldingBall) {
@@ -1480,17 +1481,17 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
 
         if (!isDisabled) return false;
         
         // Handle the leveling screen first if it's visible
         if (statusScreen.isVisible()) {
-            statusScreen.mouseReleased(mouseX, mouseY, button);
+            statusScreen.mouseReleased(event.x(), event.y(), event.button());
             return true;
         }
 
-        if (button == 0) {
+        if (event.button() == 0) {
             if (droppedFood != null && droppedFood.isBeingDragged()) {
                 // Check if food is near buddy before dropping it
                 if (droppedFood.isNearBuddy(buddyPosX + SPRITE_WIDTH/2, buddyPosY + SPRITE_HEIGHT/2)) {
@@ -1505,7 +1506,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
                     }
                 } else {
                     // If not close, just drop normally
-                    droppedFood.drop((int)mouseX, (int)mouseY);
+                    droppedFood.drop((int)event.x(), (int)event.y());
                 }
                 return true;
             }
@@ -1528,7 +1529,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
                     }
                 } else {
                     // If not close, throw normally
-                    playBall.throwBall((int)mouseX, (int)mouseY);
+                    playBall.throwBall((int)event.x(), (int)event.y());
                     // Always make buddy chase the ball when thrown
                     isPlaying = true;
                     isChasingBall = true;
@@ -1550,19 +1551,19 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
 
         if (!isDisabled) return false;
 
-        if (button == 0) {
+        if (event.button() == 0) {
             if (droppedFood != null && droppedFood.isBeingDragged()) {
-                droppedFood.setPosition((int)mouseX, (int)mouseY);
+                droppedFood.setPosition((int)event.x(), (int)event.y());
                 return true;
             }
 
             // Handle ball dragging with velocity tracking
             if (playBall != null && playBall.isBeingDragged()) {
-                playBall.updateDragPosition((int)mouseX, (int)mouseY);
+                playBall.updateDragPosition((int)event.x(), (int)event.y());
                 return true;
             }
         }

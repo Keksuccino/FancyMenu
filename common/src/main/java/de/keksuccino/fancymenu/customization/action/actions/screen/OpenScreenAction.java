@@ -39,7 +39,8 @@ public class OpenScreenAction extends Action {
             if (RenderSystem.isOnRenderThread()) {
                 value = ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(value);
                 if (value.equals(CreateWorldScreen.class.getName())) {
-                    CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
+                    Screen current = Minecraft.getInstance().screen;
+                    CreateWorldScreen.openFresh(Minecraft.getInstance(), () -> Minecraft.getInstance().setScreen(current));
                 } else {
                     if (CustomGuiHandler.guiExists(value)) {
                         Screen custom = CustomGuiHandler.constructInstance(value, Minecraft.getInstance().screen, null);

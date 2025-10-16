@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFor
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -43,7 +44,7 @@ public class IsKeyPressedRequirement extends LoadingRequirement {
         if (value != null) {
             int keycode = SerializationUtils.deserializeNumber(Integer.class, -1, value);
             com.mojang.blaze3d.platform.InputConstants.Key key = getKey(keycode);
-            return (key.getValue() != -1) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), key.getValue());
+            return (key.getValue() != -1) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), key.getValue());
         }
 
         return false;
@@ -93,9 +94,10 @@ public class IsKeyPressedRequirement extends LoadingRequirement {
 
     @NotNull
     public static com.mojang.blaze3d.platform.InputConstants.Key getKey(int keyCode) {
+        KeyEvent event = new KeyEvent(keyCode, -1, -1);
         com.mojang.blaze3d.platform.InputConstants.Key key = null;
         try {
-            key = InputConstants.getKey(keyCode, -1);
+            key = InputConstants.getKey(event);
         } catch (Exception ignore) {}
         return (key != null) ? key : InputConstants.UNKNOWN;
     }
@@ -137,16 +139,16 @@ public class IsKeyPressedRequirement extends LoadingRequirement {
         }
 
         @Override
-        public boolean keyPressed(int keycode, int scancode, int modifiers) {
+        public boolean keyPressed(KeyEvent event) {
             if (this.keyInputModeEnabled) {
-                this.keyCode = keycode;
+                this.keyCode = event.key();
                 this.keyInputModeEnabled = false;
                 this.pressNowLabel.setText(Component.empty());
                 InputConstants.Key key = getKey(this.keyCode);
                 this.selectedKeyLabel.setText(Component.translatable("fancymenu.requirements.is_key_pressed.screen.selected_key", ((MutableComponent)key.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()))));
                 return true;
             }
-            return super.keyPressed(keycode, scancode, modifiers);
+            return super.keyPressed(event);
         }
 
         @Override

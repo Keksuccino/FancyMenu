@@ -7,12 +7,12 @@ import it.crystalnest.fancy_entity_renderer.api.entity.player.FancyPlayerWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.ApiStatus;
@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 public class WrappedFancyPlayerWidget extends AbstractWidget implements NavigatableWidget {
 
     @NotNull
@@ -275,7 +276,8 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
      * @return {@code this}.
      */
     public WrappedFancyPlayerWidget setSkin(@Nullable PlayerSkin skin) {
-        wrapped.setSkin(skin);
+        //TODO RESTORE THIS ONCE FER GOT UPDATED
+//        wrapped.setSkin(skin);
         return this;
     }
 

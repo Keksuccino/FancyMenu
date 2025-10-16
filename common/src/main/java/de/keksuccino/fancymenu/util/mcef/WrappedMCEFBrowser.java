@@ -11,6 +11,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -169,10 +172,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.isMouseOver(mouseX, mouseY) && this.interactable) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (this.isMouseOver(event.x(), event.y()) && this.interactable) {
             this.browserFocused = true;
-            this.browser.sendMousePress(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
+            this.browser.sendMousePress(this.convertMouseX(event.x()), this.convertMouseY(event.y()), event.button());
             this.browser.setFocus(true);
         } else {
             this.browserFocused = false;
@@ -181,9 +184,9 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         if (this.interactable) {
-            this.browser.sendMouseRelease(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
+            this.browser.sendMouseRelease(this.convertMouseX(event.x()), this.convertMouseY(event.y()), event.button());
             this.browser.setFocus(true);
         }
         return false;
@@ -205,28 +208,28 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (this.interactable && this.browserFocused) {
-            this.browser.sendKeyPress(keyCode, scanCode, modifiers);
+            this.browser.sendKeyPress(event.key(), event.scancode(), event.modifiers());
             this.browser.setFocus(true);
         }
         return false;
     }
 
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+    public boolean keyReleased(KeyEvent event) {
         if (this.interactable && this.browserFocused) {
-            this.browser.sendKeyRelease(keyCode, scanCode, modifiers);
+            this.browser.sendKeyRelease(event.key(), event.scancode(), event.modifiers());
             this.browser.setFocus(true);
         }
         return false;
     }
 
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
+    public boolean charTyped(CharacterEvent event) {
         if (this.interactable && this.browserFocused) {
-            if (codePoint == (char) 0) return true;
-            this.browser.sendKeyTyped(codePoint, modifiers);
+            if (event.codepoint() == (char) 0) return true;
+            this.browser.sendKeyTyped((char) event.codepoint(), event.modifiers());
             this.browser.setFocus(true);
         }
         return false;

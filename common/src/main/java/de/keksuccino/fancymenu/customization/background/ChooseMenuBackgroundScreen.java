@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -225,16 +226,16 @@ public class ChooseMenuBackgroundScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int button, int $$1, int $$2) {
+    public boolean keyPressed(KeyEvent event) {
 
-        if (button == InputConstants.KEY_ENTER) {
+        if (event.key() == InputConstants.KEY_ENTER) {
             if (this.background != null) {
                 this.callback.accept(this.background);
                 return true;
             }
         }
 
-        return super.keyPressed(button, $$1, $$2);
+        return super.keyPressed(event);
 
     }
 

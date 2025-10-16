@@ -24,6 +24,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -466,22 +467,23 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         float scale = UIBase.calculateFixedScale(this.scale);
-        int scaledMouseX = (int) ((float)mouseX / scale);
-        int scaledMouseY = (int) ((float)mouseY / scale);
+        int scaledMouseX = (int) ((float)event.x() / scale);
+        int scaledMouseY = (int) ((float)event.y() / scale);
+        MouseButtonEvent scaledEvent = new MouseButtonEvent(scaledMouseX, scaledMouseY, event.buttonInfo());
         boolean entryClick = false;
         if (this.expanded) {
             for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
                 if (e.isVisible()) {
                     if (e instanceof ContextMenuBarEntry c) {
-                        if (c.contextMenu.mouseClicked(mouseX, mouseY, button)) entryClick = true;
+                        if (c.contextMenu.mouseClicked(event, isDoubleClick)) entryClick = true;
                     }
-                    if (e.mouseClicked(scaledMouseX, scaledMouseY, button)) entryClick = true;
+                    if (e.mouseClicked(scaledEvent, isDoubleClick)) entryClick = true;
                 }
             }
         } else {
-            if (this.collapseOrExpandEntry.mouseClicked(scaledMouseX, scaledMouseY, button)) entryClick = true;
+            if (this.collapseOrExpandEntry.mouseClicked(scaledEvent, isDoubleClick)) entryClick = true;
         }
         if (this.isUserNavigatingInMenuBar() || entryClick) {
             Screen current = Minecraft.getInstance().screen;
@@ -633,8 +635,8 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            return GuiEventListener.super.mouseClicked(event, isDoubleClick);
         }
 
         @FunctionalInterface
@@ -783,8 +785,8 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 0) && (this.isActive() && this.isVisible() && this.isHovered())) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            if ((event.button() == 0) && (this.isActive() && this.isVisible() && this.isHovered())) {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
@@ -915,12 +917,12 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
             if ((!this.isHovered() || !this.isActive() || !this.isVisible()) && !this.contextMenu.isUserNavigatingInMenu() && this.contextMenu.isOpen()) {
                 this.contextMenu.closeMenu();
                 return true;
             }
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(event, isDoubleClick);
         }
 
         @Override

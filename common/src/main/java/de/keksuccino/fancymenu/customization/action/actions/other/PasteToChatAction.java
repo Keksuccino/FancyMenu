@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -47,14 +48,13 @@ public class PasteToChatAction extends Action {
             if (Minecraft.getInstance().level != null) {
                 if (Minecraft.getInstance().player != null) {
                     Screen s = Minecraft.getInstance().screen;
-                    if (!(s instanceof ChatScreen)) {
-                        ((IMixinMinecraft)Minecraft.getInstance()).openChatScreenFancyMenu(msg);
-                    } else {
-                        if (append) {
-                            ((IMixinChatScreen)s).getInputFancyMenu().insertText(msg);
-                        } else {
-                            ((IMixinChatScreen)s).getInputFancyMenu().setValue(msg);
+                    if (!(s instanceof ChatScreen openChat)) {
+                        Minecraft.getInstance().openChatScreen(ChatComponent.ChatMethod.MESSAGE);
+                        if (Minecraft.getInstance().screen instanceof ChatScreen chat) {
+                            chat.insertText(msg, !append);
                         }
+                    } else {
+                        openChat.insertText(msg, !append);
                     }
                 }
             }

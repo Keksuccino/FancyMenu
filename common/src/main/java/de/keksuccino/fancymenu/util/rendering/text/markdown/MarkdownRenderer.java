@@ -13,6 +13,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -743,11 +744,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
      * This restores the old click logic.
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         for (GuiEventListener listener : this.children()) {
-            if (listener.mouseClicked(mouseX, mouseY, button)) {
+            if (listener.mouseClicked(event, isDoubleClick)) {
                 this.setFocused(listener);
-                if (button == 0) {
+                if (event.button() == 0) {
                     this.setDragging(true);
                 }
                 return true;

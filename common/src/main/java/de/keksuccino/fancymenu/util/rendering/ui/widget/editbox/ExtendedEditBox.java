@@ -12,6 +12,9 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -379,11 +382,11 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @Override
-    public boolean charTyped(char character, int modifiers) {
-        if ((this.characterFilter != null) && !this.characterFilter.isAllowedChar(character)) {
+    public boolean charTyped(CharacterEvent event) {
+        if ((this.characterFilter != null) && !this.characterFilter.isAllowedChar((char) event.codepoint())) {
             return false;
         }
-        return super.charTyped(character, modifiers);
+        return super.charTyped(event);
     }
 
     @Override
@@ -431,19 +434,19 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @Override
-    public void deleteText(int i) {
+    public void deleteText(int i, boolean hasControlDown) {
         if (this.deleteAllAllowed) {
-            super.deleteText(i);
+            super.deleteText(i, hasControlDown);
         } else {
             this.deleteChars(i);
         }
     }
 
     @Override
-    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         if (!this.canConsumeUserInput) return false;
         //If select all, only select parts that are not prefix or suffix
-        if (Screen.isSelectAll(keycode) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
+        if (event.isSelectAll() && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
             if (this.inputSuffix != null) {
                 this.moveCursorTo(this.getValue().length() - this.inputSuffix.length(), false);
             } else {
@@ -452,18 +455,18 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             this.setHighlightPos((this.inputPrefix != null) ? this.inputPrefix.length() : 0);
             return true;
         }
-        return super.keyPressed(keycode, scancode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (!this.canConsumeUserInput) return false;
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, isDoubleClick);
     }
 
     //This is to make the edit box work in FocuslessEventHandlers
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         return false;
     }
 
