@@ -2,11 +2,10 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
-import java.util.function.BiFunction;
+import java.util.List;
 
 @Mixin(EditBox.class)
 public interface IMixinEditBox {
@@ -21,11 +20,11 @@ public interface IMixinEditBox {
 
     @Accessor("maxLength") int getMaxLengthFancyMenu();
 
-    @Accessor("formatter") BiFunction<String, Integer, FormattedCharSequence> getFormatterFancyMenu();
+    @Accessor("formatters") List<EditBox.TextFormatter> get_formatters_FancyMenu();
 
     @Accessor("highlightPos") int getHighlightPosFancyMenu();
 
-    @Invoker("deleteText") void invokeDeleteTextFancyMenu(int i);
+    @Invoker("deleteText") void invokeDeleteTextFancyMenu(int i, boolean b);
 
     @Accessor("textColor") int getTextColorFancyMenu();
 

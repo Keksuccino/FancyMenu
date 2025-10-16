@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.tabs.TabNavigationBar;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -62,7 +63,7 @@ public class MixinTabNavigationBar {
      * @reason Re-init the screen when the tab got changed by using keys (arrow keys, Tab key, number keys)
      */
     @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/tabs/TabNavigationBar;selectTab(IZ)V", shift = At.Shift.AFTER))
-    private void after_selectTab_in_keyPressed_FancyMenu(int i, CallbackInfoReturnable<Boolean> info) {
+    private void after_selectTab_in_keyPressed_FancyMenu(KeyEvent $$0, CallbackInfoReturnable<Boolean> cir) {
         this.reInitScreenAfterTabChanged_FancyMenu();
     }
 

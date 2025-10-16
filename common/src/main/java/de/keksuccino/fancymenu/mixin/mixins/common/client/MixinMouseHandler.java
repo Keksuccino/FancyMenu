@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonInfo;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -52,11 +53,11 @@ public class MixinMouseHandler {
         EventHandler.INSTANCE.postEvent(e);
     }
 
-    @Inject(method = "onPress", at = @At(value = "HEAD"))
-    private void headOnPressFancyMenu(long window, int button, int $$2, int $$3, CallbackInfo info) {
-        if (window == Minecraft.getInstance().getWindow().getWindow()) {
-            boolean clicked = $$2 == 1;
-            if (clicked && (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o)) o.mouseClicked(button);
+    @Inject(method = "onButton", at = @At(value = "HEAD"))
+    private void headOnPressFancyMenu(long window, MouseButtonInfo buttonInfo, int action, CallbackInfo info) {
+        if (window == Minecraft.getInstance().getWindow().handle()) {
+            boolean clicked = action == 1;
+            if (clicked && (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o)) o.mouseClicked(buttonInfo.button());
         }
     }
 

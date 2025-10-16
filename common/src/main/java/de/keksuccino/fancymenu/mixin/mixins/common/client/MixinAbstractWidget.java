@@ -10,6 +10,7 @@ import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -176,7 +177,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	}
 
 	@Inject(method = "isValidClickButton", at = @At("HEAD"), cancellable = true)
-	private void beforeIsValidClickButtonFancyMenu(int $$0, CallbackInfoReturnable<Boolean> info) {
+	private void beforeIsValidClickButtonFancyMenu(MouseButtonInfo $$0, CallbackInfoReturnable<Boolean> info) {
 		if (this.hiddenFancyMenu) info.setReturnValue(false);
 	}
 
