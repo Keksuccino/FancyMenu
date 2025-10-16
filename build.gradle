@@ -41,10 +41,10 @@ subprojects {
         maven {
             name = 'Sponge / Mixin'
             url = 'https://repo.spongepowered.org/repository/maven-public/'
-        }
-        maven {
-            name = 'BlameJared Maven (JEI / CraftTweaker / Bookshelf)'
-            url = 'https://maven.blamejared.com'
+            content {
+                includeGroup 'org.spongepowered'
+                includeGroup 'org.spongepowered.mixin'
+            }
         }
         maven {
             url "https://cursemaven.com"
@@ -58,15 +58,27 @@ subprojects {
                 includeGroup "maven.modrinth"
             }
         }
-        maven { url 'https://jitpack.io' }
+        maven {
+            url 'https://jitpack.io'
+            content {
+                includeGroupByRegex 'com\\.github\\..*'
+            }
+        }
         maven {
             name = 'MCEF Releases'
             url = 'https://mcef-download.cinemamod.com/repositories/releases'
+            content {
+                includeGroup 'com.cinemamod'
+            }
         }
         // Optional for snapshot versions
+        // Keep but scope so release and snapshot repos are not queried for unrelated modules.
         maven {
             name = 'MCEF Snapshots'
             url = 'https://mcef-download.cinemamod.com/repositories/snapshots'
+            content {
+                includeGroup 'com.cinemamod'
+            }
         }
         // Crystal Nest repository where Fancy Entity Renderer is hosted.
         exclusiveContent {
@@ -82,10 +94,33 @@ subprojects {
         }
     }
 
+    dependencies {
+        components.all { component ->
+            def id = component.id
+            if (id instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier) {
+                def stableGroups = [
+                        'maven.modrinth',
+                        'curse.maven',
+                        'com.github.Keksuccino',
+                        'com.github.rtyley',
+                        'net.fabricmc',
+                        'net.fabricmc.fabric-api',
+                        'net.minecraftforge',
+                        'net.neoforged',
+                        'org.spongepowered',
+                        'com.cinemamod'
+                ]
+                if (id.group in stableGroups) {
+                    component.changing = false
+                }
+            }
+        }
+    }
+
     configurations.configureEach {
         resolutionStrategy {
-            cacheChangingModulesFor 24, 'hours'
-            cacheDynamicVersionsFor 24, 'hours'
+            cacheChangingModulesFor 168, 'hours'
+            cacheDynamicVersionsFor 168, 'hours'
         }
     }
 

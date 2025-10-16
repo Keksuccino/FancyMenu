@@ -94,7 +94,7 @@ dependencies {
     implementation "maven.modrinth:melody:1.0.10-1.21-forge"
     //implementation "it.crystalnest:fancy-entity-renderer-forge:$fer_mc_version-$fer_version"
     implementation "maven.modrinth:fancy-entity-renderer:0.4.0"
-    implementation "com.cinemamod:mcef:2.1.6-1.21.1"
+    //implementation "com.cinemamod:mcef:2.1.6-1.21.1"
     compileOnly project(":common")
 }
 
