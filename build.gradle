@@ -24,8 +24,6 @@ subprojects {
                 'Implementation-Title'    : mod_name,
                 'Implementation-Version'  : mod_version,
                 'Implementation-Vendor'   : mod_authors,
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'Timestamp'               : System.currentTimeMillis(),
                 'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
                 'Built-On-Minecraft'      : minecraft_version
             ])
@@ -81,6 +79,13 @@ subprojects {
             filter {
                 includeGroup "it.crystalnest"
             }
+        }
+    }
+
+    configurations.configureEach {
+        resolutionStrategy {
+            cacheChangingModulesFor 24, 'hours'
+            cacheDynamicVersionsFor 24, 'hours'
         }
     }
 
