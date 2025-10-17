@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry;
 
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -9,7 +10,6 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.sounds.SoundManager;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
@@ -77,6 +77,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
         this.updateEntry();
     }
 
+    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateEntry();
@@ -85,7 +86,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
 
         if (MouseInput.isLeftMouseDown() && !leftMouseDown && this.isHovered()) {
             leftMouseDown = true;
-            this.buttonBase.onClick(new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(0, -1)), false);
+            this.buttonBase.onClick(VanillaEvents.mouseButtonEvent(mouseX, mouseY, 0, VanillaEvents.GLFW_NO_MODIFIERS), false);
         }
         if (!MouseInput.isLeftMouseDown()) leftMouseDown = false;
 

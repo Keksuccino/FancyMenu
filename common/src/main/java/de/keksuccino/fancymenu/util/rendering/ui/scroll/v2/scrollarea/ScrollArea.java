@@ -15,14 +15,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@SuppressWarnings("all")
 public class ScrollArea extends UIBase implements GuiEventListener, Renderable, NarratableEntry, FancyMenuUiComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();

@@ -1,8 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.ui.menubar.v2;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -26,7 +27,6 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -471,7 +471,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         float scale = UIBase.calculateFixedScale(this.scale);
         int scaledMouseX = (int) ((float)event.x() / scale);
         int scaledMouseY = (int) ((float)event.y() / scale);
-        MouseButtonEvent scaledEvent = new MouseButtonEvent(scaledMouseX, scaledMouseY, event.buttonInfo());
+        MouseButtonEvent scaledEvent = VanillaEvents.mouseButtonEvent(scaledMouseX, scaledMouseY, event.buttonInfo());
         boolean entryClick = false;
         if (this.expanded) {
             for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
@@ -569,6 +569,9 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                     tooltip.setScale(this.parent.scale);
                     TooltipHandler.INSTANCE.addTooltip(tooltip, () -> true, false, true);
                 }
+            }
+            if (this.isHovered()) {
+                graphics.requestCursor(this.isActive() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
             }
         }
 

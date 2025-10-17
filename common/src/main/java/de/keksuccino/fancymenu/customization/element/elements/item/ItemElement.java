@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -18,12 +19,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemLore;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -127,6 +128,7 @@ public class ItemElement extends AbstractElement {
      * The tooltip logic is now handled by the modern deferred tooltip system.
      */
     protected void renderItem(GuiGraphics graphics, int x, int y, int width, int height, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
+
         int count = SerializationUtils.deserializeNumber(Integer.class, 1, PlaceholderParser.replacePlaceholders(this.itemCount));
 
         this.renderScaledItem(graphics, itemStack, x, y, width, height);
@@ -135,10 +137,15 @@ public class ItemElement extends AbstractElement {
             this.renderItemCount(graphics, this.font, x, y, Math.max(width, height), count);
         }
 
-        // NEW: Use the built-in deferred tooltip system. It's cleaner and safer.
         if (!isEditor() && this.showTooltip && UIBase.isXYInArea(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight())) {
-            graphics.setTooltipForNextFrame(this.font, itemStack, mouseX, mouseY);
+            TooltipHandler.INSTANCE.setVanillaTooltip(graphics, buildItemTooltip(itemStack), itemStack.getTooltipImage(), mouseX, mouseY, null);
         }
+
+    }
+
+    @NotNull
+    protected List<Component> buildItemTooltip(@NotNull ItemStack itemStack) {
+        return itemStack.getTooltipLines(Item.TooltipContext.EMPTY, null, TooltipFlag.NORMAL);
     }
 
     /**

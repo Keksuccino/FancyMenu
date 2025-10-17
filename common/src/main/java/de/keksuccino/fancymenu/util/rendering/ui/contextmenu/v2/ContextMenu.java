@@ -1,7 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -23,7 +24,6 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -906,7 +906,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             // Process entries only if they're visible in the scroll area
             for (ContextMenuEntry<?> entry : this.entries) {
                 if (!this.needsScrolling || isEntryVisible(entry)) {
-                    MouseButtonEvent scaledEvent = new MouseButtonEvent(scaledMouseX, scaledMouseY, event.buttonInfo());
+                    MouseButtonEvent scaledEvent = VanillaEvents.mouseButtonEvent(scaledMouseX, scaledMouseY, event.buttonInfo());
                     entry.mouseClicked(scaledEvent, isDoubleClick);
                 }
             }
@@ -1346,6 +1346,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             this.renderIcon(graphics);
 
             this.renderTooltipIconAndRegisterTooltip(graphics, mouseX, mouseY, (shortcutTextWidth > 0) ? -(shortcutTextWidth + 8) : 0);
+
+            if (this.isHovered()) {
+                graphics.requestCursor(this.isActive() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
+            }
 
         }
 

@@ -4,14 +4,21 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
+import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
 import java.util.function.BooleanSupplier;
 
 public class TooltipHandler {
@@ -23,6 +30,7 @@ public class TooltipHandler {
 
     private final List<HandledTooltip> tooltips = new ArrayList<>();
     private final Map<AbstractWidget, HandledTooltip> widgetTooltips = new HashMap<>();
+    private Runnable vanillaTooltip = null;
 
     public TooltipHandler() {
         EventHandler.INSTANCE.registerListenersOf(this);
@@ -41,6 +49,9 @@ public class TooltipHandler {
         }
         if (renderTooltip != null) {
             renderTooltip.tooltip.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+        } else if (this.vanillaTooltip != null) {
+            this.vanillaTooltip.run();
+            this.vanillaTooltip = null;
         }
     }
 
@@ -49,6 +60,12 @@ public class TooltipHandler {
         for (HandledTooltip t : new ArrayList<>(this.tooltips)) {
             if (t.removeOnScreenInitOrResize) t.remove();
         }
+    }
+
+    public void setVanillaTooltip(@NotNull GuiGraphics graphics, @NotNull List<Component> lines, @NotNull Optional<TooltipComponent> tooltipImage, int x, int y, @Nullable ResourceLocation background) {
+        List<ClientTooltipComponent> tooltipLines = lines.stream().map(Component::getVisualOrderText).map(ClientTooltipComponent::create).collect(Util.toMutableList());
+        tooltipImage.ifPresent(component -> tooltipLines.add(tooltipLines.isEmpty() ? 0 : 1, ClientTooltipComponent.create(component)));
+        this.vanillaTooltip = () -> graphics.renderTooltip(Minecraft.getInstance().font, tooltipLines, x, y, DefaultTooltipPositioner.INSTANCE, background);
     }
 
     public HandledTooltip addWidgetTooltip(@NotNull AbstractWidget widget, @NotNull Tooltip tooltip, boolean removeOnScreenInitOrResize, boolean removeAfterScreenRender) {

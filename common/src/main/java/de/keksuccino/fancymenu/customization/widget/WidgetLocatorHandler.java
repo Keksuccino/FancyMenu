@@ -7,11 +7,10 @@ import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierH
 import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.input.MouseButtonInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -103,7 +102,7 @@ public class WidgetLocatorHandler {
     public static boolean invokeWidgetOnClick(@NotNull WidgetMeta meta) {
         try {
             AbstractWidget w = meta.getWidget();
-            w.onClick(new MouseButtonEvent(w.getX() + 1, w.getY() + 1, new MouseButtonInfo(0, -1)), false);
+            w.onClick(VanillaEvents.mouseButtonEvent(w.getX() + 1, w.getY() + 1, 0, 0), false);
             return true;
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to invoke widget's onClick() method!", ex);

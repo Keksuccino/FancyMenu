@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderButton;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -15,17 +15,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
-import java.util.function.BiConsumer;
 
-@SuppressWarnings("unused")
 public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget {
 
     public static final ResourceLocation SLIDER_SPRITE = ResourceLocation.parse("widget/slider");
@@ -81,6 +77,10 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         this.renderHandle(graphics, mouseX, mouseY, partial);
 
         this.renderLabel(graphics, mouseX, mouseY, partial);
+
+        if (this.isHovered()) {
+            graphics.requestCursor(this.isActive() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
+        }
 
     }
 

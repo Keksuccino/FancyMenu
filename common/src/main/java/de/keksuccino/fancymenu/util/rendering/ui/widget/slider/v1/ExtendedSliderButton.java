@@ -1,7 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderButton;
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -86,6 +88,9 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         this.renderHandle(graphics);
         int labelColorInt = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
         this.renderScrollingLabel(graphics, Minecraft.getInstance().font, 2, labelColorInt | Mth.ceil(this.alpha * 255.0F) << 24);
+        if (this.isHovered()) {
+            graphics.requestCursor(this.isActive() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
+        }
     }
 
     protected void renderHandle(@NotNull GuiGraphics graphics) {
@@ -132,8 +137,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
 
             if (this.handleClick) {
                 boolean leftClick = this.leftDownThis || leftDownGlobal;
-                MouseButtonInfo mouseButtonInfo = new MouseButtonInfo(leftClick ? 0 : 1, -1);
-                MouseButtonEvent mouseButtonEvent = new MouseButtonEvent(mouseX, mouseY, mouseButtonInfo);
+                MouseButtonEvent mouseButtonEvent = VanillaEvents.mouseButtonEvent(mouseX, mouseY, 0, VanillaEvents.GLFW_NO_MODIFIERS);
                 if (this.isHoveredOrFocused() && (MouseInput.isLeftMouseDown() || (this.enableRightClick && MouseInput.isRightMouseDown())) && (!leftDownGlobal || this.ignoreGlobalLeftMouseDown) && !leftDownNotHovered && !this.isInputBlocked() && this.active && this.visible) {
                     if (!this.leftDownThis) {
                         this.onClick(mouseButtonEvent, false);

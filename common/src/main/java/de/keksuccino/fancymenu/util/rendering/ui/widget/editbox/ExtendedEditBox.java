@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -11,7 +12,6 @@ import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -22,7 +22,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.Color;
 
 /**
@@ -79,7 +78,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         boolean bordered = access.getBorderedFancyMenu();
 
         if (this.isVisible()) {
-            // --- Background and Border Rendering (Custom) ---
+            // Background and Border Rendering (Custom)
             graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
             if (bordered) {
                 int borderColor = this.isFocused() ? this.borderFocusedColor.getColorInt() : this.borderNormalColor.getColorInt();
@@ -87,7 +86,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                 UIBase.renderBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
             }
 
-            // --- Text and Cursor Rendering ---
+            // Text and Cursor Rendering
             int textColor = access.getIsEditableFancyMenu() ? this.textColor.getColorInt() : this.textColorUneditable.getColorInt();
             int cursorPos = this.getCursorPosition() - access.getDisplayPosFancyMenu();
             int highlightPos = access.getHighlightPosFancyMenu() - access.getDisplayPosFancyMenu();
@@ -181,14 +180,14 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @Override
-    public void render(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
         if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
-        super.render($$0, $$1, $$2, $$3);
+        super.render(graphics, mouseX, mouseY, partial);
+        if (this.isHovered()) {
+            graphics.requestCursor(this.isActive() ? CursorTypes.IBEAM : CursorTypes.NOT_ALLOWED);
+        }
     }
-
-    // <--- The rest of your class methods remain unchanged as their logic is not directly tied to rendering calls --->
-    // <--- They operate on internal state, which is still valid. --->
 
     public void setHeight(int height) {
         this.height = height;
@@ -464,7 +463,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         return super.mouseClicked(event, isDoubleClick);
     }
 
-    //This is to make the edit box work in FocuslessEventHandlers
+    // This is to make the edit box work in FocuslessEventHandlers
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
         return false;

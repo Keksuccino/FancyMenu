@@ -1,11 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -20,10 +19,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -107,6 +104,9 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.renderBackground(graphics);
         this.renderLabelText(graphics);
+        if (this.isHovered()) {
+            graphics.requestCursor(this.isActive() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
+        }
     }
 
     protected void renderBackground(@NotNull GuiGraphics graphics) {

@@ -13,6 +13,8 @@ public class VanillaEvents {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    public static final int GLFW_NO_MODIFIERS = 0;
+
     @Nullable
     private static MouseButtonInfo latestVanillaMouseButtonInfo = null;
     private static long latestVanillaMouseButtonInfoCachingTime = -1L;

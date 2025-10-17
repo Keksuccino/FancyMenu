@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiGraphics;
@@ -10,7 +10,6 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
@@ -21,7 +20,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@SuppressWarnings("unused")
 public class ScrollBar extends UIBase implements GuiEventListener, Renderable, NarratableEntry {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -106,6 +104,15 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
             }
         }
 
+        if (this.grabberHovered) {
+            graphics.requestCursor(this.isActive() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
+        }
+
+    }
+
+    @Override
+    public boolean isActive() {
+        return this.active;
     }
 
     public boolean isGrabberHovered() {

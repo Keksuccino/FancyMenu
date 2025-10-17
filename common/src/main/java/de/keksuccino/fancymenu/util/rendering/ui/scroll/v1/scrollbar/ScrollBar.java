@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar;
 
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
@@ -101,6 +102,10 @@ public class ScrollBar {
         this.handleGrabberScrolling();
 
         ScrollBarHandler.handleScrollBar(this);
+
+        if (this.isGrabberHovered()) {
+            graphics.requestCursor(this.active ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
+        }
 
     }
 
