@@ -24,12 +24,12 @@ import java.util.UUID;
 public class WrappedFancyPlayerWidget extends AbstractWidget implements NavigatableWidget {
 
     @NotNull
+    protected final FancyPlayerWidget wrapped;
+
+    @NotNull
     public static WrappedFancyPlayerWidget build(int x, int y, int width, int height) {
         return new WrappedFancyPlayerWidget(x, y, width, height);
     }
-
-    @NotNull
-    protected final FancyPlayerWidget wrapped;
 
     protected WrappedFancyPlayerWidget(int x, int y, int width, int height) {
         super(x, y, width, height, Component.empty());
@@ -276,7 +276,7 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
      * @return {@code this}.
      */
     public WrappedFancyPlayerWidget setSkin(@Nullable PlayerSkin skin) {
-        //TODO RESTORE THIS ONCE FER GOT UPDATED
+        //TODO RESTORE THIS ONCE FER GOT UPDATED !!!!!!!!
 //        wrapped.setSkin(skin);
         return this;
     }

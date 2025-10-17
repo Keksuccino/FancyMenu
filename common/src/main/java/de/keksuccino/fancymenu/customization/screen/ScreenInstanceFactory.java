@@ -53,7 +53,7 @@ public class ScreenInstanceFactory {
 		);
 
 		ScreenInstanceFactory.registerScreenProvider(CreateWorldScreen.class.getName(), () ->
-				new ExecuteOnRenderScreen(() -> CreateWorldScreen.openFresh(Minecraft.getInstance(), new TitleScreen()), true));
+				new ExecuteOnRenderScreen(() -> CreateWorldScreen.openFresh(Minecraft.getInstance(), () -> Minecraft.getInstance().setScreen(new TitleScreen())), true));
 
 	}
 

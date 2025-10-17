@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -291,13 +292,8 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
     }
 
     @NotNull
-    public static MouseButtonEvent buildMouseButtonEvent(double mouseX, double mouseY, int button, int modifiers) {
-        return new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, modifiers));
-    }
-
-    @NotNull
     public static MouseButtonEvent buildMouseButtonEvent(double mouseX, double mouseY, int button) {
-        return buildMouseButtonEvent(mouseX, mouseY, button, -1);
+        return VanillaEvents.mouseButtonEvent(mouseX, mouseY, button);
     }
 
 }

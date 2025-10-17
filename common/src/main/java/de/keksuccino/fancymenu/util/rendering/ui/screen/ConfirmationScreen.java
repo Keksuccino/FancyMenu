@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -164,15 +165,15 @@ public class ConfirmationScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int button, int p_96553_, int p_96554_) {
+    public boolean keyPressed(KeyEvent event) {
 
         //ENTER
-        if (button == InputConstants.KEY_ENTER) {
+        if (event.key() == InputConstants.KEY_ENTER) {
             this.callback.accept(true);
             return true;
         }
 
-        return super.keyPressed(button, p_96553_, p_96554_);
+        return super.keyPressed(event);
 
     }
 

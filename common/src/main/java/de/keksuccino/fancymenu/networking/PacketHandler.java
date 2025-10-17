@@ -108,11 +108,11 @@ public class PacketHandler {
             }
         } else if (direction == PacketDirection.TO_SERVER) {
             if (sender != null) {
-                MinecraftServer server = sender.getServer();
+                MinecraftServer server = sender.level().getServer();
                 if (server != null) {
                     Packet packet = deserializePacket(() -> Objects.requireNonNull(codec.deserialize(dataSplit[1])));
                     if (packet != null) {
-                        sender.getServer().execute(() -> {
+                        sender.level().getServer().execute(() -> {
                             try {
                                 packet.processPacket(sender);
                             } catch (Exception ex) {

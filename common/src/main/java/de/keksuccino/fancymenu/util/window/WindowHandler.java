@@ -13,6 +13,7 @@ import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinWindow;
+import de.keksuccino.fancymenu.util.OSUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.IoSupplier;
@@ -89,7 +90,7 @@ public class WindowHandler {
 	}
 
 	public static void updateCustomWindowIcon() {
-		if (Minecraft.ON_OSX) {
+		if (OSUtils.isMacOS()) {
 			updateCustomWindowIconMacOS();
 		} else {
 			updateCustomWindowIconWindowsLinux();
@@ -164,7 +165,7 @@ public class WindowHandler {
 			$$6.height($$4.get(0));
 			$$6.pixels($$8);
 			$$6.position(0);
-			GLFW.glfwSetWindowIcon(Minecraft.getInstance().getWindow().getWindow(), $$6);
+			GLFW.glfwSetWindowIcon(Minecraft.getInstance().getWindow().handle(), $$6);
 			STBImage.stbi_image_free($$7);
 			STBImage.stbi_image_free($$8);
 		} catch (IOException var12) {
@@ -190,7 +191,7 @@ public class WindowHandler {
 
 	public static void resetWindowIcon() {
 		try {
-			if (Minecraft.ON_OSX) {
+			if (OSUtils.isMacOS()) {
 				MacosUtil.loadIcon(getVanillaWindowIconFile("icons", "minecraft.icns"));
 			} else {
 				setIcon(getVanillaWindowIconFile("icons", "icon_16x16.png"), getVanillaWindowIconFile("icons", "icon_32x32.png"));

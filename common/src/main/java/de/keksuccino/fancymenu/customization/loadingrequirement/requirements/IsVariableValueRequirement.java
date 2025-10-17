@@ -12,6 +12,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestio
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -143,9 +145,9 @@ public class IsVariableValueRequirement extends LoadingRequirement {
         }
 
         @Override
-        public boolean keyPressed(int $$0, int $$1, int $$2) {
-            if (this.variableNameSuggestions.keyPressed($$0, $$1, $$2)) return true;
-            return super.keyPressed($$0, $$1, $$2);
+        public boolean keyPressed(KeyEvent event) {
+            if (this.variableNameSuggestions.keyPressed(event)) return true;
+            return super.keyPressed(event);
         }
 
         @Override
@@ -155,9 +157,9 @@ public class IsVariableValueRequirement extends LoadingRequirement {
         }
 
         @Override
-        public boolean mouseClicked(double $$0, double $$1, int $$2) {
-            if (this.variableNameSuggestions.mouseClicked($$0, $$1, $$2)) return true;
-            return super.mouseClicked($$0, $$1, $$2);
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            if (this.variableNameSuggestions.mouseClicked(event)) return true;
+            return super.mouseClicked(event, isDoubleClick);
         }
 
         @Override

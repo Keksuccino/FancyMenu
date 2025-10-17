@@ -21,10 +21,10 @@ public class FancyMenuNeoForgeClientEvents {
     @SubscribeEvent
     public void afterScreenKeyPress(ScreenEvent.KeyPressed.Post e) {
 
-        ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(e.getScreen(), e.getKeyCode(), e.getScanCode(), e.getModifiers());
+        ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(e.getScreen(), e.getKeyEvent());
         EventHandler.INSTANCE.postEvent(event);
 
-        if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) o.keyPressed(e.getKeyCode(), e.getScanCode(), e.getModifiers());
+        if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) o.keyPressed(e.getKeyEvent());
 
     }
 

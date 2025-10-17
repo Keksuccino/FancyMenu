@@ -55,14 +55,13 @@ public record FloatBlitRenderState(RenderPipeline pipeline, TextureSetup texture
      * Adds the four vertices of the textured quad to the given vertex consumer.
      *
      * @param vertexConsumer The consumer to which the vertices will be added.
-     * @param depth The Z-coordinate (depth) for the vertices.
      */
     @Override
-    public void buildVertices(VertexConsumer vertexConsumer, float depth) {
-        vertexConsumer.addVertexWith2DPose(this.transform(), this.minX(), this.minY(), depth).setUv(this.minU(), this.minV()).setColor(this.color());
-        vertexConsumer.addVertexWith2DPose(this.transform(), this.minX(), this.maxY(), depth).setUv(this.minU(), this.maxV()).setColor(this.color());
-        vertexConsumer.addVertexWith2DPose(this.transform(), this.maxX(), this.maxY(), depth).setUv(this.maxU(), this.maxV()).setColor(this.color());
-        vertexConsumer.addVertexWith2DPose(this.transform(), this.maxX(), this.minY(), depth).setUv(this.maxU(), this.minV()).setColor(this.color());
+    public void buildVertices(VertexConsumer vertexConsumer) {
+        vertexConsumer.addVertexWith2DPose(this.transform(), this.minX(), this.minY()).setUv(this.minU(), this.minV()).setColor(this.color());
+        vertexConsumer.addVertexWith2DPose(this.transform(), this.minX(), this.maxY()).setUv(this.minU(), this.maxV()).setColor(this.color());
+        vertexConsumer.addVertexWith2DPose(this.transform(), this.maxX(), this.maxY()).setUv(this.maxU(), this.maxV()).setColor(this.color());
+        vertexConsumer.addVertexWith2DPose(this.transform(), this.maxX(), this.minY()).setUv(this.maxU(), this.minV()).setColor(this.color());
     }
 
     /**

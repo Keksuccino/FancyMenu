@@ -11,6 +11,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.apache.logging.log4j.LogManager;
@@ -217,10 +218,10 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.active && this.visible && this.isHoveredOrFocused() && (button == 0)) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (this.active && this.visible && this.isHoveredOrFocused() && (event.button() == 0)) {
             for (ComponentWidget w : this.children) {
-                if (w.mouseClicked(mouseX, mouseY, button)) return true;
+                if (w.mouseClicked(event, isDoubleClick)) return true;
             }
             if (this.onClick != null) {
                 this.onClick.accept(this);

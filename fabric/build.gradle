@@ -30,8 +30,8 @@ dependencies {
     include(implementation 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7')
     modImplementation "maven.modrinth:melody:1.0.13-1.21.10-fabric"
     modImplementation "maven.modrinth:konkrete:1.9.13-1.21.10-fabric"
-    modImplementation "maven.modrinth:modmenu:15.0.0-beta.2"
-    modImplementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
+    modCompileOnly "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
+    modCompileOnly "com.cinemamod:mcef:2.1.6-1.21.4"
     modImplementation "maven.modrinth:modmenu:16.0.0-rc.1"
 
 }

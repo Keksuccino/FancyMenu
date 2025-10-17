@@ -124,7 +124,7 @@ public class WebUtils {
         try {
             String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
             URL u = new URL(url);
-            if (!Minecraft.ON_OSX) {
+            if (!OSUtils.isMacOS()) {
                 if (s.contains("win")) {
                     Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
                 } else {

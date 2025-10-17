@@ -32,8 +32,8 @@ public class IsSpectatorRequirement extends LoadingRequirement {
         if (Minecraft.getInstance().level != null) {
             LocalPlayer p = Minecraft.getInstance().player;
             ClientPacketListener l = Minecraft.getInstance().getConnection();
-            if (l != null) {
-                PlayerInfo playerinfo = l.getPlayerInfo(p.getGameProfile().getId());
+            if ((l != null) && (p.getGameProfile() != null)) {
+                PlayerInfo playerinfo = l.getPlayerInfo(p.getGameProfile().id());
                 if (playerinfo != null) {
                     if (playerinfo.getGameMode() == GameType.SPECTATOR) {
                         return true;

@@ -85,7 +85,7 @@ public class CursorHandler {
 
     private static void setCursor(long cursor) {
         if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
-        GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), cursor);
+        GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().handle(), cursor);
     }
 
     @EventListener

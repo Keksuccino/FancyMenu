@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -216,14 +217,14 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
     }
 
     @Override
-    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
 
-        if (keycode == InputConstants.KEY_ENTER) {
+        if (event.key() == InputConstants.KEY_ENTER) {
             this.trySave();
             return true;
         }
 
-        return super.keyPressed(keycode, scancode, modifiers);
+        return super.keyPressed(event);
 
     }
 

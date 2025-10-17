@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
@@ -53,18 +54,26 @@ public class MixinMouseHandler {
         EventHandler.INSTANCE.postEvent(e);
     }
 
-    @Inject(method = "onButton", at = @At(value = "HEAD"))
-    private void headOnPressFancyMenu(long window, MouseButtonInfo buttonInfo, int action, CallbackInfo info) {
-        if (window == Minecraft.getInstance().getWindow().handle()) {
-            boolean clicked = action == 1;
-            if (clicked && (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o)) o.mouseClicked(buttonInfo.button());
-        }
-    }
-
     @WrapOperation(method = "handleAccumulatedMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseMoved(DD)V"))
     private void wrap_mouseMoved_in_handleAccumulatedMovement_FancyMenu(Screen instance, double mouseX, double mouseY, Operation<Void> original) {
         if (MCEFUtil.isMCEFLoaded()) BrowserHandler.mouseMoved(mouseX, mouseY);
         original.call(instance, mouseX, mouseY);
+    }
+
+    @WrapOperation(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MouseHandler;simulateRightClick(Lnet/minecraft/client/input/MouseButtonInfo;Z)Lnet/minecraft/client/input/MouseButtonInfo;"))
+    private MouseButtonInfo wrap_simulateRightClick_in_onButton_FancyMenu(MouseHandler instance, MouseButtonInfo infoIn, boolean pressed, Operation<MouseButtonInfo> original) {
+
+        // Cache latest MouseButtonInfo
+        MouseButtonInfo info = original.call(instance, infoIn, pressed);
+        VanillaEvents.updateLatestVanillaMouseButtonInfo(info);
+
+        // Handle clicks in GameIntroOverlay
+        if (pressed && (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o)) {
+            o.mouseClicked(VanillaEvents.mouseButtonEvent(), false);
+        }
+
+        return info;
+
     }
 
 }

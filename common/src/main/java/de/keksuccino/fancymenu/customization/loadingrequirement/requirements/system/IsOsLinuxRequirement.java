@@ -1,16 +1,14 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system;
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
+import de.keksuccino.fancymenu.util.OSUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
-
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 public class IsOsLinuxRequirement extends LoadingRequirement {
 
@@ -25,18 +23,7 @@ public class IsOsLinuxRequirement extends LoadingRequirement {
 
     @Override
     public boolean isRequirementMet(@Nullable String value) {
-
-        return !isMacOS() && !isWindows();
-
-    }
-
-    public static boolean isMacOS() {
-        return Minecraft.ON_OSX;
-    }
-
-    public static boolean isWindows() {
-        String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-        return (s.contains("win"));
+        return OSUtils.isLinux();
     }
 
     @Override

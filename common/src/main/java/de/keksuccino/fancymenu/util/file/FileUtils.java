@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.file;
 
-import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.OSUtils;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import java.io.*;
@@ -80,7 +80,7 @@ public class FileUtils extends de.keksuccino.konkrete.file.FileUtils {
             String url = file.toURI().toURL().toString();
             String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
             URL u = new URL(url);
-            if (!Minecraft.ON_OSX) {
+            if (!OSUtils.isMacOS()) {
                 if (s.contains("win")) {
                     Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
                 } else {

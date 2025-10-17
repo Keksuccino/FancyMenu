@@ -25,6 +25,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -342,15 +343,15 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if ((this.rightClickMenu != null) && this.rightClickMenu.mouseClicked(mouseX, mouseY, button) && this.rightClickMenu.isOpen()) return true;
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if ((this.rightClickMenu != null) && this.rightClickMenu.mouseClicked(event, isDoubleClick) && this.rightClickMenu.isOpen()) return true;
         this.closeRightClickContextMenu();
         for (DebugOverlayLine line : this.lines) {
-            if (line.onClick(button, (int) mouseX, (int) mouseY)) return true;
+            if (line.onClick(event.button(), (int) event.x(), (int) event.y())) return true;
         }
-        if (button == 1) {
+        if (event.button() == 1) {
             for (AbstractElement e : this.currentScreenElements) {
-                if (RenderingUtils.isXYInArea(mouseX, mouseY, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight())) {
+                if (RenderingUtils.isXYInArea(event.x(), event.y(), e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight())) {
                     this.openRightClickContextMenu(this.buildContextMenuForElement(e));
                     return true;
                 }

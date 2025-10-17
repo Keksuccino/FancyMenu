@@ -28,7 +28,7 @@ public class WorldLoadProgressPlaceholder extends Placeholder {
             return "" + ((IMixinProgressScreen)p).getProgressFancyMenu();
         }
         if (s instanceof LevelLoadingScreen l) {
-            return "" + ((IMixinLevelLoadingScreen)l).getProgressListenerFancyMenu().getProgress();
+            return "" + (int)(((IMixinLevelLoadingScreen)l).get_loadTracker_FancyMenu().serverProgress() * 100.0F);
         }
         return "0";
     }

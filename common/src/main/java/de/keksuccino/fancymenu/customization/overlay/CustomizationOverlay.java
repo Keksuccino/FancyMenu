@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -123,23 +124,24 @@ public class CustomizationOverlay implements FancyMenuUiComponent {
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName())) {
 
 			String keyName = e.getKeyName();
+            KeyEvent event = e.getKeyEvent();
 
 			if (!FancyMenu.getOptions().modpackMode.getValue()) {
 
 				//Toggle Menu Bar
-				if (keyName.equals("c") && Screen.hasControlDown() && Screen.hasAltDown()) {
+				if (keyName.equals("c") && event.hasControlDown() && event.hasAltDown()) {
 					FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
 					ScreenCustomization.reInitCurrentScreen();
 				}
 
 				//Toggle Debug Overlay
-				if (keyName.equals("d") && Screen.hasControlDown() && Screen.hasAltDown()) {
+				if (keyName.equals("d") && event.hasControlDown() && event.hasAltDown()) {
 					FancyMenu.getOptions().showDebugOverlay.setValue(!FancyMenu.getOptions().showDebugOverlay.getValue());
 					ScreenCustomization.reInitCurrentScreen();
 				}
 
 				//Reload FancyMenu
-				if (keyName.equals("r") && Screen.hasControlDown() && Screen.hasAltDown()) {
+				if (keyName.equals("r") && event.hasControlDown() && event.hasAltDown()) {
 					ScreenCustomization.reloadFancyMenu();
 				}
 

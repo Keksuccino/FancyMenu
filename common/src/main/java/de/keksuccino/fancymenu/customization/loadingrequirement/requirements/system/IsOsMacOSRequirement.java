@@ -1,12 +1,11 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system;
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
+import de.keksuccino.fancymenu.util.OSUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
-
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
@@ -24,13 +23,7 @@ public class IsOsMacOSRequirement extends LoadingRequirement {
 
     @Override
     public boolean isRequirementMet(@Nullable String value) {
-
-        return isMacOS();
-
-    }
-
-    protected static boolean isMacOS() {
-        return Minecraft.ON_OSX;
+        return OSUtils.isMacOS();
     }
 
     @Override

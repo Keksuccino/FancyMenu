@@ -20,6 +20,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
@@ -178,14 +180,14 @@ public class GameIntroOverlay extends Overlay {
         Minecraft.getInstance().setOverlay(null);
     }
 
-    public void keyPressed(int keycode, int scancode, int modifiers) {
+    public void keyPressed(KeyEvent event) {
         //Handle "Press Any Key to Skip" if enabled
         if (FancyMenu.getOptions().gameIntroAllowSkip.getValue()) {
             this.close();
         }
     }
 
-    public void mouseClicked(int button) {
+    public void mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         //Handle "Press Any Key to Skip" if enabled
         if (FancyMenu.getOptions().gameIntroAllowSkip.getValue()) {
             this.close();

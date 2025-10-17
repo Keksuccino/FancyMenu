@@ -49,18 +49,17 @@ public record FloatColoredRectangleRenderState(RenderPipeline pipeline, TextureS
      * Adds the four vertices of the colored rectangle to the given vertex consumer.
      *
      * @param vertexConsumer The consumer to which the vertices will be added.
-     * @param depth The Z-coordinate (depth) for the vertices.
      */
     @Override
-    public void buildVertices(VertexConsumer vertexConsumer, float depth) {
+    public void buildVertices(VertexConsumer vertexConsumer) {
         // Top-left vertex with startColor
-        vertexConsumer.addVertexWith2DPose(this.transform(), this.minX(), this.minY(), depth).setColor(this.startColor());
+        vertexConsumer.addVertexWith2DPose(this.transform(), this.minX(), this.minY()).setColor(this.startColor());
         // Bottom-left vertex with endColor
-        vertexConsumer.addVertexWith2DPose(this.transform(), this.minX(), this.maxY(), depth).setColor(this.endColor());
+        vertexConsumer.addVertexWith2DPose(this.transform(), this.minX(), this.maxY()).setColor(this.endColor());
         // Bottom-right vertex with endColor
-        vertexConsumer.addVertexWith2DPose(this.transform(), this.maxX(), this.maxY(), depth).setColor(this.endColor());
+        vertexConsumer.addVertexWith2DPose(this.transform(), this.maxX(), this.maxY()).setColor(this.endColor());
         // Top-right vertex with startColor
-        vertexConsumer.addVertexWith2DPose(this.transform(), this.maxX(), this.minY(), depth).setColor(this.startColor());
+        vertexConsumer.addVertexWith2DPose(this.transform(), this.maxX(), this.minY()).setColor(this.startColor());
     }
 
     /**

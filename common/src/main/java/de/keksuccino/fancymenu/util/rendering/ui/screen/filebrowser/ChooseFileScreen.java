@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,15 +48,15 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
     }
 
     @Override
-    public boolean keyPressed(int keycode, int scancode, int modifiers) {
-        if (keycode == InputConstants.KEY_ENTER) {
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == InputConstants.KEY_ENTER) {
             AbstractFileScrollAreaEntry selected = this.getSelectedEntry();
             if (selected != null) {
                 this.callback.accept(new File(selected.file.getPath().replace("\\", "/")));
                 return true;
             }
         }
-        return super.keyPressed(keycode, scancode, modifiers);
+        return super.keyPressed(event);
     }
 
     public class FileScrollAreaEntry extends AbstractFileScrollAreaEntry {

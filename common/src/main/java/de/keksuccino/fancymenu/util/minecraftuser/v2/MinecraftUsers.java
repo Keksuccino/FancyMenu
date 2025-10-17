@@ -84,7 +84,7 @@ public class MinecraftUsers {
 
             if (profile != UNKNOWN_USER_PROFILE) {
                 GameProfile gameProfile;
-                MinecraftSessionService minecraftSessionService = Minecraft.getInstance().getMinecraftSessionService();
+                MinecraftSessionService minecraftSessionService = Minecraft.getInstance().services().sessionService();
                 gameProfile = Objects.requireNonNull(minecraftSessionService.fetchProfile(Objects.requireNonNull(profile.getUUID()), false)).profile();
                 MinecraftProfileTextures textures = Objects.requireNonNull(minecraftSessionService.getTextures(gameProfile));
                 CACHED_PROFILE_TEXTURES.put(playerName, textures);

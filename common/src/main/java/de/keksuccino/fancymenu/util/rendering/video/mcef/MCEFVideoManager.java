@@ -2,11 +2,8 @@ package de.keksuccino.fancymenu.util.rendering.video.mcef;
 
 import com.cinemamod.mcef.MCEFClient;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.util.mcef.ActionBridge;
-import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.melody.resources.audio.MinecraftSoundSettingsObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cef.CefSettings;

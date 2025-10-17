@@ -9,6 +9,8 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -122,9 +124,9 @@ public class IsLanguageRequirement extends LoadingRequirement {
         }
 
         @Override
-        public boolean keyPressed(int $$0, int $$1, int $$2) {
-            if (this.langIdSuggestions.keyPressed($$0, $$1, $$2)) return true;
-            return super.keyPressed($$0, $$1, $$2);
+        public boolean keyPressed(KeyEvent event) {
+            if (this.langIdSuggestions.keyPressed(event)) return true;
+            return super.keyPressed(event);
         }
 
         @Override
@@ -134,9 +136,9 @@ public class IsLanguageRequirement extends LoadingRequirement {
         }
 
         @Override
-        public boolean mouseClicked(double $$0, double $$1, int $$2) {
-            if (this.langIdSuggestions.mouseClicked($$0, $$1, $$2)) return true;
-            return super.mouseClicked($$0, $$1, $$2);
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            if (this.langIdSuggestions.mouseClicked(event)) return true;
+            return super.mouseClicked(event, isDoubleClick);
         }
 
         @Override

@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,12 +28,12 @@ public class FancyMenuFabricClientEvents {
 
     private static void registerScreenEvents() {
         ScreenEvents.BEFORE_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
-            ScreenKeyboardEvents.afterKeyPress(screen).register((screen1, key, scancode, modifiers) -> {
+            ScreenKeyboardEvents.afterKeyPress(screen).register((screen1, keyEvent) -> {
 
-                ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(screen1, key, scancode, modifiers);
+                ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(screen1, keyEvent);
                 EventHandler.INSTANCE.postEvent(event);
 
-                if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) o.keyPressed(key, scancode, modifiers);
+                if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) o.keyPressed(keyEvent);
 
             });
         });
