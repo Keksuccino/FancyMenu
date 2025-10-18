@@ -61,17 +61,8 @@ dependencies {
         jarJar.ranged(it, "[1.7,)")
     }
     compileOnly "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
-//    implementation "com.cinemamod:mcef:2.1.6-1.21.1"
-    compileOnly "curse.maven:mcef-636236:6091756"
-}
-
-// Exclude Fabric Loader from NeoForge
-configurations {
-    runtimeClasspath    { exclude group: 'net.fabricmc', module: 'fabric-loader' }
-    developmentRuntimeClasspath {
-        // Gradle 8 names used by ForgeGradle 6
-        exclude group: 'net.fabricmc', module: 'fabric-loader'
-    }
+    compileOnly 'com.cinemamod:mcef:2.1.6-1.21.4'
+    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.4.1'
 }
 
 // Exclude Fabric Loader from NeoForge
