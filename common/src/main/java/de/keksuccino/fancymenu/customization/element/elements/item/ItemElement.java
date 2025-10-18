@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -21,6 +22,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.level.saveddata.maps.MapId;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -79,7 +82,7 @@ public class ItemElement extends AbstractElement {
                 if ((loreFinal != null) && !loreFinal.isBlank()) {
                     List<Component> lines = new ArrayList<>();
                     for (String line : StringUtils.splitLines(loreFinal.replace("%n%", "\n"), "\n")) {
-                        lines.add(Component.literal(line)); // Assuming buildComponent is similar to literal()
+                        lines.add(buildComponent(line));
                     }
                     this.cachedStack.set(DataComponents.LORE, new ItemLore(lines));
                 }
