@@ -337,7 +337,7 @@ public abstract class CellScreen extends Screen {
     }
 
     @Override
-    protected FocusNavigationEvent.TabNavigation createTabEvent(boolean $$0) {
+    public FocusNavigationEvent.TabNavigation createTabEvent(boolean $$0) {
         return null;
     }
 
