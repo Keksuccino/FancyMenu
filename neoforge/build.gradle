@@ -73,6 +73,7 @@ configurations {
         exclude group: 'net.fabricmc', module: 'fabric-loader'
     }
 }
+configurations.named("testCompileClasspath") { extendsFrom configurations.getByName("compileOnly") }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code++
 Spec<Task> notNeoTask = { Task it -> !it.name.startsWith("neo") } as Spec<Task>
