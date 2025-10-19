@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtEntityListener;
+import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtEntityListener;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -36,16 +38,27 @@ public class MixinGameRenderer {
         }
 
         HitResult hitResult = this.minecraft.hitResult;
+        OnStartLookingAtEntityListener startLookingListener = Listeners.ON_START_LOOKING_AT_ENTITY;
+        OnStopLookingAtEntityListener stopLookingListener = Listeners.ON_STOP_LOOKING_AT_ENTITY;
+
         if (hitResult == null) {
             Listeners.ON_LOOKING_AT_BLOCK.onStopLooking();
-            Listeners.ON_LOOKING_AT_ENTITY.onStopLooking();
+            OnStartLookingAtEntityListener.LookedEntityData previousEntity = startLookingListener.getCurrentEntityData();
+            if (previousEntity != null) {
+                stopLookingListener.onStopLooking(previousEntity);
+                startLookingListener.clearCurrentEntity();
+            }
             return;
         }
 
         Entity cameraEntity = this.minecraft.getCameraEntity();
         if (cameraEntity == null) {
             Listeners.ON_LOOKING_AT_BLOCK.onStopLooking();
-            Listeners.ON_LOOKING_AT_ENTITY.onStopLooking();
+            OnStartLookingAtEntityListener.LookedEntityData previousEntity = startLookingListener.getCurrentEntityData();
+            if (previousEntity != null) {
+                stopLookingListener.onStopLooking(previousEntity);
+                startLookingListener.clearCurrentEntity();
+            }
             return;
         }
 
@@ -54,26 +67,45 @@ public class MixinGameRenderer {
         if (hitResult instanceof EntityHitResult entityHitResult) {
             Entity targetEntity = entityHitResult.getEntity();
             double distance = entityHitResult.getLocation().distanceTo(eyePosition);
-            Listeners.ON_LOOKING_AT_ENTITY.onLookAtEntity(targetEntity, distance);
+
+            OnStartLookingAtEntityListener.LookedEntityData previousEntity = startLookingListener.getCurrentEntityData();
+            if (previousEntity != null && !previousEntity.uuid().equals(targetEntity.getUUID())) {
+                stopLookingListener.onStopLooking(previousEntity);
+                startLookingListener.clearCurrentEntity();
+            }
+
+            startLookingListener.onLookAtEntity(targetEntity, distance);
             Listeners.ON_LOOKING_AT_BLOCK.onStopLooking();
             return;
         }
 
         if (!(hitResult instanceof BlockHitResult blockHitResult)) {
             Listeners.ON_LOOKING_AT_BLOCK.onStopLooking();
-            Listeners.ON_LOOKING_AT_ENTITY.onStopLooking();
+            OnStartLookingAtEntityListener.LookedEntityData previousEntity = startLookingListener.getCurrentEntityData();
+            if (previousEntity != null) {
+                stopLookingListener.onStopLooking(previousEntity);
+                startLookingListener.clearCurrentEntity();
+            }
             return;
         }
 
         if (!(this.minecraft.level instanceof ClientLevel clientLevel)) {
             Listeners.ON_LOOKING_AT_BLOCK.onStopLooking();
-            Listeners.ON_LOOKING_AT_ENTITY.onStopLooking();
+            OnStartLookingAtEntityListener.LookedEntityData previousEntity = startLookingListener.getCurrentEntityData();
+            if (previousEntity != null) {
+                stopLookingListener.onStopLooking(previousEntity);
+                startLookingListener.clearCurrentEntity();
+            }
             return;
         }
 
         double distance = blockHitResult.getLocation().distanceTo(eyePosition);
         Listeners.ON_LOOKING_AT_BLOCK.onLookAtBlock(clientLevel, blockHitResult, distance);
-        Listeners.ON_LOOKING_AT_ENTITY.onStopLooking();
+        OnStartLookingAtEntityListener.LookedEntityData previousEntity = startLookingListener.getCurrentEntityData();
+        if (previousEntity != null) {
+            stopLookingListener.onStopLooking(previousEntity);
+            startLookingListener.clearCurrentEntity();
+        }
 
     }
 

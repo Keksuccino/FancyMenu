@@ -12,6 +12,7 @@ public class ListenerRegistry {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final CharacterFilter IDENTIFIER_NAME_VALIDATOR = CharacterFilter.buildResourceNameFilter();
     private static final Map<String, AbstractListener> LISTENERS = new LinkedHashMap<>();
+    private static final Map<String, String> LEGACY_IDENTIFIER_MAPPINGS = new HashMap<>();
 
     public static void register(@NotNull AbstractListener listener) {
         if (!ListenerHandler.canRegisterListeners) {
@@ -27,9 +28,21 @@ public class ListenerRegistry {
         LISTENERS.put(listener.getIdentifier(), listener);
     }
 
+    public static void registerLegacyIdentifier(@NotNull String legacyIdentifier, @NotNull String targetIdentifier) {
+        if (!IDENTIFIER_NAME_VALIDATOR.isAllowedText(legacyIdentifier)) {
+            throw new RuntimeException("[FANCYMENU] Failed to register listener legacy identifier! Only basic characters [a-z], [0-9], [-_] are allowed! Illegal identifier: " + legacyIdentifier);
+        }
+        LEGACY_IDENTIFIER_MAPPINGS.put(legacyIdentifier, targetIdentifier);
+    }
+
     @Nullable
     public static AbstractListener getListener(@NotNull String identifier) {
-        return LISTENERS.get(identifier);
+        AbstractListener listener = LISTENERS.get(identifier);
+        if (listener != null) {
+            return listener;
+        }
+        String mappedIdentifier = LEGACY_IDENTIFIER_MAPPINGS.get(identifier);
+        return (mappedIdentifier != null) ? LISTENERS.get(mappedIdentifier) : null;
     }
 
     @NotNull
