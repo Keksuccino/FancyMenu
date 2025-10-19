@@ -35,6 +35,8 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Added "Download File to Game Directory" action to download files to the instance's game directory and the ".minecraft" directory (#1242)
   - There's also a listener that triggers when a file finishes downloading via this action (also includes if the download succeeded or not)
 - Added "Write File in Game Directory" action to write text content to files in the instance's game directory and the ".minecraft" directory (#1242)
+- Added "Select File from System" action that lets the user select a file on their PC and copies it to a target path inside the instance directory (or the ".minecraft" directory) (#1327)
+  - Also has a listener called "On File Selected" that triggers after a file got selected (#1328)
 - Added "File Size" placeholder to get the size of a local file in bytes (#1244)
 - Added "File MD5" placeholder to get the MD5 hash of a local file
 - Added "Last Death Message" placeholder that returns the player's last death message if there is any (#1165)
