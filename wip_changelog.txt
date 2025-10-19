@@ -110,6 +110,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed MCEF Video menu backgrounds sometimes fail to load, causing the GUI to look glitchy (#1317, #1252)
 - Fixed Audio elements don't stop playing when joining a world via quick-play (#1270)
 - Fixed some elements stop working when hiding the menu bar via "Hide Menu Bar" option in context menu (#1236)
+- Fixed game becoming unresponsive when trying to join a world or server while already in a world or on a server (#1332)
 
 %changelog:end%
 
