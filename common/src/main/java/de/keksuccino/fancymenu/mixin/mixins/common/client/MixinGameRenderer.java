@@ -10,6 +10,7 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
@@ -17,6 +18,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -85,12 +87,19 @@ public class MixinGameRenderer {
 
         stopLooking_FancyMenu(startLookingListener, stopLookingListener);
 
-        if (!(hitResult instanceof BlockHitResult blockHitResult)) {
+        if (!(hitResult instanceof BlockHitResult blockHitResult) || blockHitResult.getType() != HitResult.Type.BLOCK) {
             stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             return;
         }
 
         if (!(this.minecraft.level instanceof ClientLevel clientLevel)) {
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+            return;
+        }
+
+        BlockPos blockPos = blockHitResult.getBlockPos();
+        BlockState blockState = clientLevel.getBlockState(blockPos);
+        if (blockState.isAir()) {
             stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             return;
         }
