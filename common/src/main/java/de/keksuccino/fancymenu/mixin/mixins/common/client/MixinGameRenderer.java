@@ -2,7 +2,9 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtBlockListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtEntityListener;
+import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtBlockListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtEntityListener;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -29,6 +31,8 @@ public class MixinGameRenderer {
 
     @Unique
     private static final double ENTITY_LOOK_DISTANCE_FANCYMENU = 20.0D;
+    @Unique
+    private static final double BLOCK_LOOK_DISTANCE_FANCYMENU = OnStartLookingAtBlockListener.MAX_LOOK_DISTANCE;
 
     @Shadow @Final Minecraft minecraft;
 
@@ -45,18 +49,20 @@ public class MixinGameRenderer {
         }
 
         HitResult hitResult = this.minecraft.hitResult;
+        OnStartLookingAtBlockListener startBlockListener = Listeners.ON_START_LOOKING_AT_BLOCK;
+        OnStopLookingAtBlockListener stopBlockListener = Listeners.ON_STOP_LOOKING_AT_BLOCK;
         OnStartLookingAtEntityListener startLookingListener = Listeners.ON_START_LOOKING_AT_ENTITY;
         OnStopLookingAtEntityListener stopLookingListener = Listeners.ON_STOP_LOOKING_AT_ENTITY;
 
         if (hitResult == null) {
-            Listeners.ON_LOOKING_AT_BLOCK.onStopLooking();
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             stopLooking_FancyMenu(startLookingListener, stopLookingListener);
             return;
         }
 
         Entity cameraEntity = this.minecraft.getCameraEntity();
         if (cameraEntity == null) {
-            Listeners.ON_LOOKING_AT_BLOCK.onStopLooking();
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             stopLooking_FancyMenu(startLookingListener, stopLookingListener);
             return;
         }
@@ -73,24 +79,28 @@ public class MixinGameRenderer {
             Entity targetEntity = extendedEntityHit.getEntity();
             double distance = extendedEntityHit.getLocation().distanceTo(eyePosition);
             startLookingListener.onLookAtEntity(targetEntity, distance);
-            Listeners.ON_LOOKING_AT_BLOCK.onStopLooking();
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             return;
         }
 
         stopLooking_FancyMenu(startLookingListener, stopLookingListener);
 
         if (!(hitResult instanceof BlockHitResult blockHitResult)) {
-            Listeners.ON_LOOKING_AT_BLOCK.onStopLooking();
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             return;
         }
 
         if (!(this.minecraft.level instanceof ClientLevel clientLevel)) {
-            Listeners.ON_LOOKING_AT_BLOCK.onStopLooking();
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             return;
         }
 
         double distance = blockHitResult.getLocation().distanceTo(eyePosition);
-        Listeners.ON_LOOKING_AT_BLOCK.onLookAtBlock(clientLevel, blockHitResult, distance);
+        if (distance > BLOCK_LOOK_DISTANCE_FANCYMENU) {
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+            return;
+        }
+        startBlockListener.onLookAtBlock(clientLevel, blockHitResult, distance);
 
     }
 
@@ -101,6 +111,15 @@ public class MixinGameRenderer {
             stopListener.onStopLooking(previousEntity);
             startListener.clearCurrentEntity();
         }
+    }
+
+    @Unique
+    private static void stopLookingBlock_FancyMenu(OnStartLookingAtBlockListener startListener, OnStopLookingAtBlockListener stopListener) {
+        OnStartLookingAtBlockListener.LookedBlockData previousBlock = startListener.getCurrentBlockData();
+        if (previousBlock != null) {
+            stopListener.onStopLooking(previousBlock);
+        }
+        startListener.clearCurrentBlock();
     }
 
     @Nullable

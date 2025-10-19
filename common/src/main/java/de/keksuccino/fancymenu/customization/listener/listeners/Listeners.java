@@ -26,7 +26,8 @@ public class Listeners {
     public static final OnStartedFreezingListener ON_STARTED_FREEZING = new OnStartedFreezingListener();
     public static final OnStoppedFreezingListener ON_STOPPED_FREEZING = new OnStoppedFreezingListener();
     public static final OnFullyFrozenListener ON_FULLY_FROZEN = new OnFullyFrozenListener();
-    public static final OnLookingAtBlockListener ON_LOOKING_AT_BLOCK = new OnLookingAtBlockListener();
+    public static final OnStartLookingAtBlockListener ON_START_LOOKING_AT_BLOCK = new OnStartLookingAtBlockListener();
+    public static final OnStopLookingAtBlockListener ON_STOP_LOOKING_AT_BLOCK = new OnStopLookingAtBlockListener();
     public static final OnStartLookingAtEntityListener ON_START_LOOKING_AT_ENTITY = new OnStartLookingAtEntityListener();
     public static final OnStopLookingAtEntityListener ON_STOP_LOOKING_AT_ENTITY = new OnStopLookingAtEntityListener();
     public static final OnEntitySpawnedListener ON_ENTITY_SPAWNED = new OnEntitySpawnedListener();
@@ -97,10 +98,12 @@ public class Listeners {
         ListenerRegistry.register(ON_STARTED_FREEZING);
         ListenerRegistry.register(ON_STOPPED_FREEZING);
         ListenerRegistry.register(ON_FULLY_FROZEN);
-        ListenerRegistry.register(ON_LOOKING_AT_BLOCK);
+        ListenerRegistry.register(ON_START_LOOKING_AT_BLOCK);
+        ListenerRegistry.register(ON_STOP_LOOKING_AT_BLOCK);
         ListenerRegistry.register(ON_START_LOOKING_AT_ENTITY);
         ListenerRegistry.register(ON_STOP_LOOKING_AT_ENTITY);
         ListenerRegistry.registerLegacyIdentifier("looking_at_entity", ON_START_LOOKING_AT_ENTITY.getIdentifier());
+        ListenerRegistry.registerLegacyIdentifier("looking_at_block", ON_START_LOOKING_AT_BLOCK.getIdentifier());
         ListenerRegistry.register(ON_ENTITY_SPAWNED);
         ListenerRegistry.register(ON_ENTITY_DIED);
         ListenerRegistry.register(ON_ENTITY_IN_SIGHT);
