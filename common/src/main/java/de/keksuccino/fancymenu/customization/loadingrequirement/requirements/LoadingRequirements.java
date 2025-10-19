@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.wor
 public class LoadingRequirements {
 
     public static final IsElementHoveredRequirement IS_ELEMENT_HOVERED = new IsElementHoveredRequirement();
+    public static final IsElementFocusedRequirement IS_ELEMENT_FOCUSED = new IsElementFocusedRequirement();
     public static final IsAnyElementHoveredRequirement IS_ANY_ELEMENT_HOVERED = new IsAnyElementHoveredRequirement();
     public static final IsAnyButtonHoveredRequirement IS_ANY_BUTTON_HOVERED = new IsAnyButtonHoveredRequirement();
     public static final IsLayoutEnabledRequirement IS_LAYOUT_ENABLED = new IsLayoutEnabledRequirement();
@@ -100,6 +101,7 @@ public class LoadingRequirements {
     public static void registerAll() {
 
         LoadingRequirementRegistry.register(IS_ELEMENT_HOVERED);
+        LoadingRequirementRegistry.register(IS_ELEMENT_FOCUSED);
         LoadingRequirementRegistry.register(IS_ANY_ELEMENT_HOVERED);
         LoadingRequirementRegistry.register(IS_ANY_BUTTON_HOVERED);
         LoadingRequirementRegistry.register(IS_LAYOUT_ENABLED);
