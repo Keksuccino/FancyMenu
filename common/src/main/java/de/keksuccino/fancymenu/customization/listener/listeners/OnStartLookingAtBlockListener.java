@@ -63,6 +63,27 @@ public class OnStartLookingAtBlockListener extends AbstractListener {
             }
             return data.blockKey();
         }));
+        list.add(new CustomVariable("block_pos_x", () -> {
+            LookedBlockData data = this.currentBlockData;
+            if (data == null) {
+                return "0";
+            }
+            return Integer.toString(data.blockPos().getX());
+        }));
+        list.add(new CustomVariable("block_pos_y", () -> {
+            LookedBlockData data = this.currentBlockData;
+            if (data == null) {
+                return "0";
+            }
+            return Integer.toString(data.blockPos().getY());
+        }));
+        list.add(new CustomVariable("block_pos_z", () -> {
+            LookedBlockData data = this.currentBlockData;
+            if (data == null) {
+                return "0";
+            }
+            return Integer.toString(data.blockPos().getZ());
+        }));
         list.add(new CustomVariable("distance", () -> {
             LookedBlockData data = this.currentBlockData;
             if (data == null) {

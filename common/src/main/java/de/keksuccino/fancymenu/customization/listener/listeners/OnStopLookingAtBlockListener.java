@@ -34,6 +34,27 @@ public class OnStopLookingAtBlockListener extends AbstractListener {
             }
             return data.blockKey();
         }));
+        list.add(new CustomVariable("block_pos_x", () -> {
+            LookedBlockData data = this.lastBlockData;
+            if (data == null) {
+                return "0";
+            }
+            return Integer.toString(data.blockPos().getX());
+        }));
+        list.add(new CustomVariable("block_pos_y", () -> {
+            LookedBlockData data = this.lastBlockData;
+            if (data == null) {
+                return "0";
+            }
+            return Integer.toString(data.blockPos().getY());
+        }));
+        list.add(new CustomVariable("block_pos_z", () -> {
+            LookedBlockData data = this.lastBlockData;
+            if (data == null) {
+                return "0";
+            }
+            return Integer.toString(data.blockPos().getZ());
+        }));
         list.add(new CustomVariable("distance", () -> {
             LookedBlockData data = this.lastBlockData;
             if (data == null) {
