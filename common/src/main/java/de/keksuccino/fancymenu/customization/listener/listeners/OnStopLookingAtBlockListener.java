@@ -55,7 +55,7 @@ public class OnStopLookingAtBlockListener extends AbstractListener {
             }
             return Integer.toString(data.blockPos().getZ());
         }));
-        list.add(new CustomVariable("distance", () -> {
+        list.add(new CustomVariable("distance_to_player", () -> {
             LookedBlockData data = this.lastBlockData;
             if (data == null) {
                 return "0";
