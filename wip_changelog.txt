@@ -99,6 +99,8 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Renamed the "Screen Identifier" placeholder to "Current Screen Identifier" to make it more clear what it does exactly
 - The Widgets menu in the menu bar of the layout editor (menu bar -> UI -> Widgets) now supports toggling each widget instead of just enabling it on left-click
 - The "Scrolling Enabled/Disabled" entry in the right-click context menu of the "Text" element got moved down to other scroll-related entries (#1312)
+- Setting a tooltip to a "Button" or "Slider" element now adds the tooltip as real Vanilla tooltip to the widget, instead of using a custom tooltip system (#1204)
+  - This makes these tooltips compatible with everything that changes the tooltip style and tooltips now work when navigating in menus by using the arrow or Tab keys
 - Fixed "World Save Data" placeholder being in the wrong category
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
 - Fixed missing localizations for some options of the new (1.21.4+) Player Entity element (#1276)
