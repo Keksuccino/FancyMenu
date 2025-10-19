@@ -34,7 +34,6 @@ public class IsAnyEffectActiveRequirement extends LoadingRequirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
         try {
-            if ((value == null) || value.trim().isEmpty()) return false;
             ClientLevel level = Minecraft.getInstance().level;
             LocalPlayer player = Minecraft.getInstance().player;
             if ((level != null) && (player != null)) {
