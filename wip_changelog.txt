@@ -98,6 +98,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
   - It now has an option to remove targets by ID, so you can easily copy an element's ID in the editor and then remove it there without searching it in long target lists first
 - Renamed the "Screen Identifier" placeholder to "Current Screen Identifier" to make it more clear what it does exactly
 - The Widgets menu in the menu bar of the layout editor (menu bar -> UI -> Widgets) now supports toggling each widget instead of just enabling it on left-click
+- The "Scrolling Enabled/Disabled" entry in the right-click context menu of the "Text" element got moved down to other scroll-related entries (#1312)
 - Fixed "World Save Data" placeholder being in the wrong category
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
 - Fixed missing localizations for some options of the new (1.21.4+) Player Entity element (#1276)
