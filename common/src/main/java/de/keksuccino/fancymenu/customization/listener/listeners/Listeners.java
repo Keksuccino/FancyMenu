@@ -17,6 +17,7 @@ public class Listeners {
     public static final OnDeathListener ON_DEATH = new OnDeathListener();
     public static final OnVariableUpdatedListener ON_VARIABLE_UPDATED = new OnVariableUpdatedListener();
     public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
+    public static final OnFileSelectedListener ON_FILE_SELECTED = new OnFileSelectedListener();
     public static final OnChatMessageReceivedListener ON_CHAT_MESSAGE_RECEIVED = new OnChatMessageReceivedListener();
     public static final OnChatMessageSentListener ON_CHAT_MESSAGE_SENT = new OnChatMessageSentListener();
     public static final OnEffectGainedListener ON_EFFECT_GAINED = new OnEffectGainedListener();
@@ -90,6 +91,7 @@ public class Listeners {
         ListenerRegistry.register(ON_QUIT_MINECRAFT);
         ListenerRegistry.register(ON_VARIABLE_UPDATED);
         ListenerRegistry.register(ON_FILE_DOWNLOADED);
+        ListenerRegistry.register(ON_FILE_SELECTED);
         ListenerRegistry.register(ON_CHAT_MESSAGE_RECEIVED);
         ListenerRegistry.register(ON_CHAT_MESSAGE_SENT);
         ListenerRegistry.register(ON_EFFECT_GAINED);
