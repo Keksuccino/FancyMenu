@@ -14,18 +14,16 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -247,9 +245,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.getWidget() != null) && this.getWidget().isHovered() && this.getWidget().visible && this.shouldRender() && !isEditor()) {
-            String tooltip = this.tooltip.replace("%n%", "\n");
-            TooltipHandler.INSTANCE.addWidgetTooltip(this.getWidget(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
+        if ((this.tooltip != null) && (this.getWidget() != null) && this.shouldRender() && !isEditor()) {
+            String t = PlaceholderParser.replacePlaceholders(this.tooltip).replace("%n%", "\n").replace("\\n", "\n");
+            this.getWidget().setTooltip(Tooltip.create(Component.literal(t)));
         }
     }
 

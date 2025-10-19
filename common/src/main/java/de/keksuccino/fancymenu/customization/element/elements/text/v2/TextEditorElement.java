@@ -127,12 +127,6 @@ public class TextEditorElement extends AbstractEditorElement {
                         true, 2, null, null)
                 .setStackable(true);
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "set_scrolling", TextEditorElement.class,
-                        consumes -> consumes.getElement().enableScrolling,
-                        (textEditorElement, aBoolean) -> textEditorElement.getElement().enableScrolling = aBoolean,
-                        "fancymenu.elements.text.scrolling")
-                .setStackable(true);
-
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_line_wrapping", TextEditorElement.class,
                         consumes -> consumes.getElement().markdownRenderer.isAutoLineBreakingEnabled(),
                         (textEditorElement, aBoolean) -> textEditorElement.getElement().markdownRenderer.setAutoLineBreakingEnabled(aBoolean),
@@ -310,6 +304,14 @@ public class TextEditorElement extends AbstractEditorElement {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.margin.desc")));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_markdown");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "set_scrolling", TextEditorElement.class,
+                        consumes -> consumes.getElement().enableScrolling,
+                        (textEditorElement, aBoolean) -> textEditorElement.getElement().enableScrolling = aBoolean,
+                        "fancymenu.elements.text.scrolling")
+                .setStackable(true);
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_scrolling");
 
         ContextMenu grabberTextureMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("grabber_texture", Component.translatable("fancymenu.elements.text.scroll_grabber_texture"), grabberTextureMenu)

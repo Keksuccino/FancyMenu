@@ -129,7 +129,7 @@ public class DotMinecraftUtils {
         String pathStr = path.toString().replace('\\', '/');
         
         // Check if path starts with .minecraft/ or just .minecraft
-        if (pathStr.startsWith(".minecraft/") || pathStr.equals(".minecraft")) {
+        if (isShortenedDotMinecraftPath(pathStr)) {
             Path minecraftDir = getMinecraftDirectory();
             
             if (pathStr.equals(".minecraft")) {
@@ -178,7 +178,7 @@ public class DotMinecraftUtils {
         } catch (Exception e) {
             // If path creation fails, try string manipulation directly
             String normalizedPath = pathString.replace('\\', '/');
-            if (normalizedPath.startsWith(".minecraft/") || normalizedPath.equals(".minecraft")) {
+            if (isShortenedDotMinecraftPath(normalizedPath)) {
                 Path minecraftDir = getMinecraftDirectory();
                 if (normalizedPath.equals(".minecraft")) {
                     return minecraftDir.toString();
@@ -188,6 +188,30 @@ public class DotMinecraftUtils {
             }
             return pathString;
         }
+    }
+
+    /**
+     * If the given path String is a shortened .minecraft path.<br>
+     * Shortened .minecraft paths starts with {@code .minecraft/} or equal {@code .minecraft}.
+     */
+    public static boolean isShortenedDotMinecraftPath(@NotNull String path) {
+        path = path.trim();
+        return path.startsWith(".minecraft/") || path.equals(".minecraft");
+    }
+
+    /**
+     * Converts the given path to a shortened .minecraft path IF the input path is inside the .minecraft directory.<br>
+     * Returns NULL if the input path is NOT in the .minecraft directory.
+     */
+    @Nullable
+    public static String convertToShortenedDotMinecraftPath(@NotNull String path) {
+        if (isShortenedDotMinecraftPath(path)) return path.trim();
+        String dotMcDir = getMinecraftDirectoryAsFile().getAbsolutePath().replace("\\", "/");
+        path = path.trim();
+        File pathFile = new File(path);
+        String absolutePath = pathFile.getAbsolutePath().replace("\\", "/");
+        if (!absolutePath.startsWith(dotMcDir)) return null;
+        return absolutePath.replace(dotMcDir, ".minecraft/");
     }
 
 }
