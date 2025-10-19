@@ -87,12 +87,13 @@ public class MixinGameRenderer {
 
         stopLooking_FancyMenu(startLookingListener, stopLookingListener);
 
-        if (!(hitResult instanceof BlockHitResult blockHitResult) || blockHitResult.getType() != HitResult.Type.BLOCK) {
+        if (!(this.minecraft.level instanceof ClientLevel clientLevel)) {
             stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             return;
         }
 
-        if (!(this.minecraft.level instanceof ClientLevel clientLevel)) {
+        HitResult blockPickResult = cameraEntity.pick(BLOCK_LOOK_DISTANCE_FANCYMENU, partialTicks, false);
+        if (!(blockPickResult instanceof BlockHitResult blockHitResult) || blockHitResult.getType() != HitResult.Type.BLOCK) {
             stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             return;
         }
@@ -109,6 +110,17 @@ public class MixinGameRenderer {
             stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             return;
         }
+
+        OnStartLookingAtBlockListener.LookedBlockData previousBlock = startBlockListener.getCurrentBlockData();
+        if (previousBlock != null) {
+            boolean sameBlock = previousBlock.blockPos().equals(blockPos)
+                && previousBlock.blockState().equals(blockState)
+                && previousBlock.levelKey().equals(clientLevel.dimension());
+            if (!sameBlock) {
+                stopBlockListener.onStopLooking(previousBlock);
+            }
+        }
+
         startBlockListener.onLookAtBlock(clientLevel, blockHitResult, distance);
 
     }
