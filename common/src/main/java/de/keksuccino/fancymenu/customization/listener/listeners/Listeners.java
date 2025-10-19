@@ -32,7 +32,8 @@ public class Listeners {
     public static final OnStopLookingAtEntityListener ON_STOP_LOOKING_AT_ENTITY = new OnStopLookingAtEntityListener();
     public static final OnEntitySpawnedListener ON_ENTITY_SPAWNED = new OnEntitySpawnedListener();
     public static final OnEntityDiedListener ON_ENTITY_DIED = new OnEntityDiedListener();
-    public static final OnEntityInSightListener ON_ENTITY_IN_SIGHT = new OnEntityInSightListener();
+    public static final OnEntityStopsBeingInSightListener ON_ENTITY_STOPS_BEING_IN_SIGHT = new OnEntityStopsBeingInSightListener();
+    public static final OnEntityStartsBeingInSightListener ON_ENTITY_STARTS_BEING_IN_SIGHT = new OnEntityStartsBeingInSightListener(ON_ENTITY_STOPS_BEING_IN_SIGHT);
     public static final OnInteractedWithEntityListener ON_INTERACTED_WITH_ENTITY = new OnInteractedWithEntityListener();
     public static final OnEntityMountedListener ON_ENTITY_MOUNTED = new OnEntityMountedListener();
     public static final OnEntityUnmountedListener ON_ENTITY_UNMOUNTED = new OnEntityUnmountedListener();
@@ -106,7 +107,9 @@ public class Listeners {
         ListenerRegistry.registerLegacyIdentifier("looking_at_block", ON_START_LOOKING_AT_BLOCK.getIdentifier());
         ListenerRegistry.register(ON_ENTITY_SPAWNED);
         ListenerRegistry.register(ON_ENTITY_DIED);
-        ListenerRegistry.register(ON_ENTITY_IN_SIGHT);
+        ListenerRegistry.register(ON_ENTITY_STARTS_BEING_IN_SIGHT);
+        ListenerRegistry.register(ON_ENTITY_STOPS_BEING_IN_SIGHT);
+        ListenerRegistry.registerLegacyIdentifier("entity_in_sight", ON_ENTITY_STARTS_BEING_IN_SIGHT.getIdentifier());
         ListenerRegistry.register(ON_INTERACTED_WITH_ENTITY);
         ListenerRegistry.register(ON_ENTITY_MOUNTED);
         ListenerRegistry.register(ON_ENTITY_UNMOUNTED);

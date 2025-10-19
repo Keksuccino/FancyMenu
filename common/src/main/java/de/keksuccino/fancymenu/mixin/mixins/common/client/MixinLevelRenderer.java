@@ -31,7 +31,7 @@ public class MixinLevelRenderer {
 
     @Inject(method = "renderLevel(Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V", at = @At("HEAD"))
     private void before_renderLevel_FancyMenu(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, Matrix4f frustumMatrix, CallbackInfo info) {
-        Listeners.ON_ENTITY_IN_SIGHT.onRenderFrameStart();
+        Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameStart();
     }
 
     @WrapOperation(method = "renderLevel(Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderEntity(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V"))
@@ -43,14 +43,14 @@ public class MixinLevelRenderer {
         Vec3 cameraPosition = new Vec3(cameraX, cameraY, cameraZ);
         if (isEntityVisibleForListener_FancyMenu(entity, cameraPosition, entityPosition)) {
             double distance = entityPosition.distanceTo(cameraPosition);
-            Listeners.ON_ENTITY_IN_SIGHT.onEntityVisible(entity, distance);
+            Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onEntityVisible(entity, distance);
         }
         original.call(levelRenderer, entity, cameraX, cameraY, cameraZ, partialTicks, poseStack, bufferSource);
     }
 
     @Inject(method = "renderLevel(Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V", at = @At("TAIL"))
     private void after_renderLevel_FancyMenu(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, Matrix4f frustumMatrix, CallbackInfo info) {
-        Listeners.ON_ENTITY_IN_SIGHT.onRenderFrameEnd();
+        Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameEnd();
     }
 
     @Unique
