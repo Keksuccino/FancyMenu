@@ -4,6 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -21,6 +23,8 @@ public class JoinServerAction extends Action {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private static long lastJoinErrorTrigger = -1;
+
     public JoinServerAction() {
         super("joinserver");
     }
@@ -37,6 +41,14 @@ public class JoinServerAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
+        if (Minecraft.getInstance().level != null) {
+            long now = System.currentTimeMillis();
+            if ((lastJoinErrorTrigger + 20000) < now) {
+                lastJoinErrorTrigger = now;
+                QueueableScreenHandler.addToQueue(new QueueableNotificationScreen(Component.translatable("fancymenu.actions.errors.cannot_join_world_while_in_world")));
+            }
+            return;
+        }
         if (value != null) {
             if (!(Minecraft.getInstance().screen instanceof JoinServerBridgeScreen) && !(Minecraft.getInstance().screen instanceof ConnectScreen) && !(Minecraft.getInstance().screen instanceof DisconnectedScreen)) {
                 if (RenderSystem.isOnRenderThread()) {

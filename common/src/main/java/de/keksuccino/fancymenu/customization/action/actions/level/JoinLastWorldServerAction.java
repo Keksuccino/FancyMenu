@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -19,6 +21,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 
 public class JoinLastWorldServerAction extends Action {
+
+    private static long lastJoinErrorTrigger = -1;
 
     public JoinLastWorldServerAction() {
         super("join_last_world");
@@ -36,6 +40,14 @@ public class JoinLastWorldServerAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
+        if (Minecraft.getInstance().level != null) {
+            long now = System.currentTimeMillis();
+            if ((lastJoinErrorTrigger + 20000) < now) {
+                lastJoinErrorTrigger = now;
+                QueueableScreenHandler.addToQueue(new QueueableNotificationScreen(Component.translatable("fancymenu.actions.errors.cannot_join_world_while_in_world")));
+            }
+            return;
+        }
         if (!LastWorldHandler.getLastWorld().isEmpty() && (Minecraft.getInstance().screen != null)) {
             if (!LastWorldHandler.isLastWorldServer()) { // CASE: SINGLEPLAYER WORLD
                 File f = new File(LastWorldHandler.getLastWorld());

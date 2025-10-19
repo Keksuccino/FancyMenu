@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -11,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class EnterWorldAction extends Action {
+
+    private static long lastJoinErrorTrigger = -1;
 
     public EnterWorldAction() {
         super("loadworld");
@@ -28,6 +32,14 @@ public class EnterWorldAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
+        if (Minecraft.getInstance().level != null) {
+            long now = System.currentTimeMillis();
+            if ((lastJoinErrorTrigger + 20000) < now) {
+                lastJoinErrorTrigger = now;
+                QueueableScreenHandler.addToQueue(new QueueableNotificationScreen(Component.translatable("fancymenu.actions.errors.cannot_join_world_while_in_world")));
+            }
+            return;
+        }
         if (value != null) {
             if (Minecraft.getInstance().getLevelSource().levelExists(value)) {
                 Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
