@@ -80,7 +80,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
         String browserId = this.getIdentifier();
 
-        BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
+        BrowserLoadEventListenerManager.getInstance().registerPersistentListenerForBrowser(this, success -> {
             if (success) {
                 initialized = true;
                 // Apply settings once the page is loaded
@@ -441,12 +441,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.browser.canGoBack()) this.browser.goBack();
         if (initialized) {
             this.setVolume(this.volume);
-            // Re-register load listener to inject JavaScript API on navigation
-            BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
-                if (success) {
-                    injectJavaScriptAPI();
-                }
-            });
         }
     }
 
@@ -454,12 +448,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.browser.canGoForward()) this.browser.goForward();
         if (initialized) {
             this.setVolume(this.volume);
-            // Re-register load listener to inject JavaScript API on navigation
-            BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
-                if (success) {
-                    injectJavaScriptAPI();
-                }
-            });
         }
     }
 
@@ -469,24 +457,12 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public void setUrl(@NotNull String url) {
         this.browser.loadURL(url);
-        // Re-register load listener to inject JavaScript API on new page
-        BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
-            if (success) {
-                injectJavaScriptAPI();
-            }
-        });
     }
 
     public void reload() {
         this.browser.reload();
         if (initialized) {
             this.setVolume(this.volume);
-            // Re-register load listener to inject JavaScript API on reload
-            BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
-                if (success) {
-                    injectJavaScriptAPI();
-                }
-            });
         }
     }
 
