@@ -30,6 +30,7 @@ import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -76,7 +77,10 @@ public class ManageListenersScreen extends CellScreen {
             instanceCells.add(cell);
         }
 
-        // TODO sort instanceCells here
+        instanceCells.sort(Comparator
+                .comparing((ListenerInstanceCell cell) -> cell.labelComponent.getString(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(cell -> cell.labelComponent.getString())
+                .thenComparing(cell -> cell.instance.instanceIdentifier));
 
         String finalEditingInstanceId = editingInstanceId;
         String finalEditingValue = editingValue;
