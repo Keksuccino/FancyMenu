@@ -50,47 +50,46 @@ public class JoinServerAction extends Action {
             return;
         }
         if (value != null) {
-            if (!(Minecraft.getInstance().screen instanceof JoinServerBridgeScreen) && !(Minecraft.getInstance().screen instanceof ConnectScreen) && !(Minecraft.getInstance().screen instanceof DisconnectedScreen)) {
-                if (RenderSystem.isOnRenderThread()) {
-                    try {
+            if (Minecraft.getInstance().screen instanceof DisconnectedScreen) {
+                Minecraft.getInstance().setScreen(new TitleScreen());
+            }
+            if (!(Minecraft.getInstance().screen instanceof JoinServerBridgeScreen) && !(Minecraft.getInstance().screen instanceof ConnectScreen)) {
+                try {
 
-                        Screen current = Minecraft.getInstance().screen;
+                    Screen current = Minecraft.getInstance().screen;
 
-                        Minecraft.getInstance().setScreen(new JoinServerBridgeScreen());
+                    Minecraft.getInstance().setScreen(new JoinServerBridgeScreen());
 
-                        String ip = value.replace(" ", "");
-                        int port = 25565;
-                        if (ip.contains(":")) {
-                            String portString = ip.split(":", 2)[1];
-                            ip = ip.split(":", 2)[0];
-                            if (MathUtils.isInteger(portString)) {
-                                port = Integer.parseInt(portString);
-                            }
+                    String ip = value.replace(" ", "");
+                    int port = 25565;
+                    if (ip.contains(":")) {
+                        String portString = ip.split(":", 2)[1];
+                        ip = ip.split(":", 2)[0];
+                        if (MathUtils.isInteger(portString)) {
+                            port = Integer.parseInt(portString);
                         }
-                        ServerData d = null;
-                        ServerList l = new ServerList(Minecraft.getInstance());
-                        l.load();
-                        for (ServerData data : ((IMixinServerList) l).getServerListFancyMenu()) {
-                            if (data.ip.equals(value.replace(" ", ""))) {
-                                d = data;
-                                break;
-                            }
-                        }
-                        if (d == null) {
-                            d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), ServerData.Type.OTHER);
-                            l.add(d, false);
-                            l.save();
-                        }
-                        if (current == null) current = new TitleScreen();
-                        boolean isQuickPlay = false;
-
-                        ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay, null);
-
-                    } catch (Exception ex) {
-                        LOGGER.error("[FANCYMENU] Failed to execute the 'Join Server' action!", ex);
                     }
-                } else {
-                    LOGGER.error("[FANCYMENU] Tried to execute Join Server action while already connecting!", new IllegalStateException());
+                    ServerData d = null;
+                    ServerList l = new ServerList(Minecraft.getInstance());
+                    l.load();
+                    for (ServerData data : ((IMixinServerList) l).getServerListFancyMenu()) {
+                        if (data.ip.equals(value.replace(" ", ""))) {
+                            d = data;
+                            break;
+                        }
+                    }
+                    if (d == null) {
+                        d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), ServerData.Type.OTHER);
+                        l.add(d, false);
+                        l.save();
+                    }
+                    if (current == null) current = new TitleScreen();
+                    boolean isQuickPlay = false;
+
+                    ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay, null);
+
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to execute the 'Join Server' action!", ex);
                 }
             }
         }

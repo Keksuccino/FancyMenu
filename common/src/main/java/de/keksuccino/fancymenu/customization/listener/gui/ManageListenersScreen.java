@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
@@ -182,23 +183,8 @@ public class ManageListenersScreen extends CellScreen {
     }
 
     @Override
-    public boolean allowEnterForDone() {
-        for (RenderCell renderCell : this.allCells) {
-            if (renderCell instanceof ListenerInstanceCell c) {
-                if (c.editMode) return false;
-            }
-        }
-        return super.allowEnterForDone();
-    }
-
-    @Override
     public boolean shouldCloseOnEsc() {
-        for (RenderCell renderCell : this.allCells) {
-            if (renderCell instanceof ListenerInstanceCell c) {
-                if (c.editMode) return false;
-            }
-        }
-        return super.shouldCloseOnEsc();
+        return false;
     }
 
     @Override
@@ -226,7 +212,15 @@ public class ManageListenersScreen extends CellScreen {
 
     @Override
     protected void onCancel() {
-        this.callback.accept(false);
+        Minecraft.getInstance().setScreen(
+                ConfirmationScreen.critical(callback -> {
+                    if (callback) {
+                        this.callback.accept(false);
+                    } else {
+                        Minecraft.getInstance().setScreen(this);
+                    }
+                }, Component.translatable("fancymenu.listeners.manage.cancel_warning"))
+        );
     }
 
     @Override
