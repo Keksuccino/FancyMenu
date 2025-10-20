@@ -112,6 +112,14 @@ public class TextEditorScreen extends Screen {
     protected final TextEditorHistory history = new TextEditorHistory(this);
     protected ExtendedEditBox searchBar;
 
+    private static final Comparator<Placeholder> PLACEHOLDER_DISPLAY_NAME_COMPARATOR = Comparator
+            .comparing((Placeholder placeholder) -> placeholder.getDisplayName(), String.CASE_INSENSITIVE_ORDER)
+            .thenComparing(Placeholder::getDisplayName)
+            .thenComparing(Placeholder::getIdentifier);
+    private static final Comparator<String> PLACEHOLDER_CATEGORY_COMPARATOR = Comparator
+            .comparing((String category) -> category, String.CASE_INSENSITIVE_ORDER)
+            .thenComparing(category -> category);
+
     protected IndentationGuideRenderer indentGuideRenderer;
     protected boolean showIndentationGuides = true;
 
@@ -511,7 +519,9 @@ public class TextEditorScreen extends Screen {
         }
 
         if (searchValue != null) {
-            for (Placeholder p : PlaceholderRegistry.getPlaceholders()) {
+            List<Placeholder> placeholders = PlaceholderRegistry.getPlaceholders();
+            placeholders.sort(PLACEHOLDER_DISPLAY_NAME_COMPARATOR);
+            for (Placeholder p : placeholders) {
                 if (!this.placeholderFitsSearchValue(p, searchValue)) continue;
                 PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(p.getDisplayName()), () -> {
                     this.history.saveSnapshot();
@@ -617,13 +627,19 @@ public class TextEditorScreen extends Screen {
             }
             l.add(p);
         }
-        //Move the Other category to the end
-        List<Placeholder> otherCategory = categories.get(I18n.get("fancymenu.requirements.categories.other"));
-        if (otherCategory != null) {
-            categories.remove(I18n.get("fancymenu.requirements.categories.other"));
-            categories.put(I18n.get("fancymenu.requirements.categories.other"), otherCategory);
+        categories.values().forEach(list -> list.sort(PLACEHOLDER_DISPLAY_NAME_COMPARATOR));
+        String otherKey = I18n.get("fancymenu.requirements.categories.other");
+        List<String> sortedKeys = new ArrayList<>(categories.keySet());
+        boolean hasOther = sortedKeys.remove(otherKey);
+        sortedKeys.sort(PLACEHOLDER_CATEGORY_COMPARATOR);
+        Map<String, List<Placeholder>> sortedCategories = new LinkedHashMap<>();
+        for (String key : sortedKeys) {
+            sortedCategories.put(key, categories.get(key));
         }
-        return categories;
+        if (hasOther) {
+            sortedCategories.put(otherKey, categories.get(otherKey));
+        }
+        return sortedCategories;
     }
 
     protected void renderLineNumberBackground(GuiGraphics graphics, int width) {
