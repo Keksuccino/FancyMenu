@@ -125,6 +125,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed "Is Any Effect Active" requirement not working (#1097)
 - Fixed tooltips of "Button" and "Slider" elements don't parse "%n%" into real line breaks anymore (#1340)
 - Fixed Vanilla tooltips sometimes render behind custom elements added via FancyMenu
+- Fixed "Join Server" action not working in the Disconnected screen (#1341)
 
 %changelog:end%
 
