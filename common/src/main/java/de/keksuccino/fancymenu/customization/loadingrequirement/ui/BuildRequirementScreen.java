@@ -40,6 +40,11 @@ public class BuildRequirementScreen extends Screen {
     protected ScrollArea descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedEditBox searchBar;
 
+    private static final Comparator<LoadingRequirement> REQUIREMENT_DISPLAY_NAME_COMPARATOR = Comparator
+            .comparing((LoadingRequirement requirement) -> requirement.getDisplayName(), String.CASE_INSENSITIVE_ORDER)
+            .thenComparing(LoadingRequirement::getDisplayName)
+            .thenComparing(LoadingRequirement::getIdentifier);
+
     public BuildRequirementScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementInstance instanceToEdit, @NotNull Consumer<LoadingRequirementInstance> callback) {
 
         super((instanceToEdit != null) ? Component.translatable("fancymenu.requirements.screens.edit_requirement") : Component.translatable("fancymenu.requirements.screens.add_requirement"));
@@ -254,7 +259,9 @@ public class BuildRequirementScreen extends Screen {
         this.requirementsListScrollArea.clearEntries();
 
         if (searchValue != null) {
-            for (LoadingRequirement r : LoadingRequirementRegistry.getRequirements()) {
+            List<LoadingRequirement> requirements = LoadingRequirementRegistry.getRequirements();
+            requirements.sort(REQUIREMENT_DISPLAY_NAME_COMPARATOR);
+            for (LoadingRequirement r : requirements) {
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
                 if (!this.requirementFitsSearchValue(r, searchValue)) continue;
                 Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
@@ -269,11 +276,16 @@ public class BuildRequirementScreen extends Screen {
         }
 
         LinkedHashMap<String, List<LoadingRequirement>> categories = LoadingRequirementRegistry.getRequirementsOrderedByCategories();
+        categories.values().forEach(list -> list.sort(REQUIREMENT_DISPLAY_NAME_COMPARATOR));
+        List<Map.Entry<String, List<LoadingRequirement>>> sortedCategories = new ArrayList<>(categories.entrySet());
+        sortedCategories.sort(Comparator
+                .comparing((Map.Entry<String, List<LoadingRequirement>> entry) -> entry.getKey(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(Map.Entry::getKey));
 
         if (category == null) {
 
             //Add category entries
-            for (Map.Entry<String, List<LoadingRequirement>> m : categories.entrySet()) {
+            for (Map.Entry<String, List<LoadingRequirement>> m : sortedCategories) {
                 Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
                 TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_2, (entry) -> {
                     BuildRequirementScreen.this.setContentOfRequirementsList(m.getKey());
@@ -285,7 +297,9 @@ public class BuildRequirementScreen extends Screen {
             }
 
             //Add requirement entries without category
-            for (LoadingRequirement r : LoadingRequirementRegistry.getRequirementsWithoutCategory()) {
+            List<LoadingRequirement> uncategorized = LoadingRequirementRegistry.getRequirementsWithoutCategory();
+            uncategorized.sort(REQUIREMENT_DISPLAY_NAME_COMPARATOR);
+            for (LoadingRequirement r : uncategorized) {
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
                 Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
                 RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1, (entry) -> {
