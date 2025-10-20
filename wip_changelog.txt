@@ -119,6 +119,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed game becoming unresponsive when trying to join a world or server while already in a world or on a server (#1332)
 - Fixed after reloading the webpage in a "Browser" element, the FancyMenu JavaScript API injected into browsers stops working (#1339)
 - Fixed "Is Any Effect Active" requirement not working (#1097)
+- Fixed tooltips of "Button" and "Slider" elements don't parse "%n%" into real line breaks anymore (#1340)
 
 %changelog:end%
 
