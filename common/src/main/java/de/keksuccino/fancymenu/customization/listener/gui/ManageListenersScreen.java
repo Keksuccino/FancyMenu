@@ -68,21 +68,29 @@ public class ManageListenersScreen extends CellScreen {
         }
         
         this.addSpacerCell(10);
-        
+
         // Add all listener instances to the list
+        List<ListenerInstanceCell> instanceCells = new ArrayList<>();
         for (ListenerInstance instance : this.tempInstances) {
             ListenerInstanceCell cell = new ListenerInstanceCell(instance);
+            instanceCells.add(cell);
+        }
+
+        // TODO sort instanceCells here
+
+        String finalEditingInstanceId = editingInstanceId;
+        String finalEditingValue = editingValue;
+        instanceCells.forEach(cell -> {
             this.addCell(cell).setSelectable(true);
-            
             // Restore edit mode if this was the cell being edited
-            if (editingInstanceId != null && editingInstanceId.equals(instance.instanceIdentifier)) {
+            if (finalEditingInstanceId != null && finalEditingInstanceId.equals(cell.instance.instanceIdentifier)) {
                 cell.enterEditMode();
-                if (cell.editBox != null && editingValue != null) {
-                    cell.editBox.setValue(editingValue);
-                    cell.editBox.setCursorPosition(editingValue.length());
+                if (cell.editBox != null && finalEditingValue != null) {
+                    cell.editBox.setValue(finalEditingValue);
+                    cell.editBox.setCursorPosition(finalEditingValue.length());
                 }
             }
-        }
+        });
         
         this.addStartEndSpacerCell();
         

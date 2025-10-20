@@ -21,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -204,7 +205,12 @@ public class ManageVariablesScreen extends Screen {
 
         this.variableListScrollArea.clearEntries();
 
-        for (Variable v : VariableHandler.getVariables()) {
+        List<Variable> variables = VariableHandler.getVariables();
+        variables.sort(Comparator
+                .comparing(Variable::getName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(Variable::getName));
+
+        for (Variable v : variables) {
             if (!this.variableFitsSearchValue(v, searchValue)) continue;
             VariableScrollEntry e = new VariableScrollEntry(this.variableListScrollArea, v, (entry) -> {
             });
