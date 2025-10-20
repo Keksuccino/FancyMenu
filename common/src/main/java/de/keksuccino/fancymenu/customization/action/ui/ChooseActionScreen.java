@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -239,7 +240,12 @@ public class ChooseActionScreen extends Screen {
         if (searchValue.isBlank()) searchValue = null;
 
         this.actionsListScrollArea.clearEntries();
-        for (Action action : ActionRegistry.getActions()) {
+        List<Action> actions = ActionRegistry.getActions();
+        actions.sort(Comparator
+                .comparing((Action action) -> action.getActionDisplayName().getString(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(action -> action.getActionDisplayName().getString())
+                .thenComparing(Action::getIdentifier));
+        for (Action action : actions) {
             if ((LayoutEditorScreen.getCurrentInstance() != null) && !action.shouldShowUpInEditorActionMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             if (!this.actionFitsSearchValue(action, searchValue)) continue;
             ActionScrollEntry e = new ActionScrollEntry(this.actionsListScrollArea, action, (entry) -> {
