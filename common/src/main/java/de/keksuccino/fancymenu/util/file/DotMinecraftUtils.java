@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.file;
 
-import de.keksuccino.fancymenu.util.OsUtils;
+import de.keksuccino.fancymenu.util.OSUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +20,7 @@ public class DotMinecraftUtils {
         String userHome = System.getProperty("user.home");
         Path minecraftPath;
         
-        if (OsUtils.isWindows()) {
+        if (OSUtils.isWindows()) {
             // Windows: %APPDATA%\.minecraft
             String appData = System.getenv("APPDATA");
             if (appData != null) {
@@ -29,10 +29,10 @@ public class DotMinecraftUtils {
                 // Fallback if APPDATA is not set
                 minecraftPath = Paths.get(userHome, "AppData", "Roaming", ".minecraft");
             }
-        } else if (OsUtils.isMacOS()) {
+        } else if (OSUtils.isMacOS()) {
             // macOS: ~/Library/Application Support/minecraft
             minecraftPath = Paths.get(userHome, "Library", "Application Support", "minecraft");
-        } else if (OsUtils.isLinux()) {
+        } else if (OSUtils.isLinux()) {
             // Linux: ~/.minecraft
             minecraftPath = Paths.get(userHome, ".minecraft");
         } else {
