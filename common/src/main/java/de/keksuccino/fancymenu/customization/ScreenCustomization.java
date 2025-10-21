@@ -288,20 +288,28 @@ public class ScreenCustomization {
 	}
 
 	public static void reInitCurrentScreen() {
-		if (Minecraft.getInstance().screen != null) {
-			RenderingUtils.resetGuiScale();
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-			if (!((IMixinScreen)Minecraft.getInstance().screen).get_initialized_FancyMenu()) {
-				Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
-			} else {
-				Minecraft.getInstance().screen.resize(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
-			}
-			ScrollScreenNormalizer.normalizeScrollableScreen(Minecraft.getInstance().screen);
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-		}
+		reInitCurrentScreen(true, true);
 	}
+
+    public static void reInitCurrentScreen(boolean resetScale, boolean setScreenOnFirstInit) {
+        if (Minecraft.getInstance().screen != null) {
+            if (resetScale) RenderingUtils.resetGuiScale();
+            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+            if (!((IMixinScreen)Minecraft.getInstance().screen).get_initialized_FancyMenu()) {
+                if (setScreenOnFirstInit) {
+                    Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
+                } else {
+                    Minecraft.getInstance().screen.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+                }
+            } else {
+                Minecraft.getInstance().screen.resize(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+            }
+            ScrollScreenNormalizer.normalizeScrollableScreen(Minecraft.getInstance().screen);
+            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+        }
+    }
 
 	/**
 	 * This gets called when switching from one type of screen to a new one (e.g. Title screen -> Options screen).<br>

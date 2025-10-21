@@ -17,6 +17,8 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class RenderingUtils {
@@ -27,7 +29,11 @@ public class RenderingUtils {
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
 
+    private static final List<DeferredScreenRenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
     private static boolean lockDepthTest = false;
+    private static boolean blurBlocked = false;
+    private static boolean tooltipRenderingBlocked = false;
+    private static int overrideBackgroundBlurRadius = -1000;
 
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
@@ -42,12 +48,59 @@ public class RenderingUtils {
         graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
     }
 
+    public static void setOverrideBackgroundBlurRadius(int radius) {
+        overrideBackgroundBlurRadius = radius;
+    }
+
+    public static void resetOverrideBackgroundBlurRadius() {
+        overrideBackgroundBlurRadius = -1000;
+    }
+
+    public static boolean shouldOverrideBackgroundBlurRadius() {
+        return overrideBackgroundBlurRadius != -1000;
+    }
+
+    public static int getOverrideBackgroundBlurRadius() {
+        return overrideBackgroundBlurRadius;
+    }
+
     public static void setDepthTestLocked(boolean locked) {
         lockDepthTest = locked;
     }
 
     public static boolean isDepthTestLocked() {
         return lockDepthTest;
+    }
+
+    public static void setMenuBlurringBlocked(boolean blocked) {
+        blurBlocked = blocked;
+    }
+
+    public static boolean isMenuBlurringBlocked() {
+        return blurBlocked;
+    }
+
+    public static void setTooltipRenderingBlocked(boolean blocked) {
+        tooltipRenderingBlocked = blocked;
+    }
+
+    public static boolean isTooltipRenderingBlocked() {
+        return tooltipRenderingBlocked;
+    }
+
+    public static void addDeferredScreenRenderingTask(@NotNull DeferredScreenRenderingTask task) {
+        DEFERRED_SCREEN_RENDERING_TASKS.add(task);
+    }
+
+    @NotNull
+    public static List<DeferredScreenRenderingTask> getDeferredScreenRenderingTasks() {
+        return new ArrayList<>(DEFERRED_SCREEN_RENDERING_TASKS);
+    }
+
+    public static void executeAndClearDeferredScreenRenderingTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        List<DeferredScreenRenderingTask> tasks = getDeferredScreenRenderingTasks();
+        DEFERRED_SCREEN_RENDERING_TASKS.clear();
+        tasks.forEach(task -> task.render(graphics, mouseX, mouseY, partial));
     }
 
     /**
@@ -402,6 +455,11 @@ public class RenderingUtils {
 
     public static boolean isMatrixIdentity(Matrix4f matrix) {
         return (matrix.properties() & 4) != 0;
+    }
+
+    @FunctionalInterface
+    public interface DeferredScreenRenderingTask {
+        void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
     }
 
 }

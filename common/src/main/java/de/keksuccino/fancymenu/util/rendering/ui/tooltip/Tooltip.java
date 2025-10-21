@@ -80,6 +80,9 @@ public class Tooltip implements Renderable {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (RenderingUtils.isTooltipRenderingBlocked()) return;
+
         Screen s = Minecraft.getInstance().screen;
         if (!this.isEmpty() && (s != null)) {
 

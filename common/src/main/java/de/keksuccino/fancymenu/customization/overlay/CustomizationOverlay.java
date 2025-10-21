@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.screen.AfterScreenRenderingEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.auth.ModValidator;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
-import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -97,8 +96,8 @@ public class CustomizationOverlay {
 		}
 	}
 
-	@EventListener(priority = EventPriority.LOW)
-	public void onRenderPost(RenderScreenEvent.Post e) {
+	@EventListener
+	public void onRenderPost(AfterScreenRenderingEvent e) {
 		if (!isValidFancyMenu) {
 			ModValidator.renderInvalidError(e.getGraphics());
 		}

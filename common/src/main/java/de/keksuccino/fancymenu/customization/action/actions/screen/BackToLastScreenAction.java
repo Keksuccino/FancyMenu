@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.action.actions.screen;
 
 import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.events.screen.CloseScreenEvent;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -8,6 +9,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,6 +36,15 @@ public class BackToLastScreenAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
+        if (Minecraft.getInstance().screen instanceof CustomGuiBaseScreen c) {
+            if (c.getParentScreen() != null) {
+                Minecraft.getInstance().setScreen(c.getParentScreen());
+                return;
+            }
+        }
+        if (this.lastScreen instanceof LayoutEditorScreen) {
+            this.lastScreen = null;
+        }
         Minecraft.getInstance().setScreen(this.lastScreen);
     }
 

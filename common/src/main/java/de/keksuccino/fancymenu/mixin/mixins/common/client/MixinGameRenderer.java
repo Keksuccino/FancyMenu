@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAt
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtEntityListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtBlockListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtEntityListener;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -37,6 +38,11 @@ public class MixinGameRenderer {
     private static final double BLOCK_LOOK_DISTANCE_FANCYMENU = OnStartLookingAtBlockListener.MAX_LOOK_DISTANCE;
 
     @Shadow @Final Minecraft minecraft;
+
+    @Inject(method = "processBlurEffect", at = @At("HEAD"), cancellable = true)
+    private void head_processBlurEffect_FancyMenu(float radius, CallbackInfo info) {
+        if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
+    }
 
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {

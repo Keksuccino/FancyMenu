@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
-@SuppressWarnings("all")
+@SuppressWarnings("unused")
 public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();

@@ -75,12 +75,12 @@ public class TooltipElement extends AbstractElement {
     @Override
     public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        if (RenderingUtils.isTooltipRenderingBlocked()) return;
+
         if (isEditor()) {
             super.renderInternal(graphics, mouseX, mouseY, partial);
         } else {
-            ScreenRenderUtils.postPostRenderTask((graphics1, mouseX1, mouseY1, partial1) -> {
-                super.renderInternal(graphics, mouseX, mouseY, partial);
-            });
+            RenderingUtils.addDeferredScreenRenderingTask(super::renderInternal);
         }
 
     }

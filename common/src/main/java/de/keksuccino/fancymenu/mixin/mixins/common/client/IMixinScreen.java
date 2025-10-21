@@ -22,4 +22,6 @@ public interface IMixinScreen {
 
     @Accessor("initialized") boolean get_initialized_FancyMenu();
 
+    @Invoker("init") void invoke_init_FancyMenu();
+
 }
