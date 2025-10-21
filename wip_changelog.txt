@@ -126,6 +126,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed tooltips of "Button" and "Slider" elements don't parse "%n%" into real line breaks anymore (#1340)
 - Fixed Vanilla tooltips sometimes render behind custom elements added via FancyMenu
 - Fixed "Join Server" action not working in the Disconnected screen (#1341)
+- Fixed "Back to Last Screen" action opens the layout editor when just edited the actions's parent screen in the layout editor
 
 %changelog:end%
 
