@@ -73,30 +73,35 @@ public class CustomGuiBaseScreen extends Screen {
 
 		super.render(graphics, mouseX, mouseY, partial);
 
-		String title = this.getTitleString();
-		Component titleComp = LocalizationUtils.isLocalizationKey(title) ? Component.translatable(title) : Component.literal(PlaceholderParser.replacePlaceholders(title));
+		String title = PlaceholderParser.replacePlaceholders(this.getTitleString());
+		Component titleComp = LocalizationUtils.isLocalizationKey(title) ? Component.translatable(title) : Component.literal(title);
 		graphics.drawCenteredString(this.font, titleComp, this.width / 2, 8, -1);
 
 	}
 
 	@Override
 	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-		if (this.gui.popupMode && (this.parentScreen != null)) {
+        boolean popup = this.gui.popupMode && (this.parentScreen != null);
+        boolean popupOverlay = popup && this.gui.popupModeBackgroundOverlay;
+		if (popup) {
             this.renderPopupMenuBackgroundScreen(graphics, mouseX, mouseY, partial);
         } else {
             if ((Minecraft.getInstance().level == null) || !this.gui.worldBackground) {
                 this.renderPanorama(graphics, partial);
             }
         }
-        if (this.gui.popupMode && !this.gui.popupModeBackgroundOverlay) return;
-        if (this.gui.popupMode) RenderingUtils.setOverrideBackgroundBlurRadius(7);
+        if (popup) {
+            RenderingUtils.setOverrideBackgroundBlurRadius(7);
+        }
 		try {
-            this.renderBlurredBackground(partial);
+            if (!popup || popupOverlay) {
+                this.renderBlurredBackground(partial);
+            }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error while rendering background blur in Custom GUI!", ex);
         }
         RenderingUtils.resetOverrideBackgroundBlurRadius();
-		if (!this.gui.popupMode) {
+		if (!popup) {
             this.renderMenuBackground(graphics);
         }
 	}

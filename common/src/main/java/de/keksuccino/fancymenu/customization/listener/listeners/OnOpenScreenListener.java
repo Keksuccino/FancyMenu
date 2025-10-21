@@ -38,5 +38,5 @@ public class OnOpenScreenListener extends AbstractListener {
     public @NotNull List<Component> getDescription() {
         return List.of(LocalizationUtils.splitLocalizedLines("fancymenu.listeners.on_open_screen.desc"));
     }
-    
+
 }
