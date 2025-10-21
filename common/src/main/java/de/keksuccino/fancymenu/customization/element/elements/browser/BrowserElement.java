@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -65,6 +66,8 @@ public class BrowserElement extends AbstractElement {
             if (!bothCustomGuis && (closedScreen.getClass() == newScreen.getClass())) return;
         }
         if (this.browser != null) BrowserHandler.remove(this.getInstanceIdentifier(), true);
+        // Reset cursor in case the browser changed it
+        CursorHandler.setClientTickCursor(CursorHandler.CURSOR_NORMAL);
     }
 
     @Override
