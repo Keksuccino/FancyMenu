@@ -44,6 +44,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Added "Number Base Converter" placeholder to convert a number between bases (supports decimals) (#1291)
 - Added "Uptime Duration" placeholder that returns the seconds or milliseconds that passed since the game got launched (#1306)
 - Added "Print to Game Log" action to print text to the game's log for debugging (#1267)
+- Added "Popup Mode" to Custom GUIs, so they look like they open on top of the previous screen by rendering the previous screen in the background
 - Added "OLED Purple" FancyMenu theme (by Mowzy - Thanks so much for the great looking design!)
 - Added "Nether" FancyMenu theme (by Mowzy - Thanks so much for the great looking design!)
 - Added "Butter Dark" FancyMenu theme (by caelaThinx - Thanks so much for the great looking design!)
