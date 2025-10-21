@@ -128,6 +128,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed Vanilla tooltips sometimes render behind custom elements added via FancyMenu
 - Fixed "Join Server" action not working in the Disconnected screen (#1341)
 - Fixed "Back to Last Screen" action opens the layout editor when just edited the actions's parent screen in the layout editor
+- Fixed cursor keeps the last type it had when closing a menu while hovering something in a Browser element that changes the cursor to a non-default one (#1342)
 
 %changelog:end%
 
