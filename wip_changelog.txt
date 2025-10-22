@@ -131,6 +131,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Fixed "Join Server" action not working in the Disconnected screen (#1341)
 - Fixed "Back to Last Screen" action opens the layout editor when just edited the actions's parent screen in the layout editor
 - Fixed cursor keeps the last type it had when closing a menu while hovering something in a Browser element that changes the cursor to a non-default one (#1342)
+- Fixed "executeWithCallback()" function in "FancyMenu JavaScript API" invokes "onSuccess()" and "onFailure()" in weird ways instead of just invoking "onSuccess()" on actual success and "onFailure()" only on actual failure (#1345)
 
 %changelog:end%
 
