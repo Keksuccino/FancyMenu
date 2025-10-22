@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.Util;
@@ -20,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget {
@@ -50,6 +53,9 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected ConsumingSupplier<ExtendedEditBox, Boolean> isActiveSupplier = null;
     @Nullable
     protected ConsumingSupplier<ExtendedEditBox, Boolean> isVisibleSupplier = null;
+    @Nullable
+    protected Supplier<Tooltip> customTooltip;
+    protected boolean forceDefaultTooltipStyle = true;
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
         super(font, x, y, width, height, hint);
@@ -163,6 +169,16 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
 
         super.render($$0, $$1, $$2, $$3);
+
+        if ((this.customTooltip != null) && this.visible && this.isHovered()) {
+            Tooltip tt = this.customTooltip.get();
+            if (tt != null) {
+                if (this.forceDefaultTooltipStyle) {
+                    tt.setDefaultStyle();
+                }
+                TooltipHandler.INSTANCE.addTooltip(tt, () -> true, true, true);
+            }
+        }
 
     }
 
@@ -486,6 +502,20 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     @Override
     public void setNavigatable(boolean navigatable) {
         this.navigatable = navigatable;
+    }
+
+    @NotNull
+    public ExtendedEditBox setTooltip(@Nullable Supplier<Tooltip> tooltip) {
+        this.customTooltip = tooltip;
+        return this;
+    }
+
+    public boolean isForceDefaultTooltipStyle() {
+        return forceDefaultTooltipStyle;
+    }
+
+    public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
+        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
     }
 
     @FunctionalInterface

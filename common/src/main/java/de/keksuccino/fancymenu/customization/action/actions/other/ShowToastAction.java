@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.rendering.ui.toast.SimpleToast;
 import de.keksuccino.fancymenu.util.rendering.ui.toast.ToastHandler;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -44,7 +45,7 @@ public class ShowToastAction extends Action {
 
     @Override
     public boolean canRunAsync() {
-        return false;
+        return true;
     }
 
     @Override
@@ -54,6 +55,14 @@ public class ShowToastAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
+        if (!Minecraft.getInstance().isSameThread()) {
+            MainThreadTaskExecutor.executeInMainThread(() -> this.execute(value), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        } else {
+            this._execute(value);
+        }
+    }
+
+    protected void _execute(@Nullable String value) {
         ToastConfig config = ToastConfig.parse(value);
         if (config == null) {
             LOGGER.error("[FANCYMENU] ShowToastAction: Failed to parse toast configuration!");
@@ -154,7 +163,7 @@ public class ShowToastAction extends Action {
             TextInputCell widthCell = this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
                     .setEditListener(s -> this.config.width = parseInteger(s, this.config.width, MIN_WIDTH, MAX_WIDTH))
                     .setText(String.valueOf(this.config.width));
-            widthCell.editBox.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fancymenu.actions.show_toast.edit.width.desc")));
+            widthCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.width.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -162,22 +171,24 @@ public class ShowToastAction extends Action {
             TextInputCell durationCell = this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
                     .setEditListener(s -> this.config.durationMs = parseLong(s, this.config.durationMs, MIN_DURATION_MS, MAX_DURATION_MS))
                     .setText(String.valueOf(this.config.durationMs));
-            durationCell.editBox.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fancymenu.actions.show_toast.edit.duration.desc")));
+            durationCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.duration.desc")));
 
             this.addCellGroupEndSpacerCell();
 
             this.addLabelCell(Component.translatable("fancymenu.actions.show_toast.edit.title_text"));
-            this.addTextInputCell(null, true, true)
+            TextInputCell titleCell = this.addTextInputCell(null, true, true)
                     .setEditListener(s -> this.config.title = s.replace("\\n", "\n"))
                     .setText(this.config.title.replace("\n", "\\n"));
+            titleCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.title_text.desc")));
 
             this.addCellGroupEndSpacerCell();
 
             this.addLabelCell(Component.translatable("fancymenu.actions.show_toast.edit.message"));
-            this.addTextInputCell(null, true, true)
+            TextInputCell messageCell = this.addTextInputCell(null, true, true)
                     .setEditorMultiLineMode(true)
                     .setEditListener(s -> this.config.message = s.replace("\\n", "\n"))
                     .setText(this.config.message.replace("\n", "\\n"));
+            messageCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.message.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -195,7 +206,7 @@ public class ShowToastAction extends Action {
                 });
                 chooser.setSource(this.config.iconSource.isBlank() ? null : this.config.iconSource, false);
                 Minecraft.getInstance().setScreen(chooser);
-            }), true);
+            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_icon.desc"))), true);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.clear_icon"), button -> {
                 this.config.iconSource = "";
                 this.iconSourceCell.setText("");
@@ -217,7 +228,7 @@ public class ShowToastAction extends Action {
                 });
                 chooser.setSource(this.config.backgroundSource.isBlank() ? null : this.config.backgroundSource, false);
                 Minecraft.getInstance().setScreen(chooser);
-            }), true);
+            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_background.desc"))), true);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.clear_background"), button -> {
                 this.config.backgroundSource = "";
                 this.backgroundSourceCell.setText("");
