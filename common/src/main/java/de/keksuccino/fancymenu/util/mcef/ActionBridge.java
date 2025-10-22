@@ -134,61 +134,75 @@ public class ActionBridge {
                 }
                 
                 waitForCefQuery(function() {
-                    window.%namespace% = {
-                        executeWithCallback: function(actionType, actionValue, onSuccess, onFailure) {
-                            // Handle overloaded calls
-                            if (typeof actionValue === 'function') {
-                                // executeWithCallback(actionType, onSuccess, onFailure)
-                                onFailure = onSuccess;
-                                onSuccess = actionValue;
-                                actionValue = null;
-                            }
-                            
-                            if (!actionType || typeof actionType !== 'string') {
-                                if (onFailure) onFailure('Invalid action type');
-                                return;
-                            }
-                            
-                            // Construct action string
-                            var actionString = actionType;
-                            if (actionValue !== null && actionValue !== undefined && actionValue !== '') {
-                                actionString += ':' + actionValue;
-                            }
-                            
-                            console.log('[FancyMenu] Executing action:', actionString);
-                            
-                            window.cefQuery({
-                                request: JSON.stringify({
-                                    type: '%action_type%',
-                                    action: actionString
-                                }),
-                                onSuccess: function(response) {
-                                    console.log('[FancyMenu] Action response:', response);
-                                    if (onSuccess) {
-                                        try {
-                                            var result = JSON.parse(response);
-                                            onSuccess(result);
-                                        } catch (e) {
-                                            onSuccess(response);
-                                        }
+                    function executeWithCallbackInternal(actionType, actionValue, onSuccess, onFailure) {
+                        // Handle overloaded calls
+                        if (typeof actionValue === 'function') {
+                            // executeWithCallback(actionType, onSuccess, onFailure)
+                            onFailure = onSuccess;
+                            onSuccess = actionValue;
+                            actionValue = null;
+                        }
+
+                        if (!actionType || typeof actionType !== 'string') {
+                            if (onFailure) onFailure('Invalid action type');
+                            return;
+                        }
+
+                        // Construct action string
+                        var actionString = actionType;
+                        if (actionValue !== null && actionValue !== undefined && actionValue !== '') {
+                            actionString += ':' + actionValue;
+                        }
+
+                        console.log('[FancyMenu] Executing action:', actionString);
+
+                        window.cefQuery({
+                            request: JSON.stringify({
+                                type: '%action_type%',
+                                action: actionString
+                            }),
+                            onSuccess: function(response) {
+                                console.log('[FancyMenu] Action response:', response);
+                                if (onSuccess) {
+                                    try {
+                                        var result = JSON.parse(response);
+                                        onSuccess(result);
+                                    } catch (e) {
+                                        onSuccess(response);
                                     }
-                                },
-                                onFailure: function(error_code, error_message) {
-                                    console.error('[FancyMenu] Action failed:', error_code, error_message);
-                                    if (onFailure) onFailure(error_message);
                                 }
-                            });
+                            },
+                            onFailure: function(error_code, error_message) {
+                                console.error('[FancyMenu] Action failed:', error_code, error_message);
+                                if (onFailure) onFailure(error_message);
+                            }
+                        });
+                    }
+
+                    function executeInternal(actionType, actionValue) {
+                        if (arguments.length === 1) {
+                            // Single argument - action without value
+                            executeWithCallbackInternal(actionType);
+                        } else {
+                            // Two arguments - action with value
+                            executeWithCallbackInternal(actionType, actionValue);
+                        }
+                    }
+
+                    var actionsNamespace = {
+                        executeWithCallback: executeWithCallbackInternal,
+                        execute: executeInternal
+                    };
+
+                    window.%namespace% = {
+                        actions: actionsNamespace,
+                        executeWithCallback: function(actionType, actionValue, onSuccess, onFailure) {
+                            return executeWithCallbackInternal.apply(null, arguments);
                         },
-                        
+
                         // Convenience method for executing actions without callbacks
                         execute: function(actionType, actionValue) {
-                            if (arguments.length === 1) {
-                                // Single argument - action without value
-                                this.executeWithCallback(actionType);
-                            } else {
-                                // Two arguments - action with value
-                                this.executeWithCallback(actionType, actionValue);
-                            }
+                            return executeInternal.apply(null, arguments);
                         },
 
                         placeholders: {
