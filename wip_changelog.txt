@@ -20,6 +20,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 - Added "Has Player Permission Level" requirement to check if the player has a specific permission level (like level 4 for operator) (#1239)
 - Added "Is Resource Pack Enabled" requirement to check if a resource pack is enabled by its display name (#1002)
 - Added "Is Any Screen Open" requirement that returns true when ANY screen is open (useful for listeners, since they work outside menus) (#1275)
+- Added "Show Toast" action to show a custom Toast notification in the upper-right corner of the screen
 - Added "Reset Element Animator" action to reset an "Element Animator" element, so it starts playing its animation (#1307)
 - Added "Toggle Element Animator" action to toggle if an "Element Animator" element should play its animation
 - Added "Enable Element Animator" action to enable an "Element Animator" element, so it plays its animation
