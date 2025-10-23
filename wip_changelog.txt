@@ -44,6 +44,7 @@ CHANGELOG | FANCYMENU v3.8.0 - The "I'm Not Gonna Read All That" Update [ W I P 
 - Added "Last Death Message" placeholder that returns the player's last death message if there is any (#1165)
 - Added "Number Base Converter" placeholder to convert a number between bases (supports decimals) (#1291)
 - Added "Uptime Duration" placeholder that returns the seconds or milliseconds that passed since the game got launched (#1306)
+- Added "Get NBT Data (Server-Side)" placeholder that supports the full feature range of the "/data get" command (requires FancyMenu on the server) (#1344)
 - Added "Print to Game Log" action to print text to the game's log for debugging (#1267)
 - Added "Popup Mode" to Custom GUIs, so they look like they open on top of the previous screen by rendering the previous screen in the background
 - Added "OLED Purple" FancyMenu theme (by Mowzy - Thanks so much for the great looking design!)
