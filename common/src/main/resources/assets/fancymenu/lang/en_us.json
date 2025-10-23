@@ -2130,5 +2130,7 @@
   "fancymenu.actions.show_toast.edit.clear_background": "Clear Background",
   "fancymenu.actions.show_toast.edit.clear_background.desc": "Removes the custom background and falls back to Mojang's default toast sprite.",
   "fancymenu.actions.show_toast.default_title": "FancyMenu Toast",
-  "fancymenu.actions.show_toast.default_message": "Hello from FancyMenu!"
+  "fancymenu.actions.show_toast.default_message": "Hello from FancyMenu!",
+  "fancymenu.placeholders.nbt_data_get.server": "Get NBT Data (Server-Side)",
+  "fancymenu.placeholders.nbt_data_get.server.desc": "§xRequires FancyMenu on the server.§r\n\nFetches live NBT data from the server, mirroring every target supported by '/data get'.\nReturns an empty value until the server response arrives.\n\nSupported source_type values:\n- entity: Full selector syntax (scores, advancements, predicates, rotation, gamemode, etc.)\n- block: Absolute, relative (~) or local (^) coordinates like the vanilla command\n- storage: Command storage identifiers (namespace:key)\n\nOptional arguments:\n- nbt_path: Same path rules as '/data get'\n- scale: Multiplies numeric results (default 1.0)\n- return_type: 'value', 'string', 'snbt', or 'json'\n\nResponses are cached for 100ms to avoid spamming the server."
 }
