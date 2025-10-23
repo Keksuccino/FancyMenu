@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServerSideNbtDataGetPlaceholder extends Placeholder {
 
     private static final long CACHE_DURATION_MS = 100L;
-    private static final long REQUEST_COOLDOWN_MS = 100L;
+    private static final long REQUEST_TIMEOUT_MS = 2000L;
 
     private static final Map<String, CacheEntry> CACHE = new ConcurrentHashMap<>();
     private static final Map<String, Long> PENDING_REQUESTS = new ConcurrentHashMap<>();
@@ -42,23 +42,32 @@ public class ServerSideNbtDataGetPlaceholder extends Placeholder {
 
         long now = System.currentTimeMillis();
         CacheEntry entry = CACHE.get(placeholderKey);
-        if (entry != null) {
-            if ((now - entry.timestampMs) <= CACHE_DURATION_MS) {
-                return entry.value;
-            }
-            CACHE.remove(placeholderKey);
+
+        Long pendingSince = PENDING_REQUESTS.get(placeholderKey);
+        if (pendingSince != null && ((now - pendingSince) > REQUEST_TIMEOUT_MS)) {
+            PENDING_REQUESTS.remove(placeholderKey);
+            pendingSince = null;
         }
 
-        requestDataFromServer(dps, placeholderKey, now);
+        boolean awaitingUpdate = (pendingSince != null);
+
+        if (!awaitingUpdate) {
+            long lastUpdate = entry != null ? entry.timestampMs : Long.MIN_VALUE;
+            if ((entry == null) || ((now - lastUpdate) > CACHE_DURATION_MS)) {
+                requestDataFromServer(dps, placeholderKey, now);
+                awaitingUpdate = true;
+            }
+        }
+
+        if (entry != null) {
+            return entry.value;
+        }
+
         return "";
     }
 
     private void requestDataFromServer(DeserializedPlaceholderString dps, String placeholderKey, long now) {
         if (Minecraft.getInstance().player == null || Minecraft.getInstance().getConnection() == null) {
-            return;
-        }
-        Long lastRequest = PENDING_REQUESTS.get(placeholderKey);
-        if ((lastRequest != null) && ((now - lastRequest) < REQUEST_COOLDOWN_MS)) {
             return;
         }
 
