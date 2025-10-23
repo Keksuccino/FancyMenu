@@ -22,8 +22,9 @@ runs {
         workingDirectory project.file('../run_client')
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         dependencies {
-            runtime 'com.github.Keksuccino:japng:0.5.3'
-            runtime 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7'
+            runtime "com.github.Keksuccino:japng:0.5.3"
+            runtime "com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7"
+            runtime "io.github.llamalad7:mixinextras-neoforge:${mixin_extras_version}"
         }
     }
     server {
@@ -59,9 +60,12 @@ dependencies {
     implementation(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
     }
-    //implementation "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
-    implementation "maven.modrinth:fancy-entity-renderer:0.4.0"
-//    implementation "com.cinemamod:mcef:2.1.6-1.21.1"
+    implementation(jarJar("io.github.llamalad7:mixinextras-neoforge:${mixin_extras_version}")) {
+        jarJar.ranged(it, "[${mixin_extras_version},)")
+    }
+    //implementation "maven.modrinth:fancy-entity-renderer:0.4.0"
+    implementation "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
+    //implementation "com.cinemamod:mcef:2.1.6-1.21.1"
     implementation "maven.modrinth:mcef:euXLgkSB"
     compileOnly project(":common")
 }

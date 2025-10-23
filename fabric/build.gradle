@@ -19,20 +19,20 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.layered() {
         officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-1.21.1:2024.11.17@zip")
+        parchment("org.parchmentmc.data:parchment-${parchment_mc_version}:${parchment_version}@zip")
     }
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
-    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.2")))
+    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${mixin_extras_version}")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
     include(implementation 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7')
     modImplementation "maven.modrinth:melody:1.0.10-1.21-fabric"
     modImplementation "maven.modrinth:konkrete:1.9.9-1.21-fabric"
     modImplementation "maven.modrinth:modmenu:11.0.0-beta.1"
-    modImplementation "maven.modrinth:fancy-entity-renderer:JjeSIcya"
-    //modCompileOnly "maven.modrinth:fancy-entity-renderer:JjeSIcya"
+    //modImplementation "maven.modrinth:fancy-entity-renderer:JjeSIcya"
+    modImplementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
     modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
     modImplementation "curse.maven:xaeros-world-map-317780:6538360"
     modImplementation "curse.maven:xaeros-minimap-263420:6515046"
