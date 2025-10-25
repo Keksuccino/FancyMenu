@@ -41,6 +41,7 @@
     "client.MixinCreateWorldScreen_WorldTab",
     "client.MixinCreativeModeInventoryScreen",
     "client.MixinCycleButton",
+    "client.MixinDeathScreen",
     "client.MixinDisconnectedScreen",
     "client.MixinGameLoadCookie",
     "client.MixinGameRenderer",
