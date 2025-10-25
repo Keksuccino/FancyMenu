@@ -160,7 +160,9 @@ subprojects {
                 "fer_mc_version": fer_mc_version,
                 "parchment_version": parchment_version,
                 "parchment_mc_version": parchment_mc_version,
-                "mixin_extras_version": mixin_extras_version
+                "mixin_extras_version": mixin_extras_version,
+                "fabric_loom_version": fabric_loom_version,
+                "neogradle_version": neogradle_version
         ]
         filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/mods.toml', 'META-INF/neoforge.mods.toml', '*.mixins.json']) {
             expand expandProps

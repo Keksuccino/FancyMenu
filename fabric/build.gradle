@@ -3,15 +3,11 @@ plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
-    id 'fabric-loom' version '1.9-SNAPSHOT'
+    id "fabric-loom" version "$fabric_loom_version"
 }
 
 base {
     archivesName = "${mod_id}"
-}
-
-repositories {
-    flatDir { dirs 'libs' }
 }
 
 dependencies {
