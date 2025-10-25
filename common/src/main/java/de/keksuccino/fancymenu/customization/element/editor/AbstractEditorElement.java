@@ -73,6 +73,24 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 		return UIBase.getUIColorTheme().layout_editor_element_border_color_normal.getColorInt();
 	};
+    protected static final ConsumingSupplier<AbstractEditorElement, Float> HORIZONTAL_TILT_CONTROLS_ALPHA = consumes -> {
+        if (consumes.horizontalTiltGrabber.hovered || consumes.isGettingHorizontalTilted()) {
+            return 1.0F;
+        }
+        return 0.7F;
+    };
+    protected static final ConsumingSupplier<AbstractEditorElement, Float> VERTICAL_TILT_CONTROLS_ALPHA = consumes -> {
+        if (consumes.verticalTiltGrabber.hovered || consumes.isGettingVerticalTilted()) {
+            return 1.0F;
+        }
+        return 0.7F;
+    };
+    protected static final ConsumingSupplier<AbstractEditorElement, Float> ROTATION_CONTROLS_ALPHA = consumes -> {
+        if (consumes.rotationGrabber.hovered || consumes.isGettingRotated()) {
+            return 1.0F;
+        }
+        return 0.7F;
+    };
 
 	public AbstractElement element;
 	public final EditorElementSettings settings;
@@ -945,7 +963,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		// Use many points to create a smooth circle
 		int points = 360; // One point per degree for maximum smoothness
-		int circleColor = UIBase.getUIColorTheme().layout_editor_element_border_rotation_controls_color.getColorInt();
+		int circleColor = UIBase.getUIColorTheme().layout_editor_element_border_rotation_controls_color.getColorIntWithAlpha(ROTATION_CONTROLS_ALPHA.get(this));
 
 		// Draw the circle by plotting points
 		for (int i = 0; i < points; i++) {
@@ -978,7 +996,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			int verticalLineX = (int)centerX + 8;
 			int verticalLineTop = this.getY() - lineExtension;
 			int verticalLineBottom = this.getY() + this.getHeight() + lineExtension;
-			graphics.fill(verticalLineX, verticalLineTop, verticalLineX + 1, verticalLineBottom, UIBase.getUIColorTheme().layout_editor_element_border_vertical_tilting_controls_color.getColorInt());
+			graphics.fill(verticalLineX, verticalLineTop, verticalLineX + 1, verticalLineBottom, UIBase.getUIColorTheme().layout_editor_element_border_vertical_tilting_controls_color.getColorIntWithAlpha(VERTICAL_TILT_CONTROLS_ALPHA.get(this)));
 		}
 
 		if (!this.element.advancedHorizontalTiltMode) {
@@ -986,7 +1004,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			int horizontalLineY = (int)centerY + 8;
 			int horizontalLineLeft = this.getX() - lineExtension;
 			int horizontalLineRight = this.getX() + this.getWidth() + lineExtension;
-			graphics.fill(horizontalLineLeft, horizontalLineY, horizontalLineRight, horizontalLineY + 1, UIBase.getUIColorTheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorInt());
+			graphics.fill(horizontalLineLeft, horizontalLineY, horizontalLineRight, horizontalLineY + 1, UIBase.getUIColorTheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorIntWithAlpha(HORIZONTAL_TILT_CONTROLS_ALPHA.get(this)));
 		}
 
 		// Render tilt grabbers
@@ -2179,7 +2197,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				// Draw the grabber as a filled circle at the rotation position
 				int x = this.getX();
 				int y = this.getY();
-				int color = UIBase.getUIColorTheme().layout_editor_element_border_rotation_controls_color.getColorInt();
+				int color = UIBase.getUIColorTheme().layout_editor_element_border_rotation_controls_color.getColorIntWithAlpha(ROTATION_CONTROLS_ALPHA.get(AbstractEditorElement.this));
 
 				// Draw a small filled square (approximation of a circle for the grabber)
 				graphics.fill(x - size / 2, y - size / 2, x + size / 2, y + size / 2, color);
@@ -2248,7 +2266,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				int y = this.getY();
 
 				// Draw a small filled square (the grabber)
-				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUIColorTheme().layout_editor_element_border_vertical_tilting_controls_color.getColorInt());
+				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUIColorTheme().layout_editor_element_border_vertical_tilting_controls_color.getColorIntWithAlpha(VERTICAL_TILT_CONTROLS_ALPHA.get(AbstractEditorElement.this)));
 			}
 		}
 
@@ -2307,7 +2325,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				int y = this.getY();
 
 				// Draw a small filled square (the grabber)
-				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUIColorTheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorInt());
+				graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUIColorTheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorIntWithAlpha(HORIZONTAL_TILT_CONTROLS_ALPHA.get(AbstractEditorElement.this)));
 			}
 		}
 
