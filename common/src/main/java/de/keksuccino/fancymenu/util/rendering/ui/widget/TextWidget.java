@@ -10,6 +10,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -150,6 +151,18 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
         double width = this.getScaledTextWidth();
         double height = this.getScaledTextHeight();
         return mouseX >= x && mouseX <= (x + width) && mouseY >= y && mouseY <= (y + height);
+    }
+
+    @Nullable
+    public Style getStyleAtMouseX(double mouseX) {
+        double left = this.getRenderX();
+        double right = left + this.getScaledTextWidth();
+        if (mouseX < left || mouseX > right) {
+            return null;
+        }
+        float safeScale = Math.max(0.0001F, this.scale);
+        double relative = (mouseX - left) / safeScale;
+        return this.font.getSplitter().componentStyleAtWidth(this.getMessage(), Mth.floor(relative));
     }
 
     @Override

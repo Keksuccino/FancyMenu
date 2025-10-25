@@ -12,7 +12,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -116,7 +115,7 @@ public abstract class MixinDeathScreen extends Screen {
         if (((CustomizableWidget)this.causeOfDeathTextFancyMenu).isHiddenFancyMenu()) {
             return;
         }
-        Style style = this.getClickedComponentStyleAtFancyMenu((int)mouseX);
+        Style style = this.causeOfDeathTextFancyMenu.getStyleAtMouseX(mouseX);
         if (style != null && style.getClickEvent() != null && style.getClickEvent().getAction() == ClickEvent.Action.OPEN_URL) {
             this.handleComponentClicked(style);
             cir.setReturnValue(false);
@@ -134,28 +133,10 @@ public abstract class MixinDeathScreen extends Screen {
         if (((CustomizableWidget)this.causeOfDeathTextFancyMenu).isHiddenFancyMenu()) {
             return;
         }
-        Style style = this.getClickedComponentStyleAtFancyMenu(mouseX);
+        Style style = this.causeOfDeathTextFancyMenu.getStyleAtMouseX(mouseX);
         if (style != null) {
             graphics.renderComponentHoverEffect(this.font, style, mouseX, mouseY);
         }
-    }
-
-    @Unique
-    private @Nullable Style getClickedComponentStyleAtFancyMenu(int mouseX) {
-        if (this.causeOfDeath == null || this.causeOfDeathTextFancyMenu == null) {
-            return null;
-        }
-        if (((CustomizableWidget)this.causeOfDeathTextFancyMenu).isHiddenFancyMenu()) {
-            return null;
-        }
-        double left = this.causeOfDeathTextFancyMenu.getRenderX();
-        double right = left + this.causeOfDeathTextFancyMenu.getScaledTextWidth();
-        if (mouseX < left || mouseX > right) {
-            return null;
-        }
-        float scale = this.causeOfDeathTextFancyMenu.getScale();
-        double relative = (mouseX - left) / Math.max(0.0001F, scale);
-        return this.font.getSplitter().componentStyleAtWidth(this.causeOfDeath, Mth.floor(relative));
     }
 
     @Unique
