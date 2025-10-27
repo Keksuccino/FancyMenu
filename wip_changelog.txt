@@ -51,6 +51,14 @@ CHANGELOG | FANCYMENU v3.8.0 - The "I'm Not Gonna Read All That" Update [ W I P 
 - Added "Nether" FancyMenu theme (by Mowzy - Thanks so much for the great looking design!)
 - Added "Butter Dark" FancyMenu theme (by caelaThinx - Thanks so much for the great looking design!)
 - Added "Butter OLED" FancyMenu theme (by caelaThinx - Thanks so much for the great looking design!)
+- Added/Updated the following translations:
+  - German (de_de)
+  - Greek (el_gr)
+  - Mexican Spanish (es_mx)
+  - French (fr_fr)
+  - Japanese (ja_jp)
+  - Russian (ru_ru)
+  - Simplified Chinese (zh_cn)
 - The action script editor got a complete overhaul
   - Lots of visual QoL improvements to make editing scripts easier
   - Added a minimap at the right side for easy navigation in longer scripts
