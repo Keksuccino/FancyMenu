@@ -399,6 +399,7 @@ public class ActionScriptEditorScreen extends Screen {
                     this.rightClickContextMenu.closeMenu();
                     this.onOpenActionChooser(selectionReference);
                 }).setIcon(ContextMenu.IconFactory.getIcon("pick"))
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.a"))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_action_chooser.desc")));
 
         if (!favoriteActions.isEmpty() || !regularActions.isEmpty()) {
@@ -1350,6 +1351,11 @@ public class ActionScriptEditorScreen extends Screen {
                 if (this.pasteCopiedAction(selected)) {
                     return true;
                 }
+            }
+
+            if ("a".equals(keyName)) {
+                this.onOpenActionChooser(this.selectedEntry);
+                return true;
             }
 
             if ((keyCode == InputConstants.KEY_UP) || (keyCode == InputConstants.KEY_DOWN)) {

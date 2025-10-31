@@ -16,9 +16,11 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -478,6 +480,10 @@ public class ManageListenersScreen extends CellScreen {
                 RenderingUtils.resetShaderColor(graphics);
                 UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.labelComponent, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER);
                 RenderingUtils.resetShaderColor(graphics);
+                // Show Writing cursor when the label is hovered
+                if (UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER, Minecraft.getInstance().font.width(this.labelComponent), Minecraft.getInstance().font.lineHeight)) {
+                    CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
+                }
             }
         }
         
@@ -505,9 +511,13 @@ public class ManageListenersScreen extends CellScreen {
             }
             boolean b = super.mouseClicked(mouseX, mouseY, button);
             if ((button == 1) && this.isHovered() && !this.editMode) {
-                this.setSelected(true);
-                ManageListenersScreen.this.updateSelectedInstance();
-                ManageListenersScreen.this.onEditActionsOfSelected();
+                MainThreadTaskExecutor.executeInMainThread(() -> {
+                    MainThreadTaskExecutor.executeInMainThread(() -> {
+                        this.setSelected(true);
+                        ManageListenersScreen.this.updateSelectedInstance();
+                        ManageListenersScreen.this.onEditActionsOfSelected();
+                    }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+                }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
             }
             return b;
         }

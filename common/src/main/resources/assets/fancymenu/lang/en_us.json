@@ -166,6 +166,7 @@
   "fancymenu.actions.script_editor.cancel_warning": "Are you sure?\n\nDo you really want to cancel the script editing?\n\n§xThis will undo everything you've done in here!",
   "fancymenu.actions.script_editor.shortcuts.shift_arrow_down": "Shift + Down",
   "fancymenu.actions.script_editor.shortcuts.shift_arrow_up": "Shift + Up",
+  "fancymenu.actions.script_editor.shortcuts.a": "A",
   "fancymenu.actions.select_file": "Select File from System",
   "fancymenu.actions.select_file.desc": "This action opens a native file selection dialog so you can pick a file from anywhere on your computer.\nWhen a file is selected it gets copied to the configured target path inside the Minecraft instance directory (or the default '.minecraft' directory when the prefix is used).\n\nFancyMenu also fires a listener with the selection result so you can trigger follow-up actions when the file was copied, the dialog was cancelled, or an error occurred.",
   "fancymenu.actions.select_file.dialog_title": "Select a File",
