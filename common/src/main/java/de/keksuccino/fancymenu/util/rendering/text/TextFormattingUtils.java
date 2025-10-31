@@ -126,9 +126,7 @@ public class TextFormattingUtils {
         List<MutableComponent> wrappedLines = new ArrayList<>();
         for (Component line : lines) {
             if (line.getString().isBlank()) line = Component.literal(" ");
-            LOGGER.info("############# LINE WRAP COMPONENTS IN: " + line.getString());
             for (FormattedText text : Minecraft.getInstance().font.getSplitter().splitLines(line, maxLength, Style.EMPTY)) {
-                LOGGER.info("############# LINE WRAP COMPONENTS OUT: " + text.getString());
                 wrappedLines.add(convertFormattedTextToComponent(text));
             }
         }

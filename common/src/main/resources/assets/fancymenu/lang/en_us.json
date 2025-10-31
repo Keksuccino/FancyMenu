@@ -1157,6 +1157,8 @@
   "fancymenu.listeners.manage.edit": "Edit Actions",
   "fancymenu.listeners.manage.remove": "Remove Listener",
   "fancymenu.listeners.manage.rename_tip": "Rename listeners by double-clicking their display name.",
+  "fancymenu.listeners.manage.quick_edit_tip": "Right-click listeners to quick-edit their actions.",
+  "fancymenu.listeners.manage.delete_warning": "Are you sure?\n\nDo you really want to §xdelete§r this listener?\n\n§xYou can't undo this!",
   "fancymenu.listeners.on_block_broke": "On Block Broke",
   "fancymenu.listeners.on_block_broke.desc": "This listener triggers once when the player breaks a block.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$block_key §r= The resource location of the broken block\n- §z$$broke_with_item_key §r= The resource location of the item/tool that was used (or EMPTY when nothing was held)\n- §z$$block_pos_x §r= The X coordinate of the broken block\n- §z$$block_pos_y §r= The Y coordinate of the broken block\n- §z$$block_pos_z §r= The Z coordinate of the broken block",
   "fancymenu.listeners.on_block_placed": "On Block Placed",

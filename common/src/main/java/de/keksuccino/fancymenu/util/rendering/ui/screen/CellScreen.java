@@ -54,23 +54,15 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     protected ExtendedButton cancelButton;
     protected int lastWidth = 0;
     protected int lastHeight = 0;
-
-    // Store all cells to support filtering
     protected final List<RenderCell> allCells = new ArrayList<>();
-
-    // Search bar feature
     protected boolean searchBarEnabled = false;
     @Nullable
     protected ExtendedEditBox searchBar;
     @NotNull
     protected Component searchBarPlaceholder = Component.translatable("fancymenu.ui.generic.search");
-
-    // Description area feature
     protected boolean descriptionAreaEnabled = false;
     @Nullable
     protected ScrollArea descriptionScrollArea;
-    @NotNull
-    protected Component descriptionAreaLabel = Component.translatable("fancymenu.ui.generic.description");
 
     protected CellScreen(@NotNull Component title) {
         super(title);
@@ -117,10 +109,6 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
      */
     protected void setDescriptionAreaEnabled(boolean enabled) {
         this.descriptionAreaEnabled = enabled;
-    }
-
-    public void setDescriptionAreaLabel(@NotNull Component descriptionAreaLabel) {
-        this.descriptionAreaLabel = descriptionAreaLabel;
     }
 
     /**
@@ -220,6 +208,8 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
      */
     protected boolean cellMatchesSearch(@NotNull RenderCell cell, @Nullable String searchValue) {
         if (searchValue == null || searchValue.isBlank()) return true;
+
+        if (cell.ignoreSearch) return true;
 
         String searchLower = searchValue.toLowerCase();
 
@@ -385,10 +375,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        // Render description label if description area is enabled
-        if (this.descriptionAreaEnabled && this.descriptionScrollArea != null) {
-            int descLabelWidth = this.font.width(this.descriptionAreaLabel);
-            graphics.drawString(this.font, this.descriptionAreaLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        if (this.descriptionAreaEnabled && (this.descriptionScrollArea != null)) {
             this.descriptionScrollArea.render(graphics, mouseX, mouseY, partial);
         }
 
@@ -509,7 +496,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         this.allCells.add(cell);
 
         // Only add to scroll area if it matches the search filter (or if search is disabled)
-        if (!this.searchBarEnabled || this.searchBar == null || this.cellMatchesSearch(cell, this.searchBar.getValue())) {
+        if (cell.ignoreSearch || (!this.searchBarEnabled || this.searchBar == null || this.cellMatchesSearch(cell, this.searchBar.getValue()))) {
             CellScrollEntry entry = new CellScrollEntry(this.scrollArea, cell);
             this.scrollArea.addEntry(entry);
         }
@@ -890,6 +877,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         protected Supplier<String> searchStringSupplier = () -> null;
         protected final List<GuiEventListener> children = new ArrayList<>();
         protected final Map<String, String> memory = new HashMap<>();
+        protected boolean ignoreSearch = false;
 
         public abstract void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
@@ -1034,6 +1022,11 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         public RenderCell putMemoryValue(@NotNull String key, @NotNull String value) {
             this.memory.put(key, value);
+            return this;
+        }
+
+        public RenderCell setIgnoreSearch() {
+            this.ignoreSearch = true;
             return this;
         }
 

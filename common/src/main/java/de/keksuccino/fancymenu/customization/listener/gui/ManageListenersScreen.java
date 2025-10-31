@@ -25,7 +25,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
@@ -68,8 +67,8 @@ public class ManageListenersScreen extends CellScreen {
                 }
             }
         }
-        
-        this.addSpacerCell(10);
+
+        this.addSpacerCell(5).setIgnoreSearch();
 
         // Add all listener instances to the list
         List<ListenerInstanceCell> instanceCells = new ArrayList<>();
@@ -96,8 +95,8 @@ public class ManageListenersScreen extends CellScreen {
                 }
             }
         });
-        
-        this.addStartEndSpacerCell();
+
+        this.addSpacerCell(5).setIgnoreSearch();
         
     }
 
@@ -126,31 +125,39 @@ public class ManageListenersScreen extends CellScreen {
             Minecraft.getInstance().setScreen(chooseScreen);
         });
         
-        this.addRightSideDefaultSpacer();
-        
         // Edit listener button
         this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.edit"), button -> {
-            if (this.selectedInstance != null) {
-                ListenerInstance cached = this.selectedInstance;
-                ActionScriptEditorScreen actionsScreen = new ActionScriptEditorScreen(cached.getActionScript(), updatedScript -> {
-                    if (updatedScript != null) {
-                        cached.setActionScript(updatedScript);
-                    }
-                    Minecraft.getInstance().setScreen(this);
-                });
-                Minecraft.getInstance().setScreen(actionsScreen);
-            }
+            this.onEditActionsOfSelected();
         }).setIsActiveSupplier(consumes -> this.selectedInstance != null);
-        
+
         // Remove listener button
         this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.remove"), button -> {
-            if (this.selectedInstance != null) {
-                this.tempInstances.remove(this.selectedInstance);
-                this.selectedInstance = null;
-                this.rebuild();
+            ListenerInstance sel = this.selectedInstance;
+            if (sel != null) {
+                Minecraft.getInstance().setScreen(ConfirmationScreen.critical(call -> {
+                    if (call) {
+                        this.tempInstances.remove(sel);
+                        this.selectedInstance = null;
+                        this.rebuild();
+                    }
+                    Minecraft.getInstance().setScreen(this);
+                }, Component.translatable("fancymenu.listeners.manage.delete_warning")));
             }
         }).setIsActiveSupplier(consumes -> this.selectedInstance != null);
         
+    }
+
+    protected void onEditActionsOfSelected() {
+        if (this.selectedInstance != null) {
+            ListenerInstance cached = this.selectedInstance;
+            ActionScriptEditorScreen actionsScreen = new ActionScriptEditorScreen(cached.getActionScript(), updatedScript -> {
+                if (updatedScript != null) {
+                    cached.setActionScript(updatedScript);
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(actionsScreen);
+        }
     }
 
     @Override
@@ -198,12 +205,20 @@ public class ManageListenersScreen extends CellScreen {
             int descW = (int) this.descriptionScrollArea.getWidthWithBorder();
             int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
             int descEndY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder());
-            List<FormattedCharSequence> text = this.font.split(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()).withItalic(true)), descW);
+            List<FormattedCharSequence> renameTip = this.font.split(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_inactive.getColorInt()).withItalic(true)), descW);
+            List<FormattedCharSequence> quickEditTip = this.font.split(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_inactive.getColorInt()).withItalic(true)), descW);
             int lineY = descEndY + 4;
-            for (FormattedCharSequence line : text) {
+            for (FormattedCharSequence line : renameTip) {
                 int lineWidth = this.font.width(line);
                 int lineX = descEndX - lineWidth;
-                graphics.drawString(this.font, line, lineX, lineY, -1);
+                graphics.drawString(this.font, line, lineX, lineY, -1, false);
+                lineY += this.font.lineHeight + 2;
+            }
+            lineY += 2;
+            for (FormattedCharSequence line : quickEditTip) {
+                int lineWidth = this.font.width(line);
+                int lineX = descEndX - lineWidth;
+                graphics.drawString(this.font, line, lineX, lineY, -1, false);
                 lineY += this.font.lineHeight + 2;
             }
         }
@@ -418,6 +433,7 @@ public class ManageListenersScreen extends CellScreen {
         protected boolean editMode = false;
         protected long lastClickTime = 0;
         protected static final long DOUBLE_CLICK_TIME = 500; // milliseconds
+        protected static final int TOP_DOWN_CELL_BORDER = 1;
         
         public ListenerInstanceCell(@NotNull ListenerInstance instance) {
             this.instance = instance;
@@ -425,9 +441,9 @@ public class ManageListenersScreen extends CellScreen {
             this.setDescriptionSupplier(this.instance.parent::getDescription);
             this.setSearchStringSupplier(() -> {
                 if (this.instance.getDisplayName() != null) {
-                    return this.instance.getDisplayName() + " " + this.instance.instanceIdentifier;
+                    return this.instance.getDisplayName();
                 }
-                return this.instance.parent.getDisplayName().getString() + " " + this.instance.instanceIdentifier;
+                return this.instance.parent.getDisplayName().getString();
             });
         }
         
@@ -448,7 +464,7 @@ public class ManageListenersScreen extends CellScreen {
             if (this.editMode && this.editBox != null) {
                 // Render edit box
                 this.editBox.setX(this.getX());
-                this.editBox.setY(this.getY());
+                this.editBox.setY(this.getY() + TOP_DOWN_CELL_BORDER);
                 this.editBox.setWidth(Math.min(this.getWidth(), 200));
                 this.editBox.setHeight(Minecraft.getInstance().font.lineHeight + 1);
                 this.editBox.render(graphics, mouseX, mouseY, partial);
@@ -460,7 +476,7 @@ public class ManageListenersScreen extends CellScreen {
             } else {
                 // Render label
                 RenderingUtils.resetShaderColor(graphics);
-                UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.labelComponent, this.getX(), this.getY() + 1);
+                UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.labelComponent, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER);
                 RenderingUtils.resetShaderColor(graphics);
             }
         }
@@ -472,7 +488,7 @@ public class ManageListenersScreen extends CellScreen {
             } else {
                 this.setWidth(Minecraft.getInstance().font.width(this.labelComponent));
             }
-            this.setHeight(Minecraft.getInstance().font.lineHeight + 1);
+            this.setHeight(Minecraft.getInstance().font.lineHeight + (TOP_DOWN_CELL_BORDER * 2));
         }
         
         @Override
@@ -487,7 +503,13 @@ public class ManageListenersScreen extends CellScreen {
                     this.lastClickTime = currentTime;
                 }
             }
-            return super.mouseClicked(mouseX, mouseY, button);
+            boolean b = super.mouseClicked(mouseX, mouseY, button);
+            if ((button == 1) && this.isHovered() && !this.editMode) {
+                this.setSelected(true);
+                ManageListenersScreen.this.updateSelectedInstance();
+                ManageListenersScreen.this.onEditActionsOfSelected();
+            }
+            return b;
         }
         
         @Override
