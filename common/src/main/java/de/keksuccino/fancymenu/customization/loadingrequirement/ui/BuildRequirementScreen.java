@@ -62,19 +62,13 @@ public class BuildRequirementScreen extends Screen {
     protected void init() {
 
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty()) {
-            @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                super.renderWidget(graphics, mouseX, mouseY, partial);
-                if (this.getValue().isBlank() && !this.isFocused()) {
-                    graphics.drawString(this.font, Component.translatable("fancymenu.requirements.build_requirement.screen.search_requirement"), this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
-                }
-            }
-        };
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
+        this.searchBar.setHintFancyMenu(consumes -> Component.translatable("fancymenu.requirements.build_requirement.screen.search_requirement"));
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateRequirementsList());
         this.addRenderableWidget(this.searchBar);
         UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+        this.setInitialFocus(this.searchBar);
 
         // Set positions for scroll areas
         this.requirementsListScrollArea.setWidth((this.width / 2) - 40, true);

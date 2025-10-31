@@ -168,17 +168,8 @@ public class TextEditorScreen extends Screen {
         int placeholderSearchBarY = this.getPlaceholderAreaY() - 25;
 
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, this.getPlaceholderAreaX(), placeholderSearchBarY, this.getPlaceholderAreaWidth(), 20 - 2, Component.empty()) {
-            @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                super.renderWidget(graphics, mouseX, mouseY, partial);
-                if (this.getValue().isBlank() && !this.isFocused()) {
-                    graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
-                    graphics.drawString(this.font, Component.translatable("fancymenu.placeholders.text_editor.search_placeholder"), this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
-                    graphics.disableScissor();
-                }
-            }
-        };
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, this.getPlaceholderAreaX(), placeholderSearchBarY, this.getPlaceholderAreaWidth(), 20 - 2, Component.empty());
+        this.searchBar.setHintFancyMenu(consumes -> Component.translatable("fancymenu.placeholders.text_editor.search_placeholder"));
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updatePlaceholdersList());
         this.searchBar.setIsVisibleSupplier(consumes -> extendedPlaceholderMenu && this.allowPlaceholders);

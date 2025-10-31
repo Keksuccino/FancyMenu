@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.LogicExecutorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class ChooseActionScreen extends Screen {
+public class ChooseActionScreen extends Screen implements InitialWidgetFocusScreen {
 
     protected final ActionInstance instance;
     protected Consumer<ActionInstance> callback;
@@ -61,19 +62,13 @@ public class ChooseActionScreen extends Screen {
     protected void init() {
 
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty()) {
-            @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                super.renderWidget(graphics, mouseX, mouseY, partial);
-                if (this.getValue().isBlank() && !this.isFocused()) {
-                    graphics.drawString(this.font, Component.translatable("fancymenu.actions.build_action.screen.search_action"), this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
-                }
-            }
-        };
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
+        this.searchBar.setHintFancyMenu(consumes -> Component.translatable("fancymenu.actions.build_action.screen.search_action"));
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateActionsList());
         this.addRenderableWidget(this.searchBar);
         UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+        this.setupInitialFocusWidget(this, this.searchBar);
 
         // Set positions for scroll areas
         this.actionsListScrollArea.setWidth((this.width / 2) - 40, true);
@@ -176,6 +171,8 @@ public class ChooseActionScreen extends Screen {
         graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         super.render(graphics, mouseX, mouseY, partial);
+
+        this.performInitialWidgetFocusActionInRender();
 
     }
 

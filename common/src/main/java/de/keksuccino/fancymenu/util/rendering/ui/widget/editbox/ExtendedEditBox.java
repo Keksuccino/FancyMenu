@@ -56,14 +56,16 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     @Nullable
     protected Supplier<Tooltip> customTooltip;
     protected boolean forceDefaultTooltipStyle = true;
+    @Nullable
+    protected ConsumingSupplier<ExtendedEditBox, Component> hintFancymenu = null;
 
-    public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
-        super(font, x, y, width, height, hint);
+    public ExtendedEditBox(Font font, int x, int y, int width, int height, Component narrationMessage) {
+        super(font, x, y, width, height, narrationMessage);
         this.font = font;
     }
 
-    public ExtendedEditBox(Font font, int x, int y, int width, int height, @Nullable EditBox editBox, Component hint) {
-        super(font, x, y, width, height, editBox, hint);
+    public ExtendedEditBox(Font font, int x, int y, int width, int height, @Nullable EditBox editBox, Component narrationMessage) {
+        super(font, x, y, width, height, editBox, narrationMessage);
         this.font = font;
     }
 
@@ -135,9 +137,22 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                 graphics.drawString(this.font, afterCursorComp, textXAfterCursor, textY, textColor, this.textShadow);
             }
 
+            // Vanilla Hint
             Component hint = access.getHintFancyMenu();
+            boolean vanillaHintRendered = false;
             if ((hint != null) && text.isEmpty() && !this.isFocused()) {
+                graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
                 graphics.drawString(this.font, hint, textXAfterCursor, textY, textColor, this.textShadow);
+                graphics.disableScissor();
+                vanillaHintRendered = true;
+            }
+
+            // FancyMenu's Custom Hint Implementation
+            Component hintFm = this.getHintFancyMenu();
+            if (!vanillaHintRendered && (hintFm != null) && text.isEmpty()) {
+                graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
+                graphics.drawString(this.font, hintFm, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), -1, false);
+                graphics.disableScissor();
             }
 
             if (!renderSmallCursor && access.getSuggestionFancyMenu() != null) {
@@ -516,6 +531,22 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
         this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
+    }
+
+    @NotNull
+    public ExtendedEditBox setHintFancyMenu(@Nullable ConsumingSupplier<ExtendedEditBox, Component> hint) {
+        this.hintFancymenu = hint;
+        return this;
+    }
+
+    @Nullable
+    protected MutableComponent getHintFancyMenu() {
+        if (this.hintFancymenu == null) return null;
+        Component c = this.hintFancymenu.get(this);
+        if (c != null) {
+            return c.copy().withColor(UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt());
+        }
+        return null;
     }
 
     @FunctionalInterface

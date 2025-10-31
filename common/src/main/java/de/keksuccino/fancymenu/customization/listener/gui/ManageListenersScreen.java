@@ -425,7 +425,7 @@ public class ManageListenersScreen extends CellScreen {
             this.setDescriptionSupplier(this.instance.parent::getDescription);
             this.setSearchStringSupplier(() -> {
                 if (this.instance.getDisplayName() != null) {
-                    return this.instance.getDisplayName();
+                    return this.instance.getDisplayName() + " " + this.instance.instanceIdentifier;
                 }
                 return this.instance.parent.getDisplayName().getString() + " " + this.instance.instanceIdentifier;
             });
@@ -437,12 +437,9 @@ public class ManageListenersScreen extends CellScreen {
                 this.labelComponent = Component.literal(this.instance.getDisplayName())
                         .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
             } else {
-                // Show default label (listener type + identifier)
-                MutableComponent typeName = this.instance.parent.getDisplayName().copy()
+                // Show default label (listener type)
+                this.labelComponent = this.instance.parent.getDisplayName().copy()
                         .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
-                MutableComponent identifier = Component.literal(" [" + this.instance.instanceIdentifier + "]")
-                        .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                this.labelComponent = typeName.append(identifier);
             }
         }
         

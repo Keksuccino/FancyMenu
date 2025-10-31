@@ -40,7 +40,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public abstract class CellScreen extends Screen {
+public abstract class CellScreen extends Screen implements InitialWidgetFocusScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -279,20 +279,16 @@ public abstract class CellScreen extends Screen {
 
             // Initialize search bar
             String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-            this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, scrollAreaX + 1, 50 + 15 + 1, scrollAreaWidth - 2, 20 - 2, Component.empty()) {
-                @Override
-                public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                    super.renderWidget(graphics, mouseX, mouseY, partial);
-                    if (this.getValue().isBlank() && !this.isFocused() && CellScreen.this.searchBarPlaceholder != null) {
-                        graphics.drawString(CellScreen.this.font, CellScreen.this.searchBarPlaceholder, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (CellScreen.this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
-                    }
-                }
-            };
+            this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, scrollAreaX + 1, 50 + 15 + 1, scrollAreaWidth - 2, 20 - 2, Component.empty());
+            if (CellScreen.this.searchBarPlaceholder != null) {
+                this.searchBar.setHintFancyMenu(consumes -> CellScreen.this.searchBarPlaceholder);
+            }
             this.searchBar.setValue(oldSearchValue);
             this.searchBar.setResponder(s -> CellScreen.this.updateCellsVisibility());
             UIBase.applyDefaultWidgetSkinTo(this.searchBar);
             this.searchBar.setMaxLength(100000);
             this.addRenderableWidget(this.searchBar);
+            this.setupInitialFocusWidget(this, this.searchBar);
         }
 
         float oldScrollX = 0.0F;
@@ -399,6 +395,8 @@ public abstract class CellScreen extends Screen {
         this.scrollArea.render(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
+
+        this.performInitialWidgetFocusActionInRender();
 
     }
 
