@@ -79,6 +79,7 @@ CHANGELOG | FANCYMENU v3.8.0 - The "I'm Not Gonna Read All That" Update [ W I P 
     - ARROW DOWN : Navigate one entry down from the currently selected one
     - SHIFT + ARROW UP : Move the selected entry one up
     - SHIFT + ARROW DOWN : Move the selected entry one down
+- Most screens with search bars now have their search bar auto-focused when opening the screen, so you can start typing right away (#1360)
 - The "FancyMenu JavaScript API" for "Browser" elements now exposes FancyMenu's placeholder system, so you can basically use placeholders in the API now (#1343)
 - Moved the "execute" functions of the "FancyMenu JavaScript API" to a dedicated "actions" namespace ("fancymenu.actions.execute...) (legacy scripts keep working like before)
 - The text of the Death screen can now be customized (title, score, death reason)
