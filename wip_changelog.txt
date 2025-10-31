@@ -144,6 +144,7 @@ CHANGELOG | FANCYMENU v3.8.0 - The "I'm Not Gonna Read All That" Update [ W I P 
 - Fixed "Back to Last Screen" action opens the layout editor when just edited the actions's parent screen in the layout editor
 - Fixed cursor keeps the last type it had when closing a menu while hovering something in a Browser element that changes the cursor to a non-default one (#1342)
 - Fixed "executeWithCallback()" function in "FancyMenu JavaScript API" invokes "onSuccess()" and "onFailure()" in weird ways instead of just invoking "onSuccess()" on actual success and "onFailure()" only on actual failure (#1345)
+- Fixed the clear version of the Pause screen (F3 + ESC) showing customizations from the normal Pause screen (#1350)
 
 %changelog:end%
 
