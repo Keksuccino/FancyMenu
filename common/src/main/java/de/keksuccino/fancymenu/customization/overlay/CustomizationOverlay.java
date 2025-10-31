@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
+import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +28,13 @@ public class CustomizationOverlay {
 	private static CustomizationOverlayMenuBar overlayMenuBar;
 	private static DebugOverlay debugOverlay;
 	private static boolean isValidFancyMenu = ModValidator.isFancyMenuMetadataValid();
+
+    static {
+
+        // This makes the clear version of the Pause screen not show the customization overlay
+        registerOverlayVisibilityController(screen -> (screen instanceof PauseScreen p) ? p.showsPauseMenu() : true);
+
+    }
 
 	public static void init() {
 		EventHandler.INSTANCE.registerListenersOf(new CustomizationOverlay());

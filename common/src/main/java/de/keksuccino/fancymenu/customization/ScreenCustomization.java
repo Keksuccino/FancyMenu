@@ -46,6 +46,7 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.VideoSettingsScreen;
 import org.apache.logging.log4j.LogManager;
@@ -148,11 +149,13 @@ public class ScreenCustomization {
 	}
 
 	private static void enableCustomizationForScreen(Screen screen) {
+        if (screen == null) return;
+        if (isScreenBlacklisted(screen)) return;
 		if (customizableScreens == null) {
 			readCustomizableScreensFromFile();
 		}
 		if (screen instanceof CustomGuiBaseScreen) return;
-		if ((screen != null) && !isCustomizationEnabledForScreen(screen, true)) {
+		if (!isCustomizationEnabledForScreen(screen, true)) {
 			//Always use the screen class path here! NEVER universal identifiers!
 			String screenClassPath = screen.getClass().getName();
 			PropertyContainer sec = new PropertyContainer(screenClassPath);
@@ -201,7 +204,11 @@ public class ScreenCustomization {
 		if (screen instanceof CustomGuiBaseScreen) {
 			return true;
 		}
-		//Always use the screen class path here! NEVER universal identifiers!
+        // This makes the clear version of the Pause screen not get customized
+        if (screen instanceof PauseScreen p) {
+            if (!p.showsPauseMenu()) return false;
+        }
+		// Always use the screen class path here! NEVER universal identifiers!
 		List<PropertyContainer> s = customizableScreens.getContainersOfType(screen.getClass().getName());
 		return !s.isEmpty();
 	}
