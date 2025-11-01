@@ -2132,5 +2132,8 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Используется для отображения предупреждений о бета-сборках и прочего.",
   "fancymenu.widgetified_screens.title_screen.logo": "Логотип Minecraft",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Иконки уведомлений Realms",
-  "fancymenu.widgetified_screens.title_screen.splash": "Ванильный сплэш-текст"
+  "fancymenu.widgetified_screens.title_screen.splash": "Ванильный сплэш-текст",
+  "fancymenu.actions.script_editor.shortcuts.a": "A",
+  "fancymenu.listeners.manage.quick_edit_tip": "Кликни ПКМ по листенеру, чтобы быстро отредактировать его действия.",
+  "fancymenu.listeners.manage.delete_warning": "Ты уверен?\n\nТы и правда хочешь §xудалить§r этот листенер?\n\n§xОтменить это действие будет нельзя!"
 }

@@ -2132,5 +2132,8 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Se usa para mostrar advertencias de compilaciones Beta y otras cosas.",
   "fancymenu.widgetified_screens.title_screen.logo": "Logo de Minecraft",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Iconos de Notificación de Realms",
-  "fancymenu.widgetified_screens.title_screen.splash": "Texto Splash de Vanilla"
+  "fancymenu.widgetified_screens.title_screen.splash": "Texto Splash de Vanilla",
+  "fancymenu.actions.script_editor.shortcuts.a": "A",
+  "fancymenu.listeners.manage.quick_edit_tip": "Dale clic derecho a los activadores para editar sus acciones rápidamente.",
+  "fancymenu.listeners.manage.delete_warning": "¿Estás seguro?\n\n¿En serio quieres §xeliminar§r este activador?\n\n§x¡No podrás deshacer esto!§r"
 }

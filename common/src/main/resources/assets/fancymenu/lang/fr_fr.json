@@ -2132,5 +2132,8 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Utilisé pour afficher les avertissements de build Bêta et autres choses.",
   "fancymenu.widgetified_screens.title_screen.logo": "Logo Minecraft",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Icônes de notification Realms",
-  "fancymenu.widgetified_screens.title_screen.splash": "Texte Splash Vanilla"
+  "fancymenu.widgetified_screens.title_screen.splash": "Texte Splash Vanilla",
+  "fancymenu.actions.script_editor.shortcuts.a": "A",
+  "fancymenu.listeners.manage.quick_edit_tip": "Fais un clic-droit sur les déclencheurs pour modifier rapidement leurs actions.",
+  "fancymenu.listeners.manage.delete_warning": "T'es sûr ?\n\nTu veux vraiment §xsupprimer§r ce déclencheur ?\n\n§xTu ne pourras pas revenir en arrière !"
 }

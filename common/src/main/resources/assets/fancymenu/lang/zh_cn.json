@@ -2132,5 +2132,8 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "用于显示 Beta 构建警告和其他信息。",
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft Logo",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms 通知图标",
-  "fancymenu.widgetified_screens.title_screen.splash": "原版闪烁标语"
+  "fancymenu.widgetified_screens.title_screen.splash": "原版闪烁标语",
+  "fancymenu.actions.script_editor.shortcuts.a": "A",
+  "fancymenu.listeners.manage.quick_edit_tip": "右键点击监听器，即可快速编辑它的动作。",
+  "fancymenu.listeners.manage.delete_warning": "确定要这么做吗？\n\n你真的要§x删除§r这个监听器吗？\n\n§x这个操作无法撤销！"
 }

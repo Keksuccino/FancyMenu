@@ -2132,5 +2132,8 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Wird verwendet, um Beta-Build-Warnungen und andere Dinge anzuzeigen.",
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft-Logo",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms-Benachrichtigungs-Icons",
-  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash-Text"
+  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash-Text",
+  "fancymenu.actions.script_editor.shortcuts.a": "A",
+  "fancymenu.listeners.manage.quick_edit_tip": "Rechtsklicke auf Listener, um ihre Aktionen schnell zu bearbeiten.",
+  "fancymenu.listeners.manage.delete_warning": "Bist du sicher?\n\nMöchtest du diesen Listener wirklich §xlöschen§r?\n\n§xDas kannst du nicht rückgängig machen!§r"
 }

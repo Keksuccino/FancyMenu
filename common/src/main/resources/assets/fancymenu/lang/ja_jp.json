@@ -2132,5 +2132,8 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "ベータビルドの警告などを表示するために使用されます。",
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraftのロゴ",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realmsの通知アイコン",
-  "fancymenu.widgetified_screens.title_screen.splash": "バニラのスプラッシュテキスト"
+  "fancymenu.widgetified_screens.title_screen.splash": "バニラのスプラッシュテキスト",
+  "fancymenu.actions.script_editor.shortcuts.a": "A",
+  "fancymenu.listeners.manage.quick_edit_tip": "リスナーを右クリックすると、アクションをサクッと編集できるよ。",
+  "fancymenu.listeners.manage.delete_warning": "本当によろしいですか？\n\nこのリスナーを本当に§x削除§rしますか？\n\n§xこの操作は元に戻せません！"
 }
