@@ -29,6 +29,7 @@
     "client.IMixinSuggestionsList",
     "client.MixinAbstractButton",
     "client.MixinAbstractContainerEventHandler",
+    "client.MixinAbstractContainerScreen",
     "client.MixinAbstractSelectionList",
     "client.MixinAbstractSliderButton",
     "client.MixinAbstractWidget",

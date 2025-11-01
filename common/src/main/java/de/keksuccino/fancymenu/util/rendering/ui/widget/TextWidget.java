@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,7 +16,7 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TextWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget {
+public class TextWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     @Nullable
     protected String widgetIdentifier;

@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -25,7 +26,7 @@ import java.awt.Color;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
-public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget {
+public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
