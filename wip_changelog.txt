@@ -147,7 +147,7 @@ CHANGELOG | FANCYMENU v3.8.0 - The "I'm Not Gonna Read All That" Update [ W I P 
 - Fixed "executeWithCallback()" function in "FancyMenu JavaScript API" invokes "onSuccess()" and "onFailure()" in weird ways instead of just invoking "onSuccess()" on actual success and "onFailure()" only on actual failure (#1345)
 - Fixed the clear version of the Pause screen (F3 + ESC) showing customizations from the normal Pause screen (#1350)
 - Fixed Slider elements, Dragger elements and other things related to mouse-dragging logic not working correctly in the Inventory screen (and other types of container screens) (#1364)
-- Fixed APNG textures not restarting correctly when used in places that restart animated textures, like background backgrounds that restart on button hover
+- Fixed APNG textures not restarting correctly when used in places that restart animated textures, like button backgrounds that restart on button hover
 
 %changelog:end%
 
