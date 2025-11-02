@@ -43,7 +43,7 @@ public class OsCpuUsagePlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");
+        return I18n.get("fancymenu.requirements.categories.other");
     }
 
     @Override

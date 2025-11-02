@@ -22,6 +22,11 @@ public class IsAnyEffectActiveRequirement extends LoadingRequirement {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return false;
     }
@@ -29,7 +34,6 @@ public class IsAnyEffectActiveRequirement extends LoadingRequirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
         try {
-            if ((value == null) || value.trim().isEmpty()) return false;
             ClientLevel level = Minecraft.getInstance().level;
             LocalPlayer player = Minecraft.getInstance().player;
             if ((level != null) && (player != null)) {
@@ -53,7 +57,7 @@ public class IsAnyEffectActiveRequirement extends LoadingRequirement {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.world");
+        return I18n.get("fancymenu.requirements.categories.world");
     }
 
     @Override

@@ -11,6 +11,8 @@ public class CustomGui {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    public static boolean isCurrentlyRenderingPopupBackgroundScreen = false;
+
     @NotNull
     public String identifier = "";
     @NotNull
@@ -19,6 +21,8 @@ public class CustomGui {
     public boolean worldBackground = true;
     public boolean worldBackgroundOverlay = true;
     public boolean pauseGame = true;
+    public boolean popupMode = false;
+    public boolean popupModeBackgroundOverlay = true;
 
     @NotNull
     public CustomGui copy() {
@@ -37,6 +41,8 @@ public class CustomGui {
         container.putProperty("transparent_world_background", "" + this.worldBackground);
         container.putProperty("transparent_world_background_overlay", "" + this.worldBackgroundOverlay);
         container.putProperty("pause_game", "" + this.pauseGame);
+        container.putProperty("popup_mode", "" + this.popupMode);
+        container.putProperty("popup_mode_background_overlay", "" + this.popupModeBackgroundOverlay);
         return container;
     }
 
@@ -62,6 +68,8 @@ public class CustomGui {
         gui.worldBackground = SerializationUtils.deserializeBoolean(gui.worldBackground, serialized.getValue("transparent_world_background"));
         gui.worldBackgroundOverlay = SerializationUtils.deserializeBoolean(gui.worldBackgroundOverlay, serialized.getValue("transparent_world_background_overlay"));
         gui.pauseGame = SerializationUtils.deserializeBoolean(gui.pauseGame, serialized.getValue("pause_game"));
+        gui.popupMode = SerializationUtils.deserializeBoolean(gui.popupMode, serialized.getValue("popup_mode"));
+        gui.popupModeBackgroundOverlay = SerializationUtils.deserializeBoolean(gui.popupModeBackgroundOverlay, serialized.getValue("popup_mode_background_overlay"));
 
         return gui;
 

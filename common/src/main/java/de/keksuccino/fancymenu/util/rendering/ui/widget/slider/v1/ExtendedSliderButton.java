@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -23,7 +24,7 @@ import java.awt.*;
 import java.util.function.Consumer;
 
 @Deprecated
-public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget, NavigatableWidget {
+public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/slider.png");
 

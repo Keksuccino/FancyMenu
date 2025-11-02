@@ -37,17 +37,17 @@ public class ModVersionPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.modversion");
+        return I18n.get("fancymenu.placeholders.modversion");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.dynamicvariabletextfield.variables.modversion.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.modversion.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.client");
+        return I18n.get("fancymenu.requirements.categories.client");
     }
 
     @Override

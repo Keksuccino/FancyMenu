@@ -77,6 +77,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     public MCEFVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         if (MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized) this.videoManager = MCEFVideoManager.getInstance();
+        this.allowDepthTestManipulation = true;
     }
 
     @Override
@@ -99,6 +100,11 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
             int y = this.getAbsoluteY();
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
+
+            if (!this.ensureVideoManagerReady()) {
+                graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorIntWithAlpha(this.opacity));
+                return;
+            }
 
             if (!this.triedRestore) {
                 this.triedRestore = true;
@@ -351,6 +357,14 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     @Override
     public float getPlayTime() {
         return this.cachedPlayTime.get();
+    }
+
+    protected boolean ensureVideoManagerReady() {
+        if (this.videoManager != null) return true;
+        if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) return false;
+        if (!MCEFVideoManager.initialized) return false;
+        this.videoManager = MCEFVideoManager.getInstance();
+        return (this.videoManager != null);
     }
 
 }

@@ -50,6 +50,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     public CheckboxElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         this.prepareExecutableBlock();
+        this.allowDepthTestManipulation = true;
     }
 
     /**

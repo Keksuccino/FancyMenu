@@ -1,43 +1,48 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
-import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityElementRenderer;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityProperties;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.*;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.CapeResourceSupplier;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.entity.FancyEntityRendererUtils;
+import de.keksuccino.fancymenu.util.rendering.entity.WrappedFancyPlayerWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Quaternionf;
+import java.awt.*;
 
 public class PlayerEntityElement extends AbstractElement {
     
     private static final Logger LOGGER = LogManager.getLogger();
-
-    public final PlayerEntityElementRenderer normalRenderer = buildEntityRenderer(false);
-    public final PlayerEntityElementRenderer slimRenderer = buildEntityRenderer(true);
+    private static final DrawableColor MISSING_FER_COLOR = DrawableColor.of(Color.RED);
 
     public volatile boolean copyClientPlayer = false;
     @NotNull
     public volatile String playerName = "Steve";
     public boolean showPlayerName = true;
+    @NotNull
+    public PlayerPose pose = PlayerPose.STANDING;
+    public boolean bodyMovement = false;
     public boolean hasParrotOnShoulder = false;
     public boolean parrotOnLeftShoulder = false;
-    public boolean crouching = false;
     public boolean isBaby = false;
-    public String scale = "30";
     public boolean headFollowsMouse = true;
     public boolean bodyFollowsMouse = true;
     public volatile boolean slim = true;
@@ -49,6 +54,7 @@ public class PlayerEntityElement extends AbstractElement {
     public CapeResourceSupplier capeTextureSupplier;
     public String bodyXRot;
     public String bodyYRot;
+    public String bodyZRot;
     public String headXRot;
     public String headYRot;
     public String headZRot;
@@ -66,6 +72,7 @@ public class PlayerEntityElement extends AbstractElement {
     public String rightLegZRot;
     public boolean bodyXRotAdvancedMode;
     public boolean bodyYRotAdvancedMode;
+    public boolean bodyZRotAdvancedMode;
     public boolean headXRotAdvancedMode;
     public boolean headYRotAdvancedMode;
     public boolean headZRotAdvancedMode;
@@ -81,17 +88,32 @@ public class PlayerEntityElement extends AbstractElement {
     public boolean rightLegXRotAdvancedMode;
     public boolean rightLegYRotAdvancedMode;
     public boolean rightLegZRotAdvancedMode;
+    @NotNull
+    public Wearable leftHandWearable = Wearable.empty();
+    @NotNull
+    public Wearable rightHandWearable = Wearable.empty();
+    @NotNull
+    public Wearable headWearable = Wearable.empty();
+    @NotNull
+    public Wearable chestWearable = Wearable.empty();
+    @NotNull
+    public Wearable legsWearable = Wearable.empty();
+    @NotNull
+    public Wearable feetWearable = Wearable.empty();
+
+    @Nullable
+    protected WrappedFancyPlayerWidget widget = null;
 
     public PlayerEntityElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
     }
 
-    @Nullable
-    protected static PlayerEntityElementRenderer buildEntityRenderer(boolean slim) {
-        try {
-            return new PlayerEntityElementRenderer(slim);
-        } catch (Exception ignored) {}
-        return null;
+    @Override
+    public void afterConstruction() {
+        super.afterConstruction();
+        if (FancyEntityRendererUtils.isFerLoaded()) {
+            this.widget = WrappedFancyPlayerWidget.build(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+        }
     }
 
     @Override
@@ -99,37 +121,65 @@ public class PlayerEntityElement extends AbstractElement {
 
         if (this.shouldRender()) {
 
-            this.updatePlayerDisplayName();
+            if (this.widget == null) {
 
-            this.updateSkinAndCape();
+                graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), MISSING_FER_COLOR.getColorInt());
+                int xCenter = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2);
+                int yCenter = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2);
+                graphics.drawCenteredString(Minecraft.getInstance().font, "§lFER (FANCY ENTITY RENDERER) IS NOT INSTALLED!", xCenter, yCenter, -1);
+                graphics.drawCenteredString(Minecraft.getInstance().font, "§lPLEASE DOWNLOAD FROM CURSEFORGE OR MODRINTH!", xCenter, yCenter + Minecraft.getInstance().font.lineHeight + 2, -1);
 
-            float scale = this.stringToFloat(this.scale);
-            if (scale == 0.0F) scale = 30;
+            } else {
 
             //Update element size based on entity size
             this.baseWidth = (int)(this.getActiveEntityProperties().getDimensions().width * scale);
             this.baseHeight = (int)(this.getActiveEntityProperties().getDimensions().height * scale);
 
-            RenderSystem.enableBlend();
+                this.updateSkinAndCape();
 
-            PlayerEntityProperties props = this.getActiveEntityProperties();
-            int x = this.getAbsoluteX();
-            int y = this.getAbsoluteY();
-            int mouseOffsetX = this.baseWidth / 2;
-            int mouseOffsetY = (this.baseHeight / 4) / 2;
-            if (props.isBaby) mouseOffsetY += (this.baseHeight / 2) - mouseOffsetY; //not exactly the same eye pos as for adult size, but good enough
-            this.renderPlayerEntity(x, y, (int)scale, (float)x - mouseX + mouseOffsetX, (float)y - mouseY + mouseOffsetY, props);
+                this.updateEntityPose();
 
-            RenderingUtils.resetShaderColor(graphics);
+                this.updateParrots();
+
+                this.updateWearables();
+
+                this.updateEntityProperties();
+
+                this.widget.render(graphics, mouseX, mouseY, partial);
+
+            }
 
         }
 
     }
 
-    protected void renderPlayerEntity(int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props) {
-        float f = (float)Math.atan(angleXComponent / 40.0F);
-        float f1 = (float)Math.atan(angleYComponent / 40.0F);
-        innerRenderPlayerEntity(posX, posY, scale, f, f1, props, this.getActiveRenderer());
+    protected void updateEntityProperties() {
+
+        if (this.widget != null) {
+
+            this.widget.setShowName(this.showPlayerName);
+            this.widget.setName(this.playerName);
+            this.widget.setBaby(this.isBaby);
+            this.widget.setHeadFollowsMouse(this.headFollowsMouse);
+            this.widget.setBodyFollowsMouse(this.bodyFollowsMouse);
+            this.widget.setSlim(this.slim);
+
+        }
+
+    }
+
+    protected void updateWearables() {
+
+        if (this.widget == null) return;
+
+        this.widget.setLeftHandItem(this.leftHandWearable.getWearable());
+        this.widget.setRightHandItem(this.rightHandWearable.getWearable());
+
+        this.widget.setHeadWearable(this.headWearable.getWearable());
+        this.widget.setChestWearable(this.chestWearable.getWearable());
+        this.widget.setLegsWearable(this.legsWearable.getWearable());
+        this.widget.setFeetWearable(this.feetWearable.getWearable());
+
     }
 
     @SuppressWarnings("all")
@@ -179,12 +229,41 @@ public class PlayerEntityElement extends AbstractElement {
         if (!this.bodyFollowsMouse) {
             props.yBodyRot = 180.0F + bodyXRot;
         }
-        if (!this.headFollowsMouse) {
-            props.xRot = headYRot;
-            props.yRot = 0;
-            props.yHeadRot = 180.0F + headXRot;
-            props.yHeadRotO = 180.0F + headXRot;
-            props.headZRot = headZRot;
+    }
+
+    protected void updateEntityPose() {
+
+        if (this.widget != null) {
+
+            this.widget.setPose(this.pose.pose);
+            this.widget.setBodyMovement(this.bodyMovement);
+
+            float bodyXRot = stringToFloat(this.bodyXRot);
+            float bodyYRot = stringToFloat(this.bodyYRot);
+            float bodyZRot = stringToFloat(this.bodyZRot);
+            float headXRot = stringToFloat(this.headXRot);
+            float headYRot = stringToFloat(this.headYRot);
+            float headZRot = stringToFloat(this.headZRot);
+            float leftArmXRot = stringToFloat(this.leftArmXRot);
+            float leftArmYRot = stringToFloat(this.leftArmYRot);
+            float leftArmZRot = stringToFloat(this.leftArmZRot);
+            float rightArmXRot = stringToFloat(this.rightArmXRot);
+            float rightArmYRot = stringToFloat(this.rightArmYRot);
+            float rightArmZRot = stringToFloat(this.rightArmZRot);
+            float leftLegXRot = stringToFloat(this.leftLegXRot);
+            float leftLegYRot = stringToFloat(this.leftLegYRot);
+            float leftLegZRot = stringToFloat(this.leftLegZRot);
+            float rightLegXRot = stringToFloat(this.rightLegXRot);
+            float rightLegYRot = stringToFloat(this.rightLegYRot);
+            float rightLegZRot = stringToFloat(this.rightLegZRot);
+
+            this.widget.setBodyRotation(bodyXRot, bodyYRot, bodyZRot);
+            this.widget.setHeadRotation(headXRot, headYRot, headZRot);
+            this.widget.setLeftArmRotation(leftArmXRot, leftArmYRot, leftArmZRot);
+            this.widget.setRightArmRotation(rightArmXRot, rightArmYRot, rightArmZRot);
+            this.widget.setLeftLegRotation(leftLegXRot, leftLegYRot, leftLegZRot);
+            this.widget.setRightLegRotation(rightLegXRot, rightLegYRot, rightLegZRot);
+
         }
         props.leftArmXRot = leftArmXRot;
         props.leftArmYRot = leftArmYRot;
@@ -216,14 +295,21 @@ public class PlayerEntityElement extends AbstractElement {
         innerPoseStack.popPose();
     }
 
-    protected float stringToFloat(@Nullable String s) {
-        if (s == null) return 0.0F;
-        s = PlaceholderParser.replacePlaceholders(s);
-        s = s.replace(" ", "");
-        try {
-            return Float.parseFloat(s);
-        } catch (Exception ignore) {}
-        return 0.0F;
+    protected void updateSkinAndCape() {
+        if (this.widget == null) return;
+        if (this.copyClientPlayer || this.autoSkin) {
+            this.slim = (this.skinTextureSupplier == null) || this.skinTextureSupplier.isSlimPlayerNameSkin();
+        }
+        if ((this.capeTextureSupplier != null) && this.capeTextureSupplier.hasNoCape()) {
+            this.capeTextureSupplier = null;
+        }
+        ResourceLocation skinLoc = (this.skinTextureSupplier != null) ? this.skinTextureSupplier.getSkinLocation() : SkinResourceSupplier.DEFAULT_SKIN_LOCATION;
+        ResourceLocation capeLoc = null;
+        if ((this.capeTextureSupplier != null) && !this.capeTextureSupplier.hasNoCape()) {
+            capeLoc = this.capeTextureSupplier.getCapeLocation();
+            if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
+        }
+        this.widget.setSkin(new PlayerSkin(skinLoc, null, capeLoc, null, this.slim ? PlayerSkin.Model.SLIM : PlayerSkin.Model.WIDE, false));
     }
 
     public void setCopyClientPlayer(boolean copyClientPlayer) {
@@ -247,38 +333,19 @@ public class PlayerEntityElement extends AbstractElement {
             playerName = "Steve";
         }
         this.playerName = playerName;
-        this.updatePlayerDisplayName();
     }
 
     public void setShowPlayerName(boolean showName) {
-        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
         this.showPlayerName = showName;
-        this.normalRenderer.properties.showDisplayName = showName;
-        this.slimRenderer.properties.showDisplayName = showName;
     }
 
     public void setHasParrotOnShoulder(boolean hasParrot, boolean onLeftShoulder) {
-        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
         this.hasParrotOnShoulder = hasParrot;
         this.parrotOnLeftShoulder = onLeftShoulder;
-        this.normalRenderer.properties.hasParrotOnShoulder = hasParrot;
-        this.slimRenderer.properties.hasParrotOnShoulder = hasParrot;
-        this.normalRenderer.properties.parrotOnLeftShoulder = onLeftShoulder;
-        this.slimRenderer.properties.parrotOnLeftShoulder = onLeftShoulder;
-    }
-
-    public void setCrouching(boolean crouching) {
-        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
-        this.crouching = crouching;
-        this.normalRenderer.properties.crouching = crouching;
-        this.slimRenderer.properties.crouching = crouching;
     }
 
     public void setIsBaby(boolean isBaby) {
-        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
         this.isBaby = isBaby;
-        this.normalRenderer.properties.isBaby = isBaby;
-        this.slimRenderer.properties.isBaby = isBaby;
     }
 
     public void setCapeByPlayerName() {
@@ -297,40 +364,155 @@ public class PlayerEntityElement extends AbstractElement {
         this.capeTextureSupplier = new CapeResourceSupplier(resourceSource, false);
     }
 
-    protected void updateSkinAndCape() {
-        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
-        if (this.copyClientPlayer || this.autoSkin) {
-            this.slim = (this.skinTextureSupplier == null) || this.skinTextureSupplier.isSlimPlayerNameSkin();
-        }
-        if ((this.capeTextureSupplier != null) && this.capeTextureSupplier.hasNoCape()) {
-            this.capeTextureSupplier = null;
-        }
-        this.normalRenderer.properties.setSkinTextureLocation((this.skinTextureSupplier != null) ? this.skinTextureSupplier.getSkinLocation() : SkinResourceSupplier.DEFAULT_SKIN_LOCATION);
-        this.slimRenderer.properties.setSkinTextureLocation((this.skinTextureSupplier != null) ? this.skinTextureSupplier.getSkinLocation() : SkinResourceSupplier.DEFAULT_SKIN_LOCATION);
-        ResourceLocation capeLoc = null;
-        if ((this.capeTextureSupplier != null) && !this.capeTextureSupplier.hasNoCape()) {
-            capeLoc = this.capeTextureSupplier.getCapeLocation();
-            if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
-        }
-        this.normalRenderer.properties.setCapeTextureLocation(capeLoc);
-        this.slimRenderer.properties.setCapeTextureLocation(capeLoc);
+    protected static float stringToFloat(@Nullable String s) {
+        if (s == null) return 0.0F;
+        s = PlaceholderParser.replacePlaceholders(s);
+        s = s.replace(" ", "");
+        try {
+            return Float.parseFloat(s);
+        } catch (Exception ignore) {}
+        return 0.0F;
     }
 
-    protected void updatePlayerDisplayName() {
-        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
-        this.normalRenderer.properties.displayName = buildComponent(this.playerName);
-        this.slimRenderer.properties.displayName = buildComponent(this.playerName);
-    }
+    public enum PlayerPose implements LocalizedCycleEnum<PlayerPose> {
 
-    public PlayerEntityElementRenderer getActiveRenderer() {
-        if (this.slim) {
-            return this.slimRenderer;
+        STANDING("standing", Pose.STANDING),
+        CROUCHING("crouching", Pose.CROUCHING),
+        SLEEPING("sleeping", Pose.SLEEPING),
+        SWIMMING("swimming", Pose.SWIMMING),
+        DYING("dying", Pose.DYING),
+        SPIN_ATTACK("spin_attack", Pose.SPIN_ATTACK);
+
+        public final String name;
+        public final Pose pose;
+
+        PlayerPose(@NotNull String name, @NotNull Pose pose) {
+            this.name = name;
+            this.pose = pose;
         }
-        return this.normalRenderer;
+
+        @Override
+        public @NotNull String getLocalizationKeyBase() {
+            return "fancymenu.elements.player_entity.pose";
+        }
+
+        @Override
+        public @NotNull Style getValueComponentStyle() {
+            return WARNING_TEXT_STYLE.get();
+        }
+
+        @Override
+        public @NotNull String getName() {
+            return this.name;
+        }
+
+        @Override
+        public @NotNull PlayerPose[] getValues() {
+            return PlayerPose.values();
+        }
+
+        @Override
+        public @Nullable PlayerPose getByNameInternal(@NotNull String name) {
+            return getByName(name);
+        }
+
+        @Nullable
+        public static PlayerPose getByName(@Nullable String name) {
+            if (name == null) return null;
+            for (PlayerPose p : PlayerPose.values()) {
+                if (p.name.equals(name)) return p;
+            }
+            return null;
+        }
+
     }
 
-    public PlayerEntityProperties getActiveEntityProperties() {
-        return this.getActiveRenderer().properties;
+    public static class Wearable {
+
+        public static final String WEARABLE_EMPTY_KEY = "fancymenu_wearable_none_dummy";
+        private static final String SERIALIZATION_SEPARATOR = ":::";
+
+        @NotNull
+        public String itemKey;
+        public boolean enchanted;
+        @NotNull
+        public ItemStack cachedStack = new ItemStack(Items.AIR);
+        @Nullable
+        protected String lastFinalKey = null;
+        protected boolean lastEnchanted = false;
+
+        @NotNull
+        public static Wearable empty() {
+            return new Wearable(WEARABLE_EMPTY_KEY, false);
+        }
+
+        private Wearable(@NotNull String itemKey, boolean enchanted) {
+            this.itemKey = itemKey;
+            this.enchanted = enchanted;
+        }
+
+        public void update() {
+
+            try {
+
+                String keyFinal = PlaceholderParser.replacePlaceholders(this.itemKey);
+
+                if (!keyFinal.equals(this.lastFinalKey) || (this.lastEnchanted != this.enchanted)) {
+
+                    this.lastFinalKey = keyFinal;
+                    this.lastEnchanted = enchanted;
+
+                    Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(keyFinal));
+                    this.cachedStack = new ItemStack(item);
+                    this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
+
+                }
+
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to update wearable of PlayerEntityElement!", ex);
+            }
+
+        }
+
+        public boolean isEmpty() {
+            return this.itemKey.equals(WEARABLE_EMPTY_KEY);
+        }
+
+        public void setEmpty() {
+            this.itemKey = WEARABLE_EMPTY_KEY;
+        }
+
+        @Nullable
+        public ItemStack getWearable() {
+            if (this.isEmpty()) return null;
+            this.update();
+            return this.cachedStack;
+        }
+
+        @NotNull
+        public String serialize() {
+            StringBuilder serialized = new StringBuilder()
+                    .append(this.itemKey).append(SERIALIZATION_SEPARATOR)
+                    .append(this.enchanted);
+            return serialized.toString();
+        }
+
+        @NotNull
+        public static Wearable deserialize(@Nullable String serialized) {
+            if (serialized == null) return empty();
+            try {
+                if (serialized.contains(SERIALIZATION_SEPARATOR)) {
+                    var array = serialized.split(SERIALIZATION_SEPARATOR);
+                    String key = array[0];
+                    boolean enchant = SerializationUtils.deserializeBoolean(false, array[1]);
+                    return new Wearable(key, enchant);
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to deserialize Wearable of PlayerEntityElement!", ex);
+            }
+            return empty();
+        }
+
     }
 
 }

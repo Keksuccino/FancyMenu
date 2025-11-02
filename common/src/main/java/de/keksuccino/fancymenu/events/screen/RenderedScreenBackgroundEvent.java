@@ -19,10 +19,16 @@ public class RenderedScreenBackgroundEvent extends EventBase {
 
     private final Screen screen;
     private final GuiGraphics graphics;
+    private final int mouseX;
+    private final int mouseY;
+    private final float partial;
 
-    public RenderedScreenBackgroundEvent(@NotNull Screen screen, @NotNull GuiGraphics graphics) {
+    public RenderedScreenBackgroundEvent(@NotNull Screen screen, @NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.screen = Objects.requireNonNull(screen);
         this.graphics = Objects.requireNonNull(graphics);
+        this.mouseX = mouseX;
+        this.mouseY = mouseY;
+        this.partial = partial;
     }
 
     @NotNull
@@ -33,6 +39,18 @@ public class RenderedScreenBackgroundEvent extends EventBase {
     @NotNull
     public GuiGraphics getGraphics() {
         return graphics;
+    }
+
+    public int getMouseX() {
+        return mouseX;
+    }
+
+    public int getMouseY() {
+        return mouseY;
+    }
+
+    public float getPartial() {
+        return partial;
     }
 
     public <T extends GuiEventListener & NarratableEntry> void addWidget(T widget) {

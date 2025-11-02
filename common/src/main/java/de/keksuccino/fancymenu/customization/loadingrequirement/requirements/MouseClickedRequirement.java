@@ -36,12 +36,12 @@ public class MouseClickedRequirement extends LoadingRequirement {
     @NotNull
     @Override
     public String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.mouse_click");
+        return I18n.get("fancymenu.requirements.mouse_click");
     }
 
     @Override
     public List<String> getDescription() {
-        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.mouse_click.desc"));
+        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.mouse_click.desc"));
     }
 
     @Nullable
@@ -53,7 +53,7 @@ public class MouseClickedRequirement extends LoadingRequirement {
     @Nullable
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.mouse_click.valuename");
+        return I18n.get("fancymenu.requirements.mouse_click.value_name");
     }
 
     @Nullable

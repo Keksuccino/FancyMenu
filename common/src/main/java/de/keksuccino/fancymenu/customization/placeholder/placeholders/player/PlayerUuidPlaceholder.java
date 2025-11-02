@@ -29,17 +29,17 @@ public class PlayerUuidPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.playeruuid");
+        return I18n.get("fancymenu.placeholders.playeruuid");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.dynamicvariabletextfield.variables.playeruuid.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.playeruuid.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.player");
+        return I18n.get("fancymenu.requirements.categories.player");
     }
 
     @Override

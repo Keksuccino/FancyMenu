@@ -20,6 +20,7 @@ public class MusicControllerElement extends AbstractElement {
 
     public MusicControllerElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override

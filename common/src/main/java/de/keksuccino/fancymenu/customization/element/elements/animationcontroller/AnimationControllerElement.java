@@ -25,6 +25,7 @@ public class AnimationControllerElement extends AbstractElement {
 
     public AnimationControllerElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override
@@ -47,6 +48,12 @@ public class AnimationControllerElement extends AbstractElement {
             }
 
         } else {
+
+            boolean shouldPlay = AnimationControllerStateController.isPlaying(this.getInstanceIdentifier());
+            if (!shouldPlay) {
+                AnimationControllerHandler.resetController(this);
+                return;
+            }
 
             this.targetElements.forEach(targetElement -> {
                 if (this.shouldRender()) {

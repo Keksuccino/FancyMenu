@@ -12,6 +12,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -40,8 +42,7 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
         element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_texture_border_y"));
         element.restartAnimatedOnMenuLoad = deserializeBoolean(element.restartAnimatedOnMenuLoad, serialized.getValue("restart_animated_on_menu_load"));
 
-        String tint = serialized.getValue("image_tint");
-        if (tint != null) element.imageTint = DrawableColor.of(tint);
+        element.imageTint = Objects.requireNonNullElse(serialized.getValue("image_tint"), element.imageTint);
 
         return element;
 
@@ -57,7 +58,7 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
         serializeTo.putProperty("nine_slice_texture", "" + element.nineSlice);
         serializeTo.putProperty("nine_slice_texture_border_x", "" + element.nineSliceBorderX);
         serializeTo.putProperty("nine_slice_texture_border_y", "" + element.nineSliceBorderY);
-        serializeTo.putProperty("image_tint", element.imageTint.getHex());
+        serializeTo.putProperty("image_tint", element.imageTint);
         serializeTo.putProperty("restart_animated_on_menu_load", "" + element.restartAnimatedOnMenuLoad);
 
         return serializeTo;
@@ -71,12 +72,12 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.editor.add.image");
+        return Component.translatable("fancymenu.elements.image");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.add.image.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.image.desc");
     }
 
 }
