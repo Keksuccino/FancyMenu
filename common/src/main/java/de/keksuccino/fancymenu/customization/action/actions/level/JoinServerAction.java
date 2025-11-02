@@ -1,12 +1,10 @@
 package de.keksuccino.fancymenu.customization.action.actions.level;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
-import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.*;
@@ -80,14 +78,14 @@ public class JoinServerAction extends Action {
                         }
                     }
                     if (d == null) {
-                        d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), ServerData.Type.OTHER);
+                        d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), IS_LAN);
                         l.add(d, false);
                         l.save();
                     }
                     if (current == null) current = new TitleScreen();
                     boolean isQuickPlay = false;
 
-                    ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay, null);
+                    ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay);
 
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to execute the 'Join Server' action!", ex);

@@ -281,7 +281,7 @@ public class MimicKeybindAction extends Action {
                     .setEditListener(s -> this.config.pressedDurationMs = s)
                     .setText(this.config.pressedDurationMs);
             durationInput.editBox.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fancymenu.actions.mimic_keybind.edit.pressed_duration.desc")));
-            durationInput.editBox.moveCursorToStart(true);
+            durationInput.editBox.moveCursorToStart();
             this.durationCell = durationInput;
             updateDurationFieldState();
 
@@ -341,11 +341,11 @@ public class MimicKeybindAction extends Action {
         }
 
         @Override
-        public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaY) {
             if (this.suggestions.mouseScrolled(scrollDeltaY)) {
                 return true;
             }
-            return super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+            return super.mouseScrolled(mouseX, mouseY, scrollDeltaY);
         }
 
         @Override

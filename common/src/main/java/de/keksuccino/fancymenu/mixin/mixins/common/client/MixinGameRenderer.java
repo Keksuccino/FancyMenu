@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAt
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtBlockListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtEntityListener;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
@@ -45,7 +44,7 @@ public class MixinGameRenderer {
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void before_render_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
+    private void before_render_FancyMenu(float partialTicks, long nanoTime, boolean renderLevel, CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
     }
 

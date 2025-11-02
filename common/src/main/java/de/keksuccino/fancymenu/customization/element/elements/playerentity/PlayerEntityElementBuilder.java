@@ -10,14 +10,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Objects;
 
+@SuppressWarnings("all")
 public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityElement, PlayerEntityEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     public PlayerEntityElementBuilder() {
-        super("player_entity_v2");
+        super("fancymenu_customization_player_entity");
     }
 
     @Override
@@ -80,6 +80,9 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         }
 
+        element.scale = serialized.getValue("scale");
+        if (element.scale == null) element.scale = "30";
+
         element.setHasParrotOnShoulder(
                 this.deserializeBoolean(element.hasParrotOnShoulder, serialized.getValue("parrot")),
                 this.deserializeBoolean(element.parrotOnLeftShoulder, serialized.getValue("parrot_left_shoulder"))
@@ -87,9 +90,7 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         element.setIsBaby(this.deserializeBoolean(element.isBaby, serialized.getValue("is_baby")));
 
-        element.pose = Objects.requireNonNullElse(PlayerEntityElement.PlayerPose.getByName(serialized.getValue("player_pose")), PlayerEntityElement.PlayerPose.STANDING);
-
-        element.bodyMovement = this.deserializeBoolean(element.bodyMovement, serialized.getValue("body_movement"));
+        element.setCrouching(this.deserializeBoolean(element.crouching, serialized.getValue("crouching")));
 
         element.setShowPlayerName(this.deserializeBoolean(element.showPlayerName, serialized.getValue("showname")));
 
@@ -100,11 +101,11 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         element.headXRot = serialized.getValue("headrotationx");
         element.headYRot = serialized.getValue("headrotationy");
-        element.headZRot = serialized.getValue("head_z_rot");
 
         element.bodyXRot = serialized.getValue("bodyrotationx");
         element.bodyYRot = serialized.getValue("bodyrotationy");
-        element.bodyZRot = serialized.getValue("bodyrotationz");
+
+        element.headZRot = serialized.getValue("head_z_rot");
 
         element.leftArmXRot = serialized.getValue("left_arm_x_rot");
         element.leftArmYRot = serialized.getValue("left_arm_y_rot");
@@ -124,7 +125,6 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         element.bodyXRotAdvancedMode = this.deserializeBoolean(element.bodyXRotAdvancedMode, serialized.getValue("body_x_rot_advanced_mode"));
         element.bodyYRotAdvancedMode = this.deserializeBoolean(element.bodyYRotAdvancedMode, serialized.getValue("body_y_rot_advanced_mode"));
-        element.bodyZRotAdvancedMode = this.deserializeBoolean(element.bodyZRotAdvancedMode, serialized.getValue("body_z_rot_advanced_mode"));
         element.headXRotAdvancedMode = this.deserializeBoolean(element.headXRotAdvancedMode, serialized.getValue("head_x_rot_advanced_mode"));
         element.headYRotAdvancedMode = this.deserializeBoolean(element.headYRotAdvancedMode, serialized.getValue("head_y_rot_advanced_mode"));
         element.headZRotAdvancedMode = this.deserializeBoolean(element.headZRotAdvancedMode, serialized.getValue("head_z_rot_advanced_mode"));
@@ -140,13 +140,6 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         element.rightLegXRotAdvancedMode = this.deserializeBoolean(element.rightLegXRotAdvancedMode, serialized.getValue("right_leg_x_rot_advanced_mode"));
         element.rightLegYRotAdvancedMode = this.deserializeBoolean(element.rightLegYRotAdvancedMode, serialized.getValue("right_leg_y_rot_advanced_mode"));
         element.rightLegZRotAdvancedMode = this.deserializeBoolean(element.rightLegZRotAdvancedMode, serialized.getValue("right_leg_z_rot_advanced_mode"));
-
-        element.leftHandWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("left_hand_wearable"));
-        element.rightHandWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("right_hand_wearable"));
-        element.headWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("head_wearable"));
-        element.chestWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("chest_wearable"));
-        element.legsWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("legs_wearable"));
-        element.feetWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("feet_wearable"));
 
         return element;
 
@@ -168,11 +161,11 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         if (element.capeTextureSupplier != null) {
             serializeTo.putProperty("cape_source", element.capeTextureSupplier.getSourceWithPrefix());
         }
+        serializeTo.putProperty("scale", element.scale);
         serializeTo.putProperty("parrot", "" + element.hasParrotOnShoulder);
         serializeTo.putProperty("parrot_left_shoulder", "" + element.parrotOnLeftShoulder);
         serializeTo.putProperty("is_baby", "" + element.isBaby);
-        serializeTo.putProperty("body_movement", "" + element.bodyMovement);
-        serializeTo.putProperty("player_pose", element.pose.name);
+        serializeTo.putProperty("crouching", "" + element.crouching);
         serializeTo.putProperty("showname", "" + element.showPlayerName);
         serializeTo.putProperty("head_follows_mouse", "" + element.headFollowsMouse);
         serializeTo.putProperty("body_follows_mouse", "" + element.bodyFollowsMouse);
@@ -180,7 +173,6 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         serializeTo.putProperty("headrotationy", element.headYRot);
         serializeTo.putProperty("bodyrotationx", element.bodyXRot);
         serializeTo.putProperty("bodyrotationy", element.bodyYRot);
-        serializeTo.putProperty("bodyrotationz", element.bodyZRot);
         serializeTo.putProperty("head_z_rot", element.headZRot);
         serializeTo.putProperty("left_arm_x_rot", element.leftArmXRot);
         serializeTo.putProperty("left_arm_y_rot", element.leftArmYRot);
@@ -196,7 +188,6 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         serializeTo.putProperty("right_leg_z_rot", element.rightLegZRot);
         serializeTo.putProperty("body_x_rot_advanced_mode", "" + element.bodyXRotAdvancedMode);
         serializeTo.putProperty("body_y_rot_advanced_mode", "" + element.bodyYRotAdvancedMode);
-        serializeTo.putProperty("body_z_rot_advanced_mode", "" + element.bodyZRotAdvancedMode);
         serializeTo.putProperty("head_x_rot_advanced_mode", "" + element.headXRotAdvancedMode);
         serializeTo.putProperty("head_y_rot_advanced_mode", "" + element.headYRotAdvancedMode);
         serializeTo.putProperty("head_z_rot_advanced_mode", "" + element.headZRotAdvancedMode);
@@ -213,13 +204,6 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         serializeTo.putProperty("right_leg_y_rot_advanced_mode", "" + element.rightLegYRotAdvancedMode);
         serializeTo.putProperty("right_leg_z_rot_advanced_mode", "" + element.rightLegZRotAdvancedMode);
 
-        serializeTo.putProperty("left_hand_wearable", element.leftHandWearable.serialize());
-        serializeTo.putProperty("right_hand_wearable", element.rightHandWearable.serialize());
-        serializeTo.putProperty("head_wearable", element.headWearable.serialize());
-        serializeTo.putProperty("chest_wearable", element.chestWearable.serialize());
-        serializeTo.putProperty("legs_wearable", element.legsWearable.serialize());
-        serializeTo.putProperty("feet_wearable", element.feetWearable.serialize());
-
         return serializeTo;
         
     }
@@ -231,12 +215,12 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.elements.player_entity");
+        return Component.translatable("fancymenu.helper.editor.items.playerentity");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.desc");
     }
 
 }

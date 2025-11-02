@@ -31,7 +31,6 @@ public class RenderingUtils {
 
     private static final List<DeferredScreenRenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
     private static boolean lockDepthTest = false;
-    private static boolean blurBlocked = false;
     private static boolean tooltipRenderingBlocked = false;
     private static int overrideBackgroundBlurRadius = -1000;
 
@@ -70,14 +69,6 @@ public class RenderingUtils {
 
     public static boolean isDepthTestLocked() {
         return lockDepthTest;
-    }
-
-    public static void setMenuBlurringBlocked(boolean blocked) {
-        blurBlocked = blocked;
-    }
-
-    public static boolean isMenuBlurringBlocked() {
-        return blurBlocked;
     }
 
     public static void setTooltipRenderingBlocked(boolean blocked) {
@@ -369,21 +360,29 @@ public class RenderingUtils {
     public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, float z, int color) {
         Matrix4f matrix4f = graphics.pose().last().pose();
         if (minX < maxX) {
-            float i = minX;
+            float $$8 = minX;
             minX = maxX;
-            maxX = i;
+            maxX = $$8;
         }
         if (minY < maxY) {
-            float i = minY;
+            float $$9 = minY;
             minY = maxY;
-            maxY = i;
+            maxY = $$9;
         }
-        VertexConsumer vertexConsumer = graphics.bufferSource().getBuffer(RenderType.gui());
-        vertexConsumer.addVertex(matrix4f, (float)minX, (float)minY, (float)z).setColor(color);
-        vertexConsumer.addVertex(matrix4f, (float)minX, (float)maxY, (float)z).setColor(color);
-        vertexConsumer.addVertex(matrix4f, (float)maxX, (float)maxY, (float)z).setColor(color);
-        vertexConsumer.addVertex(matrix4f, (float)maxX, (float)minY, (float)z).setColor(color);
-        graphics.flush();
+        float red = (float)FastColor.ARGB32.red(color) / 255.0F;
+        float green = (float)FastColor.ARGB32.green(color) / 255.0F;
+        float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
+        float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
+        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder.vertex(matrix4f, minX, minY, z).color(red, green, blue, alpha).endVertex();
+        bufferBuilder.vertex(matrix4f, minX, maxY, z).color(red, green, blue, alpha).endVertex();
+        bufferBuilder.vertex(matrix4f, maxX, maxY, z).color(red, green, blue, alpha).endVertex();
+        bufferBuilder.vertex(matrix4f, maxX, minY, z).color(red, green, blue, alpha).endVertex();
+        BufferUploader.drawWithShader(bufferBuilder.end());
+        RenderSystem.disableBlend();
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, ResourceLocation location, float x, float y, float f3, float f4, float width, float height, float width2, float height2, int color) {
@@ -424,13 +423,13 @@ public class RenderingUtils {
         RenderSystem.setShaderTexture(0, location);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         Matrix4f $$10 = graphics.pose().last().pose();
-        BufferBuilder $$11 = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        $$11.addVertex($$10, $$1, $$3, $$5).setUv($$6, $$8);
-        $$11.addVertex($$10, $$1, $$4, $$5).setUv($$6, $$9);
-        $$11.addVertex($$10, $$2, $$4, $$5).setUv($$7, $$9);
-        $$11.addVertex($$10, $$2, $$3, $$5).setUv($$7, $$8);
-        BufferUploader.drawWithShader(Objects.requireNonNull($$11.build()));
-        graphics.flush();
+        BufferBuilder $$11 = Tesselator.getInstance().getBuilder();
+        $$11.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        $$11.vertex($$10, $$1, $$3, $$5).uv($$6, $$8).endVertex();
+        $$11.vertex($$10, $$1, $$4, $$5).uv($$6, $$9).endVertex();
+        $$11.vertex($$10, $$2, $$4, $$5).uv($$7, $$9).endVertex();
+        $$11.vertex($$10, $$2, $$3, $$5).uv($$7, $$8).endVertex();
+        BufferUploader.drawWithShader($$11.end());
     }
 
     public static void enableScissor(@NotNull GuiGraphics graphics, int minX, int minY, int maxX, int maxY) {

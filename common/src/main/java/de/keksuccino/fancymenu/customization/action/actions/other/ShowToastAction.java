@@ -271,7 +271,7 @@ public class ShowToastAction extends Action {
             }
             try {
                 long parsed = Long.parseLong(raw.trim());
-                return Mth.clamp(parsed, min, max);
+                return (long) Mth.clamp(parsed, min, max);
             } catch (NumberFormatException ex) {
                 return fallback;
             }
@@ -314,7 +314,7 @@ public class ShowToastAction extends Action {
 
         public void normalize() {
             this.width = Mth.clamp(this.width, MIN_WIDTH, MAX_WIDTH);
-            this.durationMs = Mth.clamp(this.durationMs, MIN_DURATION_MS, MAX_DURATION_MS);
+            this.durationMs = (long) Mth.clamp(this.durationMs, MIN_DURATION_MS, MAX_DURATION_MS);
             if (this.title == null) this.title = "";
             if (this.message == null) this.message = "";
             if (this.iconSource == null) this.iconSource = "";

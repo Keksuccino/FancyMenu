@@ -22,7 +22,6 @@ import java.net.SocketAddress;
 import java.nio.file.Path;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Overlay;
-import net.minecraft.client.gui.screens.ReceivingLevelScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -42,7 +41,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -80,8 +78,8 @@ public class MixinMinecraft {
 		}
 	}
 
-	@Inject(method = "doWorldLoad(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/packs/repository/PackRepository;Lnet/minecraft/server/WorldStem;Z)V", at = @At("HEAD"))
-	private void before_doWorldLoad_FancyMenu(LevelStorageAccess levelStorage, PackRepository packRepository, WorldStem worldStem, boolean newWorld, CallbackInfo info) {
+	@Inject(method = "doWorldLoad", at = @At("HEAD"))
+	private void before_doWorldLoad_FancyMenu(String levelId, LevelStorageAccess levelStorage, PackRepository packRepository, WorldStem worldStem, boolean newWorld, CallbackInfo info) {
 		try {
 			if (levelStorage != null && worldStem != null) {
 				Path savePath = levelStorage.getLevelPath(LevelResource.ROOT).toAbsolutePath();
@@ -139,7 +137,7 @@ public class MixinMinecraft {
 	}
 
 	@Inject(method = "setLevel", at = @At("TAIL"))
-	private void afterSetLevelFancyMenu(ClientLevel clientLevel, ReceivingLevelScreen.Reason reason, CallbackInfo info) {
+	private void afterSetLevelFancyMenu(ClientLevel clientLevel, CallbackInfo ci) {
 		Minecraft self = (Minecraft)(Object)this;
 
 		if (clientLevel == null) {
@@ -258,16 +256,7 @@ public class MixinMinecraft {
 
 	}
 
-	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At("HEAD"))
-	private void beforeDisconnectFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, CallbackInfo info) {
-		this.fireServerLeft_FancyMenu();
-	}
-
-	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;level:Lnet/minecraft/client/multiplayer/ClientLevel;", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.BEFORE))
-	private void beforeLevelClearedWorldLeftFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, CallbackInfo info) {
-		WorldSessionTracker.handleWorldLeft((Minecraft)(Object)this);
-	}
-	@Inject(method = "clearClientLevel", at = @At("HEAD"))
+	@Inject(method = "clearLevel(Lnet/minecraft/client/gui/screens/Screen;)V", at = @At("HEAD"))
 	private void beforeClearClientLevelFancyMenu(Screen nextScreen, CallbackInfo info) {
 		WorldSessionTracker.captureSnapshot((Minecraft) (Object) this);
 		this.fireServerLeft_FancyMenu();

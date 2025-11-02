@@ -85,7 +85,7 @@ public final class WorldSessionTracker {
 
         IntegratedServer server = minecraft.getSingleplayerServer();
         if (server != null) {
-            session.lastCheatsAllowed = Boolean.toString(server.getWorldData().isAllowCommands());
+            session.lastCheatsAllowed = Boolean.toString(server.getWorldData().getAllowCommands());
         }
     }
 

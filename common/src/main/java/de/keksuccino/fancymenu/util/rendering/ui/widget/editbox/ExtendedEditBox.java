@@ -542,7 +542,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         if (this.hintFancymenu == null) return null;
         Component c = this.hintFancymenu.get(this);
         if (c != null) {
-            return c.copy().withColor(UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt());
+            return c.copy().withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt()));
         }
         return null;
     }

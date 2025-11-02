@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -42,8 +41,6 @@ import java.util.function.Supplier;
 
 @SuppressWarnings("all")
 public abstract class CellScreen extends Screen implements InitialWidgetFocusScreen {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final Logger LOGGER = LogManager.getLogger();
 

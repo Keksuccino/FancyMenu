@@ -65,8 +65,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	protected static final ResourceLocation DRAGGING_NOT_ALLOWED_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/not_allowed.png");
-	protected static final ResourceLocation DEPRECATED_WARNING_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/warning_20x20.png");
+	protected static final ResourceLocation DRAGGING_NOT_ALLOWED_TEXTURE = new ResourceLocation("fancymenu", "textures/not_allowed.png");
+	protected static final ResourceLocation DEPRECATED_WARNING_TEXTURE = new ResourceLocation("fancymenu", "textures/warning_20x20.png");
 	protected static final ConsumingSupplier<AbstractEditorElement, Integer> BORDER_COLOR = (editorElement) -> {
 		if (editorElement.isSelected()) {
 			return UIBase.getUIColorTheme().layout_editor_element_border_color_selected.getColorInt();

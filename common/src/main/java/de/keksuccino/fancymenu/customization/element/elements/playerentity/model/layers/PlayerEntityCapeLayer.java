@@ -1,10 +1,10 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.layers;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.model.layers;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.PlayerEntityElementRenderer;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.PlayerEntityProperties;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityElementRenderer;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityProperties;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;

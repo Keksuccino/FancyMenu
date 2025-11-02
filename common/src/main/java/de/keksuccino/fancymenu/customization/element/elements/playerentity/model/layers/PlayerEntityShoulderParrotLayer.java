@@ -1,9 +1,9 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.layers;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.model.layers;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.PlayerEntityElementRenderer;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.PlayerEntityProperties;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityElementRenderer;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityProperties;
 import net.minecraft.client.model.ParrotModel;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelLayers;
