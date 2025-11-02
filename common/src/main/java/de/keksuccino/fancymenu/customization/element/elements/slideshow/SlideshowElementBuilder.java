@@ -56,12 +56,12 @@ public class SlideshowElementBuilder extends ElementBuilder<SlideshowElement, Sl
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.editor.add.slideshow");
+        return Component.translatable("fancymenu.elements.slideshow");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.add.slideshow.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.slideshow.desc");
     }
 
 }

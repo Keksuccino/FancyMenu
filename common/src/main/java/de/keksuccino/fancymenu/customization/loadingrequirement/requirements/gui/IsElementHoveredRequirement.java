@@ -27,6 +27,11 @@ public class IsElementHoveredRequirement extends LoadingRequirement {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return true;
     }
@@ -61,22 +66,22 @@ public class IsElementHoveredRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered");
+        return I18n.get("fancymenu.requirements.is_element_hovered");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_element_hovered.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered.valuename");
+        return I18n.get("fancymenu.requirements.is_element_hovered.value_name");
     }
 
     @Override

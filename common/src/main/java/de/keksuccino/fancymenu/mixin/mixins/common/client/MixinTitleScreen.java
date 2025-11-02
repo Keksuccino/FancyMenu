@@ -39,6 +39,10 @@ public abstract class MixinTitleScreen extends Screen {
     @Shadow @Final private static ResourceLocation PANORAMA_OVERLAY;
     @Unique private GuiGraphics cached_graphics_FancyMenu = null;
 
+    @Unique private int cached_mouseX_FancyMenu = -1;
+    @Unique private int cached_mouseY_FancyMenu = -1;
+    @Unique private float cached_partial_FancyMenu = -1f;
+
     //unused dummy constructor
     @SuppressWarnings("all")
     private MixinTitleScreen() {
@@ -63,7 +67,7 @@ public abstract class MixinTitleScreen extends Screen {
                             logo.renderLogoAtPosition(graphics, x, y, renderer.getAlpha());
                         }))
                 .setWidgetIdentifierFancyMenu("minecraft_logo_widget")
-                .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.logo"));
+                .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.logo"));
 
         MinecraftSplashRenderer splash = MinecraftSplashRenderer.getDefaultInstance();
         this.addRenderableWidget(new RendererWidget(splash.getDefaultPositionX(this.width) - 50, splash.getDefaultPositionY() - 20, 100, 40,
@@ -72,7 +76,19 @@ public abstract class MixinTitleScreen extends Screen {
                             splash.renderAt(graphics, x + (width / 2), y + (height / 2), Minecraft.getInstance().font, splashColor);
                         }))
                 .setWidgetIdentifierFancyMenu("minecraft_splash_widget")
-                .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash"));
+                .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.splash"));
+
+        if (this.realmsNotificationsScreen != null) {
+            RealmsNotificationRenderer notifications = new RealmsNotificationRenderer(this.realmsNotificationsScreen, this.width, this.height);
+            int totalWidth = notifications.getTotalWidth();
+            if (totalWidth == 0) totalWidth = 50;
+            this.addRenderableWidget(new RendererWidget(notifications.getDefaultPositionX(), notifications.getDefaultPositionY(), totalWidth, notifications.getTotalHeight(),
+                            (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
+                                notifications.renderIcons(graphics, x, y, DrawableColor.WHITE.getColorIntWithAlpha(renderer.getAlpha()));
+                            }))
+                    .setWidgetIdentifierFancyMenu("minecraft_realms_notification_icons_widget")
+                    .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.realmsnotification"));
+        }
 
         BrandingRenderer branding = new BrandingRenderer(this.height);
         this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY() + 1, branding.getTotalWidth(), branding.getTotalHeight(),
@@ -81,12 +97,15 @@ public abstract class MixinTitleScreen extends Screen {
                             branding.render(graphics, x, y);
                         }))
                 .setWidgetIdentifierFancyMenu("minecraft_branding_widget")
-                .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.branding"));
+                .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.branding"));
 
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void before_render_FancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
+    private void before_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+        this.cached_mouseX_FancyMenu = mouseX;
+        this.cached_mouseY_FancyMenu = mouseY;
+        this.cached_partial_FancyMenu = partial;
         //Disable fading if customizations enabled, so FancyMenu can properly handle widget alpha
         if (ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             this.fading = false;

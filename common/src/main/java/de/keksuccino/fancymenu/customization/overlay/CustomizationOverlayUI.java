@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
+import de.keksuccino.fancymenu.customization.listener.gui.ManageListenersScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenBuilder;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenRegistry;
@@ -631,17 +632,22 @@ public class CustomizationOverlayUI {
             Minecraft.getInstance().setScreen(new ManageOverriddenGuisScreen(() -> Minecraft.getInstance().setScreen(s)));
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.custom_guis.manage_overridden.desc")));
 
-        ContextMenu variablesMenu = new ContextMenu();
-        customizationMenu.addSubMenuEntry("variables", Component.translatable("fancymenu.overlay.menu_bar.variables"), variablesMenu)
+        customizationMenu.addClickableEntry("variables", Component.translatable("fancymenu.overlay.menu_bar.variables.manage"), (menu, entry) -> {
+                    ManageVariablesScreen s = new ManageVariablesScreen(call -> {
+                        Minecraft.getInstance().setScreen(screen);
+                    });
+                    Minecraft.getInstance().setScreen(s);
+                })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.variables.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
-        variablesMenu.addClickableEntry("manage_variables", Component.translatable("fancymenu.overlay.menu_bar.variables.manage"), (menu, entry) -> {
-            ManageVariablesScreen s = new ManageVariablesScreen(call -> {
-                Minecraft.getInstance().setScreen(screen);
-            });
-            Minecraft.getInstance().setScreen(s);
-        });
+        customizationMenu.addClickableEntry("manage_listeners", Component.translatable("fancymenu.listeners.manage"), (menu, entry) -> {
+                    ManageListenersScreen s = new ManageListenersScreen(aBoolean -> {
+                        Minecraft.getInstance().setScreen(screen);
+                    });
+                    Minecraft.getInstance().setScreen(s);
+                })
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.listeners.manage.desc")));
 
         customizationMenu.addClickableEntry("pre_load_resources", Component.translatable("fancymenu.resources.pre_loading"),
                         (menu, entry) -> {
@@ -720,11 +726,15 @@ public class CustomizationOverlayUI {
         customizationMenu.addSeparatorEntry("separator_before_hide_menu_bar");
 
         customizationMenu.addClickableEntry("hide_menu_bar", Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay"), (menu, entry) -> {
+            menuBar.closeAllContextMenus();
             Minecraft.getInstance().setScreen(ConfirmationScreen.critical((call) -> {
-                if (call) {
-                    FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
-                }
                 Minecraft.getInstance().setScreen(screen);
+                if (call) {
+                    MainThreadTaskExecutor.executeInMainThread(() -> {
+                        FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
+                        ScreenCustomization.reInitCurrentScreen();
+                    }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                }
             }, LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.hide_overlay.confirm")).setDelay(4000));
         }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay.shortcut"))
                 .setIcon(ContextMenu.IconFactory.getIcon("close"));
@@ -778,7 +788,7 @@ public class CustomizationOverlayUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("book"));
 
         helpMenu.addClickableEntry("join_the_discord", Component.translatable("fancymenu.overlay.menu_bar.help.discord"), (menu, entry) -> {
-            WebUtils.openWebLink("https://discord.gg/UzmeWkD");
+            WebUtils.openWebLink("https://discord.gg/rhayah27GC");
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.discord.tooltip")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));
 

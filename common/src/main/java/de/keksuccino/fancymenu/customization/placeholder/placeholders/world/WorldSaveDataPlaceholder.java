@@ -19,6 +19,11 @@ public class WorldSaveDataPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String levelName = dps.values.get("level_name");
         if (levelName == null) {
@@ -53,7 +58,7 @@ public class WorldSaveDataPlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.world");
+        return I18n.get("fancymenu.placeholders.categories.world");
     }
 
     @Override

@@ -99,12 +99,12 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.editor.elements.progress_bar");
+        return Component.translatable("fancymenu.elements.progress_bar");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.desc");
     }
 
 }

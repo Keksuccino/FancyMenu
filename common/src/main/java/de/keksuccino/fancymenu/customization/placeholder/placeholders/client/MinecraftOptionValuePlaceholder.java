@@ -19,6 +19,11 @@ public class MinecraftOptionValuePlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         if (!dps.values.containsKey("name")) {
             return null;
@@ -55,7 +60,7 @@ public class MinecraftOptionValuePlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.client");
+        return I18n.get("fancymenu.requirements.categories.client");
     }
 
     @Override

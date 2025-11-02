@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -36,7 +37,7 @@ public class BuildCustomGuiScreen extends CellScreen {
     @Override
     protected void initCells() {
 
-        this.addSpacerCell(20);
+        this.addStartEndSpacerCell();
 
         this.addLabelCell(Component.translatable("fancymenu.custom_guis.build.identifier"));
         this.addTextInputCell(CharacterFilter.buildOnlyLowercaseFileNameFilter(), false, false)
@@ -64,15 +65,22 @@ public class BuildCustomGuiScreen extends CellScreen {
             this.guiTemp.worldBackground = value.getAsBoolean();
         }), true);
 
-        this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.world_background_overlay", this.guiTemp.worldBackgroundOverlay), (value, button) -> {
-            this.guiTemp.worldBackgroundOverlay = value.getAsBoolean();
-        }), true);
+        this.addSpacerCell(10);
+
+        this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.popup_mode", this.guiTemp.popupMode), (value, button) -> {
+            this.guiTemp.popupMode = value.getAsBoolean();
+        }).setTooltip(Tooltip.of(Component.translatable("fancymenu.custom_guis.build.popup_mode.desc"))), true);
+
+        this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.popup_mode_background_overlay", this.guiTemp.popupModeBackgroundOverlay), (value, button) -> {
+            this.guiTemp.popupModeBackgroundOverlay = value.getAsBoolean();
+        }).setTooltip(Tooltip.of(Component.translatable("fancymenu.custom_guis.build.popup_mode_background_overlay.desc")))
+                .setIsActiveSupplier(consumes -> this.guiTemp.popupMode), true);
 
         this.addSpacerCell(10);
 
         this.settingsFeedbackCell = this.addLabelCell(Component.empty());
 
-        this.addSpacerCell(20);
+        this.addStartEndSpacerCell();
 
     }
 
@@ -114,6 +122,8 @@ public class BuildCustomGuiScreen extends CellScreen {
                 this.gui.pauseGame = this.guiTemp.pauseGame;
                 this.gui.worldBackground = this.guiTemp.worldBackground;
                 this.gui.worldBackgroundOverlay = this.guiTemp.worldBackgroundOverlay;
+                this.gui.popupMode = this.guiTemp.popupMode;
+                this.gui.popupModeBackgroundOverlay = this.guiTemp.popupModeBackgroundOverlay;
             }
             this.callback.accept(this.gui);
         }

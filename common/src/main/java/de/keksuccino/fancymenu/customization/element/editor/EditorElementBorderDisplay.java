@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,13 +16,15 @@ import java.util.function.Supplier;
 
 public class EditorElementBorderDisplay implements Renderable {
 
+    private static final int LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU = 2;
+    private static final int LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU = 1;
+
     public final AbstractEditorElement editorElement;
     public Font font = Minecraft.getInstance().font;
     public final DisplayPosition defaultPosition;
     public final List<DisplayPosition> alternativePositions = new ArrayList<>();
     public DisplayPosition currentPosition;
     protected final Map<String, Supplier<Component>> lines = new LinkedHashMap<>();
-    public boolean textShadow = true;
     protected List<Component> renderLines = new ArrayList<>();
     protected int width = 0;
     protected int height = 0;
@@ -80,11 +85,21 @@ public class EditorElementBorderDisplay implements Renderable {
 
         float scale = this.getScale();
         int lineY = y;
+        int backgroundColor = UIBase.getUIColorTheme().layout_editor_element_border_display_line_background_color.getColorInt();
+        int textColor = UIBase.getUIColorTheme().layout_editor_element_border_display_line_text_color.getColorInt();
         graphics.pose().pushPose();
         graphics.pose().scale(scale, scale, scale);
         for (Component c : this.renderLines) {
-            int lineX = leftAligned ? x : x + (this.getWidth() - (int)((float)this.font.width(c) * scale));
-            graphics.drawString(this.font, c, (int)(lineX / scale), (int)(lineY / scale), -1, this.textShadow);
+            int lineWidth = this.font.width(c);
+            int lineX = leftAligned ? x : x + (this.getWidth() - (int)((float)lineWidth * scale));
+            int scaledLineX = (int)(lineX / scale);
+            int scaledLineY = (int)(lineY / scale);
+            int backgroundLeft = scaledLineX - LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU;
+            int backgroundTop = scaledLineY - LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU;
+            int backgroundRight = scaledLineX + lineWidth + LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU;
+            int backgroundBottom = scaledLineY + this.font.lineHeight + LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU;
+            graphics.fill(backgroundLeft, backgroundTop, backgroundRight, backgroundBottom, backgroundColor);
+            graphics.drawString(this.font, c, scaledLineX, scaledLineY, textColor, false);
             lineY += (this.font.lineHeight + 2) * scale;
         }
         graphics.pose().popPose();
@@ -127,7 +142,7 @@ public class EditorElementBorderDisplay implements Renderable {
     }
 
     protected float getScale() {
-        return !Minecraft.getInstance().isEnforceUnicode() ? 0.5F : 1.0F;
+        return UIBase.getFixedUIScale();
     }
 
     public int getWidth() {

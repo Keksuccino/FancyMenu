@@ -29,17 +29,17 @@ public class MinecraftVersionPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.mcversion");
+        return I18n.get("fancymenu.placeholders.mcversion");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.dynamicvariabletextfield.variables.mcversion.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.mcversion.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.client");
+        return I18n.get("fancymenu.requirements.categories.client");
     }
 
     @Override

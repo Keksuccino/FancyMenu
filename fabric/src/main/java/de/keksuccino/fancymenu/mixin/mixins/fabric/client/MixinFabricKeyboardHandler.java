@@ -1,11 +1,15 @@
 package de.keksuccino.fancymenu.mixin.mixins.fabric.client;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import de.keksuccino.fancymenu.events.screen.ScreenCharTypedEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,6 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(KeyboardHandler.class)
 public class MixinFabricKeyboardHandler {
+
+    @Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
     @Unique int cached_key_FancyMenu;
     @Unique int cached_scanCode_FancyMenu;
@@ -65,12 +71,19 @@ public class MixinFabricKeyboardHandler {
 
     /**
      * @reason This adds special char typed handling for FancyMenu's {@link WrappedMCEFBrowser}.
+     *         It also handles the CharTypedEvent.
      */
     @WrapWithCondition(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
     private boolean wrap_screen_charTyped_in_charTyped_FancyMenu(Runnable runnable, String message, String className) {
+
         Minecraft minecraft = Minecraft.getInstance();
         Screen screen = minecraft.screen;
         if (screen != null) {
+
+            // Fire CharTypedEvent
+            EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(screen, (char) this.cached_char_codePoint_FancyMenu));
+
+            // Handle browser typing logic
             for (GuiEventListener listener : screen.children()) {
                 if (listener instanceof WrappedMCEFBrowser) {
                     boolean b = false;
@@ -84,6 +97,7 @@ public class MixinFabricKeyboardHandler {
                     if (b) return false;
                 }
             }
+
         }
         return true;
     }

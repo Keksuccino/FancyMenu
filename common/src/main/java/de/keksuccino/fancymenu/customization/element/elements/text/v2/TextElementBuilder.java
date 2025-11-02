@@ -24,7 +24,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         TextElement i = new TextElement(this);
         i.baseWidth = 200;
         i.baseHeight = 40;
-        i.setSource(TextElement.SourceMode.DIRECT, I18n.get("fancymenu.customization.items.text.placeholder"));
+        i.setSource(TextElement.SourceMode.DIRECT, I18n.get("fancymenu.elements.text.placeholder"));
         return i;
     }
 
@@ -300,12 +300,12 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.customization.items.text");
+        return Component.translatable("fancymenu.elements.text");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.v2.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.desc");
     }
 
 }

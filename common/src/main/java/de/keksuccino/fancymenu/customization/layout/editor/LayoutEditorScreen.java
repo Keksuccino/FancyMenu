@@ -61,7 +61,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final boolean FORCE_DISABLE_BUDDY = true;
+	public static final boolean FORCE_DISABLE_BUDDY = false;
 
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
 	public static final int ELEMENT_DRAG_CRUMPLE_ZONE = 5;
@@ -1237,11 +1237,15 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@Override
-	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaY) {
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+		boolean handled = false;
 		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			return this.buddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaY);
+			handled = this.buddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
 		}
-		return false;
+		if (!handled && super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
+			return true;
+		}
+		return handled;
 	}
 
 	@Override

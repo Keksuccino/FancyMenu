@@ -21,6 +21,11 @@ public class MimicButtonAction extends Action {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return true;
     }
@@ -42,17 +47,17 @@ public class MimicButtonAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.mimicbutton");
+        return Component.translatable("fancymenu.actions.mimicbutton");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.mimicbutton.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimicbutton.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.mimicbutton.desc.value");
+        return Component.translatable("fancymenu.actions.mimicbutton.desc.value");
     }
 
     @Override
