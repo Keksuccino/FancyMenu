@@ -140,17 +140,7 @@ public class AnimationControllerHandler {
 
             // Remove non-looping animations once they finish or animations in general when the controller is not active anymore
             if ((!state.controller.loop && elapsedTime > lastKeyframe.timestamp) || !state.controller.shouldRender()) {
-                // Restore original properties
-                if (!state.controller.offsetMode) {
-                    state.targetElement.posOffsetX = state.originalPosOffsetX;
-                    state.targetElement.posOffsetY = state.originalPosOffsetY;
-                    state.targetElement.baseWidth = state.originalBaseWidth;
-                    state.targetElement.baseHeight = state.originalBaseHeight;
-                    state.targetElement.anchorPoint = state.originalAnchorPoint;
-                    state.targetElement.stickyAnchor = state.originalStickyAnchor;
-                }
-                state.targetElement.animatedOffsetX = 0;
-                state.targetElement.animatedOffsetY = 0;
+                restoreElementToOriginal(state);
                 it.remove();
                 if (state.controller.shouldRender()) {
                     FINISHED_ANIMATIONS.add(state.targetElement.getInstanceIdentifier());
@@ -163,6 +153,37 @@ public class AnimationControllerHandler {
 
     private static float lerp(float a, float b, float t) {
         return a + (b - a) * t;
+    }
+
+    private static void restoreElementToOriginal(@NotNull AnimationState state) {
+        if (!state.controller.offsetMode) {
+            state.targetElement.posOffsetX = state.originalPosOffsetX;
+            state.targetElement.posOffsetY = state.originalPosOffsetY;
+            state.targetElement.baseWidth = state.originalBaseWidth;
+            state.targetElement.baseHeight = state.originalBaseHeight;
+            state.targetElement.anchorPoint = state.originalAnchorPoint;
+            state.targetElement.stickyAnchor = state.originalStickyAnchor;
+        }
+        state.targetElement.animatedOffsetX = 0;
+        state.targetElement.animatedOffsetY = 0;
+    }
+
+    public static void resetAnimationState(@NotNull String targetElementId) {
+        AnimationState state = RUNNING_ANIMATIONS.remove(targetElementId);
+        if (state != null) {
+            restoreElementToOriginal(state);
+        }
+        ANIMATED_MEMORY.remove(targetElementId);
+        FINISHED_ANIMATIONS.remove(targetElementId);
+    }
+
+    public static void resetController(@NotNull AnimationControllerElement controller) {
+        for (AnimationControllerElement.TargetElement target : controller.targetElements) {
+            if ((target.targetElementId != null) && !target.targetElementId.isEmpty()) {
+                resetAnimationState(target.targetElementId);
+            }
+            target.animationApplied = false;
+        }
     }
 
     public static void stopAnimation(@NotNull String targetElementId) {

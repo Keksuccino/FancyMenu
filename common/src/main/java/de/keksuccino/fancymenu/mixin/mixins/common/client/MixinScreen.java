@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -15,7 +16,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.renderer.RenderType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +40,23 @@ public abstract class MixinScreen implements CustomizableScreen {
 
 	@Shadow @Final private List<GuiEventListener> children;
 
+    @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+    private void wrap_render_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
+        EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(instance, graphics, mouseX, mouseY, partial));
+        original.call(instance, graphics, mouseX, mouseY, partial);
+        EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(instance, graphics, mouseX, mouseY, partial));
+    }
+
+    @Inject(method = "renderWithTooltip", at = @At("RETURN"))
+    private void return_renderWithTooltip_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+        RenderingUtils.executeAndClearDeferredScreenRenderingTasks(graphics, mouseX, mouseY, partial);
+    }
+
+    @Inject(method = "renderBlurredBackground", at = @At("HEAD"), cancellable = true)
+    private void head_renderBlurredBackground_FancyMenu(float f, CallbackInfo info) {
+        if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
+    }
+
 	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
 	private void wrap_renderBackground_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
 		//Don't fire the event in the TitleScreen, because it gets handled differently there
@@ -47,12 +64,12 @@ public abstract class MixinScreen implements CustomizableScreen {
 			original.call(instance, graphics, mouseX, mouseY, partial);
 			return;
 		}
-		ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
-		if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this.getScreen_FancyMenu())) {
+		ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
+		if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(instance)) {
 			if (!l.layoutBase.menuBackgrounds.isEmpty()) {
 				RenderSystem.enableBlend();
 				//Render a black background before the custom background gets rendered
-				graphics.fill(0, 0, this.getScreen_FancyMenu().width, this.getScreen_FancyMenu().height, 0);
+				graphics.fill(0, 0, instance.width, instance.height, 0);
 				RenderingUtils.resetShaderColor(graphics);
 			} else {
 				original.call(instance, graphics, mouseX, mouseY, partial);
@@ -60,7 +77,7 @@ public abstract class MixinScreen implements CustomizableScreen {
 		} else {
 			original.call(instance, graphics, mouseX, mouseY, partial);
 		}
-		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this.getScreen_FancyMenu(), graphics));
+		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, mouseX, mouseY, partial));
 	}
 
 	@Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;"))
@@ -106,11 +123,6 @@ public abstract class MixinScreen implements CustomizableScreen {
 	@Override
 	public @NotNull List<GuiEventListener> removeOnInitChildrenFancyMenu() {
 		return this.removeOnInitChildrenFancyMenu;
-	}
-
-	@Unique
-	private Screen getScreen_FancyMenu() {
-		return (Screen)((Object)this);
 	}
 
 }

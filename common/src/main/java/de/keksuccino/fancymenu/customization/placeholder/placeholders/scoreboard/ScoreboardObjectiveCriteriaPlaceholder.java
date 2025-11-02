@@ -21,6 +21,11 @@ public class ScoreboardObjectiveCriteriaPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         ClientLevel level = Minecraft.getInstance().level;
         String objectiveName = dps.values.get("objective");

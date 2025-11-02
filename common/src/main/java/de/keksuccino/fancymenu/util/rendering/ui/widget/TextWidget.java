@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -10,10 +11,12 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TextWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget {
+public class TextWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     @Nullable
     protected String widgetIdentifier;
@@ -24,6 +27,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     protected boolean shadow = true;
     @NotNull
     protected Font font;
+    protected float scale = 1.0F;
 
     @NotNull
     public static TextWidget empty(int x, int y, int width) {
@@ -43,26 +47,61 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     public TextWidget(int x, int y, int width, int height, @NotNull Font font, @NotNull Component text) {
         super(x, y, width, height, text);
         this.font = font;
+        this.updateIntrinsicSize();
     }
 
     @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        int textWidth = this.getTextWidth();
-        int textX = this.getX();
-        int textY = this.getY();
-        if (this.alignment == TextAlignment.CENTER) {
-            textX = this.getX() + (this.getWidth() / 2) - (textWidth / 2);
-        }
-        if (this.alignment == TextAlignment.RIGHT) {
-            textX = this.getX() + this.getWidth() - textWidth;
-        }
+        double drawX = this.getRenderX();
+        double drawY = this.getRenderY();
+        float currentScale = this.scale;
         RenderingUtils.resetShaderColor(graphics);
-        graphics.drawString(this.font, this.getMessage(), textX, textY, this.baseColor.getColorInt(), this.shadow);
+        graphics.pose().pushPose();
+        if (currentScale != 1.0F) {
+            graphics.pose().scale(currentScale, currentScale, 1.0F);
+            drawX /= currentScale;
+            drawY /= currentScale;
+        }
+        graphics.drawString(this.font, this.getMessage(), Mth.floor(drawX), Mth.floor(drawY), this.baseColor.getColorInt(), this.shadow);
+        graphics.pose().popPose();
         RenderingUtils.resetShaderColor(graphics);
     }
 
     public int getTextWidth() {
-        return this.font.width(this.getMessage().getVisualOrderText());
+        return Mth.ceil(this.getScaledTextWidth());
+    }
+
+    public double getScaledTextWidth() {
+        return this.font.width(this.getMessage().getVisualOrderText()) * this.scale;
+    }
+
+    public double getScaledTextHeight() {
+        return this.font.lineHeight * this.scale;
+    }
+
+    public double getRenderX() {
+        double textWidth = this.getScaledTextWidth();
+        double x = this.getX();
+        if (this.alignment == TextAlignment.CENTER) {
+            x = this.getX() + (this.getWidth() / 2.0) - (textWidth / 2.0);
+        } else if (this.alignment == TextAlignment.RIGHT) {
+            x = this.getX() + this.getWidth() - textWidth;
+        }
+        return x;
+    }
+
+    public double getRenderY() {
+        return this.getY();
+    }
+
+    public float getScale() {
+        return this.scale;
+    }
+
+    public TextWidget setScale(float scale) {
+        this.scale = Math.max(0.0001F, scale);
+        this.updateIntrinsicSize();
+        return this;
     }
 
     public @NotNull TextAlignment getTextAlignment() {
@@ -98,12 +137,33 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
 
     public TextWidget setFont(@NotNull Font font) {
         this.font = font;
+        this.updateIntrinsicSize();
         return this;
     }
 
     public TextWidget centerWidget(@NotNull Screen parent) {
         this.setX((parent.width / 2) - (this.getWidth() / 2));
         return this;
+    }
+
+    public boolean isTextHovered(double mouseX, double mouseY) {
+        double x = this.getRenderX();
+        double y = this.getRenderY();
+        double width = this.getScaledTextWidth();
+        double height = this.getScaledTextHeight();
+        return mouseX >= x && mouseX <= (x + width) && mouseY >= y && mouseY <= (y + height);
+    }
+
+    @Nullable
+    public Style getStyleAtMouseX(double mouseX) {
+        double left = this.getRenderX();
+        double right = left + this.getScaledTextWidth();
+        if (mouseX < left || mouseX > right) {
+            return null;
+        }
+        float safeScale = Math.max(0.0001F, this.scale);
+        double relative = (mouseX - left) / safeScale;
+        return this.font.getSplitter().componentStyleAtWidth(this.getMessage(), Mth.floor(relative));
     }
 
     @Override
@@ -145,6 +205,10 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     @Override
     public void playDownSound(@NotNull SoundManager $$0) {
         //no click sound
+    }
+
+    protected void updateIntrinsicSize() {
+        this.height = Math.max(1, Mth.ceil(this.font.lineHeight * this.scale));
     }
 
     public enum TextAlignment {

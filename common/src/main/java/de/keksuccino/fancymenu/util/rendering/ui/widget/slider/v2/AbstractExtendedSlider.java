@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -20,10 +21,9 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
-import java.util.function.BiConsumer;
 
 @SuppressWarnings("unused")
-public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget {
+public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget, FancyMenuWidget {
 
     public static final ResourceLocation SLIDER_SPRITE = ResourceLocation.parse("widget/slider");
     public static final ResourceLocation HIGHLIGHTED_SPRITE = ResourceLocation.parse("widget/slider_highlighted");
@@ -57,6 +57,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     protected boolean navigatable = true;
     @Nullable
     protected ConsumingSupplier<AbstractExtendedSlider, Boolean> isActiveSupplier = null;
+    protected boolean leftMouseDown = false;
 
     public AbstractExtendedSlider(int x, int y, int width, int height, Component label, double value) {
         super(x, y, width, height, label, value);
@@ -413,6 +414,29 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     @Override
     public void setNavigatable(boolean navigatable) {
         this.navigatable = navigatable;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!this.canClick()) return false;
+        if (button == 0) this.leftMouseDown = true;
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        this.leftMouseDown = false;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (!this.leftMouseDown) return false;
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    protected boolean canClick() {
+        return (this.isHovered() && this.isActive() && this.visible);
     }
 
     @FunctionalInterface

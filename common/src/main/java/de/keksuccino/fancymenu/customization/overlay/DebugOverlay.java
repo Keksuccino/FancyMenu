@@ -334,20 +334,20 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         ContextMenu menu = new ContextMenu();
 
         if (element instanceof VanillaWidgetElement v) {
-            menu.addClickableEntry("copy_vanilla_widget_locator", Component.translatable("fancymenu.helper.editor.items.vanilla_button.copy_locator"), (menu1, entry) -> {
+            menu.addClickableEntry("copy_vanilla_widget_locator", Component.translatable("fancymenu.elements.vanilla_button.copy_locator"), (menu1, entry) -> {
                         if (v.widgetMeta != null) {
                             Minecraft.getInstance().keyboardHandler.setClipboard(v.widgetMeta.getLocator());
                         }
                         MainThreadTaskExecutor.executeInMainThread(() -> this.closeRightClickContextMenu(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                     })
-                    .setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc")))
+                    .setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.vanilla_button.copy_locator.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("notes"));
         }
 
-        menu.addClickableEntry("copy_id", Component.translatable("fancymenu.helper.editor.items.copyid"), (menu1, entry) -> {
+        menu.addClickableEntry("copy_id", Component.translatable("fancymenu.elements.copyid"), (menu1, entry) -> {
                     Minecraft.getInstance().keyboardHandler.setClipboard(element.getInstanceIdentifier());
                     MainThreadTaskExecutor.executeInMainThread(() -> this.closeRightClickContextMenu(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.copyid.btn.desc")))
+                }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.copyid.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("notes"));
 
         return menu;

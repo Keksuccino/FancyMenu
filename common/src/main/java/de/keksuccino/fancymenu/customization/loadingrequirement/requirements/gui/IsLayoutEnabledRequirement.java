@@ -8,8 +8,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFor
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
-
 import javax.annotation.Nullable;
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,8 +29,9 @@ public class IsLayoutEnabledRequirement extends LoadingRequirement {
 
         if (value != null) {
             for (Layout s : LayoutHandler.getEnabledLayouts()) {
-                if (s.layoutFile != null) {
-                    return Files.getNameWithoutExtension(s.layoutFile.getName()).equals(value);
+                File f = s.layoutFile;
+                if (f != null) {
+                    return Files.getNameWithoutExtension(f.getName()).equals(value);
                 }
             }
         }
@@ -41,22 +42,22 @@ public class IsLayoutEnabledRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.visibilityrequirement.is_layout_enabled");
+        return I18n.get("fancymenu.requirements.is_layout_enabled");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.visibilityrequirement.is_layout_enabled.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_layout_enabled.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.visibilityrequirement.is_layout_enabled.value.desc");
+        return I18n.get("fancymenu.requirements.is_layout_enabled.value.desc");
     }
 
     @Override

@@ -27,7 +27,7 @@ public class FancyMenu {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final String VERSION = "3.7.0";
+	public static final String VERSION = "3.8.0";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
@@ -61,8 +61,6 @@ public class FancyMenu {
 				MCEFVideoManager.getInstance().initialize();
 			}
 
-			UIColorThemes.registerAll();
-
 			TextColorFormatters.registerAll();
 
 			EventHandler.INSTANCE.registerListenersOf(new Test());
@@ -80,6 +78,8 @@ public class FancyMenu {
 	public static void lateClientInit() {
 
 		LOGGER.info("[FANCYMENU] Starting late client initialization phase..");
+
+		UIColorThemes.registerAll();
 
 		WindowHandler.updateCustomWindowIcon();
 

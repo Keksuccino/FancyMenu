@@ -72,13 +72,13 @@ public class MCEFVideoMenuBackgroundConfigScreen extends CellScreen {
 
         this.addCellGroupEndSpacerCell();
 
-        this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.parallax", this.background.parallaxEnabled), true, (value, button) -> {
+        this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.backgrounds.image.configure.parallax", this.background.parallaxEnabled), true, (value, button) -> {
             this.background.parallaxEnabled = value.getAsBoolean();
         });
 
-        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.background.image.configure.parallax_intensity"), var1 -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity"), var1 -> {
             final Screen currentScreen = Minecraft.getInstance().screen;
-            TextEditorScreen s = TextEditorScreen.build(Component.translatable("fancymenu.background.image.configure.parallax_intensity"), null, callback -> {
+            TextEditorScreen s = TextEditorScreen.build(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity"), null, callback -> {
                 if (callback != null) {
                     this.background.parallaxIntensityString = callback;
                 }
@@ -86,13 +86,13 @@ public class MCEFVideoMenuBackgroundConfigScreen extends CellScreen {
             });
             s.setText(this.background.parallaxIntensityString);
             Minecraft.getInstance().setScreen(s);
-        }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.parallax_intensity.desc"))), true);
+        }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.image.configure.parallax_intensity.desc"))), true);
 
-        WidgetCell invertParallaxCell = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.invert_parallax", this.background.invertParallax), true, (value, button) -> {
+        WidgetCell invertParallaxCell = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.backgrounds.image.configure.invert_parallax", this.background.invertParallax), true, (value, button) -> {
             this.background.invertParallax = value.getAsBoolean();
         });
         if (invertParallaxCell.widget instanceof ExtendedButton b) {
-            b.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.invert_parallax.desc")));
+            b.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.image.configure.invert_parallax.desc")));
         }
 
         this.addStartEndSpacerCell();

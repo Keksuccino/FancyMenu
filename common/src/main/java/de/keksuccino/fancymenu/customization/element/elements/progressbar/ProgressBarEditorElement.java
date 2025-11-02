@@ -27,20 +27,20 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                         ProgressBarEditorElement.class,
                         element -> ((ProgressBarElement)element.element).barColor.getHex(),
                         (element, colorHex) -> ((ProgressBarElement)element.element).barColor = DrawableColor.of(colorHex),
-                        null, false, false, Component.translatable("fancymenu.editor.elements.progress_bar.bar_color"),
+                        null, false, false, Component.translatable("fancymenu.elements.progress_bar.bar_color"),
                         true, DrawableColor.of(new Color(82, 149, 255)).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.bar_color.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.bar_color.desc")));
 
         this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_bar_texture",
                         ProgressBarEditorElement.class,
                         null,
                         consumes -> consumes.getElement().barTextureSupplier,
                         (progressBarEditorElement, iTextureResourceSupplier) -> progressBarEditorElement.getElement().barTextureSupplier = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.editor.elements.progress_bar.bar_texture"),
+                        Component.translatable("fancymenu.elements.progress_bar.bar_texture"),
                         true, null, true, true, true)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.bar_texture.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.bar_texture.desc")));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_bar_entries");
 
@@ -48,20 +48,20 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                         ProgressBarEditorElement.class,
                         element -> ((ProgressBarElement)element.element).backgroundColor.getHex(),
                         (element, colorHex) -> ((ProgressBarElement)element.element).backgroundColor = DrawableColor.of(colorHex),
-                        null, false, false, Component.translatable("fancymenu.editor.elements.progress_bar.background_color"),
+                        null, false, false, Component.translatable("fancymenu.elements.progress_bar.background_color"),
                         true, DrawableColor.of(new Color(171, 200, 247)).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.background_color.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.background_color.desc")));
 
         this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_background_texture",
                         ProgressBarEditorElement.class,
                         null,
                         consumes -> consumes.getElement().backgroundTextureSupplier,
                         (progressBarEditorElement, iTextureResourceSupplier) -> progressBarEditorElement.getElement().backgroundTextureSupplier = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.editor.elements.progress_bar.background_texture"),
+                        Component.translatable("fancymenu.elements.progress_bar.background_texture"),
                         true, null, true, true, true)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.background_texture.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.background_texture.desc")));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_background_entries");
 
@@ -77,13 +77,13 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                         ProgressBarEditorElement.class,
                         consumes -> ((ProgressBarElement)consumes.element).progressSource,
                         (progressBarEditorElement, s) -> ((ProgressBarElement)progressBarEditorElement.element).progressSource = s,
-                        null, false, true, Component.translatable("fancymenu.editor.elements.progress_bar.source"), false, "50", null, null)
+                        null, false, true, Component.translatable("fancymenu.elements.progress_bar.source"), false, "50", null, null)
                 .setStackable(false)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.source.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.source.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "smooth_filling_animation", ProgressBarEditorElement.class,
                 consumes -> consumes.getElement().smoothFillingAnimation,
-                (element, aBoolean) -> element.getElement().smoothFillingAnimation = aBoolean, "fancymenu.editor.elements.progress_bar.smoothing");
+                (element, aBoolean) -> element.getElement().smoothFillingAnimation = aBoolean, "fancymenu.elements.progress_bar.smoothing");
 
         this.rightClickMenu.addSeparatorEntry("separator_after_progress_source");
 
@@ -99,9 +99,9 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                         ProgressBarEditorElement.class,
                         element -> ((ProgressBarElement)element.element).useProgressForElementAnchor,
                         (element, aBoolean) -> ((ProgressBarElement)element.element).useProgressForElementAnchor = aBoolean,
-                        "fancymenu.editor.elements.progress_bar.progress_for_element_anchor")
+                        "fancymenu.elements.progress_bar.progress_for_element_anchor")
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.progress_for_element_anchor.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.progress_for_element_anchor.desc")));
 
     }
 

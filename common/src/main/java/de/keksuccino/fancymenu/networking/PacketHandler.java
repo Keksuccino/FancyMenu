@@ -36,6 +36,11 @@ public class PacketHandler {
         FANCYMENU_CLIENTS.add(playerUUID);
     }
 
+    public static boolean isFancyMenuClient(@NotNull ServerPlayer player) {
+        Objects.requireNonNull(player);
+        return FANCYMENU_CLIENTS.contains(player.getUUID().toString());
+    }
+
     public static void sendHandshakeToClient(@NotNull ServerPlayer player) {
         sendToClient(player, new HandshakePacket());
     }
@@ -71,6 +76,16 @@ public class PacketHandler {
             }
         } else {
             LOGGER.error("[FANCYMENU] No codec found for packet: " + packet.getClass(), new NullPointerException("Codec returned for packet was NULL!"));
+        }
+    }
+
+    public static <T extends Packet> void sendToAllFancyMenuClients(@NotNull MinecraftServer server, @NotNull T packet) {
+        Objects.requireNonNull(server, "Server was NULL when broadcasting packet!");
+        Objects.requireNonNull(packet, "Packet was NULL when broadcasting!");
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (isFancyMenuClient(player)) {
+                sendToClient(player, packet);
+            }
         }
     }
 

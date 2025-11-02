@@ -47,6 +47,7 @@ public class SplashTextElement extends AbstractElement {
 
     public SplashTextElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override

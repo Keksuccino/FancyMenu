@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
@@ -24,14 +23,13 @@ import java.util.function.Supplier;
 
 public class PlayerEntityPoseScreen extends CellScreen {
 
-    protected static final int ENTITY_SCALE = 110;
-
     protected PlayerEntityElement element;
     protected LayoutEditorScreen editor;
     protected Runnable runOnClose;
 
     public String bodyXRot;
     public String bodyYRot;
+    public String bodyZRot;
     public String headXRot;
     public String headYRot;
     public String headZRot;
@@ -49,6 +47,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
     public String rightLegZRot;
     public boolean bodyXRotAdvancedMode;
     public boolean bodyYRotAdvancedMode;
+    public boolean bodyZRotAdvancedMode;
     public boolean headXRotAdvancedMode;
     public boolean headYRotAdvancedMode;
     public boolean headZRotAdvancedMode;
@@ -67,7 +66,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
     protected PlayerEntityPoseScreen(@NotNull PlayerEntityElement element, @NotNull LayoutEditorScreen editor, @NotNull Runnable runOnClose) {
 
-        super(Component.translatable("fancymenu.editor.elements.player_entity.edit_pose"));
+        super(Component.translatable("fancymenu.elements.player_entity.edit_pose"));
 
         this.element = element;
         this.editor = editor;
@@ -75,6 +74,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
         this.bodyXRot = element.bodyXRot;
         this.bodyYRot = element.bodyYRot;
+        this.bodyZRot = element.bodyZRot;
 
         this.headXRot = element.headXRot;
         this.headYRot = element.headYRot;
@@ -98,6 +98,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
         this.bodyXRotAdvancedMode = element.bodyXRotAdvancedMode;
         this.bodyYRotAdvancedMode = element.bodyYRotAdvancedMode;
+        this.bodyZRotAdvancedMode = element.bodyZRotAdvancedMode;
         this.headXRotAdvancedMode = element.headXRotAdvancedMode;
         this.headYRotAdvancedMode = element.headYRotAdvancedMode;
         this.headZRotAdvancedMode = element.headZRotAdvancedMode;
@@ -121,7 +122,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
         this.addSpacerCell(20);
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.body"));
+        this.addLabelCell(Component.translatable("fancymenu.elements.player_entity.pose.body"));
 
         this.addCell(new RotationCell("body_x_rot",
                 () -> this.bodyXRot,
@@ -135,7 +136,13 @@ public class PlayerEntityPoseScreen extends CellScreen {
                 () -> this.bodyYRotAdvancedMode,
                 aBoolean -> this.bodyYRotAdvancedMode = aBoolean));
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.head"));
+        this.addCell(new RotationCell("body_z_rot",
+                () -> this.bodyZRot,
+                s -> this.bodyZRot = s,
+                () -> this.bodyZRotAdvancedMode,
+                aBoolean -> this.bodyZRotAdvancedMode = aBoolean));
+
+        this.addLabelCell(Component.translatable("fancymenu.elements.player_entity.pose.head"));
 
         this.addCell(new RotationCell("head_x_rot",
                 () -> this.headXRot,
@@ -155,7 +162,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
                 () -> this.headZRotAdvancedMode,
                 aBoolean -> this.headZRotAdvancedMode = aBoolean));
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.left_arm"));
+        this.addLabelCell(Component.translatable("fancymenu.elements.player_entity.pose.left_arm"));
 
         this.addCell(new RotationCell("left_arm_x_rot",
                 () -> this.leftArmXRot,
@@ -175,7 +182,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
                 () -> this.leftArmZRotAdvancedMode,
                 aBoolean -> this.leftArmZRotAdvancedMode = aBoolean));
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.right_arm"));
+        this.addLabelCell(Component.translatable("fancymenu.elements.player_entity.pose.right_arm"));
 
         this.addCell(new RotationCell("right_arm_x_rot",
                 () -> this.rightArmXRot,
@@ -195,7 +202,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
                 () -> this.rightArmZRotAdvancedMode,
                 aBoolean -> this.rightArmZRotAdvancedMode = aBoolean));
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.left_leg"));
+        this.addLabelCell(Component.translatable("fancymenu.elements.player_entity.pose.left_leg"));
 
         this.addCell(new RotationCell("left_leg_x_rot",
                 () -> this.leftLegXRot,
@@ -215,7 +222,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
                 () -> this.leftLegZRotAdvancedMode,
                 aBoolean -> this.leftLegZRotAdvancedMode = aBoolean));
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.right_leg"));
+        this.addLabelCell(Component.translatable("fancymenu.elements.player_entity.pose.right_leg"));
 
         this.addCell(new RotationCell("right_leg_x_rot",
                 () -> this.rightLegXRot,
@@ -244,18 +251,22 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
         super.render(graphics, mouseX, mouseY, partial);
 
-        int entityX = this.width - 20 - (this.getRightSideWidgetWidth() / 2) - ((int)(this.element.getActiveEntityProperties().getDimensions().width() * ENTITY_SCALE) / 2);
-        int entityY = (int) this.scrollArea.getYWithBorder() + 30;
-        this.renderEntity(graphics, mouseX, mouseY, partial, entityX, entityY);
-
-        RenderingUtils.resetShaderColor(graphics);
+        this.renderEntity(graphics, mouseX, mouseY, partial);
 
     }
 
-    protected void renderEntity(GuiGraphics graphics, int mouseX, int mouseY, float partial, int posX, int posY) {
+    protected void renderEntity(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (this.cancelButton == null) return;
+
+        int entityWidth = 60;
+        int entityHeight = 140;
+        int posX = this.cancelButton.getX() + (this.cancelButton.getWidth() / 2) - (entityWidth / 2);
+        int posY = this.cancelButton.getY() - 20 - entityHeight;
 
         String cachedBodyXRot = this.element.bodyXRot;
         String cachedBodyYRot = this.element.bodyYRot;
+        String cachedBodyZRot = this.element.bodyZRot;
         String cachedHeadXRot = this.element.headXRot;
         String cachedHeadYRot = this.element.headYRot;
         String cachedHeadZRot = this.element.headZRot;
@@ -271,25 +282,55 @@ public class PlayerEntityPoseScreen extends CellScreen {
         String cachedRightLegXRot = this.element.rightLegXRot;
         String cachedRightLegYRot = this.element.rightLegYRot;
         String cachedRightLegZRot = this.element.rightLegZRot;
-        String cachedScale = this.element.scale;
+        boolean cachedBodyXRotAdvancedMode = this.element.bodyXRotAdvancedMode;
+        boolean cachedBodyYRotAdvancedMode = this.element.bodyYRotAdvancedMode;
+        boolean cachedBodyZRotAdvancedMode = this.element.bodyZRotAdvancedMode;
+        boolean cachedHeadXRotAdvancedMode = this.element.headXRotAdvancedMode;
+        boolean cachedHeadYRotAdvancedMode = this.element.headYRotAdvancedMode;
+        boolean cachedHeadZRotAdvancedMode = this.element.headZRotAdvancedMode;
+        boolean cachedLeftArmXRotAdvancedMode = this.element.leftArmXRotAdvancedMode;
+        boolean cachedLeftArmYRotAdvancedMode = this.element.leftArmYRotAdvancedMode;
+        boolean cachedLeftArmZRotAdvancedMode = this.element.leftArmZRotAdvancedMode;
+        boolean cachedRightArmXRotAdvancedMode = this.element.rightArmXRotAdvancedMode;
+        boolean cachedRightArmYRotAdvancedMode = this.element.rightArmYRotAdvancedMode;
+        boolean cachedRightArmZRotAdvancedMode = this.element.rightArmZRotAdvancedMode;
+        boolean cachedLeftLegXRotAdvancedMode = this.element.leftLegXRotAdvancedMode;
+        boolean cachedLeftLegYRotAdvancedMode = this.element.leftLegYRotAdvancedMode;
+        boolean cachedLeftLegZRotAdvancedMode = this.element.leftLegZRotAdvancedMode;
+        boolean cachedRightLegXRotAdvancedMode = this.element.rightLegXRotAdvancedMode;
+        boolean cachedRightLegYRotAdvancedMode = this.element.rightLegYRotAdvancedMode;
+        boolean cachedRightLegZRotAdvancedMode = this.element.rightLegZRotAdvancedMode;
         ElementAnchorPoint cachedOrientation = this.element.anchorPoint;
         String cachedAdvancedX = this.element.advancedX;
         String cachedAdvancedY = this.element.advancedY;
+        String cachedAdvancedW = this.element.advancedWidth;
+        String cachedAdvancedH = this.element.advancedHeight;
         int cachedPosOffsetX = this.element.posOffsetX;
         int cachedPosOffsetY = this.element.posOffsetY;
+        int cachedBaseWidth = this.element.baseWidth;
+        int cachedBaseHeight = this.element.baseHeight;
+        boolean cachedStayOnScreen = this.element.stayOnScreen;
+        boolean cachedStickyAnchor = this.element.stickyAnchor;
 
         this.applyPose();
-        this.element.scale = "" + ENTITY_SCALE;
+        this.applyAdvancedMode();
         this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
         this.element.advancedX = null;
         this.element.advancedY = null;
+        this.element.advancedWidth = null;
+        this.element.advancedHeight = null;
         this.element.posOffsetX = posX;
         this.element.posOffsetY = posY;
+        this.element.baseWidth = entityWidth;
+        this.element.baseHeight = entityHeight;
+        this.element.stayOnScreen = false;
+        this.element.stickyAnchor = false;
 
         this.element.render(graphics, mouseX, mouseY, partial);
 
         this.element.bodyXRot = cachedBodyXRot;
         this.element.bodyYRot = cachedBodyYRot;
+        this.element.bodyZRot = cachedBodyZRot;
         this.element.headXRot = cachedHeadXRot;
         this.element.headYRot = cachedHeadYRot;
         this.element.headZRot = cachedHeadZRot;
@@ -305,18 +346,42 @@ public class PlayerEntityPoseScreen extends CellScreen {
         this.element.rightLegXRot = cachedRightLegXRot;
         this.element.rightLegYRot = cachedRightLegYRot;
         this.element.rightLegZRot = cachedRightLegZRot;
-        this.element.scale = cachedScale;
+        this.element.bodyXRotAdvancedMode = cachedBodyXRotAdvancedMode;
+        this.element.bodyYRotAdvancedMode = cachedBodyYRotAdvancedMode;
+        this.element.bodyZRotAdvancedMode = cachedBodyZRotAdvancedMode;
+        this.element.headXRotAdvancedMode = cachedHeadXRotAdvancedMode;
+        this.element.headYRotAdvancedMode = cachedHeadYRotAdvancedMode;
+        this.element.headZRotAdvancedMode = cachedHeadZRotAdvancedMode;
+        this.element.leftArmXRotAdvancedMode = cachedLeftArmXRotAdvancedMode;
+        this.element.leftArmYRotAdvancedMode = cachedLeftArmYRotAdvancedMode;
+        this.element.leftArmZRotAdvancedMode = cachedLeftArmZRotAdvancedMode;
+        this.element.rightArmXRotAdvancedMode = cachedRightArmXRotAdvancedMode;
+        this.element.rightArmYRotAdvancedMode = cachedRightArmYRotAdvancedMode;
+        this.element.rightArmZRotAdvancedMode = cachedRightArmZRotAdvancedMode;
+        this.element.leftLegXRotAdvancedMode = cachedLeftLegXRotAdvancedMode;
+        this.element.leftLegYRotAdvancedMode = cachedLeftLegYRotAdvancedMode;
+        this.element.leftLegZRotAdvancedMode = cachedLeftLegZRotAdvancedMode;
+        this.element.rightLegXRotAdvancedMode = cachedRightLegXRotAdvancedMode;
+        this.element.rightLegYRotAdvancedMode = cachedRightLegYRotAdvancedMode;
+        this.element.rightLegZRotAdvancedMode = cachedRightLegZRotAdvancedMode;
         this.element.anchorPoint = cachedOrientation;
         this.element.advancedX = cachedAdvancedX;
         this.element.advancedY = cachedAdvancedY;
+        this.element.advancedWidth = cachedAdvancedW;
+        this.element.advancedHeight = cachedAdvancedH;
         this.element.posOffsetX = cachedPosOffsetX;
         this.element.posOffsetY = cachedPosOffsetY;
+        this.element.baseWidth = cachedBaseWidth;
+        this.element.baseHeight = cachedBaseHeight;
+        this.element.stayOnScreen = cachedStayOnScreen;
+        this.element.stickyAnchor = cachedStickyAnchor;
 
     }
 
     protected void applyPose() {
         this.element.bodyXRot = this.bodyXRot;
         this.element.bodyYRot = this.bodyYRot;
+        this.element.bodyZRot = this.bodyZRot;
         this.element.headXRot = this.headXRot;
         this.element.headYRot = this.headYRot;
         this.element.headZRot = this.headZRot;
@@ -337,6 +402,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
     protected void applyAdvancedMode() {
         this.element.bodyXRotAdvancedMode = this.bodyXRotAdvancedMode;
         this.element.bodyYRotAdvancedMode = this.bodyYRotAdvancedMode;
+        this.element.bodyZRotAdvancedMode = this.bodyZRotAdvancedMode;
         this.element.headXRotAdvancedMode = this.headXRotAdvancedMode;
         this.element.headYRotAdvancedMode = this.headYRotAdvancedMode;
         this.element.headZRotAdvancedMode = this.headZRotAdvancedMode;
@@ -386,7 +452,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
         public RotationCell(@NotNull String localizationKeySuffix, @NotNull Supplier<String> rotationValueGetter, @NotNull Consumer<String> rotationValueSetter, @NotNull Supplier<Boolean> advancedModeGetter, @NotNull Consumer<Boolean> advancedModeSetter) {
 
-            this.toggleModeButton = new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.editor.elements.player_entity.pose.advanced", advancedModeGetter.get()), (value, button) -> {
+            this.toggleModeButton = new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.elements.player_entity.pose.advanced", advancedModeGetter.get()), (value, button) -> {
                 advancedModeSetter.accept(value.getAsBoolean());
                 if (this.activeWidget != null) this.children().remove(this.activeWidget);
                 this.activeWidget = value.getAsBoolean() ? this.rotationStringButton : this.rotationSlider;
@@ -394,8 +460,8 @@ public class PlayerEntityPoseScreen extends CellScreen {
             });
             UIBase.applyDefaultWidgetSkinTo(this.toggleModeButton);
 
-            this.rotationStringButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.editor.elements.player_entity.pose.advanced." + localizationKeySuffix), button -> {
-                TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.editor.elements.player_entity.pose.advanced." + localizationKeySuffix), null, call -> {
+            this.rotationStringButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.elements.player_entity.pose.advanced." + localizationKeySuffix), button -> {
+                TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.elements.player_entity.pose.advanced." + localizationKeySuffix), null, call -> {
                     if (call != null) {
                         rotationValueSetter.accept(call);
                     }
@@ -411,7 +477,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
             }) {
                 @Override
                 public String getSliderMessageWithoutPrefixSuffix() {
-                    return I18n.get("fancymenu.editor.elements.player_entity.pose." + localizationKeySuffix, super.getSliderMessageWithoutPrefixSuffix());
+                    return I18n.get("fancymenu.elements.player_entity.pose." + localizationKeySuffix, super.getSliderMessageWithoutPrefixSuffix());
                 }
             };
             UIBase.applyDefaultWidgetSkinTo(this.rotationSlider);

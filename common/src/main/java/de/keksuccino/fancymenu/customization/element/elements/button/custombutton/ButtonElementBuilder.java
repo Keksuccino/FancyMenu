@@ -195,11 +195,11 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             return b.getWidget().getMessage();
         }
         if (element instanceof VanillaWidgetElement b) {
-            if (b.getWidget() instanceof AbstractButton) return Component.translatable("fancymenu.editor.elements.vanilla_widget.button");
-            if (b.getWidget() instanceof CustomizableSlider) return Component.translatable("fancymenu.editor.elements.vanilla_widget.slider");
-            return Component.translatable("fancymenu.editor.elements.vanilla_widget.generic");
+            if (b.getWidget() instanceof AbstractButton) return Component.translatable("fancymenu.elements.vanilla_widget.button");
+            if (b.getWidget() instanceof CustomizableSlider) return Component.translatable("fancymenu.elements.vanilla_widget.slider");
+            return Component.translatable("fancymenu.elements.vanilla_widget.generic");
         }
-        return Component.translatable("fancymenu.editor.add.button");
+        return Component.translatable("fancymenu.elements.button");
     }
 
     @Override

@@ -92,7 +92,11 @@ dependencies {
     }
     implementation "maven.modrinth:konkrete:1.9.9-1.21-forge"
     implementation "maven.modrinth:melody:1.0.10-1.21-forge"
-    implementation "com.cinemamod:mcef:2.1.6-1.21.1"
+    //implementation "it.crystalnest:fancy-entity-renderer-forge:$fer_mc_version-$fer_version"
+    implementation "maven.modrinth:fancy-entity-renderer:0.4.0"
+    implementation("com.cinemamod:mcef:2.1.6-1.21.1") {
+        exclude group: 'net.fabricmc', module: 'fabric-loader'
+    }
     compileOnly project(":common")
 }
 
