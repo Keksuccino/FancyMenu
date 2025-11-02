@@ -46,12 +46,12 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
 
         if (this.getElement().getWidget() != null) {
 
-            this.rightClickMenu.addClickableEntryAfter("copy_id", "copy_vanilla_widget_locator", Component.translatable("fancymenu.helper.editor.items.vanilla_button.copy_locator"), (menu, entry) ->
+            this.rightClickMenu.addClickableEntryAfter("copy_id", "copy_vanilla_widget_locator", Component.translatable("fancymenu.elements.vanilla_button.copy_locator"), (menu, entry) ->
                     {
                         Minecraft.getInstance().keyboardHandler.setClipboard(((VanillaWidgetElement)this.element).widgetMeta.getLocator());
                         menu.closeMenu();
                     })
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc")))
+                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.vanilla_button.copy_locator.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("notes"));
 
         }
@@ -74,7 +74,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
                             consumes -> consumes.getElement().sliderBackgroundTextureNormal,
                             (buttonEditorElement, iTextureResourceSupplier) -> {
                                 buttonEditorElement.getElement().sliderBackgroundTextureNormal = iTextureResourceSupplier;
-                            }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.normal"), true, null, true, true, true);
+                            }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.normal"), true, null, true, true, true);
 
                     this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "highlighted_slider_background_texture",
                                     VanillaWidgetEditorElement.class,
@@ -82,8 +82,8 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
                                     consumes -> consumes.getElement().sliderBackgroundTextureHighlighted,
                                     (buttonEditorElement, iTextureResourceSupplier) -> {
                                         buttonEditorElement.getElement().sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
-                                    }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
-                            .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted.desc")));
+                                    }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
+                            .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")));
 
                 }
 

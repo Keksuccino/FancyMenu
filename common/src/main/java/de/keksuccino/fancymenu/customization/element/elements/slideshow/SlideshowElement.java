@@ -30,6 +30,7 @@ public class SlideshowElement extends AbstractElement {
 
     public SlideshowElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override

@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
@@ -56,6 +57,7 @@ public class ItemElement extends AbstractElement {
 
     public ItemElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.supportsTilting = false;
     }
 
     /**
@@ -137,7 +139,7 @@ public class ItemElement extends AbstractElement {
 
         // NEW: Use the built-in deferred tooltip system. It's cleaner and safer.
         if (!isEditor() && this.showTooltip && UIBase.isXYInArea(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight())) {
-            graphics.setTooltipForNextFrame(this.font, itemStack, mouseX, mouseY);
+            RenderingUtils.addDeferredScreenRenderingTask((graphics1, mouseX1, mouseY1, partial) -> this.renderItemTooltip(graphics1, mouseX1, mouseY1, itemStack));
         }
     }
 

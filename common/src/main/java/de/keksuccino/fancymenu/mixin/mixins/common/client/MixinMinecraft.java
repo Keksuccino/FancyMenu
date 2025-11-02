@@ -6,6 +6,8 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.listener.listeners.helpers.WorldSessionTracker;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
@@ -16,17 +18,31 @@ import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import java.net.SocketAddress;
+import java.nio.file.Path;
+import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Overlay;
+import net.minecraft.client.gui.screens.ReceivingLevelScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.Connection;
+import net.minecraft.server.WorldStem;
+import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.world.level.storage.LevelResource;
+import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -46,8 +62,40 @@ public class MixinMinecraft {
 	@Unique private static boolean reloadListenerRegisteredFancyMenu = false;
 	@Unique private boolean lateClientInitDoneFancyMenu = false;
 	@Unique private Screen lastScreen_FancyMenu = null;
+	@Unique private static final String UNKNOWN_SERVER_IP_FANCYMENU = "ERROR";
+	@Unique private boolean hasActiveServerConnection_FancyMenu;
+	@Unique private boolean pendingServerJoinEvent_FancyMenu;
+	@Unique @Nullable private String lastServerIp_FancyMenu;
+	@Unique private boolean quitListenerFired_FancyMenu;
 
 	@Shadow @Nullable public Screen screen;
+	@Shadow @Nullable public ClientLevel level;
+	@Shadow @Nullable public LocalPlayer player;
+
+	@Inject(method = "stop", at = @At("HEAD"))
+	private void before_stop_FancyMenu(CallbackInfo info) {
+		if (!this.quitListenerFired_FancyMenu) {
+			this.quitListenerFired_FancyMenu = true;
+			Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
+		}
+	}
+
+	@Inject(method = "doWorldLoad(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/packs/repository/PackRepository;Lnet/minecraft/server/WorldStem;Z)V", at = @At("HEAD"))
+	private void before_doWorldLoad_FancyMenu(LevelStorageAccess levelStorage, PackRepository packRepository, WorldStem worldStem, boolean newWorld, CallbackInfo info) {
+		try {
+			if (levelStorage != null && worldStem != null) {
+				Path savePath = levelStorage.getLevelPath(LevelResource.ROOT).toAbsolutePath();
+				String iconPath = levelStorage.getIconFile().map(path -> path.toAbsolutePath().toString()).orElse(null);
+				String worldName = worldStem.worldData().getLevelName();
+				WorldSessionTracker.prepareSession(worldName, savePath.toString(), iconPath, newWorld);
+			} else {
+				WorldSessionTracker.clearSession();
+			}
+		} catch (Exception ex) {
+			LOGGER_FANCYMENU.error("[FANCYMENU] Failed to prepare world session data!", ex);
+			WorldSessionTracker.clearSession();
+		}
+	}
 
 	@Inject(method = "setOverlay", at = @At("HEAD"))
 	private void beforeSetOverlayFancyMenu(Overlay overlay, CallbackInfo info) {
@@ -59,6 +107,10 @@ public class MixinMinecraft {
 
 	@Inject(method = "tick", at = @At("HEAD"))
 	private void beforeGameTickFancyMenu(CallbackInfo info) {
+
+		if (this.pendingServerJoinEvent_FancyMenu && this.player != null) {
+			this.fireServerJoined_FancyMenu();
+		}
 
 		if (MCEFUtil.isMCEFLoaded()) BrowserHandler.tick();
 
@@ -86,7 +138,30 @@ public class MixinMinecraft {
 		}
 	}
 
-	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;tick()V"))
+	@Inject(method = "setLevel", at = @At("TAIL"))
+	private void afterSetLevelFancyMenu(ClientLevel clientLevel, ReceivingLevelScreen.Reason reason, CallbackInfo info) {
+		Minecraft self = (Minecraft)(Object)this;
+
+		if (clientLevel == null) {
+			return;
+		}
+		if (self.isLocalServer()) {
+			return;
+		}
+		if (this.hasActiveServerConnection_FancyMenu || this.pendingServerJoinEvent_FancyMenu) {
+			return;
+		}
+
+		String serverIp = this.fetchCurrentServerIp_FancyMenu();
+		this.lastServerIp_FancyMenu = serverIp;
+
+		if (this.player != null) {
+			this.fireServerJoined_FancyMenu();
+		} else {
+			this.pendingServerJoinEvent_FancyMenu = true;
+		}
+	}
+	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
 	private void beforeScreenTickFancyMenu(CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new ScreenTickEvent.Pre(this.screen));
@@ -97,7 +172,7 @@ public class MixinMinecraft {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new ScreenTickEvent.Post(this.screen));
 	}
-	
+
 	@Inject(at = @At(value = "HEAD"), method = "createTitle", cancellable = true)
 	private void changeWindowTitleFancyMenu(CallbackInfoReturnable<String> info) {
 		String title = WindowHandler.getCustomWindowTitle();
@@ -109,13 +184,23 @@ public class MixinMinecraft {
 	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
 	private void before_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
 
+		// This is just for giving FM the correct screen identifiers for all possible scenarios
+		if ((screen == null) && (this.level == null)) {
+			screen = new TitleScreen();
+		} else if ((screen == null) && ((this.player != null) && this.player.isDeadOrDying())) {
+			if (this.player.shouldShowDeathScreen()) {
+				screen = new DeathScreen(null, this.level.getLevelData().isHardcore());
+			}
+		}
+		final Screen finalScreen = screen;
+
 		if ((Minecraft.getInstance().screen instanceof LayoutEditorScreen e) && !(screen instanceof LayoutEditorScreen)) {
 			e.layout.menuBackgrounds.forEach(menuBackground -> {
-				menuBackground.onCloseScreen(e, screen);
+				menuBackground.onCloseScreen(e, finalScreen);
 				menuBackground.onDisableOrRemove();
 			});
 			e.getAllElements().forEach(element -> {
-				element.element.onCloseScreen(e, screen);
+				element.element.onCloseScreen(e, finalScreen);
 				element.element.onDestroyElement();
 			});
 		}
@@ -140,6 +225,15 @@ public class MixinMinecraft {
 		if (overrideWith != null) {
 			info.cancel();
 			Minecraft.getInstance().setScreen(overrideWith);
+			return;
+		}
+
+		if ((screen != null) && (screen != this.screen)) {
+			Screen cachedCurrent = this.screen;
+			Listeners.ON_OPEN_SCREEN.onScreenOpened(screen);
+			if (cachedCurrent != this.screen) {
+				info.cancel();
+			}
 		}
 
 	}
@@ -164,7 +258,23 @@ public class MixinMinecraft {
 
 	}
 
-	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;releaseAll()V", shift = At.Shift.AFTER))
+	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At("HEAD"))
+	private void beforeDisconnectFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, CallbackInfo info) {
+		this.fireServerLeft_FancyMenu();
+	}
+
+	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;level:Lnet/minecraft/client/multiplayer/ClientLevel;", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.BEFORE))
+	private void beforeLevelClearedWorldLeftFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, CallbackInfo info) {
+		WorldSessionTracker.handleWorldLeft((Minecraft)(Object)this);
+	}
+	@Inject(method = "clearClientLevel", at = @At("HEAD"))
+	private void beforeClearClientLevelFancyMenu(Screen nextScreen, CallbackInfo info) {
+		WorldSessionTracker.captureSnapshot((Minecraft) (Object) this);
+		this.fireServerLeft_FancyMenu();
+		WorldSessionTracker.handleWorldLeft((Minecraft) (Object) this);
+	}
+
+	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V", shift = At.Shift.AFTER))
 	private void beforeInitCurrentScreenFancyMenu(Screen screen, CallbackInfo info) {
 		if (screen != null) {
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(screen, InitOrResizeScreenEvent.InitializationPhase.INIT));
@@ -188,13 +298,22 @@ public class MixinMinecraft {
 		EventHandler.INSTANCE.postEvent(new CloseScreenEvent(this.screen, screen));
 	}
 
+	/** @reason Fire FancyMenu close screen listeners after the screen was removed. */
+	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;removed()V", shift = At.Shift.AFTER))
+	private void afterScreenRemovedFancyMenu(Screen screen, CallbackInfo info) {
+		if (this.lastScreen_FancyMenu != null) {
+			Listeners.ON_CLOSE_SCREEN.onScreenClosed(this.lastScreen_FancyMenu);
+		}
+	}
+
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;added()V"))
 	private void beforeScreenAddedFancyMenu(Screen screen, CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.screen));
 	}
 
-	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(I)V", shift = At.Shift.AFTER))
+
+	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(D)V", shift = At.Shift.AFTER))
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {
 		if (this.screen != null) {
 			RenderingUtils.resetGuiScale();
@@ -233,6 +352,73 @@ public class MixinMinecraft {
 				});
 			}
 		}
+	}
+
+	@Unique
+	private void fireServerLeft_FancyMenu() {
+		if (!this.hasActiveServerConnection_FancyMenu) {
+			this.pendingServerJoinEvent_FancyMenu = false;
+			this.lastServerIp_FancyMenu = null;
+			return;
+		}
+
+		String serverIp = (this.lastServerIp_FancyMenu != null && !this.lastServerIp_FancyMenu.isBlank())
+				? this.lastServerIp_FancyMenu
+				: UNKNOWN_SERVER_IP_FANCYMENU;
+		Listeners.ON_SERVER_LEFT.onServerLeft(serverIp);
+		this.hasActiveServerConnection_FancyMenu = false;
+		this.pendingServerJoinEvent_FancyMenu = false;
+		this.lastServerIp_FancyMenu = null;
+	}
+
+	@Unique
+	private void fireServerJoined_FancyMenu() {
+		if (this.hasActiveServerConnection_FancyMenu) {
+			return;
+		}
+		if (this.lastServerIp_FancyMenu == null || this.lastServerIp_FancyMenu.isBlank() || UNKNOWN_SERVER_IP_FANCYMENU.equals(this.lastServerIp_FancyMenu)) {
+			this.lastServerIp_FancyMenu = this.fetchCurrentServerIp_FancyMenu();
+		}
+
+		String serverIp = (this.lastServerIp_FancyMenu != null && !this.lastServerIp_FancyMenu.isBlank())
+				? this.lastServerIp_FancyMenu
+				: UNKNOWN_SERVER_IP_FANCYMENU;
+		this.pendingServerJoinEvent_FancyMenu = false;
+		this.hasActiveServerConnection_FancyMenu = true;
+		Listeners.ON_SERVER_JOINED.onServerJoined(serverIp);
+	}
+
+	@Unique
+	private String fetchCurrentServerIp_FancyMenu() {
+		Minecraft self = (Minecraft)(Object)this;
+		ServerData serverData = self.getCurrentServer();
+		if (serverData != null && serverData.ip != null && !serverData.ip.isBlank()) {
+			return serverData.ip;
+		}
+
+		ClientPacketListener listener = self.getConnection();
+		if (listener != null) {
+			Connection connection = listener.getConnection();
+			if (connection != null) {
+				SocketAddress address = connection.getRemoteAddress();
+				if (address != null) {
+					String resolved = address.toString();
+					if (resolved != null) {
+						resolved = resolved.trim();
+						if (!resolved.isEmpty()) {
+							if (resolved.startsWith("/")) {
+								resolved = resolved.substring(1);
+							}
+							if (!resolved.isEmpty()) {
+								return resolved;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return UNKNOWN_SERVER_IP_FANCYMENU;
 	}
 
 }

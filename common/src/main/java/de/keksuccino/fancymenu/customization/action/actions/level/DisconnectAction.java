@@ -23,6 +23,11 @@ public class DisconnectAction extends Action {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return true;
     }
@@ -63,17 +68,17 @@ public class DisconnectAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.disconnect");
+        return Component.translatable("fancymenu.actions.disconnect");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.disconnect.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.disconnect.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.disconnect.desc.value");
+        return Component.translatable("fancymenu.actions.disconnect.desc.value");
     }
 
     @Override

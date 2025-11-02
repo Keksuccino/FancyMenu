@@ -37,7 +37,7 @@ public class UnixTimestampPlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.realtime");
+        return I18n.get("fancymenu.requirements.categories.realtime");
     }
 
     @Override

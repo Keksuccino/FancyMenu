@@ -115,6 +115,14 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
             y = -((h - getScreenHeight()) / 2) + (int)parallaxOffset[1];
         }
 
+        // Always draw black background
+        graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorIntWithAlpha(this.opacity));
+
+        if (!this.ensureVideoManagerReady()) {
+            RenderSystem.disableBlend();
+            return;
+        }
+
         if (!this.initialized) {
             this.initialized = true;
             playerId = videoManager.createPlayer(x, y, w, h);
@@ -187,8 +195,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         }
         this.lastPausedState = pausedState;
 
-        // Always draw black background
-        graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorIntWithAlpha(this.opacity));
+        RenderSystem.enableBlend();
 
         this.videoPlayer.setOpacity(this.opacity);
 
@@ -350,6 +357,14 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     @Override
     public float getPlayTime() {
         return this.cachedPlayTime.get();
+    }
+
+    protected boolean ensureVideoManagerReady() {
+        if (this.videoManager != null) return true;
+        if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) return false;
+        if (!MCEFVideoManager.initialized) return false;
+        this.videoManager = MCEFVideoManager.getInstance();
+        return (this.videoManager != null);
     }
 
 }

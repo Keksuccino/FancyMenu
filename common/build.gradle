@@ -1,17 +1,13 @@
+
 plugins {
-    id 'idea'
     id 'java'
+    id 'idea'
     id 'maven-publish'
-    id 'org.spongepowered.gradle.vanilla' version '0.2.1-SNAPSHOT'
+    id "fabric-loom" version "$fabric_loom_version"
 }
+
 base {
     archivesName = "${mod_id}"
-}
-minecraft {
-    version(minecraft_version)
-    if (file("src/main/resources/${mod_id}.accesswidener").exists()) {
-        accessWideners(file("src/main/resources/${mod_id}.accesswidener"))
-    }
 }
 
 repositories {
@@ -21,18 +17,30 @@ repositories {
 }
 
 dependencies {
-    compileOnly(annotationProcessor('io.github.llamalad7:mixinextras-common:0.4.1'))
-    compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
-    //compileOnly fileTree('libs') { include '*.jar' }
-    compileOnly 'com.github.Keksuccino:japng:0.5.3'
-    compileOnly 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7'
-    compileOnly "maven.modrinth:melody:1.0.12-1.21.6-forge"
-    compileOnly "maven.modrinth:konkrete:1.9.12-1.21.6-forge"
-    compileOnly 'com.cinemamod:mcef:2.1.6-1.21.4'
-    //implementation "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
-    compileOnly "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${parchment_mc_version}:${parchment_version}@zip")
+    }
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.7'
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
+    compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
+    compileOnly "com.github.Keksuccino:japng:0.5.3"
+    compileOnly "com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7"
+    modCompileOnly "maven.modrinth:melody:1.0.10-1.21-fabric"
+    modCompileOnly "maven.modrinth:konkrete:1.9.9-1.21-fabric"
+    modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
+    implementation "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
+}
+
+loom {
+    if (file("src/main/resources/${mod_id}.accesswidener").exists()) {
+        accessWidenerPath.set(file("src/main/resources/${mod_id}.accesswidener"))
+    }
+    mixin {
+        defaultRefmapName.set("${mod_id}.refmap.json")
+    }
 }
 
 publishing {

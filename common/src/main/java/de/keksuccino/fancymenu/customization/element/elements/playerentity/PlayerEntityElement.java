@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.CapeResourceSupplier;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.SkinResourceSupplier;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.CapeResourceSupplier;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
@@ -399,7 +399,7 @@ public class PlayerEntityElement extends AbstractElement {
                     this.lastFinalKey = keyFinal;
                     this.lastEnchanted = enchanted;
 
-                    Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(keyFinal));
+                    Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(keyFinal));
                     this.cachedStack = new ItemStack(item);
                     this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
 

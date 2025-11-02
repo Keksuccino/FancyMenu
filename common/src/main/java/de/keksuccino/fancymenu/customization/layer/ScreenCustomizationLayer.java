@@ -35,8 +35,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.window.WindowHandler;
-import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -55,7 +53,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings({"unused", "deprecation", "removal"})
+@SuppressWarnings({"unused", "deprecation"})
 public class ScreenCustomizationLayer implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -431,7 +429,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@EventListener
 	public void drawToBackground(RenderedScreenBackgroundEvent e) {
-		this.renderBackground(e.getGraphics(), MouseInput.getMouseX(), MouseInput.getMouseY(), RenderingUtils.getPartialTick(), e.getScreen());
+		this.renderBackground(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial(), e.getScreen());
 	}
 
 	@EventListener

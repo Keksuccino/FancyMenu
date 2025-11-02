@@ -40,17 +40,17 @@ public class AbsolutePathPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.placeholder.absolute_path");
+        return I18n.get("fancymenu.placeholders.absolute_path");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.placeholder.absolute_path.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.absolute_path.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");
+        return I18n.get("fancymenu.requirements.categories.other");
     }
 
     @Override

@@ -21,6 +21,11 @@ public class WorldDifficultyPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
 
         try {

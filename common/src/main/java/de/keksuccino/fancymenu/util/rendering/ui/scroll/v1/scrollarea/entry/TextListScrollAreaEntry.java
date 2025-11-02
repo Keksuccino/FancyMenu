@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -34,7 +34,7 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
 
         renderListingDot(graphics, this.getX() + 5, centerY - 2, this.listDotColor);
 
-        graphics.drawString(this.font, this.text, (this.getX() + 5 + 4 + 3), (centerY - (this.font.lineHeight / 2)), -1, false);
+        graphics.drawString(this.font, this.text, (this.getX() + 5 + 4 + 3), (centerY - (this.font.lineHeight / 2)), UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
     }
 

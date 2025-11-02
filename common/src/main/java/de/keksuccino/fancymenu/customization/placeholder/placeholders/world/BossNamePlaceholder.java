@@ -24,6 +24,11 @@ public class BossNamePlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         LocalPlayer player = Minecraft.getInstance().player;
         ClientLevel level = Minecraft.getInstance().level;
@@ -38,7 +43,7 @@ public class BossNamePlaceholder extends Placeholder {
                         if (asJson) {
                             return ComponentSerialization.Serializer.toJson(m.getValue().getName(), level.registryAccess());
                         } else {
-                            return TextFormattingUtils.textComponentToString(m.getValue().getName());
+                            return TextFormattingUtils.convertComponentToString(m.getValue().getName());
                         }
                     }
                     i++;

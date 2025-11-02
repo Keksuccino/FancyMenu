@@ -10,10 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.Objects;
 
-@SuppressWarnings("all")
 public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityElement, PlayerEntityEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -233,12 +231,12 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.helper.editor.items.playerentity");
+        return Component.translatable("fancymenu.elements.player_entity");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.desc");
     }
 
 }

@@ -54,6 +54,9 @@ public class TooltipElement extends AbstractElement {
 
     public TooltipElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+
+        this.allowDepthTestManipulation = true;
+        this.supportsTilting = false;
         
         // Configure markdown renderer for tooltip style
         this.markdownRenderer.setAutoLineBreakingEnabled(true);
@@ -71,17 +74,20 @@ public class TooltipElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (RenderingUtils.isTooltipRenderingBlocked()) return;
+
         if (isEditor()) {
-            this._render(graphics, mouseX, mouseY, partial);
+            super.renderInternal(graphics, mouseX, mouseY, partial);
         } else {
-            ScreenRenderUtils.postPostRenderTask((graphics1, mouseX1, mouseY1, partial1) -> {
-                this._render(graphics, mouseX, mouseY, partial);
-            });
+            RenderingUtils.addDeferredScreenRenderingTask(super::renderInternal);
         }
+
     }
 
-    protected void _render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -143,6 +149,8 @@ public class TooltipElement extends AbstractElement {
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to render Tooltip element!", e);
         }
+
+        RenderingUtils.resetShaderColor(graphics);
 
     }
     
@@ -260,7 +268,7 @@ public class TooltipElement extends AbstractElement {
 
             if (linesRaw.isEmpty()) {
                 if (isEditor()) {
-                    linesRaw.add(I18n.get("fancymenu.customization.items.text.status.unable_to_load"));
+                    linesRaw.add(I18n.get("fancymenu.elements.text.status.unable_to_load"));
                 } else {
                     linesRaw.add("");
                 }

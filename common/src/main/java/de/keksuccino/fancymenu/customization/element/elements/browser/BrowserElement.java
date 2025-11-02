@@ -9,6 +9,8 @@ import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -44,6 +46,7 @@ public class BrowserElement extends AbstractElement {
 
     public BrowserElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override
@@ -63,6 +66,8 @@ public class BrowserElement extends AbstractElement {
             if (!bothCustomGuis && (closedScreen.getClass() == newScreen.getClass())) return;
         }
         if (this.browser != null) BrowserHandler.remove(this.getInstanceIdentifier(), true);
+        // Reset cursor in case the browser changed it
+        CursorHandler.setClientTickCursor(CursorHandler.CURSOR_NORMAL);
     }
 
     @Override
@@ -84,6 +89,8 @@ public class BrowserElement extends AbstractElement {
             if (this.browser != null) {
 
                 BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+
+                boolean mouseInside = UIBase.isXYInArea(mouseX, mouseY, x, y, w, h);
 
                 if (!this.browser.isHideVideoControls() && this.hideVideoControls) this.browser.setHideVideoControls(true);
                 if (this.browser.isHideVideoControls() && !this.hideVideoControls) this.browser.setHideVideoControls(false);
@@ -120,7 +127,7 @@ public class BrowserElement extends AbstractElement {
 
                 //Render warning when trying to click browser in editor
                 if (isEditor()) {
-                    if (MouseInput.isLeftMouseDown() && this.browser.isMouseOver(mouseX, mouseY)) {
+                    if (MouseInput.isLeftMouseDown() && mouseInside) {
                         this.lastLeftClickTime = System.currentTimeMillis();
                     }
                     if ((this.lastLeftClickTime + 5000) > System.currentTimeMillis()) {

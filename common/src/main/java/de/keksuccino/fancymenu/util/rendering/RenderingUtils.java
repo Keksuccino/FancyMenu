@@ -10,8 +10,8 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScissorStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +21,9 @@ import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class RenderingUtils {
 
@@ -30,16 +33,12 @@ public class RenderingUtils {
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
 
-    /**
-     * Renders a "missing" texture.
-     * This is a 2x2 pattern of magenta and black squares.
-     *
-     * @param graphics The graphics instance to render to.
-     * @param x Top-left X coordinate of the area to render to.
-     * @param y Top-left Y coordinate of the area to render to.
-     * @param width Width of the rendered area.
-     * @param height Height of the rendered area.
-     */
+    private static final List<DeferredScreenRenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
+    private static boolean lockDepthTest = false;
+    private static boolean blurBlocked = false;
+    private static boolean tooltipRenderingBlocked = false;
+    private static int overrideBackgroundBlurRadius = -1000;
+
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
         int partH = height / 2;
@@ -51,6 +50,61 @@ public class RenderingUtils {
         graphics.fill(x, y + partH, x + partW, y + height, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
         //Bottom-right
         graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
+    }
+
+    public static void setOverrideBackgroundBlurRadius(int radius) {
+        overrideBackgroundBlurRadius = radius;
+    }
+
+    public static void resetOverrideBackgroundBlurRadius() {
+        overrideBackgroundBlurRadius = -1000;
+    }
+
+    public static boolean shouldOverrideBackgroundBlurRadius() {
+        return overrideBackgroundBlurRadius != -1000;
+    }
+
+    public static int getOverrideBackgroundBlurRadius() {
+        return overrideBackgroundBlurRadius;
+    }
+
+    public static void setDepthTestLocked(boolean locked) {
+        lockDepthTest = locked;
+    }
+
+    public static boolean isDepthTestLocked() {
+        return lockDepthTest;
+    }
+
+    public static void setMenuBlurringBlocked(boolean blocked) {
+        blurBlocked = blocked;
+    }
+
+    public static boolean isMenuBlurringBlocked() {
+        return blurBlocked;
+    }
+
+    public static void setTooltipRenderingBlocked(boolean blocked) {
+        tooltipRenderingBlocked = blocked;
+    }
+
+    public static boolean isTooltipRenderingBlocked() {
+        return tooltipRenderingBlocked;
+    }
+
+    public static void addDeferredScreenRenderingTask(@NotNull DeferredScreenRenderingTask task) {
+        DEFERRED_SCREEN_RENDERING_TASKS.add(task);
+    }
+
+    @NotNull
+    public static List<DeferredScreenRenderingTask> getDeferredScreenRenderingTasks() {
+        return new ArrayList<>(DEFERRED_SCREEN_RENDERING_TASKS);
+    }
+
+    public static void executeAndClearDeferredScreenRenderingTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        List<DeferredScreenRenderingTask> tasks = getDeferredScreenRenderingTasks();
+        DEFERRED_SCREEN_RENDERING_TASKS.clear();
+        tasks.forEach(task -> task.render(graphics, mouseX, mouseY, partial));
     }
 
     /**
@@ -293,7 +347,6 @@ public class RenderingUtils {
 
     }
 
-
     public static float getPartialTick() {
         return Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
     }
@@ -334,11 +387,24 @@ public class RenderingUtils {
         submitColoredRectangle(graphics, RenderPipelines.GUI, TextureSetup.noTexture(), minX, minY, maxX, maxY, color, null);
     }
 
-    private static void submitColoredRectangle(@NotNull GuiGraphics graphics, RenderPipeline pipeline, TextureSetup textureSetup, float minX, float minY, float maxX, float maxY, int color, @Nullable Integer endColor) {
-        ScreenRectangle scissorStackPeek = ((IMixinScissorStack)((IMixinGuiGraphics)graphics).get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
-        ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
-                        new FloatColoredRectangleRenderState(pipeline, textureSetup, new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, color, endColor != null ? endColor : color, scissorStackPeek)
-                );
+    public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, float z, int color) {
+        Matrix4f matrix4f = graphics.pose().last().pose();
+        if (minX < maxX) {
+            float i = minX;
+            minX = maxX;
+            maxX = i;
+        }
+        if (minY < maxY) {
+            float i = minY;
+            minY = maxY;
+            maxY = i;
+        }
+        VertexConsumer vertexConsumer = graphics.bufferSource().getBuffer(RenderType.gui());
+        vertexConsumer.addVertex(matrix4f, (float)minX, (float)minY, (float)z).setColor(color);
+        vertexConsumer.addVertex(matrix4f, (float)minX, (float)maxY, (float)z).setColor(color);
+        vertexConsumer.addVertex(matrix4f, (float)maxX, (float)maxY, (float)z).setColor(color);
+        vertexConsumer.addVertex(matrix4f, (float)maxX, (float)minY, (float)z).setColor(color);
+        graphics.flush();
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, int color) {
@@ -370,9 +436,17 @@ public class RenderingUtils {
         );
     }
 
-    private static void innerBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, ResourceLocation texture, float minX, float maxX, float minY, float maxY, float minU, float maxU, float minV, float maxV, int color) {
-        GpuTextureView textureView = Minecraft.getInstance().getTextureManager().getTexture(texture).getTextureView();
-        submitBlit(graphics, pipeline, textureView, minX, minY, maxX, maxY, minU, maxU, minV, maxV, color);
+    private static void innerBlit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
+        RenderSystem.setShaderTexture(0, location);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        Matrix4f $$10 = graphics.pose().last().pose();
+        BufferBuilder $$11 = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        $$11.addVertex($$10, $$1, $$3, $$5).setUv($$6, $$8);
+        $$11.addVertex($$10, $$1, $$4, $$5).setUv($$6, $$9);
+        $$11.addVertex($$10, $$2, $$4, $$5).setUv($$7, $$9);
+        $$11.addVertex($$10, $$2, $$3, $$5).setUv($$7, $$8);
+        BufferUploader.drawWithShader(Objects.requireNonNull($$11.build()));
+        graphics.flush();
     }
 
     private static void submitBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, GpuTextureView textureView, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
@@ -438,6 +512,11 @@ public class RenderingUtils {
         private DestFactor(final int value) {
             this.value = value;
         }
+    }
+
+    @FunctionalInterface
+    public interface DeferredScreenRenderingTask {
+        void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
     }
 
 }
