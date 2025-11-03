@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -30,15 +31,17 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.annotation.Nullable;
+
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen extends Screen {
 
-    @Shadow @Final private static Component COPYRIGHT_TEXT;
+    @Shadow @Final public static Component COPYRIGHT_TEXT;
+    @Shadow @Final private static ResourceLocation PANORAMA_OVERLAY;
+    @Shadow @Nullable private RealmsNotificationsScreen realmsNotificationsScreen;
     @Shadow public boolean fading;
 
-    @Shadow @Final private static ResourceLocation PANORAMA_OVERLAY;
     @Unique private GuiGraphics cached_graphics_FancyMenu = null;
-
     @Unique private int cached_mouseX_FancyMenu = -1;
     @Unique private int cached_mouseY_FancyMenu = -1;
     @Unique private float cached_partial_FancyMenu = -1f;
@@ -117,7 +120,7 @@ public abstract class MixinTitleScreen extends Screen {
      * @reason Manually fire FancyMenu's {@link RenderedScreenBackgroundEvent} in {@link TitleScreen}, because normal event doesn't work correctly here.
      */
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(FF)V"))
-    private void wrap_renderPanorama_FancyMenu(PanoramaRenderer instance, float p_110004_, float p_110005_, Operation<Void> original) {
+    private void wrap_renderPanorama_FancyMenu(PanoramaRenderer instance, float deltaT, float alpha, Operation<Void> original) {
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
         if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             if (!l.layoutBase.menuBackgrounds.isEmpty()) {
@@ -125,12 +128,12 @@ public abstract class MixinTitleScreen extends Screen {
                 //Render a black background before the custom background gets rendered
                 this.cached_graphics_FancyMenu.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, 0);
             } else {
-                original.call(instance, p_110004_, p_110005_);
+                original.call(instance, deltaT, alpha);
             }
         } else {
-            original.call(instance, p_110004_, p_110005_);
+            original.call(instance, deltaT, alpha);
         }
-        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, this.cached_graphics_FancyMenu));
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, this.cached_graphics_FancyMenu, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
     }
 
     /**

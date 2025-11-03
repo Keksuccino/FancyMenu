@@ -38,11 +38,6 @@ public class MixinGameRenderer {
 
     @Shadow @Final Minecraft minecraft;
 
-    @Inject(method = "processBlurEffect", at = @At("HEAD"), cancellable = true)
-    private void head_processBlurEffect_FancyMenu(float radius, CallbackInfo info) {
-        if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
-    }
-
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(float partialTicks, long nanoTime, boolean renderLevel, CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
@@ -92,7 +87,9 @@ public class MixinGameRenderer {
 
         stopLooking_FancyMenu(startLookingListener, stopLookingListener);
 
-        if (!(this.minecraft.level instanceof ClientLevel clientLevel)) {
+        ClientLevel clientLevel = this.minecraft.level;
+
+        if (clientLevel == null) {
             stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
             return;
         }

@@ -31,6 +31,7 @@ import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPauseScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
@@ -207,7 +208,7 @@ public class ScreenCustomization {
 		}
         // This makes the clear version of the Pause screen not get customized
         if (screen instanceof PauseScreen p) {
-            if (!p.showsPauseMenu()) return false;
+            if (!((IMixinPauseScreen)p).get_showPauseMenu_FancyMenu()) return false;
         }
 		// Always use the screen class path here! NEVER universal identifiers!
 		List<PropertyContainer> s = customizableScreens.getContainersOfType(screen.getClass().getName());

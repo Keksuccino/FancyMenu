@@ -29,5 +29,6 @@ public abstract class MixinSoundManager {
             this.soundEngine.addEventListener(this.worldSoundEventBridge_FancyMenu);
         }
     }
+
 }
 

@@ -80,7 +80,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
         }
 
         try {
-            NbtPathArgument.NbtPath path = NbtPathArgument.NbtPath.of(nbtPath);
+            NbtPathArgument.NbtPath path = new NbtPathArgument().parse(new StringReader(nbtPath));
             CompoundTag sourceData = getSourceData(sourceType, dps);
             if (sourceData == null) {
                 return "";

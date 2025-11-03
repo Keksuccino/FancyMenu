@@ -24,7 +24,7 @@ public class MixinMouseHandler {
     @Shadow private double accumulatedDX;
     @Shadow private double accumulatedDY;
 
-    private final Minecraft mc = Minecraft.getInstance();
+    private final Minecraft mc_FancyMenu = Minecraft.getInstance();
 
     @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDD)Z"), cancellable = true)
     private void beforeMouseScrollScreenFancyMenu(long $$0, double $$1, double $$2, CallbackInfo info) {
@@ -32,10 +32,10 @@ public class MixinMouseHandler {
         if (Minecraft.ON_OSX && $$2 == 0) {
             offset = $$1;
         }
-        double scrollDelta = (this.mc.options.discreteMouseScroll().get() ? Math.signum(offset) : offset) * this.mc.options.mouseWheelSensitivity().get();
-        double mX = this.xpos * (double)this.mc.getWindow().getGuiScaledWidth() / (double)this.mc.getWindow().getScreenWidth();
-        double mY = this.ypos * (double)this.mc.getWindow().getGuiScaledHeight() / (double)this.mc.getWindow().getScreenHeight();
-        ScreenMouseScrollEvent.Pre e = new ScreenMouseScrollEvent.Pre(mc.screen, mX, mY, scrollDelta);
+        double scrollDelta = (this.mc_FancyMenu.options.discreteMouseScroll().get() ? Math.signum(offset) : offset) * this.mc_FancyMenu.options.mouseWheelSensitivity().get();
+        double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
+        double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
+        ScreenMouseScrollEvent.Pre e = new ScreenMouseScrollEvent.Pre(mc_FancyMenu.screen, mX, mY, scrollDelta);
         EventHandler.INSTANCE.postEvent(e);
         if (e.isCanceled()) {
             info.cancel();
@@ -48,10 +48,10 @@ public class MixinMouseHandler {
         if (Minecraft.ON_OSX && $$2 == 0) {
             offset = $$1;
         }
-        double scrollDelta = (this.mc.options.discreteMouseScroll().get() ? Math.signum(offset) : offset) * this.mc.options.mouseWheelSensitivity().get();
-        double mX = this.xpos * (double)this.mc.getWindow().getGuiScaledWidth() / (double)this.mc.getWindow().getScreenWidth();
-        double mY = this.ypos * (double)this.mc.getWindow().getGuiScaledHeight() / (double)this.mc.getWindow().getScreenHeight();
-        ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mc.screen, mX, mY, scrollDelta);
+        double scrollDelta = (this.mc_FancyMenu.options.discreteMouseScroll().get() ? Math.signum(offset) : offset) * this.mc_FancyMenu.options.mouseWheelSensitivity().get();
+        double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
+        double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
+        ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mc_FancyMenu.screen, mX, mY, scrollDelta);
         EventHandler.INSTANCE.postEvent(e);
     }
 
@@ -68,14 +68,14 @@ public class MixinMouseHandler {
      */
     @Inject(method = "onPress", at = @At("RETURN"))
     private void triggerMouseButtonListeners_FancyMenu(long window, int button, int action, int modifiers, CallbackInfo info) {
-        if (window != this.mcFancyMenu.getWindow().getWindow()) {
+        if (window != this.mc_FancyMenu.getWindow().getWindow()) {
             return;
         }
 
-        double guiWidth = (double)this.mcFancyMenu.getWindow().getGuiScaledWidth();
-        double guiHeight = (double)this.mcFancyMenu.getWindow().getGuiScaledHeight();
-        double screenWidth = (double)this.mcFancyMenu.getWindow().getScreenWidth();
-        double screenHeight = (double)this.mcFancyMenu.getWindow().getScreenHeight();
+        double guiWidth = (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth();
+        double guiHeight = (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight();
+        double screenWidth = (double)this.mc_FancyMenu.getWindow().getScreenWidth();
+        double screenHeight = (double)this.mc_FancyMenu.getWindow().getScreenHeight();
         double mouseX = this.xpos * guiWidth / screenWidth;
         double mouseY = this.ypos * guiHeight / screenHeight;
 
@@ -86,17 +86,17 @@ public class MixinMouseHandler {
         }
     }
 
-    @Inject(method = "handleAccumulatedMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
+    @Inject(method = "onMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
     private void before_Screen_mouseMoved_FancyMenu(CallbackInfo info) {
-        double guiWidth = (double)this.mcFancyMenu.getWindow().getGuiScaledWidth();
-        double guiHeight = (double)this.mcFancyMenu.getWindow().getGuiScaledHeight();
-        double screenWidth = (double)this.mcFancyMenu.getWindow().getScreenWidth();
-        double screenHeight = (double)this.mcFancyMenu.getWindow().getScreenHeight();
+        double guiWidth = (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth();
+        double guiHeight = (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight();
+        double screenWidth = (double)this.mc_FancyMenu.getWindow().getScreenWidth();
+        double screenHeight = (double)this.mc_FancyMenu.getWindow().getScreenHeight();
         double mouseX = this.xpos * guiWidth / screenWidth;
         double mouseY = this.ypos * guiHeight / screenHeight;
         double deltaX = this.accumulatedDX * guiWidth / screenWidth;
         double deltaY = this.accumulatedDY * guiHeight / screenHeight;
-        EventHandler.INSTANCE.postEvent(new ScreenMouseMoveEvent(this.mcFancyMenu.screen, mouseX, mouseY, deltaX, deltaY));
+        EventHandler.INSTANCE.postEvent(new ScreenMouseMoveEvent(this.mc_FancyMenu.screen, mouseX, mouseY, deltaX, deltaY));
         if (MCEFUtil.isMCEFLoaded()) BrowserHandler.mouseMoved(mouseX, mouseY);
     }
 

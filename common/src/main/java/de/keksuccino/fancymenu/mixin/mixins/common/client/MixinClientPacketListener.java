@@ -87,7 +87,7 @@ public class MixinClientPacketListener {
             return;
         }
 
-        Entity entity = minecraft.level.getEntity(packet.playerId());
+        Entity entity = minecraft.level.getEntity(packet.getPlayerId());
         if (!(entity instanceof Player player) || entity == minecraft.player) {
             return;
         }
@@ -119,7 +119,7 @@ public class MixinClientPacketListener {
         }
 
         Vec3 deathPosition = minecraft.player.position();
-        Listeners.ON_DEATH.onDeath(packet.message(), daysSurvived, deathPosition.x, deathPosition.y, deathPosition.z);
+        Listeners.ON_DEATH.onDeath(packet.getMessage(), daysSurvived, deathPosition.x, deathPosition.y, deathPosition.z);
     }
 
     /** @reason Fire FancyMenu listener when the local player picks up an item entity. */

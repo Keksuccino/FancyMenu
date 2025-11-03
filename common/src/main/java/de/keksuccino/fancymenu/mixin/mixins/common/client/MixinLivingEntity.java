@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
@@ -38,9 +37,9 @@ public abstract class MixinLivingEntity {
         if (!(self instanceof LocalPlayer)) {
             return;
         }
-        Holder<MobEffect> effectHolder = effectInstance.getEffect();
-        String effectKey = this.resolveEffectKey_FancyMenu(effectHolder);
-        String effectType = this.resolveEffectTypeName_FancyMenu(effectHolder.value());
+        MobEffect effect = effectInstance.getEffect();
+        String effectKey = this.resolveEffectKey_FancyMenu(effect);
+        String effectType = this.resolveEffectTypeName_FancyMenu(effect);
         Listeners.ON_EFFECT_GAINED.onEffectGained(effectKey, effectType, effectInstance.getDuration());
     }
 
@@ -123,7 +122,6 @@ public abstract class MixinLivingEntity {
             case 50 -> EquipmentSlot.CHEST;
             case 51 -> EquipmentSlot.LEGS;
             case 52 -> EquipmentSlot.FEET;
-            case 65 -> EquipmentSlot.BODY;
             default -> null;
         };
     }
@@ -139,18 +137,14 @@ public abstract class MixinLivingEntity {
     }
 
     @Unique
-    private String resolveEffectKey_FancyMenu(Holder<MobEffect> effectHolder) {
-        return effectHolder.unwrapKey()
-                .map(key -> key.location().toString())
-                .orElseGet(() -> {
-                    ResourceLocation fallback = BuiltInRegistries.MOB_EFFECT.getKey(effectHolder.value());
-                    return fallback != null ? fallback.toString() : "unknown";
-                });
+    private String resolveEffectKey_FancyMenu(MobEffect effect) {
+        ResourceLocation effectLocation = BuiltInRegistries.MOB_EFFECT.getKey(effect);
+        return effectLocation != null ? effectLocation.toString() : "unknown";
     }
 
     @Unique
     private String resolveItemType_FancyMenu(EquipmentSlot slot, ItemStack stack) {
-        if (slot == EquipmentSlot.BODY || slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR) {
+        if (slot.getType() == EquipmentSlot.Type.ARMOR) {
             return "armor";
         }
         if ((slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND) && stack.isDamageableItem()) {
