@@ -92,11 +92,11 @@ public class PlayerEntityModel extends PlayerModel {
             this.rightArm.y = 2.0F;
         }
 
-        if (this.rightArmPose != HumanoidModel.ArmPose.SPYGLASS) {
+        if (this.rightArmPose != ArmPose.SPYGLASS) {
             AnimationUtils.bobModelPart(this.rightArm, someFloatThatsAlways1, 1.0F);
         }
 
-        if (this.leftArmPose != HumanoidModel.ArmPose.SPYGLASS) {
+        if (this.leftArmPose != ArmPose.SPYGLASS) {
             AnimationUtils.bobModelPart(this.leftArm, someFloatThatsAlways1, -1.0F);
         }
 

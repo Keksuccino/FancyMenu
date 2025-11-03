@@ -27,9 +27,9 @@ public class InputFieldEditorElement extends AbstractEditorElement {
                         consumes -> (consumes instanceof InputFieldEditorElement),
                         consumes -> ((InputFieldElement)consumes.element).linkedVariable,
                         (element, varName) -> ((InputFieldElement)element.element).linkedVariable = varName,
-                        null, false, false, Component.translatable("fancymenu.customization.items.input_field.editor.set_variable"),
+                        null, false, false, Component.translatable("fancymenu.elements.input_field.editor.set_variable"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_variable.desc")))
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_variable.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
         this.rightClickMenu.addSeparatorEntry("input_field_separator_1");
@@ -41,24 +41,24 @@ public class InputFieldEditorElement extends AbstractEditorElement {
                         (element, type) -> ((InputFieldElement)element.element).type = type,
                         (menu, entry, switcherValue) -> {
                             if (switcherValue == InputFieldElement.InputFieldType.TEXT) {
-                                return Component.translatable("fancymenu.customization.items.input_field.type.text");
+                                return Component.translatable("fancymenu.elements.input_field.type.text");
                             }
                             if (switcherValue == InputFieldElement.InputFieldType.INTEGER_ONLY) {
-                                return Component.translatable("fancymenu.customization.items.input_field.type.integer");
+                                return Component.translatable("fancymenu.elements.input_field.type.integer");
                             }
                             if (switcherValue == InputFieldElement.InputFieldType.DECIMAL_ONLY) {
-                                return Component.translatable("fancymenu.customization.items.input_field.type.decimal");
+                                return Component.translatable("fancymenu.elements.input_field.type.decimal");
                             }
-                            return Component.translatable("fancymenu.customization.items.input_field.type.url");
+                            return Component.translatable("fancymenu.elements.input_field.type.url");
                         })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_type.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_type.desc")));
 
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_length",
                         consumes -> (consumes instanceof InputFieldEditorElement),
                         consumes -> ((InputFieldElement)consumes.element).maxTextLength,
                         (element, length) -> ((InputFieldElement)element.element).maxTextLength = length,
-                        Component.translatable("fancymenu.customization.items.input_field.editor.set_max_length"),
+                        Component.translatable("fancymenu.elements.input_field.editor.set_max_length"),
                         true, 10000, null, null)
                 .setStackable(true);
 

@@ -14,6 +14,11 @@ public class ReloadFancyMenuAction extends Action {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return false;
     }
@@ -25,12 +30,12 @@ public class ReloadFancyMenuAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.reloadmenu");
+        return Component.translatable("fancymenu.actions.reloadmenu");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.reloadmenu.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.reloadmenu.desc");
     }
 
     @Override

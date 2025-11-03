@@ -23,6 +23,11 @@ public class IsPlayerLeftHandedRequirement extends LoadingRequirement {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return false;
     }
@@ -53,7 +58,7 @@ public class IsPlayerLeftHandedRequirement extends LoadingRequirement {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.world");
+        return I18n.get("fancymenu.requirements.categories.world");
     }
 
     @Override

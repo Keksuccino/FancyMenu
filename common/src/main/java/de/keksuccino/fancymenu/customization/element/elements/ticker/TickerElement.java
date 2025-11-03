@@ -27,6 +27,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
 
     public TickerElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     protected void tickerElementTick() {

@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
+import java.util.Objects;
 
 public class ImageEditorElement extends AbstractEditorElement {
 
@@ -36,10 +37,10 @@ public class ImageEditorElement extends AbstractEditorElement {
         }).setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "image_tint", ImageEditorElement.class,
-                        consumes -> consumes.getElement().imageTint.getHex(),
-                        (imageEditorElement, s) -> imageEditorElement.getElement().imageTint = DrawableColor.of((s != null) ? s : "#FFFFFF"),
-                        null, false, false, Component.translatable("fancymenu.elements.image.tint"),
-                        true, "#FFFFFF", TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+                        consumes -> consumes.getElement().imageTint,
+                        (imageEditorElement, tint) -> imageEditorElement.getElement().imageTint = Objects.requireNonNullElse(tint, "#FFFFFF"),
+                        null, false, true, Component.translatable("fancymenu.elements.image.tint"),
+                        true, "#FFFFFF", null, null)
                 .setStackable(true);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_repeat_texture");

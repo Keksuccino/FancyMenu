@@ -21,6 +21,9 @@ Andreas Grewe
 Jolihan
 JJ
 Kreezxil
+caelaThinx
+Mavontay Hamilton
+생이 남
 
 
 ## LOCALIZATION
@@ -57,6 +60,12 @@ Thank you for making tons of great looking icons for context menus!
 
 ### Mondaze
 Thank you for designing FancyMenu's beautiful new logos!
+
+### Mowzy
+Thank you for the gorgeous looking "OLED Purple" and "Nether" FancyMenu themes!
+
+### caelaThinx
+Thank you for the beautiful "Butter Dark" and "Butter OLED" FancyMenu themes!
 
 ### All Alpha & Beta Testers
 You all did an outstanding job helping me find bugs and polish features! Thank you!

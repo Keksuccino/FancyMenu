@@ -48,7 +48,6 @@ public class UniversalScreenIdentifierRegistry {
         register("realms_download_latest_world_screen", RealmsDownloadLatestWorldScreen.class.getName());
         register("realms_generic_error_screen", RealmsGenericErrorScreen.class.getName());
         register("realms_invite_screen", RealmsInviteScreen.class.getName());
-        register("realms_long_confirmation_screen", RealmsLongConfirmationScreen.class.getName());
         register("realms_long_running_mco_task_screen", RealmsLongRunningMcoTaskScreen.class.getName());
         register("realms_notifications_screen", RealmsNotificationsScreen.class.getName());
         register("realms_parental_consent_screen", RealmsParentalConsentScreen.class.getName());

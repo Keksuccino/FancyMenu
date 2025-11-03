@@ -23,6 +23,11 @@ public class VideoMenuBackgroundPlaytimePlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String backId = dps.values.get("background_identifier");
         String showPercentageStr = dps.values.get("show_percentage");

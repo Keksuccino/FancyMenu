@@ -19,6 +19,7 @@
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",
     "client.IMixinOptions",
+    "client.IMixinPauseScreen",
     "client.IMixinPlayerModel",
     "client.IMixinProgressScreen",
     "client.IMixinRealmsNotificationsScreen",
@@ -29,9 +30,12 @@
     "client.IMixinSuggestionsList",
     "client.MixinAbstractButton",
     "client.MixinAbstractContainerEventHandler",
+    "client.MixinAbstractContainerScreen",
     "client.MixinAbstractSelectionList",
     "client.MixinAbstractSliderButton",
     "client.MixinAbstractWidget",
+    "client.MixinChatListener",
+    "client.MixinClientPacketListener",
     "client.MixinConnectScreen",
     "client.MixinCreateWorldScreen",
     "client.MixinCreateWorldScreen_GameTab",
@@ -43,22 +47,32 @@
     "client.MixinDisconnectedScreen",
     "client.MixinGameNarrator",
     "client.MixinGameRenderer",
-    "client.MixinGenericDirtMessageScreen",
+    "client.MixinGuiGraphics",
     "client.MixinImageButton",
+    "client.MixinKeyboardHandler",
     "client.MixinLevelLoadingScreen",
+    "client.MixinLevelLoadStatusManager",
+    "client.MixinLevelRenderer",
     "client.MixinLevelStorageAccess",
+    "client.MixinLivingEntity",
     "client.MixinLoadingOverlay",
+    "client.MixinLocalPlayer",
     "client.MixinMinecraft",
     "client.MixinMouseHandler",
+    "client.MixinMultiPlayerGameMode",
     "client.MixinMusicManager",
     "client.MixinOnlineServerEntry",
     "client.MixinPauseScreen",
+    "client.MixinPlayer",
     "client.MixinProgressScreen",
+    "client.MixinQuickPlay",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
+    "client.MixinRenderSystem",
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
     "client.MixinSoundEngine",
+    "client.MixinSoundManager",
     "client.MixinStringDecomposer",
     "client.MixinSwitchGrid_SwitchBuilder",
     "client.MixinTabNavigationBar",
@@ -66,6 +80,9 @@
     "client.MixinWorldListEntry"
   ],
   "mixins": [
+    "server.MixinLivingEntity",
+    "server.MixinServerLevel",
+    "server.MixinServerPlayer"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -74,3 +91,11 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
+
+
+
+
+
+
+
+

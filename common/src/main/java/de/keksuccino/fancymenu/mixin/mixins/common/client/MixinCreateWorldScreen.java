@@ -25,12 +25,14 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import java.util.function.Function;
 
 @Mixin(CreateWorldScreen.class)
 public class MixinCreateWorldScreen extends Screen {
 
     @Unique private boolean reInitialized_FancyMenu = false;
+    @Unique private int cached_mouseX_FancyMenu;
+    @Unique private int cached_mouseY_FancyMenu;
+    @Unique private float cached_partial_FancyMenu;
 
     protected MixinCreateWorldScreen(Component $$0) {
         super($$0);
@@ -74,10 +76,17 @@ public class MixinCreateWorldScreen extends Screen {
         return true;
     }
 
+    @Inject(method = "render", at = @At("HEAD"))
+    private void before_render_FancyMenu(GuiGraphics guiGraphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+        this.cached_mouseX_FancyMenu = mouseX;
+        this.cached_mouseY_FancyMenu = mouseY;
+        this.cached_partial_FancyMenu = partial;
+    }
+
     //CreateWorldScreen overrides renderDirtBackground, so add back RenderedScreenBackgroundEvent
     @Inject(method = "renderDirtBackground", at = @At("RETURN"))
     private void afterRenderDirtBackgroundInCreateWorldFancyMenu(GuiGraphics graphics, CallbackInfo info) {
-        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
     }
 
     /**

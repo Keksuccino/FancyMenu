@@ -8,8 +8,8 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.*;
 import net.minecraft.client.Minecraft;
@@ -62,6 +62,7 @@ public class ItemElement extends AbstractElement {
 
     public ItemElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.supportsTilting = false;
     }
 
     protected void updateCachedItem() {
@@ -173,7 +174,7 @@ public class ItemElement extends AbstractElement {
         }
 
         if (!isEditor() && this.showTooltip && UIBase.isXYInArea(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight())) {
-            ScreenRenderUtils.postPostRenderTask((graphics1, mouseX1, mouseY1, partial) -> this.renderItemTooltip(graphics1, mouseX, mouseY, itemStack));
+            RenderingUtils.addDeferredScreenRenderingTask((graphics1, mouseX1, mouseY1, partial) -> this.renderItemTooltip(graphics1, mouseX1, mouseY1, itemStack));
         }
 
     }

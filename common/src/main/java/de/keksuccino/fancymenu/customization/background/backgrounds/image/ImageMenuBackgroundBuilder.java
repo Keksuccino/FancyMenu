@@ -94,12 +94,12 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
     @Override
     public @NotNull Component getDisplayName() {
-        return Component.translatable("fancymenu.background.image");
+        return Component.translatable("fancymenu.backgrounds.image");
     }
 
     @Override
     public @Nullable Component[] getDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.background.image.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.image.desc");
     }
 
 }

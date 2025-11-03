@@ -55,17 +55,17 @@ public class CalculatorPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.placeholder.calc");
+        return I18n.get("fancymenu.placeholders.calc");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.placeholder.calc.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.calc.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.advanced");
+        return I18n.get("fancymenu.requirements.categories.advanced");
     }
 
     @Override

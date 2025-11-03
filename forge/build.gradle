@@ -1,29 +1,28 @@
+
 plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
+
 base {
     archivesName = "${mod_id}"
 }
+
 mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
-
     config("${mod_id}.mixins.json")
     config("${mod_id}.forge.mixins.json")
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 jarJar.enable()
 
 minecraft {
 
     mappings channel: 'official', version: minecraft_version
-
-    // Tell FG to not automtically create the reobf tasks, as we now use Official mappings at runtime, If you don't use them at dev time then you'll have to fix your reobf yourself.
-    //reobf = false
 
     // This property allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
     // It is REQUIRED to be set to true for this template to function.
@@ -47,7 +46,6 @@ minecraft {
             mods {
                 modClientRun {
                     source sourceSets.main
-                    source project(":common").sourceSets.main
                 }
             }
         }
@@ -60,16 +58,11 @@ minecraft {
             mods {
                 modServerRun {
                     source sourceSets.main
-                    source project(":common").sourceSets.main
                 }
             }
         }
     }
 
-}
-
-repositories {
-    flatDir { dirs 'libs' }
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
@@ -79,10 +72,10 @@ dependencies {
     implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason
-    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
-    //compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
-    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.5")) {
-        jarJar.ranged(it, "[0.3.5,)")
+    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
+    //compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:${mixin_extras_version}")) {
+        jarJar.ranged(it, "[${mixin_extras_version},)")
     }
     minecraftLibrary(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
@@ -92,8 +85,10 @@ dependencies {
     }
     implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.20-1.20.1-forge")
     implementation fg.deobf("maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge")
-    implementation fg.deobf("maven.modrinth:rrls:4.0.6.1+mc1.20.1-forge")
-    implementation fg.deobf("curse.maven:mcef-636236:5828187")
+    //implementation "it.crystalnest:fancy-entity-renderer-forge:$fer_mc_version-$fer_version"
+    implementation(fg.deobf("com.cinemamod:mcef:2.1.6-1.20.1")) {
+        exclude group: 'net.fabricmc', module: 'fabric-loader'
+    }
     compileOnly project(":common")
 }
 
@@ -117,7 +112,10 @@ tasks.named("sourcesJar", Jar) {
 }
 
 processResources {
-    from project(":common").sourceSets.main.resources
+    dependsOn(tasks.named("compileJava"))
+    from(project(":common").sourceSets.main.resources) {
+        exclude "${mod_id}.refmap.json"
+    }
 }
 
 jar.finalizedBy('reobfJar')
@@ -136,12 +134,6 @@ publishing {
             url "file://" + System.getenv("local_maven")
         }
     }
-}
-
-sourceSets.each {
-    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
-    it.output.resourcesDir = dir
-    it.java.destinationDirectory = dir
 }
 
 jar {

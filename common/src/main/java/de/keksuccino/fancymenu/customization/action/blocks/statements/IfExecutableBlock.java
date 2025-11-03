@@ -16,6 +16,7 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
     public LoadingRequirementContainer condition = new LoadingRequirementContainer().forceRequirementsMet(true);
     @Nullable
     protected AbstractExecutableBlock child;
+    private boolean collapsed = false;
 
     public IfExecutableBlock() {
     }
@@ -50,6 +51,14 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
         return this.child;
     }
 
+    public boolean isCollapsed() {
+        return this.collapsed;
+    }
+
+    public void setCollapsed(boolean collapsed) {
+        this.collapsed = collapsed;
+    }
+
     @Override
     public void addValuePlaceholder(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
         super.addValuePlaceholder(placeholder, replaceWithSupplier);
@@ -66,6 +75,7 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
         }
         b.condition = this.condition.copy(unique);
         b.valuePlaceholders.putAll(this.valuePlaceholders);
+        b.collapsed = this.collapsed;
         return b;
     }
 
@@ -79,6 +89,7 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
         String key = "[if_executable_block_body:" + this.getIdentifier() + "]";
         container.putProperty(key, this.condition.identifier);
         this.condition.serializeToExistingPropertyContainer(container);
+        container.putProperty("[if_executable_block_collapsed:" + this.getIdentifier() + "]", Boolean.toString(this.collapsed));
         return container;
     }
 
@@ -93,6 +104,10 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
                 }
                 break;
             }
+        }
+        String collapsedKey = "[if_executable_block_collapsed:" + identifier + "]";
+        if (serialized.hasProperty(collapsedKey)) {
+            b.collapsed = Boolean.parseBoolean(serialized.getValue(collapsedKey));
         }
         return b;
     }

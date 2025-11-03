@@ -62,7 +62,7 @@ public class IsKeyPressedRequirement extends LoadingRequirement {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override

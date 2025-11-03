@@ -50,6 +50,7 @@ public class ProgressBarElement extends AbstractElement {
 
     public ProgressBarElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     /**
@@ -261,7 +262,7 @@ public class ProgressBarElement extends AbstractElement {
 
         @Override
         public @NotNull String getLocalizationKeyBase() {
-            return "fancymenu.editor.elements.progress_bar.direction";
+            return "fancymenu.elements.progress_bar.direction";
         }
 
         @Override
@@ -307,7 +308,7 @@ public class ProgressBarElement extends AbstractElement {
 
         @Override
         public @NotNull String getLocalizationKeyBase() {
-            return "fancymenu.editor.elements.progress_bar.mode";
+            return "fancymenu.elements.progress_bar.mode";
         }
 
         @Override

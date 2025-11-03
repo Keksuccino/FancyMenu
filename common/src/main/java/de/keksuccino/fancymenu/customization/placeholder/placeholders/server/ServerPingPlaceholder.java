@@ -40,17 +40,17 @@ public class ServerPingPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverping");
+        return I18n.get("fancymenu.placeholders.serverping");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverping.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.serverping.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.server");
+        return I18n.get("fancymenu.requirements.categories.server");
     }
 
     @Override

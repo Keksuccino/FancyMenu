@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.wor
 public class LoadingRequirements {
 
     public static final IsElementHoveredRequirement IS_ELEMENT_HOVERED = new IsElementHoveredRequirement();
+    public static final IsElementFocusedRequirement IS_ELEMENT_FOCUSED = new IsElementFocusedRequirement();
     public static final IsAnyElementHoveredRequirement IS_ANY_ELEMENT_HOVERED = new IsAnyElementHoveredRequirement();
     public static final IsAnyButtonHoveredRequirement IS_ANY_BUTTON_HOVERED = new IsAnyButtonHoveredRequirement();
     public static final IsLayoutEnabledRequirement IS_LAYOUT_ENABLED = new IsLayoutEnabledRequirement();
@@ -52,6 +53,8 @@ public class LoadingRequirements {
     public static final IsTextRequirement IS_TEXT = new IsTextRequirement();
     public static final IsServerIpRequirement IS_SERVER_IP = new IsServerIpRequirement();
     public static final IsServerOnlineRequirement IS_SERVER_ONLINE = new IsServerOnlineRequirement();
+    public static final IsResourcePackEnabledRequirement IS_RESOURCE_PACK_ENABLED = new IsResourcePackEnabledRequirement();
+    public static final HasPlayerPermissionLevelRequirement HAS_PLAYER_PERMISSION_LEVEL = new HasPlayerPermissionLevelRequirement();
     public static final IsVariableValueRequirement IS_VARIABLE_VALUE = new IsVariableValueRequirement();
     public static final IsPlayerRunningRequirement IS_PLAYER_RUNNING = new IsPlayerRunningRequirement();
     public static final IsPlayerSneakingRequirement IS_PLAYER_SNEAKING = new IsPlayerSneakingRequirement();
@@ -93,10 +96,12 @@ public class LoadingRequirements {
     public static final MouseClickedRequirement MOUSE_CLICKED = new MouseClickedRequirement();
     public static final IsInternetConnectionAvailableRequirement IS_INTERNET_CONNECTION_AVAILABLE = new IsInternetConnectionAvailableRequirement();
     public static final IsMcefLoadedRequirement IS_MCEF_LOADED = new IsMcefLoadedRequirement();
+    public static final IsAnyScreenOpenRequirement IS_ANY_SCREEN_OPEN = new IsAnyScreenOpenRequirement();
 
     public static void registerAll() {
 
         LoadingRequirementRegistry.register(IS_ELEMENT_HOVERED);
+        LoadingRequirementRegistry.register(IS_ELEMENT_FOCUSED);
         LoadingRequirementRegistry.register(IS_ANY_ELEMENT_HOVERED);
         LoadingRequirementRegistry.register(IS_ANY_BUTTON_HOVERED);
         LoadingRequirementRegistry.register(IS_LAYOUT_ENABLED);
@@ -104,6 +109,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_BUTTON_ACTIVE);
         LoadingRequirementRegistry.register(IS_MENU_TITLE);
         LoadingRequirementRegistry.register(IS_KEY_PRESSED);
+        LoadingRequirementRegistry.register(IS_ANY_SCREEN_OPEN);
 
         LoadingRequirementRegistry.register(IS_REAL_TIME_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_HOUR);
@@ -165,6 +171,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_THUNDERING);
         LoadingRequirementRegistry.register(IS_CLEAR_WEATHER);
         LoadingRequirementRegistry.register(IS_SNOWING);
+        LoadingRequirementRegistry.register(HAS_PLAYER_PERMISSION_LEVEL);
         LoadingRequirementRegistry.register(IS_PLAYER_LEFT_HANDED);
         LoadingRequirementRegistry.register(IS_INVENTORY_SLOT_FILLED);
         LoadingRequirementRegistry.register(IS_HOTBAR_SLOT_ACTIVE);
@@ -176,6 +183,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_TEXT);
         LoadingRequirementRegistry.register(IS_SERVER_IP);
         LoadingRequirementRegistry.register(IS_SERVER_ONLINE);
+        LoadingRequirementRegistry.register(IS_RESOURCE_PACK_ENABLED);
         LoadingRequirementRegistry.register(IS_VARIABLE_VALUE);
         LoadingRequirementRegistry.register(ONLY_ONCE_PER_SESSION);
         LoadingRequirementRegistry.register(MOUSE_CLICKED);
@@ -184,3 +192,8 @@ public class LoadingRequirements {
     }
 
 }
+
+
+
+
+

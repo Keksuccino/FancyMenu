@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -18,8 +20,15 @@ import java.io.File;
 
 public class JoinLastWorldServerAction extends Action {
 
+    private static long lastJoinErrorTrigger = -1;
+
     public JoinLastWorldServerAction() {
         super("join_last_world");
+    }
+
+    @Override
+    public boolean canRunAsync() {
+        return false;
     }
 
     @Override
@@ -29,8 +38,16 @@ public class JoinLastWorldServerAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
-        if (!LastWorldHandler.getLastWorld().equals("") && (Minecraft.getInstance().screen != null)) {
-            if (!LastWorldHandler.isLastWorldServer()) {
+        if (Minecraft.getInstance().level != null) {
+            long now = System.currentTimeMillis();
+            if ((lastJoinErrorTrigger + 20000) < now) {
+                lastJoinErrorTrigger = now;
+                QueueableScreenHandler.addToQueue(new QueueableNotificationScreen(Component.translatable("fancymenu.actions.errors.cannot_join_world_while_in_world")));
+            }
+            return;
+        }
+        if (!LastWorldHandler.getLastWorld().isEmpty() && (Minecraft.getInstance().screen != null)) {
+            if (!LastWorldHandler.isLastWorldServer()) { // CASE: SINGLEPLAYER WORLD
                 File f = new File(LastWorldHandler.getLastWorld());
                 if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
                     Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
@@ -70,12 +87,12 @@ public class JoinLastWorldServerAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.join_last_world");
+        return Component.translatable("fancymenu.actions.join_last_world");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.join_last_world.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.join_last_world.desc");
     }
 
     @Override
