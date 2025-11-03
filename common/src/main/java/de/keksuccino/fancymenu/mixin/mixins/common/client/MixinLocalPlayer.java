@@ -503,13 +503,13 @@ public class MixinLocalPlayer {
     }
 
     @Inject(method = "removeEffectNoUpdate", at = @At("TAIL"))
-    private void after_removeEffectNoUpdate_FancyMenu(Holder<MobEffect> effectHolder, CallbackInfoReturnable<MobEffectInstance> cir) {
+    private void after_removeEffectNoUpdate_FancyMenu(@Nullable MobEffect effect, CallbackInfoReturnable<MobEffectInstance> cir) {
         MobEffectInstance removedInstance = cir.getReturnValue();
-        if (removedInstance == null) {
+        if (removedInstance == null || effect == null) {
             return;
         }
-        String effectKey = this.resolveEffectKey_FancyMenu(effectHolder);
-        String effectType = this.resolveEffectTypeName_FancyMenu(effectHolder.value());
+        String effectKey = this.resolveEffectKey_FancyMenu(effect);
+        String effectType = this.resolveEffectTypeName_FancyMenu(effect);
         Listeners.ON_EFFECT_LOST.onEffectLost(effectKey, effectType);
     }
 
@@ -540,13 +540,9 @@ public class MixinLocalPlayer {
     }
 
     @Unique
-    private String resolveEffectKey_FancyMenu(Holder<MobEffect> effectHolder) {
-        return effectHolder.unwrapKey()
-                .map(key -> key.location().toString())
-                .orElseGet(() -> {
-                    ResourceLocation fallback = BuiltInRegistries.MOB_EFFECT.getKey(effectHolder.value());
-                    return fallback != null ? fallback.toString() : "unknown";
-                });
+    private String resolveEffectKey_FancyMenu(MobEffect effect) {
+        ResourceLocation effectLocation = BuiltInRegistries.MOB_EFFECT.getKey(effect);
+        return effectLocation != null ? effectLocation.toString() : "unknown";
     }
 
     @Unique
