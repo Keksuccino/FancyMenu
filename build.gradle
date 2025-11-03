@@ -47,6 +47,14 @@ subprojects {
             }
         }
         maven {
+            name = 'FabricMC'
+            url = 'https://maven.fabricmc.net/'
+            content {
+                includeGroup 'net.fabricmc'
+                includeGroup 'net.fabricmc.fabric-api'
+            }
+        }
+        maven {
             url "https://cursemaven.com"
             content {
                 includeGroup "curse.maven"
