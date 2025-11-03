@@ -12,7 +12,6 @@ base {
 
 mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
-
     config("${mod_id}.mixins.json")
     config("${mod_id}.forge.mixins.json")
 }
@@ -24,9 +23,6 @@ jarJar.enable()
 minecraft {
 
     mappings channel: 'official', version: minecraft_version
-
-    // Tell FG to not automtically create the reobf tasks, as we now use Official mappings at runtime, If you don't use them at dev time then you'll have to fix your reobf yourself.
-    //reobf = false
 
     // This property allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
     // It is REQUIRED to be set to true for this template to function.
@@ -71,10 +67,6 @@ minecraft {
 
 }
 
-repositories {
-    flatDir { dirs 'libs' }
-}
-
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
 dependencies {
@@ -93,10 +85,10 @@ dependencies {
     minecraftLibrary(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
     }
-    implementation "maven.modrinth:konkrete:1.8.0-1.20-1.20.1-forge"
-    implementation "maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge"
+    implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.20-1.20.1-forge")
+    implementation fg.deobf("maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge")
     //implementation "it.crystalnest:fancy-entity-renderer-forge:$fer_mc_version-$fer_version"
-    implementation("com.cinemamod:mcef:2.1.6-1.20.1") {
+    implementation(fg.deobf("com.cinemamod:mcef:2.1.6-1.20.1")) {
         exclude group: 'net.fabricmc', module: 'fabric-loader'
     }
     compileOnly project(":common")
@@ -155,4 +147,28 @@ jar {
                 "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json"
         ])
     }
+}
+
+gradle.projectsEvaluated {
+    if (!tasks.names.contains("prepareRuns")) {
+        return
+    }
+
+    def ideRunTasks = ["genIntellijRuns", "genEclipseRuns", "genVSCodeRuns"]
+    def prepareRunsProvider = tasks.named("prepareRuns")
+    def defaultDescription = "Generates IDE run configurations for this project."
+
+    def wireIdeRunTask = { String taskName ->
+        tasks.matching { it.name == taskName }.configureEach { ideTask ->
+            if (!ideTask.group) {
+                ideTask.group = "forgegradle"
+            }
+            if (!ideTask.description) {
+                ideTask.description = defaultDescription
+            }
+            ideTask.dependsOn(prepareRunsProvider)
+        }
+    }
+
+    ideRunTasks.each(wireIdeRunTask)
 }
