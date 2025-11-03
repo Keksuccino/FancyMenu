@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class SimpleToast implements Toast {
 
-    protected static final ResourceLocation BACKGROUND_SPRITE = ResourceLocation.withDefaultNamespace("toast/tutorial");
+    protected static final ResourceLocation TEXTURE = new ResourceLocation("textures/gui/toasts.png");
     
     public static final int PROGRESS_BAR_WIDTH = 154;
     public static final int PROGRESS_BAR_HEIGHT = 1;
@@ -51,7 +51,7 @@ public class SimpleToast implements Toast {
 
         ResourceLocation customBack = this.getCustomBackground();
         if (customBack == null) {
-            graphics.blitSprite(BACKGROUND_SPRITE, 0, 0, this.width(), this.height());
+            graphics.blit(TEXTURE, 0, 0, 0, 96, this.width(), this.height());
         } else {
             graphics.blit(customBack, 0, 0, 0.0F, 0.0F, this.width(), this.height(), this.width(), this.height());
         }

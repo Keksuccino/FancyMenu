@@ -102,7 +102,7 @@ public class ServerSideServerNbtDataRequestPacketLogic {
         if (be == null) {
             return null;
         }
-        CompoundTag tag = be.saveWithFullMetadata(level.registryAccess());
+        CompoundTag tag = be.saveWithFullMetadata();
         return new CommandContextData(tag, source);
     }
 
@@ -159,7 +159,7 @@ public class ServerSideServerNbtDataRequestPacketLogic {
             case "json" -> {
                 if (tag instanceof CompoundTag) {
                     Component component = NbtUtils.toPrettyComponent(tag);
-                    String json = Component.Serializer.toJson(component, context.source().registryAccess());
+                    String json = Component.Serializer.toJson(component);
                     if (json.startsWith("\"") && json.endsWith("\"") && (json.length() >= 2)) {
                         return json.substring(1, json.length() - 1);
                     }

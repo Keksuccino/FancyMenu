@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -72,7 +73,7 @@ public class StructureUtils {
      */
     @NotNull
     public static ResourceKey<Structure> getStructureKey(@NotNull String structureId) {
-        ResourceLocation resourceLocation = ResourceLocation.parse(structureId);
+        ResourceLocation resourceLocation = new ResourceLocation(structureId);
         return getStructureKey(resourceLocation);
     }
 
@@ -109,7 +110,7 @@ public class StructureUtils {
     @NotNull
     public static Optional<ResourceKey<Structure>> findStructureKey(@NotNull RegistryAccess registryAccess, @NotNull String structureName) {
         try {
-            ResourceLocation resourceLocation = ResourceLocation.parse(structureName);
+            ResourceLocation resourceLocation = new ResourceLocation(structureName);
             ResourceKey<Structure> key = ResourceKey.create(Registries.STRUCTURE, resourceLocation);
             // Verify the key exists in the registry
             Registry<Structure> structureRegistry = registryAccess.registryOrThrow(Registries.STRUCTURE);

@@ -157,7 +157,14 @@ public class MixinServerPlayer {
         }
 
         StructureManager structureManager = level.structureManager();
-        StructureStart structureStart = structureManager.getStructureWithPieceAt(blockPos, holder -> true);
+        StructureStart structureStart = StructureStart.INVALID_START;
+        for (Structure structureCandidate : structureManager.getAllStructuresAt(blockPos).keySet()) {
+            StructureStart candidateStart = structureManager.getStructureWithPieceAt(blockPos, structureCandidate);
+            if (candidateStart != StructureStart.INVALID_START) {
+                structureStart = candidateStart;
+                break;
+            }
+        }
         if (structureStart == StructureStart.INVALID_START) {
             return null;
         }

@@ -24,10 +24,10 @@ public class UIColorThemes {
     public static final LightUIColorTheme LIGHT = new LightUIColorTheme();
 
     // ASSET THEMES
-    public static final ResourceLocation OLED_PURPLE_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/oled_purple.json");
-    public static final ResourceLocation NETHER_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/nether.json");
-    public static final ResourceLocation BUTTER_DARK_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/butter_dark.json");
-    public static final ResourceLocation BUTTER_OLED_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/butter_oled.json");
+    public static final ResourceLocation OLED_PURPLE_THEME_LOCATION = new ResourceLocation("fancymenu", "themes/oled_purple.json");
+    public static final ResourceLocation NETHER_THEME_LOCATION = new ResourceLocation("fancymenu", "themes/nether.json");
+    public static final ResourceLocation BUTTER_DARK_THEME_LOCATION = new ResourceLocation("fancymenu", "themes/butter_dark.json");
+    public static final ResourceLocation BUTTER_OLED_THEME_LOCATION = new ResourceLocation("fancymenu", "themes/butter_oled.json");
 
     public static final UIColorTheme[] DEFAULT_THEMES = new UIColorTheme[]{ DARK, LIGHT };
 
