@@ -46,7 +46,6 @@ minecraft {
             mods {
                 modClientRun {
                     source sourceSets.main
-                    source project(":common").sourceSets.main
                 }
             }
         }
@@ -59,7 +58,6 @@ minecraft {
             mods {
                 modServerRun {
                     source sourceSets.main
-                    source project(":common").sourceSets.main
                 }
             }
         }
@@ -113,8 +111,14 @@ tasks.named("sourcesJar", Jar) {
     from(project(":common").sourceSets.main.allSource)
 }
 
+def forgeGeneratedRefmap = layout.buildDirectory.file("tmp/compileJava/${mod_id}.refmap.json")
+
 processResources {
-    from project(":common").sourceSets.main.resources
+    dependsOn(tasks.named("compileJava"))
+    from(project(":common").sourceSets.main.resources) {
+        exclude "${mod_id}.refmap.json"
+    }
+    from(forgeGeneratedRefmap)
 }
 
 jar.finalizedBy('reobfJar')
@@ -135,40 +139,10 @@ publishing {
     }
 }
 
-sourceSets.each {
-    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
-    it.output.resourcesDir = dir
-    it.java.destinationDirectory = dir
-}
-
 jar {
     manifest {
         attributes([
                 "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json"
         ])
     }
-}
-
-gradle.projectsEvaluated {
-    if (!tasks.names.contains("prepareRuns")) {
-        return
-    }
-
-    def ideRunTasks = ["genIntellijRuns", "genEclipseRuns", "genVSCodeRuns"]
-    def prepareRunsProvider = tasks.named("prepareRuns")
-    def defaultDescription = "Generates IDE run configurations for this project."
-
-    def wireIdeRunTask = { String taskName ->
-        tasks.matching { it.name == taskName }.configureEach { ideTask ->
-            if (!ideTask.group) {
-                ideTask.group = "forgegradle"
-            }
-            if (!ideTask.description) {
-                ideTask.description = defaultDescription
-            }
-            ideTask.dependsOn(prepareRunsProvider)
-        }
-    }
-
-    ideRunTasks.each(wireIdeRunTask)
 }
