@@ -111,14 +111,11 @@ tasks.named("sourcesJar", Jar) {
     from(project(":common").sourceSets.main.allSource)
 }
 
-def forgeGeneratedRefmap = layout.buildDirectory.file("tmp/compileJava/${mod_id}.refmap.json")
-
 processResources {
     dependsOn(tasks.named("compileJava"))
     from(project(":common").sourceSets.main.resources) {
         exclude "${mod_id}.refmap.json"
     }
-    from(forgeGeneratedRefmap)
 }
 
 jar.finalizedBy('reobfJar')
