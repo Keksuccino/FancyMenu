@@ -40,6 +40,8 @@ public class AsyncPlaceholderErrorScreen extends QueueableScreen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        this.renderBackground(graphics);
+
         super.render(graphics, mouseX, mouseY, partial);
 
         int centerX = this.width / 2;
@@ -62,7 +64,7 @@ public class AsyncPlaceholderErrorScreen extends QueueableScreen {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
+    public void renderBackground(@NotNull GuiGraphics graphics) {
         RenderSystem.enableBlend();
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
     }

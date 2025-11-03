@@ -25,7 +25,7 @@ import java.util.Locale;
 public final class MusicTrackInfoHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ResourceLocation MUSIC_TRACK_METADATA_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "metadata/minecraft_music_tracks.json");
+    private static final ResourceLocation MUSIC_TRACK_METADATA_LOCATION = new ResourceLocation("fancymenu", "metadata/minecraft_music_tracks.json");
     private static final Gson GSON = new GsonBuilder().create();
     private static final Type MUSIC_TRACK_INFO_TYPE = new TypeToken<List<MusicTrackInfo>>() {}.getType();
 

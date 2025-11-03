@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.overlay;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.screen.AfterScreenRenderingEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPauseScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.auth.ModValidator;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -32,7 +33,7 @@ public class CustomizationOverlay {
     static {
 
         // This makes the clear version of the Pause screen not show the customization overlay
-        registerOverlayVisibilityController(screen -> (screen instanceof PauseScreen p) ? p.showsPauseMenu() : true);
+        registerOverlayVisibilityController(screen -> (screen instanceof PauseScreen p) ? ((IMixinPauseScreen)p).get_showPauseMenu_FancyMenu() : true);
 
     }
 

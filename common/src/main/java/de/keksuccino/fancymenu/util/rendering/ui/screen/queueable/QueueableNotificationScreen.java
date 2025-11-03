@@ -61,7 +61,7 @@ public class QueueableNotificationScreen extends QueueableScreen {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
+    public void renderBackground(@NotNull GuiGraphics graphics) {
         RenderSystem.enableBlend();
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
     }

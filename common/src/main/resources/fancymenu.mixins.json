@@ -19,6 +19,7 @@
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",
     "client.IMixinOptions",
+    "client.IMixinPauseScreen",
     "client.IMixinPlayerModel",
     "client.IMixinProgressScreen",
     "client.IMixinRealmsNotificationsScreen",

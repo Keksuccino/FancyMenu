@@ -138,7 +138,7 @@ public class ChooseListenerTypeScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBackground(@NotNull GuiGraphics graphics) {
     }
 
     protected void updateListenersList() {
@@ -152,7 +152,7 @@ public class ChooseListenerTypeScreen extends Screen {
             
             ListenerScrollEntry entry = new ListenerScrollEntry(
                     this.listenersScrollArea,
-                    ((MutableComponent)listener.getDisplayName()).withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()),
+                    ((MutableComponent)listener.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())),
                     UIBase.getUIColorTheme().listing_dot_color_1,
                     e -> {
                         this.selectedListener = listener;

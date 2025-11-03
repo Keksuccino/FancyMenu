@@ -18,6 +18,7 @@ public class QueueableScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         assertQueueableSetUpCorrectly();
+        this.renderBackground(graphics);
         super.render(graphics, mouseX, mouseY, partial);
     }
 

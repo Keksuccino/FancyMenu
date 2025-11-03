@@ -8,7 +8,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
@@ -20,7 +19,6 @@ import org.joml.Vector3f;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class RenderingUtils {
 
@@ -32,7 +30,6 @@ public class RenderingUtils {
     private static final List<DeferredScreenRenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
     private static boolean lockDepthTest = false;
     private static boolean tooltipRenderingBlocked = false;
-    private static int overrideBackgroundBlurRadius = -1000;
 
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
@@ -45,22 +42,6 @@ public class RenderingUtils {
         graphics.fill(x, y + partH, x + partW, y + height, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
         //Bottom-right
         graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
-    }
-
-    public static void setOverrideBackgroundBlurRadius(int radius) {
-        overrideBackgroundBlurRadius = radius;
-    }
-
-    public static void resetOverrideBackgroundBlurRadius() {
-        overrideBackgroundBlurRadius = -1000;
-    }
-
-    public static boolean shouldOverrideBackgroundBlurRadius() {
-        return overrideBackgroundBlurRadius != -1000;
-    }
-
-    public static int getOverrideBackgroundBlurRadius() {
-        return overrideBackgroundBlurRadius;
     }
 
     public static void setDepthTestLocked(boolean locked) {

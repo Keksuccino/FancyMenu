@@ -142,7 +142,7 @@ public class ActionScriptEditorScreen extends Screen {
     protected int minimapTotalEntriesHeight = 0;
     @Nullable
     protected ActionInstance clipboardActionInstance = null;
-    private static final ResourceLocation ILLEGAL_ACTION_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/not_allowed.png");
+    private static final ResourceLocation ILLEGAL_ACTION_ICON = new ResourceLocation("fancymenu", "textures/not_allowed.png");
     private static final AspectRatio ILLEGAL_ACTION_ICON_RATIO = new AspectRatio(32, 32);
     private static final long ILLEGAL_ACTION_VISIBLE_DURATION_MS = 1500L;
     private static final long ILLEGAL_ACTION_FADE_DURATION_MS = 300L;
@@ -822,7 +822,7 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBackground(GuiGraphics guiGraphics) {
     }
 
     protected void renderInlineEditors(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -1115,7 +1115,7 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
         if (this.isMinimapHovered((int)mouseX, (int)mouseY) && !this.isUserNavigatingInRightClickContextMenu()) {
             if (scrollY != 0.0D) {
                 float scrollStep = 0.1F * this.scriptEntriesScrollArea.verticalScrollBar.getWheelScrollSpeed();
@@ -1128,7 +1128,7 @@ public class ActionScriptEditorScreen extends Screen {
             }
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        return super.mouseScrolled(mouseX, mouseY, scrollY);
     }
 
 

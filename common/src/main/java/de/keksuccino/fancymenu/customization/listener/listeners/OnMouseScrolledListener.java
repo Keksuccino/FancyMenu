@@ -26,7 +26,7 @@ public class OnMouseScrolledListener extends AbstractListener {
     @EventListener
     public void onMouseScrolled(@NotNull ScreenMouseScrollEvent.Pre event) {
 
-        this.lastScrollDeltaY = event.getScrollDeltaY();
+        this.lastScrollDeltaY = event.getScrollDelta();
 
         this.notifyAllInstances();
 

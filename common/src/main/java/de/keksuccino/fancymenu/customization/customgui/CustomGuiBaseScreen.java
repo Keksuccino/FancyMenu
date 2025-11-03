@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,17 +16,19 @@ import org.jetbrains.annotations.Nullable;
 public class CustomGuiBaseScreen extends Screen {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final DrawableColor DARK_BACKGROUND = DrawableColor.BLACK;
+    private static final float BACKGROUND_ALPHA = 0.4F;
 
-	protected final CustomGui gui;
-	protected final Screen overrideScreen;
-	protected final Screen parentScreen;
+    protected final CustomGui gui;
+    protected final Screen overrideScreen;
+    protected final Screen parentScreen;
 
-	public CustomGuiBaseScreen(@NotNull CustomGui customGui, @Nullable Screen parentScreen, @Nullable Screen overrideScreen) {
-		super(Component.empty());
-		this.gui = customGui;
-		this.overrideScreen = overrideScreen;
-		this.parentScreen = parentScreen;
-	}
+    public CustomGuiBaseScreen(@NotNull CustomGui customGui, @Nullable Screen parentScreen, @Nullable Screen overrideScreen) {
+        super(Component.empty());
+        this.gui = customGui;
+        this.overrideScreen = overrideScreen;
+        this.parentScreen = parentScreen;
+    }
 
     @Override
     protected void init() {
@@ -41,12 +43,7 @@ public class CustomGuiBaseScreen extends Screen {
             if (this.parentScreen != null) {
                 Screen current = Minecraft.getInstance().screen;
                 Minecraft.getInstance().screen = this.parentScreen;
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
                 this.parentScreen.resize(minecraft, width, height);
-//                ScrollScreenNormalizer.normalizeScrollableScreen(this.parentScreen);
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
                 Minecraft.getInstance().screen = current;
             }
         } catch (Exception ex) {
@@ -55,66 +52,57 @@ public class CustomGuiBaseScreen extends Screen {
     }
 
     @Override
-	public void onClose() {
-		Minecraft.getInstance().setScreen(this.parentScreen);
-	}
-	
-	@Override
-	public boolean shouldCloseOnEsc() {
-		return this.gui.allowEsc;
-	}
-
-	@Override
-	public boolean isPauseScreen() {
-		return this.gui.pauseGame;
-	}
+    public void onClose() {
+        Minecraft.getInstance().setScreen(this.parentScreen);
+    }
 
     @Override
-	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public boolean shouldCloseOnEsc() {
+        return this.gui.allowEsc;
+    }
 
-		if (this.gui.worldBackground) {
-			this.renderBackground(graphics);
-		} else {
-			this.renderDirtBackground(graphics);
-		}
+    @Override
+    public boolean isPauseScreen() {
+        return this.gui.pauseGame;
+    }
 
-		String title = PlaceholderParser.replacePlaceholders(this.getTitleString());
-		Component titleComp = LocalizationUtils.isLocalizationKey(title) ? Component.translatable(title) : Component.literal(title);
-		graphics.drawCenteredString(this.font, titleComp, this.width / 2, 8, -1);
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		super.render(graphics, mouseX, mouseY, partial);
+        this._renderBackground(graphics, mouseX, mouseY, partial);
 
-	}
+        super.render(graphics, mouseX, mouseY, partial);
 
-	@Override
-	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        String title = PlaceholderParser.replacePlaceholders(this.getTitleString());
+        Component titleComp = LocalizationUtils.isLocalizationKey(title) ? Component.translatable(title) : Component.literal(title);
+        graphics.drawCenteredString(this.font, titleComp, this.width / 2, 8, -1);
+
+    }
+
+    protected void _renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         boolean popup = this.gui.popupMode && (this.parentScreen != null);
         boolean popupOverlay = popup && this.gui.popupModeBackgroundOverlay;
-		if (popup) {
+        if (popup) {
             this.renderPopupMenuBackgroundScreen(graphics, mouseX, mouseY, partial);
         } else {
             if ((Minecraft.getInstance().level == null) || !this.gui.worldBackground) {
-                this.renderPanorama(graphics, partial);
+                this.renderDirtBackground(graphics);
+                return;
             }
         }
-        if (popup) {
-            RenderingUtils.setOverrideBackgroundBlurRadius(7);
+        if (popupOverlay) {
+            this.renderDarkBackgroundOverlay(graphics);
         }
-		try {
-            if (!popup || popupOverlay) {
-                this.renderBlurredBackground(partial);
-            }
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Error while rendering background blur in Custom GUI!", ex);
+        if (!popup) {
+            this.renderBackground(graphics);
         }
-        RenderingUtils.resetOverrideBackgroundBlurRadius();
-		if (!popup) {
-            this.renderMenuBackground(graphics);
-        }
-	}
+    }
+
+    protected void renderDarkBackgroundOverlay(@NotNull GuiGraphics graphics) {
+        graphics.fill(0, 0, this.width, this.height, DARK_BACKGROUND.getColorIntWithAlpha(BACKGROUND_ALPHA));
+    }
 
     protected void renderPopupMenuBackgroundScreen(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        if (this.gui.popupModeBackgroundOverlay) RenderingUtils.setMenuBlurringBlocked(true);
         RenderingUtils.setTooltipRenderingBlocked(true);
         Screen current = Minecraft.getInstance().screen;
         CustomGui.isCurrentlyRenderingPopupBackgroundScreen = true;
@@ -128,23 +116,22 @@ public class CustomGuiBaseScreen extends Screen {
         CustomGui.isCurrentlyRenderingPopupBackgroundScreen = false;
         Minecraft.getInstance().screen = current;
         RenderingUtils.setTooltipRenderingBlocked(false);
-        RenderingUtils.setMenuBlurringBlocked(false);
     }
 
-	@NotNull
-	public String getTitleString() {
-		return this.gui.title;
-	}
+    @NotNull
+    public String getTitleString() {
+        return this.gui.title;
+    }
 
-	@NotNull
-	public String getIdentifier() {
-		return this.gui.identifier;
-	}
+    @NotNull
+    public String getIdentifier() {
+        return this.gui.identifier;
+    }
 
-	@Nullable
-	public Screen getOverriddenScreen() {
-		return this.overrideScreen;
-	}
+    @Nullable
+    public Screen getOverriddenScreen() {
+        return this.overrideScreen;
+    }
 
     @NotNull
     public CustomGui getGuiMetadata() {

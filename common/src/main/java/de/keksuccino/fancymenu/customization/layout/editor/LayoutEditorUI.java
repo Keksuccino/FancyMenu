@@ -722,7 +722,7 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_layout_wide_requirements");
 
 		menu.addClickableEntry("manage_open_screen_actions", Component.translatable("fancymenu.layout.editor.edit_open_screen_action_script"), (menu1, entry) -> {
-					ActionScriptEditorScreen s = new ActionScriptEditorScreen(editor.layout.openScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.openScreenExecutableBlocks.getFirst().copy(false), (call) -> {
+					ActionScriptEditorScreen s = new ActionScriptEditorScreen(editor.layout.openScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.openScreenExecutableBlocks.get(0).copy(false), (call) -> {
 						if (call != null) {
 							editor.history.saveSnapshot();
 							editor.layout.openScreenExecutableBlocks.clear();
@@ -736,7 +736,7 @@ public class LayoutEditorUI {
 				.setStackable(false);
 
 		menu.addClickableEntry("manage_close_screen_actions", Component.translatable("fancymenu.layout.editor.edit_close_screen_action_script"), (menu1, entry) -> {
-					ActionScriptEditorScreen s = new ActionScriptEditorScreen(editor.layout.closeScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.closeScreenExecutableBlocks.getFirst().copy(false), (call) -> {
+					ActionScriptEditorScreen s = new ActionScriptEditorScreen(editor.layout.closeScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.closeScreenExecutableBlocks.get(0).copy(false), (call) -> {
 						if (call != null) {
 							editor.history.saveSnapshot();
 							editor.layout.closeScreenExecutableBlocks.clear();

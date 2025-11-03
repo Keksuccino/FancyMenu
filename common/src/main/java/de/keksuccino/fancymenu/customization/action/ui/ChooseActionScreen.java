@@ -177,7 +177,7 @@ public class ChooseActionScreen extends Screen implements InitialWidgetFocusScre
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBackground(@NotNull GuiGraphics graphics) {
     }
 
     protected void setDescription(@Nullable Action action) {
