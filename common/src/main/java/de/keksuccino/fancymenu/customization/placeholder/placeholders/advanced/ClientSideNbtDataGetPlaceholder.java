@@ -98,7 +98,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
             } else if ("snbt".equalsIgnoreCase(returnType)) {
                 return tag.toString();
             } else if ("json".equalsIgnoreCase(returnType) && tag instanceof CompoundTag) {
-                String json = Component.Serializer.toJson(NbtUtils.toPrettyComponent(tag), level.registryAccess());
+                String json = Component.Serializer.toJson(NbtUtils.toPrettyComponent(tag));
                 if (json.startsWith("\"") && json.endsWith("\"")) {
                     return json.substring(1, json.length() - 1);
                 }
@@ -173,7 +173,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
             BlockPos pos = new BlockPos(x, y, z);
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity != null) {
-                return blockEntity.saveWithoutMetadata(level.registryAccess());
+                return blockEntity.saveWithoutMetadata();
             }
         } catch (NumberFormatException ex) {
             LOGGER.error("[FANCYMENU] Invalid block position: {}", posStr);
