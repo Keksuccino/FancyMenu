@@ -28,10 +28,11 @@ dependencies {
     compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
     compileOnly "com.github.Keksuccino:japng:0.5.3"
     compileOnly "com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7"
-    modCompileOnly "maven.modrinth:melody:1.0.4-1.20.1-1.20.4-fabric"
-    modCompileOnly "maven.modrinth:konkrete:1.8.1-1.20.1-fabric"
-    modCompileOnly 'com.cinemamod:mcef:2.1.6-1.20.1'
+	modCompileOnly "maven.modrinth:melody:1.0.1-1.19.2-fabric"
+    modCompileOnly "maven.modrinth:konkrete:1.8.0-1.19.1-1.19.2-fabric"
+    //modCompileOnly 'com.cinemamod:mcef:2.1.6-1.20.1'
     //implementation "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
+
 }
 
 loom {
