@@ -17,11 +17,17 @@ import java.util.List;
 public class RenderedScreenBackgroundEvent extends EventBase {
 
     private final Screen screen;
-    private final PoseStack poseStack;
+    private final GuiGraphics graphics;
+    private final int mouseX;
+    private final int mouseY;
+    private final float partial;
 
-    public RenderedScreenBackgroundEvent(Screen screen, PoseStack poseStack) {
-        this.screen = screen;
-        this.poseStack = poseStack;
+    public RenderedScreenBackgroundEvent(@NotNull Screen screen, @NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.screen = Objects.requireNonNull(screen);
+        this.graphics = Objects.requireNonNull(graphics);
+        this.mouseX = mouseX;
+        this.mouseY = mouseY;
+        this.partial = partial;
     }
 
     public Screen getScreen() {
@@ -34,6 +40,18 @@ public class RenderedScreenBackgroundEvent extends EventBase {
 
     public PoseStack getPoseStack() {
         return this.poseStack;
+    }
+
+    public int getMouseX() {
+        return mouseX;
+    }
+
+    public int getMouseY() {
+        return mouseY;
+    }
+
+    public float getPartial() {
+        return partial;
     }
 
     public <T extends GuiEventListener & NarratableEntry> void addWidget(T widget) {

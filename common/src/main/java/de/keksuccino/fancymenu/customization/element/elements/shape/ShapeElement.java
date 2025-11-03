@@ -24,6 +24,7 @@ public class ShapeElement extends AbstractElement {
 
     public ShapeElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override

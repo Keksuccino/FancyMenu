@@ -3,14 +3,18 @@ package de.keksuccino.fancymenu.util.rendering.ui.theme;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Objects;
 
 public class UIColorThemeSerializer {
@@ -47,18 +51,36 @@ public class UIColorThemeSerializer {
             Gson gson = buildGsonInstance();
             return gson.fromJson(json, UIColorTheme.class);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to deserialize FancyMenu theme!", ex);
         }
         return null;
     }
 
     @Nullable
-    public static UIColorTheme deserializeThemeFromFile(@NotNull File file) {
-        String json = "";
-        for (String s : FileUtils.getFileLines(file)) {
-            json += s;
+    public static UIColorTheme deserializeThemeFromResource(@NotNull ResourceLocation resource) {
+        InputStream in = null;
+        try {
+            StringBuilder json = new StringBuilder();
+            in = Objects.requireNonNull(Minecraft.getInstance().getResourceManager().open(resource));
+            for (String s : FileUtils.readTextLinesFrom(in)) {
+                json.append(s);
+            }
+            CloseableUtils.closeQuietly(in);
+            return deserializeTheme(json.toString());
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to deserialize FancyMenu theme from ResourceLocation: " + resource, ex);
         }
-        return deserializeTheme(json);
+        CloseableUtils.closeQuietly(in);
+        return null;
+    }
+
+    @Nullable
+    public static UIColorTheme deserializeThemeFromFile(@NotNull File file) {
+        StringBuilder json = new StringBuilder();
+        for (String s : FileUtils.getFileLines(file)) {
+            json.append(s);
+        }
+        return deserializeTheme(json.toString());
     }
 
     @Nullable
@@ -68,7 +90,7 @@ public class UIColorThemeSerializer {
             Gson gson = buildGsonInstance();
             return gson.toJson(theme);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to serialize FancyMenu theme!", ex);
         }
         return null;
     }
@@ -83,7 +105,7 @@ public class UIColorThemeSerializer {
                 FileUtils.writeTextToFile(file, false, json);
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to serialize FancyMenu theme to file!", ex);
         }
     }
 

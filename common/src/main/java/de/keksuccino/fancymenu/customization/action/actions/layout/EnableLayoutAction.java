@@ -16,6 +16,11 @@ public class EnableLayoutAction extends Action {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return true;
     }
@@ -36,17 +41,17 @@ public class EnableLayoutAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Components.translatable("fancymenu.helper.buttonaction.enable_layout");
+        return Component.translatable("fancymenu.actions.enable_layout");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.buttonaction.enable_layout.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.enable_layout.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Components.translatable("fancymenu.helper.buttonaction.enable_layout.value.desc");
+        return Component.translatable("fancymenu.actions.enable_layout.value.desc");
     }
 
     @Override

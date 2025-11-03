@@ -31,17 +31,17 @@ public class SetVariableAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Components.translatable("fancymenu.helper.buttonaction.variables.set");
+        return Component.translatable("fancymenu.actions.variables.set");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.buttonaction.variables.set.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.variables.set.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Components.translatable("fancymenu.helper.buttonaction.variables.set.value.desc");
+        return Component.translatable("fancymenu.actions.variables.set.value.desc");
     }
 
     @Override

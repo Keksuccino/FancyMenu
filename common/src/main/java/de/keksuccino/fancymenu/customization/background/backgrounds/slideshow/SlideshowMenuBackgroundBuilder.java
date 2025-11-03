@@ -65,12 +65,12 @@ public class SlideshowMenuBackgroundBuilder extends MenuBackgroundBuilder<Slides
 
     @Override
     public @NotNull Component getDisplayName() {
-        return Components.translatable("fancymenu.background.slideshow");
+        return Component.translatable("fancymenu.backgrounds.slideshow");
     }
 
     @Override
     public @Nullable Component[] getDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.background.slideshow.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.slideshow.desc");
     }
 
 }

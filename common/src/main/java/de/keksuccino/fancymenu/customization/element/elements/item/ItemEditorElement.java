@@ -33,14 +33,15 @@ public class ItemEditorElement extends AbstractEditorElement {
                         itemKeyTargetFieldGetter,
                         itemKeyTargetFieldSetter,
                         null, false, true, Component.translatable("fancymenu.elements.item.key"),
-                        true, "" + Services.PLATFORM.getItemKey(Items.BARRIER), null, null)
+                        true, "" + BuiltInRegistries.ITEM.getKey(Items.BARRIER), null, null)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.key.desc")))
                 .setStackable(false);
 
         if (itemKeyEntry instanceof ContextMenu.SubMenuContextMenuEntry subMenuEntry) {
 
             subMenuEntry.getSubContextMenu().removeEntry("input_value");
 
-            subMenuEntry.getSubContextMenu().addClickableEntryAt(0, "input_value", Component.translatable("fancymenu.guicomponents.set"), (menu, entry) ->
+            subMenuEntry.getSubContextMenu().addClickableEntryAt(0, "input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) ->
             {
                 if (entry.getStackMeta().isFirstInStack()) {
                     Screen inputScreen = new ItemKeyScreen(itemKeyTargetFieldGetter.get(this), callback -> {

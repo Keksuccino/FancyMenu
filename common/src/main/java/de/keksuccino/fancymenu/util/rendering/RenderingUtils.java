@@ -18,6 +18,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RenderingUtils {
 
@@ -25,6 +27,10 @@ public class RenderingUtils {
     public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
+
+    private static final List<DeferredScreenRenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
+    private static boolean lockDepthTest = false;
+    private static boolean tooltipRenderingBlocked = false;
 
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
@@ -37,6 +43,37 @@ public class RenderingUtils {
         graphics.fill(x, y + partH, x + partW, y + height, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
         //Bottom-right
         graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
+    }
+
+    public static void setDepthTestLocked(boolean locked) {
+        lockDepthTest = locked;
+    }
+
+    public static boolean isDepthTestLocked() {
+        return lockDepthTest;
+    }
+
+    public static void setTooltipRenderingBlocked(boolean blocked) {
+        tooltipRenderingBlocked = blocked;
+    }
+
+    public static boolean isTooltipRenderingBlocked() {
+        return tooltipRenderingBlocked;
+    }
+
+    public static void addDeferredScreenRenderingTask(@NotNull DeferredScreenRenderingTask task) {
+        DEFERRED_SCREEN_RENDERING_TASKS.add(task);
+    }
+
+    @NotNull
+    public static List<DeferredScreenRenderingTask> getDeferredScreenRenderingTasks() {
+        return new ArrayList<>(DEFERRED_SCREEN_RENDERING_TASKS);
+    }
+
+    public static void executeAndClearDeferredScreenRenderingTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        List<DeferredScreenRenderingTask> tasks = getDeferredScreenRenderingTasks();
+        DEFERRED_SCREEN_RENDERING_TASKS.clear();
+        tasks.forEach(task -> task.render(graphics, mouseX, mouseY, partial));
     }
 
     /**
@@ -229,7 +266,6 @@ public class RenderingUtils {
 
     }
 
-
     public static float getPartialTick() {
         return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();
     }
@@ -402,6 +438,11 @@ public class RenderingUtils {
 
     public static boolean isMatrixIdentity(Matrix4f matrix) {
         return MatrixUtils.isMatrixIdentityMojang(matrix);
+    }
+
+    @FunctionalInterface
+    public interface DeferredScreenRenderingTask {
+        void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
     }
 
 }

@@ -16,6 +16,11 @@ public abstract class AbstractWorldPlaceholder extends Placeholder {
         super(identifier);
     }
 
+    @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
     @Nullable
     protected LocalPlayer getPlayer() {
         return Minecraft.getInstance().player;

@@ -147,12 +147,12 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Components.translatable("fancymenu.customization.items.ticker");
+        return Component.translatable("fancymenu.elements.ticker");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.desc");
     }
 
 }

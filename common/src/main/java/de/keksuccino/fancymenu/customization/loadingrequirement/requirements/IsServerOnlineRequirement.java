@@ -36,12 +36,12 @@ public class IsServerOnlineRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.serveronline");
+        return I18n.get("fancymenu.requirements.serveronline");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.serveronline.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.serveronline.desc"));
     }
 
     @Override
@@ -51,7 +51,7 @@ public class IsServerOnlineRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.serveronline.valuename");
+        return I18n.get("fancymenu.requirements.serveronline.value_name");
     }
 
     @Override

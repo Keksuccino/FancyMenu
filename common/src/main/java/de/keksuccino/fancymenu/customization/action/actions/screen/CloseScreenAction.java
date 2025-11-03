@@ -15,6 +15,11 @@ public class CloseScreenAction extends Action {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return false;
     }
@@ -26,12 +31,12 @@ public class CloseScreenAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.closegui");
+        return Component.translatable("fancymenu.actions.close_screen");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.closegui.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.close_screen.desc");
     }
 
     @Override

@@ -192,13 +192,13 @@ public class NonStackableOverlayUI {
 
         ContextMenu subMenu = new ContextMenu();
 
-        subMenu.addClickableEntry("input_value", Components.translatable("fancymenu.guicomponents.set"), (menu, entry) -> {
+        subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) -> {
             menu.closeMenu();
             inputLogic.accept(setter);
         });
 
         if (addResetOption) {
-            subMenu.addClickableEntry("reset_to_default", Components.translatable("fancymenu.guicomponents.reset"), (menu, entry) -> {
+            subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"), (menu, entry) -> {
                 setter.accept(defaultValue);
             });
         }

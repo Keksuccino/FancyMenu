@@ -69,12 +69,12 @@ public class ShapeElementBuilder extends ElementBuilder<ShapeElement, ShapeEdito
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Components.translatable("fancymenu.editor.add.shape.rectangle");
+        return Component.translatable("fancymenu.elements.shape.rectangle");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.add.shape.rectangle.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.shape.rectangle.desc");
     }
 
 }

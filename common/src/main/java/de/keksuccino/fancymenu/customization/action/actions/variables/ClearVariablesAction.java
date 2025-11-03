@@ -14,6 +14,11 @@ public class ClearVariablesAction extends Action {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return false;
     }
@@ -25,12 +30,12 @@ public class ClearVariablesAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Components.translatable("fancymenu.helper.buttonaction.variables.clearall");
+        return Component.translatable("fancymenu.actions.variables.clearall");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.buttonaction.variables.clearall.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.variables.clearall.desc");
     }
 
     @Override

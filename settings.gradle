@@ -25,7 +25,7 @@ plugins {
 }
 
 // This should match the folder name of the project, or else IDEA may complain (see https://youtrack.jetbrains.com/issue/IDEA-317606)
-rootProject.name = 'fancymenu-1.19.2-fixed'
+rootProject.name = 'fancymenu-1.19.2'
 include("common")
 include("fabric")
 include("forge")

@@ -20,4 +20,10 @@ public interface IMixinScreen {
 
     @Invoker("removeWidget") void invokeRemoveWidgetFancyMenu(GuiEventListener widget);
 
+    @Accessor("initialized") boolean get_initialized_FancyMenu();
+
+    @Invoker("init") void invoke_init_FancyMenu();
+
+    @Invoker("clearFocus") void invoke_clearFocus_FancyMenu();
+
 }

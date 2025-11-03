@@ -137,12 +137,12 @@ public class IsTextRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_text");
+        return I18n.get("fancymenu.requirements.is_text");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.is_text.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_text.desc"));
     }
 
     @Override
@@ -189,7 +189,7 @@ public class IsTextRequirement extends LoadingRequirement {
         protected TextInputCell secondTextCell;
 
         protected IsTextValueConfigScreen(String value, @NotNull Consumer<String> callback) {
-            super(Components.translatable("fancymenu.helper.editor.items.visibilityrequirements.is_text.valuename"), callback);
+            super(Component.translatable("fancymenu.requirements.is_text.value_name"), callback);
             if (value == null) value = "";
             List<String> sections = getSections(value);
             if (!sections.isEmpty()) {
@@ -208,12 +208,12 @@ public class IsTextRequirement extends LoadingRequirement {
 
             this.addSpacerCell(20);
 
-            ILocalizedValueCycle<TextCompareMode> modeCycle = CommonCycles.cycleOrangeValue("fancymenu.loading_requirements.is_text.compare_mode", Arrays.asList(TextCompareMode.values()), this.mode)
+            ILocalizedValueCycle<TextCompareMode> modeCycle = CommonCycles.cycleOrangeValue("fancymenu.requirements.is_text.compare_mode", Arrays.asList(TextCompareMode.values()), this.mode)
                     .setValueNameSupplier(mode -> {
-                        if (mode == TextCompareMode.CONTAINS) return I18n.get("fancymenu.loading_requirements.is_text.compare_mode.contains");
-                        if (mode == TextCompareMode.STARTS_WITH) return I18n.get("fancymenu.loading_requirements.is_text.compare_mode.starts_with");
-                        if (mode == TextCompareMode.ENDS_WITH) return I18n.get("fancymenu.loading_requirements.is_text.compare_mode.ends_with");
-                        return I18n.get("fancymenu.loading_requirements.is_text.compare_mode.equals");
+                        if (mode == TextCompareMode.CONTAINS) return I18n.get("fancymenu.requirements.is_text.compare_mode.contains");
+                        if (mode == TextCompareMode.STARTS_WITH) return I18n.get("fancymenu.requirements.is_text.compare_mode.starts_with");
+                        if (mode == TextCompareMode.ENDS_WITH) return I18n.get("fancymenu.requirements.is_text.compare_mode.ends_with");
+                        return I18n.get("fancymenu.requirements.is_text.compare_mode.equals");
                     });
             this.addCycleButtonCell(modeCycle, true, (value, button) -> {
                 this.mode = value;
@@ -222,13 +222,13 @@ public class IsTextRequirement extends LoadingRequirement {
             this.addCellGroupEndSpacerCell();
 
             String fText = this.getFirstTextString();
-            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_text.compare_mode.first_text"));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_text.compare_mode.first_text"));
             this.firstTextCell = this.addTextInputCell(null, true, true).setText(fText);
 
             this.addCellGroupEndSpacerCell();
 
             String sText = this.getSecondTextString();
-            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_text.compare_mode.second_text"));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_text.compare_mode.second_text"));
             this.secondTextCell = this.addTextInputCell(null, true, true).setText(sText);
 
             this.addSpacerCell(20);

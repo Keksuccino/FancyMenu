@@ -26,12 +26,12 @@ public class QuitGameAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.quitgame");
+        return Component.translatable("fancymenu.actions.quitgame");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.quitgame.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.quitgame.desc");
     }
 
     @Override

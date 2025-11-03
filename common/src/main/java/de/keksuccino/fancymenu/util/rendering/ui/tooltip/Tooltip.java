@@ -1,22 +1,20 @@
 package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Matrix4f;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
-import de.keksuccino.fancymenu.util.rendering.gui.TooltipRenderUtil;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,6 +78,9 @@ public class Tooltip implements Renderable {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (RenderingUtils.isTooltipRenderingBlocked()) return;
+
         Screen s = Minecraft.getInstance().screen;
         if (!this.isEmpty() && (s != null)) {
 
@@ -278,7 +279,19 @@ public class Tooltip implements Renderable {
     }
 
     public Tooltip setTooltipText(List<Component> lines) {
-        this.textLines = (lines != null) ? lines : new ArrayList<>();
+        MutableComponent merged = Component.empty();
+        if (lines != null) {
+            boolean b = true;
+            for (Component c : lines) {
+                if (!b) merged.append("\n");
+                merged.append(c);
+                b = false;
+            }
+        }
+        this.textLines = new ArrayList<>();
+        for (FormattedText s : Minecraft.getInstance().font.getSplitter().splitLines(merged, 300, Style.EMPTY)) {
+            this.textLines.add(TextFormattingUtils.convertFormattedTextToComponent(s));
+        }
         this.updateSize();
         return this;
     }

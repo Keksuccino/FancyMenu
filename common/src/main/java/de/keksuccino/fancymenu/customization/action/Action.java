@@ -1,7 +1,8 @@
 package de.keksuccino.fancymenu.customization.action;
 
+import de.keksuccino.fancymenu.customization.action.ui.AsyncActionErrorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import net.minecraft.client.Minecraft;
@@ -23,6 +24,7 @@ public abstract class Action {
     private final String identifier;
     @Nullable
     protected ActionInstance currentInstance = null;
+    protected volatile boolean asyncErrorShown = false;
 
     public Action(@NotNull String uniqueIdentifier) {
         this.identifier = Objects.requireNonNull(uniqueIdentifier);
@@ -93,6 +95,19 @@ public abstract class Action {
             }
             Minecraft.getInstance().setScreen(s);
         }
+    }
+
+    public boolean canRunAsync() {
+        return true;
+    }
+
+    public boolean checkAsync() {
+        boolean sameThread = Minecraft.getInstance().isSameThread();
+        if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
+            this.asyncErrorShown = true;
+            QueueableScreenHandler.addToQueue(new AsyncActionErrorScreen(this.getActionDisplayName()));
+        }
+        return this.canRunAsync() || sameThread; // should run action
     }
 
 }

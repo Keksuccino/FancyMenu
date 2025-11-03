@@ -90,7 +90,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element.element).rotation = rot;
                             ((SplashTextElement)element.element).updateSplash();
                         },
-                        Components.translatable("fancymenu.editor.items.splash.rotation"),
+                        Component.translatable("fancymenu.elements.splash.rotation"),
                         true, 20.0F, null, null)
                 .setStackable(true);
 
@@ -101,7 +101,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element1.element).baseColor = DrawableColor.of(s);
                             ((SplashTextElement)element1.element).updateSplash();
                         },
-                        null, false, true, Components.translatable("fancymenu.editor.items.splash.basecolor"),
+                        null, false, true, Component.translatable("fancymenu.elements.splash.basecolor"),
                         true, DrawableColor.of(255, 255, 0).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
@@ -117,16 +117,16 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         consumes -> ((SplashTextElement)consumes.element).bounce,
                         (element1, s) -> ((SplashTextElement)element1.element).bounce = s,
-                        "fancymenu.editor.items.splash.bounce")
+                        "fancymenu.elements.splash.bounce")
                 .setStackable(true);
 
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "refresh_on_load",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         consumes -> ((SplashTextElement)consumes.element).refreshOnMenuReload,
                         (element1, s) -> ((SplashTextElement)element1.element).refreshOnMenuReload = s,
-                        "fancymenu.editor.items.splash.refresh")
+                        "fancymenu.elements.splash.refresh")
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.splash.refresh.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.splash.refresh.desc")));
 
     }
 
