@@ -57,6 +57,8 @@ public class TextElement extends AbstractElement {
 
         super(builder);
 
+        this.allowDepthTestManipulation = true;
+
         this.scrollArea = new ScrollArea(0, 0, this.getAbsoluteWidth(), this.getAbsoluteHeight()) {
             @Override
             public void updateScrollArea() {
@@ -231,7 +233,7 @@ public class TextElement extends AbstractElement {
     public void updateContent() {
 
         if (this.source == null) {
-            this.markdownRenderer.setText(I18n.get("fancymenu.customization.items.text.placeholder"));
+            this.markdownRenderer.setText(I18n.get("fancymenu.elements.text.placeholder"));
             return;
         }
 
@@ -254,7 +256,7 @@ public class TextElement extends AbstractElement {
                         linesRaw = (linesRaw != null) ? new ArrayList<>(linesRaw) : new ArrayList<>();
                     }
                 } else {
-                    linesRaw.add(I18n.get("fancymenu.customization.items.text.placeholder"));
+                    linesRaw.add(I18n.get("fancymenu.elements.text.placeholder"));
                 }
             } catch (Exception ex) {
                 if (linesRaw == null) linesRaw = new ArrayList<>();
@@ -263,7 +265,7 @@ public class TextElement extends AbstractElement {
 
             if (linesRaw.isEmpty()) {
                 if (isEditor()) {
-                    linesRaw.add(I18n.get("fancymenu.customization.items.text.status.unable_to_load"));
+                    linesRaw.add(I18n.get("fancymenu.elements.text.status.unable_to_load"));
                 } else {
                     linesRaw.add("");
                 }

@@ -28,7 +28,7 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
     @NotNull ImageMenuBackground background;
 
     protected ImageMenuBackgroundConfigScreen(@NotNull ImageMenuBackground background, @NotNull Consumer<ImageMenuBackground> callback) {
-        super(Components.translatable("fancymenu.background.image.configure"));
+        super(Component.translatable("fancymenu.backgrounds.image.configure"));
         this.background = background;
         this.callback = callback;
     }
@@ -38,7 +38,7 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
 
         this.addStartEndSpacerCell();
 
-        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.background.image.configure.choose_image.local"), button -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.backgrounds.image.configure.choose_image.local"), button -> {
             ResourceChooserScreen<ITexture, ImageFileType> s = ResourceChooserScreen.image(null, source -> {
                 if (source != null) {
                     this.background.textureSupplier = ResourceSupplier.image(source);
@@ -49,7 +49,7 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
             Minecraft.getInstance().setScreen(s);
         }), true);
 
-        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.background.image.type.web.fallback"), var1 -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.backgrounds.image.type.web.fallback"), var1 -> {
             ResourceChooserScreen<ITexture, ImageFileType> s = ResourceChooserScreen.image(null, source -> {
                 if (source != null) {
                     this.background.fallbackTextureSupplier = ResourceSupplier.image(source);
@@ -58,42 +58,42 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
             });
             s.setSource((this.background.fallbackTextureSupplier != null) ? this.background.fallbackTextureSupplier.getSourceWithPrefix() : null, false);
             Minecraft.getInstance().setScreen(s);
-        }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.type.web.fallback.desc"))), true);
+        }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.image.type.web.fallback.desc"))), true);
 
-        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.background.image.type.web.fallback.reset").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), var1 -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.backgrounds.image.type.web.fallback.reset").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), var1 -> {
             this.background.fallbackTextureSupplier = null;
         }), true);
 
         this.addCellGroupEndSpacerCell();
 
-        this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.restart_animated_on_menu_load", this.background.restartAnimatedOnMenuLoad), true, (value, button) -> {
+        this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.backgrounds.image.restart_animated_on_menu_load", this.background.restartAnimatedOnMenuLoad), true, (value, button) -> {
             this.background.restartAnimatedOnMenuLoad = value.getAsBoolean();
         });
 
-        WidgetCell repeatButton = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.repeat", this.background.repeat), true, (value, button) -> {
+        WidgetCell repeatButton = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.backgrounds.image.configure.repeat", this.background.repeat), true, (value, button) -> {
             this.background.repeat = value.getAsBoolean();
         });
         if (repeatButton.widget instanceof CycleButton<?> b) {
             b.setIsActiveSupplier(consumes -> !this.background.slideLeftRight);
         }
 
-        WidgetCell slideButton = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.slide", this.background.slideLeftRight), true, (value, button) -> {
+        WidgetCell slideButton = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.backgrounds.image.configure.slide", this.background.slideLeftRight), true, (value, button) -> {
             this.background.slideLeftRight = value.getAsBoolean();
         });
         if (slideButton.widget instanceof CycleButton<?> b) {
             b.setIsActiveSupplier(consumes -> !this.background.repeat && !this.background.parallaxEnabled);
         }
 
-        WidgetCell parallaxButton = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.parallax", this.background.parallaxEnabled), true, (value, button) -> {
+        WidgetCell parallaxButton = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.backgrounds.image.configure.parallax", this.background.parallaxEnabled), true, (value, button) -> {
             this.background.parallaxEnabled = value.getAsBoolean();
         });
         if (parallaxButton.widget instanceof CycleButton<?> b) {
             b.setIsActiveSupplier(consumes -> !this.background.slideLeftRight);
         }
 
-        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.background.image.configure.parallax_intensity"), var1 -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity"), var1 -> {
             final Screen currentScreen = Minecraft.getInstance().screen;
-            TextEditorScreen s = TextEditorScreen.build(Component.translatable("fancymenu.background.image.configure.parallax_intensity"), null, callback -> {
+            TextEditorScreen s = TextEditorScreen.build(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity"), null, callback -> {
                 if (callback != null) {
                     this.background.parallaxIntensityString = callback;
                 }
@@ -101,13 +101,13 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
             });
             s.setText(this.background.parallaxIntensityString);
             Minecraft.getInstance().setScreen(s);
-        }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.parallax_intensity.desc"))), true);
+        }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.image.configure.parallax_intensity.desc"))), true);
 
-        WidgetCell invertParallaxCell = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.invert_parallax", this.background.invertParallax), true, (value, button) -> {
+        WidgetCell invertParallaxCell = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.backgrounds.image.configure.invert_parallax", this.background.invertParallax), true, (value, button) -> {
             this.background.invertParallax = value.getAsBoolean();
         });
         if (invertParallaxCell.widget instanceof ExtendedButton b) {
-            b.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.invert_parallax.desc")));
+            b.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.image.configure.invert_parallax.desc")));
         }
 
         this.addStartEndSpacerCell();
@@ -121,7 +121,7 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
 
         if (this.doneButton != null) {
             this.doneButton.setTooltipSupplier(consumes -> {
-                if (this.background.textureSupplier == null) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.no_image_chosen"));
+                if (this.background.textureSupplier == null) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.image.configure.no_image_chosen"));
                 return null;
             });
         }

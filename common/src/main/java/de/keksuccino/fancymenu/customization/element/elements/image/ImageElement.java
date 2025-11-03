@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.image;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -22,16 +23,21 @@ public class ImageElement extends AbstractElement {
 
     @Nullable
     public ResourceSupplier<ITexture> textureSupplier;
-    @NotNull
-    public DrawableColor imageTint = DrawableColor.of("#FFFFFF");
     public boolean repeat = false;
     public boolean nineSlice = false;
     public int nineSliceBorderX = 5;
     public int nineSliceBorderY = 5;
     public boolean restartAnimatedOnMenuLoad = false;
+    @NotNull
+    public String imageTint = "#FFFFFF";
+    @Nullable
+    public String lastImageTint;
+    @Nullable
+    private DrawableColor currentImageTint;
 
     public ImageElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override
@@ -50,17 +56,36 @@ public class ImageElement extends AbstractElement {
 
     }
 
+    protected void tickImageTint() {
+
+        String tint = PlaceholderParser.replacePlaceholders(this.imageTint);
+        if (!tint.equals(this.lastImageTint)) {
+            this.currentImageTint = DrawableColor.of(tint);
+            if (this.currentImageTint == DrawableColor.EMPTY) {
+                this.currentImageTint = DrawableColor.of("#FFFFFF");
+                LOGGER.error("[FANCYMENU] Failed to parse tint color for ImageElement! Defaulting to WHITE as tint because parsing failed for: " + tint + " (RAW: " + this.imageTint + ")", new IllegalStateException("Failed to parse image tint color"));
+            }
+        }
+        this.lastImageTint = tint;
+
+        if (this.currentImageTint == null) this.currentImageTint = DrawableColor.of("#FFFFFF");
+
+    }
+
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
+
+            this.tickImageTint();
+            if (this.currentImageTint == null) return;
 
             int x = this.getAbsoluteX();
             int y = this.getAbsoluteY();
 
             RenderSystem.enableBlend();
 
-            this.imageTint.setAsShaderColor(graphics, this.opacity);
+            this.currentImageTint.setAsShaderColor(graphics, this.opacity);
 
             ITexture t = this.getTextureResource();
             if ((t != null) && t.isReady()) {
@@ -78,7 +103,7 @@ public class ImageElement extends AbstractElement {
                 RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
 
-            this.imageTint.resetShaderColor(graphics);
+            this.currentImageTint.resetShaderColor(graphics);
             RenderSystem.disableBlend();
 
         }

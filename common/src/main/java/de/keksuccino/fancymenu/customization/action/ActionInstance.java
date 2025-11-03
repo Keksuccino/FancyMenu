@@ -44,6 +44,7 @@ public class ActionInstance implements Executable, ValuePlaceholderHolder {
     public void execute() {
         String v = this.value;
         try {
+            if (!this.action.checkAsync()) return;
             if (v != null) {
                 //Replace value placeholders in value
                 for (Map.Entry<String, Supplier<String>> m : this.valuePlaceholders.entrySet()) {
@@ -134,6 +135,8 @@ public class ActionInstance implements Executable, ValuePlaceholderHolder {
                             ActionInstance i = new ActionInstance(action, action.hasValue() ? m.getValue() : null);
                             i.identifier = identifier;
                             instances.add(i);
+                        } else {
+                            LOGGER.error("[FANCYMENU] Action type not found! Registry returned NULL for type: " + actionType, new NullPointerException("Action type not registered"));
                         }
                     }
                 }

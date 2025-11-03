@@ -54,22 +54,22 @@ public class IsRealTimeMonthRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.realtimemonth");
+        return I18n.get("fancymenu.requirements.realtime_month");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.realtimemonth.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.realtime_month.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.realtime");
+        return I18n.get("fancymenu.requirements.categories.realtime");
     }
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.realtimemonth.valuename");
+        return I18n.get("fancymenu.requirements.realtime_month.value_name");
     }
 
     @Override

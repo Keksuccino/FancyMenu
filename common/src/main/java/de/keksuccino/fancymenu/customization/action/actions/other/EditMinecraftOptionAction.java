@@ -33,6 +33,11 @@ public class EditMinecraftOptionAction extends Action {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return true;
     }
@@ -112,7 +117,7 @@ public class EditMinecraftOptionAction extends Action {
 
         @SuppressWarnings("all")
         protected EditMinecraftOptionActionValueScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Components.translatable("fancymenu.editor.actions.generic_edit_value"), callback);
+            super(Component.translatable("fancymenu.actions.generic_edit_value"), callback);
             if (value.contains(":")) {
                 this.name = value.split(":", 2)[0];
                 this.setTo = value.split(":", 2)[1];

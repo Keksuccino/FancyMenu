@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
@@ -14,8 +15,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidg
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.loadingrequirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
@@ -315,6 +315,32 @@ public class LayoutEditorUI {
 
 		windowMenu.addSeparatorEntry("separator_after_anchor_overlay_opacity");
 
+		LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> rotationControlsToggleCycle = CommonCycles.cycleEnabledDisabled("fancymenu.editor.settings.enable_rotation_grabbers", FancyMenu.getOptions().enableElementRotationControls.getValue());
+		rotationControlsToggleCycle.addCycleListener(cycle -> FancyMenu.getOptions().enableElementRotationControls.setValue(cycle.getAsBoolean()));
+		windowMenu.addValueCycleEntry("toggle_element_rotation_controls", rotationControlsToggleCycle)
+				.setTickAction((menu, entry, isPost) -> {
+					//This is to correct the displayed value in case the grid got toggled via shortcut
+					if (FancyMenu.getOptions().enableElementRotationControls.getValue() != rotationControlsToggleCycle.current().getAsBoolean()) {
+						rotationControlsToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.getByBoolean(FancyMenu.getOptions().enableElementRotationControls.getValue()), false);
+					}
+				})
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.settings.enable_rotation_grabbers.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("reload"));
+
+		LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> tiltingControlsToggleCycle = CommonCycles.cycleEnabledDisabled("fancymenu.editor.settings.enable_element_tilting_controls", FancyMenu.getOptions().enableElementTiltingControls.getValue());
+		tiltingControlsToggleCycle.addCycleListener(cycle -> FancyMenu.getOptions().enableElementTiltingControls.setValue(cycle.getAsBoolean()));
+		windowMenu.addValueCycleEntry("toggle_element_tilting_controls", tiltingControlsToggleCycle)
+				.setTickAction((menu, entry, isPost) -> {
+					//This is to correct the displayed value in case the grid got toggled via shortcut
+					if (FancyMenu.getOptions().enableElementTiltingControls.getValue() != tiltingControlsToggleCycle.current().getAsBoolean()) {
+						tiltingControlsToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.getByBoolean(FancyMenu.getOptions().enableElementTiltingControls.getValue()), false);
+					}
+				})
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.settings.enable_element_tilting_controls.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"));
+
+		windowMenu.addSeparatorEntry("separator_after_rotation_tilting_controls");
+
 		if (!LayoutEditorScreen.FORCE_DISABLE_BUDDY) {
 			windowMenu.addValueCycleEntry("toggle_buddy", CommonCycles.cycleEnabledDisabled("fancymenu.editor.buddy.enable", FancyMenu.getOptions().enableBuddy.getValue()).addCycleListener(cycleEnabledDisabled -> {
 				FancyMenu.getOptions().enableBuddy.setValue(cycleEnabledDisabled.getAsBoolean());
@@ -362,12 +388,24 @@ public class LayoutEditorUI {
 		ContextMenu menu = new ContextMenu();
 		int i = 0;
 		for (AbstractLayoutEditorWidget w : editor.layoutEditorWidgets) {
-			menu.addClickableEntry("widget_" + i, w.getDisplayLabel(), (menu1, entry) -> {
-				w.setVisible(true);
+			ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("widget_" + i, Component.empty(), (menu1, entry1) -> {
+				w.setVisible(!w.isVisible());
 			});
+			entry.setLabelSupplier((menu1, entry1) -> buildEditorWidgetToggleLabel(w));
 			i++;
 		}
 		return menu;
+	}
+
+	private static MutableComponent buildEditorWidgetToggleLabel(@NotNull AbstractLayoutEditorWidget widget) {
+		boolean visible = widget.isVisible();
+		int color = visible ? UIBase.getUIColorTheme().success_text_color.getColorInt() : UIBase.getUIColorTheme().error_text_color.getColorInt();
+		String symbol = visible ? "✔" : "✖";
+		MutableComponent label = Component.empty();
+		label.append(Component.literal(symbol).withStyle(Style.EMPTY.withColor(color)));
+		label.append(Component.literal(" "));
+		label.append(widget.getDisplayLabel().copy());
+		return label;
 	}
 
 	@NotNull
@@ -479,7 +517,7 @@ public class LayoutEditorUI {
 						Minecraft.getInstance().setScreen(editor);
 					});
 					Minecraft.getInstance().setScreen(s);
-				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")))
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
 		menu.addValueCycleEntry("keep_background_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect", editor.layout.preserveBackgroundAspectRatio).addCycleListener(cycle -> {
@@ -551,31 +589,31 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_layout_index");
 
 		menu.addValueCycleEntry("random_mode", CommonCycles.cycleEnabledDisabled("fancymenu.fancymenu.editor.layoutoptions.randommode", editor.layout.randomMode).addCycleListener(cycle -> {
-			editor.history.saveSnapshot();
-			editor.layout.randomMode = cycle.getAsBoolean();
-		})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.btn.desc")))
+					editor.history.saveSnapshot();
+					editor.layout.randomMode = cycle.getAsBoolean();
+				})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("random"));
 
-		menu.addClickableEntry("random_mode_group", Components.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), (menu1, entry) -> {
-			Minecraft.getInstance().setScreen(TextInputScreen.build(Components.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerFiler(), call -> {
-				if (call != null) {
-					if (!MathUtils.isInteger(call)) {
-						call = "1";
-					}
-					editor.history.saveSnapshot();
-					editor.layout.randomGroup = call;
-				}
-				Minecraft.getInstance().setScreen(editor);
-			}).setText(editor.layout.randomGroup));
-		}).setIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
-				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.btn.desc")))
+		menu.addClickableEntry("random_mode_group", Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), (menu1, entry) -> {
+					Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerFiler(), call -> {
+						if (call != null) {
+							if (!MathUtils.isInteger(call)) {
+								call = "1";
+							}
+							editor.history.saveSnapshot();
+							editor.layout.randomGroup = call;
+						}
+						Minecraft.getInstance().setScreen(editor);
+					}).setText(editor.layout.randomGroup));
+				}).setIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
+				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("group"));
 
 		menu.addValueCycleEntry("random_mode_first_time", CommonCycles.cycleEnabledDisabled("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime", editor.layout.randomOnlyFirstTime).addCycleListener(cycle -> {
-			editor.history.saveSnapshot();
-			editor.layout.randomOnlyFirstTime = cycle.getAsBoolean();
-		})).setIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
-				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.btn.desc")))
+					editor.history.saveSnapshot();
+					editor.layout.randomOnlyFirstTime = cycle.getAsBoolean();
+				})).setIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
+				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("random_once"));
 
 		menu.addSeparatorEntry("separator_after_random_mode_first_time");
@@ -609,7 +647,7 @@ public class LayoutEditorUI {
 				.setIsActiveSupplier((menu1, entry) -> (editor.layout.forcedScale != 0))
 				.setTooltipSupplier((menu1, entry) -> {
 					if (entry.isActive()) {
-						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.btn.desc"));
+						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.desc"));
 					}
 					return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.forced_scale_needed"));
 				})
@@ -639,7 +677,7 @@ public class LayoutEditorUI {
 								}
 							}
 							return null;
-						}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")))
+						}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("measure"))
 				.setIsActiveSupplier((menu1, entry) -> editor.layout.autoScalingWidth == 0)
 				.setTooltipSupplier((menu1, entry) -> entry.isActive() ? null : Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.auto_scaling.disable_forced_scale_first")));
@@ -672,20 +710,20 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_close_audio");
 
-		menu.addClickableEntry("layout_wide_requirements", Components.translatable("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (menu1, entry) -> {
-			Minecraft.getInstance().setScreen(new ManageRequirementsScreen(editor.layout.layoutWideLoadingRequirementContainer.copy(false), (call) -> {
-				if (call != null) {
-					editor.layout.layoutWideLoadingRequirementContainer = call;
-				}
-				Minecraft.getInstance().setScreen(editor);
-			}));
-		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")))
+		menu.addClickableEntry("layout_wide_requirements", Component.translatable("fancymenu.requirements.layouts.loading_requirements"), (menu1, entry) -> {
+					Minecraft.getInstance().setScreen(new ManageRequirementsScreen(editor.layout.layoutWideLoadingRequirementContainer.copy(false), (call) -> {
+						if (call != null) {
+							editor.layout.layoutWideLoadingRequirementContainer = call;
+						}
+						Minecraft.getInstance().setScreen(editor);
+					}));
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.layouts.loading_requirements.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("check_list"));
 
 		menu.addSeparatorEntry("separator_after_layout_wide_requirements");
 
 		menu.addClickableEntry("manage_open_screen_actions", Component.translatable("fancymenu.layout.editor.edit_open_screen_action_script"), (menu1, entry) -> {
-					ManageActionsScreen s = new ManageActionsScreen(editor.layout.openScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.openScreenExecutableBlocks.get(0).copy(false), (call) -> {
+					ActionScriptEditorScreen s = new ActionScriptEditorScreen(editor.layout.openScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.openScreenExecutableBlocks.get(0).copy(false), (call) -> {
 						if (call != null) {
 							editor.history.saveSnapshot();
 							editor.layout.openScreenExecutableBlocks.clear();
@@ -699,7 +737,7 @@ public class LayoutEditorUI {
 				.setStackable(false);
 
 		menu.addClickableEntry("manage_close_screen_actions", Component.translatable("fancymenu.layout.editor.edit_close_screen_action_script"), (menu1, entry) -> {
-					ManageActionsScreen s = new ManageActionsScreen(editor.layout.closeScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.closeScreenExecutableBlocks.get(0).copy(false), (call) -> {
+					ActionScriptEditorScreen s = new ActionScriptEditorScreen(editor.layout.closeScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.closeScreenExecutableBlocks.get(0).copy(false), (call) -> {
 						if (call != null) {
 							editor.history.saveSnapshot();
 							editor.layout.closeScreenExecutableBlocks.clear();
@@ -722,7 +760,7 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_paste_elements");
 
-		menu.addSubMenuEntry("add_element", Components.translatable("fancymenu.editor.layoutproperties.newelement"), buildElementContextMenu(editor))
+		menu.addSubMenuEntry("add_element", Component.translatable("fancymenu.editor.layout.settings.new_element"), buildElementContextMenu(editor))
 				.setIcon(ContextMenu.IconFactory.getIcon("add"));
 
 		return menu;

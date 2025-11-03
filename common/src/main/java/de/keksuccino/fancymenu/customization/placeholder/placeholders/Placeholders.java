@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.server.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.MaxRamPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.PercentRamPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.UsedRamPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.LastDeathMessagePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerNamePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerUuidPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.world.*;
@@ -31,7 +32,7 @@ public class Placeholders {
     public static final MinecraftOptionValuePlaceholder MINECRAFT_OPTION_VALUE = new MinecraftOptionValuePlaceholder();
     public static final ScreenWidthPlaceholder SCREEN_WIDTH = new ScreenWidthPlaceholder();
     public static final ScreenHeightPlaceholder SCREEN_HEIGHT = new ScreenHeightPlaceholder();
-    public static final ScreenIdentifierPlaceholder SCREEN_IDENTIFIER = new ScreenIdentifierPlaceholder();
+    public static final CurrentScreenIdentifierPlaceholder CURRENT_SCREEN_IDENTIFIER = new CurrentScreenIdentifierPlaceholder();
     public static final ElementWidthPlaceholder ELEMENT_WIDTH = new ElementWidthPlaceholder();
     public static final ElementHeightPlaceholder ELEMENT_HEIGHT = new ElementHeightPlaceholder();
     public static final ElementPosXPlaceholder ELEMENT_POS_X = new ElementPosXPlaceholder();
@@ -42,6 +43,7 @@ public class Placeholders {
     public static final VanillaButtonLabelPlaceholder VANILLA_BUTTON_LABEL = new VanillaButtonLabelPlaceholder();
     public static final PlayerNamePlaceholder PLAYER_NAME = new PlayerNamePlaceholder();
     public static final PlayerUuidPlaceholder PLAYER_UUID = new PlayerUuidPlaceholder();
+    public static final LastDeathMessagePlaceholder LAST_DEATH_MESSAGE = new LastDeathMessagePlaceholder();
     public static final ServerMotdPlaceholder SERVER_MOTD = new ServerMotdPlaceholder();
     public static final ServerPingPlaceholder SERVER_PING = new ServerPingPlaceholder();
     public static final ServerVersionPlaceholder SERVER_VERSION = new ServerVersionPlaceholder();
@@ -86,6 +88,7 @@ public class Placeholders {
     public static final JvmNamePlaceholder JVM_NAME = new JvmNamePlaceholder();
     public static final OpenGLVersionPlaceholder OPEN_GL_VERSION = new OpenGLVersionPlaceholder();
     public static final OSNamePlaceholder OS_NAME = new OSNamePlaceholder();
+    public static final UptimeDurationPlaceholder UPTIME_DURATION = new UptimeDurationPlaceholder();
     public static final ActiveHotbarSlotPlaceholder ACTIVE_HOTBAR_SLOT = new ActiveHotbarSlotPlaceholder();
     public static final CurrentPlayerHealthPlaceholder CURRENT_PLAYER_HEALTH = new CurrentPlayerHealthPlaceholder();
     public static final GameTimePlaceholder GAME_TIME = new GameTimePlaceholder();
@@ -134,6 +137,7 @@ public class Placeholders {
     public static final MathCeilPlaceholder MATH_CEIL = new MathCeilPlaceholder();
     public static final MathFloorPlaceholder MATH_FLOOR = new MathFloorPlaceholder();
     public static final MathRoundPlaceholder MATH_ROUND = new MathRoundPlaceholder();
+    public static final NumberBaseConvertPlaceholder NUMBER_BASE_CONVERT = new NumberBaseConvertPlaceholder();
     public static final MathSignPlaceholder MATH_SIGN = new MathSignPlaceholder();
     public static final SwitchCasePlaceholder SWITCH_CASE = new SwitchCasePlaceholder();
     public static final ReplaceTextPlaceholder REPLACE_TEXT = new ReplaceTextPlaceholder();
@@ -149,7 +153,8 @@ public class Placeholders {
     public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
     public static final ClipboardContentPlaceholder CLIPBOARD_CONTENT = new ClipboardContentPlaceholder();
     public static final ScoreboardPlayerTeamPlaceholder SCOREBOARD_PLAYER_TEAM = new ScoreboardPlayerTeamPlaceholder();
-    public static final NbtDataGetPlaceholder NBT_DATA_GET = new NbtDataGetPlaceholder();
+    public static final ClientSideNbtDataGetPlaceholder NBT_DATA_GET = new ClientSideNbtDataGetPlaceholder();
+    public static final ServerSideNbtDataGetPlaceholder NBT_DATA_GET_SERVER = new ServerSideNbtDataGetPlaceholder();
     public static final WorldPlayersListPlaceholder WORLD_PLAYERS_LIST = new WorldPlayersListPlaceholder();
     public static final ScoreboardScorePlaceholder SCOREBOARD_SCORE = new ScoreboardScorePlaceholder();
     public static final ScoreboardObjectivesListPlaceholder SCOREBOARD_OBJECTIVES_LIST = new ScoreboardObjectivesListPlaceholder();
@@ -166,6 +171,8 @@ public class Placeholders {
     public static final FileTextPlaceholder FILE_TEXT = new FileTextPlaceholder();
     public static final WorldSaveNamesPlaceholder LEVEL_SAVE_NAMES = new WorldSaveNamesPlaceholder();
     public static final WorldSaveDataPlaceholder LEVEL_SAVE_DATA = new WorldSaveDataPlaceholder();
+    public static final FileSizePlaceholder FILE_SIZE = new FileSizePlaceholder();
+    public static final FileMd5Placeholder FILE_MD5 = new FileMd5Placeholder();
 
     public static void registerAll() {
 
@@ -183,7 +190,7 @@ public class Placeholders {
         //GUI
         PlaceholderRegistry.register(SCREEN_WIDTH);
         PlaceholderRegistry.register(SCREEN_HEIGHT);
-        PlaceholderRegistry.register(SCREEN_IDENTIFIER);
+        PlaceholderRegistry.register(CURRENT_SCREEN_IDENTIFIER);
         PlaceholderRegistry.register(ELEMENT_WIDTH);
         PlaceholderRegistry.register(ELEMENT_HEIGHT);
         PlaceholderRegistry.register(ELEMENT_POS_X);
@@ -196,6 +203,7 @@ public class Placeholders {
         //Player
         PlaceholderRegistry.register(PLAYER_NAME);
         PlaceholderRegistry.register(PLAYER_UUID);
+        PlaceholderRegistry.register(LAST_DEATH_MESSAGE);
 
         //World
         PlaceholderRegistry.register(ACTIVE_HOTBAR_SLOT);
@@ -288,11 +296,15 @@ public class Placeholders {
         PlaceholderRegistry.register(MATH_CEIL);
         PlaceholderRegistry.register(MATH_FLOOR);
         PlaceholderRegistry.register(MATH_ROUND);
+        PlaceholderRegistry.register(NUMBER_BASE_CONVERT);
         PlaceholderRegistry.register(MATH_SIGN);
         PlaceholderRegistry.register(SWITCH_CASE);
         PlaceholderRegistry.register(REPLACE_TEXT);
         PlaceholderRegistry.register(NBT_DATA_GET);
+        PlaceholderRegistry.register(NBT_DATA_GET_SERVER);
         PlaceholderRegistry.register(FILE_TEXT);
+        PlaceholderRegistry.register(FILE_SIZE);
+        PlaceholderRegistry.register(FILE_MD5);
 
         //Audio
         PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);
@@ -317,6 +329,7 @@ public class Placeholders {
         PlaceholderRegistry.register(JVM_NAME);
         PlaceholderRegistry.register(OPEN_GL_VERSION);
         PlaceholderRegistry.register(OS_NAME);
+        PlaceholderRegistry.register(UPTIME_DURATION);
         PlaceholderRegistry.register(TEXT_CHARACTER_COUNT);
         PlaceholderRegistry.register(TEXT_WIDTH);
         PlaceholderRegistry.register(CLIPBOARD_CONTENT);

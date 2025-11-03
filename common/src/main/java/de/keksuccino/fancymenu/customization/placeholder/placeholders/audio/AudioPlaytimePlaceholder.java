@@ -20,6 +20,11 @@ public class AudioPlaytimePlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String elementId = dps.values.get("element_identifier");
         String showPercentageStr = dps.values.get("show_percentage");

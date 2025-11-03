@@ -80,12 +80,12 @@ public class CursorElementBuilder extends ElementBuilder<CursorElement, CursorEd
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Components.translatable("fancymenu.customization.elements.cursor");
+        return Component.translatable("fancymenu.elements.cursor");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.customization.elements.cursor.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.desc");
     }
 
 }

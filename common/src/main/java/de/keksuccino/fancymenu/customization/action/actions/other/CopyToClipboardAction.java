@@ -28,17 +28,17 @@ public class CopyToClipboardAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.copytoclipboard");
+        return Component.translatable("fancymenu.actions.copy_to_clipboard");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.copytoclipboard.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.copy_to_clipboard.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.copytoclipboard.desc.value");
+        return Component.translatable("fancymenu.actions.copy_to_clipboard.desc.value");
     }
 
     @Override

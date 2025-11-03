@@ -20,6 +20,8 @@ import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerEleme
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slider.v2.SliderElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.tooltip.TooltipElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.video.mcef.MCEFVideoElementBuilder;
+import de.keksuccino.fancymenu.platform.Services;
 
 public class Elements {
 

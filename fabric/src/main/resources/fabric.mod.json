@@ -32,6 +32,9 @@
     "minecraft": ">=1.19.2",
     "java": ">=17"
   },
+  "suggests": {
+    "fancy_entity_renderer": ">=${fer_version}"
+  },
   "breaks": {
     "drippyloadingscreen": "<3.0.0",
     "fmextension_audio": "*",

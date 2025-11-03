@@ -147,12 +147,12 @@ public class IsNumberRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_number");
+        return I18n.get("fancymenu.requirements.is_number");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.is_number.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_number.desc"));
     }
 
     @Override
@@ -199,7 +199,7 @@ public class IsNumberRequirement extends LoadingRequirement {
         protected TextInputCell secondNumberCell;
 
         protected IsNumberValueConfigScreen(String value, @NotNull Consumer<String> callback) {
-            super(Components.translatable("fancymenu.helper.editor.items.visibilityrequirements.is_number.valuename"), callback);
+            super(Component.translatable("fancymenu.requirements.is_number.value_name"), callback);
             if (value == null) value = "";
             List<String> sections = getSections(value);
             if (!sections.isEmpty()) {
@@ -218,13 +218,13 @@ public class IsNumberRequirement extends LoadingRequirement {
 
             this.addSpacerCell(20);
 
-            ILocalizedValueCycle<NumberCompareMode> modeCycle = CommonCycles.cycleOrangeValue("fancymenu.loading_requirements.is_number.compare_mode", Arrays.asList(NumberCompareMode.values()), this.mode)
+            ILocalizedValueCycle<NumberCompareMode> modeCycle = CommonCycles.cycleOrangeValue("fancymenu.requirements.is_number.compare_mode", Arrays.asList(NumberCompareMode.values()), this.mode)
                     .setValueNameSupplier(mode -> {
-                        if (mode == NumberCompareMode.BIGGER_THAN) return I18n.get("fancymenu.loading_requirements.is_number.compare_mode.bigger_than");
-                        if (mode == NumberCompareMode.SMALLER_THAN) return I18n.get("fancymenu.loading_requirements.is_number.compare_mode.smaller_than");
-                        if (mode == NumberCompareMode.BIGGER_THAN_OR_EQUALS) return I18n.get("fancymenu.loading_requirements.is_number.compare_mode.bigger_than_or_equals");
-                        if (mode == NumberCompareMode.SMALLER_THAN_OR_EQUALS) return I18n.get("fancymenu.loading_requirements.is_number.compare_mode.smaller_than_or_equals");
-                        return I18n.get("fancymenu.loading_requirements.is_number.compare_mode.equals");
+                        if (mode == NumberCompareMode.BIGGER_THAN) return I18n.get("fancymenu.requirements.is_number.compare_mode.bigger_than");
+                        if (mode == NumberCompareMode.SMALLER_THAN) return I18n.get("fancymenu.requirements.is_number.compare_mode.smaller_than");
+                        if (mode == NumberCompareMode.BIGGER_THAN_OR_EQUALS) return I18n.get("fancymenu.requirements.is_number.compare_mode.bigger_than_or_equals");
+                        if (mode == NumberCompareMode.SMALLER_THAN_OR_EQUALS) return I18n.get("fancymenu.requirements.is_number.compare_mode.smaller_than_or_equals");
+                        return I18n.get("fancymenu.requirements.is_number.compare_mode.equals");
                     });
             this.addCycleButtonCell(modeCycle, true, (value, button) -> {
                 this.mode = value;
@@ -233,13 +233,13 @@ public class IsNumberRequirement extends LoadingRequirement {
             this.addCellGroupEndSpacerCell();
 
             String fNumber = this.getFirstNumberString();
-            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_number.compare_mode.first_number"));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_number.compare_mode.first_number"));
             this.firstNumberCell = this.addTextInputCell(null, true, true).setText(fNumber);
 
             this.addCellGroupEndSpacerCell();
 
             String sNumber = this.getSecondNumberString();
-            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_number.compare_mode.second_number"));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_number.compare_mode.second_number"));
             this.secondNumberCell = this.addTextInputCell(null, true, true).setText(sNumber);
 
             this.addSpacerCell(20);

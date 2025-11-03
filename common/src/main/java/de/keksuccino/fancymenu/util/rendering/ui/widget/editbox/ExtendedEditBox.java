@@ -9,9 +9,12 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
+import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -25,11 +28,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
-public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget {
+public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -57,18 +59,20 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected ConsumingSupplier<ExtendedEditBox, Boolean> isActiveSupplier = null;
     @Nullable
     protected ConsumingSupplier<ExtendedEditBox, Boolean> isVisibleSupplier = null;
-    protected Component hint;
-    @NotNull
-    protected final List<FormattedCharSequence> tooltip = new ArrayList<>();
+    @Nullable
+    protected Supplier<Tooltip> customTooltip;
+    protected boolean forceDefaultTooltipStyle = true;
+    @Nullable
+    protected ConsumingSupplier<ExtendedEditBox, Component> hintFancymenu = null;
 
-    public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
-        super(font, x, y, width, height, hint);
+    public ExtendedEditBox(Font font, int x, int y, int width, int height, Component narrationMessage) {
+        super(font, x, y, width, height, narrationMessage);
         this.font = font;
         this.hint = hint;
     }
 
-    public ExtendedEditBox(Font font, int x, int y, int width, int height, @Nullable EditBox editBox, Component hint) {
-        super(font, x, y, width, height, editBox, hint);
+    public ExtendedEditBox(Font font, int x, int y, int width, int height, @Nullable EditBox editBox, Component narrationMessage) {
+        super(font, x, y, width, height, editBox, narrationMessage);
         this.font = font;
         this.hint = hint;
     }
@@ -181,8 +185,22 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                 graphics.drawString(this.font, afterCursorComp, textXAfterCursor, textY, textColor, this.textShadow);
             }
 
+            // Vanilla Hint
+            Component hint = access.getHintFancyMenu();
+            boolean vanillaHintRendered = false;
             if ((hint != null) && text.isEmpty() && !this.isFocused()) {
+                graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
                 graphics.drawString(this.font, hint, textXAfterCursor, textY, textColor, this.textShadow);
+                graphics.disableScissor();
+                vanillaHintRendered = true;
+            }
+
+            // FancyMenu's Custom Hint Implementation
+            Component hintFm = this.getHintFancyMenu();
+            if (!vanillaHintRendered && (hintFm != null) && text.isEmpty()) {
+                graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
+                graphics.drawString(this.font, hintFm, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), -1, false);
+                graphics.disableScissor();
             }
 
             if (!renderSmallCursor && access.getSuggestionFancyMenu() != null) {
@@ -249,6 +267,16 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
 
         super.render(graphics.pose(), mouseX, mouseY, partial);
+
+        if ((this.customTooltip != null) && this.visible && this.isHovered()) {
+            Tooltip tt = this.customTooltip.get();
+            if (tt != null) {
+                if (this.forceDefaultTooltipStyle) {
+                    tt.setDefaultStyle();
+                }
+                TooltipHandler.INSTANCE.addTooltip(tt, () -> true, true, true);
+            }
+        }
 
     }
 
@@ -571,6 +599,36 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     @Override
     public void setNavigatable(boolean navigatable) {
         this.navigatable = navigatable;
+    }
+
+    @NotNull
+    public ExtendedEditBox setTooltip(@Nullable Supplier<Tooltip> tooltip) {
+        this.customTooltip = tooltip;
+        return this;
+    }
+
+    public boolean isForceDefaultTooltipStyle() {
+        return forceDefaultTooltipStyle;
+    }
+
+    public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
+        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
+    }
+
+    @NotNull
+    public ExtendedEditBox setHintFancyMenu(@Nullable ConsumingSupplier<ExtendedEditBox, Component> hint) {
+        this.hintFancymenu = hint;
+        return this;
+    }
+
+    @Nullable
+    protected MutableComponent getHintFancyMenu() {
+        if (this.hintFancymenu == null) return null;
+        Component c = this.hintFancymenu.get(this);
+        if (c != null) {
+            return c.copy().withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt()));
+        }
+        return null;
     }
 
     @FunctionalInterface

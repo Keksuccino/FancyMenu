@@ -34,6 +34,7 @@ public class CursorElement extends AbstractElement {
 
     public CursorElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override

@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.sounds.SoundManager;
@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class RendererWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget {
+public class RendererWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     @NotNull
     protected RendererWidgetBody body;

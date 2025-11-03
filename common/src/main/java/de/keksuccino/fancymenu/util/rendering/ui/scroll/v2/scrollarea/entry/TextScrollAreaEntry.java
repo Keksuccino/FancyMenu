@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry;
 
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -15,6 +15,7 @@ public class TextScrollAreaEntry extends ScrollAreaEntry {
     protected int textWidth;
     public Font font = Minecraft.getInstance().font;
     protected Consumer<TextScrollAreaEntry> onClickCallback;
+    protected int textBaseColor = UIBase.getUIColorTheme().generic_text_base_color.getColorInt();
 
     public TextScrollAreaEntry(ScrollArea parent, @NotNull Component text, @NotNull Consumer<TextScrollAreaEntry> onClick) {
         super(parent, 0, 14);
@@ -25,7 +26,7 @@ public class TextScrollAreaEntry extends ScrollAreaEntry {
     @Override
     public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         float centerY = this.getY() + (this.getHeight() / 2f);
-        graphics.drawString(this.font, this.text, (int)(this.getX() + 5f), (int)(centerY - (this.font.lineHeight / 2f)), -1, false);
+        graphics.drawString(this.font, this.text, (int)(this.getX() + 5f), (int)(centerY - (this.font.lineHeight / 2f)), this.textBaseColor, false);
     }
 
     @Override
@@ -45,6 +46,14 @@ public class TextScrollAreaEntry extends ScrollAreaEntry {
 
     public int getTextWidth() {
         return this.textWidth;
+    }
+
+    public int getTextBaseColor() {
+        return textBaseColor;
+    }
+
+    public void setTextBaseColor(int textBaseColor) {
+        this.textBaseColor = textBaseColor;
     }
 
 }
