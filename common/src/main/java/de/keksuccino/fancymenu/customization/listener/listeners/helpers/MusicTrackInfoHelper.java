@@ -81,7 +81,7 @@ public final class MusicTrackInfoHelper {
      */
     @Nullable
     public static String extractTrackResourceLocation(@Nullable Sound sound) {
-        if (sound == null || sound == SoundManager.EMPTY_SOUND || sound == SoundManager.INTENTIONALLY_EMPTY_SOUND) {
+        if (sound == null || sound == SoundManager.EMPTY_SOUND) {
             return null;
         }
         ResourceLocation path = sound.getPath();

@@ -1,13 +1,14 @@
 package de.keksuccino.fancymenu.customization.element.elements.dragger;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class DraggerWidget extends AbstractWidget {
+public class DraggerWidget extends ModernAbstractWidget {
 
     @NotNull
     public DraggingCallback draggingCallback;

@@ -30,6 +30,8 @@ dependencies {
     modImplementation "maven.modrinth:modmenu:4.2.0-beta.2"
     //modImplementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
     //modCompileOnly 'com.cinemamod:mcef:2.1.6-1.20.1'
+    //This is only to fix the missing dependency error in-dev
+    implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
 
 }
 

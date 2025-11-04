@@ -83,9 +83,8 @@ public class JoinServerAction extends Action {
                         l.save();
                     }
                     if (current == null) current = new TitleScreen();
-                    boolean isQuickPlay = false;
 
-                    ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay);
+                    ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d);
 
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to execute the 'Join Server' action!", ex);

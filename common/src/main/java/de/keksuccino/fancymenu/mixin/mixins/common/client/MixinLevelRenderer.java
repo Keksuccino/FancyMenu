@@ -18,7 +18,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLevelRenderer {
 
     @Inject(method = "renderLevel", at = @At("HEAD"))
-    private void before_renderLevel_FancyMenu(PoseStack poseStack, float partialTick, long finishNanoTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo info) {
+    private void before_renderLevel_FancyMenu(PoseStack poseStack, float partialTick, long finishNanoTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, com.mojang.math.Matrix4f projectionMatrix, CallbackInfo ci) {
         Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameStart();
     }
 
@@ -48,7 +47,7 @@ public class MixinLevelRenderer {
     }
 
     @Inject(method = "renderLevel", at = @At("TAIL"))
-    private void after_renderLevel_FancyMenu(PoseStack poseStack, float partialTick, long finishNanoTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo info) {
+    private void after_renderLevel_FancyMenu(PoseStack poseStack, float partialTick, long finishNanoTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, com.mojang.math.Matrix4f projectionMatrix, CallbackInfo ci) {
         Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameEnd();
     }
 
@@ -73,7 +72,7 @@ public class MixinLevelRenderer {
         }
 
         BlockPos cameraBlockPos = BlockPos.containing(cameraPosition);
-        BlockState cameraBlockState = entity.level().getBlockState(cameraBlockPos);
+        BlockState cameraBlockState = entity.level.getBlockState(cameraBlockPos);
         if (cameraBlockState.canOcclude()) {
             return false;
         }
@@ -81,7 +80,7 @@ public class MixinLevelRenderer {
         Vec3 direction = entityPosition.subtract(cameraPosition);
         Vec3 start = cameraPosition.add(direction.normalize().scale(1.0E-3D));
 
-        BlockHitResult hitResult = entity.level().clip(new ClipContext(start, entityPosition, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, cameraEntity));
+        BlockHitResult hitResult = entity.level.clip(new ClipContext(start, entityPosition, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, cameraEntity));
         if (hitResult.getType() != HitResult.Type.BLOCK) {
             return true;
         }
@@ -91,7 +90,7 @@ public class MixinLevelRenderer {
             return true;
         }
 
-        BlockState blockState = entity.level().getBlockState(hitResult.getBlockPos());
+        BlockState blockState = entity.level.getBlockState(hitResult.getBlockPos());
         return !blockState.canOcclude();
     }
 

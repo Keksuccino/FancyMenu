@@ -53,11 +53,6 @@ public class FancyMenu {
 
 			FileTypes.registerAll();
 
-			if (MCEFUtil.isMCEFLoaded()) {
-				BrowserHandler.init();
-				MCEFVideoManager.getInstance().initialize();
-			}
-
 			TextColorFormatters.registerAll();
 
 			EventHandler.INSTANCE.registerListenersOf(new Test());

@@ -41,7 +41,7 @@ public abstract class MixinLevelLoadingScreen extends Screen {
 
             this.chunkRendererFancyMenu = this.addRenderableWidget(new RendererWidget((this.width / 2) - 50, (this.height / 2) + 30 - 50, 100, 100,
                     (graphics, mouseX, mouseY, partial, x, y, width1, height1, renderer) -> {
-                        this.renderChunkBoxFancyMenu(graphics, x + 50, y + 50, this.progressListener);
+                        this.renderChunkBoxFancyMenu(graphics.pose(), x + 50, y + 50, this.progressListener);
                     }
             )).setWidgetIdentifierFancyMenu("chunks");
 

@@ -82,7 +82,7 @@ public class MixinAbstractContainerScreen extends Screen {
     @Unique
     private boolean canClickWidget_FancyMenu(@NotNull GuiEventListener listener) {
         if (listener instanceof AbstractWidget w) {
-            return (w.isHovered() && w.isActive() && w.visible);
+            return (((IMixinAbstractWidget)w).getIsHoveredFancyMenu() && w.isActive() && w.visible);
         }
         return false;
     }

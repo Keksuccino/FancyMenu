@@ -8,7 +8,9 @@ import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.NotNull;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Fired after rendering the screen background.<br>
@@ -39,7 +41,7 @@ public class RenderedScreenBackgroundEvent extends EventBase {
     }
 
     public PoseStack getPoseStack() {
-        return this.poseStack;
+        return this.graphics.pose();
     }
 
     public int getMouseX() {

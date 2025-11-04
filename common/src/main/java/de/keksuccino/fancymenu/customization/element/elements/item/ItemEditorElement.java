@@ -3,13 +3,13 @@ package de.keksuccino.fancymenu.customization.element.elements.item;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +33,7 @@ public class ItemEditorElement extends AbstractEditorElement {
                         itemKeyTargetFieldGetter,
                         itemKeyTargetFieldSetter,
                         null, false, true, Component.translatable("fancymenu.elements.item.key"),
-                        true, "" + BuiltInRegistries.ITEM.getKey(Items.BARRIER), null, null)
+                        true, "" + Registry.ITEM.getKey(Items.BARRIER), null, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.key.desc")))
                 .setStackable(false);
 

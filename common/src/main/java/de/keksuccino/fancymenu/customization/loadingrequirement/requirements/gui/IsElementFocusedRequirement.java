@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
@@ -53,7 +54,9 @@ public class IsElementFocusedRequirement extends LoadingRequirement {
                         List<GuiEventListener> listeners = i.getWidgetsToRegister();
                         if (listeners == null) return false;
                         for (GuiEventListener l : listeners) {
-                            if (l.isFocused()) return true;
+                            if (l instanceof AbstractWidget w) {
+                                if (w.isFocused()) return true;
+                            }
                         }
                     }
                 }

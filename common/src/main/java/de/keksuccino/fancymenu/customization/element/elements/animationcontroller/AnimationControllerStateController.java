@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.lang.reflect.Type;
 import java.util.*;
 
 public class AnimationControllerStateController {
@@ -36,7 +37,11 @@ public class AnimationControllerStateController {
 
             if (json.toString().isBlank()) return;
 
-            List<AnimationControllerState> stateList = GSON.fromJson(json.toString(), new TypeToken<>() {});
+            Type type = new TypeToken<List<AnimationControllerState>>() {}.getType();
+            List<AnimationControllerState> stateList = GSON.fromJson(json.toString(), type);
+            if (stateList == null) {
+                return;
+            }
             stateList.forEach(state -> STATES.put(Objects.requireNonNull(state.element_identifier), state));
 
         } catch (Exception ex) {

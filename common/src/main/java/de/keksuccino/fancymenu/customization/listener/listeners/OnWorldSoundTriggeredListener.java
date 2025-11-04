@@ -89,7 +89,7 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
     @Nullable
     private String resolveSoundResourceLocation(@NotNull SoundInstance sound) {
         Sound resolvedSound = sound.getSound();
-        if ((resolvedSound != null) && (resolvedSound != SoundManager.EMPTY_SOUND) && (resolvedSound != SoundManager.INTENTIONALLY_EMPTY_SOUND)) {
+        if ((resolvedSound != null) && (resolvedSound != SoundManager.EMPTY_SOUND)) {
             ResourceLocation path = resolvedSound.getPath();
             if (path != null) {
                 return path.toString();
