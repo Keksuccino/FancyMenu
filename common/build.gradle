@@ -17,13 +17,14 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.ow2.asm:asm-util:9.7'
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.layered() {
         officialMojangMappings()
         parchment("org.parchmentmc.data:parchment-${parchment_mc_version}:${parchment_version}@zip")
     }
+    annotationProcessor 'org.ow2.asm:asm-util:9.7'
     compileOnly group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
-    compileOnly group: 'org.ow2.asm', name: 'asm-tree', version: '9.7'
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
     compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
     compileOnly "com.github.Keksuccino:japng:0.5.3"
@@ -60,5 +61,12 @@ publishing {
         maven {
             url "file://" + System.getenv("local_maven")
         }
+    }
+}
+
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile).configureEach {
+        // Silence classfile lint warnings triggered by cross-loader enum references.
+        options.compilerArgs.add("-Xlint:-classfile")
     }
 }
