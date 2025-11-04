@@ -108,8 +108,6 @@ public class MixinMinecraft {
 			this.fireServerJoined_FancyMenu();
 		}
 
-		if (MCEFUtil.isMCEFLoaded()) BrowserHandler.tick();
-
 		for (Runnable r : MainThreadTaskExecutor.getAndClearQueue(MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK)) {
 			try {
 				r.run();
@@ -293,12 +291,11 @@ public class MixinMinecraft {
 		}
 	}
 
-	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;added()V"))
+	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V"))
 	private void beforeScreenAddedFancyMenu(Screen screen, CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.screen));
 	}
-
 
 	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(D)V", shift = At.Shift.AFTER))
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {

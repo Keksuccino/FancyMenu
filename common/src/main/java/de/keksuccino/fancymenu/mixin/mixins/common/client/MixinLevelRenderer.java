@@ -71,7 +71,7 @@ public class MixinLevelRenderer {
             return false;
         }
 
-        BlockPos cameraBlockPos = BlockPos.containing(cameraPosition);
+        BlockPos cameraBlockPos = new BlockPos(cameraPosition);
         BlockState cameraBlockState = entity.level.getBlockState(cameraBlockPos);
         if (cameraBlockState.canOcclude()) {
             return false;
