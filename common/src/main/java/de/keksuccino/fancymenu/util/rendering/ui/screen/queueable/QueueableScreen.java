@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.queueable;
 
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
-public class QueueableScreen extends Screen {
+public class QueueableScreen extends ModernScreen {
 
     private volatile Consumer<QueueableScreen> closeCallback;
 

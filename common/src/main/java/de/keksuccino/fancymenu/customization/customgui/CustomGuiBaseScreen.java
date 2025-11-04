@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -13,7 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CustomGuiBaseScreen extends Screen {
+public class CustomGuiBaseScreen extends ModernScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DrawableColor DARK_BACKGROUND = DrawableColor.BLACK;
@@ -86,7 +88,7 @@ public class CustomGuiBaseScreen extends Screen {
             this.renderPopupMenuBackgroundScreen(graphics, mouseX, mouseY, partial);
         } else {
             if ((Minecraft.getInstance().level == null) || !this.gui.worldBackground) {
-                this.renderDirtBackground(graphics);
+                this.renderDirtBackground(0);
                 return;
             }
         }
@@ -109,7 +111,7 @@ public class CustomGuiBaseScreen extends Screen {
         try {
             Minecraft.getInstance().screen = this.parentScreen;
             // FancyMenu's render events get fired in renderWithTooltip, so they should fire here automatically
-            this.parentScreen.renderWithTooltip(graphics, -500, -500, partial);
+            this.parentScreen.render(graphics.pose(), -500, -500, partial);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render popup menu background screen of Custom GUI!", ex);
         }

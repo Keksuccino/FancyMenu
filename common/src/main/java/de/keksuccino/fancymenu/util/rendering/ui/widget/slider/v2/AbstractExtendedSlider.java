@@ -6,24 +6,21 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 @SuppressWarnings("unused")
-public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget, FancyMenuWidget {
+public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget, FancyMenuWidget, WidgetWithVanillaTooltip {
 
     @Nullable
     protected DrawableColor sliderBackgroundColorNormal;
@@ -53,6 +50,8 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     @Nullable
     protected ConsumingSupplier<AbstractExtendedSlider, Boolean> isActiveSupplier = null;
     protected boolean leftMouseDown = false;
+    @Nullable
+    protected VanillaTooltip vanillaTooltip;
 
     public AbstractExtendedSlider(int x, int y, int width, int height, Component label, double value) {
         super(x, y, width, height, label, value);
@@ -466,7 +465,21 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected boolean canClick() {
-        return (this.isHovered() && this.isActive() && this.visible);
+        return (this.isHovered && this.isActive() && this.visible);
+    }
+
+    public boolean isHovered() {
+        return this.isHovered;
+    }
+
+    @Override
+    public @Nullable VanillaTooltip getVanillaTooltip_FancyMenu() {
+        return this.vanillaTooltip;
+    }
+
+    @Override
+    public void setVanillaTooltip_FancyMenu(@Nullable VanillaTooltip tooltip) {
+        this.vanillaTooltip = tooltip;
     }
 
     @FunctionalInterface

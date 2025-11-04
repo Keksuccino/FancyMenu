@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -7,7 +8,6 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
@@ -247,13 +247,13 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
         int entityX = this.width - 20 - (this.getRightSideWidgetWidth() / 2) - ((int)(this.element.getActiveEntityProperties().getDimensions().width * ENTITY_SCALE) / 2);
         int entityY = (int) this.scrollArea.getYWithBorder() + 30;
-        this.renderEntity(graphics.pose(), mouseX, mouseY, partial, entityX, entityY);
+        this.renderEntity(graphics, mouseX, mouseY, partial, entityX, entityY);
 
         RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected void renderEntity(PoseStack pose, int mouseX, int mouseY, float partial, int posX, int posY) {
+    protected void renderEntity(GuiGraphics graphics, int mouseX, int mouseY, float partial, int posX, int posY) {
 
         String cachedBodyXRot = this.element.bodyXRot;
         String cachedBodyYRot = this.element.bodyYRot;
@@ -287,7 +287,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
         this.element.posOffsetX = posX;
         this.element.posOffsetY = posY;
 
-        this.element.render(pose, mouseX, mouseY, partial);
+        this.element.render(graphics, mouseX, mouseY, partial);
 
         this.element.bodyXRot = cachedBodyXRot;
         this.element.bodyYRot = cachedBodyYRot;

@@ -87,7 +87,6 @@ public class ManageResourcePackAction extends Action {
             repository.setSelected(selectedIds);
 
             refreshOptions(minecraft.options, repository);
-            updateHighContrastOption(minecraft, repository);
 
             if (config.reloadOnChange) {
                 minecraft.reloadResourcePacks();
@@ -150,17 +149,6 @@ public class ManageResourcePackAction extends Action {
         if (changed) {
             options.save();
         }
-    }
-
-    private void updateHighContrastOption(@NotNull Minecraft minecraft, @NotNull PackRepository repository) {
-        boolean highContrastEnabled = false;
-        for (Pack selected : repository.getSelectedPacks()) {
-            if ("high_contrast".equals(selected.getId())) {
-                highContrastEnabled = true;
-                break;
-            }
-        }
-        minecraft.options.highContrast().set(highContrastEnabled);
     }
 
     @Nullable
