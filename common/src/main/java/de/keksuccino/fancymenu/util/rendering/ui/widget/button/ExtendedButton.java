@@ -8,13 +8,11 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
@@ -27,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 @SuppressWarnings("unused")
-public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget, FancyMenuWidget {
+public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget, FancyMenuWidget, WidgetWithVanillaTooltip {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -58,6 +56,8 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected boolean navigatable = true;
     @Nullable
     protected String identifier;
+    @Nullable
+    protected VanillaTooltip vanillaTooltip;
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress) {
         super(x, y, width, height, Component.literal(""), onPress);
@@ -485,6 +485,16 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @Override
     public @Nullable String getWidgetIdentifierFancyMenu() {
         return this.identifier;
+    }
+
+    @Override
+    public @Nullable VanillaTooltip getVanillaTooltip_FancyMenu() {
+        return this.vanillaTooltip;
+    }
+
+    @Override
+    public void setVanillaTooltip_FancyMenu(@Nullable VanillaTooltip tooltip) {
+        this.vanillaTooltip = tooltip;
     }
 
 }

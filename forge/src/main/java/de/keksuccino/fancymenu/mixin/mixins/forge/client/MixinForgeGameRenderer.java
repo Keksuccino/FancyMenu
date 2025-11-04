@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.mixin.MixinCacheCommon;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
@@ -29,6 +30,7 @@ public class MixinForgeGameRenderer {
         EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(instance, pose, mouseX, mouseY, partial));
         original.call(instance, pose, mouseX, mouseY, partial);
         EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(instance, pose, mouseX, mouseY, partial));
+        VanillaTooltip.renderScreenTooltips(instance, pose, mouseX, mouseY, partial);
         RenderingUtils.executeAndClearDeferredScreenRenderingTasks(graphics, mouseX, mouseY, partial);
         EventHandler.INSTANCE.postEvent(new AfterScreenRenderingEvent(instance, graphics, mouseX, mouseY, partial));
         ScreenRenderUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);

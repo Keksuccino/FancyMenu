@@ -6,10 +6,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -37,7 +35,7 @@ import java.util.function.Consumer;
 
 @SuppressWarnings("all")
 @Mixin(value = AbstractWidget.class)
-public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueWidget, IExtendedWidget {
+public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueWidget, IExtendedWidget, WidgetWithVanillaTooltip {
 
 	@Shadow @Final public static ResourceLocation WIDGETS_LOCATION;
 
@@ -108,6 +106,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private boolean widgetInitializedFancyMenu = false;
 	@Unique
 	private final List<Runnable> resetCustomizationsListenersFancyMenu = new ArrayList<>();
+    @Unique @Nullable
+    private VanillaTooltip vanillaTooltip_FancyMenu;
 
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
 	private void beforeRenderFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
@@ -678,5 +678,17 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	public @Nullable String getWidgetIdentifierFancyMenu() {
 		return this.widgetIdentifierFancyMenu;
 	}
+
+    @Unique
+    @Override
+    public @Nullable VanillaTooltip getVanillaTooltip_FancyMenu() {
+        return vanillaTooltip_FancyMenu;
+    }
+
+    @Unique
+    @Override
+    public void setVanillaTooltip_FancyMenu(@Nullable VanillaTooltip tooltip) {
+        this.vanillaTooltip_FancyMenu = tooltip;
+    }
 
 }

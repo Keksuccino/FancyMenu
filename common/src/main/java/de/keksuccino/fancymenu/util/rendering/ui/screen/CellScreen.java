@@ -2,12 +2,17 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
@@ -25,7 +30,6 @@ import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +41,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public abstract class CellScreen extends Screen implements InitialWidgetFocusScreen {
+public abstract class CellScreen extends ModernScreen implements InitialWidgetFocusScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -331,13 +335,13 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         this.lastHeight = window.getScreenHeight();
 
         //Adjust GUI scale to make all right-side buttons fit in the screen
-        if ((topRightSideWidget != null) && (topRightSideWidget.getY() < 20) && (window.getGuiScale() > 1)) {
+        if ((topRightSideWidget != null) && (topRightSideWidget.y < 20) && (window.getGuiScale() > 1)) {
             double newScale = window.getGuiScale();
             newScale--;
             if (newScale < 1) newScale = 1;
             window.setGuiScale(newScale);
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
-        } else if ((topRightSideWidget != null) && (topRightSideWidget.getY() >= 20) && resized) {
+        } else if ((topRightSideWidget != null) && (topRightSideWidget.y >= 20) && resized) {
             RenderingUtils.resetGuiScale();
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
@@ -533,16 +537,6 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             this.searchBar.setFocused(false);
         }
         return super.mouseClicked($$0, $$1, $$2);
-    }
-
-    @Override
-    public FocusNavigationEvent.ArrowNavigation createArrowEvent(ScreenDirection $$0) {
-        return null;
-    }
-
-    @Override
-    public FocusNavigationEvent.TabNavigation createTabEvent() {
-        return null;
     }
 
     protected class CellScrollEntry extends de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry {

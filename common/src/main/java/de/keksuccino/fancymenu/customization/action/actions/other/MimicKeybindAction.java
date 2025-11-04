@@ -17,7 +17,6 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -280,7 +279,7 @@ public class MimicKeybindAction extends Action {
             TextInputCell durationInput = this.addTextInputCell(null, true, true)
                     .setEditListener(s -> this.config.pressedDurationMs = s)
                     .setText(this.config.pressedDurationMs);
-            durationInput.editBox.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fancymenu.actions.mimic_keybind.edit.pressed_duration.desc")));
+            durationInput.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.mimic_keybind.edit.pressed_duration.desc")));
             durationInput.editBox.moveCursorToStart();
             this.durationCell = durationInput;
             updateDurationFieldState();

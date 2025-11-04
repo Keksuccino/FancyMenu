@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.customization.element.editor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;

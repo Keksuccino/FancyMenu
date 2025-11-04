@@ -23,6 +23,8 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -40,8 +42,6 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -1501,14 +1501,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	public boolean isMouseOver(double mouseX, double mouseY) {
 		if (this.element.layerHiddenInEditor) return false;
 		return UIBase.isXYInArea((int) mouseX, (int) mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
-	}
-
-	@Override
-	public void setFocused(boolean var1) {}
-
-	@Override
-	public boolean isFocused() {
-		return false;
 	}
 
 	public boolean isSelected() {

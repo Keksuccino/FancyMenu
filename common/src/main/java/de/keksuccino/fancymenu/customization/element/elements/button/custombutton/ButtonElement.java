@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custombutton;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -14,19 +13,20 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetWithVanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -249,9 +249,11 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.getWidget() != null) && this.shouldRender() && !isEditor()) {
-            String t = PlaceholderParser.replacePlaceholders(this.tooltip).replace("%n%", "\n").replace("\\n", "\n");
-            this.getWidget().setTooltip(Tooltip.create(Component.literal(t)));
+        if (this.getWidget() instanceof WidgetWithVanillaTooltip wt) {
+            if ((this.tooltip != null) && (this.getWidget() != null) && this.shouldRender() && !isEditor()) {
+                String t = PlaceholderParser.replacePlaceholders(this.tooltip).replace("%n%", "\n").replace("\\n", "\n");
+                wt.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.literal(t)));
+            }
         }
     }
 

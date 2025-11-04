@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.Axis;
+import de.keksuccino.fancymenu.util.rendering.gui.QuaternionUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -283,17 +284,17 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			if (hasTilt) {
 				// Apply vertical tilt (rotation around X axis)
 				if (verticalTilt != 0.0F) {
-					graphics.pose().mulPose(Axis.XP.rotationDegrees(verticalTilt));
+					graphics.pose().mulPose(QuaternionUtils.toMojangQuaternion(Axis.XP.rotationDegrees(verticalTilt)));
 				}
 				// Apply horizontal tilt (rotation around Y axis)
 				if (horizontalTilt != 0.0F) {
-					graphics.pose().mulPose(Axis.YP.rotationDegrees(horizontalTilt));
+					graphics.pose().mulPose(QuaternionUtils.toMojangQuaternion(Axis.YP.rotationDegrees(horizontalTilt)));
 				}
 			}
 
 			// Apply rotation (around Z axis)
 			if (hasRotation) {
-				graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotDegrees));
+				graphics.pose().mulPose(QuaternionUtils.toMojangQuaternion(Axis.ZP.rotationDegrees(rotDegrees)));
 			}
 
 			// Translate back
