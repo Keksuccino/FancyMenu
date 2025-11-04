@@ -549,9 +549,13 @@ public class MixinLocalPlayer {
         if (damageSource == null) {
             return "unknown";
         }
-        return damageSource.typeHolder().unwrapKey()
-                .map(key -> key.location().toString())
-                .orElse("unknown");
+        String messageId = damageSource.getMsgId();
+        if (messageId == null || messageId.isEmpty()) {
+            return "unknown";
+        }
+        String namespacedId = messageId.contains(":") ? messageId : ("minecraft:" + messageId);
+        ResourceLocation location = ResourceLocation.tryParse(namespacedId);
+        return location != null ? location.toString() : messageId;
 
     }
 
@@ -595,7 +599,7 @@ public class MixinLocalPlayer {
         if (isRaining) {
             Holder<Biome> biomeHolder = clientLevel.getBiome(playerPos);
             Biome biome = biomeHolder.value();
-            Biome.Precipitation precipitation = biome.getPrecipitationAt(playerPos);
+            Biome.Precipitation precipitation = biome.getPrecipitation();
             if (precipitation == Biome.Precipitation.SNOW) {
                 canSnow = clientLevel.canSeeSky(playerPos);
             } else if (precipitation == Biome.Precipitation.RAIN) {
@@ -619,7 +623,7 @@ public class MixinLocalPlayer {
     /** @reason Fire FancyMenu listener when the local player takes drowning damage. */
     @Inject(method = "hurt", at = @At("HEAD"))
     private void before_hurt_FancyMenu(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (source.is(DamageTypes.DROWN) && !this.drowningActive_FancyMenu) {
+        if (source == DamageSource.DROWN && !this.drowningActive_FancyMenu) {
             this.drowningActive_FancyMenu = true;
             Listeners.ON_STARTED_DROWNING.onStartedDrowning();
         }

@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.networking.packets.structures.StructureEventPacke
 import de.keksuccino.fancymenu.util.level.StructureUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -92,7 +91,7 @@ public class MixinServerPlayer {
 
     @Unique
     private Set<String> detectStructureKeys_FancyMenu(@NotNull ServerPlayer self) {
-        if (!(self.level() instanceof ServerLevel level)) {
+        if (!(self.level instanceof ServerLevel level)) {
             return Set.of();
         }
 
@@ -147,7 +146,7 @@ public class MixinServerPlayer {
 
     @Unique
     private String detectHighPrecisionStructureKey_FancyMenu(@NotNull ServerPlayer self) {
-        if (!(self.level() instanceof ServerLevel level)) {
+        if (!(self.level instanceof ServerLevel level)) {
             return null;
         }
 

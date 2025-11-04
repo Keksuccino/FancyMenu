@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.server;
 
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.entities.EntityEventPacket;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -23,7 +23,7 @@ public class MixinLivingEntity {
     @Inject(method = "die", at = @At("TAIL"))
     private void after_die_FancyMenu(@NotNull DamageSource damageSource, CallbackInfo info) {
         LivingEntity self = (LivingEntity)(Object)this;
-        if (!(self.level() instanceof ServerLevel serverLevel)) {
+        if (!(self.level instanceof ServerLevel serverLevel)) {
             return;
         }
         if (serverLevel.getServer() == null) {
@@ -36,7 +36,7 @@ public class MixinLivingEntity {
     private void broadcastEntityDeath_FancyMenu(@NotNull ServerLevel level, @NotNull LivingEntity entity, @NotNull DamageSource damageSource) {
         EntityEventPacket packet = new EntityEventPacket();
         packet.event_type = EntityEventPacket.EntityEventType.DEATH;
-        ResourceLocation entityKeyLocation = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        ResourceLocation entityKeyLocation = Registry.ENTITY_TYPE.getKey(entity.getType());
         packet.entity_key = (entityKeyLocation != null) ? entityKeyLocation.toString() : null;
         packet.entity_uuid = entity.getUUID().toString();
         packet.pos_x = entity.getX();
@@ -50,7 +50,7 @@ public class MixinLivingEntity {
         if (killer != null) {
             packet.killer_name = killer.getDisplayName().getString();
             packet.killer_uuid = killer.getUUID().toString();
-            ResourceLocation killerKeyLocation = BuiltInRegistries.ENTITY_TYPE.getKey(killer.getType());
+            ResourceLocation killerKeyLocation = Registry.ENTITY_TYPE.getKey(killer.getType());
             packet.killer_key = (killerKeyLocation != null) ? killerKeyLocation.toString() : null;
             if (packet.killer_key == null && killer instanceof net.minecraft.world.entity.player.Player) {
                 packet.killer_key = "minecraft:player";
@@ -87,8 +87,13 @@ public class MixinLivingEntity {
         if (damageSource == null) {
             return "unknown";
         }
-        return damageSource.typeHolder().unwrapKey()
-                .map(key -> key.location().toString())
-                .orElse("unknown");
+        String messageId = damageSource.getMsgId();
+        if (messageId == null || messageId.isEmpty()) {
+            return "unknown";
+        }
+        String namespacedId = messageId.contains(":") ? messageId : ("minecraft:" + messageId);
+        ResourceLocation location = ResourceLocation.tryParse(namespacedId);
+        return location != null ? location.toString() : messageId;
     }
+
 }

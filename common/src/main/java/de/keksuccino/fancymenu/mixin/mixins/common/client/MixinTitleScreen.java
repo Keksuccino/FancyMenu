@@ -11,7 +11,8 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -22,14 +23,14 @@ import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import javax.annotation.Nullable;
 
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen extends Screen {
@@ -37,6 +38,9 @@ public abstract class MixinTitleScreen extends Screen {
     @Shadow @Final public static Component COPYRIGHT_TEXT;
     @Shadow @Final private static ResourceLocation PANORAMA_OVERLAY;
     @Shadow @Nullable private RealmsNotificationsScreen realmsNotificationsScreen;
+    @Shadow @Final private static ResourceLocation MINECRAFT_LOGO;
+    @Shadow @Final private static ResourceLocation MINECRAFT_EDITION;
+    @Shadow @Nullable private String splash;
     @Shadow public boolean fading;
 
     @Unique private GuiGraphics cached_graphics_FancyMenu = null;
@@ -79,18 +83,6 @@ public abstract class MixinTitleScreen extends Screen {
                 .setWidgetIdentifierFancyMenu("minecraft_splash_widget")
                 .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.splash"));
 
-        if (this.realmsNotificationsScreen != null) {
-            RealmsNotificationRenderer notifications = new RealmsNotificationRenderer(this.realmsNotificationsScreen, this.width, this.height);
-            int totalWidth = notifications.getTotalWidth();
-            if (totalWidth == 0) totalWidth = 50;
-            this.addRenderableWidget(new RendererWidget(notifications.getDefaultPositionX(), notifications.getDefaultPositionY(), totalWidth, notifications.getTotalHeight(),
-                            (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
-                                notifications.renderIcons(graphics, x, y, DrawableColor.WHITE.getColorIntWithAlpha(renderer.getAlpha()));
-                            }))
-                    .setWidgetIdentifierFancyMenu("minecraft_realms_notification_icons_widget")
-                    .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.realmsnotification"));
-        }
-
         BrandingRenderer branding = new BrandingRenderer(this.height);
         this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY(), branding.getTotalWidth(), branding.getTotalHeight(),
                         (pose, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
@@ -100,10 +92,13 @@ public abstract class MixinTitleScreen extends Screen {
                 .setWidgetIdentifierFancyMenu("minecraft_branding_widget")
                 .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.branding"));
 
+        // We don't need that in older MC versions anyway
+        this.realmsNotificationsScreen = null;
+
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void before_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+    private void before_render_FancyMenu(PoseStack poseStack, int mouseX, int mouseY, float partial, CallbackInfo ci) {
         this.cached_mouseX_FancyMenu = mouseX;
         this.cached_mouseY_FancyMenu = mouseY;
         this.cached_partial_FancyMenu = partial;

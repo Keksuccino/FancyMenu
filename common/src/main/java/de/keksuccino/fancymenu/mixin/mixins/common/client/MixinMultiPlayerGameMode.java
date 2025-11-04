@@ -7,7 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -216,7 +216,7 @@ public class MixinMultiPlayerGameMode {
         if (stack == null || stack.isEmpty()) {
             return null;
         }
-        ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        ResourceLocation itemLocation = Registry.ITEM.getKey(stack.getItem());
         return itemLocation != null ? itemLocation.toString() : null;
     }
 
@@ -225,7 +225,7 @@ public class MixinMultiPlayerGameMode {
         if (state == null) {
             return "";
         }
-        ResourceLocation blockLocation = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        ResourceLocation blockLocation = Registry.BLOCK.getKey(state.getBlock());
         return blockLocation != null ? blockLocation.toString() : "";
     }
 
@@ -234,8 +234,9 @@ public class MixinMultiPlayerGameMode {
         if (entity == null) {
             return "";
         }
-        ResourceLocation entityLocation = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        ResourceLocation entityLocation = Registry.ENTITY_TYPE.getKey(entity.getType());
         return entityLocation != null ? entityLocation.toString() : "";
     }
+
 }
 
