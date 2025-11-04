@@ -7,9 +7,9 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -181,7 +181,7 @@ public class WriteFileAction extends Action {
             TextInputCell pathCell = this.addTextInputCell(null, true, true)
                     .setEditListener(s -> this.config.targetPath = s)
                     .setText(this.config.targetPath);
-            pathCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.write_file.edit.target_path.desc")));
+            pathCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.write_file.edit.target_path.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -191,7 +191,7 @@ public class WriteFileAction extends Action {
                     .setEditorMultiLineMode(true)
                     .setEditListener(s -> this.config.content = s.replace("\n", "\\n"))
                     .setText(this.config.content);
-            contentCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.write_file.edit.content.desc")));
+            contentCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.write_file.edit.content.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -199,7 +199,7 @@ public class WriteFileAction extends Action {
             CycleButton<CommonCycles.CycleEnabledDisabled> appendModeButton = new CycleButton<>(0, 0, 20, 20,
                     CommonCycles.cycleEnabledDisabled("fancymenu.actions.write_file.edit.mode", this.config.appendMode),
                     (value, button) -> this.config.appendMode = value.getAsBoolean());
-            appendModeButton.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.write_file.edit.mode.desc")));
+            appendModeButton.setTooltip(Tooltip.of(Component.translatable("fancymenu.actions.write_file.edit.mode.desc")));
             this.addWidgetCell(appendModeButton, true);
 
             this.addStartEndSpacerCell();

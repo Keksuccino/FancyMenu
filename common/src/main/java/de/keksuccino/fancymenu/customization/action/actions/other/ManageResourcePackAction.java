@@ -7,10 +7,10 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.enums.LocalizedEnum;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -20,7 +20,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -248,7 +247,7 @@ public class ManageResourcePackAction extends Action {
             TextInputCell nameCell = this.addTextInputCell(null, true, true)
                     .setEditListener(text -> this.config.packName = text)
                     .setText(this.config.packName);
-            nameCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.pack_name.desc")));
+            nameCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.manage_resource_pack.edit.pack_name.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -259,7 +258,7 @@ public class ManageResourcePackAction extends Action {
             );
             modeCycle.setCurrentValue(this.config.mode, false);
             CycleButton<ResourcePackMode> modeButton = new CycleButton<>(0, 0, 20, 20, modeCycle, (selectedMode, button) -> this.config.mode = selectedMode);
-            modeButton.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.mode.desc")));
+            modeButton.setTooltip(Tooltip.of(Component.translatable("fancymenu.actions.manage_resource_pack.edit.mode.desc")));
             modeButton.setSelectedValue(this.config.mode);
             this.addWidgetCell(modeButton, true);
 
@@ -271,7 +270,7 @@ public class ManageResourcePackAction extends Action {
                     CommonCycles.cycleEnabledDisabled("fancymenu.actions.manage_resource_pack.edit.reload", this.config.reloadOnChange),
                     (state, button) -> this.config.reloadOnChange = state.getAsBoolean()
             );
-            reloadButton.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.reload.desc")));
+            reloadButton.setTooltip(Tooltip.of(Component.translatable("fancymenu.actions.manage_resource_pack.edit.reload.desc")));
             reloadButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.config.reloadOnChange));
             this.addWidgetCell(reloadButton, true);
 
