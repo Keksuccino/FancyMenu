@@ -34,6 +34,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
+import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,13 +78,18 @@ public class MixinMinecraft {
 	}
 
 	@Inject(method = "doWorldLoad", at = @At("HEAD"))
-	private void before_doWorldLoad_FancyMenu(String levelId, LevelStorageAccess levelStorage, PackRepository packRepository, WorldStem worldStem, boolean newWorld, CallbackInfo info) {
+	private void before_doWorldLoad_FancyMenu(String levelId, LevelStorageAccess levelStorage, PackRepository packRepository, WorldStem worldStem, CallbackInfo info) {
 		try {
 			if (levelStorage != null && worldStem != null) {
 				Path savePath = levelStorage.getLevelPath(LevelResource.ROOT).toAbsolutePath();
 				String iconPath = levelStorage.getIconFile().map(path -> path.toAbsolutePath().toString()).orElse(null);
 				String worldName = worldStem.worldData().getLevelName();
-				WorldSessionTracker.prepareSession(worldName, savePath.toString(), iconPath, newWorld);
+				boolean isFirstJoin = false;
+				ServerLevelData overworldData = worldStem.worldData().overworldData();
+				if (overworldData != null) {
+					isFirstJoin = !overworldData.isInitialized();
+				}
+				WorldSessionTracker.prepareSession(worldName, savePath.toString(), iconPath, isFirstJoin);
 			} else {
 				WorldSessionTracker.clearSession();
 			}

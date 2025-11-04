@@ -72,7 +72,7 @@ public abstract class MixinMusicManager {
             return null;
         }
         Sound sound = soundInstance.getSound();
-        if (sound != null && sound != SoundManager.EMPTY_SOUND && sound != SoundManager.INTENTIONALLY_EMPTY_SOUND) {
+        if (sound != null && sound != SoundManager.EMPTY_SOUND) {
             ResourceLocation resolvedPath = sound.getPath();
             if (resolvedPath != null) {
                 return resolvedPath.toString();

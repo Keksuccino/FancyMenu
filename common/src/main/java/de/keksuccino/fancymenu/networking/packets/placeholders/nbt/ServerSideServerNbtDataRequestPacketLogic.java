@@ -91,7 +91,8 @@ public class ServerSideServerNbtDataRequestPacketLogic {
         if ((positionString == null) || positionString.isEmpty()) {
             return null;
         }
-        ServerLevel level = sender.serverLevel();
+        ServerLevel level = (sender.level instanceof ServerLevel l) ? l : null;
+        if (level == null) return null;
         CommandSourceStack source = sender.createCommandSourceStack();
         Coordinates coordinates = BlockPosArgument.blockPos().parse(new StringReader(positionString));
         BlockPos pos = coordinates.getBlockPos(source);

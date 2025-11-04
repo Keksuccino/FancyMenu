@@ -1,9 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -13,13 +14,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ConfirmationScreen extends Screen {
+public class ConfirmationScreen extends ModernScreen {
 
     @NotNull
     protected List<Component> textLines;
@@ -57,7 +57,7 @@ public class ConfirmationScreen extends Screen {
     public static ConfirmationScreen ofStrings(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
         ConfirmationScreen s = new ConfirmationScreen(callback, new ArrayList<>());
         for (String line : textLines) {
-            s.textLines.add(Components.literal(line));
+            s.textLines.add(Component.literal(line));
         }
         return s;
     }
@@ -78,7 +78,7 @@ public class ConfirmationScreen extends Screen {
     }
 
     protected ConfirmationScreen(@NotNull Consumer<Boolean> callback, @NotNull List<Component> textLines) {
-        super((!textLines.isEmpty()) ? textLines.get(0) : Components.empty());
+        super((!textLines.isEmpty()) ? textLines.get(0) : Component.empty());
         this.callback = callback;
         this.textLines = textLines;
     }
@@ -119,9 +119,9 @@ public class ConfirmationScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         int y = (this.height / 2) - ((this.renderTextLines.size() * 14) / 2);
         for (Component c : this.renderTextLines) {
@@ -131,15 +131,15 @@ public class ConfirmationScreen extends Screen {
         }
 
         this.confirmButton.active = this.delayEnd <= System.currentTimeMillis();
-        this.confirmButton.x = (this.width / 2) - this.confirmButton.getWidth() - 5;
-        this.confirmButton.y = this.height - 40;
-        this.confirmButton.render(pose, mouseX, mouseY, partial);
+        this.confirmButton.setX((this.width / 2) - this.confirmButton.getWidth() - 5);
+        this.confirmButton.setY(this.height - 40);
+        this.confirmButton.render(graphics, mouseX, mouseY, partial);
 
-        this.cancelButton.x = (this.width / 2) + 5;
-        this.cancelButton.y = this.height - 40;
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
+        this.cancelButton.setX((this.width / 2) + 5);
+        this.cancelButton.setY(this.height - 40);
+        this.cancelButton.render(graphics, mouseX, mouseY, partial);
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
