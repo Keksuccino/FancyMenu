@@ -5,16 +5,15 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -22,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class DualTextInputScreen extends Screen {
+public class DualTextInputScreen extends ModernScreen {
 
     @NotNull
     protected Consumer<Pair<String, String>> callback;
