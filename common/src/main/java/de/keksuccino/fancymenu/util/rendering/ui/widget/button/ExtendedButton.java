@@ -120,10 +120,15 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
     }
 
-    @Override
-    public void renderButton(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.renderBackground(GuiGraphics.currentGraphics());
         this.renderLabelText(GuiGraphics.currentGraphics());
+    }
+
+    @Deprecated
+    @Override
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.renderWidget(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
     }
 
     protected void renderBackground(@NotNull GuiGraphics graphics) {

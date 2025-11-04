@@ -95,7 +95,6 @@ public class LoadingRequirements {
     public static final OncePerSessionRequirement ONLY_ONCE_PER_SESSION = new OncePerSessionRequirement();
     public static final MouseClickedRequirement MOUSE_CLICKED = new MouseClickedRequirement();
     public static final IsInternetConnectionAvailableRequirement IS_INTERNET_CONNECTION_AVAILABLE = new IsInternetConnectionAvailableRequirement();
-    public static final IsMcefLoadedRequirement IS_MCEF_LOADED = new IsMcefLoadedRequirement();
     public static final IsAnyScreenOpenRequirement IS_ANY_SCREEN_OPEN = new IsAnyScreenOpenRequirement();
 
     public static void registerAll() {

@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -119,7 +120,7 @@ public class OnStartLookingAtBlockListener extends AbstractListener {
             BlockPos pos = hitResult.getBlockPos().immutable();
             BlockState state = level.getBlockState(pos);
             ResourceKey<Level> levelKey = level.dimension();
-            ResourceLocation blockKeyLocation = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+            ResourceLocation blockKeyLocation = Registry.BLOCK.getKey(state.getBlock());
             String blockKey = (blockKeyLocation != null) ? blockKeyLocation.toString() : null;
             return new LookedBlockData(pos, state, levelKey, blockKey, distance);
         }

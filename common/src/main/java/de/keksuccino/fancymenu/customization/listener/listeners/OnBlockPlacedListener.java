@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.listener.listeners;
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,7 +25,7 @@ public class OnBlockPlacedListener extends AbstractListener {
 
     public void onBlockPlaced(@NotNull BlockPos blockPos, @NotNull BlockState blockState) {
         this.lastBlockPos = blockPos.immutable();
-        ResourceLocation blockKeyLocation = BuiltInRegistries.BLOCK.getKey(blockState.getBlock());
+        ResourceLocation blockKeyLocation = Registry.BLOCK.getKey(blockState.getBlock());
         this.cachedBlockKey = (blockKeyLocation != null) ? blockKeyLocation.toString() : null;
         this.notifyAllInstances();
     }

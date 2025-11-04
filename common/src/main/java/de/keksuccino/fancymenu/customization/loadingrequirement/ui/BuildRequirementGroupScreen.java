@@ -1,5 +1,8 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.ui;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -12,7 +15,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -22,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class BuildRequirementGroupScreen extends Screen {
+public class BuildRequirementGroupScreen extends ModernScreen {
 
     protected Screen parentScreen;
     protected LoadingRequirementContainer parent;
@@ -52,8 +54,8 @@ public class BuildRequirementGroupScreen extends Screen {
 
         this.groupIdentifierTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 150, 20, true, CharacterFilter.getBasicFilenameCharacterFilter()) {
             @Override
-            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                super.render(graphics, mouseX, mouseY, partial);
+            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+                super.render(pose, mouseX, mouseY, partial);
                 BuildRequirementGroupScreen.this.group.identifier = this.getValue();
             }
         };
@@ -255,7 +257,7 @@ public class BuildRequirementGroupScreen extends Screen {
 
         this.groupIdentifierTextField.setX(this.width - 20 - this.groupIdentifierTextField.getWidth());
         this.groupIdentifierTextField.setY(this.groupModeButton.getY() - 15 - 20);
-        this.groupIdentifierTextField.render(graphics, mouseX, mouseY, partial);
+        this.groupIdentifierTextField.render(graphics.pose(), mouseX, mouseY, partial);
 
         String idLabel = I18n.get("fancymenu.requirements.screens.build_group_screen.group_identifier");
         int idLabelWidth = this.font.width(idLabel);

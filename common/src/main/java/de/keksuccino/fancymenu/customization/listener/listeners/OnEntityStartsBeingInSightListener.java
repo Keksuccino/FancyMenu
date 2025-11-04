@@ -2,13 +2,12 @@ package de.keksuccino.fancymenu.customization.listener.listeners;
 
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -127,7 +126,7 @@ public class OnEntityStartsBeingInSightListener extends AbstractListener {
                                   @NotNull UUID entityUuid) {
 
         public static @NotNull EntitySightData from(@NotNull Entity entity, double distanceToPlayer) {
-            ResourceLocation entityTypeKey = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+            ResourceLocation entityTypeKey = Registry.ENTITY_TYPE.getKey(entity.getType());
             String keyString = (entityTypeKey != null) ? entityTypeKey.toString() : null;
             return new EntitySightData(
                 keyString,

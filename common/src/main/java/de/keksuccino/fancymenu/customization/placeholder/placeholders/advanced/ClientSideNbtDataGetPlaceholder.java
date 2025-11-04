@@ -12,7 +12,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.commands.arguments.NbtPathArgument;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.NumericTag;
@@ -468,7 +468,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
             @Nullable AABB bounds
     ) {
         if (typeFilter != null) {
-            Optional<EntityType<?>> targetType = BuiltInRegistries.ENTITY_TYPE.getOptional(typeFilter.value());
+            Optional<EntityType<?>> targetType = Registry.ENTITY_TYPE.getOptional(typeFilter.value());
             if (targetType.isPresent()) {
                 boolean matches = entity.getType() == targetType.get();
                 if (typeFilter.inverted() == matches) return false;
