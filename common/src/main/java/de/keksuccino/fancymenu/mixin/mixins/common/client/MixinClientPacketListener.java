@@ -9,7 +9,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
@@ -141,7 +141,7 @@ public class MixinClientPacketListener {
 
         String itemKey = null;
         if (!stack.isEmpty()) {
-            ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            ResourceLocation itemLocation = Registry.ITEM.getKey(stack.getItem());
             if (itemLocation != null) {
                 itemKey = itemLocation.toString();
             }
