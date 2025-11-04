@@ -55,7 +55,6 @@
     "client.MixinPauseScreen",
     "client.MixinPlayer",
     "client.MixinProgressScreen",
-    "client.MixinQuickPlay",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
     "client.MixinRenderSystem",

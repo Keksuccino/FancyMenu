@@ -5,10 +5,8 @@ import org.joml.Matrix4f;
 public class MatrixUtils {
 
     public static Matrix4f convertToJoml(com.mojang.math.Matrix4f mojangMatrix) {
-        // Cast the Mojang matrix to your accessor interface
+        // Cast the Mojang matrix to the accessor interface
         GuiMatrix4f accessor = new GuiMatrix4f(mojangMatrix);
-
-        // Now use the accessor methods to get the fields
         // Remember: Mojang mij = row i, col j. JOML constructor wants column-major order.
         return new Matrix4f(
                 accessor.getM00(), accessor.getM10(), accessor.getM20(), accessor.getM30(), // JOML Col 0 <-- Mojang Col 0
@@ -18,7 +16,6 @@ public class MatrixUtils {
         );
     }
 
-    // Example using the converted Mojang utility methods from the previous response
     public static boolean isMatrixIdentityMojang(com.mojang.math.Matrix4f mojangMatrix) {
         GuiMatrix4f accessor = new GuiMatrix4f(mojangMatrix);
         return accessor.getM00() == 1.0f && accessor.getM01() == 0.0f && accessor.getM02() == 0.0f && accessor.getM03() == 0.0f &&
