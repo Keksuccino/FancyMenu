@@ -11,9 +11,9 @@ import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket;
 import net.minecraft.network.protocol.game.ClientboundTakeItemEntityPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.stats.Stats;
@@ -22,6 +22,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.network.protocol.game.ServerboundChatPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -33,22 +34,25 @@ import java.util.UUID;
 public class MixinClientPacketListener {
 
     /** @reason Fire FancyMenu listener whenever the client sends a chat message. */
-    @Inject(method = "sendChat", at = @At("HEAD"))
-    private void before_sendChat_FancyMenu(String message, CallbackInfo ci) {
-        Listeners.ON_CHAT_MESSAGE_SENT.onChatMessageSent(Component.literal(message));
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;)V", at = @At("HEAD"))
+    private void before_sendChat_FancyMenu(Packet<?> packet, CallbackInfo ci) {
+        if (!(packet instanceof ServerboundChatPacket chatPacket)) {
+            return;
+        }
+        Listeners.ON_CHAT_MESSAGE_SENT.onChatMessageSent(Component.literal(chatPacket.message()));
     }
 
     /** @reason Fire FancyMenu listener when another player joins the connected server. */
-    @Inject(method = "handlePlayerInfoUpdate", at = @At("HEAD"))
-    private void before_handlePlayerInfoUpdate_FancyMenu(ClientboundPlayerInfoUpdatePacket packet, CallbackInfo ci) {
-        if (!packet.actions().contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)) {
+    @Inject(method = "handlePlayerInfo", at = @At("HEAD"))
+    private void before_handlePlayerInfoUpdate_FancyMenu(ClientboundPlayerInfoPacket packet, CallbackInfo ci) {
+        if (packet.getAction() != ClientboundPlayerInfoPacket.Action.ADD_PLAYER) {
             return;
         }
 
         UUID localProfileId = Minecraft.getInstance().getUser().getProfileId();
 
-        for (ClientboundPlayerInfoUpdatePacket.Entry entry : packet.newEntries()) {
-            GameProfile profile = entry.profile();
+        for (ClientboundPlayerInfoPacket.PlayerUpdate entry : packet.getEntries()) {
+            GameProfile profile = entry.getProfile();
             if (profile == null) {
                 continue;
             }
@@ -63,18 +67,31 @@ public class MixinClientPacketListener {
     }
 
     /** @reason Fire FancyMenu listener when another player leaves the connected server. */
-    @Inject(method = "handlePlayerInfoRemove", at = @At("HEAD"))
-    private void before_handlePlayerInfoRemove_FancyMenu(ClientboundPlayerInfoRemovePacket packet, CallbackInfo ci) {
+    @Inject(method = "handlePlayerInfo", at = @At("HEAD"))
+    private void before_handlePlayerInfoRemove_FancyMenu(ClientboundPlayerInfoPacket packet, CallbackInfo ci) {
+        if (packet.getAction() != ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER) {
+            return;
+        }
+
         UUID localProfileId = Minecraft.getInstance().getUser().getProfileId();
         ClientPacketListener self = (ClientPacketListener)(Object)this;
 
-        for (UUID profileId : packet.profileIds()) {
+        for (ClientboundPlayerInfoPacket.PlayerUpdate entry : packet.getEntries()) {
+            GameProfile profile = entry.getProfile();
+            if (profile == null) {
+                continue;
+            }
+
+            UUID profileId = profile.getId();
             if (profileId == null || profileId.equals(localProfileId)) {
                 continue;
             }
 
             PlayerInfo playerInfo = self.getPlayerInfo(profileId);
-            String playerName = playerInfo != null ? playerInfo.getProfile().getName() : null;
+            String playerName = profile.getName();
+            if ((playerName == null || playerName.isBlank()) && playerInfo != null) {
+                playerName = playerInfo.getProfile().getName();
+            }
             Listeners.ON_OTHER_PLAYER_LEFT_WORLD.onOtherPlayerLeft(playerName, profileId);
         }
     }

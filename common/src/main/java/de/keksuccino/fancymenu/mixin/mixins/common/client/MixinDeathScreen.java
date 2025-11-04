@@ -1,12 +1,13 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ClickEvent;
@@ -67,8 +68,8 @@ public abstract class MixinDeathScreen extends Screen {
         }
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
-    private boolean cancel_renderCenteredText_FancyMenu(GuiGraphics instance, Font font, Component text, int x, int y, int color) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/DeathScreen;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+    private boolean cancel_renderCenteredText_FancyMenu(PoseStack poseStack, Font font, Component text, int i1, int i2, int i3) {
         if (!this.isCustomizableFancyMenu()) {
             return true;
         }
@@ -84,8 +85,8 @@ public abstract class MixinDeathScreen extends Screen {
         return true;
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;renderComponentHoverEffect(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Style;II)V"))
-    private boolean cancel_renderHover_FancyMenu(GuiGraphics instance, Font font, Style style, int mouseX, int mouseY) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/DeathScreen;renderComponentHoverEffect(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/network/chat/Style;II)V"))
+    private boolean cancel_renderHover_FancyMenu(DeathScreen instance, PoseStack poseStack, Style style, int i1, int i2) {
         return !this.isCustomizableFancyMenu();
     }
 
@@ -95,12 +96,12 @@ public abstract class MixinDeathScreen extends Screen {
     }
 
     @Inject(method = "render", at = @At("RETURN"))
-    private void after_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo info) {
+    private void after_render_FancyMenu(PoseStack poseStack, int mouseX, int mouseY, float partialTick, CallbackInfo info) {
         if (!this.isCustomizableFancyMenu()) {
             return;
         }
         if (this.causeOfDeathTextFancyMenu != null) {
-            this.renderCauseOfDeathTooltipFancyMenu(graphics, mouseX, mouseY);
+            this.renderCauseOfDeathTooltipFancyMenu(GuiGraphics.currentGraphics(), mouseX, mouseY);
         }
     }
 

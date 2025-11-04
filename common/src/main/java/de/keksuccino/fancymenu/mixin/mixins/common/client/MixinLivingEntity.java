@@ -4,7 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -48,7 +48,7 @@ public abstract class MixinLivingEntity {
     private ItemStack wrap_finishUsingItem_FancyMenu(ItemStack stack, Level level, LivingEntity living, Operation<ItemStack> operation) {
         String itemKey = null;
         if (!stack.isEmpty()) {
-            ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            ResourceLocation itemLocation = Registry.ITEM.getKey(stack.getItem());
             if (itemLocation != null) {
                 itemKey = itemLocation.toString();
             }
@@ -78,7 +78,7 @@ public abstract class MixinLivingEntity {
             return;
         }
 
-        ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(this.lastBrokenStack_FancyMenu.getItem());
+        ResourceLocation itemLocation = Registry.ITEM.getKey(this.lastBrokenStack_FancyMenu.getItem());
         String itemKey = itemLocation != null ? itemLocation.toString() : null;
         Listeners.ON_ITEM_BROKE.onItemBroke(itemKey, this.lastBrokenItemType_FancyMenu);
         this.clearBrokenItemCache_FancyMenu();
@@ -138,7 +138,7 @@ public abstract class MixinLivingEntity {
 
     @Unique
     private String resolveEffectKey_FancyMenu(MobEffect effect) {
-        ResourceLocation effectLocation = BuiltInRegistries.MOB_EFFECT.getKey(effect);
+        ResourceLocation effectLocation = Registry.MOB_EFFECT.getKey(effect);
         return effectLocation != null ? effectLocation.toString() : "unknown";
     }
 

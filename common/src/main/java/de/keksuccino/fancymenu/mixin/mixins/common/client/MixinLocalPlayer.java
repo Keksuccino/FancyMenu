@@ -8,7 +8,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
@@ -18,7 +18,6 @@ import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.Level;
@@ -152,8 +151,8 @@ public class MixinLocalPlayer {
         this.updateFluidListeners_FancyMenu(self);
         this.updatePositionChangedListener_FancyMenu(self);
         this.updateSteppingListener_FancyMenu(self);
-        if (self.level() != null) {
-            ResourceKey<Level> currentDimensionKey = self.level().dimension();
+        if (self.level != null) {
+            ResourceKey<Level> currentDimensionKey = self.level.dimension();
             if (!this.dimensionInitialized_FancyMenu || !Objects.equals(this.lastDimensionKey_FancyMenu, currentDimensionKey)) {
                 this.dimensionInitialized_FancyMenu = true;
                 this.lastDimensionKey_FancyMenu = currentDimensionKey;
@@ -241,7 +240,7 @@ public class MixinLocalPlayer {
 
         ResourceKey<Biome> currentBiomeKey = null;
         ClientLevel cachedClientLevel = null;
-        if (self.level() instanceof ClientLevel clientLevel) {
+        if (self.level instanceof ClientLevel clientLevel) {
             cachedClientLevel = clientLevel;
             if (clientLevel.hasChunkAt(self.getBlockX(), self.getBlockZ())) {
                 Holder<Biome> biomeHolder = clientLevel.getBiome(self.blockPosition());
@@ -337,7 +336,7 @@ public class MixinLocalPlayer {
 
     @Unique
     private void updatePositionChangedListener_FancyMenu(LocalPlayer self) {
-        if (!(self.level() instanceof ClientLevel clientLevel)) {
+        if (!(self.level instanceof ClientLevel clientLevel)) {
             return;
         }
 
@@ -363,12 +362,12 @@ public class MixinLocalPlayer {
 
     @Unique
     private void updateSteppingListener_FancyMenu(LocalPlayer self) {
-        if (!(self.level() instanceof ClientLevel clientLevel)) {
+        if (!(self.level instanceof ClientLevel clientLevel)) {
             this.resetSteppingState_FancyMenu();
             return;
         }
 
-        if (!self.onGround() || self.isSpectator()) {
+        if (!self.isOnGround() || self.isSpectator()) {
             this.resetSteppingState_FancyMenu();
             return;
         }
@@ -453,7 +452,7 @@ public class MixinLocalPlayer {
 
     @Unique
     private FluidContactInfo detectFluidContact_FancyMenu(LocalPlayer self) {
-        if (!(self.level() instanceof ClientLevel clientLevel)) {
+        if (!(self.level instanceof ClientLevel clientLevel)) {
             return NO_FLUID_FANCYMENU;
         }
 
@@ -481,7 +480,7 @@ public class MixinLocalPlayer {
 
                     double fluidSurface = (double)y + fluidState.getHeight(clientLevel, mutablePos);
                     if (fluidSurface >= box.minY) {
-                        ResourceLocation fluidLocation = BuiltInRegistries.FLUID.getKey(fluidState.getType());
+                        ResourceLocation fluidLocation = Registry.FLUID.getKey(fluidState.getType());
                         String key = (fluidLocation != null) ? fluidLocation.toString() : null;
                         return new FluidContactInfo(true, key);
                     }
@@ -541,7 +540,7 @@ public class MixinLocalPlayer {
 
     @Unique
     private String resolveEffectKey_FancyMenu(MobEffect effect) {
-        ResourceLocation effectLocation = BuiltInRegistries.MOB_EFFECT.getKey(effect);
+        ResourceLocation effectLocation = Registry.MOB_EFFECT.getKey(effect);
         return effectLocation != null ? effectLocation.toString() : "unknown";
     }
 
@@ -563,12 +562,12 @@ public class MixinLocalPlayer {
         }
         Entity causingEntity = damageSource.getEntity();
         if (causingEntity != null) {
-            ResourceLocation entityLocation = BuiltInRegistries.ENTITY_TYPE.getKey(causingEntity.getType());
+            ResourceLocation entityLocation = Registry.ENTITY_TYPE.getKey(causingEntity.getType());
             return entityLocation != null ? entityLocation.toString() : null;
         }
         Entity directEntity = damageSource.getDirectEntity();
         if (directEntity != null) {
-            ResourceLocation entityLocation = BuiltInRegistries.ENTITY_TYPE.getKey(directEntity.getType());
+            ResourceLocation entityLocation = Registry.ENTITY_TYPE.getKey(directEntity.getType());
             return entityLocation != null ? entityLocation.toString() : null;
         }
         return null;
@@ -624,7 +623,6 @@ public class MixinLocalPlayer {
             this.drowningActive_FancyMenu = true;
             Listeners.ON_STARTED_DROWNING.onStartedDrowning();
         }
-
     }
 
     /** @reason Fire FancyMenu listener when the local player drops an item. */
@@ -632,7 +630,7 @@ public class MixinLocalPlayer {
     private ItemStack wrap_removeFromSelected_FancyMenu(Inventory inventory, boolean fullStack, Operation<ItemStack> operation) {
         ItemStack removed = operation.call(inventory, fullStack);
         if (!removed.isEmpty()) {
-            ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(removed.getItem());
+            ResourceLocation itemLocation = Registry.ITEM.getKey(removed.getItem());
             String itemKey = itemLocation != null ? itemLocation.toString() : null;
             Listeners.ON_ITEM_DROPPED.onItemDropped(itemKey);
         }

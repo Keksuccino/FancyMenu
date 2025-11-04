@@ -1,12 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.sounds.SoundManager;
@@ -16,7 +15,7 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TextWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
+public class TextWidget extends ModernAbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     @Nullable
     protected String widgetIdentifier;
@@ -31,7 +30,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
 
     @NotNull
     public static TextWidget empty(int x, int y, int width) {
-        return new TextWidget(x, y, width, 9, Minecraft.getInstance().font, Components.empty());
+        return new TextWidget(x, y, width, 9, Minecraft.getInstance().font, Component.empty());
     }
 
     @NotNull
@@ -41,45 +40,13 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
 
     @NotNull
     public static TextWidget of(@NotNull String text, int x, int y, int width) {
-        return of(Components.literal(text), x, y, width);
+        return of(Component.literal(text), x, y, width);
     }
 
     public TextWidget(int x, int y, int width, int height, @NotNull Font font, @NotNull Component text) {
         super(x, y, width, height, text);
         this.font = font;
         this.updateIntrinsicSize();
-    }
-
-    public int getX() {
-        return this.x;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public int getY() {
-        return this.y;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public int getWidth() {
-        return this.width;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public int getHeight() {
-        return this.height;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
     }
 
     @Override

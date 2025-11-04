@@ -1,15 +1,14 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class RendererWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
+public class RendererWidget extends ModernAbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     @NotNull
     protected RendererWidgetBody body;
@@ -17,49 +16,17 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget, Navi
     protected String identifier;
 
     public RendererWidget(int x, int y, int width, int height, @NotNull RendererWidgetBody body) {
-        super(x, y, width, height, Components.empty());
+        super(x, y, width, height, Component.empty());
         this.body = body;
     }
 
     @Override
-    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.body.render(pose, mouseX, mouseY, partial, this.x, this.y, this.getWidth(), this.getHeight(), this);
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.body.render(graphics, mouseX, mouseY, partial, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this);
     }
 
     @Override
-    public void updateNarration(@NotNull NarrationElementOutput var1) {
-    }
-
-    public int getX() {
-        return this.x;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public int getY() {
-        return this.y;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public int getWidth() {
-        return this.width;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public int getHeight() {
-        return this.height;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
+    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
     public RendererWidget setBody(@NotNull RendererWidgetBody body) {
@@ -110,7 +77,7 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget, Navi
 
     @FunctionalInterface
     public interface RendererWidgetBody {
-        void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial, int x, int y, int width, int height, @NotNull RendererWidget renderer);
+        void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height, @NotNull RendererWidget renderer);
     }
 
 }
