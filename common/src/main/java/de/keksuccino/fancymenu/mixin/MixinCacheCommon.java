@@ -6,6 +6,9 @@ import org.jetbrains.annotations.Nullable;
 public class MixinCacheCommon {
 
     @Nullable
-    public static PoseStack current_screen_render_pose_stack = null;
+    public static PoseStack cached_screen_render_pose_stack = null;
+    public static int cached_screen_render_mouseX;
+    public static int cached_screen_render_mouseY;
+    public static float cached_screen_render_partial;
 
 }

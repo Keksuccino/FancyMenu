@@ -1,9 +1,10 @@
 package de.keksuccino.fancymenu.events.screen;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Renderable;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
@@ -36,6 +37,11 @@ public class AfterScreenRenderingEvent extends EventBase {
         return graphics;
     }
 
+    @NotNull
+    public PoseStack getPoseStack() {
+        return graphics.pose();
+    }
+
     public int getMouseX() {
         return mouseX;
     }
@@ -53,7 +59,7 @@ public class AfterScreenRenderingEvent extends EventBase {
         this.getNarratables().add(widget);
     }
 
-    public <T extends GuiEventListener & NarratableEntry & Renderable> void addRenderableWidget(T widget) {
+    public <T extends GuiEventListener & NarratableEntry & Widget> void addRenderableWidget(T widget) {
         this.addWidget(widget);
         this.getRenderables().add(widget);
     }
@@ -62,7 +68,7 @@ public class AfterScreenRenderingEvent extends EventBase {
         return ((IMixinScreen)this.getScreen()).getChildrenFancyMenu();
     }
 
-    public List<Renderable> getRenderables() {
+    public List<Widget> getRenderables() {
         return ((IMixinScreen)this.getScreen()).getRenderablesFancyMenu();
     }
 

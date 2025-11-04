@@ -8,65 +8,65 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
+import de.keksuccino.fancymenu.mixin.MixinCacheCommon;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(Screen.class)
-public class MixinScreen implements CustomizableScreen {
+public abstract class MixinScreen implements CustomizableScreen, ContainerEventHandler {
 
     @Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
     @Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
+    @Unique private boolean initialized_FancyMenu = false;
     @Unique private boolean nextFocusPath_called_FancyMenu = false;
-    @Unique private int cached_mouseX_FancyMenu;
-    @Unique private int cached_mouseY_FancyMenu;
-    @Unique private float cached_partial_FancyMenu;
 
     @Shadow @Final private List<GuiEventListener> children;
 
-    @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-    private void wrap_render_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
-        this.cached_mouseX_FancyMenu = mouseX;
-        this.cached_mouseY_FancyMenu = mouseY;
-        this.cached_partial_FancyMenu = partial;
-        EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(instance, graphics, mouseX, mouseY, partial));
-        original.call(instance, graphics, mouseX, mouseY, partial);
-        EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(instance, graphics, mouseX, mouseY, partial));
+    @Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("RETURN"))
+    private void return_init_FancyMenu(Minecraft minecraft, int width, int height, CallbackInfo info) {
+        this.initialized_FancyMenu = true;
     }
 
-    @Inject(method = "renderWithTooltip", at = @At("RETURN"))
-    private void return_renderWithTooltip_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
-        RenderingUtils.executeAndClearDeferredScreenRenderingTasks(graphics, mouseX, mouseY, partial);
+    @Inject(method = "renderTooltipInternal", at = @At("HEAD"), cancellable = true)
+    private void head_renderTooltipInternal_FancyMenu(PoseStack pose, List<ClientTooltipComponent> clientTooltipComponents, int mouseX, int mouseY, CallbackInfo info) {
+        if (RenderingUtils.isTooltipRenderingBlocked()) info.cancel();
     }
 
-    @WrapMethod(method = "renderBackground")
-    private void wrap_renderBackground_FancyMenu(GuiGraphics graphics, Operation<Void> original) {
+    @WrapMethod(method = "renderBackground(Lcom/mojang/blaze3d/vertex/PoseStack;I)V")
+    private void wrap_renderBackground_FancyMenu(PoseStack poseStack, int vOffset, Operation<Void> original) {
         Screen instance = ((Screen)(Object)this);
-        int mouseX = this.cached_mouseX_FancyMenu;
-        int mouseY = this.cached_mouseY_FancyMenu;
-        float partial = this.cached_partial_FancyMenu;
+        GuiGraphics graphics = GuiGraphics.currentGraphics();
+        int mouseX = MixinCacheCommon.cached_screen_render_mouseX;
+        int mouseY = MixinCacheCommon.cached_screen_render_mouseY;
+        float partial = MixinCacheCommon.cached_screen_render_partial;
         //Don't fire the event in the TitleScreen, because it gets handled differently there
         if (instance instanceof TitleScreen) {
-            original.call(graphics);
+            original.call(poseStack, vOffset);
             return;
         }
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
@@ -77,32 +77,35 @@ public class MixinScreen implements CustomizableScreen {
                 graphics.fill(0, 0, instance.width, instance.height, 0);
                 RenderingUtils.resetShaderColor(graphics);
             } else {
-                original.call(graphics);
+                original.call(poseStack, vOffset);
             }
         } else {
-            original.call(graphics);
+            original.call(poseStack, vOffset);
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, mouseX, mouseY, partial));
     }
 
-    @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;"))
-    private void beforeNextFocusPathInKeyPressedFancyMenu(int $$0, int $$1, int $$2, CallbackInfoReturnable<Boolean> info) {
+    @WrapOperation(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;changeFocus(Z)Z"))
+    private boolean wrap_changeFocus_in_keyPressed_FancyMenu(Screen instance, boolean focus, Operation<Boolean> original) {
         this.nextFocusPath_called_FancyMenu = true;
+        boolean b = original.call(instance, focus);
+        this.nextFocusPath_called_FancyMenu = false;
+        return b;
     }
 
-    @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;", shift = At.Shift.AFTER))
-    private void afterNextFocusPathInKeyPressedFancyMenu(int $$0, int $$1, int $$2, CallbackInfoReturnable<Boolean> info) {
+    @Override
+    public void setInitialFocus(@Nullable GuiEventListener eventListener) {
+        this.nextFocusPath_called_FancyMenu = true;
+        ContainerEventHandler.super.setInitialFocus(eventListener);
         this.nextFocusPath_called_FancyMenu = false;
     }
 
-    @Inject(method = "setInitialFocus", at = @At("HEAD"))
-    private void beforeSetInitialFocus_2_FancyMenu(CallbackInfo info) {
+    @Override
+    public boolean changeFocus(boolean focus) {
         this.nextFocusPath_called_FancyMenu = true;
-    }
-
-    @Inject(method = "setInitialFocus", at = @At("RETURN"))
-    private void afterSetInitialFocus_2_FancyMenu(CallbackInfo info) {
+        boolean b = ContainerEventHandler.super.changeFocus(focus);
         this.nextFocusPath_called_FancyMenu = false;
+        return b;
     }
 
     @Inject(method = "children", at = @At("RETURN"), cancellable = true)
@@ -118,6 +121,12 @@ public class MixinScreen implements CustomizableScreen {
     @Override
     public @NotNull List<GuiEventListener> removeOnInitChildrenFancyMenu() {
         return this.removeOnInitChildrenFancyMenu;
+    }
+
+    @Unique
+    @Override
+    public boolean isScreenInitialized_FancyMenu() {
+        return this.initialized_FancyMenu;
     }
 
 }

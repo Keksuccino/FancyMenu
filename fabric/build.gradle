@@ -24,6 +24,7 @@ dependencies {
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${mixin_extras_version}")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
     include(implementation 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7')
+    include(implementation 'org.joml:joml:1.10.8')
     modImplementation "maven.modrinth:melody:1.0.1-1.19.2-fabric"
     modImplementation "maven.modrinth:konkrete:1.8.0-1.19.1-1.19.2-fabric"
     modImplementation "maven.modrinth:modmenu:4.2.0-beta.2"

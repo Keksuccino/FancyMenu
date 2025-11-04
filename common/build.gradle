@@ -32,6 +32,7 @@ dependencies {
     modCompileOnly "maven.modrinth:konkrete:1.8.0-1.19.1-1.19.2-fabric"
     //modCompileOnly 'com.cinemamod:mcef:2.1.6-1.20.1'
     //implementation "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
+    implementation 'org.joml:joml:1.10.8'
 
 }
 

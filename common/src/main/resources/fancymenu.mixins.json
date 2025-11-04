@@ -38,7 +38,6 @@
     "client.MixinDeathScreen",
     "client.MixinGameNarrator",
     "client.MixinGameRenderer",
-    "client.MixinGuiGraphics",
     "client.MixinImageButton",
     "client.MixinKeyboardHandler",
     "client.MixinLevelLoadingScreen",
