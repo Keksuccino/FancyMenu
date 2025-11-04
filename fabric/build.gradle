@@ -12,6 +12,7 @@ base {
 
 dependencies {
 
+    implementation 'org.ow2.asm:asm-util:9.7'
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.layered() {
         officialMojangMappings()
