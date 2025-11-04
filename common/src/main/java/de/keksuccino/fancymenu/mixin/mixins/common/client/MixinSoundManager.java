@@ -6,6 +6,7 @@ import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.client.sounds.SoundEventListener;
 import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,7 +25,7 @@ public abstract class MixinSoundManager {
     private SoundEventListener worldSoundEventBridge_FancyMenu;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void afterInitFancyMenu(Options options, CallbackInfo info) {
+    private void afterInitFancyMenu(ResourceManager resourceManager, Options options, CallbackInfo ci) {
         if (this.worldSoundEventBridge_FancyMenu == null) {
             this.worldSoundEventBridge_FancyMenu = (sound, accessor) -> {
                 Sound resolvedSound = sound.getSound();

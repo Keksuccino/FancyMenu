@@ -3,8 +3,9 @@ package de.keksuccino.fancymenu.mixin.mixins.forge.client;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import de.keksuccino.fancymenu.events.screen.ScreenCharTypedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.KeyboardHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,33 +40,15 @@ public class MixinForgeKeyboardHandler {
     }
 
     /**
-     * @reason This adds special char typed handling for FancyMenu's {@link WrappedMCEFBrowser}.
-     *         It also handles the CharTypedEvent.
+     * @reason This handles the CharTypedEvent.
      */
     @WrapWithCondition(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
     private boolean wrap_screen_charTyped_in_charTyped_FancyMenu(Runnable runnable, String message, String className) {
         Minecraft minecraft = Minecraft.getInstance();
         Screen screen = minecraft.screen;
         if (screen != null) {
-
             // Fire CharTypedEvent
             EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(screen, (char) this.cached_char_codePoint_FancyMenu));
-
-            // Handle browser typing logic
-            for (GuiEventListener listener : screen.children()) {
-                if (listener instanceof WrappedMCEFBrowser) {
-                    boolean b = false;
-                    if (Character.charCount(this.cached_char_codePoint_FancyMenu) == 1) {
-                        b = listener.charTyped((char) this.cached_char_codePoint_FancyMenu, this.cached_char_modifiers_FancyMenu);
-                    } else {
-                        for (char c : Character.toChars(this.cached_char_codePoint_FancyMenu)) {
-                            b = !b ? listener.charTyped(c, this.cached_char_modifiers_FancyMenu) : true;
-                        }
-                    }
-                    if (b) return false;
-                }
-            }
-
         }
         return true;
     }
