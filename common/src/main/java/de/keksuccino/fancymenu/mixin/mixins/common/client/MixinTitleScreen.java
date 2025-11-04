@@ -43,7 +43,6 @@ public abstract class MixinTitleScreen extends Screen {
     @Shadow @Nullable private String splash;
     @Shadow public boolean fading;
 
-    @Unique private GuiGraphics cached_graphics_FancyMenu = null;
     @Unique private int cached_mouseX_FancyMenu = -1;
     @Unique private int cached_mouseY_FancyMenu = -1;
     @Unique private float cached_partial_FancyMenu = -1f;
@@ -125,7 +124,7 @@ public abstract class MixinTitleScreen extends Screen {
         } else {
             original.call(instance, deltaT, alpha);
         }
-        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, this.cached_graphics_FancyMenu, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, GuiGraphics.currentGraphics(), this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
     }
 
     /**

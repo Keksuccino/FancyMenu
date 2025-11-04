@@ -216,12 +216,12 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Components.translatable("fancymenu.helper.editor.items.playerentity");
+        return Component.translatable("fancymenu.elements.player_entity");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.desc");
     }
 
 }
