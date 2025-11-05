@@ -152,8 +152,6 @@ subprojects {
                 "fabric_version": fabric_version,
                 "fabric_short_version": fabric_short_version,
                 "fabric_loader_version": fabric_loader_version,
-                "forge_version": forge_version,
-                "forge_loader_version": forge_loader_version,
                 "neoforge_version": neoforge_version,
                 "neoforge_loader_version": neoforge_loader_version,
                 "fer_version": fer_version,
