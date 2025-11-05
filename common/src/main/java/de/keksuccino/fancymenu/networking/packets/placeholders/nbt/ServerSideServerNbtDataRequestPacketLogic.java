@@ -4,6 +4,7 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataResponsePacket.ResultType;
+import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import net.minecraft.advancements.critereon.NbtPredicate;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.NbtPathArgument;
@@ -26,7 +27,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.List;
 import java.util.Locale;
 
@@ -159,11 +159,7 @@ public class ServerSideServerNbtDataRequestPacketLogic {
             case "json" -> {
                 if (tag instanceof CompoundTag) {
                     Component component = NbtUtils.toPrettyComponent(tag);
-                    String json = Component.Serializer.toJson(component, context.source().registryAccess());
-                    if (json.startsWith("\"") && json.endsWith("\"") && (json.length() >= 2)) {
-                        return json.substring(1, json.length() - 1);
-                    }
-                    return json;
+                    return ComponentParser.toJson(component);
                 }
                 return tag.toString();
             }

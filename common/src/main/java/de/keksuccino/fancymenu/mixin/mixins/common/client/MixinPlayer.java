@@ -18,4 +18,5 @@ public abstract class MixinPlayer {
             Listeners.ON_JUMP.onJump();
         }
     }
+
 }

@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -11,7 +10,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -90,7 +88,7 @@ public class DualTextInputScreen extends Screen {
 
         if (this.allowPlaceholders) {
             UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(this.input_one.getX() + this.input_one.getWidth() + 5, this.input_one.getY(), editorButtonWidth, 20, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
-                TextEditorScreen s = new TextEditorScreen((this.filter != null) ? this.filter.convertToLegacyFilter() : null, callback -> {
+                TextEditorScreen s = new TextEditorScreen((this.filter != null) ? this.filter: null, callback -> {
                     if (callback != null) {
                         this.setFirstText(callback);
                     }
@@ -122,7 +120,7 @@ public class DualTextInputScreen extends Screen {
 
         if (this.allowPlaceholders) {
             UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(this.input_two.getX() + this.input_two.getWidth() + 5, this.input_two.getY(), editorButtonWidth, 20, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
-                TextEditorScreen s = new TextEditorScreen((this.filter != null) ? this.filter.convertToLegacyFilter() : null, callback -> {
+                TextEditorScreen s = new TextEditorScreen((this.filter != null) ? this.filter : null, callback -> {
                     if (callback != null) {
                         this.setSecondText(callback);
                     }
@@ -154,7 +152,6 @@ public class DualTextInputScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        RenderSystem.enableBlend();
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         MutableComponent t = this.title.copy().withStyle(Style.EMPTY.withBold(true));

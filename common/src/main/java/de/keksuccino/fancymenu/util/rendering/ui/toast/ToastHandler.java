@@ -11,7 +11,7 @@ public class ToastHandler {
 
     public static void showToast(@NotNull final SimpleToast toast, final long durationMs) {
         final long start = System.currentTimeMillis();
-        Minecraft.getInstance().getToasts().addToast(toast);
+        Minecraft.getInstance().getToastManager().addToast(toast);
         new Thread(() -> {
             try {
                 while (true) {

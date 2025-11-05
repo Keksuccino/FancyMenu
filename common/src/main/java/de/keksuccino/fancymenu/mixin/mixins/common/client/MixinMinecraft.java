@@ -161,7 +161,7 @@ public class MixinMinecraft {
 			this.pendingServerJoinEvent_FancyMenu = true;
 		}
 	}
-	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
+	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;tick()V"))
 	private void beforeScreenTickFancyMenu(CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new ScreenTickEvent.Pre(this.screen));
@@ -274,7 +274,7 @@ public class MixinMinecraft {
 		WorldSessionTracker.handleWorldLeft((Minecraft) (Object) this);
 	}
 
-	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V", shift = At.Shift.AFTER))
+	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;releaseAll()V", shift = At.Shift.AFTER))
 	private void beforeInitCurrentScreenFancyMenu(Screen screen, CallbackInfo info) {
 		if (screen != null) {
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(screen, InitOrResizeScreenEvent.InitializationPhase.INIT));
@@ -313,7 +313,7 @@ public class MixinMinecraft {
 	}
 
 
-	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(D)V", shift = At.Shift.AFTER))
+	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(I)V", shift = At.Shift.AFTER))
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {
 		if (this.screen != null) {
 			RenderingUtils.resetGuiScale();

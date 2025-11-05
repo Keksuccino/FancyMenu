@@ -10,6 +10,7 @@ import java.nio.IntBuffer;
 import javax.imageio.ImageIO;
 import com.mojang.blaze3d.platform.MacosUtil;
 import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinWindow;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
