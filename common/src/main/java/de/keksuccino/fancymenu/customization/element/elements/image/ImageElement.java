@@ -12,7 +12,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -85,28 +84,23 @@ public class ImageElement extends AbstractElement {
             int x = this.getAbsoluteX();
             int y = this.getAbsoluteY();
 
-            RenderSystem.enableBlend();
-
-            this.currentImageTint.setAsShaderColor(graphics, this.opacity);
+            int tint = this.currentImageTint.getColorIntWithAlpha(this.opacity);
 
             ITexture t = this.getTextureResource();
             if ((t != null) && t.isReady()) {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
                     if (this.repeat) {
-                        RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(),  this.imageTint.getColorIntWithAlpha(this.opacity));
+                        RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), tint);
                     } else if (this.nineSlice) {
-                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, this.imageTint.getColorIntWithAlpha(this.opacity));
+                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, tint);
                     } else {
-                        graphics.blit(RenderPipelines.GUI_TEXTURED, loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.imageTint.getColorIntWithAlpha(this.opacity));
+                        graphics.blit(RenderPipelines.GUI_TEXTURED, loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), tint);
                     }
                 }
             } else if (isEditor()) {
                 RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
-
-            this.currentImageTint.resetShaderColor(graphics);
-            RenderSystem.disableBlend();
 
         }
 

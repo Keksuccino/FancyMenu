@@ -119,7 +119,6 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorIntWithAlpha(this.opacity));
 
         if (!this.ensureVideoManagerReady()) {
-            RenderSystem.disableBlend();
             return;
         }
 
@@ -194,8 +193,6 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
             }
         }
         this.lastPausedState = pausedState;
-
-        RenderSystem.enableBlend();
 
         this.videoPlayer.setOpacity(this.opacity);
 

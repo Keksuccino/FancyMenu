@@ -5,6 +5,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import net.minecraft.advancements.critereon.MinMaxBounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -94,11 +95,11 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
             Tag tag = tags.get(0);
 
             if ("string".equalsIgnoreCase(returnType)) {
-                return tag.getAsString();
+                return tag.asString().orElse("");
             } else if ("snbt".equalsIgnoreCase(returnType)) {
                 return tag.toString();
             } else if ("json".equalsIgnoreCase(returnType) && tag instanceof CompoundTag) {
-                String json = Component.Serializer.toJson(NbtUtils.toPrettyComponent(tag), level.registryAccess());
+                String json = ComponentParser.toJson(NbtUtils.toPrettyComponent(tag));
                 if (json.startsWith("\"") && json.endsWith("\"")) {
                     return json.substring(1, json.length() - 1);
                 }
@@ -186,25 +187,25 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
             if (scale != 1.0D) {
                 return formatScaledNumeric(numericTag, scale);
             }
-            return numericTag.getAsString();
+            return numericTag.asString().orElse("");
         }
         if (tag instanceof StringTag) {
-            return tag.getAsString();
+            return tag.asString().orElse("");
         }
         return tag.toString();
     }
 
     private String formatScaledNumeric(NumericTag tag, double scale) {
         if (tag instanceof FloatTag) {
-            float value = (float)(tag.getAsDouble() * scale);
+            float value = (float)(tag.asDouble().orElse(1D) * scale);
             return Float.toString(value) + "f";
         }
         if (tag instanceof DoubleTag) {
-            double value = tag.getAsDouble() * scale;
+            double value = tag.asDouble().orElse(1D) * scale;
             return Double.toString(value) + "d";
         }
 
-        long rounded = Math.round(tag.getAsDouble() * scale);
+        long rounded = Math.round(tag.asDouble().orElse(1D) * scale);
         if (tag instanceof ByteTag) {
             return Byte.toString((byte)rounded) + "b";
         }

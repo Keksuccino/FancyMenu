@@ -155,10 +155,8 @@ public class TargetElementManagerScreen extends CellScreen {
             this.removeButton.setX(this.getX() + this.getWidth() - this.removeButton.getWidth());
             this.removeButton.setY(this.getY() + (this.getHeight() - this.removeButton.getHeight()) / 2);
 
-            RenderingUtils.resetShaderColor(graphics);
             int textY = this.getY() + (this.getHeight() - Minecraft.getInstance().font.lineHeight) / 2;
             UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.label, this.getX(), textY);
-            RenderingUtils.resetShaderColor(graphics);
         }
 
         @Override

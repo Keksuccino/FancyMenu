@@ -44,6 +44,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -880,7 +881,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	protected void renderDraggingNotAllowedOverlay(GuiGraphics graphics) {
 		if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
-			RenderSystem.enableBlend();
 			graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
@@ -888,28 +888,24 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			int texH = size[1];
 			int texX = this.getX() + (this.getWidth() / 2) - (texW / 2);
 			int texY = this.getY() + (this.getHeight() / 2) - (texH / 2);
-			graphics.blit(DRAGGING_NOT_ALLOWED_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
+			graphics.blit(RenderPipelines.GUI_TEXTURED, DRAGGING_NOT_ALLOWED_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
 		}
 	}
 
 	protected void renderDeprecatedIndicator(GuiGraphics graphics) {
 		if (this.element.builder.isDeprecated()) {
-			RenderSystem.enableBlend();
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth() / 3, this.getHeight() / 3);
 			int texW = size[0];
 			int texH = size[1];
 			int texX = this.getX() + this.getWidth() - texW;
 			int texY = this.getY();
-			UIBase.setShaderColor(graphics, UIBase.getUIColorTheme().warning_text_color);
-			graphics.blit(DEPRECATED_WARNING_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
-			RenderingUtils.resetShaderColor(graphics);
+			graphics.blit(RenderPipelines.GUI_TEXTURED, DEPRECATED_WARNING_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH, UIBase.getUIColorTheme().warning_text_color.getColorInt());
 		}
 	}
 
 	protected void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		RenderSystem.disableDepthTest();
 		RenderingUtils.setDepthTestLocked(true);
 
 		if (((this.editor.getTopHoveredElement() == this) && !this.editor.isUserNavigatingInRightClickMenu() && !this.editor.isUserNavigatingInElementMenu()) || this.isSelected() || this.isMultiSelected()) {
@@ -945,7 +941,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		RenderingUtils.setDepthTestLocked(false);
-		RenderSystem.enableDepthTest();
 
 	}
 
@@ -1836,7 +1831,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					s.setText(defaultText);
 					inputScreen = s;
 				} else {
-					TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
+					TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter : null, (call) -> {
 						if (call != null) {
 							this.editor.history.saveSnapshot();
 							for (AbstractEditorElement e : selectedElements) {

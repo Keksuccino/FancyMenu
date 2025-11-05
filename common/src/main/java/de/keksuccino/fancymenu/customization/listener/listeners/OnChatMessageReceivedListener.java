@@ -2,12 +2,10 @@ package de.keksuccino.fancymenu.customization.listener.listeners;
 
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.RegistryAccess;
+import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -44,14 +42,7 @@ public class OnChatMessageReceivedListener extends AbstractListener {
 
     @NotNull
     private String serializeComponent(@NotNull Component component) {
-        RegistryAccess registryAccess = RegistryAccess.EMPTY;
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.level != null) {
-            registryAccess = minecraft.level.registryAccess();
-        } else if ((minecraft.getConnection() != null) && (minecraft.getConnection().registryAccess() != null)) {
-            registryAccess = minecraft.getConnection().registryAccess();
-        }
-        return Component.Serializer.toJson(component, registryAccess);
+        return ComponentParser.toJson(component);
     }
 
     @Override

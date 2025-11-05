@@ -43,6 +43,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -53,6 +54,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2fStack;
 import org.lwjgl.glfw.GLFW;
 import java.awt.Color;
 import java.util.ArrayDeque;
@@ -869,7 +871,6 @@ public class ActionScriptEditorScreen extends Screen {
             alpha = ILLEGAL_ACTION_MAX_ALPHA * (1.0F - Mth.clamp(fadeProgress, 0.0F, 1.0F));
         }
 
-        RenderSystem.enableBlend();
         int targetHeight = Math.max(1, Math.round(this.height / 3.0F));
         int[] size = ILLEGAL_ACTION_ICON_RATIO.getAspectRatioSizeByMaximumSize(Math.max(1, this.width), targetHeight);
         int iconWidth = size[0];
@@ -877,9 +878,7 @@ public class ActionScriptEditorScreen extends Screen {
         int iconX = (this.width - iconWidth) / 2;
         int iconY = (this.height - iconHeight) / 2;
 
-        UIBase.setShaderColor(graphics, UIBase.getUIColorTheme().ui_texture_color, alpha);
-        graphics.blit(ILLEGAL_ACTION_ICON, iconX, iconY, 0.0F, 0.0F, iconWidth, iconHeight, iconWidth, iconHeight);
-        RenderingUtils.resetShaderColor(graphics);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, ILLEGAL_ACTION_ICON, iconX, iconY, 0.0F, 0.0F, iconWidth, iconHeight, iconWidth, iconHeight, UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(alpha));
 
     }
 
@@ -893,7 +892,6 @@ public class ActionScriptEditorScreen extends Screen {
             return;
         }
         UIColorTheme theme = UIBase.getUIColorTheme();
-        RenderSystem.enableBlend();
         graphics.fill(this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, theme.actions_minimap_background_color.getColorInt());
         UIBase.renderBorder(graphics, this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, 1, theme.actions_minimap_border_color, true, true, true, true);
 
@@ -948,21 +946,20 @@ public class ActionScriptEditorScreen extends Screen {
         UIColorTheme theme = UIBase.getUIColorTheme();
         Color backgroundColor = withAlpha(theme.screen_background_color.getColor(), 220);
 
-        PoseStack poseStack = graphics.pose();
-        poseStack.pushPose();
-        poseStack.translate(0.0F, 0.0F, 400.0F);
+        Matrix3x2fStack matrix = graphics.pose();
+        matrix.pushMatrix();
 
-        RenderSystem.enableBlend();
         graphics.fill(tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, backgroundColor.getRGB());
         UIBase.renderBorder(graphics, tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, 1, theme.actions_minimap_tooltip_border_color, true, true, true, true);
 
-        poseStack.translate(tooltipX + MINIMAP_TOOLTIP_PADDING, tooltipY + MINIMAP_TOOLTIP_PADDING, 0.0F);
-        poseStack.scale(MINIMAP_TOOLTIP_SCALE, MINIMAP_TOOLTIP_SCALE, 1.0F);
-        poseStack.translate(-this.minimapHoveredEntry.getX(), -this.minimapHoveredEntry.getY(), 0.0F);
+        matrix.translate(tooltipX + MINIMAP_TOOLTIP_PADDING, tooltipY + MINIMAP_TOOLTIP_PADDING);
+        matrix.scale(MINIMAP_TOOLTIP_SCALE, MINIMAP_TOOLTIP_SCALE);
+        matrix.translate(-this.minimapHoveredEntry.getX(), -this.minimapHoveredEntry.getY());
 
         this.minimapHoveredEntry.renderThumbnail(graphics);
 
-        poseStack.popPose();
+        matrix.popMatrix();
+
     }
 
     protected void renderChainMinimapBorder(@NotNull GuiGraphics graphics, @NotNull List<ExecutableEntry> chainEntries, int color) {
@@ -2946,13 +2943,12 @@ public class ActionScriptEditorScreen extends Screen {
             return super.isHovered();
         }
 
-        @SuppressWarnings({"removal"})
         @Override
         public void updateEntry() {
             super.updateEntry();
             // Make the entry not look like it is hovered when navigating in the context menu
             if (!this.isSelected() && ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) {
-                this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, 1);
+                this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle);
             }
         }
 
@@ -2975,7 +2971,6 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         private void renderEntryDecorations(@NotNull GuiGraphics graphics) {
-            RenderSystem.enableBlend();
             List<ExecutableEntry> chainAnchors = ActionScriptEditorScreen.this.getChainAnchorsFor(this);
             for (ExecutableEntry anchorEntry : chainAnchors) {
                 List<ExecutableEntry> chainEntries = ActionScriptEditorScreen.this.getStatementChainOf(anchorEntry);

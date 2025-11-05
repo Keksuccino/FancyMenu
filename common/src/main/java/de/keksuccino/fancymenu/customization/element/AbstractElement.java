@@ -4,8 +4,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import com.mojang.serialization.JsonOps;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -121,8 +119,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public int animatedOffsetX = 0;
 	public int animatedOffsetY = 0;
 	/**
-	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
-	 * Elements that do not support scaling via {@link PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
+	 * This is for when the render scale was changed in a non-system-wide way like via {@link com.mojang.blaze3d.vertex.PoseStack#translate(float, float, float)}.<br>
+	 * Elements that do not support scaling via {@link com.mojang.blaze3d.vertex.PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
 	 * This value is -1F by default and is not always set to an actual scale, so check this before using it!
 	 **/
 	public float customGuiScale = -1F;
@@ -285,19 +283,22 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 			// Apply tilting first (before rotation)
 			if (hasTilt) {
-				// Apply vertical tilt (rotation around X axis)
+				float scaleX = 1.0F;
+				float scaleY = 1.0F;
 				if (verticalTilt != 0.0F) {
-					graphics.pose().mulPose(Axis.XP.rotationDegrees(verticalTilt));
+					scaleY *= (float) Math.cos(Math.toRadians(verticalTilt));
 				}
-				// Apply horizontal tilt (rotation around Y axis)
 				if (horizontalTilt != 0.0F) {
-					graphics.pose().mulPose(Axis.YP.rotationDegrees(horizontalTilt));
+					scaleX *= (float) Math.cos(Math.toRadians(horizontalTilt));
+				}
+				if ((scaleX != 1.0F) || (scaleY != 1.0F)) {
+					graphics.pose().scale(scaleX, scaleY);
 				}
 			}
 
 			// Apply rotation (around Z axis)
 			if (hasRotation) {
-				graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotDegrees));
+				graphics.pose().rotate((float) Math.toRadians(rotDegrees));
 			}
 
 			// Translate back

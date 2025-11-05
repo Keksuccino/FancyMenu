@@ -95,7 +95,7 @@ public class CustomGuiBaseScreen extends Screen {
         }
 		try {
             if (!popup || popupOverlay) {
-                this.renderBlurredBackground(partial);
+                this.renderBlurredBackground(graphics);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error while rendering background blur in Custom GUI!", ex);

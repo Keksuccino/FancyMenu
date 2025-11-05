@@ -477,9 +477,7 @@ public class ManageListenersScreen extends CellScreen {
                 }
             } else {
                 // Render label
-                RenderingUtils.resetShaderColor(graphics);
                 UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.labelComponent, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER);
-                RenderingUtils.resetShaderColor(graphics);
                 // Show Writing cursor when the label is hovered
                 if (UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER, Minecraft.getInstance().font.width(this.labelComponent), Minecraft.getInstance().font.lineHeight)) {
                     CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);

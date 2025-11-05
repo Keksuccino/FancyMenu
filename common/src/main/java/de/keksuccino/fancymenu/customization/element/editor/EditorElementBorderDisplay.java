@@ -87,8 +87,8 @@ public class EditorElementBorderDisplay implements Renderable {
         int lineY = y;
         int backgroundColor = UIBase.getUIColorTheme().layout_editor_element_border_display_line_background_color.getColorInt();
         int textColor = UIBase.getUIColorTheme().layout_editor_element_border_display_line_text_color.getColorInt();
-        graphics.pose().pushPose();
-        graphics.pose().scale(scale, scale, scale);
+        graphics.pose().pushMatrix();
+        graphics.pose().scale(scale, scale);
         for (Component c : this.renderLines) {
             int lineWidth = this.font.width(c);
             int lineX = leftAligned ? x : x + (this.getWidth() - (int)((float)lineWidth * scale));
