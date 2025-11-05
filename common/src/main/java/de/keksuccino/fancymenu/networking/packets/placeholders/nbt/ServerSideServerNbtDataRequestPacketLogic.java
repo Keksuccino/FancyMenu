@@ -91,7 +91,7 @@ public class ServerSideServerNbtDataRequestPacketLogic {
         if ((positionString == null) || positionString.isEmpty()) {
             return null;
         }
-        ServerLevel level = sender.serverLevel();
+        ServerLevel level = sender.level();
         CommandSourceStack source = sender.createCommandSourceStack();
         Coordinates coordinates = BlockPosArgument.blockPos().parse(new StringReader(positionString));
         BlockPos pos = coordinates.getBlockPos(source);
@@ -151,7 +151,7 @@ public class ServerSideServerNbtDataRequestPacketLogic {
 
         switch (returnType) {
             case "string" -> {
-                return tag.getAsString();
+                return tag.asString().orElse("");
             }
             case "snbt" -> {
                 return tag.toString();
@@ -171,7 +171,7 @@ public class ServerSideServerNbtDataRequestPacketLogic {
                 if (tag instanceof NumericTag numericTag) {
                     return formatScaledNumeric(numericTag, scale);
                 }
-                return tag.getAsString();
+                return tag.asString().orElse("");
             }
         }
     }
@@ -181,12 +181,12 @@ public class ServerSideServerNbtDataRequestPacketLogic {
         if (scale != 1.0D) {
             return formatScaled(tag, scale);
         }
-        return tag.getAsString();
+        return tag.asString().orElse("");
     }
 
     @NotNull
     private static String formatScaled(@NotNull NumericTag tag, double scale) {
-        double scaled = tag.getAsDouble() * scale;
+        double scaled = tag.asDouble().orElse(1D) * scale;
         if (tag instanceof net.minecraft.nbt.FloatTag) {
             return Float.toString((float) scaled) + "f";
         }

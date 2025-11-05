@@ -167,7 +167,7 @@ public class MixinServerPlayer {
             return null;
         }
 
-        Registry<Structure> registry = level.registryAccess().registryOrThrow(Registries.STRUCTURE);
+        Registry<Structure> registry = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
         ResourceLocation location = registry.getKey(structure);
         return (location != null) ? location.toString() : null;
     }
