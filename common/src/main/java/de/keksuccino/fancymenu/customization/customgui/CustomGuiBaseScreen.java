@@ -40,12 +40,7 @@ public class CustomGuiBaseScreen extends Screen {
             if (this.parentScreen != null) {
                 Screen current = Minecraft.getInstance().screen;
                 Minecraft.getInstance().screen = this.parentScreen;
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
                 this.parentScreen.resize(minecraft, width, height);
-//                ScrollScreenNormalizer.normalizeScrollableScreen(this.parentScreen);
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
                 Minecraft.getInstance().screen = current;
             }
         } catch (Exception ex) {
@@ -95,6 +90,7 @@ public class CustomGuiBaseScreen extends Screen {
         }
 		try {
             if (!popup || popupOverlay) {
+                graphics.nextStratum();
                 this.renderBlurredBackground(graphics);
             }
         } catch (Exception ex) {

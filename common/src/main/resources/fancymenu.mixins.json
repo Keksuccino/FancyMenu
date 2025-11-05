@@ -50,6 +50,7 @@
     "client.MixinGameRenderer",
     "client.MixinGenericMessageScreen",
     "client.MixinGuiGraphics",
+    "client.MixinGuiRenderer",
     "client.MixinImageButton",
     "client.MixinKeyboardHandler",
     "client.MixinLevelLoadingScreen",

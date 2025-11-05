@@ -170,32 +170,32 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.serializeElementInstancesToLayoutInstance();
 
-		//Handle forced GUI scale
-		if (this.layout.forcedScale != 0) {
-			float newscale = this.layout.forcedScale;
-			if (newscale <= 0) {
-				newscale = 1;
-			}
-			Window m = Minecraft.getInstance().getWindow();
-			WindowHandler.setGuiScale(newscale);
-			this.width = m.getGuiScaledWidth();
-			this.height = m.getGuiScaledHeight();
-		}
+        //Handle forced GUI scale
+        if (this.layout.forcedScale != 0) {
+            float newscale = this.layout.forcedScale;
+            if (newscale <= 0) {
+                newscale = 1;
+            }
+            Window m = Minecraft.getInstance().getWindow();
+            WindowHandler.setGuiScale(newscale);
+            this.width = m.getGuiScaledWidth();
+            this.height = m.getGuiScaledHeight();
+        }
 
-		//Handle auto-scaling
-		if ((this.layout.autoScalingWidth != 0) && (this.layout.autoScalingHeight != 0)) {
-			Window m = Minecraft.getInstance().getWindow();
-			double guiWidth = this.width * WindowHandler.getGuiScale();
-			double guiHeight = this.height * WindowHandler.getGuiScale();
-			double percentX = (guiWidth / (double)this.layout.autoScalingWidth) * 100.0D;
-			double percentY = (guiHeight / (double)this.layout.autoScalingHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * WindowHandler.getGuiScale();
-			double newScaleY = (percentY / 100.0D) * WindowHandler.getGuiScale();
-			double newScale = Math.min(newScaleX, newScaleY);
-			WindowHandler.setGuiScale(newScale);
-			this.width = m.getGuiScaledWidth();
-			this.height = m.getGuiScaledHeight();
-		}
+        //Handle auto-scaling
+        if ((this.layout.autoScalingWidth != 0) && (this.layout.autoScalingHeight != 0)) {
+            Window m = Minecraft.getInstance().getWindow();
+            double guiWidth = this.width * WindowHandler.getGuiScale();
+            double guiHeight = this.height * WindowHandler.getGuiScale();
+            double percentX = (guiWidth / (double)this.layout.autoScalingWidth) * 100.0D;
+            double percentY = (guiHeight / (double)this.layout.autoScalingHeight) * 100.0D;
+            double newScaleX = (percentX / 100.0D) * WindowHandler.getGuiScale();
+            double newScaleY = (percentY / 100.0D) * WindowHandler.getGuiScale();
+            double newScale = Math.min(newScaleX, newScaleY);
+            WindowHandler.setGuiScale(newScale);
+            this.width = m.getGuiScaledWidth();
+            this.height = m.getGuiScaledHeight();
+        }
 
 		this.getAllElements().forEach(element -> {
 			if (!this.justOpened) element.element.onBeforeResizeScreen();

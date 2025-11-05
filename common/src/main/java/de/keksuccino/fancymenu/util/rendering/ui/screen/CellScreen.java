@@ -336,8 +336,8 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         this.lastHeight = window.getScreenHeight();
 
         //Adjust GUI scale to make all right-side buttons fit in the screen
-        if ((topRightSideWidget != null) && (topRightSideWidget.getY() < 20) && (window.getGuiScale() > 1)) {
-            double newScale = window.getGuiScale();
+        if ((topRightSideWidget.getY() < 20) && (WindowHandler.getGuiScale() > 1)) {
+            double newScale = WindowHandler.getGuiScale();
             newScale--;
             if (newScale < 1) newScale = 1;
             WindowHandler.setGuiScale(newScale);

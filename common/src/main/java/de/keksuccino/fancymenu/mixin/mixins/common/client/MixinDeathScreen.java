@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -92,9 +94,10 @@ public abstract class MixinDeathScreen extends Screen {
         return !this.isCustomizableFancyMenu();
     }
 
-    @WrapWithCondition(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/DeathScreen;clickUrlAction(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/Screen;Ljava/net/URI;)Z"))
-    private boolean cancel_handleComponentClicked_FancyMenu(Minecraft minecraft, Screen screen, URI uri) {
-        return !this.isCustomizableFancyMenu();
+    @WrapOperation(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/DeathScreen;clickUrlAction(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/Screen;Ljava/net/URI;)Z"))
+    private boolean cancel_handleComponentClicked_FancyMenu(Minecraft minecraft, Screen screen, URI uri, Operation<Boolean> original) {
+        if (!this.isCustomizableFancyMenu()) return original.call(minecraft, screen, uri);
+        return false;
     }
 
     @Inject(method = "render", at = @At("RETURN"))
