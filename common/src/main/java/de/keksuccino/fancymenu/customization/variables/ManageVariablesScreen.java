@@ -160,8 +160,6 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
 
         this.performInitialWidgetFocusActionInRender();
 
-        RenderSystem.enableBlend();
-
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));

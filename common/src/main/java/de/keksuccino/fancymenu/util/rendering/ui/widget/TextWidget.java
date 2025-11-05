@@ -55,16 +55,14 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
         double drawX = this.getRenderX();
         double drawY = this.getRenderY();
         float currentScale = this.scale;
-        RenderingUtils.resetShaderColor(graphics);
-        graphics.pose().pushPose();
+        graphics.pose().pushMatrix();
         if (currentScale != 1.0F) {
-            graphics.pose().scale(currentScale, currentScale, 1.0F);
+            graphics.pose().scale(currentScale, currentScale);
             drawX /= currentScale;
             drawY /= currentScale;
         }
         graphics.drawString(this.font, this.getMessage(), Mth.floor(drawX), Mth.floor(drawY), this.baseColor.getColorInt(), this.shadow);
-        graphics.pose().popPose();
-        RenderingUtils.resetShaderColor(graphics);
+        graphics.pose().popMatrix();
     }
 
     public int getTextWidth() {

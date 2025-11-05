@@ -31,6 +31,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.apache.logging.log4j.LogManager;
@@ -150,9 +152,14 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
             return null;
         }
 
-        CompoundTag tag = new CompoundTag();
-        targetEntity.saveWithoutId(tag);
-        return tag;
+        ProblemReporter.Collector collector = new ProblemReporter.Collector();
+        TagValueOutput tagValueOutput = TagValueOutput.createWithContext(collector, targetEntity.registryAccess());
+        targetEntity.saveWithoutId(tagValueOutput);
+        CompoundTag result = tagValueOutput.buildResult();
+        if (!collector.isEmpty()) {
+            LOGGER.warn("[FANCYMENU] Issues serializing entity NBT: {}", collector.getTreeReport());
+        }
+        return result;
     }
 
     @Nullable

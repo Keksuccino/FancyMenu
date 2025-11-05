@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.DeathScreen;
@@ -22,6 +23,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.net.URI;
 
 @SuppressWarnings("deprecation")
 @WidgetifiedScreen
@@ -89,8 +92,8 @@ public abstract class MixinDeathScreen extends Screen {
         return !this.isCustomizableFancyMenu();
     }
 
-    @WrapWithCondition(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/DeathScreen;handleComponentClicked(Lnet/minecraft/network/chat/Style;)Z"))
-    private boolean cancel_handleComponentClicked_FancyMenu(DeathScreen instance, Style style) {
+    @WrapWithCondition(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/DeathScreen;clickUrlAction(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/Screen;Ljava/net/URI;)Z"))
+    private boolean cancel_handleComponentClicked_FancyMenu(Minecraft minecraft, Screen screen, URI uri) {
         return !this.isCustomizableFancyMenu();
     }
 
@@ -116,7 +119,7 @@ public abstract class MixinDeathScreen extends Screen {
             return;
         }
         Style style = this.causeOfDeathTextFancyMenu.getStyleAtMouseX(mouseX);
-        if (style != null && style.getClickEvent() != null && style.getClickEvent().getAction() == ClickEvent.Action.OPEN_URL) {
+        if (style != null && style.getClickEvent() != null && style.getClickEvent().action() == ClickEvent.Action.OPEN_URL) {
             this.handleComponentClicked(style);
             cir.setReturnValue(false);
         }
