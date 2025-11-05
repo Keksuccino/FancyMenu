@@ -298,8 +298,8 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
             }
             int horizontal = xTo;
             while(horizontal < xTo + width) {
-                int pixel = in.getPixelRGBA(xFrom + horiOffset, yFrom + vertOffset);
-                in.setPixelRGBA(horizontal, vertical, pixel);
+                int pixel = in.getPixel(xFrom + horiOffset, yFrom + vertOffset);
+                in.setPixel(horizontal, vertical, pixel);
                 horizontal++;
                 if (mirrorX) {
                     horiOffset--;

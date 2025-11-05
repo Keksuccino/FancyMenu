@@ -253,7 +253,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
 		if (this.allowDepthTestManipulation) {
-			RenderSystem.disableDepthTest();
 			RenderingUtils.setDepthTestLocked(true);
 		}
 
@@ -274,7 +273,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		if (this.shouldRender() && (hasRotation || hasTilt)) {
 
-			graphics.pose().pushPose();
+			graphics.pose().pushMatrix();
 			transformationsApplied = true;
 
 			// Calculate center point of the element
@@ -282,7 +281,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			float centerY = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2.0F);
 
 			// Translate to center
-			graphics.pose().translate(centerX, centerY, 0);
+			graphics.pose().translate(centerX, centerY);
 
 			// Apply tilting first (before rotation)
 			if (hasTilt) {
@@ -302,7 +301,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			}
 
 			// Translate back
-			graphics.pose().translate(-centerX, -centerY, 0);
+			graphics.pose().translate(-centerX, -centerY);
 
 		}
 
@@ -331,12 +330,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		// Pop the transformations
 		if (this.shouldRender() && transformationsApplied) {
-			graphics.pose().popPose();
+			graphics.pose().popMatrix();
 		}
 
 		if (this.allowDepthTestManipulation) {
 			RenderingUtils.setDepthTestLocked(false);
-			RenderSystem.enableDepthTest();
 		}
 
 	}

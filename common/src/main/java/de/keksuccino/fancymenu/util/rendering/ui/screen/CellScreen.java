@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
@@ -534,6 +535,9 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.searchBarEnabled && (this.searchBar != null) && !this.searchBar.isHovered()) {
+            this.searchBar.setFocused(false);
+        }
         for (GuiEventListener listener : this.children()) {
             if (listener.mouseClicked(mouseX, mouseY, button)) {
                 this.setFocused(listener);
@@ -555,14 +559,6 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             }
         }
         return super.keyPressed(keycode, scancode, modifiers);
-    }
-
-    @Override
-    public boolean mouseClicked(double $$0, double $$1, int $$2) {
-        if (this.searchBarEnabled && (this.searchBar != null) && !this.searchBar.isHovered()) {
-            this.searchBar.setFocused(false);
-        }
-        return super.mouseClicked($$0, $$1, $$2);
     }
 
     @Override

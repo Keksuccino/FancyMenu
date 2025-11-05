@@ -3,9 +3,11 @@ package de.keksuccino.fancymenu.util.rendering.ui.toast;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
-import net.minecraft.client.gui.components.toasts.ToastComponent;
+import net.minecraft.client.gui.components.toasts.ToastManager;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -47,27 +49,36 @@ public class SimpleToast implements Toast {
 
     @NotNull
     @Override
-    public Toast.Visibility render(@NotNull GuiGraphics graphics, @NotNull ToastComponent toastComponent, long progressTime) {
+    public Visibility getWantedVisibility() {
+        return this.visibility;
+    }
+
+    @Override
+    public void update(@NotNull ToastManager toastManager, long visibilityTime) {
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics graphics, @NotNull Font font, long visibilityTime) {
 
         ResourceLocation customBack = this.getCustomBackground();
         if (customBack == null) {
-            graphics.blitSprite(BACKGROUND_SPRITE, 0, 0, this.width(), this.height());
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BACKGROUND_SPRITE, 0, 0, this.width(), this.height());
         } else {
-            graphics.blit(customBack, 0, 0, 0.0F, 0.0F, this.width(), this.height(), this.width(), this.height());
+            graphics.blit(RenderPipelines.GUI_TEXTURED, customBack, 0, 0, 0.0F, 0.0F, this.width(), this.height(), this.width(), this.height());
         }
 
         this.icon.render(graphics, 6, 6);
 
         if (this.message == null) {
-            graphics.drawString(toastComponent.getMinecraft().font, this.title, 30, 12, -11534256, false);
+            graphics.drawString(font, this.title, 30, 12, -11534256, false);
         } else {
-            graphics.drawString(toastComponent.getMinecraft().font, this.title, 30, 7, -11534256, false);
-            graphics.drawString(toastComponent.getMinecraft().font, this.message, 30, 18, -16777216, false);
+            graphics.drawString(font, this.title, 30, 7, -11534256, false);
+            graphics.drawString(font, this.message, 30, 18, -16777216, false);
         }
 
         if (this.progressable) {
             graphics.fill(PROGRESS_BAR_X, PROGRESS_BAR_Y, PROGRESS_BAR_X + PROGRESS_BAR_WIDTH, PROGRESS_BAR_Y + PROGRESS_BAR_HEIGHT, -1);
-            float clampProgress = Mth.clampedLerp(this.lastProgress, this.progress, (float)(progressTime - this.lastProgressTime) / 100.0F);
+            float clampProgress = Mth.clampedLerp(this.lastProgress, this.progress, (float)(visibilityTime - this.lastProgressTime) / 100.0F);
             int progressColor;
             if (this.progress >= this.lastProgress) {
                 progressColor = -16755456;
@@ -76,10 +87,8 @@ public class SimpleToast implements Toast {
             }
             graphics.fill(PROGRESS_BAR_X, PROGRESS_BAR_Y, (int)((float)PROGRESS_BAR_X + (float)PROGRESS_BAR_WIDTH * clampProgress), PROGRESS_BAR_Y + PROGRESS_BAR_HEIGHT, progressColor);
             this.lastProgress = clampProgress;
-            this.lastProgressTime = progressTime;
+            this.lastProgressTime = visibilityTime;
         }
-
-        return this.visibility;
 
     }
 
@@ -152,8 +161,7 @@ public class SimpleToast implements Toast {
         public void render(GuiGraphics graphics, int x, int y) {
             ResourceLocation icon = this.getIcon();
             if (icon != null) {
-                RenderSystem.enableBlend();
-                graphics.blit(icon, x, y, 0.0F, 0.0F, 20, 20, 20, 20);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0.0F, 0.0F, 20, 20, 20, 20);
             }
         }
 

@@ -10,12 +10,16 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
+@SuppressWarnings("all")
 public class PlayerEntityEditorElement extends AbstractEditorElement {
 
     public PlayerEntityEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
