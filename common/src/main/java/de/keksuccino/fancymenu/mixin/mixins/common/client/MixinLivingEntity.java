@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity {
@@ -42,6 +43,25 @@ public abstract class MixinLivingEntity {
         String effectKey = this.resolveEffectKey_FancyMenu(effectHolder);
         String effectType = this.resolveEffectTypeName_FancyMenu(effectHolder.value());
         Listeners.ON_EFFECT_GAINED.onEffectGained(effectKey, effectType, effectInstance.getDuration());
+    }
+
+    /** @reason Fire FancyMenu listener when the local player loses a status effect. */
+    @Inject(method = "removeEffectNoUpdate", at = @At("TAIL"))
+    private void after_removeEffectNoUpdate_FancyMenu(Holder<MobEffect> effectHolder, CallbackInfoReturnable<MobEffectInstance> cir) {
+        MobEffectInstance removedInstance = cir.getReturnValue();
+        if (removedInstance == null) {
+            return;
+        }
+
+        LivingEntity self = (LivingEntity)(Object)this;
+        if (!(self instanceof LocalPlayer)) {
+            return;
+        }
+
+        Holder<MobEffect> removedEffect = removedInstance.getEffect();
+        String effectKey = this.resolveEffectKey_FancyMenu(removedEffect);
+        String effectType = this.resolveEffectTypeName_FancyMenu(removedEffect.value());
+        Listeners.ON_EFFECT_LOST.onEffectLost(effectKey, effectType);
     }
 
     /** @reason Fire FancyMenu listener when the local player finishes consuming an item. */

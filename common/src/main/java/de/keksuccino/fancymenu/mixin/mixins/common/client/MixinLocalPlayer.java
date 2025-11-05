@@ -13,9 +13,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectCategory;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -502,17 +499,6 @@ public class MixinLocalPlayer {
 
     }
 
-    @Inject(method = "removeEffectNoUpdate", at = @At("TAIL"))
-    private void after_removeEffectNoUpdate_FancyMenu(Holder<MobEffect> effectHolder, CallbackInfoReturnable<MobEffectInstance> cir) {
-        MobEffectInstance removedInstance = cir.getReturnValue();
-        if (removedInstance == null) {
-            return;
-        }
-        String effectKey = this.resolveEffectKey_FancyMenu(effectHolder);
-        String effectType = this.resolveEffectTypeName_FancyMenu(effectHolder.value());
-        Listeners.ON_EFFECT_LOST.onEffectLost(effectKey, effectType);
-    }
-
     @Inject(method = "setExperienceValues", at = @At("TAIL"))
     private void after_setExperienceValues_FancyMenu(float currentXP, int totalExperience, int level, CallbackInfo ci) {
         LocalPlayer self = (LocalPlayer)(Object)this;
@@ -527,26 +513,6 @@ public class MixinLocalPlayer {
             Listeners.ON_EXPERIENCE_CHANGED.onExperienceChanged(this.previousTotalExperience_FancyMenu, newTotalExperience, levelUp);
         }
 
-    }
-
-    @Unique
-    private String resolveEffectTypeName_FancyMenu(MobEffect effect) {
-        MobEffectCategory category = effect.getCategory();
-        return switch (category) {
-            case BENEFICIAL -> "positive";
-            case HARMFUL -> "negative";
-            case NEUTRAL -> "neutral";
-        };
-    }
-
-    @Unique
-    private String resolveEffectKey_FancyMenu(Holder<MobEffect> effectHolder) {
-        return effectHolder.unwrapKey()
-                .map(key -> key.location().toString())
-                .orElseGet(() -> {
-                    ResourceLocation fallback = BuiltInRegistries.MOB_EFFECT.getKey(effectHolder.value());
-                    return fallback != null ? fallback.toString() : "unknown";
-                });
     }
 
     @Unique
