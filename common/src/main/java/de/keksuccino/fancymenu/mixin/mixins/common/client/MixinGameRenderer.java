@@ -40,7 +40,7 @@ public class MixinGameRenderer {
     @Shadow @Final Minecraft minecraft;
 
     @Inject(method = "processBlurEffect", at = @At("HEAD"), cancellable = true)
-    private void head_processBlurEffect_FancyMenu(float radius, CallbackInfo info) {
+    private void head_processBlurEffect_FancyMenu(CallbackInfo info) {
         if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
     }
 

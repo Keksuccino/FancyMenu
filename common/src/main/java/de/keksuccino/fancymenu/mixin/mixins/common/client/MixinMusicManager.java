@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.MusicInfo;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.resources.ResourceLocation;
@@ -113,7 +114,7 @@ public abstract class MixinMusicManager {
     }
 
     @Inject(method = "startPlaying", at = @At("HEAD"), cancellable = true)
-    private void stopMusicIfDisabledInConfigFancyMenu(Music music, CallbackInfo info) {
+    private void stopMusicIfDisabledInConfigFancyMenu(MusicInfo music, CallbackInfo info) {
         if ((Minecraft.getInstance().level == null) && !FancyMenu.getOptions().playVanillaMenuMusic.getValue()) {
             this.stopPlaying();
             info.cancel();
@@ -121,7 +122,7 @@ public abstract class MixinMusicManager {
     }
 
     @Inject(method = "startPlaying", at = @At("RETURN"))
-    private void after_startPlayingFancyMenu(Music music, CallbackInfo info) {
+    private void after_startPlayingFancyMenu(MusicInfo music, CallbackInfo info) {
         if ((this.currentMusic != null) && (this.currentMusic.getSound() != SoundManager.EMPTY_SOUND)) {
             this.fireMusicTrackStartedFancyMenu(this.currentMusic);
         } else {
