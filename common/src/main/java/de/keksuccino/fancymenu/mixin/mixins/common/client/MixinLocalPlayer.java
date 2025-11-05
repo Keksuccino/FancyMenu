@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.helpers.FluidContactInfo;
+import de.keksuccino.fancymenu.mixin.interfaces.LocalPlayerDrowningTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -28,11 +29,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Objects;
 
 @Mixin(LocalPlayer.class)
-public class MixinLocalPlayer {
+public class MixinLocalPlayer implements LocalPlayerDrowningTracker {
 
     @Unique
     private ResourceKey<Biome> lastBiomeKey_FancyMenu;
@@ -544,6 +544,16 @@ public class MixinLocalPlayer {
         return null;
     }
 
+    @Override
+    public boolean fancymenu$isDrowningActive() {
+        return this.drowningActive_FancyMenu;
+    }
+
+    @Override
+    public void fancymenu$setDrowningActive(boolean active) {
+        this.drowningActive_FancyMenu = active;
+    }
+
     @Unique
     private void updateWeatherListener_FancyMenu(LocalPlayer self, @Nullable ClientLevel clientLevel) {
         if (clientLevel == null) {
@@ -587,16 +597,6 @@ public class MixinLocalPlayer {
 
     }
 
-    /** @reason Fire FancyMenu listener when the local player takes drowning damage. */
-    @Inject(method = "hurt", at = @At("HEAD"))
-    private void before_hurt_FancyMenu(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (source.is(DamageTypes.DROWN) && !this.drowningActive_FancyMenu) {
-            this.drowningActive_FancyMenu = true;
-            Listeners.ON_STARTED_DROWNING.onStartedDrowning();
-        }
-
-    }
-
     /** @reason Fire FancyMenu listener when the local player drops an item. */
     @WrapOperation(method = "drop", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;removeFromSelected(Z)Lnet/minecraft/world/item/ItemStack;"))
     private ItemStack wrap_removeFromSelected_FancyMenu(Inventory inventory, boolean fullStack, Operation<ItemStack> operation) {
@@ -610,10 +610,3 @@ public class MixinLocalPlayer {
     }
 
 }
-
-
-
-
-
-
-

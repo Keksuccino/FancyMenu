@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.mixin.interfaces.LocalPlayerDrowningTracker;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -13,6 +14,8 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
@@ -62,6 +65,23 @@ public abstract class MixinLivingEntity {
         String effectKey = this.resolveEffectKey_FancyMenu(removedEffect);
         String effectType = this.resolveEffectTypeName_FancyMenu(removedEffect.value());
         Listeners.ON_EFFECT_LOST.onEffectLost(effectKey, effectType);
+    }
+
+    /** @reason Fire FancyMenu listener when the local player takes drowning damage. */
+    @Inject(method = "handleDamageEvent", at = @At("HEAD"))
+    private void before_handleDamageEvent_FancyMenu(DamageSource damageSource, CallbackInfo ci) {
+        LivingEntity self = (LivingEntity)(Object)this;
+        if (!(self instanceof LocalPlayer localPlayer)) {
+            return;
+        }
+        if (!damageSource.is(DamageTypes.DROWN)) {
+            return;
+        }
+        LocalPlayerDrowningTracker tracker = (LocalPlayerDrowningTracker)localPlayer;
+        if (!tracker.fancymenu$isDrowningActive()) {
+            tracker.fancymenu$setDrowningActive(true);
+            Listeners.ON_STARTED_DROWNING.onStartedDrowning();
+        }
     }
 
     /** @reason Fire FancyMenu listener when the local player finishes consuming an item. */
