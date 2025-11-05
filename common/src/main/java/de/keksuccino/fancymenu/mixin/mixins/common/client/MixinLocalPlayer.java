@@ -576,7 +576,7 @@ public class MixinLocalPlayer implements LocalPlayerDrowningTracker {
         if (isRaining) {
             Holder<Biome> biomeHolder = clientLevel.getBiome(playerPos);
             Biome biome = biomeHolder.value();
-            Biome.Precipitation precipitation = biome.getPrecipitationAt(playerPos);
+            Biome.Precipitation precipitation = biome.getPrecipitationAt(playerPos, clientLevel.getSeaLevel());
             if (precipitation == Biome.Precipitation.SNOW) {
                 canSnow = clientLevel.canSeeSky(playerPos);
             } else if (precipitation == Biome.Precipitation.RAIN) {

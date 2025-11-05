@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.gui.GuiGraphics;
@@ -53,12 +54,12 @@ public abstract class MixinScreen implements CustomizableScreen {
     }
 
     @Inject(method = "renderBlurredBackground", at = @At("HEAD"), cancellable = true)
-    private void head_renderBlurredBackground_FancyMenu(float f, CallbackInfo info) {
+    private void head_renderBlurredBackground_FancyMenu(GuiGraphics guiGraphics, CallbackInfo info) {
         if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
     }
 
-	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-	private void wrap_renderBackground_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
+	@WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+	private void wrap_renderBackground_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
 		//Don't fire the event in the TitleScreen, because it gets handled differently there
 		if (instance instanceof TitleScreen) {
 			original.call(instance, graphics, mouseX, mouseY, partial);
@@ -69,7 +70,6 @@ public abstract class MixinScreen implements CustomizableScreen {
 			if (!l.layoutBase.menuBackgrounds.isEmpty()) {
 				//Render a black background before the custom background gets rendered
 				graphics.fill(0, 0, instance.width, instance.height, 0);
-				RenderingUtils.resetShaderColor(graphics);
 			} else {
 				original.call(instance, graphics, mouseX, mouseY, partial);
 			}

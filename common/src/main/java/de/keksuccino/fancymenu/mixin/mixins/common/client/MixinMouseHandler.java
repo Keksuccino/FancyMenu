@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseMoveEvent;
@@ -9,6 +11,7 @@ import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -85,14 +88,12 @@ public class MixinMouseHandler {
         }
     }
 
-    @Inject(method = "handleAccumulatedMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
-    private void before_Screen_mouseMoved_FancyMenu(CallbackInfo info) {
+    @WrapOperation(method = "handleAccumulatedMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseMoved(DD)V"))
+    private void wrap_mouseMoved_in_handleAccumulatedMovement_FancyMenu(Screen instance, double mouseX, double mouseY, Operation<Void> original) {
         double guiWidth = (double)this.mcFancyMenu.getWindow().getGuiScaledWidth();
         double guiHeight = (double)this.mcFancyMenu.getWindow().getGuiScaledHeight();
         double screenWidth = (double)this.mcFancyMenu.getWindow().getScreenWidth();
         double screenHeight = (double)this.mcFancyMenu.getWindow().getScreenHeight();
-        double mouseX = this.xpos * guiWidth / screenWidth;
-        double mouseY = this.ypos * guiHeight / screenHeight;
         double deltaX = this.accumulatedDX * guiWidth / screenWidth;
         double deltaY = this.accumulatedDY * guiHeight / screenHeight;
         EventHandler.INSTANCE.postEvent(new ScreenMouseMoveEvent(this.mcFancyMenu.screen, mouseX, mouseY, deltaX, deltaY));
