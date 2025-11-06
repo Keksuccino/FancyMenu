@@ -20,6 +20,11 @@ public class WorldSaveNamesPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String separator = dps.values.get("separator");
         if (separator == null) {

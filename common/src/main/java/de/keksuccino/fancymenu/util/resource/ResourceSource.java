@@ -1,8 +1,11 @@
 package de.keksuccino.fancymenu.util.resource;
 
+import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.io.File;
 import java.util.Objects;
 import net.minecraft.resources.ResourceLocation;
 
@@ -14,6 +17,7 @@ public class ResourceSource {
 
     protected ResourceSourceType sourceType;
     protected String resourceSourceWithoutPrefix;
+    protected boolean isDotMinecraftSource = false;
 
     /**
      * Creates a {@link ResourceSource} out of the given source string.<br>
@@ -25,10 +29,17 @@ public class ResourceSource {
         Objects.requireNonNull(resourceSource);
         resourceSource = resourceSource.trim();
         ResourceSource source = new ResourceSource();
-        source.sourceType = (sourceType != null) ? sourceType : ResourceSourceType.getSourceTypeOf(resourceSource);
         source.resourceSourceWithoutPrefix = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
-        if (source.sourceType == ResourceSourceType.LOCAL) {
-            source.resourceSourceWithoutPrefix = GameDirectoryUtils.getAbsoluteGameDirectoryPath(source.resourceSourceWithoutPrefix);
+        String dotMcSourcePath = DotMinecraftUtils.convertToShortenedDotMinecraftPath(source.resourceSourceWithoutPrefix);
+        source.isDotMinecraftSource = dotMcSourcePath != null;
+        if (source.isDotMinecraftSource) {
+            source.sourceType = ResourceSourceType.LOCAL;
+            source.resourceSourceWithoutPrefix = new File(DotMinecraftUtils.resolveMinecraftPath(dotMcSourcePath)).getAbsolutePath().replace("\\", "/");
+        } else {
+            source.sourceType = (sourceType != null) ? sourceType : ResourceSourceType.getSourceTypeOf(resourceSource);
+            if (source.sourceType == ResourceSourceType.LOCAL) {
+                source.resourceSourceWithoutPrefix = GameDirectoryUtils.getAbsoluteGameDirectoryPath(source.resourceSourceWithoutPrefix);
+            }
         }
         return source;
     }
@@ -58,7 +69,11 @@ public class ResourceSource {
     @NotNull
     public String getSerializationSource() {
         String source = this.resourceSourceWithoutPrefix;
-        if (this.sourceType == ResourceSourceType.LOCAL) source = GameDirectoryUtils.getPathWithoutGameDirectory(source);
+        if (this.isDotMinecraftSource) {
+            source = DotMinecraftUtils.convertToShortenedDotMinecraftPath(source);
+        } else {
+            if (this.sourceType == ResourceSourceType.LOCAL) source = GameDirectoryUtils.getPathWithoutGameDirectory(source);
+        }
         return this.sourceType.getSourcePrefix() + source;
     }
 
@@ -76,6 +91,10 @@ public class ResourceSource {
     @NotNull
     public String getSourceWithoutPrefix() {
         return this.resourceSourceWithoutPrefix;
+    }
+
+    public boolean isDotMinecraftSource() {
+        return this.isDotMinecraftSource;
     }
 
     @Override

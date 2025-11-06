@@ -54,22 +54,22 @@ public class IsRealTimeMinuteRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.realtimeminute");
+        return I18n.get("fancymenu.requirements.realtime_minute");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.realtimeminute.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.realtime_minute.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.realtime");
+        return I18n.get("fancymenu.requirements.categories.realtime");
     }
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.realtimeminute.valuename");
+        return I18n.get("fancymenu.requirements.realtime_minute.value_name");
     }
 
     @Override

@@ -55,11 +55,11 @@ versionRange="[3.0.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
-modId="rrls"
-type="optional"
-ordering="NONE"
-versionRange="[4.0.1,)"
-side="BOTH"
+modId = "fancy_entity_renderer"
+type = "optional"
+versionRange = "[${fer_version},)"
+ordering = "AFTER"
+side = "CLIENT"
 
 [[dependencies.${mod_id}]]
 modId="neoforge"

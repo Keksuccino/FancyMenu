@@ -26,6 +26,11 @@ public class ScoreboardObjectivesListPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
 
         ClientPacketListener connection = Minecraft.getInstance().getConnection();

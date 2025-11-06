@@ -27,7 +27,7 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
 
     @Override
     protected @NotNull ExtendedButton buildConfirmButton() {
-        return new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
+        return new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.ok"), (button) -> {
             AbstractFileScrollAreaEntry selected = this.getSelectedEntry();
             if ((selected != null) && !selected.resourceUnfriendlyFileName) {
                 this.callback.accept(new File(selected.file.getPath().replace("\\", "/")));

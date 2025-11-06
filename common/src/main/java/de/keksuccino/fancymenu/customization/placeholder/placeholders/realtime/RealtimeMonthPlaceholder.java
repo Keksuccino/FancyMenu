@@ -36,7 +36,7 @@ public class RealtimeMonthPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimemonth");
+        return I18n.get("fancymenu.placeholders.realtime_month");
     }
 
     @Override
@@ -46,7 +46,7 @@ public class RealtimeMonthPlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.realtime");
+        return I18n.get("fancymenu.requirements.categories.realtime");
     }
 
     @Override

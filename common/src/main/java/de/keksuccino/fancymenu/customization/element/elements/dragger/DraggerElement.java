@@ -32,6 +32,7 @@ public class DraggerElement extends AbstractElement {
     public DraggerElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         this.widget = new DraggerWidget(0,0,0,0, this::onDraggerElementDragged, this::onDraggerElementClickedOrReleased);
+        this.allowDepthTestManipulation = true;
     }
 
     protected void onDraggerElementDragged(double mouseX, double mouseY, double dragX, double dragY) {

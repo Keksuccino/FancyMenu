@@ -93,7 +93,7 @@ public class TooltipEditorElement extends AbstractEditorElement {
 
         // Markdown submenu - using Text element localization
         ContextMenu markdownMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("markdown", Component.translatable("fancymenu.customization.items.text.markdown"), markdownMenu)
+        this.rightClickMenu.addSubMenuEntry("markdown", Component.translatable("fancymenu.elements.text.markdown"), markdownMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
         // Text shadow - using Text element localization
@@ -101,7 +101,7 @@ public class TooltipEditorElement extends AbstractEditorElement {
                 TooltipEditorElement.class,
                 e -> ((TooltipElement)e.element).markdownRenderer.isTextShadow(),
                 (e, value) -> ((TooltipElement)e.element).markdownRenderer.setTextShadow(value),
-                "fancymenu.customization.items.text.shadow");
+                "fancymenu.elements.text.shadow");
 
         // Text case mode - using Text element localization
         this.addCycleContextMenuEntryTo(markdownMenu, "text_case",
@@ -111,12 +111,12 @@ public class TooltipEditorElement extends AbstractEditorElement {
                 (e, caseMode) -> ((TooltipElement)e.element).markdownRenderer.setTextCase(caseMode),
                 (menu, entry, value) -> {
                     if (value == MarkdownRenderer.TextCase.NORMAL) {
-                        return Component.translatable("fancymenu.customization.items.text.case_mode.normal");
+                        return Component.translatable("fancymenu.elements.text.case_mode.normal");
                     }
                     if (value == MarkdownRenderer.TextCase.ALL_LOWER) {
-                        return Component.translatable("fancymenu.customization.items.text.case_mode.lower");
+                        return Component.translatable("fancymenu.elements.text.case_mode.lower");
                     }
-                    return Component.translatable("fancymenu.customization.items.text.case_mode.upper");
+                    return Component.translatable("fancymenu.elements.text.case_mode.upper");
                 });
 
         // Text scale - using Text element localization
@@ -124,7 +124,7 @@ public class TooltipEditorElement extends AbstractEditorElement {
                 TooltipEditorElement.class,
                 e -> ((TooltipElement)e.element).markdownRenderer.getTextBaseScale(),
                 (e, scale) -> ((TooltipElement)e.element).markdownRenderer.setTextBaseScale(scale),
-                Component.translatable("fancymenu.customization.items.text.scale"),
+                Component.translatable("fancymenu.elements.text.scale"),
                 true, 1.0F, null, null);
 
         // Text color - using Text element localization
@@ -133,7 +133,7 @@ public class TooltipEditorElement extends AbstractEditorElement {
                 e -> ((TooltipElement)e.element).markdownRenderer.getTextBaseColor().getHex(),
                 (e, color) -> ((TooltipElement)e.element).markdownRenderer.setTextBaseColor(DrawableColor.of(color)),
                 null, false, false,
-                Component.translatable("fancymenu.customization.items.text.base_color"),
+                Component.translatable("fancymenu.elements.text.base_color"),
                 true, "#FFFFFF", null, null);
 
         // Text border - using Text element localization
@@ -141,7 +141,7 @@ public class TooltipEditorElement extends AbstractEditorElement {
                 TooltipEditorElement.class,
                 e -> (int)((TooltipElement)e.element).markdownRenderer.getBorder(),
                 (e, border) -> ((TooltipElement)e.element).markdownRenderer.setBorder(border),
-                Component.translatable("fancymenu.customization.items.text.text_border"),
+                Component.translatable("fancymenu.elements.text.text_border"),
                 true, 0, null, null);
 
         // Line spacing - using Text element localization
@@ -149,7 +149,7 @@ public class TooltipEditorElement extends AbstractEditorElement {
                 TooltipEditorElement.class,
                 e -> (int)((TooltipElement)e.element).markdownRenderer.getLineSpacing(),
                 (e, spacing) -> ((TooltipElement)e.element).markdownRenderer.setLineSpacing(spacing),
-                Component.translatable("fancymenu.customization.items.text.line_spacing"),
+                Component.translatable("fancymenu.elements.text.line_spacing"),
                 true, 1, null, null);
 
         // Auto line wrapping - using Text element localization
@@ -157,14 +157,14 @@ public class TooltipEditorElement extends AbstractEditorElement {
                 TooltipEditorElement.class,
                 e -> ((TooltipElement)e.element).markdownRenderer.isAutoLineBreakingEnabled(),
                 (e, value) -> ((TooltipElement)e.element).markdownRenderer.setAutoLineBreakingEnabled(value),
-                "fancymenu.customization.items.text.auto_line_wrapping");
+                "fancymenu.elements.text.auto_line_wrapping");
 
         // Parse markdown toggle - using Text element localization
         this.addToggleContextMenuEntryTo(markdownMenu, "parse_markdown",
                 TooltipEditorElement.class,
                 e -> ((TooltipElement)e.element).markdownRenderer.isParseMarkdown(),
                 (e, value) -> ((TooltipElement)e.element).markdownRenderer.setParseMarkdown(value),
-                "fancymenu.customization.items.text.markdown.toggle");
+                "fancymenu.elements.text.markdown.toggle");
 
         this.rightClickMenu.addSeparatorEntry("separator_after_markdown");
 

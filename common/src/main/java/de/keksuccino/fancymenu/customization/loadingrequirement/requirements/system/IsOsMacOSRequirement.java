@@ -28,17 +28,17 @@ public class IsOsMacOSRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.osmac");
+        return I18n.get("fancymenu.requirements.osmac");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.osmac.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.osmac.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.system");
+        return I18n.get("fancymenu.requirements.categories.system");
     }
 
     @Override

@@ -1,19 +1,16 @@
 package de.keksuccino.fancymenu.customization.element.elements.tooltip;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -54,6 +51,9 @@ public class TooltipElement extends AbstractElement {
 
     public TooltipElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+
+        this.allowDepthTestManipulation = true;
+        this.supportsTilting = false;
         
         // Configure markdown renderer for tooltip style
         this.markdownRenderer.setAutoLineBreakingEnabled(true);
@@ -71,17 +71,20 @@ public class TooltipElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (RenderingUtils.isTooltipRenderingBlocked()) return;
+
         if (isEditor()) {
-            this._render(graphics, mouseX, mouseY, partial);
+            super.renderInternal(graphics, mouseX, mouseY, partial);
         } else {
-            ScreenRenderUtils.postPostRenderTask((graphics1, mouseX1, mouseY1, partial1) -> {
-                this._render(graphics, mouseX, mouseY, partial);
-            });
+            RenderingUtils.addDeferredScreenRenderingTask(super::renderInternal);
         }
+
     }
 
-    protected void _render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -260,7 +263,7 @@ public class TooltipElement extends AbstractElement {
 
             if (linesRaw.isEmpty()) {
                 if (isEditor()) {
-                    linesRaw.add(I18n.get("fancymenu.customization.items.text.status.unable_to_load"));
+                    linesRaw.add(I18n.get("fancymenu.elements.text.status.unable_to_load"));
                 } else {
                     linesRaw.add("");
                 }

@@ -14,6 +14,7 @@ public class DraggerWidget extends AbstractWidget {
     public DraggingCallback draggingCallback;
     @NotNull
     public MouseCallback mouseCallback;
+    protected boolean leftMouseDown = false;
 
     public DraggerWidget(int x, int y, int width, int height, @NotNull DraggingCallback draggingCallback, @NotNull MouseCallback mouseCallback) {
         super(x, y, width, height, Component.empty());
@@ -30,26 +31,41 @@ public class DraggerWidget extends AbstractWidget {
     }
 
     @Override
-    public void playDownSound(SoundManager $$0) {
+    public void playDownSound(@NotNull SoundManager soundManager) {
         //don't play click/down sound
     }
 
     @Override
-    protected void onDrag(MouseButtonEvent event, double dragX, double dragY) {
-        this.draggingCallback.onDrag(event.x(), event.y(), dragX, dragY);
-        super.onDrag(event, dragX, dragY);
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.canClick()) {
+            this.leftMouseDown = true;
+            this.mouseCallback.onClickOrRelease(mouseX, mouseY, false);
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public void onClick(MouseButtonEvent event, boolean isDoubleClick) {
-        this.mouseCallback.onClickOrRelease(event.x(), event.y(), false);
-        super.onClick(event, isDoubleClick);
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.leftMouseDown) {
+            this.leftMouseDown = false;
+            this.mouseCallback.onClickOrRelease(mouseX, mouseY, true);
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
-    public void onRelease(MouseButtonEvent event) {
-        this.mouseCallback.onClickOrRelease(event.x(), event.y(), true);
-        super.onRelease(event);
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.leftMouseDown) {
+            this.draggingCallback.onDrag(mouseX, mouseY, dragX, dragY);
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    protected boolean canClick() {
+        return (this.isHovered() && this.isActive() && this.visible);
     }
 
     @FunctionalInterface

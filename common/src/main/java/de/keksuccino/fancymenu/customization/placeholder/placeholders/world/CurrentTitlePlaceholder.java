@@ -23,6 +23,11 @@ public class CurrentTitlePlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         LocalPlayer player = Minecraft.getInstance().player;
         ClientLevel level = Minecraft.getInstance().level;
@@ -34,7 +39,7 @@ public class CurrentTitlePlaceholder extends Placeholder {
                 if (asJson) {
                     return ComponentSerialization.Serializer.toJson(component, level.registryAccess());
                 } else {
-                    return TextFormattingUtils.textComponentToString(component);
+                    return TextFormattingUtils.convertComponentToString(component);
                 }
             }
         }

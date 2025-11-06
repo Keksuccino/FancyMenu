@@ -21,6 +21,7 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
 
     private long loopStartTime = 0;
     private boolean hasTimedOut = false;
+    private boolean collapsed = false;
 
     public WhileExecutableBlock() {
     }
@@ -72,6 +73,14 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
         return System.currentTimeMillis() - this.loopStartTime >= TIMEOUT_MILLIS;
     }
 
+    public boolean isCollapsed() {
+        return this.collapsed;
+    }
+
+    public void setCollapsed(boolean collapsed) {
+        this.collapsed = collapsed;
+    }
+
     @Override
     public void addValuePlaceholder(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
         super.addValuePlaceholder(placeholder, replaceWithSupplier);
@@ -88,6 +97,7 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
         }
         b.condition = this.condition.copy(unique);
         b.valuePlaceholders.putAll(this.valuePlaceholders);
+        b.collapsed = this.collapsed;
         return b;
     }
 
@@ -101,6 +111,7 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
         String key = "[while_executable_block_body:" + this.getIdentifier() + "]";
         container.putProperty(key, this.condition.identifier);
         this.condition.serializeToExistingPropertyContainer(container);
+        container.putProperty("[while_executable_block_collapsed:" + this.getIdentifier() + "]", Boolean.toString(this.collapsed));
         return container;
     }
 
@@ -115,6 +126,10 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
                 }
                 break;
             }
+        }
+        String collapsedKey = "[while_executable_block_collapsed:" + identifier + "]";
+        if (serialized.hasProperty(collapsedKey)) {
+            b.collapsed = Boolean.parseBoolean(serialized.getValue(collapsedKey));
         }
         return b;
     }

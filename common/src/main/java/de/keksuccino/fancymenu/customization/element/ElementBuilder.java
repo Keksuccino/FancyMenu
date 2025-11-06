@@ -258,6 +258,18 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             element.layerHiddenInEditor = deserializeBoolean(element.layerHiddenInEditor, serialized.getValue("layer_hidden_in_editor"));
 
+            element.rotationDegrees = deserializeNumber(Float.class, element.rotationDegrees, serialized.getValue("rotation_degrees"));
+            element.advancedRotationMode = deserializeBoolean(element.advancedRotationMode, serialized.getValue("advanced_rotation_mode"));
+            element.advancedRotationDegrees = serialized.getValue("advanced_rotation_degrees");
+
+            element.verticalTiltDegrees = deserializeNumber(Float.class, element.verticalTiltDegrees, serialized.getValue("vertical_tilt_degrees"));
+            element.advancedVerticalTiltMode = deserializeBoolean(element.advancedVerticalTiltMode, serialized.getValue("advanced_vertical_tilt_mode"));
+            element.advancedVerticalTiltDegrees = serialized.getValue("advanced_vertical_tilt_degrees");
+            
+            element.horizontalTiltDegrees = deserializeNumber(Float.class, element.horizontalTiltDegrees, serialized.getValue("horizontal_tilt_degrees"));
+            element.advancedHorizontalTiltMode = deserializeBoolean(element.advancedHorizontalTiltMode, serialized.getValue("advanced_horizontal_tilt_mode"));
+            element.advancedHorizontalTiltDegrees = serialized.getValue("advanced_horizontal_tilt_degrees");
+
             element.afterConstruction();
 
             return element;
@@ -387,6 +399,18 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("in_editor_color", element.inEditorColor.getHex());
 
             sec.putProperty("layer_hidden_in_editor", "" + element.layerHiddenInEditor);
+
+            sec.putProperty("rotation_degrees", "" + element.rotationDegrees);
+            sec.putProperty("advanced_rotation_mode", "" + element.advancedRotationMode);
+            sec.putProperty("advanced_rotation_degrees", element.advancedRotationDegrees);
+
+            sec.putProperty("vertical_tilt_degrees", "" + element.verticalTiltDegrees);
+            sec.putProperty("advanced_vertical_tilt_mode", "" + element.advancedVerticalTiltMode);
+            sec.putProperty("advanced_vertical_tilt_degrees", element.advancedVerticalTiltDegrees);
+            
+            sec.putProperty("horizontal_tilt_degrees", "" + element.horizontalTiltDegrees);
+            sec.putProperty("advanced_horizontal_tilt_mode", "" + element.advancedHorizontalTiltMode);
+            sec.putProperty("advanced_horizontal_tilt_degrees", element.advancedHorizontalTiltDegrees);
 
             return sec;
 

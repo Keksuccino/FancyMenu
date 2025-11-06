@@ -22,6 +22,11 @@ public class WorldLoadProgressPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         Screen s = Minecraft.getInstance().screen;
         if (s instanceof ProgressScreen p) {
@@ -50,7 +55,7 @@ public class WorldLoadProgressPlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.client");
+        return I18n.get("fancymenu.requirements.categories.client");
     }
 
     @Override

@@ -1,9 +1,11 @@
+
 plugins {
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.192'
+    id "net.neoforged.gradle.userdev" version "$neogradle_version"
     id 'java-library'
 }
+
 base {
     archivesName = "${mod_id}"
 }
@@ -14,6 +16,7 @@ base {
 if (file('src/main/resources/META-INF/accesstransformer.cfg').exists()) {
     minecraft.accessTransformers.file file('src/main/resources/META-INF/accesstransformer.cfg')
 }
+
 runs {
     configureEach {
         modSource project.sourceSets.main
@@ -22,8 +25,8 @@ runs {
         workingDirectory project.file('../run_client')
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         dependencies {
-            runtime 'com.github.Keksuccino:japng:0.5.3'
-            runtime 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7'
+            runtime "com.github.Keksuccino:japng:0.5.3"
+            runtime "com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7"
         }
     }
     server {
@@ -40,19 +43,19 @@ test {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
-repositories {
-    flatDir { dirs 'libs' }
-}
-
 jarJar.enable()
+
+subsystems {
+    parchment {
+        minecraftVersion = "${parchment_mc_version}"
+        mappingsVersion = "${parchment_version}"
+    }
+}
 
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
     implementation "net.neoforged:neoforge:${neoforge_version}"
-    compileOnly project(":common")
-    implementation "maven.modrinth:konkrete:1.9.13-1.21.10-neoforge"
-    implementation "maven.modrinth:melody:1.0.13-1.21.10-neoforge"
     //Also needs to get added to the client run configuration (runs -> client -> dependencies) since it's a non-Minecraft library
     implementation(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
@@ -60,9 +63,11 @@ dependencies {
     implementation(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
     }
-    compileOnly "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
-    compileOnly 'com.cinemamod:mcef:2.1.6-1.21.4'
-    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.4.1'
+	implementation "maven.modrinth:konkrete:1.9.12-1.21.6-neoforge"
+    implementation "maven.modrinth:melody:1.0.12-1.21.6-neoforge"
+    implementation "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
+    implementation "de.keksuccino:mcef-neoforge:2.1.7-1.21.6"
+    compileOnly project(":common")
 }
 
 // Exclude Fabric Loader from NeoForge
@@ -73,7 +78,15 @@ configurations {
         exclude group: 'net.fabricmc', module: 'fabric-loader'
     }
 }
-configurations.named("testCompileClasspath") { extendsFrom configurations.getByName("compileOnly") }
+
+// Exclude Fabric Loader from NeoForge
+configurations {
+    runtimeClasspath    { exclude group: 'net.fabricmc', module: 'fabric-loader' }
+    developmentRuntimeClasspath {
+        // Gradle 8 names used by ForgeGradle 6
+        exclude group: 'net.fabricmc', module: 'fabric-loader'
+    }
+}
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code++
 Spec<Task> notNeoTask = { Task it -> !it.name.startsWith("neo") } as Spec<Task>

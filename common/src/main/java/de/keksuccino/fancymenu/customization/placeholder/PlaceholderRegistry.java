@@ -22,6 +22,7 @@ public class PlaceholderRegistry {
             LOGGER.warn("[FANCYMENU] A placeholder with the identifier '" + placeholder.getIdentifier() + "' is already registered! Overriding placeholder!");
         }
         PLACEHOLDERS.put(placeholder.getIdentifier(), placeholder);
+        placeholder.onRegistered();
     }
 
     @NotNull

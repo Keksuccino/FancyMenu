@@ -30,7 +30,7 @@ public class PercentRamPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.percentram");
+        return I18n.get("fancymenu.placeholders.percentram");
     }
 
     @Override
@@ -40,7 +40,7 @@ public class PercentRamPlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");
+        return I18n.get("fancymenu.requirements.categories.other");
     }
 
     @Override

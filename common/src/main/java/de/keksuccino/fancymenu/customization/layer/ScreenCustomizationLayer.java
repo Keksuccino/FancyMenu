@@ -36,7 +36,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
-import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -55,7 +54,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings({"unused", "deprecation", "removal"})
+@SuppressWarnings({"unused", "deprecation"})
 public class ScreenCustomizationLayer implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -259,32 +258,32 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		//Stack active layouts
 		this.layoutBase = LayoutBase.stackLayoutBases(this.activeLayouts.toArray(new LayoutBase[]{}));
 
-		Window window = Minecraft.getInstance().getWindow();
+        Window window = Minecraft.getInstance().getWindow();
 
-		//Handle forced GUI scale
-		if (this.layoutBase.forcedScale != 0) {
-			float newscale = this.layoutBase.forcedScale;
-			if (newscale <= 0) {
-				newscale = 1;
-			}
-			WindowHandler.setGuiScale(newscale);
-			e.getScreen().width = window.getGuiScaledWidth();
-			e.getScreen().height = window.getGuiScaledHeight();
-		}
+        //Handle forced GUI scale
+        if (this.layoutBase.forcedScale != 0) {
+            float newscale = this.layoutBase.forcedScale;
+            if (newscale <= 0) {
+                newscale = 1;
+            }
+            WindowHandler.setGuiScale(newscale);
+            e.getScreen().width = window.getGuiScaledWidth();
+            e.getScreen().height = window.getGuiScaledHeight();
+        }
 
-		//Handle auto-scaling
-		if ((this.layoutBase.autoScalingWidth != 0) && (this.layoutBase.autoScalingHeight != 0) && (this.layoutBase.forcedScale != 0)) {
-			double guiWidth = e.getScreen().width * WindowHandler.getGuiScale();
-			double guiHeight = e.getScreen().height * WindowHandler.getGuiScale();
-			double percentX = (guiWidth / (double)this.layoutBase.autoScalingWidth) * 100.0D;
-			double percentY = (guiHeight / (double)this.layoutBase.autoScalingHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * WindowHandler.getGuiScale();
-			double newScaleY = (percentY / 100.0D) * WindowHandler.getGuiScale();
-			double newScale = Math.min(newScaleX, newScaleY);
-			WindowHandler.setGuiScale(newScale);
-			e.getScreen().width = window.getGuiScaledWidth();
-			e.getScreen().height = window.getGuiScaledHeight();
-		}
+        //Handle auto-scaling
+        if ((this.layoutBase.autoScalingWidth != 0) && (this.layoutBase.autoScalingHeight != 0) && (this.layoutBase.forcedScale != 0)) {
+            double guiWidth = e.getScreen().width * WindowHandler.getGuiScale();
+            double guiHeight = e.getScreen().height * WindowHandler.getGuiScale();
+            double percentX = (guiWidth / (double)this.layoutBase.autoScalingWidth) * 100.0D;
+            double percentY = (guiHeight / (double)this.layoutBase.autoScalingHeight) * 100.0D;
+            double newScaleX = (percentX / 100.0D) * WindowHandler.getGuiScale();
+            double newScaleY = (percentY / 100.0D) * WindowHandler.getGuiScale();
+            double newScale = Math.min(newScaleX, newScaleY);
+            WindowHandler.setGuiScale(newScale);
+            e.getScreen().width = window.getGuiScaledWidth();
+            e.getScreen().height = window.getGuiScaledHeight();
+        }
 
 		oldMenuBackgrounds.forEach(menuBackground -> {
 			if (!this.layoutBase.menuBackgrounds.contains(menuBackground)) menuBackground.onDisableOrRemove();
@@ -431,7 +430,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@EventListener
 	public void drawToBackground(RenderedScreenBackgroundEvent e) {
-		this.renderBackground(e.getGraphics(), MouseInput.getMouseX(), MouseInput.getMouseY(), RenderingUtils.getPartialTick(), e.getScreen());
+		this.renderBackground(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial(), e.getScreen());
 	}
 
 	@EventListener

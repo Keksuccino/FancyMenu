@@ -31,7 +31,7 @@ public class MaxRamPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.maxram");
+        return I18n.get("fancymenu.placeholders.maxram");
     }
 
     @Override
@@ -41,7 +41,7 @@ public class MaxRamPlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");
+        return I18n.get("fancymenu.requirements.categories.other");
     }
 
     @Override

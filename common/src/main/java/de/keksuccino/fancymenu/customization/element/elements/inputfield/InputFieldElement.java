@@ -27,6 +27,7 @@ public class InputFieldElement extends AbstractElement {
 
     public InputFieldElement(ElementBuilder<InputFieldElement, InputFieldEditorElement> builder) {
         super(builder);
+        this.allowDepthTestManipulation = true;
     }
 
     @Override

@@ -37,6 +37,7 @@ public class LoadingRequirementInstance implements ValuePlaceholderHolder {
     }
 
     public boolean requirementMet() {
+        if (!this.requirement.checkAsync()) return false;
         String v = this.value;
         if (v != null) {
             for (Map.Entry<String, Supplier<String>> m : this.valuePlaceholders.entrySet()) {

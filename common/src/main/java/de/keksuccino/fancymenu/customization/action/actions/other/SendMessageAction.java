@@ -16,6 +16,11 @@ public class SendMessageAction extends Action {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return true;
     }
@@ -37,17 +42,17 @@ public class SendMessageAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.sendmessage");
+        return Component.translatable("fancymenu.actions.sendmessage");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.sendmessage.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.sendmessage.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.sendmessage.desc.value");
+        return Component.translatable("fancymenu.actions.sendmessage.desc.value");
     }
 
     @Override

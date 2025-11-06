@@ -36,7 +36,7 @@ public class RealtimeMinutePlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimeminute");
+        return I18n.get("fancymenu.placeholders.realtime_minute");
     }
 
     @Override
@@ -46,7 +46,7 @@ public class RealtimeMinutePlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.realtime");
+        return I18n.get("fancymenu.requirements.categories.realtime");
     }
 
     @Override

@@ -46,12 +46,12 @@ public class IsLanguageRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.language");
+        return I18n.get("fancymenu.requirements.language");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.language.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.language.desc"));
     }
 
     @Override
@@ -94,7 +94,7 @@ public class IsLanguageRequirement extends LoadingRequirement {
         protected EditBoxSuggestions langIdSuggestions;
 
         protected IsLanguageValueConfigScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
+            super(Component.translatable("fancymenu.elements.requirements.edit_value"), callback);
             this.langId = value;
         }
 
@@ -104,7 +104,7 @@ public class IsLanguageRequirement extends LoadingRequirement {
             this.addSpacerCell(20);
 
             String id = this.getLangIdString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_language.lang_id"));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_language.lang_id"));
             this.langIdCell = this.addTextInputCell(null, true, true).setText(id);
 
             this.addCellGroupEndSpacerCell();
