@@ -1,8 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.ui;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.ActionFavoritesManager;
@@ -36,13 +34,15 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -356,9 +356,9 @@ public class ActionScriptEditorScreen extends Screen {
         ContextMenu subMenu = (updateContent != null) ? updateContent : new ContextMenu() {
             // This rebuilds the context menu on right-click without closing it
             @Override
-            public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                boolean b = super.mouseClicked(mouseX, mouseY, button); // Do this first, so the action entries can do their thing (toggle favorites) before the menu gets rebuilt
-                if (this.isUserNavigatingInMenu() && (button == 1)) {
+            public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+                boolean b = super.mouseClicked(event, isDoubleClick); // Do this first, so the action entries can do their thing (toggle favorites) before the menu gets rebuilt
+                if (this.isUserNavigatingInMenu() && (event.button() == 1)) {
                     this.entries.clear();
                     buildAddActionSubMenu(this);
                     return true;
@@ -1130,7 +1130,11 @@ public class ActionScriptEditorScreen extends Screen {
 
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
 
         boolean skipSelection = this.skipNextContextMenuSelection;
         this.skipNextContextMenuSelection = false;
@@ -1145,7 +1149,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         if (this.isInlineNameEditing()) {
             boolean insideNameEditor = UIBase.isXYInArea((int) mouseX, (int) mouseY, this.inlineNameEditBox.getX(), this.inlineNameEditBox.getY(), this.inlineNameEditBox.getWidth(), this.inlineNameEditBox.getHeight());
-            if (insideNameEditor && this.inlineNameEditBox.mouseClicked(mouseX, mouseY, button)) {
+            if (insideNameEditor && this.inlineNameEditBox.mouseClicked(event, isDoubleClick)) {
                 return true;
             }
             if (!insideNameEditor) {
@@ -1155,7 +1159,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         if (this.isInlineValueEditing()) {
             boolean insideEditor = UIBase.isXYInArea((int) mouseX, (int) mouseY, this.inlineValueEditBox.getX(), this.inlineValueEditBox.getY(), this.inlineValueEditBox.getWidth(), this.inlineValueEditBox.getHeight());
-            if (insideEditor && this.inlineValueEditBox.mouseClicked(mouseX, mouseY, button)) {
+            if (insideEditor && this.inlineValueEditBox.mouseClicked(event, isDoubleClick)) {
                 return true;
             }
             if (!insideEditor) {
@@ -1227,7 +1231,7 @@ public class ActionScriptEditorScreen extends Screen {
             }
         }
 
-        boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        boolean handled = super.mouseClicked(event, isDoubleClick);
         if (!skipSelection && !actionsMenuInteracting && (button == 0) && !this.isInlineValueEditing()) {
             ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
             if ((hoveredAfter == null) || !hoveredAfter.isMouseOverValue((int)mouseX, (int)mouseY)) {
@@ -1254,24 +1258,26 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 1) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (event.button() == 1) {
             // Because of some client tick shenanigans it's important to delay the reset of the click consume var some ticks
             MainThreadTaskExecutor.executeInMainThread(() ->
                     MainThreadTaskExecutor.executeInMainThread(() -> this.actionsMenuRightClickConsumedByEntry = false,
                             MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK), MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
         }
-        if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.mouseReleased(mouseX, mouseY, button)) {
+        if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.mouseReleased(event)) {
             return true;
         }
-        if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.mouseReleased(mouseX, mouseY, button)) {
+        if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.mouseReleased(event)) {
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
+        int scanCode = event.scancode();
         if (this.inlineNameEditBox != null) {
             if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
                 this.finishInlineNameEditing(true);
@@ -1281,7 +1287,7 @@ public class ActionScriptEditorScreen extends Screen {
                 this.finishInlineNameEditing(false);
                 return true;
             }
-            if (this.inlineNameEditBox.keyPressed(keyCode, scanCode, modifiers)) {
+            if (this.inlineNameEditBox.keyPressed(event)) {
                 return true;
             }
         }
@@ -1295,7 +1301,7 @@ public class ActionScriptEditorScreen extends Screen {
                 this.finishInlineValueEditing(false);
                 return true;
             }
-            if (this.inlineValueEditBox.keyPressed(keyCode, scanCode, modifiers)) {
+            if (this.inlineValueEditBox.keyPressed(event)) {
                 return true;
             }
         }
@@ -1305,8 +1311,8 @@ public class ActionScriptEditorScreen extends Screen {
 
         if (!contextMenuActive && !inlineEditingActive) {
             ExecutableEntry selected = this.getSelectedEntry();
-            boolean ctrlDown = hasControlDown();
-            boolean shiftDown = hasShiftDown();
+            boolean ctrlDown = event.hasControlDown();
+            boolean shiftDown = event.hasShiftDown();
             String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
             keyName = (keyName != null) ? keyName.toLowerCase(Locale.ROOT) : "";
 
@@ -1374,7 +1380,7 @@ public class ActionScriptEditorScreen extends Screen {
             }
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     protected boolean handleEnterShortcut(@Nullable ExecutableEntry selected) {
@@ -1400,14 +1406,14 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
-        if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.charTyped(codePoint, modifiers)) {
+    public boolean charTyped(CharacterEvent event) {
+        if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.charTyped(event)) {
             return true;
         }
-        if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.charTyped(codePoint, modifiers)) {
+        if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.charTyped(event)) {
             return true;
         }
-        return super.charTyped(codePoint, modifiers);
+        return super.charTyped(event);
     }
 
     private void updateCursor(int mouseX, int mouseY) {
@@ -3366,13 +3372,13 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered && !actionsMenuRightClickConsumedByEntry) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            if ((event.button() == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered && !actionsMenuRightClickConsumedByEntry) {
                 ActionScriptEditorScreen.this.toggleFavorite(this.action);
                 actionsMenuRightClickConsumedByEntry = true;
                 return true;
             }
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(event, isDoubleClick);
         }
 
     }

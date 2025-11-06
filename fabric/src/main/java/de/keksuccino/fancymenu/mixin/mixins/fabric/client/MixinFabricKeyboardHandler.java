@@ -7,6 +7,8 @@ import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
@@ -87,7 +89,7 @@ public class MixinFabricKeyboardHandler {
                         b = listener.charTyped(event);
                     } else {
                         for (char c : Character.toChars(event.codepoint())) {
-                            b = !b ? listener.charTyped(event) : true;
+                            b = !b ? listener.charTyped(new CharacterEvent(c, event.modifiers())) : true;
                         }
                     }
                     if (b) {
@@ -100,9 +102,9 @@ public class MixinFabricKeyboardHandler {
 
     }
 
-    @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Ljava/lang/Character;isBmpCodePoint(I)Z"))
-    private void before_Screen_charTyped_in_charTyped_FancyMenu(long windowPointer, int codePoint, int modifiers, CallbackInfo info) {
-        EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(Objects.requireNonNull(Minecraft.getInstance().screen), (char) codePoint));
+    @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;charTyped(Lnet/minecraft/client/input/CharacterEvent;)Z"))
+    private void before_Screen_charTyped_in_charTyped_FancyMenu(long window, CharacterEvent event, CallbackInfo info) {
+        EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(Objects.requireNonNull(Minecraft.getInstance().screen), event));
     }
 
 }

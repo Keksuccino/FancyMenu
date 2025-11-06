@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
@@ -66,14 +67,14 @@ public class QueueableNotificationScreen extends QueueableScreen {
     }
 
     @Override
-    public boolean keyPressed(int key, int scancode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
 
-        if ((key == InputConstants.KEY_ENTER) || (key == InputConstants.KEY_NUMPADENTER)) {
+        if ((event.key() == InputConstants.KEY_ENTER) || (event.key() == InputConstants.KEY_NUMPADENTER)) {
             this.onClose();
             return true;
         }
 
-        return super.keyPressed(key, scancode, modifiers);
+        return super.keyPressed(event);
 
     }
 

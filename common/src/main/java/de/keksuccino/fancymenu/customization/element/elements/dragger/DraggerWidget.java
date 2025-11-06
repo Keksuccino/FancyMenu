@@ -36,32 +36,32 @@ public class DraggerWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (this.canClick()) {
             this.leftMouseDown = true;
-            this.mouseCallback.onClickOrRelease(mouseX, mouseY, false);
+            this.mouseCallback.onClickOrRelease(event.x(), event.y(), false);
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, isDoubleClick);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         if (this.leftMouseDown) {
             this.leftMouseDown = false;
-            this.mouseCallback.onClickOrRelease(mouseX, mouseY, true);
+            this.mouseCallback.onClickOrRelease(event.x(), event.y(), true);
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
         if (this.leftMouseDown) {
-            this.draggingCallback.onDrag(mouseX, mouseY, dragX, dragY);
+            this.draggingCallback.onDrag(event.x(), event.y(), dragX, dragY);
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return super.mouseDragged(event, dragX, dragY);
     }
 
     protected boolean canClick() {

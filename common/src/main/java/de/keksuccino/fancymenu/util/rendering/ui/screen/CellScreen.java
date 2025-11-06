@@ -31,6 +31,8 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +44,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public abstract class CellScreen extends Screen implements InitialWidgetFocusScreen {
+public abstract class CellScreen extends Screen implements InitialWidgetFocusScreen, VanillaMouseClickHandlingScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -534,9 +536,9 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
      * This restores the old click logic.
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.searchBarEnabled && (this.searchBar != null) && !this.searchBar.isHovered()) {
-            this.searchBar.setFocused(false);
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (this.searchBarEnabled && (this.searchBar != null) && !this.searchBar.isHovered() && this.searchBar.isFocused()) {
+            this.setFocused(null);
         }
         for (GuiEventListener listener : this.children()) {
             if (listener.mouseClicked(event, isDoubleClick)) {
@@ -551,14 +553,14 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     }
 
     @Override
-    public boolean keyPressed(int keycode, int scancode, int modifiers) {
-        if (keycode == InputConstants.KEY_ENTER) {
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == InputConstants.KEY_ENTER) {
             if (this.allowDone() && this.allowEnterForDone()) {
                 this.onDone();
                 return true;
             }
         }
-        return super.keyPressed(keycode, scancode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override

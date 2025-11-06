@@ -53,12 +53,12 @@ public class MixinClientPacketListener {
                 continue;
             }
 
-            UUID profileId = profile.getId();
+            UUID profileId = profile.id();
             if (profileId == null || profileId.equals(localProfileId)) {
                 continue;
             }
 
-            Listeners.ON_OTHER_PLAYER_JOINED_WORLD.onOtherPlayerJoined(profile.getName(), profileId);
+            Listeners.ON_OTHER_PLAYER_JOINED_WORLD.onOtherPlayerJoined(profile.name(), profileId);
         }
     }
 
@@ -74,13 +74,13 @@ public class MixinClientPacketListener {
             }
 
             PlayerInfo playerInfo = self.getPlayerInfo(profileId);
-            String playerName = playerInfo != null ? playerInfo.getProfile().getName() : null;
+            String playerName = playerInfo != null ? playerInfo.getProfile().name() : null;
             Listeners.ON_OTHER_PLAYER_LEFT_WORLD.onOtherPlayerLeft(playerName, profileId);
         }
     }
 
     /** @reason Fire FancyMenu listener when another player dies in the current world. */
-    @Inject(method = "handlePlayerCombatKill", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V", shift = At.Shift.AFTER))
+    @Inject(method = "handlePlayerCombatKill", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
     private void after_handlePlayerCombatKillEnsureThread_FancyMenu(ClientboundPlayerCombatKillPacket packet, CallbackInfo ci) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null) {
@@ -93,7 +93,7 @@ public class MixinClientPacketListener {
         }
 
         Vec3 deathPosition = player.position();
-        String playerName = player.getGameProfile().getName();
+        String playerName = player.getGameProfile().name();
         if ((playerName == null || playerName.isBlank()) && player.getName() != null) {
             playerName = player.getName().getString();
         }

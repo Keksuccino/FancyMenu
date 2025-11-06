@@ -42,14 +42,14 @@ public abstract class MixinScreen implements CustomizableScreen {
 
 	@Shadow @Final private List<GuiEventListener> children;
 
-    @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+    @WrapOperation(method = "renderWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
     private void wrap_render_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
         EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(instance, graphics, mouseX, mouseY, partial));
         original.call(instance, graphics, mouseX, mouseY, partial);
         EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(instance, graphics, mouseX, mouseY, partial));
     }
 
-    @Inject(method = "renderWithTooltip", at = @At("RETURN"))
+    @Inject(method = "renderWithTooltipAndSubtitles", at = @At("RETURN"))
     private void return_renderWithTooltip_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
         RenderingUtils.executeAndClearDeferredScreenRenderingTasks(graphics, mouseX, mouseY, partial);
     }
@@ -59,7 +59,7 @@ public abstract class MixinScreen implements CustomizableScreen {
         if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
     }
 
-	@WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+	@WrapOperation(method = "renderWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
 	private void wrap_renderBackground_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
 		//Don't fire the event in the TitleScreen, because it gets handled differently there
 		if (instance instanceof TitleScreen) {

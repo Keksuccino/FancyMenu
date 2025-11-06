@@ -204,7 +204,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
         if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
-        super.render($$0, $$1, $$2, $$3);
+        super.render(graphics, mouseX, mouseY, partial);
 
         if ((this.customTooltip != null) && this.visible && this.isHovered()) {
             Tooltip tt = this.customTooltip.get();

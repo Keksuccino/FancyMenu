@@ -1141,7 +1141,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	}
 
 	@Override
-	public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+	public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean isDoubleClick) {
 
 		if (this.element.layerHiddenInEditor) return false;
 
@@ -1165,19 +1165,19 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						// Calculate initial mouse angle relative to element center
 						float centerX = this.getX() + (this.getWidth() / 2.0F);
 						float centerY = this.getY() + (this.getHeight() / 2.0F);
-						this.rotationStartMouseAngle = Math.toDegrees(Math.atan2(mouseY - centerY, mouseX - centerX));
+						this.rotationStartMouseAngle = Math.toDegrees(Math.atan2(event.y() - centerY, event.x() - centerX));
 					}
 
 					if (this.verticalTiltGrabberActive) {
 						this.preTiltSnapshot = this.editor.history.createSnapshot();
 						this.verticalTiltStartAngle = this.element.verticalTiltDegrees;
-						this.verticalTiltStartMouseY = mouseY;
+						this.verticalTiltStartMouseY = event.y();
 					}
 
 					if (this.horizontalTiltGrabberActive) {
 						this.preTiltSnapshot = this.editor.history.createSnapshot();
 						this.horizontalTiltStartAngle = this.element.horizontalTiltDegrees;
-						this.horizontalTiltStartMouseX = mouseX;
+						this.horizontalTiltStartMouseX = event.x();
 					}
 
 					if (this.element.autoSizingWidth > 0) this.element.baseWidth = this.element.autoSizingWidth;
@@ -1226,26 +1226,26 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	 * @param dragY The Y distance of the drag (mouse move distance per tick; mostly values between 0.3 and 5).
 	 */
 	@Override
-	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+	public boolean mouseDragged(@NotNull MouseButtonEvent event, double dragX, double dragY) {
 
 		if (this.element.layerHiddenInEditor) return false;
 
 		if (!this.isSelected()) {
 			return false;
 		}
-		if (button == 0) {
+		if (event.button() == 0) {
 			if (this.leftMouseDown && this.isGettingRotated()) { // ROTATE ELEMENT
 				// Calculate current mouse angle relative to element center
 				float centerX = this.getX() + (this.getWidth() / 2.0F);
 				float centerY = this.getY() + (this.getHeight() / 2.0F);
-				double currentMouseAngle = Math.toDegrees(Math.atan2(mouseY - centerY, mouseX - centerX));
+				double currentMouseAngle = Math.toDegrees(Math.atan2(event.y() - centerY, event.x() - centerX));
 
 				// Calculate angle difference and apply to rotation
 				double angleDiff = currentMouseAngle - this.rotationStartMouseAngle;
 				float newRotation = (float)(this.rotationStartAngle + angleDiff);
 
 				// Snap to 45-degree increments if shift is held
-				if (Screen.hasShiftDown()) {
+				if (event.hasShiftDown()) {
 					newRotation = Math.round(newRotation / 45.0F) * 45.0F;
 				}
 
@@ -1256,7 +1256,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				this.element.rotationDegrees = newRotation;
 			} else if (this.leftMouseDown && this.isGettingVerticalTilted()) { // VERTICAL TILT
 				// Calculate tilt based on vertical mouse movement
-				double mouseDiff = mouseY - this.verticalTiltStartMouseY;
+				double mouseDiff = event.y() - this.verticalTiltStartMouseY;
 				float tiltChange = (float)(mouseDiff * 0.5); // Scale factor for sensitivity
 				float newTilt = this.verticalTiltStartAngle + tiltChange;
 
@@ -1264,14 +1264,14 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				newTilt = Math.max(-60.0F, Math.min(60.0F, newTilt));
 
 				// Snap to 15-degree increments if shift is held
-				if (Screen.hasShiftDown()) {
+				if (event.hasShiftDown()) {
 					newTilt = Math.round(newTilt / 15.0F) * 15.0F;
 				}
 
 				this.element.verticalTiltDegrees = newTilt;
 			} else if (this.leftMouseDown && this.isGettingHorizontalTilted()) { // HORIZONTAL TILT
 				// Calculate tilt based on horizontal mouse movement
-				double mouseDiff = mouseX - this.horizontalTiltStartMouseX;
+				double mouseDiff = event.x() - this.horizontalTiltStartMouseX;
 				float tiltChange = (float)(mouseDiff * 0.5); // Scale factor for sensitivity
 				float newTilt = this.horizontalTiltStartAngle + tiltChange;
 
@@ -1279,14 +1279,14 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				newTilt = Math.max(-60.0F, Math.min(60.0F, newTilt));
 
 				// Snap to 15-degree increments if shift is held
-				if (Screen.hasShiftDown()) {
+				if (event.hasShiftDown()) {
 					newTilt = Math.round(newTilt / 15.0F) * 15.0F;
 				}
 
 				this.element.horizontalTiltDegrees = newTilt;
 			} else if (this.leftMouseDown && !this.isGettingResized() && this.movingCrumpleZonePassed) { // MOVE ELEMENT
-				int diffX = (int)-(this.movingStartPosX - mouseX);
-				int diffY = (int)-(this.movingStartPosY - mouseY);
+				int diffX = (int)-(this.movingStartPosX - event.x());
+				int diffY = (int)-(this.movingStartPosY - event.y());
 				if (this.editor.allSelectedElementsMovable()) {
 					if (!this.isMultiSelected() || !this.isElementAnchorAndParentIsSelected()) {
 						// Calculate new positions

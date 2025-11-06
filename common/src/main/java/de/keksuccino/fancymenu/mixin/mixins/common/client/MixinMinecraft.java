@@ -22,7 +22,6 @@ import java.net.SocketAddress;
 import java.nio.file.Path;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Overlay;
-import net.minecraft.client.gui.screens.ReceivingLevelScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -139,7 +138,7 @@ public class MixinMinecraft {
 	}
 
 	@Inject(method = "setLevel", at = @At("TAIL"))
-	private void afterSetLevelFancyMenu(ClientLevel clientLevel, ReceivingLevelScreen.Reason reason, CallbackInfo info) {
+	private void afterSetLevelFancyMenu(ClientLevel clientLevel, CallbackInfo ci) {
 		Minecraft self = (Minecraft)(Object)this;
 
 		if (clientLevel == null) {

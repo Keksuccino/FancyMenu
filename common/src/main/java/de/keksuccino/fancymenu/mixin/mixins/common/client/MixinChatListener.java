@@ -43,9 +43,9 @@ public class MixinChatListener {
     ) {
         operation.call(instance, component, messageSignature, guiMessageTag);
 
-        UUID senderUuid = gameProfile != null ? gameProfile.getId() : null;
-        Component senderNameComponent = (gameProfile != null && gameProfile.getName() != null)
-            ? Component.literal(gameProfile.getName())
+        UUID senderUuid = gameProfile != null ? gameProfile.id() : null;
+        Component senderNameComponent = (gameProfile != null && gameProfile.name() != null)
+            ? Component.literal(gameProfile.name())
             : null;
 
         Listeners.ON_CHAT_MESSAGE_RECEIVED.onChatMessageReceived(component, senderUuid, senderNameComponent);

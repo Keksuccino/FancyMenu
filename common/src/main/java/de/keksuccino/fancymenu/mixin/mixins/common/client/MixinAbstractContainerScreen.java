@@ -5,6 +5,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,12 +30,12 @@ public class MixinAbstractContainerScreen extends Screen {
      * @reason This is to make widgets work correctly in Inventory Container screens.
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void head_mouseClicked_FancyMenu(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> info) {
+    private void head_mouseClicked_FancyMenu(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> info) {
 
         for (GuiEventListener l : this.children()) {
             if ((l instanceof FancyMenuWidget) && this.canClickWidget_FancyMenu(l)) {
                 CLICKED_WIDGETS_FANCYMENU.add(l);
-                if (l.mouseClicked(mouseX, mouseY, button)) {
+                if (l.mouseClicked(event, isDoubleClick)) {
                     info.setReturnValue(true);
                     break;
                 }
@@ -47,11 +48,11 @@ public class MixinAbstractContainerScreen extends Screen {
      * @reason This is to make widgets work correctly in Inventory Container screens.
      */
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
-    private void head_mouseReleased_FancyMenu(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> info) {
+    private void head_mouseReleased_FancyMenu(MouseButtonEvent event, CallbackInfoReturnable<Boolean> info) {
 
         for (GuiEventListener l : this.children()) {
             if ((l instanceof FancyMenuWidget) && CLICKED_WIDGETS_FANCYMENU.contains(l)) {
-                if (l.mouseReleased(mouseX, mouseY, button)) {
+                if (l.mouseReleased(event)) {
                     info.setReturnValue(true);
                     break;
                 }
@@ -66,11 +67,11 @@ public class MixinAbstractContainerScreen extends Screen {
      * @reason This is to make widgets work correctly in Inventory Container screens.
      */
     @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
-    private void head_mouseDragged_FancyMenu(double mouseX, double mouseY, int button, double dragX, double dragY, CallbackInfoReturnable<Boolean> info) {
+    private void head_mouseDragged_FancyMenu(MouseButtonEvent event, double dragX, double dragY, CallbackInfoReturnable<Boolean> info) {
 
         for (GuiEventListener l : this.children()) {
             if ((l instanceof FancyMenuWidget) && CLICKED_WIDGETS_FANCYMENU.contains(l)) {
-                if (l.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+                if (l.mouseDragged(event, dragX, dragY)) {
                     info.setReturnValue(true);
                     break;
                 }

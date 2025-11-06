@@ -2,9 +2,11 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.listener.listeners.helpers.WorldSessionTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.RendererWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
@@ -18,6 +20,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @WidgetifiedScreen
 @Mixin(LevelLoadingScreen.class)
@@ -30,6 +34,7 @@ public abstract class MixinLevelLoadingScreen extends Screen {
     @Unique private TextWidget downloadingTerrainText_FancyMenu;
     @Unique private RendererWidget chunkRenderer_FancyMenu;
     @Unique private RendererWidget progressBar_FancyMenu;
+    @Unique private boolean worldEnteredNotified_FancyMenu;
 
     protected MixinLevelLoadingScreen(Component component) {
         super(component);
@@ -78,6 +83,17 @@ public abstract class MixinLevelLoadingScreen extends Screen {
             this.progressBar_FancyMenu = null;
         }
 
+    }
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;onClose()V", shift = At.Shift.AFTER))
+    private void after_onClose_in_tick_FancyMenu(CallbackInfo info) {
+        if (this.worldEnteredNotified_FancyMenu) {
+            return;
+        }
+        if (WorldSessionTracker.hasPendingEntry()) {
+            this.worldEnteredNotified_FancyMenu = true;
+            WorldSessionTracker.handleWorldEntered(Minecraft.getInstance());
+        }
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;renderChunks(Lnet/minecraft/client/gui/GuiGraphics;IIIILnet/minecraft/server/level/progress/ChunkLoadStatusView;)V"))

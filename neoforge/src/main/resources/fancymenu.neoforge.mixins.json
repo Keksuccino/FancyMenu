@@ -9,7 +9,6 @@
     "client.MixinNeoForgeGameRenderer",
     "client.MixinNeoForgeKeyboardHandler",
     "client.MixinNeoForgeLoadingOverlay",
-    "client.MixinNeoForgeMouseHandler",
     "client.MixinNeoForgeTitleScreen"
   ],
   "injectors": {

@@ -110,7 +110,7 @@ public class CustomGuiBaseScreen extends Screen {
         try {
             Minecraft.getInstance().screen = this.parentScreen;
             // FancyMenu's render events get fired in renderWithTooltip, so they should fire here automatically
-            this.parentScreen.renderWithTooltip(graphics, -500, -500, partial);
+            this.parentScreen.renderWithTooltipAndSubtitles(graphics, -500, -500, partial);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render popup menu background screen of Custom GUI!", ex);
         }

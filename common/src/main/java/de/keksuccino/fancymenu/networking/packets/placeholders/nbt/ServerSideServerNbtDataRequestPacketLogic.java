@@ -117,7 +117,7 @@ public class ServerSideServerNbtDataRequestPacketLogic {
                 return null;
             }
             CommandSourceStack source = sender.createCommandSourceStack();
-            CommandStorage storage = sender.getServer().getCommandStorage();
+            CommandStorage storage = sender.level().getServer().getCommandStorage();
             CompoundTag tag = storage.get(id);
             return new CommandContextData(tag, source);
         } catch (Exception ex) {

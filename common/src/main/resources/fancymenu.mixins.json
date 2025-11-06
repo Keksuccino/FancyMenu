@@ -53,7 +53,6 @@
     "client.MixinImageButton",
     "client.MixinKeyboardHandler",
     "client.MixinLevelLoadingScreen",
-    "client.MixinLevelLoadStatusManager",
     "client.MixinLevelRenderer",
     "client.MixinLevelStorageAccess",
     "client.MixinLivingEntity",
@@ -81,6 +80,8 @@
     "client.MixinWorldListEntry"
   ],
   "mixins": [
+    "client.IMixinKeyboardHandler",
+    "client.IMixinMouseHandler",
     "server.MixinLivingEntity",
     "server.MixinServerLevel",
     "server.MixinServerPlayer"

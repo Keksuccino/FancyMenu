@@ -12,6 +12,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -111,20 +112,20 @@ public abstract class MixinDeathScreen extends Screen {
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void before_mouseClicked_FancyMenu(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+    private void before_mouseClicked_FancyMenu(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> info) {
         if (!this.isCustomizableFancyMenu() || this.causeOfDeathTextFancyMenu == null || this.causeOfDeath == null) {
             return;
         }
-        if (!this.causeOfDeathTextFancyMenu.isTextHovered(mouseX, mouseY)) {
+        if (!this.causeOfDeathTextFancyMenu.isTextHovered(event.x(), event.y())) {
             return;
         }
         if (((CustomizableWidget)this.causeOfDeathTextFancyMenu).isHiddenFancyMenu()) {
             return;
         }
-        Style style = this.causeOfDeathTextFancyMenu.getStyleAtMouseX(mouseX);
+        Style style = this.causeOfDeathTextFancyMenu.getStyleAtMouseX(event.x());
         if (style != null && style.getClickEvent() != null && style.getClickEvent().action() == ClickEvent.Action.OPEN_URL) {
             this.handleComponentClicked(style);
-            cir.setReturnValue(false);
+            info.setReturnValue(false);
         }
     }
 

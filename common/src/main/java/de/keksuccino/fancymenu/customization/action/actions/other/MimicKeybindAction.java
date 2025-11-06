@@ -3,9 +3,11 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinKeyboardHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.MathUtils;
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
@@ -19,6 +21,8 @@ import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -106,10 +110,7 @@ public class MimicKeybindAction extends Action {
     }
 
     private boolean pressKeyboardKey(@NotNull KeyMapping keyMapping, @NotNull InputConstants.Key key, boolean keepPressed, long holdDurationMs) {
-        Minecraft minecraft = Minecraft.getInstance();
-        KeyboardHandler handler = minecraft.keyboardHandler;
-
-        long window = minecraft.getWindow().getWindow();
+        long window = Minecraft.getInstance().getWindow().handle();
         int keyCode;
         int scanCode;
         if (key.getType() == InputConstants.Type.KEYSYM) {
@@ -119,10 +120,8 @@ public class MimicKeybindAction extends Action {
             keyCode = InputConstants.UNKNOWN.getValue();
             scanCode = key.getValue();
         }
-
         KeyMapping.set(key, true);
-        handler.keyPress(window, keyCode, scanCode, 1, 0);
-
+        this.onKey(window, keyCode, scanCode, 1, 0);
         if (keepPressed) {
             startHoldThread(keyMapping, key, keyCode, scanCode, true, holdDurationMs);
         } else {
@@ -132,10 +131,13 @@ public class MimicKeybindAction extends Action {
     }
 
     private void releaseKeyboardKey(@NotNull InputConstants.Key key, int keyCode, int scanCode) {
-        Minecraft minecraft = Minecraft.getInstance();
-        KeyboardHandler handler = minecraft.keyboardHandler;
-        handler.keyPress(minecraft.getWindow().getWindow(), keyCode, scanCode, 0, 0);
+        this.onKey(Minecraft.getInstance().getWindow().handle(), keyCode, scanCode, 0, 0);
         KeyMapping.set(key, false);
+    }
+
+    private void onKey(long window, int keyCode, int scanCode, int action, int modifiers) {
+        KeyboardHandler handler = Minecraft.getInstance().keyboardHandler;
+        ((IMixinKeyboardHandler)handler).invoke_keyPress_FancyMenu(window, action, new KeyEvent(keyCode, scanCode, modifiers));
     }
 
     private void startHoldThread(@NotNull KeyMapping keyMapping, @NotNull InputConstants.Key key, int keyCode, int scanCode, boolean keyboard, long durationMs) {
@@ -333,11 +335,11 @@ public class MimicKeybindAction extends Action {
         }
 
         @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (this.suggestions.keyPressed(keyCode, scanCode, modifiers)) {
+        public boolean keyPressed(KeyEvent event) {
+            if (this.suggestions.keyPressed(event)) {
                 return true;
             }
-            return super.keyPressed(keyCode, scanCode, modifiers);
+            return super.keyPressed(event);
         }
 
         @Override
@@ -349,11 +351,11 @@ public class MimicKeybindAction extends Action {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (this.suggestions.mouseClicked(mouseX, mouseY, button)) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            if (this.suggestions.mouseClicked(event)) {
                 return true;
             }
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(event, isDoubleClick);
         }
 
         @Override

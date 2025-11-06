@@ -22,13 +22,13 @@ public class ScreenKeyPressedEvent extends EventBase {
     }
 
     @NotNull
-    public KeyEvent getKeyEvent() {
-        return this.keyEvent;
+    public Screen getScreen() {
+        return this.screen;
     }
 
     @NotNull
-    public Screen getScreen() {
-        return this.screen;
+    public KeyEvent getKeyEvent() {
+        return this.keyEvent;
     }
 
     public int getKeycode() {

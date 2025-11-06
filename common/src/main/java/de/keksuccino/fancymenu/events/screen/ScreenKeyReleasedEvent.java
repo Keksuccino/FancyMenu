@@ -6,6 +6,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import java.util.List;
@@ -13,36 +14,38 @@ import java.util.List;
 public class ScreenKeyReleasedEvent extends EventBase {
 
     private final Screen screen;
-    private final int keycode;
-    private final int scancode;
-    private final int modifiers;
+    private final KeyEvent event;
 
-    public ScreenKeyReleasedEvent(Screen screen, int keycode, int scancode, int modifiers) {
+    public ScreenKeyReleasedEvent(@NotNull Screen screen, @NotNull KeyEvent event) {
         this.screen = screen;
-        this.keycode = keycode;
-        this.scancode = scancode;
-        this.modifiers = modifiers;
+        this.event = event;
     }
 
+    @NotNull
     public Screen getScreen() {
         return this.screen;
     }
 
+    @NotNull
+    public KeyEvent getKeyEvent() {
+        return event;
+    }
+
     public int getKeycode() {
-        return this.keycode;
+        return this.event.key();
     }
 
     public int getScancode() {
-        return this.scancode;
+        return this.event.scancode();
     }
 
     public int getModifiers() {
-        return this.modifiers;
+        return this.event.modifiers();
     }
 
     @NotNull
     public String getKeyName() {
-        String key = GLFW.glfwGetKeyName(this.keycode, this.scancode);
+        String key = GLFW.glfwGetKeyName(this.event.key(), this.event.scancode());
         if (key == null) key = "";
         return key;
     }

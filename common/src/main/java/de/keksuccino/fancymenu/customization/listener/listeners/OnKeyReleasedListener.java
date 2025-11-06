@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.listener.listeners;
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +25,7 @@ public class OnKeyReleasedListener extends AbstractListener {
     }
 
     public void handleKeyReleased(int keycode, int scancode, int modifiers) {
-        this.lastKeyName = InputConstants.getKey(keycode, scancode).getDisplayName().getString();
+        this.lastKeyName = InputConstants.getKey(new KeyEvent(keycode, scancode, modifiers)).getDisplayName().getString();
         this.lastKeycode = keycode;
         this.lastScancode = scancode;
         this.lastModifiers = modifiers;
