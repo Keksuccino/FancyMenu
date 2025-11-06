@@ -111,6 +111,14 @@ public class TextEditorScreen extends Screen {
     protected final TextEditorHistory history = new TextEditorHistory(this);
     protected ExtendedEditBox searchBar;
 
+    private static final Comparator<Placeholder> PLACEHOLDER_DISPLAY_NAME_COMPARATOR = Comparator
+            .comparing((Placeholder placeholder) -> placeholder.getDisplayName(), String.CASE_INSENSITIVE_ORDER)
+            .thenComparing(Placeholder::getDisplayName)
+            .thenComparing(Placeholder::getIdentifier);
+    private static final Comparator<String> PLACEHOLDER_CATEGORY_COMPARATOR = Comparator
+            .comparing((String category) -> category, String.CASE_INSENSITIVE_ORDER)
+            .thenComparing(category -> category);
+
     protected IndentationGuideRenderer indentGuideRenderer;
     protected boolean showIndentationGuides = true;
 
@@ -159,17 +167,8 @@ public class TextEditorScreen extends Screen {
         int placeholderSearchBarY = this.getPlaceholderAreaY() - 25;
 
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, this.getPlaceholderAreaX(), placeholderSearchBarY, this.getPlaceholderAreaWidth(), 20 - 2, Component.empty()) {
-            @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                super.renderWidget(graphics, mouseX, mouseY, partial);
-                if (this.getValue().isBlank() && !this.isFocused()) {
-                    graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
-                    graphics.drawString(this.font, Component.translatable("fancymenu.placeholders.text_editor.search_placeholder"), this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
-                    graphics.disableScissor();
-                }
-            }
-        };
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, this.getPlaceholderAreaX(), placeholderSearchBarY, this.getPlaceholderAreaWidth(), 20 - 2, Component.empty());
+        this.searchBar.setHintFancyMenu(consumes -> Component.translatable("fancymenu.placeholders.text_editor.search_placeholder"));
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updatePlaceholdersList());
         this.searchBar.setIsVisibleSupplier(consumes -> extendedPlaceholderMenu && this.allowPlaceholders);
@@ -198,13 +197,13 @@ public class TextEditorScreen extends Screen {
         this.horizontalScrollBarPlaceholderMenu.idleBarColor = this.scrollGrabberIdleColor;
         this.horizontalScrollBarPlaceholderMenu.hoverBarColor = this.scrollGrabberHoverColor;
 
-        this.cancelButton = new ExtendedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.onClose();
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
-        this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             if (this.isTextValid()) this.callback.accept(this.getText());
         });
         this.addWidget(this.doneButton);
@@ -222,7 +221,7 @@ public class TextEditorScreen extends Screen {
                     extendedPlaceholderMenu = true;
                 }
                 this.rebuildWidgets();
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.dynamicvariabletextfield.variables.desc")));
+            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.placeholders.desc")));
             this.addWidget(this.placeholderButton);
             UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
         } else {
@@ -506,7 +505,9 @@ public class TextEditorScreen extends Screen {
         }
 
         if (searchValue != null) {
-            for (Placeholder p : PlaceholderRegistry.getPlaceholders()) {
+            List<Placeholder> placeholders = PlaceholderRegistry.getPlaceholders();
+            placeholders.sort(PLACEHOLDER_DISPLAY_NAME_COMPARATOR);
+            for (Placeholder p : placeholders) {
                 if (!this.placeholderFitsSearchValue(p, searchValue)) continue;
                 PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(p.getDisplayName()), () -> {
                     this.history.saveSnapshot();
@@ -531,7 +532,7 @@ public class TextEditorScreen extends Screen {
 
         Map<String, List<Placeholder>> categories = this.getPlaceholdersOrderedByCategories();
         if (!categories.isEmpty()) {
-            List<Placeholder> otherCategory = categories.get(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"));
+            List<Placeholder> otherCategory = categories.get(I18n.get("fancymenu.requirements.categories.other"));
             if (otherCategory != null) {
 
                 if (category == null) {
@@ -548,7 +549,7 @@ public class TextEditorScreen extends Screen {
                         }
                     }
                     //Add placeholder entries of the "Other" category to the end of the categories list (because other = no category)
-                    this.updatePlaceholderEntries(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"), false, false);
+                    this.updatePlaceholderEntries(I18n.get("fancymenu.requirements.categories.other"), false, false);
 
                 } else {
 
@@ -603,7 +604,7 @@ public class TextEditorScreen extends Screen {
             if (!p.shouldShowUpInPlaceholderMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             String cat = p.getCategory();
             if (cat == null) {
-                cat = I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");
+                cat = I18n.get("fancymenu.requirements.categories.other");
             }
             List<Placeholder> l = categories.get(cat);
             if (l == null) {
@@ -612,13 +613,19 @@ public class TextEditorScreen extends Screen {
             }
             l.add(p);
         }
-        //Move the Other category to the end
-        List<Placeholder> otherCategory = categories.get(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"));
-        if (otherCategory != null) {
-            categories.remove(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"));
-            categories.put(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"), otherCategory);
+        categories.values().forEach(list -> list.sort(PLACEHOLDER_DISPLAY_NAME_COMPARATOR));
+        String otherKey = I18n.get("fancymenu.requirements.categories.other");
+        List<String> sortedKeys = new ArrayList<>(categories.keySet());
+        boolean hasOther = sortedKeys.remove(otherKey);
+        sortedKeys.sort(PLACEHOLDER_CATEGORY_COMPARATOR);
+        Map<String, List<Placeholder>> sortedCategories = new LinkedHashMap<>();
+        for (String key : sortedKeys) {
+            sortedCategories.put(key, categories.get(key));
         }
-        return categories;
+        if (hasOther) {
+            sortedCategories.put(otherKey, categories.get(otherKey));
+        }
+        return sortedCategories;
     }
 
     protected void renderLineNumberBackground(GuiGraphics graphics, int width) {

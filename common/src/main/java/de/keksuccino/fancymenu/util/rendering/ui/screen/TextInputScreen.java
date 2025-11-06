@@ -54,13 +54,13 @@ public class TextInputScreen extends Screen {
         this.addWidget(this.input);
         this.setFocused(this.input);
 
-        this.cancelButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             if (this.isTextValid()) this.callback.accept(this.input.getValue());
         });
         this.addWidget(this.doneButton);

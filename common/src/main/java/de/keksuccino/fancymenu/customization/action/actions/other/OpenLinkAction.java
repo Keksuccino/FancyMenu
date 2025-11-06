@@ -28,17 +28,17 @@ public class OpenLinkAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.openlink");
+        return Component.translatable("fancymenu.actions.openlink");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.custombutton.config.actiontype.openlink.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.openlink.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.openlink.desc.value");
+        return Component.translatable("fancymenu.actions.openlink.desc.value");
     }
 
     @Override

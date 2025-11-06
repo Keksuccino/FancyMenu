@@ -35,17 +35,17 @@ public class MousePosYPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.placeholder.mouseposy");
+        return I18n.get("fancymenu.placeholders.mouseposy");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.placeholder.mouseposy.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.mouseposy.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override

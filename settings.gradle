@@ -29,5 +29,4 @@ plugins {
 rootProject.name = 'fancymenu-1.21.8'
 include("common")
 include("fabric")
-include("forge")
 include("neoforge")

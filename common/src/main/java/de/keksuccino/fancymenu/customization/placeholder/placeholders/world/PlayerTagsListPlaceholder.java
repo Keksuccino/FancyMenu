@@ -22,6 +22,11 @@ public class PlayerTagsListPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         ClientLevel level = Minecraft.getInstance().level;
         String playerName = dps.values.get("player_name");

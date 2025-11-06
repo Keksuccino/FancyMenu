@@ -19,6 +19,11 @@ public class AudioDurationPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String elementId = dps.values.get("element_identifier");
         if (elementId != null) {

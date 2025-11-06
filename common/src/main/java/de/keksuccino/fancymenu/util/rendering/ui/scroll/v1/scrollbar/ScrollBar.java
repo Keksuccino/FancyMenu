@@ -1,10 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
@@ -13,10 +11,13 @@ import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class ScrollBar {
 
@@ -47,6 +48,8 @@ public class ScrollBar {
     protected float grabbedAtScroll = 0.0F;
     protected volatile long lastTick;
     protected List<Consumer<ScrollBar>> scrollListeners = new ArrayList<>();
+    @Nullable
+    public Supplier<Boolean> allowScrollWheelSupplier = null;
 
     public ScrollBar(@NotNull ScrollBarDirection direction, int grabberWidth, int grabberHeight, int scrollAreaStartX, int scrollAreaStartY, int scrollAreaEndX, int scrollAreaEndY, Color idleBarColor, Color hoverBarColor) {
         this(direction, grabberWidth, grabberHeight, scrollAreaStartX, scrollAreaStartY, scrollAreaEndX, scrollAreaEndY);
@@ -152,6 +155,7 @@ public class ScrollBar {
     }
 
     protected void handleWheelScrolling(ScreenMouseScrollEvent.Pre e) {
+        if ((this.allowScrollWheelSupplier != null) && !this.allowScrollWheelSupplier.get()) return;
         if (this.active && this.allowScrollWheel && this.isMouseInsideScrollArea(true) && !this.grabbed) {
             float scrollOffset = 0.1F * this.wheelScrollSpeed;
             if (e.getScrollDeltaY() > 0) {

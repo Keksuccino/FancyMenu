@@ -1,17 +1,25 @@
 package de.keksuccino.fancymenu.mixin.mixins.fabric.client;
 
+import de.keksuccino.fancymenu.events.screen.ScreenCharTypedEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import java.util.Objects;
 
 @Mixin(KeyboardHandler.class)
 public class MixinFabricKeyboardHandler {
+
+    @Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
     /**
      * @reason This adds special key press handling for FancyMenu's {@link WrappedMCEFBrowser}.
@@ -90,6 +98,11 @@ public class MixinFabricKeyboardHandler {
             }
         }
 
+    }
+
+    @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Ljava/lang/Character;isBmpCodePoint(I)Z"))
+    private void before_Screen_charTyped_in_charTyped_FancyMenu(long windowPointer, int codePoint, int modifiers, CallbackInfo info) {
+        EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(Objects.requireNonNull(Minecraft.getInstance().screen), (char) codePoint));
     }
 
 }

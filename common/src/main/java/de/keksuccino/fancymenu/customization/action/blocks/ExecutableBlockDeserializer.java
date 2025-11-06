@@ -106,6 +106,7 @@ public class ExecutableBlockDeserializer {
         if (type.equals("else-if")) return ElseIfExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("else")) return ElseExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("while")) return WhileExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
+        if (type.equals("folder")) return FolderExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         return null;
     }
 

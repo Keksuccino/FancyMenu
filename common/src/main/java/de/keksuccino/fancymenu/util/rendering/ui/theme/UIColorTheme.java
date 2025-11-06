@@ -19,7 +19,12 @@ public class UIColorTheme {
     public DrawableColor layout_editor_grid_color_center = DrawableColor.of(new Color(91, 94, 255, 100));
     public DrawableColor layout_editor_element_border_color_normal = DrawableColor.of(new Color(3, 148, 252));
     public DrawableColor layout_editor_element_border_color_selected = DrawableColor.of(new Color(3, 219, 252));
+    public DrawableColor layout_editor_element_border_rotation_controls_color = DrawableColor.of(new Color(158, 43, 255));
+    public DrawableColor layout_editor_element_border_vertical_tilting_controls_color = DrawableColor.of(new Color(255, 181, 43));
+    public DrawableColor layout_editor_element_border_horizontal_tilting_controls_color = DrawableColor.of(new Color(145, 255, 43));
     public DrawableColor layout_editor_element_dragging_not_allowed_color = DrawableColor.of(new Color(232, 54, 9, 200));
+    public DrawableColor layout_editor_element_border_display_line_background_color = DrawableColor.of(new Color(0, 0, 0, 128));
+    public DrawableColor layout_editor_element_border_display_line_text_color = DrawableColor.of(-1);
     public DrawableColor layout_editor_anchor_point_overlay_color_base = DrawableColor.of(new Color(37, 180, 121));
     public DrawableColor layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(17, 79, 52));
     public DrawableColor layout_editor_close_icon_color = DrawableColor.of(new Color(218, 60, 30));
@@ -38,6 +43,28 @@ public class UIColorTheme {
     public DrawableColor edit_box_border_color_normal = DrawableColor.of(new Color(93, 97, 100));
     public DrawableColor edit_box_border_color_focused = DrawableColor.of(new Color(93, 97, 100));
     public DrawableColor list_entry_color_selected_hovered = DrawableColor.of(new Color(50, 50, 50));
+    public DrawableColor actions_entry_background_color_action = DrawableColor.of(new Color(58, 63, 68));
+    public DrawableColor actions_entry_background_color_action_hover = DrawableColor.of(new Color(68, 73, 78));
+    public DrawableColor actions_entry_background_color_if = DrawableColor.of(new Color(38, 63, 85));
+    public DrawableColor actions_entry_background_color_if_hover = DrawableColor.of(new Color(45, 81, 110));
+    public DrawableColor actions_entry_background_color_else_if = DrawableColor.of(new Color(57, 45, 79));
+    public DrawableColor actions_entry_background_color_else_if_hover = DrawableColor.of(new Color(70, 58, 95));
+    public DrawableColor actions_entry_background_color_else = DrawableColor.of(new Color(78, 55, 33));
+    public DrawableColor actions_entry_background_color_else_hover = DrawableColor.of(new Color(95, 70, 45));
+    public DrawableColor actions_entry_background_color_while = DrawableColor.of(new Color(35, 74, 66));
+    public DrawableColor actions_entry_background_color_while_hover = DrawableColor.of(new Color(45, 92, 82));
+    public DrawableColor actions_entry_background_color_folder = DrawableColor.of(new Color(80, 48, 60));
+    public DrawableColor actions_entry_background_color_folder_hover = DrawableColor.of(new Color(97, 62, 77));
+    public DrawableColor actions_entry_background_color_generic_block = DrawableColor.of(new Color(58, 59, 62));
+    public DrawableColor actions_entry_background_color_generic_block_hover = DrawableColor.of(new Color(71, 72, 76));
+    public DrawableColor actions_chain_indicator_color = DrawableColor.of(new Color(88, 112, 150, 180));
+    public DrawableColor actions_chain_indicator_hovered_color = DrawableColor.of(new Color(100, 181, 246, 210));
+    public DrawableColor actions_chain_indicator_selected_color = DrawableColor.of(new Color(255, 193, 71, 220));
+    public DrawableColor actions_minimap_background_color = DrawableColor.of(new Color(24, 27, 32, 200));
+    public DrawableColor actions_minimap_border_color = DrawableColor.of(new Color(94, 99, 108, 220));
+    public DrawableColor actions_minimap_viewport_color = DrawableColor.of(new Color(255, 255, 255, 35));
+    public DrawableColor actions_minimap_viewport_border_color = DrawableColor.of(new Color(210, 222, 255, 100));
+    public DrawableColor actions_minimap_tooltip_border_color = DrawableColor.of(new Color(120, 170, 220, 220));
     public DrawableColor text_editor_sidebar_color = DrawableColor.of(new Color(49, 51, 53));
     public DrawableColor text_editor_line_number_text_color_normal = DrawableColor.of(new Color(91, 92, 94));
     public DrawableColor text_editor_line_number_text_color_selected = DrawableColor.of(new Color(137, 147, 150));
@@ -101,3 +128,4 @@ public class UIColorTheme {
     }
     
 }
+

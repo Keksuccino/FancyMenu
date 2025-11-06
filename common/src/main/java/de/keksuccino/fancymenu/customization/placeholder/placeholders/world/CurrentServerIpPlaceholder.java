@@ -17,6 +17,11 @@ public class CurrentServerIpPlaceholder extends Placeholder {
         super("current_server_ip");
     }
 
+    @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
     @SuppressWarnings("all")
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {

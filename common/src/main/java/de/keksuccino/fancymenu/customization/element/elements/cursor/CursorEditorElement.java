@@ -31,9 +31,9 @@ public class CursorEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().textureSupplier,
                         (cursorEditorElement, iTextureResourceSupplier) -> cursorEditorElement.getElement().textureSupplier = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.customization.elements.cursor.cursor_texture"),
+                        Component.translatable("fancymenu.elements.cursor.cursor_texture"),
                         true, FileTypeGroup.of(FileTypes.PNG_IMAGE), null, true, true, false)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.elements.cursor.cursor_texture.desc")))
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.cursor_texture.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("cursor"))
                 .setStackable(true);
 
@@ -42,17 +42,17 @@ public class CursorEditorElement extends AbstractEditorElement {
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "hotspot_x", CursorEditorElement.class,
                         consumes -> consumes.getElement().hotspotX,
                         (cursorEditorElement, integer) -> cursorEditorElement.getElement().hotspotX = integer,
-                        Component.translatable("fancymenu.customization.elements.cursor.hotspot_x"),
+                        Component.translatable("fancymenu.elements.cursor.hotspot_x"),
                         true, 0, MathUtils::isInteger, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.elements.cursor.hotspot_x.desc")))
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.hotspot_x.desc")))
                 .setStackable(true);
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "hotspot_y", CursorEditorElement.class,
                         consumes -> consumes.getElement().hotspotY,
                         (cursorEditorElement, integer) -> cursorEditorElement.getElement().hotspotY = integer,
-                        Component.translatable("fancymenu.customization.elements.cursor.hotspot_y"),
+                        Component.translatable("fancymenu.elements.cursor.hotspot_y"),
                         true, 0, MathUtils::isInteger, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.elements.cursor.hotspot_y.desc")))
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.hotspot_y.desc")))
                 .setStackable(true);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_hotspot_y").setStackable(true);
@@ -63,8 +63,8 @@ public class CursorEditorElement extends AbstractEditorElement {
                             cursorEditorElement.getElement().editorPreviewMode = aBoolean;
                             cursorEditorElement.getElement().forceRebuildCursor();
                         },
-                        "fancymenu.customization.elements.cursor.editor_preview_mode")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.elements.cursor.editor_preview_mode.desc")))
+                        "fancymenu.elements.cursor.editor_preview_mode")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.editor_preview_mode.desc")))
                 .setStackable(true);
 
     }

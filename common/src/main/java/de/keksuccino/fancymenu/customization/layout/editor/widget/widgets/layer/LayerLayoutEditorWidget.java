@@ -197,6 +197,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             finishDragOperation();
         }
 
+        // Always inform scroll bars about mouse release so they can reset their grabber state
+        this.scrollArea.verticalScrollBar.mouseReleased(translatedMouseX, translatedMouseY, button);
+        this.scrollArea.horizontalScrollBar.mouseReleased(translatedMouseX, translatedMouseY, button);
+
         // Reset drag state
         isDragging = false;
         draggedEntry = null;
@@ -214,6 +218,12 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     @Override
     protected boolean mouseDraggedComponent(double translatedMouseX, double translatedMouseY, int button, double d1, double d2) {
+
+        // Give scroll bars a chance to handle dragging their grabbers
+        if (this.scrollArea.verticalScrollBar.mouseDragged(translatedMouseX, translatedMouseY, button, d1, d2) ||
+                this.scrollArea.horizontalScrollBar.mouseDragged(translatedMouseX, translatedMouseY, button, d1, d2)) {
+            return true;
+        }
 
         if (isDragging && button == 0) {
             updateDragTarget(translatedMouseX, translatedMouseY, this.getRealMouseX(), this.getRealMouseY());
@@ -589,6 +599,21 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     @Override
     protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDeltaX, double scrollDeltaY) {
         if (super.mouseScrolledComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, scrollDeltaX, scrollDeltaY)) return true;
+
+        // Handle scroll wheel manually to support the widget's translated coordinate system
+        if (scrollDeltaY != 0.0D && this.scrollArea.verticalScrollBar.active && this.scrollArea.verticalScrollBar.isScrollWheelAllowed()) {
+            boolean hoveringContent = this.scrollArea.isMouseOverInnerArea(realMouseX, realMouseY);
+            boolean hoveringBar = this.scrollArea.verticalScrollBar.isMouseInsideScrollArea(realMouseX, realMouseY, true);
+            if (hoveringContent || hoveringBar) {
+                float scrollOffset = 0.1F * this.scrollArea.verticalScrollBar.getWheelScrollSpeed();
+                if (scrollDeltaY > 0.0D) {
+                    scrollOffset = -scrollOffset;
+                }
+                this.scrollArea.verticalScrollBar.setScroll(this.scrollArea.verticalScrollBar.getScroll() + scrollOffset);
+                return true;
+            }
+        }
+
         return this.scrollArea.mouseScrolled(realMouseX, realMouseY, scrollDeltaX, scrollDeltaY);
     }
 

@@ -4,17 +4,20 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -56,6 +59,7 @@ public class ItemElement extends AbstractElement {
 
     public ItemElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.supportsTilting = false;
     }
 
     /**
@@ -135,10 +139,15 @@ public class ItemElement extends AbstractElement {
             this.renderItemCount(graphics, this.font, x, y, Math.max(width, height), count);
         }
 
-        // NEW: Use the built-in deferred tooltip system. It's cleaner and safer.
+        // Use the built-in deferred tooltip system
         if (!isEditor() && this.showTooltip && UIBase.isXYInArea(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight())) {
-            graphics.setTooltipForNextFrame(this.font, itemStack, mouseX, mouseY);
+            //RenderingUtils.addDeferredScreenRenderingTask((graphics1, mouseX1, mouseY1, partial) -> this.renderItemTooltip(graphics1, mouseX1, mouseY1, itemStack));
+            this.renderItemTooltip(graphics, mouseX, mouseY, itemStack);
         }
+    }
+
+    protected void renderItemTooltip(@NotNull GuiGraphics graphics, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
+        graphics.setTooltipForNextFrame(this.font, Screen.getTooltipFromItem(Minecraft.getInstance(), itemStack), itemStack.getTooltipImage(), mouseX, mouseY);
     }
 
     /**

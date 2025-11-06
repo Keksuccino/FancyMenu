@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.element;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.serialization.JsonOps;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -15,10 +15,10 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -37,7 +37,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.*;
 import java.util.List;
 import java.util.HashSet;
@@ -120,8 +119,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public int animatedOffsetX = 0;
 	public int animatedOffsetY = 0;
 	/**
-	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
-	 * Elements that do not support scaling via {@link PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
+	 * This is for when the render scale was changed in a non-system-wide way like via {@link com.mojang.blaze3d.vertex.PoseStack#translate(float, float, float)}.<br>
+	 * Elements that do not support scaling via {@link com.mojang.blaze3d.vertex.PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
 	 * This value is -1F by default and is not always set to an actual scale, so check this before using it!
 	 **/
 	public float customGuiScale = -1F;
@@ -161,11 +160,69 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	protected RuntimePropertyContainer cachedMemory;
 	protected int cachedMouseX = 0;
 	protected int cachedMouseY = 0;
+	/** The rotation angle in degrees. 0 = no rotation, positive values rotate clockwise */
+	public float rotationDegrees = 0.0F;
+	public boolean advancedRotationMode = false;
+	@Nullable
+	public String advancedRotationDegrees;
+	/** Whether this element type supports rotation. Can be overridden in subclasses. */
+	protected boolean supportsRotation = true;
+	protected String lastAdvancedRotationDegrees;
+	
+	/** The vertical tilt angle in degrees. Positive values tilt top away from viewer */
+	public float verticalTiltDegrees = 0.0F;
+	/** The horizontal tilt angle in degrees. Positive values tilt right side away from viewer */
+	public float horizontalTiltDegrees = 0.0F;
+	/** Whether this element type supports tilting. Can be overridden in subclasses. */
+	protected boolean supportsTilting = true;
+	public boolean advancedVerticalTiltMode = false;
+	@Nullable
+	public String advancedVerticalTiltDegrees;
+	protected String lastAdvancedVerticalTiltDegrees;
+	public boolean advancedHorizontalTiltMode = false;
+	@Nullable
+	public String advancedHorizontalTiltDegrees;
+	protected String lastAdvancedHorizontalTiltDegrees;
+	protected boolean allowDepthTestManipulation = false;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
 		this.builder = builder;
 		this.instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
+	}
+
+	/**
+	 * Returns whether this element type supports rotation.
+	 * @return true if this element can be rotated, false otherwise
+	 */
+	public boolean supportsRotation() {
+		return this.supportsRotation;
+	}
+
+	/**
+	 * Sets whether this element type supports rotation.
+	 * This should typically be called in the constructor of element subclasses.
+	 * @param supportsRotation true to enable rotation, false to disable it
+	 */
+	protected void setSupportsRotation(boolean supportsRotation) {
+		this.supportsRotation = supportsRotation;
+	}
+
+	/**
+	 * Returns whether this element type supports tilting.
+	 * @return true if this element can be tilted, false otherwise
+	 */
+	public boolean supportsTilting() {
+		return this.supportsTilting;
+	}
+
+	/**
+	 * Sets whether this element type supports tilting.
+	 * This should typically be called in the constructor of element subclasses.
+	 * @param supportsTilting true to enable tilting, false to disable it
+	 */
+	protected void setSupportsTilting(boolean supportsTilting) {
+		this.supportsTilting = supportsTilting;
 	}
 
 	public void setParentLayout(@Nullable Layout parentLayout) {
@@ -193,12 +250,61 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 */
 	public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+		if (this.allowDepthTestManipulation) {
+			RenderingUtils.setDepthTestLocked(true);
+		}
+
 		this.cachedMouseX = mouseX;
 		this.cachedMouseY = mouseY;
 
 		this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
 
 		this.tickBaseOpacity();
+
+		// Apply transformations if needed
+		boolean transformationsApplied = false;
+		float rotDegrees = this.getRotationDegrees();
+		float verticalTilt = this.getVerticalTiltDegrees();
+		float horizontalTilt = this.getHorizontalTiltDegrees();
+		boolean hasRotation = this.supportsRotation && (rotDegrees != 0.0F);
+		boolean hasTilt = this.supportsTilting && (verticalTilt != 0.0F || horizontalTilt != 0.0F);
+
+		if (this.shouldRender() && (hasRotation || hasTilt)) {
+
+			graphics.pose().pushMatrix();
+			transformationsApplied = true;
+
+			// Calculate center point of the element
+			float centerX = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2.0F);
+			float centerY = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2.0F);
+
+			// Translate to center
+			graphics.pose().translate(centerX, centerY);
+
+			// Apply tilting first (before rotation)
+			if (hasTilt) {
+				float scaleX = 1.0F;
+				float scaleY = 1.0F;
+				if (verticalTilt != 0.0F) {
+					scaleY *= (float) Math.cos(Math.toRadians(verticalTilt));
+				}
+				if (horizontalTilt != 0.0F) {
+					scaleX *= (float) Math.cos(Math.toRadians(horizontalTilt));
+				}
+				if ((scaleX != 1.0F) || (scaleY != 1.0F)) {
+					graphics.pose().scale(scaleX, scaleY);
+				}
+			}
+
+			// Apply rotation (around Z axis)
+			if (hasRotation) {
+				graphics.pose().rotate((float) Math.toRadians(rotDegrees));
+			}
+
+			// Translate back
+			graphics.pose().translate(-centerX, -centerY);
+
+		}
 
 		this.renderTick_Head();
 
@@ -214,14 +320,23 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		}
 
-		if (!this.shouldRender()) return;
-
 		this.renderTick_Inner_Stage_2();
 
-		//Render the actual element
-		this.render(graphics, mouseX, mouseY, partial);
+		if (this.shouldRender()) {
+			//Render the actual element
+			this.render(graphics, mouseX, mouseY, partial);
+		}
 
 		this.renderTick_Tail();
+
+		// Pop the transformations
+		if (this.shouldRender() && transformationsApplied) {
+			graphics.pose().popMatrix();
+		}
+
+		if (this.allowDepthTestManipulation) {
+			RenderingUtils.setDepthTestLocked(false);
+		}
 
 	}
 
@@ -511,6 +626,64 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.instanceIdentifier = Objects.requireNonNull(id);
 	}
 
+	public float getRotationDegrees() {
+		if (!this.supportsRotation()) return 0;
+		if (this.advancedRotationMode) {
+			if (this.advancedRotationDegrees == null) return 0;
+			String degrees = PlaceholderParser.replacePlaceholders(this.advancedRotationDegrees);
+			if (!degrees.equals(this.lastAdvancedRotationDegrees)) {
+				this.lastAdvancedRotationDegrees = degrees;
+				if (MathUtils.isFloat(degrees)) {
+					this.rotationDegrees = Float.parseFloat(degrees);
+				} else {
+					this.rotationDegrees = 0;
+					LOGGER.error("[FANCYMENU] Failed to parse advanced rotation degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
+				}
+			}
+		}
+		return this.rotationDegrees;
+	}
+
+	public float getVerticalTiltDegrees() {
+		if (!this.supportsTilting()) return 0;
+		if (this.advancedVerticalTiltMode) {
+			if (this.advancedVerticalTiltDegrees == null) return 0;
+			String degrees = PlaceholderParser.replacePlaceholders(this.advancedVerticalTiltDegrees);
+			if (!degrees.equals(this.lastAdvancedVerticalTiltDegrees)) {
+				this.lastAdvancedVerticalTiltDegrees = degrees;
+				if (MathUtils.isFloat(degrees)) {
+					float value = Float.parseFloat(degrees);
+					// Clamp to -60 to 60 range
+					this.verticalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, value));
+				} else {
+					this.verticalTiltDegrees = 0;
+					LOGGER.error("[FANCYMENU] Failed to parse advanced vertical tilt degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
+				}
+			}
+		}
+		return this.verticalTiltDegrees;
+	}
+
+	public float getHorizontalTiltDegrees() {
+		if (!this.supportsTilting()) return 0;
+		if (this.advancedHorizontalTiltMode) {
+			if (this.advancedHorizontalTiltDegrees == null) return 0;
+			String degrees = PlaceholderParser.replacePlaceholders(this.advancedHorizontalTiltDegrees);
+			if (!degrees.equals(this.lastAdvancedHorizontalTiltDegrees)) {
+				this.lastAdvancedHorizontalTiltDegrees = degrees;
+				if (MathUtils.isFloat(degrees)) {
+					float value = Float.parseFloat(degrees);
+					// Clamp to -60 to 60 range
+					this.horizontalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, value));
+				} else {
+					this.horizontalTiltDegrees = 0;
+					LOGGER.error("[FANCYMENU] Failed to parse advanced horizontal tilt degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
+				}
+			}
+		}
+		return this.horizontalTiltDegrees;
+	}
+
 	/**
 	 * Returns the actual/final X position the element will have when it gets rendered.
 	 */
@@ -670,18 +843,16 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	public void setAutoSizingBaseWidthAndHeight() {
-		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
+        double guiWidth = getScreenWidth() * WindowHandler.getGuiScale();
+        double guiHeight = getScreenHeight() * WindowHandler.getGuiScale();
 		this.autoSizingBaseScreenWidth = (int)guiWidth;
 		this.autoSizingBaseScreenHeight = (int)guiHeight;
 	}
 
 	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
 
-		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
+        double guiWidth = getScreenWidth() * WindowHandler.getGuiScale();
+        double guiHeight = getScreenHeight() * WindowHandler.getGuiScale();
 
 		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
 			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {
@@ -717,42 +888,42 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			this.cachedElementAnchorPointParent = null;
 			return;
 		}
-		
+
 		// Normalize the identifier (remove potential prefixes)
 		String normalizedIdentifier = anchorPointElementIdentifier
-			.replace("vanillabtn:", "")
-			.replace("button_compatibility_id:", "");
-		
+				.replace("vanillabtn:", "")
+				.replace("button_compatibility_id:", "");
+
 		// Check for self-anchoring
 		if (this.getInstanceIdentifier().equals(normalizedIdentifier)) {
 			this.resetToDefaultAnchor();
-			LOGGER.error("[FANCYMENU] Tried to anchor element to itself! (Element: " + this.getInstanceIdentifier() + ")", 
-				new IllegalStateException("Anchoring element to itself"));
+			LOGGER.error("[FANCYMENU] Tried to anchor element to itself! (Element: " + this.getInstanceIdentifier() + ")",
+					new IllegalStateException("Anchoring element to itself"));
 			return;
 		}
-		
+
 		// Try to get the target parent element (it might not exist yet, which is valid)
 		AbstractElement parent = getElementByInstanceIdentifier(normalizedIdentifier);
-		
+
 		// Only check for circular dependencies if parent exists
 		// If parent is null, it might be created later, which is a valid scenario
 		if (parent != null) {
 			// Check for circular dependencies (both direct and transitive)
 			if (detectCircularDependency(this, parent)) {
 				this.resetToDefaultAnchor();
-				LOGGER.error("[FANCYMENU] Detected circular anchor dependency! Cannot anchor '" + 
-					this.getInstanceIdentifier() + "' to '" + normalizedIdentifier + 
-					"' as it would create a circular reference chain.", 
-					new IllegalStateException("Circular anchor dependency detected"));
+				LOGGER.error("[FANCYMENU] Detected circular anchor dependency! Cannot anchor '" +
+								this.getInstanceIdentifier() + "' to '" + normalizedIdentifier +
+								"' as it would create a circular reference chain.",
+						new IllegalStateException("Circular anchor dependency detected"));
 				return;
 			}
 		}
-		
+
 		// Set the anchor identifier (parent might be null and resolved later)
 		this.anchorPointElementIdentifier = normalizedIdentifier;
 		this.cachedElementAnchorPointParent = parent;
 	}
-	
+
 	/**
 	 * Detects circular dependencies in the anchor chain.
 	 * @param child The element being anchored
@@ -763,44 +934,44 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		// Set a reasonable depth limit to prevent infinite loops
 		final int MAX_DEPTH = 100;
 		int depth = 0;
-		
+
 		Set<String> visitedElements = new HashSet<>();
 		visitedElements.add(child.getInstanceIdentifier());
-		
+
 		AbstractElement current = proposedParent;
 		while (current != null && depth < MAX_DEPTH) {
 			String currentId = current.getInstanceIdentifier();
-			
+
 			// Check if we've encountered the child element in the chain
 			if (visitedElements.contains(currentId)) {
 				return true; // Circular dependency detected
 			}
-			
+
 			visitedElements.add(currentId);
-			
+
 			// Move up the anchor chain
 			String parentId = current.getAnchorPointElementIdentifier();
 			if (parentId == null || parentId.trim().isEmpty()) {
 				break; // Reached the top of the chain
 			}
-			
+
 			// Normalize the parent ID
 			parentId = parentId.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
-			
+
 			current = getElementByInstanceIdentifier(parentId);
 			depth++;
 		}
-		
+
 		// Check if we hit the depth limit (which might indicate an issue)
 		if (depth >= MAX_DEPTH) {
-			LOGGER.warn("[FANCYMENU] Anchor chain depth exceeded " + MAX_DEPTH + 
-				" levels while checking for circular dependencies. This might indicate a problem.");
+			LOGGER.warn("[FANCYMENU] Anchor chain depth exceeded " + MAX_DEPTH +
+					" levels while checking for circular dependencies. This might indicate a problem.");
 			return true; // Treat as circular to be safe
 		}
-		
+
 		return false; // No circular dependency found
 	}
-	
+
 	/**
 	 * Resets the element's anchor to default values.
 	 */
@@ -1021,13 +1192,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	public enum Alignment {
-		
+
 		LEFT("left"),
 		RIGHT("right"),
 		CENTERED("centered");
-		
+
 		public final String key;
-		
+
 		Alignment(String key) {
 			this.key = key;
 		}
@@ -1040,7 +1211,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			}
 			return null;
 		}
-		
+
 	}
 
 	public enum AppearanceDelay {

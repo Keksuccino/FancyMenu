@@ -5,12 +5,9 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-
-import java.util.function.Function;
 
 @Mixin(WorldSelectionList.WorldListEntry.class)
 public class MixinWorldListEntry {

@@ -33,6 +33,11 @@ public class IsDifficultyRequirement extends LoadingRequirement {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public boolean hasValue() {
         return true;
     }
@@ -64,7 +69,7 @@ public class IsDifficultyRequirement extends LoadingRequirement {
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.world");
+        return I18n.get("fancymenu.requirements.categories.world");
     }
 
     @Override
@@ -114,7 +119,7 @@ public class IsDifficultyRequirement extends LoadingRequirement {
         protected EditBoxSuggestions suggestions;
 
         protected IsDifficultyValueConfigScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
+            super(Component.translatable("fancymenu.elements.requirements.edit_value"), callback);
             this.value = value;
         }
 

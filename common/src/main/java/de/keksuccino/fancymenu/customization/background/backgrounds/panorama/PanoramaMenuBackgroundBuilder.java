@@ -63,12 +63,12 @@ public class PanoramaMenuBackgroundBuilder extends MenuBackgroundBuilder<Panoram
 
     @Override
     public @NotNull Component getDisplayName() {
-        return Component.translatable("fancymenu.background.panorama");
+        return Component.translatable("fancymenu.backgrounds.panorama");
     }
 
     @Override
     public @Nullable Component[] getDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.background.panorama.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.panorama.desc");
     }
 
 }

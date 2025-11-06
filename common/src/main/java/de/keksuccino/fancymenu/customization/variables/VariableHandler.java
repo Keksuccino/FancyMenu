@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.variables;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
@@ -33,6 +34,7 @@ public class VariableHandler {
             v = new Variable(name);
             VARIABLES.put(name, v);
         }
+        Listeners.ON_VARIABLE_UPDATED.onVariableUpdated(v.name, v.value, Objects.requireNonNullElse(value, "0"));
         v.setValue(value);
         writeToFile();
     }

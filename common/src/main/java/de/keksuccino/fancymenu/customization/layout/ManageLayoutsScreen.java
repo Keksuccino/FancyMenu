@@ -61,7 +61,7 @@ public class ManageLayoutsScreen extends Screen {
         this.addWidget(this.sortingButton);
         UIBase.applyDefaultWidgetSkinTo(this.sortingButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(this.layouts);
         });
         this.addWidget(this.doneButton);

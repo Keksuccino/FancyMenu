@@ -20,6 +20,11 @@ public class AudioElementVolumePlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String s = dps.values.get("element_identifier");
         if (s != null) {
