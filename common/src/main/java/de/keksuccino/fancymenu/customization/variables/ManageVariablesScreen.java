@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
@@ -22,10 +23,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ManageVariablesScreen extends Screen {
+public class ManageVariablesScreen extends Screen implements InitialWidgetFocusScreen {
 
     protected Consumer<List<Variable>> callback;
 
@@ -41,19 +43,13 @@ public class ManageVariablesScreen extends Screen {
     protected void init() {
 
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty()) {
-            @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                super.renderWidget(graphics, mouseX, mouseY, partial);
-                if (this.getValue().isBlank() && !this.isFocused()) {
-                    graphics.drawString(this.font, Component.translatable("fancymenu.variables.manage_variables.screen.search_variable"), this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
-                }
-            }
-        };
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
+        this.searchBar.setHintFancyMenu(consumes -> Component.translatable("fancymenu.variables.manage_variables.screen.search_variable"));
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateVariablesList());
         this.addRenderableWidget(this.searchBar);
         UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+        this.setupInitialFocusWidget(this, this.searchBar);
 
         // Set positions for scroll area
         this.variableListScrollArea.setWidth((this.width / 2) - 40, true);
@@ -144,7 +140,7 @@ public class ManageVariablesScreen extends Screen {
         this.addRenderableWidget(toggleResetOnLaunchButton);
         UIBase.applyDefaultWidgetSkinTo(toggleResetOnLaunchButton);
 
-        ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, buttonWidth, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, buttonWidth, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(VariableHandler.getVariables());
         });
         this.addRenderableWidget(doneButton);
@@ -162,7 +158,7 @@ public class ManageVariablesScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-         
+        this.performInitialWidgetFocusActionInRender();
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
@@ -205,7 +201,12 @@ public class ManageVariablesScreen extends Screen {
 
         this.variableListScrollArea.clearEntries();
 
-        for (Variable v : VariableHandler.getVariables()) {
+        List<Variable> variables = VariableHandler.getVariables();
+        variables.sort(Comparator
+                .comparing(Variable::getName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(Variable::getName));
+
+        for (Variable v : variables) {
             if (!this.variableFitsSearchValue(v, searchValue)) continue;
             VariableScrollEntry e = new VariableScrollEntry(this.variableListScrollArea, v, (entry) -> {
             });

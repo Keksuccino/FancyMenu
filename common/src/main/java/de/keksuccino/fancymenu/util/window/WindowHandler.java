@@ -47,15 +47,15 @@ public class WindowHandler {
 		return ((FancyWindow)(Object)Minecraft.getInstance().getWindow()).getPreciseGuiScale_FancyMenu();
 	}
 
-	public static void setGuiScale(double scaleFactor) {
-		Window w = Minecraft.getInstance().getWindow();
-		w.setGuiScale(Math.max(1, (int) scaleFactor));
-		((FancyWindow)(Object)w).setPreciseGuiScale_FancyMenu(scaleFactor);
-		int i = (int)(w.getWidth() / scaleFactor);
-		((IMixinWindow)(Object)w).set_guiScaledWidth_FancyMenu(w.getWidth() / scaleFactor > i ? i + 1 : i);
-		int j = (int)(w.getHeight() / scaleFactor);
-		((IMixinWindow)(Object)w).set_guiScaledHeight_FancyMenu(w.getHeight() / scaleFactor > j ? j + 1 : j);
-	}
+    public static void setGuiScale(double scaleFactor) {
+        Window w = Minecraft.getInstance().getWindow();
+        w.setGuiScale(Math.max(1, (int) scaleFactor));
+        ((FancyWindow)(Object)w).setPreciseGuiScale_FancyMenu(scaleFactor);
+        int i = (int)(w.getWidth() / scaleFactor);
+        ((IMixinWindow)(Object)w).set_guiScaledWidth_FancyMenu(w.getWidth() / scaleFactor > i ? i + 1 : i);
+        int j = (int)(w.getHeight() / scaleFactor);
+        ((IMixinWindow)(Object)w).set_guiScaledHeight_FancyMenu(w.getHeight() / scaleFactor > j ? j + 1 : j);
+    }
 
 	public static boolean isCustomWindowIconEnabled() {
 		return FancyMenu.getOptions().showCustomWindowIcon.getValue();

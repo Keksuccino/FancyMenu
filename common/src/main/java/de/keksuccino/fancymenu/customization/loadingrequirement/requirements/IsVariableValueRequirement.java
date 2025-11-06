@@ -54,12 +54,12 @@ public class IsVariableValueRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.visibilityrequirement.is_variable_value");
+        return I18n.get("fancymenu.requirements.is_variable_value");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.visibilityrequirement.is_variable_value.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_variable_value.desc"));
     }
 
     @Override
@@ -105,7 +105,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
         protected EditBoxSuggestions variableNameSuggestions;
 
         protected IsVariableValueConfigScreen(String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.helper.visibilityrequirement.is_variable_value.value.desc"), callback);
+            super(Component.translatable("fancymenu.requirements.is_variable_value.value.desc"), callback);
             if (value == null) value = "";
             if (value.contains(":")) {
                 this.variableName = value.split(":", 2)[0];
@@ -119,7 +119,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
             this.addSpacerCell(20);
 
             String name = this.getVarNameString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_variable_value.var_name"));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_variable_value.var_name"));
             this.nameCell = this.addTextInputCell(null, true, true).setText(name);
 
             this.addCellGroupEndSpacerCell();
@@ -131,7 +131,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
             this.addCellGroupEndSpacerCell();
 
             String value = this.getVarValueString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_variable_value.var_value"));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_variable_value.var_value"));
             this.valueCell = this.addTextInputCell(null, true, true).setText(value);
 
             this.addSpacerCell(20);

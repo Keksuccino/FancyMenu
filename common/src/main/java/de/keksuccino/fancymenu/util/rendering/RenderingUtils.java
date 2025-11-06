@@ -18,10 +18,11 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
+@SuppressWarnings("unused")
 public class RenderingUtils {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -30,16 +31,12 @@ public class RenderingUtils {
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
 
-    /**
-     * Renders a "missing" texture.
-     * This is a 2x2 pattern of magenta and black squares.
-     *
-     * @param graphics The graphics instance to render to.
-     * @param x Top-left X coordinate of the area to render to.
-     * @param y Top-left Y coordinate of the area to render to.
-     * @param width Width of the rendered area.
-     * @param height Height of the rendered area.
-     */
+    private static final List<DeferredScreenRenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
+    private static boolean lockDepthTest = false;
+    private static boolean blurBlocked = false;
+    private static boolean tooltipRenderingBlocked = false;
+    private static int overrideBackgroundBlurRadius = -1000;
+
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
         int partH = height / 2;
@@ -51,6 +48,61 @@ public class RenderingUtils {
         graphics.fill(x, y + partH, x + partW, y + height, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
         //Bottom-right
         graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
+    }
+
+    public static void setOverrideBackgroundBlurRadius(int radius) {
+        overrideBackgroundBlurRadius = radius;
+    }
+
+    public static void resetOverrideBackgroundBlurRadius() {
+        overrideBackgroundBlurRadius = -1000;
+    }
+
+    public static boolean shouldOverrideBackgroundBlurRadius() {
+        return overrideBackgroundBlurRadius != -1000;
+    }
+
+    public static int getOverrideBackgroundBlurRadius() {
+        return overrideBackgroundBlurRadius;
+    }
+
+    public static void setDepthTestLocked(boolean locked) {
+        lockDepthTest = locked;
+    }
+
+    public static boolean isDepthTestLocked() {
+        return lockDepthTest;
+    }
+
+    public static void setMenuBlurringBlocked(boolean blocked) {
+        blurBlocked = blocked;
+    }
+
+    public static boolean isMenuBlurringBlocked() {
+        return blurBlocked;
+    }
+
+    public static void setTooltipRenderingBlocked(boolean blocked) {
+        tooltipRenderingBlocked = blocked;
+    }
+
+    public static boolean isTooltipRenderingBlocked() {
+        return tooltipRenderingBlocked;
+    }
+
+    public static void addDeferredScreenRenderingTask(@NotNull DeferredScreenRenderingTask task) {
+        DEFERRED_SCREEN_RENDERING_TASKS.add(task);
+    }
+
+    @NotNull
+    public static List<DeferredScreenRenderingTask> getDeferredScreenRenderingTasks() {
+        return new ArrayList<>(DEFERRED_SCREEN_RENDERING_TASKS);
+    }
+
+    public static void executeAndClearDeferredScreenRenderingTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        List<DeferredScreenRenderingTask> tasks = getDeferredScreenRenderingTasks();
+        DEFERRED_SCREEN_RENDERING_TASKS.clear();
+        tasks.forEach(task -> task.render(graphics, mouseX, mouseY, partial));
     }
 
     /**
@@ -293,7 +345,6 @@ public class RenderingUtils {
 
     }
 
-
     public static float getPartialTick() {
         return Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
     }
@@ -337,8 +388,8 @@ public class RenderingUtils {
     private static void submitColoredRectangle(@NotNull GuiGraphics graphics, RenderPipeline pipeline, TextureSetup textureSetup, float minX, float minY, float maxX, float maxY, int color, @Nullable Integer endColor) {
         ScreenRectangle scissorStackPeek = ((IMixinScissorStack)((IMixinGuiGraphics)graphics).get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
         ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
-                        new FloatColoredRectangleRenderState(pipeline, textureSetup, new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, color, endColor != null ? endColor : color, scissorStackPeek)
-                );
+                new FloatColoredRectangleRenderState(pipeline, textureSetup, new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, color, endColor != null ? endColor : color, scissorStackPeek)
+        );
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, int color) {
@@ -378,10 +429,10 @@ public class RenderingUtils {
     private static void submitBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, GpuTextureView textureView, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
         ScreenRectangle scissorStackPeek = ((IMixinScissorStack)((IMixinGuiGraphics)graphics).get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
         ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
-                        new FloatBlitRenderState(
-                                pipeline, TextureSetup.singleTexture(textureView), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, scissorStackPeek
-                        )
-                );
+                new FloatBlitRenderState(
+                        pipeline, TextureSetup.singleTexture(textureView), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, scissorStackPeek
+                )
+        );
     }
 
     public static void blendFuncSeparate(SourceFactor sourceFactor, DestFactor destFactor, SourceFactor sourceFactor2, DestFactor destFactor2) {
@@ -393,7 +444,7 @@ public class RenderingUtils {
         blendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA, SourceFactor.ONE, DestFactor.ZERO);
     }
 
-    public static enum SourceFactor {
+    public enum SourceFactor {
         CONSTANT_ALPHA(32771),
         CONSTANT_COLOR(32769),
         DST_ALPHA(772),
@@ -412,12 +463,12 @@ public class RenderingUtils {
 
         public final int value;
 
-        private SourceFactor(final int value) {
+        SourceFactor(final int value) {
             this.value = value;
         }
     }
 
-    public static enum DestFactor {
+    public enum DestFactor {
         CONSTANT_ALPHA(32771),
         CONSTANT_COLOR(32769),
         DST_ALPHA(772),
@@ -435,9 +486,14 @@ public class RenderingUtils {
 
         public final int value;
 
-        private DestFactor(final int value) {
+        DestFactor(final int value) {
             this.value = value;
         }
+    }
+
+    @FunctionalInterface
+    public interface DeferredScreenRenderingTask {
+        void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
     }
 
 }

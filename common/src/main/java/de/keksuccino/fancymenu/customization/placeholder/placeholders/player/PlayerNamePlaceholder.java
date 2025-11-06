@@ -30,17 +30,17 @@ public class PlayerNamePlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.playername");
+        return I18n.get("fancymenu.placeholders.playername");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.dynamicvariabletextfield.variables.playername.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.playername.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.player");
+        return I18n.get("fancymenu.requirements.categories.player");
     }
 
     @Override

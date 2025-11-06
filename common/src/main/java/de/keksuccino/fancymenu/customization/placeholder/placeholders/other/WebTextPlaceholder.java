@@ -130,17 +130,17 @@ public class WebTextPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.helper.placeholder.webtext");
+        return I18n.get("fancymenu.placeholders.webtext");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.placeholder.webtext.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.webtext.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");
+        return I18n.get("fancymenu.requirements.categories.other");
     }
 
     @Override

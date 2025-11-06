@@ -371,12 +371,13 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     public void reset() {
+        this.maxLoopsReached = false;
         this.current = null;
-        List<ApngFrame> l = new ArrayList<>(this.frames);
-        if (!l.isEmpty()) {
-            this.current = l.get(0);
-            this.cycles.set(0);
+        List<ApngFrame> frameList = new ArrayList<>(this.frames);
+        if (!frameList.isEmpty()) {
+            this.current = frameList.get(0);
         }
+        this.cycles.set(0);
     }
 
     @Override

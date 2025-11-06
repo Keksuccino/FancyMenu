@@ -22,6 +22,11 @@ public class VideoMenuBackgroundDurationPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String backId = dps.values.get("background_identifier");
         if (backId != null) {

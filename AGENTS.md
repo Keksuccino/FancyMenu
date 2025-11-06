@@ -28,10 +28,10 @@ FancyMenu uses its own custom packet system. If you need to add packets for a fe
 
 ## Minecraft Sources
 You have access to the full Minecraft 1.21.10 sources in the `minecraft_cached_sources` folder. The folder contains source sets for Fabric (`fabric`) and NeoForge (`neoforge`). Before starting a task, make sure to read sources you could need for the task, so you know how the current Minecraft code actually looks. Always do that, knowing how the actual Minecraft code looks is very important, especially when you work with mixins.
-Make sure to always compare Vanilla classes from all 2 modloaders (Fabric, NeoForge), since Forge and NeoForge often alter Vanilla classes, so mixins can't always get applied in `common` and instead need to get implemented for every launcher if the point to place the mixin differs between modloaders.
+Make sure to always compare Vanilla classes from both modloaders (Fabric, NeoForge), since NeoForge often alter Vanilla classes, so mixins can't always get applied in `common` and instead need to get implemented for every launcher if the point to place the mixin differs between modloaders.
 
-## OpenGL Sources
-You have access to the full LWJGL OpenGL library sources of the OpenGL version used in Minecraft 1.21.10 in the `opengl_library_cached_sources` folder. Make sure to check the sources when working on GUI tasks that involve working with raw OpenGL.
+## Library Sources
+You have access to some of the most important library sources used by Minecraft, like full LWJGL and JOML sources in the `library_cached_sources` folder. Make sure to check the sources when working on tasks that involve working with libraries used by Minecraft.
 
 ## Git & Run/Compile
 NEVER try to run git commands or try to run/compile the project!

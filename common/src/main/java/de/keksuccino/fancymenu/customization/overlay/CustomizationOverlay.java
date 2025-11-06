@@ -1,17 +1,17 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.screen.AfterScreenRenderingEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.auth.ModValidator;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
-import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
+import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +30,13 @@ public class CustomizationOverlay implements FancyMenuUiComponent {
 	private static CustomizationOverlayMenuBar overlayMenuBar;
 	private static DebugOverlay debugOverlay;
 	private static boolean isValidFancyMenu = ModValidator.isFancyMenuMetadataValid();
+
+    static {
+
+        // This makes the clear version of the Pause screen not show the customization overlay
+        registerOverlayVisibilityController(screen -> (screen instanceof PauseScreen p) ? p.showsPauseMenu() : true);
+
+    }
 
 	public static void init() {
 		EventHandler.INSTANCE.registerListenersOf(new CustomizationOverlay());
@@ -99,8 +106,8 @@ public class CustomizationOverlay implements FancyMenuUiComponent {
 		}
 	}
 
-	@EventListener(priority = EventPriority.LOW)
-	public void onRenderPost(RenderScreenEvent.Post e) {
+	@EventListener
+	public void onRenderPost(AfterScreenRenderingEvent e) {
 		if (!isValidFancyMenu) {
 			ModValidator.renderInvalidError(e.getGraphics());
 		}

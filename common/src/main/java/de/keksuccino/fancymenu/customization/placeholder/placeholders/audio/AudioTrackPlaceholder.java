@@ -22,6 +22,11 @@ public class AudioTrackPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String elementId = dps.values.get("element_identifier");
         String displayNameMappings = dps.values.get("display_name_mappings");

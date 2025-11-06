@@ -18,6 +18,11 @@ public class VideoMenuBackgroundPausedStatePlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String s = dps.values.get("background_identifier");
         if (s != null) {

@@ -71,17 +71,17 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.editor.loading_requirements.is_menu_title");
+        return I18n.get("fancymenu.requirements.is_menu_title");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirements.is_menu_title.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_menu_title.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.editor.loading_requirement.category.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override
@@ -119,7 +119,7 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
         protected EditBoxSuggestions localizationKeySuggestions;
 
         protected IsMenuTitleValueConfigScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
+            super(Component.translatable("fancymenu.elements.requirements.edit_value"), callback);
             this.menuTitleOrKey = value;
         }
 
@@ -129,7 +129,7 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
             this.addSpacerCell(20);
 
             String id = this.getMenuTitleOrKeyString();
-            this.addLabelCell(Component.translatable("fancymenu.editor.loading_requirements.is_menu_title.value"));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_menu_title.value"));
             this.menuTitleOrKeyCell = this.addTextInputCell(null, true, true).setText(id);
 
             this.localizationKeySuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.menuTitleOrKeyCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, LocalizationUtils.getLocalizationKeys());
@@ -148,8 +148,8 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
                     plain = ScreenTitleUtils.getTitleOfScreen(editor.layoutTargetScreen).getString();
                 }
             }
-            this.addLabelCell(Component.translatable("fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_key", Component.literal(key).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
-            this.addLabelCell(Component.translatable("fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_plain", Component.literal(plain).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_menu_title.value.current_menu_title_key", Component.literal(key).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
+            this.addLabelCell(Component.translatable("fancymenu.requirements.is_menu_title.value.current_menu_title_plain", Component.literal(plain).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
 
             this.addSpacerCell(20);
 

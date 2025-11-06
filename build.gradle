@@ -64,21 +64,7 @@ subprojects {
                 includeGroupByRegex 'com\\.github\\..*'
             }
         }
-        maven {
-            name = 'MCEF Releases'
-            url = 'https://mcef-download.cinemamod.com/repositories/releases'
-            content {
-                includeGroup 'com.cinemamod'
-            }
-        }
-        // Optional for snapshot versions
-        maven {
-            name = 'MCEF Snapshots'
-            url = 'https://mcef-download.cinemamod.com/repositories/snapshots'
-            content {
-                includeGroup 'com.cinemamod'
-            }
-        }
+        maven { url = "https://keksuccino.github.io/maven/" }
         maven {
             name = 'ParchmentMC Maven'
             url = 'https://maven.parchmentmc.org'
@@ -152,7 +138,14 @@ subprojects {
                 "fabric_short_version": fabric_short_version,
                 "fabric_loader_version": fabric_loader_version,
                 "neoforge_version": neoforge_version,
-                "neoforge_loader_version": neoforge_loader_version
+                "neoforge_loader_version": neoforge_loader_version,
+                "fer_version": fer_version,
+                "fer_mc_version": fer_mc_version,
+                "parchment_version": parchment_version,
+                "parchment_mc_version": parchment_mc_version,
+                "mixin_extras_version": mixin_extras_version,
+                "fabric_loom_version": fabric_loom_version,
+                "neogradle_version": neogradle_version
         ]
         filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/mods.toml', 'META-INF/neoforge.mods.toml', '*.mixins.json']) {
             expand expandProps

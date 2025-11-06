@@ -125,7 +125,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         this.addWidget(this.confirmButton);
         UIBase.applyDefaultWidgetSkinTo(this.confirmButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);

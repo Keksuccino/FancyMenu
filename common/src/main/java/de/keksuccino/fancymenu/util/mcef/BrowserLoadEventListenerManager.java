@@ -40,13 +40,9 @@ public class BrowserLoadEventListenerManager {
             List<BrowserLoadListener> loadListeners = browserMap.get(browserId);
             if (loadListeners != null) {
                 boolean success = (httpStatusCode >= 200 && httpStatusCode < 300) || (frame.getURL() != null && frame.getURL().startsWith("file:") && httpStatusCode == 0);
-                loadListeners.forEach(loadListener -> {
-                    if (!loadListener.isHandled()) {
-                        loadListener.setHandled(true);
-                        loadListener.getOnLoadCompletedTask().accept(success);
-                    }
-                });
-                loadListeners.clear();
+                synchronized (loadListeners) {
+                    loadListeners.removeIf(loadListener -> processListener(loadListener, success));
+                }
             } else {
                 LOGGER.warn("[FANCYMENU] onLoadEnd: No load listeners found for browser ID: {}", browserId);
             }
@@ -61,14 +57,12 @@ public class BrowserLoadEventListenerManager {
 
             List<BrowserLoadListener> loadListeners = browserMap.get(browserId);
             if (loadListeners != null) {
-                loadListeners.forEach(loadListener -> {
-                    if (!loadListener.isHandled()) {
+                synchronized (loadListeners) {
+                    loadListeners.removeIf(loadListener -> {
                         LOGGER.error("[FANCYMENU] Browser [ID:{}] load error: {}, {}, URL: {}", browserId, errorCode, errorText, failedUrl);
-                        loadListener.setHandled(true);
-                        loadListener.getOnLoadCompletedTask().accept(false);
-                    }
-                });
-                loadListeners.clear();
+                        return processListener(loadListener, false);
+                    });
+                }
             } else {
                 LOGGER.warn("[FANCYMENU] onLoadError: No load listeners found for browser ID: {}", browserId);
             }
@@ -97,10 +91,14 @@ public class BrowserLoadEventListenerManager {
      * Registers a browser load listener for load event tracking.
      */
     public void registerListenerForBrowser(@NotNull WrappedMCEFBrowser browser, @NotNull Consumer<Boolean> onLoadListener) {
-        if (!browserMap.containsKey(browser.getIdentifier())) {
-            browserMap.put(browser.getIdentifier(), new ArrayList<>());
-        }
-        browserMap.get(browser.getIdentifier()).add(new BrowserLoadListener(browser, onLoadListener));
+        registerListenerForBrowserInternal(browser, onLoadListener, false);
+    }
+    
+    /**
+     * Registers a persistent browser load listener that should fire for every load event.
+     */
+    public void registerPersistentListenerForBrowser(@NotNull WrappedMCEFBrowser browser, @NotNull Consumer<Boolean> onLoadListener) {
+        registerListenerForBrowserInternal(browser, onLoadListener, true);
     }
     
     /**
@@ -126,11 +124,13 @@ public class BrowserLoadEventListenerManager {
 
         private final Consumer<Boolean> onLoadCompleted;
         private final WrappedMCEFBrowser browser;
+        private final boolean persistent;
         private volatile boolean handled = false;
         
-        public BrowserLoadListener(WrappedMCEFBrowser browser, Consumer<Boolean> onLoadCompleted) {
+        public BrowserLoadListener(WrappedMCEFBrowser browser, Consumer<Boolean> onLoadCompleted, boolean persistent) {
             this.onLoadCompleted = onLoadCompleted;
             this.browser = browser;
+            this.persistent = persistent;
         }
         
         public Consumer<Boolean> getOnLoadCompletedTask() {
@@ -148,7 +148,31 @@ public class BrowserLoadEventListenerManager {
         public void setHandled(boolean handled) {
             this.handled = handled;
         }
+        
+        public boolean isPersistent() {
+            return this.persistent;
+        }
 
+    }
+    
+    private void registerListenerForBrowserInternal(@NotNull WrappedMCEFBrowser browser, @NotNull Consumer<Boolean> onLoadListener, boolean persistent) {
+        browserMap.computeIfAbsent(browser.getIdentifier(), id -> new ArrayList<>());
+        List<BrowserLoadListener> listeners = browserMap.get(browser.getIdentifier());
+        synchronized (listeners) {
+            listeners.add(new BrowserLoadListener(browser, onLoadListener, persistent));
+        }
+    }
+    
+    private boolean processListener(@NotNull BrowserLoadListener loadListener, boolean success) {
+        if (!loadListener.isHandled()) {
+            loadListener.setHandled(true);
+            loadListener.getOnLoadCompletedTask().accept(success);
+        }
+        if (loadListener.isPersistent()) {
+            loadListener.setHandled(false);
+            return false;
+        }
+        return true;
     }
 
 }

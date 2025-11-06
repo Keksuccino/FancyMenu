@@ -3,15 +3,11 @@ plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
-    id 'fabric-loom' version '1.11-SNAPSHOT'
+    id "fabric-loom" version "$fabric_loom_version"
 }
 
 base {
     archivesName = "${mod_id}"
-}
-
-repositories {
-    flatDir { dirs 'libs' }
 }
 
 dependencies {
@@ -19,20 +15,20 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.layered() {
         officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-1.21.9:2025.10.05@zip")
+        parchment("org.parchmentmc.data:parchment-${parchment_mc_version}:${parchment_version}@zip")
     }
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
-    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.4.1")))
+    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${mixin_extras_version}")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
     include(implementation 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7')
-    modImplementation "maven.modrinth:melody:1.0.13-1.21.10-fabric"
+    modImplementation "maven.modrinth:melody:1.0.14-1.21.10-fabric"
     modImplementation "maven.modrinth:konkrete:1.9.13-1.21.10-fabric"
-    modCompileOnly "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
-    modCompileOnly "com.cinemamod:mcef:2.1.6-1.21.4"
     modImplementation "maven.modrinth:modmenu:16.0.0-rc.1"
+    modCompileOnly "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
+    modImplementation "de.keksuccino:mcef-fabric:2.1.7-1.21.10"
 
 }
 

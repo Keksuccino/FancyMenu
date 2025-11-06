@@ -23,6 +23,11 @@ public class VanillaButtonLabelPlaceholder extends Placeholder {
     }
 
     @Override
+    public boolean canRunAsync() {
+        return false;
+    }
+
+    @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String buttonLocator = dps.values.get("locator");
         if (buttonLocator != null) {
@@ -45,17 +50,17 @@ public class VanillaButtonLabelPlaceholder extends Placeholder {
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.vanillabuttonlabel");
+        return I18n.get("fancymenu.placeholders.vanillabuttonlabel");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.vanillabuttonlabel.desc"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.vanillabuttonlabel.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.gui");
+        return I18n.get("fancymenu.requirements.categories.gui");
     }
 
     @Override

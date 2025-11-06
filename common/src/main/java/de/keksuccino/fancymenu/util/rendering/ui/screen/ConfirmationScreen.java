@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -19,10 +20,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-@SuppressWarnings("unused")
 public class ConfirmationScreen extends Screen {
 
+    @NotNull
     protected List<Component> textLines;
+    @NotNull
+    protected List<MutableComponent> renderTextLines = new ArrayList<>();
     protected DrawableColor headlineColor;
     protected boolean headlineBold = false;
     protected Consumer<Boolean> callback;
@@ -84,7 +87,7 @@ public class ConfirmationScreen extends Screen {
     @Override
     protected void init() {
 
-        this.confirmButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
+        this.confirmButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.ok"), (button) -> {
             this.callback.accept(true);
         }).setForceDefaultTooltipStyle(true).setTooltipSupplier(consumes -> {
             if (!consumes.active) {
@@ -96,12 +99,24 @@ public class ConfirmationScreen extends Screen {
         this.addWidget(this.confirmButton);
         UIBase.applyDefaultWidgetSkinTo(this.confirmButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(false);
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
+        this.updateRenderTextLines();
+
+    }
+
+    protected void updateRenderTextLines() {
+        List<MutableComponent> linesCopy = TextFormattingUtils.lineWrapComponents(this.textLines, 100000); // to split newlines
+        if (!linesCopy.isEmpty()) {
+            MutableComponent first = linesCopy.get(0);
+            if (this.headlineColor != null) first.setStyle(first.getStyle().withColor(this.headlineColor.getColorInt()));
+            if (this.headlineBold) first.setStyle(first.getStyle().withBold(true));
+        }
+        this.renderTextLines = TextFormattingUtils.lineWrapComponents(linesCopy, this.width - 80);
     }
 
     @Override
@@ -109,18 +124,11 @@ public class ConfirmationScreen extends Screen {
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
-        int y = (this.height / 2) - ((this.textLines.size() * 14) / 2);
-        int lineCounter = 0;
-        for (Component c : this.textLines) {
-            MutableComponent line = c.copy();
-            if (lineCounter == 0) {
-                if (this.headlineColor != null) line.setStyle(line.getStyle().withColor(this.headlineColor.getColorInt()));
-                if (this.headlineBold) line.setStyle(line.getStyle().withBold(true));
-            }
-            int textWidth = this.font.width(line);
-            graphics.drawString(this.font, line, (int)((this.width / 2) - (textWidth / 2)), y, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        int y = (this.height / 2) - ((this.renderTextLines.size() * 14) / 2);
+        for (Component c : this.renderTextLines) {
+            int textWidth = this.font.width(c);
+            graphics.drawString(this.font, c, ((this.width / 2) - (textWidth / 2)), y, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
             y += 14;
-            lineCounter++;
         }
 
         this.confirmButton.active = this.delayEnd <= System.currentTimeMillis();
