@@ -46,42 +46,69 @@ public class MixinMouseHandler {
      */
     @WrapOperation(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDDD)Z"))
     private boolean wrap_Screen_mouseScrolled_in_onScroll_FancyMenu(Screen instance, double mouseX, double mouseY, double scrollX, double scrollY, Operation<Boolean> original) {
-        if (instance instanceof VanillaMouseScrollHandlingScreen) {
-            return original.call(instance, mouseX, mouseY, scrollX, scrollY);
-        }
+        this.beforeMouseScrollScreen_FancyMenu(scrollX, scrollY);
+//        if (instance instanceof VanillaMouseScrollHandlingScreen) {
+//            return original.call(instance, mouseX, mouseY, scrollX, scrollY);
+//        }
         List<GuiEventListener> fmListeners = new ArrayList<>();
         for (GuiEventListener listener : instance.children()) {
             if (listener instanceof FancyMenuUiComponent) {
                 fmListeners.add(listener);
                 if (listener.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+                    this.afterMouseScrollScreen_FancyMenu(scrollX, scrollY);
                     return true;
                 }
             }
         }
-        // Temporarily remove FM widgets from screen children to not call their event twice
-        List<GuiEventListener> originalChildren = new ArrayList<>(instance.children());
-        instance.children().removeIf(fmListeners::contains);
-        // Call screen event and store result
+//        // Temporarily remove FM widgets from screen children to not call their event twice
+//        List<GuiEventListener> originalChildren = new ArrayList<>(instance.children());
+//        instance.children().removeIf(fmListeners::contains);
+//        // Call screen event and store result
         boolean b = original.call(instance, mouseX, mouseY, scrollX, scrollY);
-        // Restore original children
-        instance.children().clear();
-        ((IMixinScreen)instance).getChildrenFancyMenu().addAll(originalChildren);
-        // Return screen event result
+//        // Restore original children
+//        instance.children().clear();
+//        ((IMixinScreen)instance).getChildrenFancyMenu().addAll(originalChildren);
+//        // Fire post scroll FM event
+        this.afterMouseScrollScreen_FancyMenu(scrollX, scrollY);
+//        // Return screen event result
         return b;
     }
 
+    @Unique
+    private void beforeMouseScrollScreen_FancyMenu(double scrollX, double scrollY) {
+        boolean isDiscrete = mc_FancyMenu.options.discreteMouseScroll().get();
+        double wheelSensitivity = mc_FancyMenu.options.mouseWheelSensitivity().get();
+        double scrollDeltaX = (isDiscrete ? Math.signum(scrollX) : scrollX) * wheelSensitivity;
+        double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
+        double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
+        double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
+        EventHandler.INSTANCE.postEvent(new ScreenMouseScrollEvent.Pre(mc_FancyMenu.screen, mX, mY, scrollDeltaX, scrollDeltaY));
+    }
+
+    @Unique
+    private void afterMouseScrollScreen_FancyMenu(double scrollX, double scrollY) {
+        boolean isDiscrete = mc_FancyMenu.options.discreteMouseScroll().get();
+        double wheelSensitivity = mc_FancyMenu.options.mouseWheelSensitivity().get();
+        double scrollDeltaX = (isDiscrete ? Math.signum(scrollX) : scrollX) * wheelSensitivity;
+        double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
+        double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
+        double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
+        ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mc_FancyMenu.screen, mX, mY, scrollDeltaX, scrollDeltaY);
+        EventHandler.INSTANCE.postEvent(e);
+    }
+
     /**
-     * @reason This restores Minecraft's old UI component scroll logic to not only scroll the hovered component, but all of them. The old logic is only used for FancyMenu's components.
+     * @reason This restores Minecraft's old UI component click logic to not only click the hovered component, but all of them. The old logic is only used for FancyMenu's components.
      */
     @WrapOperation(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseClicked(Lnet/minecraft/client/input/MouseButtonEvent;Z)Z"))
     private boolean wrap_Screen_mouseClicked_in_onButton_FancyMenu(@NotNull Screen instance, MouseButtonEvent event, boolean isDoubleClick, Operation<Boolean> original) {
-        if (instance instanceof VanillaMouseClickHandlingScreen) {
-            return original.call(instance, event, isDoubleClick);
-        }
+//        if (instance instanceof VanillaMouseClickHandlingScreen) {
+//            return original.call(instance, event, isDoubleClick);
+//        }
         boolean cancel = false;
         long now = Util.getMillis();
         List<GuiEventListener> fmListeners = new ArrayList<>();
-        for (GuiEventListener listener : instance.children()) {
+        for (GuiEventListener listener : ((IMixinScreen)instance).getChildrenFancyMenu()) {
             if (listener instanceof FancyMenuUiComponent) {
                 fmListeners.add(listener);
                 if (listener.mouseClicked(event, isDoubleClick)) {
@@ -97,29 +124,29 @@ public class MixinMouseHandler {
             }
         }
         if (cancel) return true;
-        // Temporarily remove FM widgets from screen children to not call their event twice
-        List<GuiEventListener> originalChildren = new ArrayList<>(instance.children());
-        instance.children().removeIf(fmListeners::contains);
-        // Call screen event and store result
+//        // Temporarily remove FM widgets from screen children to not call their event twice
+//        List<GuiEventListener> originalChildren = new ArrayList<>(((IMixinScreen)instance).getChildrenFancyMenu());
+//        ((IMixinScreen)instance).getChildrenFancyMenu().removeIf(fmListeners::contains);
+//        // Call screen event and store result
         boolean b = original.call(instance, event, isDoubleClick);
-        // Restore original children
-        instance.children().clear();
-        ((IMixinScreen)instance).getChildrenFancyMenu().addAll(originalChildren);
-        // Return screen event result
+//        // Restore original children
+//        ((IMixinScreen)instance).getChildrenFancyMenu().clear();
+//        ((IMixinScreen)instance).getChildrenFancyMenu().addAll(originalChildren);
+//        // Return screen event result
         return b;
     }
 
     /**
-     * @reason This restores Minecraft's old UI component scroll logic to not only scroll the hovered component, but all of them. The old logic is only used for FancyMenu's components.
+     * @reason This restores Minecraft's old UI component click logic to not only click the hovered component, but all of them. The old logic is only used for FancyMenu's components.
      */
     @WrapOperation(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseReleased(Lnet/minecraft/client/input/MouseButtonEvent;)Z"))
     private boolean wrap_Screen_mouseReleased_in_onButton_FancyMenu(@NotNull Screen instance, MouseButtonEvent event, Operation<Boolean> original) {
-        if (instance instanceof VanillaMouseClickHandlingScreen) {
-            return original.call(instance, event);
-        }
+//        if (instance instanceof VanillaMouseClickHandlingScreen) {
+//            return original.call(instance, event);
+//        }
         boolean cancel = false;
         List<GuiEventListener> fmListeners = new ArrayList<>();
-        for (GuiEventListener listener : instance.children()) {
+        for (GuiEventListener listener : ((IMixinScreen)instance).getChildrenFancyMenu()) {
             if (listener instanceof FancyMenuUiComponent) {
                 fmListeners.add(listener);
                 if (listener.mouseReleased(event)) {
@@ -132,43 +159,16 @@ public class MixinMouseHandler {
             }
         }
         if (cancel) return true;
-        // Temporarily remove FM widgets from screen children to not call their event twice
-        List<GuiEventListener> originalChildren = new ArrayList<>(instance.children());
-        instance.children().removeIf(fmListeners::contains);
-        // Call screen event and store result
+//        // Temporarily remove FM widgets from screen children to not call their event twice
+//        List<GuiEventListener> originalChildren = new ArrayList<>(((IMixinScreen)instance).getChildrenFancyMenu());
+//        ((IMixinScreen)instance).getChildrenFancyMenu().removeIf(fmListeners::contains);
+//        // Call screen event and store result
         boolean b = original.call(instance, event);
-        // Restore original children
-        instance.children().clear();
-        ((IMixinScreen)instance).getChildrenFancyMenu().addAll(originalChildren);
-        // Return screen event result
+//        // Restore original children
+//        ((IMixinScreen)instance).getChildrenFancyMenu().clear();
+//        ((IMixinScreen)instance).getChildrenFancyMenu().addAll(originalChildren);
+//        // Return screen event result
         return b;
-    }
-
-    @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDDD)Z"), cancellable = true)
-    private void beforeMouseScrollScreenFancyMenu(long $$0, double scrollX, double scrollY, CallbackInfo info) {
-        boolean isDiscrete = mc_FancyMenu.options.discreteMouseScroll().get();
-        double wheelSensitivity = mc_FancyMenu.options.mouseWheelSensitivity().get();
-        double scrollDeltaX = (isDiscrete ? Math.signum(scrollX) : scrollX) * wheelSensitivity;
-        double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
-        double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
-        double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
-        ScreenMouseScrollEvent.Pre e = new ScreenMouseScrollEvent.Pre(mc_FancyMenu.screen, mX, mY, scrollDeltaX, scrollDeltaY);
-        EventHandler.INSTANCE.postEvent(e);
-        if (e.isCanceled()) {
-            info.cancel();
-        }
-    }
-
-    @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDDD)Z", shift = At.Shift.AFTER))
-    private void afterMouseScrollScreenFancyMenu(long $$0, double scrollX, double scrollY, CallbackInfo info) {
-        boolean isDiscrete = mc_FancyMenu.options.discreteMouseScroll().get();
-        double wheelSensitivity = mc_FancyMenu.options.mouseWheelSensitivity().get();
-        double scrollDeltaX = (isDiscrete ? Math.signum(scrollX) : scrollX) * wheelSensitivity;
-        double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
-        double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
-        double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
-        ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mc_FancyMenu.screen, mX, mY, scrollDeltaX, scrollDeltaY);
-        EventHandler.INSTANCE.postEvent(e);
     }
 
     /**
