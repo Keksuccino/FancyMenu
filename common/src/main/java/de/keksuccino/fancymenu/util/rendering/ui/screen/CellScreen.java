@@ -42,7 +42,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public abstract class CellScreen extends Screen implements InitialWidgetFocusScreen {
+public abstract class CellScreen extends Screen implements InitialWidgetFocusScreen, VanillaMouseClickHandlingScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -535,8 +535,8 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.searchBarEnabled && (this.searchBar != null) && !this.searchBar.isHovered()) {
-            this.searchBar.setFocused(false);
+        if (this.searchBarEnabled && (this.searchBar != null) && !this.searchBar.isHovered() && this.searchBar.isFocused()) {
+            this.setFocused(null);
         }
         for (GuiEventListener listener : this.children()) {
             if (listener.mouseClicked(mouseX, mouseY, button)) {
