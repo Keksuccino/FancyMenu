@@ -77,12 +77,11 @@
     "client.MixinTabNavigationBar",
     "client.MixinTitleScreen",
     "client.MixinWindow",
-    "client.MixinWorldListEntry"
+    "client.MixinWorldListEntry",
+    "client.IMixinKeyboardHandler",
+    "client.MixinContainerEventHandler"
   ],
   "mixins": [
-    "client.IMixinKeyboardHandler",
-    "client.IMixinMouseHandler",
-    "client.MixinContainerEventHandler",
     "server.MixinLivingEntity",
     "server.MixinServerLevel",
     "server.MixinServerPlayer"
