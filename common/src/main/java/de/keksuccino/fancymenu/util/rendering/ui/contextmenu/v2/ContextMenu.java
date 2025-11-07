@@ -820,6 +820,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public boolean isUserNavigatingInMenu() {
+        if (!this.isOpen()) return false;
         // If the menu is scrollable and the mouse is over it, consider it as navigating
         if (this.needsScrolling && this.isOpen() && this.isMouseOverMenu(MouseInput.getMouseX(), MouseInput.getMouseY())) {
             return true;
@@ -828,6 +829,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public boolean isUserNavigatingInSubMenu() {
+        if (!this.isOpen()) return false;
         for (ContextMenuEntry<?> e : this.entries) {
             if (e instanceof SubMenuContextMenuEntry s) {
                 if (s.subContextMenu.isUserNavigatingInMenu()) return true;

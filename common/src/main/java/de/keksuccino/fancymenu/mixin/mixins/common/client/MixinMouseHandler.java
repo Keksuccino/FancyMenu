@@ -11,16 +11,11 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.VanillaMouseClickHandlingScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.VanillaMouseScrollHandlingScreen;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
-import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,8 +23,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import java.util.ArrayList;
-import java.util.List;
 
 @Mixin(MouseHandler.class)
 public class MixinMouseHandler {
@@ -47,30 +40,16 @@ public class MixinMouseHandler {
     @WrapOperation(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDDD)Z"))
     private boolean wrap_Screen_mouseScrolled_in_onScroll_FancyMenu(Screen instance, double mouseX, double mouseY, double scrollX, double scrollY, Operation<Boolean> original) {
         this.beforeMouseScrollScreen_FancyMenu(scrollX, scrollY);
-//        if (instance instanceof VanillaMouseScrollHandlingScreen) {
-//            return original.call(instance, mouseX, mouseY, scrollX, scrollY);
-//        }
-        List<GuiEventListener> fmListeners = new ArrayList<>();
         for (GuiEventListener listener : instance.children()) {
             if (listener instanceof FancyMenuUiComponent) {
-                fmListeners.add(listener);
                 if (listener.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
                     this.afterMouseScrollScreen_FancyMenu(scrollX, scrollY);
                     return true;
                 }
             }
         }
-//        // Temporarily remove FM widgets from screen children to not call their event twice
-//        List<GuiEventListener> originalChildren = new ArrayList<>(instance.children());
-//        instance.children().removeIf(fmListeners::contains);
-//        // Call screen event and store result
         boolean b = original.call(instance, mouseX, mouseY, scrollX, scrollY);
-//        // Restore original children
-//        instance.children().clear();
-//        ((IMixinScreen)instance).getChildrenFancyMenu().addAll(originalChildren);
-//        // Fire post scroll FM event
         this.afterMouseScrollScreen_FancyMenu(scrollX, scrollY);
-//        // Return screen event result
         return b;
     }
 
@@ -95,80 +74,6 @@ public class MixinMouseHandler {
         double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
         ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mc_FancyMenu.screen, mX, mY, scrollDeltaX, scrollDeltaY);
         EventHandler.INSTANCE.postEvent(e);
-    }
-
-    /**
-     * @reason This restores Minecraft's old UI component click logic to not only click the hovered component, but all of them. The old logic is only used for FancyMenu's components.
-     */
-    @WrapOperation(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseClicked(Lnet/minecraft/client/input/MouseButtonEvent;Z)Z"))
-    private boolean wrap_Screen_mouseClicked_in_onButton_FancyMenu(@NotNull Screen instance, MouseButtonEvent event, boolean isDoubleClick, Operation<Boolean> original) {
-//        if (instance instanceof VanillaMouseClickHandlingScreen) {
-//            return original.call(instance, event, isDoubleClick);
-//        }
-        boolean cancel = false;
-        long now = Util.getMillis();
-        List<GuiEventListener> fmListeners = new ArrayList<>();
-        for (GuiEventListener listener : ((IMixinScreen)instance).getChildrenFancyMenu()) {
-            if (listener instanceof FancyMenuUiComponent) {
-                fmListeners.add(listener);
-                if (listener.mouseClicked(event, isDoubleClick)) {
-                    getMouseHandlerAccessor_FancyMenu().set_lastClickTime_FancyMenu(now);
-                    getMouseHandlerAccessor_FancyMenu().set_lastClickButton_FancyMenu(event.button());
-                    instance.setFocused(listener);
-                    if (event.button() == 0) {
-                        instance.setDragging(true);
-                    }
-                    cancel = true;
-                    break;
-                }
-            }
-        }
-        if (cancel) return true;
-//        // Temporarily remove FM widgets from screen children to not call their event twice
-//        List<GuiEventListener> originalChildren = new ArrayList<>(((IMixinScreen)instance).getChildrenFancyMenu());
-//        ((IMixinScreen)instance).getChildrenFancyMenu().removeIf(fmListeners::contains);
-//        // Call screen event and store result
-        boolean b = original.call(instance, event, isDoubleClick);
-//        // Restore original children
-//        ((IMixinScreen)instance).getChildrenFancyMenu().clear();
-//        ((IMixinScreen)instance).getChildrenFancyMenu().addAll(originalChildren);
-//        // Return screen event result
-        return b;
-    }
-
-    /**
-     * @reason This restores Minecraft's old UI component click logic to not only click the hovered component, but all of them. The old logic is only used for FancyMenu's components.
-     */
-    @WrapOperation(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseReleased(Lnet/minecraft/client/input/MouseButtonEvent;)Z"))
-    private boolean wrap_Screen_mouseReleased_in_onButton_FancyMenu(@NotNull Screen instance, MouseButtonEvent event, Operation<Boolean> original) {
-//        if (instance instanceof VanillaMouseClickHandlingScreen) {
-//            return original.call(instance, event);
-//        }
-        boolean cancel = false;
-        List<GuiEventListener> fmListeners = new ArrayList<>();
-        for (GuiEventListener listener : ((IMixinScreen)instance).getChildrenFancyMenu()) {
-            if (listener instanceof FancyMenuUiComponent) {
-                fmListeners.add(listener);
-                if (listener.mouseReleased(event)) {
-                    if ((event.button() == 0) && instance.isDragging()) {
-                        instance.setDragging(false);
-                    }
-                    cancel = true;
-                    break;
-                }
-            }
-        }
-        if (cancel) return true;
-//        // Temporarily remove FM widgets from screen children to not call their event twice
-//        List<GuiEventListener> originalChildren = new ArrayList<>(((IMixinScreen)instance).getChildrenFancyMenu());
-//        ((IMixinScreen)instance).getChildrenFancyMenu().removeIf(fmListeners::contains);
-//        // Call screen event and store result
-        boolean b = original.call(instance, event);
-//        // Restore original children
-//        ((IMixinScreen)instance).getChildrenFancyMenu().clear();
-//        ((IMixinScreen)instance).getChildrenFancyMenu().addAll(originalChildren);
-//        // Return screen event result
-        return b;
     }
 
     /**
@@ -219,12 +124,6 @@ public class MixinMouseHandler {
 
         return info;
 
-    }
-
-    @Unique
-    @NotNull
-    private static IMixinMouseHandler getMouseHandlerAccessor_FancyMenu() {
-        return (IMixinMouseHandler) Minecraft.getInstance().mouseHandler;
     }
 
 }

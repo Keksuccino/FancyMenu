@@ -82,6 +82,7 @@
   "mixins": [
     "client.IMixinKeyboardHandler",
     "client.IMixinMouseHandler",
+    "client.MixinContainerEventHandler",
     "server.MixinLivingEntity",
     "server.MixinServerLevel",
     "server.MixinServerPlayer"
