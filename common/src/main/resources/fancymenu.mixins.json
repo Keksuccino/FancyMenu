@@ -38,6 +38,7 @@
     "client.MixinChatListener",
     "client.MixinClientPacketListener",
     "client.MixinConnectScreen",
+    "client.MixinContainerEventHandler",
     "client.MixinCreateWorldScreen",
     "client.MixinCreateWorldScreen_GameTab",
     "client.MixinCreateWorldScreen_MoreTab",
