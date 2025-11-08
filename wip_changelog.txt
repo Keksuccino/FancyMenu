@@ -2,7 +2,7 @@
 CHANGELOG | FANCYMENU v3.8.0 - The "I'm Not Gonna Read All That" Update [ W I P !! Not public yet !! ]
 
 - Dropped support for (Lex)Forge for Minecraft 1.21+
-- Dropped support for Minecraft 1.18.2, 1.21.4, 1.21.8
+- Dropped support for Minecraft 1.18.2, 1.21.4
 - Added a new system: Listeners (#1247)
   - Listeners can make you, well, listen to specific game events like mouse movement, mouse clicks, keyboard key presses, menus getting opened/closed and even in-world events like entities dying, the player gaining an effect or spotting an entity and SO MUCH MORE!
   - You can add multiple listeners for the same event type and each listener can execute its own action script when triggered
