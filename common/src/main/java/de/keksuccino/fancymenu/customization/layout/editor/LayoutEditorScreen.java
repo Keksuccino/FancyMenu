@@ -62,7 +62,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final boolean FORCE_DISABLE_BUDDY = false;
+	public static final boolean FORCE_DISABLE_BUDDY = true;
 
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
 	public static final int ELEMENT_DRAG_CRUMPLE_ZONE = 5;
