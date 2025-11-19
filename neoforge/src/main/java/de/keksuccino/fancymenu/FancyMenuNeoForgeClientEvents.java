@@ -23,17 +23,17 @@ public class FancyMenuNeoForgeClientEvents {
 
     @SubscribeEvent
     public void afterScreenKeyPress(ScreenEvent.KeyPressed.Post e) {
-        ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(e.getScreen(), e.getKeyCode(), e.getScanCode(), e.getModifiers());
+        ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(e.getScreen(), e.getKeyEvent());
         EventHandler.INSTANCE.postEvent(event);
 
         if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) {
-            o.keyPressed(e.getKeyCode(), e.getScanCode(), e.getModifiers());
+            o.keyPressed(e.getKeyEvent());
         }
     }
 
     @SubscribeEvent
     public void afterScreenKeyRelease(ScreenEvent.KeyReleased.Post e) {
-        ScreenKeyReleasedEvent event = new ScreenKeyReleasedEvent(e.getScreen(), e.getKeyCode(), e.getScanCode(), e.getModifiers());
+        ScreenKeyReleasedEvent event = new ScreenKeyReleasedEvent(e.getScreen(), e.getKeyEvent());
         EventHandler.INSTANCE.postEvent(event);
     }
 
@@ -41,4 +41,5 @@ public class FancyMenuNeoForgeClientEvents {
     public void onClientLoggedIn(ClientPlayerNetworkEvent.LoggingIn e) {
         Minecraft.getInstance().execute(PacketHandler::sendHandshakeToServer);
     }
+
 }

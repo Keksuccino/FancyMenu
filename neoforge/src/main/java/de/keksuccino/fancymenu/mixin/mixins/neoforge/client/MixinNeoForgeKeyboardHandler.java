@@ -106,7 +106,7 @@ public class MixinNeoForgeKeyboardHandler {
 
     @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;charTyped(Lnet/minecraft/client/input/CharacterEvent;)Z"))
     private void before_Screen_charTyped_in_charTyped_FancyMenu(long window, CharacterEvent event, CallbackInfo info) {
-        EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(Objects.requireNonNull(Minecraft.getInstance().screen), (char) event.codepoint()));
+        EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(Objects.requireNonNull(Minecraft.getInstance().screen), event));
     }
 
 }

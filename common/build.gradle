@@ -25,7 +25,7 @@ dependencies {
     modCompileOnly "maven.modrinth:melody:1.0.14-1.21.10-fabric"
     modCompileOnly "maven.modrinth:konkrete:1.9.13-1.21.10-fabric"
     modCompileOnly "de.keksuccino:mcef-fabric:2.1.7-1.21.10"
-    implementation "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
+    compileOnly "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
 }
 
 loom {
