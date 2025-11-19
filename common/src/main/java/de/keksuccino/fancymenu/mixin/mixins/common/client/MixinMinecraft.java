@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeScreen;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -13,13 +15,14 @@ import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.reload.FancyMenuResourceReload;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
-import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
-import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import java.net.SocketAddress;
 import java.nio.file.Path;
+import java.util.List;
+import net.minecraft.client.ResourceLoadStateTracker;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
@@ -30,18 +33,16 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.Connection;
 import net.minecraft.server.WorldStem;
+import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
-import net.minecraft.util.profiling.ProfilerFiller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -55,10 +56,8 @@ import net.minecraft.client.Minecraft;
 @Mixin(value = Minecraft.class)
 public class MixinMinecraft {
 
-	@Unique private static final String DUMMY_RESOURCE_RELOAD_LISTENER_RETURN_VALUE_FANCYMENU = "PREPARE RETURN VALUE";
 	@Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
-	@Unique private static boolean reloadListenerRegisteredFancyMenu = false;
 	@Unique private boolean lateClientInitDoneFancyMenu = false;
 	@Unique private Screen lastScreen_FancyMenu = null;
 	@Unique private static final String UNKNOWN_SERVER_IP_FANCYMENU = "ERROR";
@@ -70,6 +69,14 @@ public class MixinMinecraft {
 	@Shadow @Nullable public Screen screen;
 	@Shadow @Nullable public ClientLevel level;
 	@Shadow @Nullable public LocalPlayer player;
+    @Shadow @Final private ReloadableResourceManager resourceManager;
+
+    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/ResourceLoadStateTracker;startReload(Lnet/minecraft/client/ResourceLoadStateTracker$ReloadReason;Ljava/util/List;)V"))
+    private void wrap_startReload_in_classConstruct_FancyMenu(ResourceLoadStateTracker instance, ResourceLoadStateTracker.ReloadReason reloadReason, List<PackResources> packs, Operation<Void> original) {
+        LOGGER_FANCYMENU.info("[FANCYMENU] Registering FancyMenu's resource reload listener before startReload() in Minecraft#<init>..");
+        this.resourceManager.registerReloadListener(FancyMenuResourceReload.createMinecraftPreparableReloadListener());
+        original.call(instance, reloadReason, packs);
+    }
 
 	@Inject(method = "stop", at = @At("HEAD"))
 	private void before_stop_FancyMenu(CallbackInfo info) {
@@ -327,29 +334,6 @@ public class MixinMinecraft {
 			ScrollScreenNormalizer.normalizeScrollableScreen(this.screen);
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-		}
-	}
-
-	//This is a hacky way to get Minecraft to register FancyMenu's reload listener as early as possible in the Minecraft.class constructor
-	@Inject(method = "resizeDisplay", at = @At("HEAD"))
-	private void registerResourceReloadListenerInResizeDisplayFancyMenu(CallbackInfo info) {
-		if (!reloadListenerRegisteredFancyMenu) {
-			reloadListenerRegisteredFancyMenu = true;
-			Minecraft mc = (Minecraft)((Object)this);
-			LOGGER_FANCYMENU.info("[FANCYMENU] Registering resource reload listener..");
-			if (mc.getResourceManager() instanceof ReloadableResourceManager r) {
-				r.registerReloadListener(new SimplePreparableReloadListener<String>() {
-					@Override
-					protected @NotNull String prepare(@NotNull ResourceManager var1, @NotNull ProfilerFiller var2) {
-						return DUMMY_RESOURCE_RELOAD_LISTENER_RETURN_VALUE_FANCYMENU;
-					}
-					@Override
-					protected void apply(@NotNull String prepareReturnValue, @NotNull ResourceManager var2, @NotNull ProfilerFiller var3) {
-						ResourceHandlers.reloadAll();
-						ResourcePreLoader.preLoadAll(120000); //waits for 120 seconds per resource
-					}
-				});
-			}
 		}
 	}
 
