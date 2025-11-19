@@ -5,20 +5,33 @@ import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyReleasedEvent;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.reload.FancyMenuResourceReload;
 import net.minecraft.client.Minecraft;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class FancyMenuNeoForgeClientEvents {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static void registerAll() {
+    public static void registerAll(@NotNull IEventBus bus) {
+
         NeoForge.EVENT_BUS.register(new FancyMenuNeoForgeClientEvents());
+
+        bus.addListener(FancyMenuNeoForgeClientEvents::onAddClientReloadListeners);
+
+    }
+
+    public static void onAddClientReloadListeners(AddClientReloadListenersEvent e) {
+        LOGGER.info("[FANCYMENU] Registering FancyMenu's resource reload listener via NeoForge API..");
+        e.addListener(FancyMenuResourceReload.FANCYMENU_RELOAD_LISTENER_ID, FancyMenuResourceReload.createMinecraftPreparableReloadListener());
     }
 
     @SubscribeEvent

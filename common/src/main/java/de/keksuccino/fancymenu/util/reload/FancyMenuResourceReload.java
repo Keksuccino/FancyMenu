@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.reload;
 import com.mojang.logging.LogUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -18,6 +19,8 @@ public class FancyMenuResourceReload {
     private static final String DUMMY_RETURN = "FANCYMENU RESOURCE RELOAD LISTENER";
     private static final Map<Long, Runnable> LISTENERS = new HashMap<>();
     private static long id = 0;
+
+    public static final ResourceLocation FANCYMENU_RELOAD_LISTENER_ID = ResourceLocation.fromNamespaceAndPath("fancymenu", "fancymenu_reload_listener");
 
     static {
 
