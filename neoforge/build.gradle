@@ -64,10 +64,10 @@ dependencies {
         jarJar.ranged(it, "[1.7,)")
     }
 	implementation "maven.modrinth:konkrete:1.9.13-1.21.10-neoforge"
-    implementation "maven.modrinth:melody:1.0.14-1.21.10-neoforge"
-    compileOnly "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
-    implementation "de.keksuccino:mcef-neoforge:2.1.7-1.21.10"
-    compileOnly project(":common")
+	implementation "maven.modrinth:melody:1.0.14-1.21.10-neoforge"
+	compileOnly "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
+	implementation "de.keksuccino:mcef-neoforge:2.1.7-1.21.10"
+	compileOnly project(":common")
 }
 
 // Exclude Fabric Loader from NeoForge
@@ -91,8 +91,11 @@ configurations {
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code++
 Spec<Task> notNeoTask = { Task it -> !it.name.startsWith("neo") } as Spec<Task>
 
-tasks.withType(JavaCompile).matching(notNeoTask).configureEach {
+tasks.named("compileJava", JavaCompile).configure {
     source(project(":common").sourceSets.main.allSource)
+}
+
+tasks.withType(JavaCompile).matching(notNeoTask).configureEach {
     it.options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal']
 }
 
