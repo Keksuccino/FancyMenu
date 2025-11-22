@@ -37,7 +37,10 @@ dependencies {
     compileOnly group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
     //Test to fix weird behaviour with Gson
     compileOnly 'com.google.code.gson:gson:2.8.9'
-    compileOnly 'org.joml:joml:1.10.8'
+    compileOnly("org.joml:joml:1.10.8") {
+        // Drop JetBrains annotations coming from Kotlin so we don't get a second module
+        exclude group: 'org.jetbrains', module: 'annotations'
+    }
 
 }
 
