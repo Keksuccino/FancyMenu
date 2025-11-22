@@ -27,13 +27,11 @@ public class ListenerHandler {
         canRegisterListeners = false;
     }
 
-    @NotNull
-    public static String addInstance(@NotNull ListenerInstance instance) {
+    public static void addInstance(@NotNull ListenerInstance instance) {
         assertInitialized();
         INSTANCES.put(instance.instanceIdentifier, instance);
         instance.registerSelfToParent();
         writeToFile();
-        return instance.instanceIdentifier;
     }
 
     public static void removeInstance(@NotNull String identifier) {
@@ -41,6 +39,11 @@ public class ListenerHandler {
         ListenerInstance instance = INSTANCES.get(identifier);
         if (instance != null) instance.parent.unregisterInstance(instance);
         INSTANCES.remove(identifier);
+        writeToFile();
+    }
+
+    public static void syncChanges() {
+        writeToFile();
     }
 
     @Nullable
