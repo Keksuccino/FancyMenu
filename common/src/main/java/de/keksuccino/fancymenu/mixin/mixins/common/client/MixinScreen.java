@@ -35,6 +35,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 @Mixin(Screen.class)
 public abstract class MixinScreen implements CustomizableScreen, ContainerEventHandler {
@@ -96,16 +99,42 @@ public abstract class MixinScreen implements CustomizableScreen, ContainerEventH
     @Override
     public void setInitialFocus(@Nullable GuiEventListener eventListener) {
         this.nextFocusPath_called_FancyMenu = true;
-        ContainerEventHandler.super.setInitialFocus(eventListener);
+        this.setFocused(eventListener);
+        if (eventListener != null) {
+            eventListener.changeFocus(true);
+        }
         this.nextFocusPath_called_FancyMenu = false;
     }
 
     @Override
-    public boolean changeFocus(boolean focus) {
+    public boolean changeFocus(boolean forward) {
         this.nextFocusPath_called_FancyMenu = true;
-        boolean b = ContainerEventHandler.super.changeFocus(focus);
+        GuiEventListener current = this.getFocused();
+        boolean hadFocused = current != null;
+
+        if (hadFocused && current.changeFocus(forward)) {
+            this.nextFocusPath_called_FancyMenu = false;
+            return true;
+        }
+
+        List<? extends GuiEventListener> list = this.children();
+        int start = hadFocused ? list.indexOf(current) + (forward ? 1 : 0) : (forward ? 0 : list.size());
+        ListIterator<? extends GuiEventListener> it = list.listIterator(start);
+        BooleanSupplier hasNext = forward ? it::hasNext : it::hasPrevious;
+        Supplier<? extends GuiEventListener> next = forward ? it::next : it::previous;
+
+        while (hasNext.getAsBoolean()) {
+            GuiEventListener candidate = next.get();
+            if (candidate.changeFocus(forward)) {
+                this.setFocused(candidate);
+                this.nextFocusPath_called_FancyMenu = false;
+                return true;
+            }
+        }
+
+        this.setFocused(null);
         this.nextFocusPath_called_FancyMenu = false;
-        return b;
+        return false;
     }
 
     @Inject(method = "children", at = @At("RETURN"), cancellable = true)

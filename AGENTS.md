@@ -32,6 +32,3 @@ Make sure to always compare Vanilla classes from both modloaders (Fabric, Forge)
 
 ## OpenGL/LWJGL Sources
 You have access to the full LWJGL library sources of the LWJGL version used in Minecraft 1.19.2 in the `lwjgl_library_cached_sources` folder. Make sure to check the sources when working on GUI tasks that involve working with raw OpenGL.
-
-## Git & Run/Compile
-NEVER try to run git commands or try to run/compile the project!
