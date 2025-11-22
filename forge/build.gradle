@@ -20,6 +20,12 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 jarJar.enable()
 
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 minecraft {
 
     mappings channel: 'official', version: minecraft_version
@@ -69,7 +75,6 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 
 dependencies {
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
-//    implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason
     implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
@@ -88,10 +93,6 @@ dependencies {
     }
     implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.19-1.19.2-forge")
     implementation fg.deobf("maven.modrinth:melody:1.0.1-1.19.2-forge")
-    //implementation "it.crystalnest:fancy-entity-renderer-forge:$fer_mc_version-$fer_version"
-    //implementation(fg.deobf("com.cinemamod:mcef:2.1.6-1.20.1")) {
-    //    exclude group: 'net.fabricmc', module: 'fabric-loader'
-    //}
     //This is only to fix the missing dependency error in-dev
     implementation (group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1')
     compileOnly project(":common")
@@ -144,7 +145,7 @@ publishing {
 jar {
     manifest {
         attributes([
-                "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json,${mod_id}.late.mixins.json"
+                "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json"
         ])
     }
 }
