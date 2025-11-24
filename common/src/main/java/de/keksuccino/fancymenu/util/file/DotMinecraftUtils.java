@@ -184,7 +184,12 @@ public class DotMinecraftUtils {
                     return minecraftDir.toString();
                 }
                 String relativePart = normalizedPath.substring(".minecraft/".length());
-                return minecraftDir.resolve(relativePart).toString();
+                try {
+                    return minecraftDir.resolve(relativePart).toString();
+                } catch (Exception ex2) {
+                    // Fallback to the original string if resolution still fails (e.g., invalid characters)
+                    return pathString;
+                }
             }
             return pathString;
         }
