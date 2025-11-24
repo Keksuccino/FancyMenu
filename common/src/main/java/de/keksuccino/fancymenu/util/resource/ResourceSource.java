@@ -30,14 +30,14 @@ public class ResourceSource {
         resourceSource = resourceSource.trim();
         ResourceSource source = new ResourceSource();
         source.resourceSourceWithoutPrefix = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
-        String dotMcSourcePath = DotMinecraftUtils.convertToShortenedDotMinecraftPath(source.resourceSourceWithoutPrefix);
-        source.isDotMinecraftSource = dotMcSourcePath != null;
-        if (source.isDotMinecraftSource) {
-            source.sourceType = ResourceSourceType.LOCAL;
-            source.resourceSourceWithoutPrefix = new File(DotMinecraftUtils.resolveMinecraftPath(dotMcSourcePath)).getAbsolutePath().replace("\\", "/");
-        } else {
-            source.sourceType = (sourceType != null) ? sourceType : ResourceSourceType.getSourceTypeOf(resourceSource);
-            if (source.sourceType == ResourceSourceType.LOCAL) {
+        source.sourceType = (sourceType != null) ? sourceType : ResourceSourceType.getSourceTypeOf(resourceSource);
+        // Only treat the source as a .minecraft-local file when the detected source type is LOCAL.
+        if (source.sourceType == ResourceSourceType.LOCAL) {
+            String dotMcSourcePath = DotMinecraftUtils.convertToShortenedDotMinecraftPath(source.resourceSourceWithoutPrefix);
+            source.isDotMinecraftSource = dotMcSourcePath != null;
+            if (source.isDotMinecraftSource) {
+                source.resourceSourceWithoutPrefix = new File(DotMinecraftUtils.resolveMinecraftPath(dotMcSourcePath)).getAbsolutePath().replace("\\", "/");
+            } else {
                 source.resourceSourceWithoutPrefix = GameDirectoryUtils.getAbsoluteGameDirectoryPath(source.resourceSourceWithoutPrefix);
             }
         }

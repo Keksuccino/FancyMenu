@@ -19,7 +19,7 @@ public class DotMinecraftUtils {
     public static Path getMinecraftDirectory() {
         String userHome = System.getProperty("user.home");
         Path minecraftPath;
-        
+
         if (OSUtils.isWindows()) {
             // Windows: %APPDATA%\.minecraft
             String appData = System.getenv("APPDATA");
@@ -39,7 +39,7 @@ public class DotMinecraftUtils {
             // Default fallback for unknown OS
             minecraftPath = Paths.get(userHome, ".minecraft");
         }
-        
+
         // Create the directory if it doesn't exist
         if (!Files.exists(minecraftPath)) {
             try {
@@ -49,7 +49,7 @@ public class DotMinecraftUtils {
                 LOGGER.error("[FANCYMENU] Failed to create .minecraft directory at: " + minecraftPath, ex);
             }
         }
-        
+
         return minecraftPath;
     }
 
@@ -125,22 +125,22 @@ public class DotMinecraftUtils {
         if (path == null) {
             throw new IllegalArgumentException("Path cannot be null");
         }
-        
+
         String pathStr = path.toString().replace('\\', '/');
-        
+
         // Check if path starts with .minecraft/ or just .minecraft
         if (isShortenedDotMinecraftPath(pathStr)) {
             Path minecraftDir = getMinecraftDirectory();
-            
+
             if (pathStr.equals(".minecraft")) {
                 return minecraftDir;
             }
-            
+
             // Remove the .minecraft/ prefix and append the rest to the actual minecraft directory
             String relativePart = pathStr.substring(".minecraft/".length());
             return minecraftDir.resolve(relativePart);
         }
-        
+
         // Return original path if it doesn't start with .minecraft/
         return path;
     }
@@ -184,7 +184,12 @@ public class DotMinecraftUtils {
                     return minecraftDir.toString();
                 }
                 String relativePart = normalizedPath.substring(".minecraft/".length());
-                return minecraftDir.resolve(relativePart).toString();
+                try {
+                    return minecraftDir.resolve(relativePart).toString();
+                } catch (Exception ex2) {
+                    // Fallback to the original string if resolution still fails (e.g., invalid characters)
+                    return pathString;
+                }
             }
             return pathString;
         }
