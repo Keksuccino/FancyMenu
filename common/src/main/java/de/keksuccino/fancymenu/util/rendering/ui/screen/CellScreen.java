@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScr
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -427,6 +428,9 @@ public abstract class CellScreen extends ModernScreen implements InitialWidgetFo
     }
 
     protected <T extends AbstractWidget> T addRightSideWidget(@NotNull T widget) {
+        if (widget instanceof NavigatableWidget n) {
+            n.setNavigatable(false);
+        }
         this.rightSideWidgets.add(widget);
         return widget;
     }

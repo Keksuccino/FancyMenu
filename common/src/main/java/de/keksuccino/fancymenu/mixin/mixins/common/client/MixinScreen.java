@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.mixin.MixinCacheCommon;
@@ -60,16 +61,26 @@ public abstract class MixinScreen implements CustomizableScreen, ContainerEventH
         if (RenderingUtils.isTooltipRenderingBlocked()) info.cancel();
     }
 
-    @WrapMethod(method = "renderBackground(Lcom/mojang/blaze3d/vertex/PoseStack;I)V")
-    private void wrap_renderBackground_FancyMenu(PoseStack poseStack, int vOffset, Operation<Void> original) {
+    @WrapOperation(method = "renderBackground(Lcom/mojang/blaze3d/vertex/PoseStack;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;fillGradient(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIII)V"))
+    private void wrap_fillGradient_in_renderBackground_FancyMenu(Screen instance, PoseStack pose, int i1, int i2, int i3, int i4, int i5, int i6, Operation<Void> original) {
+        this.renderBackgroundWrappedInEvent_FancyMenu(() -> original.call(instance, pose, i1, i2, i3, i4, i5, i6));
+    }
+
+    @WrapMethod(method = "renderDirtBackground")
+    private void wrap_renderDirtBackground_FancyMenu(int vOffset, Operation<Void> original) {
+        this.renderBackgroundWrappedInEvent_FancyMenu(() -> original.call(vOffset));
+    }
+
+    @Unique
+    private void renderBackgroundWrappedInEvent_FancyMenu(@NotNull Runnable original) {
         Screen instance = ((Screen)(Object)this);
         GuiGraphics graphics = GuiGraphics.currentGraphics();
         int mouseX = MixinCacheCommon.cached_screen_render_mouseX;
         int mouseY = MixinCacheCommon.cached_screen_render_mouseY;
         float partial = MixinCacheCommon.cached_screen_render_partial;
-        //Don't fire the event in the TitleScreen, because it gets handled differently there
-        if (instance instanceof TitleScreen) {
-            original.call(poseStack, vOffset);
+        //Don't fire the event in the TitleScreen or in Custom GUIs, because it gets handled differently there
+        if ((instance instanceof TitleScreen) || (instance instanceof CustomGuiBaseScreen)) {
+            original.run();
             return;
         }
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
@@ -80,10 +91,10 @@ public abstract class MixinScreen implements CustomizableScreen, ContainerEventH
                 graphics.fill(0, 0, instance.width, instance.height, 0);
                 RenderingUtils.resetShaderColor(graphics);
             } else {
-                original.call(poseStack, vOffset);
+                original.run();
             }
         } else {
-            original.call(poseStack, vOffset);
+            original.run();
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, mouseX, mouseY, partial));
     }

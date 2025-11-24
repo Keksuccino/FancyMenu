@@ -197,6 +197,11 @@ public class ManageListenersScreen extends CellScreen {
     }
 
     @Override
+    public boolean allowEnterForDone() {
+        return false;
+    }
+
+    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateSelectedInstance();
