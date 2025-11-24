@@ -1,12 +1,19 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -84,9 +91,11 @@ public class CustomGuiBaseScreen extends Screen {
         boolean popupOverlay = popup && this.gui.popupModeBackgroundOverlay;
         if (popup) {
             this.renderPopupMenuBackgroundScreen(graphics, mouseX, mouseY, partial);
+            this._renderBackgroundEvent(graphics, mouseX, mouseY, partial, false);
         } else {
             if ((Minecraft.getInstance().level == null) || !this.gui.worldBackground) {
                 this.renderDirtBackground(graphics);
+                this._renderBackgroundEvent(graphics, mouseX, mouseY, partial, true);
                 return;
             }
         }
@@ -95,7 +104,21 @@ public class CustomGuiBaseScreen extends Screen {
         }
         if (!popup) {
             this.renderBackground(graphics);
+            this._renderBackgroundEvent(graphics, mouseX, mouseY, partial, true);
         }
+    }
+
+    protected void _renderBackgroundEvent(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean blackBackground) {
+        ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
+        if (l != null) {
+            if (!l.layoutBase.menuBackgrounds.isEmpty() && blackBackground) {
+                RenderSystem.enableBlend();
+                //Render a black background before the custom background gets rendered
+                graphics.fill(0, 0, this.width, this.height, 0);
+                RenderingUtils.resetShaderColor(graphics);
+            }
+        }
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics, mouseX, mouseY, partial));
     }
 
     protected void renderDarkBackgroundOverlay(@NotNull GuiGraphics graphics) {

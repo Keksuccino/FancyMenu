@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
@@ -59,15 +60,25 @@ public abstract class MixinScreen implements CustomizableScreen {
         RenderingUtils.executeAndClearDeferredScreenRenderingTasks(graphics, mouseX, mouseY, partial);
     }
 
-    @WrapMethod(method = "renderBackground")
-    private void wrap_renderBackground_FancyMenu(GuiGraphics graphics, Operation<Void> original) {
-        Screen instance = ((Screen)(Object)this);
+    @WrapOperation(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fillGradient(IIIIII)V"))
+    private void wrap_fillGradient_in_renderBackground_FancyMenu(GuiGraphics instance, int p_283290_, int p_283278_, int p_282670_, int p_281698_, int p_283374_, int p_283076_, Operation<Void> original) {
+        this.renderBackgroundWrappedInEvent_FancyMenu(instance, () -> original.call(instance, p_283290_, p_283278_, p_282670_, p_281698_, p_283374_, p_283076_));
+    }
+
+    @WrapMethod(method = "renderDirtBackground")
+    private void wrap_renderDirtBackground_FancyMenu(GuiGraphics graphics, Operation<Void> original) {
+        this.renderBackgroundWrappedInEvent_FancyMenu(graphics, () -> original.call(graphics));
+    }
+
+    @Unique
+    private void renderBackgroundWrappedInEvent_FancyMenu(@NotNull GuiGraphics graphics, @NotNull Runnable original) {
         int mouseX = this.cached_mouseX_FancyMenu;
         int mouseY = this.cached_mouseY_FancyMenu;
         float partial = this.cached_partial_FancyMenu;
-        //Don't fire the event in the TitleScreen, because it gets handled differently there
-        if (instance instanceof TitleScreen) {
-            original.call(graphics);
+        Screen instance = ((Screen)(Object)this);
+        //Don't fire the event in the TitleScreen or in Custom GUIs, because it gets handled differently there
+        if ((instance instanceof TitleScreen) || (instance instanceof CustomGuiBaseScreen)) {
+            original.run();
             return;
         }
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
@@ -78,10 +89,10 @@ public abstract class MixinScreen implements CustomizableScreen {
                 graphics.fill(0, 0, instance.width, instance.height, 0);
                 RenderingUtils.resetShaderColor(graphics);
             } else {
-                original.call(graphics);
+                original.run();
             }
         } else {
-            original.call(graphics);
+            original.run();
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, mouseX, mouseY, partial));
     }
