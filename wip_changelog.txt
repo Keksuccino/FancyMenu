@@ -4,6 +4,6 @@ CHANGELOG | FANCYMENU v3.8.1 [ W I P !! Not public yet !! ]
 - There's now a hint in the Action Script Editor screen that tells the user to right-click the area to add actions when the script is still empty
 - Fixed mod breaking on some launchers that use the .minecraft folder as instance folder (#1425)
 - Fixed Manage Listeners screen closes when pressing ENTER (#1423)
-- Fixed Custom GUI backgrounds not working in 1.20.1 and below (#1420)
+- Fixed custom menu backgrounds not working in some cases in 1.20.1 and below (#1420, #1422)
 
 %changelog:end%
