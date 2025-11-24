@@ -1,6 +1,6 @@
 
-CHANGELOG | FANCYMENU v3.X.X [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.8.1 [ W I P !! Not public yet !! ]
 
-- 
+- Fixed mod breaks on some launchers that use the .minecraft folder as instance folder (#1425)
 
 %changelog:end%
