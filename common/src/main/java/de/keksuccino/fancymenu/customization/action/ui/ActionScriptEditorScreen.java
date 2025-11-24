@@ -787,6 +787,14 @@ public class ActionScriptEditorScreen extends Screen {
         this.cancelButton.setY(buttonY);
 
         this.scriptEntriesScrollArea.render(graphics, mouseX, mouseY, partial);
+        if (this.scriptEntriesScrollArea.getEntries().isEmpty()) {
+            // Hint overlay when no actions exist
+            Component hint = Component.translatable("fancymenu.actions.script_editor.empty_hint");
+            int hintWidth = this.font.width(hint);
+            int hintX = this.scriptEntriesScrollArea.getInnerX() + (this.scriptEntriesScrollArea.getInnerWidth() / 2) - (hintWidth / 2);
+            int hintY = this.scriptEntriesScrollArea.getInnerY() + (this.scriptEntriesScrollArea.getInnerHeight() / 2) - (this.font.lineHeight / 2);
+            graphics.drawString(this.font, hint, hintX, hintY, theme.element_label_color_inactive.getColorInt(), false);
+        }
         this.renderInlineEditors(graphics, mouseX, mouseY, partial);
         this.updateCursor(mouseX, mouseY);
 
