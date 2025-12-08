@@ -248,8 +248,8 @@ public class PlayerEntityElement extends AbstractElement {
             capeLoc = this.capeTextureSupplier.getCapeLocation();
             if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
         }
-        ClientAsset.ResourceTexture skinTex = new ClientAsset.Texture.ResourceTexture(skinLoc);
-        ClientAsset.ResourceTexture capeTex = (capeLoc != null) ? new ClientAsset.ResourceTexture(capeLoc) : null;
+        ClientAsset.Texture skinTex = new ClientTexture(skinLoc);
+        ClientAsset.Texture capeTex = (capeLoc != null) ? new ClientTexture(capeLoc) : null;
         this.widget.setSkin(new PlayerSkin(skinTex, null, capeTex, this.slim ? PlayerModelType.SLIM : PlayerModelType.WIDE, false));
     }
 
@@ -454,6 +454,13 @@ public class PlayerEntityElement extends AbstractElement {
             return empty();
         }
 
+    }
+
+    public record ClientTexture(ResourceLocation texturePath) implements ClientAsset.Texture {
+        @Override
+        public @NotNull ResourceLocation id() {
+            return this.texturePath();
+        }
     }
 
 }

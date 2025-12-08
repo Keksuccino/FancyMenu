@@ -276,8 +276,7 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
      * @return {@code this}.
      */
     public WrappedFancyPlayerWidget setSkin(@Nullable PlayerSkin skin) {
-        //TODO RESTORE THIS ONCE FER GOT UPDATED !!!!!!!!
-//        wrapped.setSkin(skin);
+        wrapped.setSkin(skin);
         return this;
     }
 
@@ -342,12 +341,12 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
      * <b>WARNING: Experimental!</b><br>
      * Currently, it has no effect.
      *
-     * @param isGlowing whether the player should glow.
+     * @param glowColor The glow color.
      * @return {@code this}.
      */
     @ApiStatus.Experimental
-    public WrappedFancyPlayerWidget setGlowing(boolean isGlowing) {
-        wrapped.setGlowing(isGlowing);
+    public WrappedFancyPlayerWidget setGlowing(int glowColor) {
+        wrapped.setGlowing(glowColor);
         return this;
     }
 
