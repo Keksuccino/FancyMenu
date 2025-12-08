@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.8.2
+
+- Fixed bugs related to the Player Entity element in MC 1.21.10
+
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.8.1
 
 - There's now a hint in the Action Script Editor screen that tells the user to right-click the area to add actions when the script is still empty
@@ -3889,6 +3898,7 @@ CHANGELOG | FANCYMNENU v1.5
 - Fixed a bug that prevented customized menu buttons from loading when the previous menu was the language settings menu
 - Fixed a rare bug that could lead to a crash when trying to save or load layouts while having non-layout files saved in the layout directory (.minecraft/config/fancymenu/customization)
 - Fixed a MC 1.12 bug that could lead to non-functional 'openlink' button actions even though the given URL was correct
+
 
 
 
