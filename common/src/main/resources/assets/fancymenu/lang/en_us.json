@@ -2155,5 +2155,19 @@
   "fancymenu.requirements.is_player_using_item.desc": "Returns true when the player is using an item.\nUsing an item means, for example, eating food, drinking a potion, drawing a bow, etc.",
   "fancymenu.requirements.is_player_in_structure": "Is Player In Structure",
   "fancymenu.requirements.is_player_in_structure.desc": "Checks if the player is currently in a specific structure type.\n\n§xFancyMenu needs to be installed on the server for this to work!",
-  "fancymenu.requirements.is_player_in_structure.key": "Structure key to check for:"
+  "fancymenu.requirements.is_player_in_structure.key": "Structure key to check for:",
+  "fancymenu.actions.play_audio": "Play Audio",
+  "fancymenu.actions.play_audio.desc": "Plays an audio resource once. Supports picking a sound channel and a base volume.",
+  "fancymenu.actions.play_audio.edit.title": "Configure Play Audio",
+  "fancymenu.actions.play_audio.edit.audio_source": "Audio Source",
+  "fancymenu.actions.play_audio.edit.audio_source.desc": "The audio resource source to play. Supports resource locations, local files, web URLs and placeholders.",
+  "fancymenu.actions.play_audio.edit.choose_audio": "Choose Audio",
+  "fancymenu.actions.play_audio.edit.choose_audio.desc": "Opens a file chooser for FancyMenu audio resources.",
+  "fancymenu.actions.play_audio.edit.clear_audio": "Clear Audio",
+  "fancymenu.actions.play_audio.edit.clear_audio.desc": "Clears the audio source.",
+  "fancymenu.actions.play_audio.edit.sound_channel": "Sound Channel: %s",
+  "fancymenu.actions.play_audio.edit.sound_channel.desc": "Which Minecraft sound category should be used for playback.",
+  "fancymenu.actions.play_audio.edit.base_volume": "Base Volume",
+  "fancymenu.actions.play_audio.edit.base_volume.desc": "A multiplier for the audio volume. 100% means full volume.",
+  "fancymenu.actions.play_audio.edit.base_volume.value": "Base Volume: %s"
 }
