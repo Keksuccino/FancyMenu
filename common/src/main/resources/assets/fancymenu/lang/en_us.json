@@ -2140,5 +2140,7 @@
   "fancymenu.requirements.is_hardcore": "Is Hardcore",
   "fancymenu.requirements.is_hardcore.desc": "If the currently loaded world is in Hardcore mode.\nReturns false when no world is loaded.",
   "fancymenu.requirements.is_debug_overlay_enabled": "Is MC Debug Overlay Enabled",
-  "fancymenu.requirements.is_debug_overlay_enabled.desc": "If the Debug Overlay (F3 menu) is currently visible.\nReturns false when the HUD is hidden (F1)."
+  "fancymenu.requirements.is_debug_overlay_enabled.desc": "If the Debug Overlay (F3 menu) is currently visible.\nReturns false when the HUD is hidden (F1).",
+  "fancymenu.requirements.is_item_hovered_in_inventory": "Is Item Hovered In Inventory",
+  "fancymenu.requirements.is_item_hovered_in_inventory.desc": "Returns true if an item is hovered in any inventory screen.\nFor example, the player inventory or a chest.\nReturns false if no inventory is open or no item is hovered."
 }

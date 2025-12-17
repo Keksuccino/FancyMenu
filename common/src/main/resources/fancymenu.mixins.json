@@ -3,6 +3,7 @@
   "package": "de.keksuccino.fancymenu.mixin.mixins.common",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "client.IMixinAbstractContainerScreen",
     "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
     "client.IMixinBossHealthOverlay",
