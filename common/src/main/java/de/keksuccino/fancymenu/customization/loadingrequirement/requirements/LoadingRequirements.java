@@ -101,6 +101,7 @@ public class LoadingRequirements {
     public static final IsAnyScreenOpenRequirement IS_ANY_SCREEN_OPEN = new IsAnyScreenOpenRequirement();
     public static final IsDebugOverlayEnabledRequirement IS_DEBUG_OVERLAY_ENABLED = new IsDebugOverlayEnabledRequirement();
     public static final IsItemHoveredInInventoryRequirement IS_ITEM_HOVERED_IN_INVENTORY = new IsItemHoveredInInventoryRequirement();
+    public static final IsCursorHoldingInventoryItemRequirement IS_CURSOR_HOLDING_INVENTORY_ITEM = new IsCursorHoldingInventoryItemRequirement();
 
     public static void registerAll() {
 
@@ -116,6 +117,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_ANY_SCREEN_OPEN);
         LoadingRequirementRegistry.register(IS_DEBUG_OVERLAY_ENABLED);
         LoadingRequirementRegistry.register(IS_ITEM_HOVERED_IN_INVENTORY);
+        LoadingRequirementRegistry.register(IS_CURSOR_HOLDING_INVENTORY_ITEM);
 
         LoadingRequirementRegistry.register(IS_REAL_TIME_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_HOUR);

@@ -2142,5 +2142,7 @@
   "fancymenu.requirements.is_debug_overlay_enabled": "Is MC Debug Overlay Enabled",
   "fancymenu.requirements.is_debug_overlay_enabled.desc": "If the Debug Overlay (F3 menu) is currently visible.\nReturns false when the HUD is hidden (F1).",
   "fancymenu.requirements.is_item_hovered_in_inventory": "Is Item Hovered In Inventory",
-  "fancymenu.requirements.is_item_hovered_in_inventory.desc": "Returns true if an item is hovered in any inventory screen.\nFor example, the player inventory or a chest.\nReturns false if no inventory is open or no item is hovered."
+  "fancymenu.requirements.is_item_hovered_in_inventory.desc": "Returns true if an item is hovered in any inventory screen.\nFor example, the player inventory or a chest.\nReturns false if no inventory is open or no item is hovered.",
+  "fancymenu.requirements.is_cursor_holding_inventory_item": "Is Cursor Holding Inventory Item",
+  "fancymenu.requirements.is_cursor_holding_inventory_item.desc": "Returns true if the cursor is holding an item in any inventory screen.\nReturns false if no inventory is open or the cursor isn't holding an item."
 }
