@@ -2138,5 +2138,7 @@
   "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text",
   "fancymenu.actions.script_editor.empty_hint": "Right-click here to add actions",
   "fancymenu.requirements.is_hardcore": "Is Hardcore",
-  "fancymenu.requirements.is_hardcore.desc": "If the currently loaded world is in Hardcore mode.\\nReturns false when no world is loaded."
+  "fancymenu.requirements.is_hardcore.desc": "If the currently loaded world is in Hardcore mode.\nReturns false when no world is loaded.",
+  "fancymenu.requirements.is_debug_overlay_enabled": "Is MC Debug Overlay Enabled",
+  "fancymenu.requirements.is_debug_overlay_enabled.desc": "If the Debug Overlay (F3 menu) is currently visible.\nReturns false when the HUD is hidden (F1)."
 }
