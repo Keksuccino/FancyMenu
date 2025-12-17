@@ -7,5 +7,6 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 - Added "Is Cursor Holding Inventory Item" requirement to check if the user is holding an item with the mouse in any inventory screen (main inventory, chests, etc.) (#1427)
 - Added "Is Camera Perspective" requirement to check for the user's current perspective (first person, third person, front view) (#1375)
 - Ported "Is Player Using Item" requirement from Spiffy (#1401)
+- Ported "Is Player In Structure" requirement from Spiffy (#1402)
 
 %changelog:end%
