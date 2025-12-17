@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.networking.packets.structure.structures;
 
 import de.keksuccino.fancymenu.networking.PacketHandler;
+import de.keksuccino.fancymenu.util.level.StructureUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.spiffyhud.util.level.StructureUtils;
 import net.minecraft.server.level.ServerPlayer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
