@@ -10,8 +10,10 @@ import de.keksuccino.fancymenu.networking.packets.commands.variable.suggestions.
 import de.keksuccino.fancymenu.networking.packets.handshake.HandshakePacketCodec;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataRequestPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataResponsePacketCodec;
-import de.keksuccino.fancymenu.networking.packets.structures.StructureEventPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.structure.clientstructures.StructureEventPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.entities.EntityEventPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.structure.playerpos.PlayerPosStructuresPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.structure.structures.StructuresPacketCodec;
 
 public class Packets {
 
@@ -26,6 +28,8 @@ public class Packets {
     public static final EntityEventPacketCodec ENTITY_EVENT_PACKET_CODEC = new EntityEventPacketCodec();
     public static final ServerNbtDataRequestPacketCodec SERVER_NBT_DATA_REQUEST_PACKET_CODEC = new ServerNbtDataRequestPacketCodec();
     public static final ServerNbtDataResponsePacketCodec SERVER_NBT_DATA_RESPONSE_PACKET_CODEC = new ServerNbtDataResponsePacketCodec();
+    public static final StructuresPacketCodec STRUCTURES_PACKET_CODEC = new StructuresPacketCodec();
+    public static final PlayerPosStructuresPacketCodec PLAYER_POS_STRUCTURES_PACKET_CODEC = new PlayerPosStructuresPacketCodec();
 
     public static void registerAll() {
 
@@ -40,6 +44,8 @@ public class Packets {
         PacketRegistry.register(ENTITY_EVENT_PACKET_CODEC);
         PacketRegistry.register(SERVER_NBT_DATA_REQUEST_PACKET_CODEC);
         PacketRegistry.register(SERVER_NBT_DATA_RESPONSE_PACKET_CODEC);
+        PacketRegistry.register(STRUCTURES_PACKET_CODEC);
+        PacketRegistry.register(PLAYER_POS_STRUCTURES_PACKET_CODEC);
 
     }
 

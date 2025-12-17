@@ -2150,5 +2150,10 @@
   "fancymenu.requirements.is_camera_perspective.value_name": "Perspective",
   "fancymenu.requirements.is_camera_perspective.value.first_person": "First Person",
   "fancymenu.requirements.is_camera_perspective.value.third_person_back": "Third Person",
-  "fancymenu.requirements.is_camera_perspective.value.third_person_front": "Front View"
+  "fancymenu.requirements.is_camera_perspective.value.third_person_front": "Front View",
+  "fancymenu.requirements.is_player_using_item": "Is Player Using Item",
+  "fancymenu.requirements.is_player_using_item.desc": "Returns true when the player is using an item.\nUsing an item means, for example, eating food, drinking a potion, drawing a bow, etc.",
+  "fancymenu.requirements.is_player_in_structure": "Is Player In Structure",
+  "fancymenu.requirements.is_player_in_structure.desc": "Checks if the player is currently in a specific structure type.\n\n§xFancyMenu needs to be installed on the server for this to work!",
+  "fancymenu.requirements.is_player_in_structure.key": "Structure key to check for:"
 }

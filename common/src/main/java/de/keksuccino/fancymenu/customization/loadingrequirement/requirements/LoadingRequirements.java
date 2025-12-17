@@ -100,6 +100,8 @@ public class LoadingRequirements {
     public static final IsItemHoveredInInventoryRequirement IS_ITEM_HOVERED_IN_INVENTORY = new IsItemHoveredInInventoryRequirement();
     public static final IsCursorHoldingInventoryItemRequirement IS_CURSOR_HOLDING_INVENTORY_ITEM = new IsCursorHoldingInventoryItemRequirement();
     public static final IsCameraPerspectiveRequirement IS_CAMERA_PERSPECTIVE = new IsCameraPerspectiveRequirement();
+    public static final IsPlayerUsingItemRequirement IS_PLAYER_USING_ITEM = new IsPlayerUsingItemRequirement();
+    public static final IsPlayerInStructureRequirement IS_PLAYER_IN_STRUCTURE = new IsPlayerInStructureRequirement();
 
     public static void registerAll() {
 
@@ -117,7 +119,6 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_ITEM_HOVERED_IN_INVENTORY);
         LoadingRequirementRegistry.register(IS_CURSOR_HOLDING_INVENTORY_ITEM);
         LoadingRequirementRegistry.register(IS_CAMERA_PERSPECTIVE);
-
         LoadingRequirementRegistry.register(IS_REAL_TIME_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_HOUR);
         LoadingRequirementRegistry.register(IS_REAL_TIME_MINUTE);
@@ -125,29 +126,24 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_REAL_TIME_SECOND);
         LoadingRequirementRegistry.register(IS_REAL_TIME_WEEK_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_YEAR);
-
         LoadingRequirementRegistry.register(FILE_EXISTS);
         LoadingRequirementRegistry.register(IS_OS_LINUX);
         LoadingRequirementRegistry.register(IS_OS_MAC_OS);
         LoadingRequirementRegistry.register(IS_OS_WINDOWS);
         LoadingRequirementRegistry.register(IS_INTERNET_CONNECTION_AVAILABLE);
-
         LoadingRequirementRegistry.register(IS_FULLSCREEN);
         LoadingRequirementRegistry.register(IS_WINDOW_WIDTH);
         LoadingRequirementRegistry.register(IS_WINDOW_HEIGHT);
         LoadingRequirementRegistry.register(IS_WINDOW_WIDTH_BIGGER_THAN);
         LoadingRequirementRegistry.register(IS_WINDOW_HEIGHT_BIGGER_THAN);
-
         LoadingRequirementRegistry.register(IS_ADVENTURE);
         LoadingRequirementRegistry.register(IS_CREATIVE);
         LoadingRequirementRegistry.register(IS_SPECTATOR);
         LoadingRequirementRegistry.register(IS_SURVIVAL);
-
         LoadingRequirementRegistry.register(IS_MULTIPLAYER);
         LoadingRequirementRegistry.register(IS_SINGLEPLAYER);
         LoadingRequirementRegistry.register(IS_WORLD_LOADED);
         LoadingRequirementRegistry.register(IS_HARDCORE);
-
         LoadingRequirementRegistry.register(IS_PLAYER_RUNNING);
         LoadingRequirementRegistry.register(IS_PLAYER_SNEAKING);
         LoadingRequirementRegistry.register(IS_PLAYER_SWIMMING);
@@ -184,7 +180,6 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_INVENTORY_SLOT_FILLED);
         LoadingRequirementRegistry.register(IS_HOTBAR_SLOT_ACTIVE);
         LoadingRequirementRegistry.register(IS_ATTACK_STRENGTH_WEAKENED);
-
         LoadingRequirementRegistry.register(IS_LANGUAGE);
         LoadingRequirementRegistry.register(IS_MOD_LOADED);
         LoadingRequirementRegistry.register(IS_NUMBER);
@@ -196,6 +191,8 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(ONLY_ONCE_PER_SESSION);
         LoadingRequirementRegistry.register(MOUSE_CLICKED);
         LoadingRequirementRegistry.register(IS_MCEF_LOADED);
+        LoadingRequirementRegistry.register(IS_PLAYER_USING_ITEM);
+        LoadingRequirementRegistry.register(IS_PLAYER_IN_STRUCTURE);
 
     }
 

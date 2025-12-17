@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.networking.packets.structures;
+package de.keksuccino.fancymenu.networking.packets.structure.clientstructures;
 
 import de.keksuccino.fancymenu.networking.PacketCodec;
 

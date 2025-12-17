@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.networking.packets.structures;
+package de.keksuccino.fancymenu.networking.packets.structure.clientstructures;
 
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import org.apache.logging.log4j.LogManager;
