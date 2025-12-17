@@ -1,8 +1,5 @@
 /run_server/
 /run_client/
-/.idea/runConfigurations/
-/.idea/workspace.xml
-/.idea/modules/
 /common/.gradle/
 /common/build/
 /fabric/.gradle/
