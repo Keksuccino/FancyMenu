@@ -2174,5 +2174,8 @@
   "fancymenu.actions.stop_all_action_audios.desc": "Stops all audios that are currently playing and were started via the \"Play Audio\" action.\nThis does not affect any other FancyMenu audio features such as button click sounds, Audio elements, menu open/close audios, etc.",
   "fancymenu.actions.execute_command_as_integrated_server": "Execute Command As Integrated Server",
   "fancymenu.actions.execute_command_as_integrated_server.desc": "Executes a command in singleplayer as the integrated server, ignoring permissions and the cheats setting.\nDoes nothing on multiplayer or when the world is opened to LAN.",
-  "fancymenu.actions.execute_command_as_integrated_server.desc.value": "Command"
+  "fancymenu.actions.execute_command_as_integrated_server.desc.value": "Command",
+  "fancymenu.actions.open_file_folder": "Open File/Folder In Game Directory",
+  "fancymenu.actions.open_file_folder.desc": "This action opens a file or folder on your system with the default program for that file type. This action is limited to work only inside the game directory, which starts at the root of the Minecraft instance directory, for safety reasons.\n\nIt is also possible to access the default '.minecraft' directory with this action. For that, just start paths with the '.minecraft/' prefix.",
+  "fancymenu.actions.open_file_folder.value": "Target File/Folder Path"
 }

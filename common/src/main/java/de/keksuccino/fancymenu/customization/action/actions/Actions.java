@@ -76,6 +76,7 @@ public class Actions {
     public static final ShowToastAction SHOW_TOAST = new ShowToastAction();
     public static final DeleteFileAction DELETE_FILE = new DeleteFileAction();
     public static final MoveFileAction MOVE_FILE = new MoveFileAction();
+    public static final OpenFileFolderAction OPEN_FILE_FOLDER = new OpenFileFolderAction();
     public static final CopyFileAction COPY_FILE = new CopyFileAction();
     public static final RenameFileAction RENAME_FILE = new RenameFileAction();
     public static final DownloadFileAction DOWNLOAD_FILE = new DownloadFileAction();
@@ -130,6 +131,7 @@ public class Actions {
         ActionRegistry.register(SHOW_TOAST);
         ActionRegistry.register(DELETE_FILE);
         ActionRegistry.register(MOVE_FILE);
+        ActionRegistry.register(OPEN_FILE_FOLDER);
         ActionRegistry.register(COPY_FILE);
         ActionRegistry.register(RENAME_FILE);
         ActionRegistry.register(DOWNLOAD_FILE);
