@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.rea
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.*;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.window.*;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsWorldLoadedRequirement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsHardcoreRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsAdventureRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsCreativeRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsSpectatorRequirement;
@@ -47,6 +48,7 @@ public class LoadingRequirements {
     public static final IsMultiplayerRequirement IS_MULTIPLAYER = new IsMultiplayerRequirement();
     public static final IsSingleplayerRequirement IS_SINGLEPLAYER = new IsSingleplayerRequirement();
     public static final IsWorldLoadedRequirement IS_WORLD_LOADED = new IsWorldLoadedRequirement();
+    public static final IsHardcoreRequirement IS_HARDCORE = new IsHardcoreRequirement();
     public static final IsLanguageRequirement IS_LANGUAGE = new IsLanguageRequirement();
     public static final IsModLoadedRequirement IS_MOD_LOADED = new IsModLoadedRequirement();
     public static final IsNumberRequirement IS_NUMBER = new IsNumberRequirement();
@@ -139,6 +141,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_MULTIPLAYER);
         LoadingRequirementRegistry.register(IS_SINGLEPLAYER);
         LoadingRequirementRegistry.register(IS_WORLD_LOADED);
+        LoadingRequirementRegistry.register(IS_HARDCORE);
 
         LoadingRequirementRegistry.register(IS_PLAYER_RUNNING);
         LoadingRequirementRegistry.register(IS_PLAYER_SNEAKING);

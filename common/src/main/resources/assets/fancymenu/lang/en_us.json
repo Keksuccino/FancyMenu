@@ -2136,5 +2136,7 @@
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft Logo",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms Notification Icons",
   "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text",
-  "fancymenu.actions.script_editor.empty_hint": "Right-click here to add actions"
+  "fancymenu.actions.script_editor.empty_hint": "Right-click here to add actions",
+  "fancymenu.requirements.is_hardcore": "Is Hardcore",
+  "fancymenu.requirements.is_hardcore.desc": "If the currently loaded world is in Hardcore mode.\\nReturns false when no world is loaded."
 }
