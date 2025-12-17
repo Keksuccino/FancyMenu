@@ -2,6 +2,9 @@
 CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
 - Added "Play Audio" action to play an audio resource once with configurable sound channel and base volume (#1433)
+- Added "Execute Command As Integrated Server" action (#1372)
+  - Force-executes a command in singleplayer as the integrated server, ignoring permissions and the cheats setting
+  - Does nothing on multiplayer or when the world is opened to LAN
 - Added "Stop All Action Audios" action to stop all audio tracks started via the "Play Audio" action
 - Added "Is Hardcore" requirement to check if the currently loaded world is in hardcore mode (#1387)
 - Added "Is MC Debug Overlay Enabled" requirement to check if the F3 debug overlay is enabled (#1436)
