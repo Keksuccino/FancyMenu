@@ -2150,5 +2150,5 @@
   "fancymenu.requirements.is_camera_perspective.value_name": "Perspective",
   "fancymenu.requirements.is_camera_perspective.value.first_person": "First Person",
   "fancymenu.requirements.is_camera_perspective.value.third_person_back": "Third Person",
-  "fancymenu.requirements.is_camera_perspective.value.third_person_front": "Second Person"
+  "fancymenu.requirements.is_camera_perspective.value.third_person_front": "Front View"
 }
