@@ -1,6 +1,6 @@
 
 CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
-- Added "Is Hardcore" requirement to check if the currently loaded world is in hardcore mode
+- Added "Is Hardcore" requirement to check if the currently loaded world is in hardcore mode (#1387)
 
 %changelog:end%
