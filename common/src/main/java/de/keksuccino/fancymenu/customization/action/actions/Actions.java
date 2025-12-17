@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.action.actions.audio.NextTrackActio
 import de.keksuccino.fancymenu.customization.action.actions.audio.PlayAudioAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.PreviousTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.SetAudioElementVolumeAction;
+import de.keksuccino.fancymenu.customization.action.actions.audio.StopAllActionAudiosAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.TogglePlayTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.file.*;
 import de.keksuccino.fancymenu.customization.action.actions.layout.DisableLayoutAction;
@@ -58,6 +59,7 @@ public class Actions {
     public static final PreviousTrackAction PREVIOUS_AUDIO_ELEMENT_TRACK = new PreviousTrackAction();
     public static final TogglePlayTrackAction TOGGLE_PLAY_AUDIO_ELEMENT_TRACK = new TogglePlayTrackAction();
     public static final PlayAudioAction PLAY_AUDIO = new PlayAudioAction();
+    public static final StopAllActionAudiosAction STOP_ALL_ACTION_AUDIOS = new StopAllActionAudiosAction();
     public static final BackToLastScreenAction BACK_TO_LAST_SCREEN = new BackToLastScreenAction();
     public static final SetVideoElementVolumeAction SET_VIDEO_ELEMENT_VOLUME = new SetVideoElementVolumeAction();
     public static final ToggleVideoElementPauseStateAction TOGGLE_VIDEO_ELEMENT_PAUSE_STATE = new ToggleVideoElementPauseStateAction();
@@ -110,6 +112,7 @@ public class Actions {
         ActionRegistry.register(PREVIOUS_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(TOGGLE_PLAY_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(PLAY_AUDIO);
+        ActionRegistry.register(STOP_ALL_ACTION_AUDIOS);
         ActionRegistry.register(BACK_TO_LAST_SCREEN);
         ActionRegistry.register(SET_VIDEO_ELEMENT_VOLUME);
         ActionRegistry.register(TOGGLE_VIDEO_ELEMENT_PAUSE_STATE);

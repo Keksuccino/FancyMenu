@@ -2169,5 +2169,7 @@
   "fancymenu.actions.play_audio.edit.sound_channel.desc": "Which Minecraft sound category should be used for playback.",
   "fancymenu.actions.play_audio.edit.base_volume": "Base Volume",
   "fancymenu.actions.play_audio.edit.base_volume.desc": "A multiplier for the audio volume. 100% means full volume.",
-  "fancymenu.actions.play_audio.edit.base_volume.value": "Base Volume: %s"
+  "fancymenu.actions.play_audio.edit.base_volume.value": "Base Volume: %s",
+  "fancymenu.actions.stop_all_action_audios": "Stop All Action Audios",
+  "fancymenu.actions.stop_all_action_audios.desc": "Stops all audios that are currently playing and were started via the \"Play Audio\" action.\nThis does not affect any other FancyMenu audio features such as button click sounds, Audio elements, menu open/close audios, etc."
 }

@@ -28,9 +28,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class PlayAudioAction extends Action {
@@ -39,9 +42,39 @@ public class PlayAudioAction extends Action {
     private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
     private static final long READY_TIMEOUT_MS = 10_000L;
     private static long lastErrorTriggered = -1L;
+    private static final Object ACTION_AUDIO_TRACKER_LOCK = new Object();
+    private static final Set<IAudio> TRACKED_ACTION_AUDIOS = ConcurrentHashMap.newKeySet();
 
     public PlayAudioAction() {
         super("play_audio");
+    }
+
+    public static void trackActionAudio(@NotNull IAudio audio) {
+        Objects.requireNonNull(audio);
+        if (audio.isClosed()) return;
+        synchronized (ACTION_AUDIO_TRACKER_LOCK) {
+            TRACKED_ACTION_AUDIOS.removeIf(IAudio::isClosed);
+            TRACKED_ACTION_AUDIOS.add(audio);
+        }
+    }
+
+    public static int stopAllTrackedActionAudios() {
+        List<IAudio> toStop;
+        synchronized (ACTION_AUDIO_TRACKER_LOCK) {
+            toStop = new ArrayList<>(TRACKED_ACTION_AUDIOS);
+            TRACKED_ACTION_AUDIOS.clear();
+        }
+        int stoppedCount = 0;
+        for (IAudio audio : toStop) {
+            if ((audio == null) || audio.isClosed()) continue;
+            try {
+                audio.stop();
+                stoppedCount++;
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] PlayAudioAction: Failed to stop tracked action audio!", ex);
+            }
+        }
+        return stoppedCount;
     }
 
     @Override
@@ -93,6 +126,7 @@ public class PlayAudioAction extends Action {
                     audio.setSoundChannel(config.getSoundSource());
                     audio.setVolume(config.baseVolume);
                     audio.play();
+                    trackActionAudio(audio);
                 }
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] PlayAudioAction: Failed to play audio: " + config.audioSource, ex);
