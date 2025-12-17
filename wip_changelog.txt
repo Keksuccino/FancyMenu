@@ -5,5 +5,6 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 - Added "Is MC Debug Overlay Enabled" requirement to check if the F3 debug overlay is enabled (#1436)
 - Added "Is Item Hovered in Inventory" requirement to check if the user is hovering over an item in any inventory screen (main inventory, chests, etc.) (#1431)
 - Added "Is Cursor Holding Inventory Item" requirement to check if the user is holding an item with the mouse in any inventory screen (main inventory, chests, etc.) (#1427)
+- Added "Is Camera Perspective" requirement to check for the user's current perspective (first person, third person, front view) (#1375)
 
 %changelog:end%
