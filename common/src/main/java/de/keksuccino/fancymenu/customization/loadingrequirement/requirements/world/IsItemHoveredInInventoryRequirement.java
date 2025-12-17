@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui;
+package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world;
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractContainerScreen;
@@ -8,7 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.Slot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -16,12 +16,12 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class IsCursorHoldingInventoryItemRequirement extends LoadingRequirement {
+public class IsItemHoveredInInventoryRequirement extends LoadingRequirement {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public IsCursorHoldingInventoryItemRequirement() {
-        super("is_cursor_holding_inventory_item");
+    public IsItemHoveredInInventoryRequirement() {
+        super("is_item_hovered_in_inventory");
     }
 
     @Override
@@ -38,13 +38,9 @@ public class IsCursorHoldingInventoryItemRequirement extends LoadingRequirement 
     public boolean isRequirementMet(@Nullable String value) {
         try {
             Screen screen = Minecraft.getInstance().screen;
-            if (!(screen instanceof AbstractContainerScreen<?> containerScreen)) return false;
-
-            ItemStack carried = containerScreen.getMenu().getCarried();
-            if (!carried.isEmpty()) return true;
-
-            ItemStack dragging = ((IMixinAbstractContainerScreen) containerScreen).get_draggingItem_FancyMenu();
-            return !dragging.isEmpty();
+            if (!(screen instanceof AbstractContainerScreen<?>)) return false;
+            Slot hoveredSlot = ((IMixinAbstractContainerScreen) screen).get_hoveredSlot_FancyMenu();
+            return (hoveredSlot != null) && hoveredSlot.hasItem();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle '" + this.getIdentifier() + "' loading requirement!", ex);
             return false;
@@ -53,17 +49,17 @@ public class IsCursorHoldingInventoryItemRequirement extends LoadingRequirement 
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_cursor_holding_inventory_item");
+        return I18n.get("fancymenu.requirements.is_item_hovered_in_inventory");
     }
 
     @Override
     public List<String> getDescription() {
-        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_cursor_holding_inventory_item.desc"));
+        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_item_hovered_in_inventory.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.requirements.categories.gui");
+        return I18n.get("fancymenu.requirements.categories.world");
     }
 
     @Override

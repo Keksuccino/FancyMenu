@@ -5,14 +5,11 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.realtime.*;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.*;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.window.*;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsWorldLoadedRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsHardcoreRequirement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.*;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsAdventureRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsCreativeRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsSpectatorRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsSurvivalRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsMultiplayerRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsSingleplayerRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.player.*;
 
 public class LoadingRequirements {
@@ -102,6 +99,7 @@ public class LoadingRequirements {
     public static final IsDebugOverlayEnabledRequirement IS_DEBUG_OVERLAY_ENABLED = new IsDebugOverlayEnabledRequirement();
     public static final IsItemHoveredInInventoryRequirement IS_ITEM_HOVERED_IN_INVENTORY = new IsItemHoveredInInventoryRequirement();
     public static final IsCursorHoldingInventoryItemRequirement IS_CURSOR_HOLDING_INVENTORY_ITEM = new IsCursorHoldingInventoryItemRequirement();
+    public static final IsCameraPerspectiveRequirement IS_CAMERA_PERSPECTIVE = new IsCameraPerspectiveRequirement();
 
     public static void registerAll() {
 
@@ -118,6 +116,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_DEBUG_OVERLAY_ENABLED);
         LoadingRequirementRegistry.register(IS_ITEM_HOVERED_IN_INVENTORY);
         LoadingRequirementRegistry.register(IS_CURSOR_HOLDING_INVENTORY_ITEM);
+        LoadingRequirementRegistry.register(IS_CAMERA_PERSPECTIVE);
 
         LoadingRequirementRegistry.register(IS_REAL_TIME_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_HOUR);
