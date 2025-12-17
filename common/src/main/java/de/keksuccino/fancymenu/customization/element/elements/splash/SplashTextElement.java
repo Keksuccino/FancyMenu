@@ -127,7 +127,7 @@ public class SplashTextElement extends AbstractElement {
             }
         }
 
-        Component renderTextComponent = Component.literal(this.renderText);
+        Component renderTextComponent = buildComponent(this.renderText);
 
         // Calculate the "bounce" effect scale, same logic as vanilla.
         float bounceScale = this.baseScale;
