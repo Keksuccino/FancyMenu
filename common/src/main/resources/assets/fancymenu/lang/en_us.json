@@ -2171,5 +2171,8 @@
   "fancymenu.actions.play_audio.edit.base_volume.desc": "A multiplier for the audio volume. 100% means full volume.",
   "fancymenu.actions.play_audio.edit.base_volume.value": "Base Volume: %s",
   "fancymenu.actions.stop_all_action_audios": "Stop All Action Audios",
-  "fancymenu.actions.stop_all_action_audios.desc": "Stops all audios that are currently playing and were started via the \"Play Audio\" action.\nThis does not affect any other FancyMenu audio features such as button click sounds, Audio elements, menu open/close audios, etc."
+  "fancymenu.actions.stop_all_action_audios.desc": "Stops all audios that are currently playing and were started via the \"Play Audio\" action.\nThis does not affect any other FancyMenu audio features such as button click sounds, Audio elements, menu open/close audios, etc.",
+  "fancymenu.actions.execute_command_as_integrated_server": "Execute Command As Integrated Server",
+  "fancymenu.actions.execute_command_as_integrated_server.desc": "Executes a command in singleplayer as the integrated server, ignoring permissions and the cheats setting.\nDoes nothing on multiplayer or when the world is opened to LAN.",
+  "fancymenu.actions.execute_command_as_integrated_server.desc.value": "Command"
 }
