@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.main.tiny" />
+        <option name="outRefMapFile" value="E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\classes\java\main\fancymenu.refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-common/0.4.1/a7f425cc49de7f10d008a9a676f5f023ebac13bb/mixinextras-common-0.4.1.jar" />
+        </processorPath>
+        <module name="fancymenu-1.21.1.common.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\fabric\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.main.tiny" />
+        <option name="outRefMapFile" value="E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\fabric\build\classes\java\main\fancymenu.refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-fabric/0.4.1/8d1a9e96afb990367fa1f904d17580d164da72e3/mixinextras-fabric-0.4.1.jar" />
+        </processorPath>
+        <module name="fancymenu-1.21.1.fabric.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5-SNAPSHOT/98b6c982030c7e9d79d3e78b31d86b285f292146/mixin-0.8.5-SNAPSHOT-processor.jar" />
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-common/0.3.5/5de895137aa0478675b6ecf7602d9652b05dc37e/mixinextras-common-0.3.5.jar" />
+        </processorPath>
+        <module name="fancymenu-1.21.1.forge.main" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="21" />
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="fancymenu-1.21.1.common" options="-Xlint:-deprecation -Xlint:-removal &quot;-AoutRefMapFile=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\classes\java\main\fancymenu.refmap.json&quot; -AdefaultObfuscationEnv=named:intermediary -Aquiet=true &quot;-AoutMapFileNamedIntermediary=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.main.tiny&quot; -AinMapFileNamedIntermediary=E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
+      <module name="fancymenu-1.21.1.common.main" options="-Xlint:-deprecation -Xlint:-removal &quot;-AoutRefMapFile=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\classes\java\main\fancymenu.refmap.json&quot; -AdefaultObfuscationEnv=named:intermediary -Aquiet=true &quot;-AoutMapFileNamedIntermediary=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.main.tiny&quot; -AinMapFileNamedIntermediary=E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
+      <module name="fancymenu-1.21.1.common.test" options="-Xlint:-deprecation -Xlint:-removal &quot;-AoutRefMapFile=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\classes\java\test\test-fancymenu.refmap.json&quot; -AdefaultObfuscationEnv=named:intermediary -Aquiet=true &quot;-AoutMapFileNamedIntermediary=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.test.tiny&quot; -AinMapFileNamedIntermediary=E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
+      <module name="fancymenu-1.21.1.fabric" options="-Xlint:-deprecation -Xlint:-removal &quot;-AoutRefMapFile=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\fabric\build\classes\java\main\fancymenu.refmap.json&quot; -AdefaultObfuscationEnv=named:intermediary -Aquiet=true &quot;-AoutMapFileNamedIntermediary=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\fabric\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.main.tiny&quot; -AinMapFileNamedIntermediary=E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
+      <module name="fancymenu-1.21.1.fabric.main" options="-Xlint:-deprecation -Xlint:-removal &quot;-AoutRefMapFile=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\fabric\build\classes\java\main\fancymenu.refmap.json&quot; -AdefaultObfuscationEnv=named:intermediary -Aquiet=true &quot;-AoutMapFileNamedIntermediary=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\fabric\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.main.tiny&quot; -AinMapFileNamedIntermediary=E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
+      <module name="fancymenu-1.21.1.fabric.test" options="-Xlint:-deprecation -Xlint:-removal &quot;-AoutRefMapFile=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\fabric\build\classes\java\test\test-fancymenu.refmap.json&quot; -AdefaultObfuscationEnv=named:intermediary -Aquiet=true &quot;-AoutMapFileNamedIntermediary=E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\fabric\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.test.tiny&quot; -AinMapFileNamedIntermediary=E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
+      <module name="fancymenu-1.21.1.forge" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-1.21.1.forge.main" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-1.21.1.forge.test" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-1.21.1.neoforge" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-1.21.1.neoforge.main" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-1.21.1.neoforge.test" options="-Xlint:-deprecation -Xlint:-removal" />
+    </option>
+  </component>
+</project>

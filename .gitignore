@@ -11,3 +11,6 @@
 /neoforge/runs/
 /.gradle/
 /build/
+/.idea/runConfigurations/
+/.idea/modules/
+/.idea/workspace.xml
