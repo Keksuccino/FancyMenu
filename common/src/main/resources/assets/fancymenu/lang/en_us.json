@@ -2177,5 +2177,11 @@
   "fancymenu.actions.execute_command_as_integrated_server.desc.value": "Command",
   "fancymenu.actions.open_file_folder": "Open File/Folder In Game Directory",
   "fancymenu.actions.open_file_folder.desc": "This action opens a file or folder on your system with the default program for that file type. This action is limited to work only inside the game directory, which starts at the root of the Minecraft instance directory, for safety reasons.\n\nIt is also possible to access the default '.minecraft' directory with this action. For that, just start paths with the '.minecraft/' prefix.",
-  "fancymenu.actions.open_file_folder.value": "Target File/Folder Path"
+  "fancymenu.actions.open_file_folder.value": "Target File/Folder Path",
+  "fancymenu.actions.extract_zip_file": "Extract ZIP File In Game Directory",
+  "fancymenu.actions.extract_zip_file.desc": "This action extracts a ZIP file into a folder in the game directory, which starts at the root of the Minecraft instance directory. The target path includes the folder name the ZIP content gets extracted to, and no extra folders get created named like the ZIP file.\n\nThis action is limited to work only inside the game directory for safety reasons.\n\nIt is also possible to access the default '.minecraft' directory with this action. For that, just start paths with the '.minecraft/' prefix.\n\nThis action extracts asynchronously and triggers the 'On ZIP Extracted via Action' listener when finished.",
+  "fancymenu.actions.extract_zip_file.value.source": "Source ZIP File Path",
+  "fancymenu.actions.extract_zip_file.value.target": "Target Folder Path",
+  "fancymenu.listeners.on_zip_extracted": "On ZIP Extracted via Action",
+  "fancymenu.listeners.on_zip_extracted.desc": "This listener triggers when a ZIP file finishes extracting via the 'Extract ZIP File In Game Directory' action.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$source_zip_path §r= The source ZIP file path\n- §z$$target_folder_path §r= The target folder path the ZIP was extracted to\n- §z$$extract_succeeded §r= If the ZIP extraction was successful (true/false)\n- §z$$failure_reason §r= The failure reason if the extraction failed (empty string if successful)"
 }
