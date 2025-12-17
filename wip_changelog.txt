@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
+- Added "Open File/Folder In Game Directory" action that opens a file/folder in the game directory or the default .minecraft folder (#1395)
 - Added "Play Audio" action to play an audio resource once with configurable sound channel and base volume (#1433)
 - Added "Execute Command As Integrated Server" action (#1372)
   - Force-executes a command in singleplayer as the integrated server, ignoring permissions and the cheats setting
