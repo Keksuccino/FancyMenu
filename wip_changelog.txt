@@ -3,5 +3,6 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
 - Added "Is Hardcore" requirement to check if the currently loaded world is in hardcore mode (#1387)
 - Added "Is MC Debug Overlay Enabled" requirement to check if the F3 debug overlay is enabled (#1436)
+- Added "Is Item Hovered in Inventory" requirement to check if the user is hovering over an item in any inventory screen (main inventory, chests, etc.) (#1431)
 
 %changelog:end%
