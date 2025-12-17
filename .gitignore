@@ -1,0 +1,16 @@
+/run_server/
+/run_client/
+/.idea/runConfigurations/
+/.idea/workspace.xml
+/.idea/modules/
+/common/.gradle/
+/common/build/
+/fabric/.gradle/
+/fabric/build/
+/fabric/run_client/
+/forge/build/
+/neoforge/.gradle/
+/neoforge/build/
+/neoforge/runs/
+/.gradle/
+/build/
