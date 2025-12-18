@@ -32,5 +32,10 @@ public class HoveredInventoryItemPlaceholder extends AbstractWorldPlaceholder {
     protected @NotNull String getLocalizationBase() {
         return "fancymenu.placeholders.world.hovered_inventory_item";
     }
-}
 
+    @Override
+    public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
+        return new DeserializedPlaceholderString(this.getIdentifier(), null, "");
+    }
+
+}
