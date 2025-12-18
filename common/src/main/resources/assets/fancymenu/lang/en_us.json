@@ -2206,5 +2206,7 @@
   "fancymenu.placeholders.world.player_armor_toughness": "Player Armor Toughness",
   "fancymenu.placeholders.world.player_armor_toughness.desc": "Returns the total armor toughness value of the player.\nReturns '0.0' when not in a world.",
   "fancymenu.placeholders.world.slot_item_durability": "Slot Item Durability",
-  "fancymenu.placeholders.world.slot_item_durability.desc": "Returns durability information of the item in the given inventory slot.\nTakes a slot number to point to an inventory slot.\n\nValues:\n§eformat§r = current, max, damage, or percentage\n\nReturns '0' when not in a world, the slot is empty, or the item has no durability."
+  "fancymenu.placeholders.world.slot_item_durability.desc": "Returns durability information of the item in the given inventory slot.\nTakes a slot number to point to an inventory slot.\n\nValues:\n§eformat§r = current, max, damage, or percentage\n\nReturns '0' when not in a world, the slot is empty, or the item has no durability.",
+  "fancymenu.placeholders.clicks_per_second": "Clicks Per Second",
+  "fancymenu.placeholders.clicks_per_second.desc": "Returns the clicks per second (CPS) for the given mouse button.\n\nRequired values:\n- mouse_button: left or right"
 }

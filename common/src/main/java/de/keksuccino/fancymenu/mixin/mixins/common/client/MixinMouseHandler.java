@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseMoveEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.input.ClicksPerSecondTracker;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import net.minecraft.client.Minecraft;
@@ -79,6 +80,7 @@ public class MixinMouseHandler {
         double mouseY = this.ypos * guiHeight / screenHeight;
 
         if (action == GLFW.GLFW_PRESS) {
+            ClicksPerSecondTracker.recordClick(button);
             Listeners.ON_MOUSE_BUTTON_CLICKED.onMouseButtonClicked(button, mouseX, mouseY);
         } else if (action == GLFW.GLFW_RELEASE) {
             Listeners.ON_MOUSE_BUTTON_RELEASED.onMouseButtonReleased(button, mouseX, mouseY);

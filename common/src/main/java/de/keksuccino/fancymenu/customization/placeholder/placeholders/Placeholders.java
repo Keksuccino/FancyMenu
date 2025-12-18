@@ -47,6 +47,7 @@ public class Placeholders {
     public static final ElementPosYPlaceholder ELEMENT_POS_Y = new ElementPosYPlaceholder();
     public static final MousePosXPlaceholder MOUSE_POS_X = new MousePosXPlaceholder();
     public static final MousePosYPlaceholder MOUSE_POS_Y = new MousePosYPlaceholder();
+    public static final ClicksPerSecondPlaceholder CLICKS_PER_SECOND = new ClicksPerSecondPlaceholder();
     public static final GuiScalePlaceholder GUI_SCALE = new GuiScalePlaceholder();
     public static final VanillaButtonLabelPlaceholder VANILLA_BUTTON_LABEL = new VanillaButtonLabelPlaceholder();
     public static final PlayerNamePlaceholder PLAYER_NAME = new PlayerNamePlaceholder();
@@ -223,6 +224,7 @@ public class Placeholders {
         PlaceholderRegistry.register(ELEMENT_POS_Y);
         PlaceholderRegistry.register(MOUSE_POS_X);
         PlaceholderRegistry.register(MOUSE_POS_Y);
+        PlaceholderRegistry.register(CLICKS_PER_SECOND);
         PlaceholderRegistry.register(GUI_SCALE);
         PlaceholderRegistry.register(VANILLA_BUTTON_LABEL);
 
