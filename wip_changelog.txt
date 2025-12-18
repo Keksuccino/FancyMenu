@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
+- Added "Text Input Field Value" placeholder that returns the current value of an input field (text box) by its element identifier (#1391)
 - Added "Current World Seed" placeholder that returns the seed of the current world (#1354)
 - Added "Clicks Per Second" placeholder that returns the clicks per second (CPS) for the given mouse button (left/right) (#1383)
 - Added "Slot Item Durability" placeholder that returns durability information of the item in the given inventory slot (#1382)
