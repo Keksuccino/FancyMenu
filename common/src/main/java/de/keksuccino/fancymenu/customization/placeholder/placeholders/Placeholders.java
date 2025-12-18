@@ -101,6 +101,7 @@ public class Placeholders {
     public static final CurrentPlayerHealthPlaceholder CURRENT_PLAYER_HEALTH = new CurrentPlayerHealthPlaceholder();
     public static final GameTimePlaceholder GAME_TIME = new GameTimePlaceholder();
     public static final SlotItemPlaceholder SLOT_ITEM = new SlotItemPlaceholder();
+    public static final ItemCategoryPlaceholder ITEM_CATEGORY = new ItemCategoryPlaceholder();
     public static final WorldDayTimePlaceholder WORLD_DAY_TIME = new WorldDayTimePlaceholder();
     public static final WorldDayTimeHourPlaceholder WORLD_DAY_TIME_HOUR = new WorldDayTimeHourPlaceholder();
     public static final WorldDayTimeMinutePlaceholder WORLD_DAY_TIME_MINUTE = new WorldDayTimeMinutePlaceholder();
@@ -245,6 +246,7 @@ public class Placeholders {
         PlaceholderRegistry.register(CURRENT_MOUNT_JUMP_METER);
         PlaceholderRegistry.register(GAME_TIME);
         PlaceholderRegistry.register(SLOT_ITEM);
+        PlaceholderRegistry.register(ITEM_CATEGORY);
         PlaceholderRegistry.register(WORLD_DAY_TIME);
         PlaceholderRegistry.register(WORLD_DAY_TIME_HOUR);
         PlaceholderRegistry.register(WORLD_DAY_TIME_MINUTE);
