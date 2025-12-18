@@ -100,6 +100,7 @@ public class LoadingRequirements {
     public static final IsItemHoveredInInventoryRequirement IS_ITEM_HOVERED_IN_INVENTORY = new IsItemHoveredInInventoryRequirement();
     public static final IsCursorHoldingInventoryItemRequirement IS_CURSOR_HOLDING_INVENTORY_ITEM = new IsCursorHoldingInventoryItemRequirement();
     public static final IsCameraPerspectiveRequirement IS_CAMERA_PERSPECTIVE = new IsCameraPerspectiveRequirement();
+    public static final IsActiveCursorTypeRequirement IS_ACTIVE_CURSOR_TYPE = new IsActiveCursorTypeRequirement();
     public static final IsPlayerUsingItemRequirement IS_PLAYER_USING_ITEM = new IsPlayerUsingItemRequirement();
     public static final IsPlayerInStructureRequirement IS_PLAYER_IN_STRUCTURE = new IsPlayerInStructureRequirement();
 
@@ -119,6 +120,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_ITEM_HOVERED_IN_INVENTORY);
         LoadingRequirementRegistry.register(IS_CURSOR_HOLDING_INVENTORY_ITEM);
         LoadingRequirementRegistry.register(IS_CAMERA_PERSPECTIVE);
+        LoadingRequirementRegistry.register(IS_ACTIVE_CURSOR_TYPE);
         LoadingRequirementRegistry.register(IS_REAL_TIME_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_HOUR);
         LoadingRequirementRegistry.register(IS_REAL_TIME_MINUTE);
