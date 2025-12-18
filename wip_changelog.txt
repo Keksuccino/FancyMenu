@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
+- Added "Player Armor Toughness" placeholder that returns the player's total armor toughness (#1384)
 - Added "Inventory Item Count" placeholder that returns the total count of an item type in the player inventory (#1386)
 - Added "Slot Item Count" placeholder that returns the item count of the item in the given inventory slot (#1385)
 - Added "Slot Item Food Point Restore Amount" placeholder that returns the amount of food/hunger points the food in the given slot would restore when eating it (#1418)
