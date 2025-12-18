@@ -2194,5 +2194,7 @@
   "fancymenu.placeholders.world.hovered_inventory_item": "Hovered Inventory Item",
   "fancymenu.placeholders.world.hovered_inventory_item.desc": "Returns the key of the hovered item in the currently open inventory.\nReturns an empty value when no inventory is open or no item is hovered.",
   "fancymenu.placeholders.world.current_biome": "Current Biome",
-  "fancymenu.placeholders.world.current_biome.desc": "Returns the biome the player is currently in.\nSet \"as_key\" to true (minecraft:forest) or false (Forest)."
+  "fancymenu.placeholders.world.current_biome.desc": "Returns the biome the player is currently in.\nSet \"as_key\" to true (minecraft:forest) or false (Forest).",
+  "fancymenu.placeholders.world.current_player_hunger_saturation": "Current Player Hunger Saturation",
+  "fancymenu.placeholders.world.current_player_hunger_saturation.desc": "Returns the current hunger saturation value of the player.\nReturns '0.0' when not in a world."
 }

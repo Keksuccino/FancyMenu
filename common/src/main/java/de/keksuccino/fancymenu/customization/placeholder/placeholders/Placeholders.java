@@ -113,6 +113,7 @@ public class Placeholders {
     public static final MaxPlayerAbsorptionHealthPlaceholder MAX_PLAYER_ABSORPTION_HEALTH = new MaxPlayerAbsorptionHealthPlaceholder();
     public static final CurrentPlayerAbsorptionHealthPercentagePlaceholder CURRENT_PLAYER_ABSORPTION_HEALTH_PERCENTAGE = new CurrentPlayerAbsorptionHealthPercentagePlaceholder();
     public static final CurrentPlayerHungerPlaceholder CURRENT_PLAYER_HUNGER = new CurrentPlayerHungerPlaceholder();
+    public static final CurrentPlayerHungerSaturationPlaceholder CURRENT_PLAYER_HUNGER_SATURATION = new CurrentPlayerHungerSaturationPlaceholder();
     public static final MaxPlayerHungerPlaceholder MAX_PLAYER_HUNGER = new MaxPlayerHungerPlaceholder();
     public static final CurrentPlayerHungerPercentagePlaceholder CURRENT_PLAYER_HUNGER_PERCENTAGE = new CurrentPlayerHungerPercentagePlaceholder();
     public static final CurrentPlayerArmorPlaceholder CURRENT_PLAYER_ARMOR = new CurrentPlayerArmorPlaceholder();
@@ -234,6 +235,7 @@ public class Placeholders {
         PlaceholderRegistry.register(MAX_PLAYER_ABSORPTION_HEALTH);
         PlaceholderRegistry.register(CURRENT_PLAYER_ABSORPTION_HEALTH_PERCENTAGE);
         PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER);
+        PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER_SATURATION);
         PlaceholderRegistry.register(MAX_PLAYER_HUNGER);
         PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER_PERCENTAGE);
         PlaceholderRegistry.register(CURRENT_PLAYER_ARMOR);
