@@ -2183,5 +2183,10 @@
   "fancymenu.actions.extract_zip_file.value.source": "Source ZIP File Path",
   "fancymenu.actions.extract_zip_file.value.target": "Target Folder Path",
   "fancymenu.listeners.on_zip_extracted": "On ZIP Extracted via Action",
-  "fancymenu.listeners.on_zip_extracted.desc": "This listener triggers when a ZIP file finishes extracting via the 'Extract ZIP File In Game Directory' action.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$source_zip_path §r= The source ZIP file path\n- §z$$target_folder_path §r= The target folder path the ZIP was extracted to\n- §z$$extract_succeeded §r= If the ZIP extraction was successful (true/false)\n- §z$$failure_reason §r= The failure reason if the extraction failed (empty string if successful)"
+  "fancymenu.listeners.on_zip_extracted.desc": "This listener triggers when a ZIP file finishes extracting via the 'Extract ZIP File In Game Directory' action.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$source_zip_path §r= The source ZIP file path\n- §z$$target_folder_path §r= The target folder path the ZIP was extracted to\n- §z$$extract_succeeded §r= If the ZIP extraction was successful (true/false)\n- §z$$failure_reason §r= The failure reason if the extraction failed (empty string if successful)",
+  "fancymenu.placeholders.world.current_dimension": "Current Dimension",
+  "fancymenu.placeholders.world.current_dimension.desc": "Returns the dimension the player is in.\nSet \"as_key\" to true (minecraft:overworld) or false (Overworld).\nNon-vanilla dimensions fall back to their key.",
+  "fancymenu.dimensions.minecraft.overworld": "Overworld",
+  "fancymenu.dimensions.minecraft.the_nether": "The Nether",
+  "fancymenu.dimensions.minecraft.the_end": "The End"
 }

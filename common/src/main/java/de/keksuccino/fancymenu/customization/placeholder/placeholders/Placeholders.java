@@ -133,6 +133,7 @@ public class Placeholders {
     public static final PlayerYCoordinatePlaceholder PLAYER_Y_COORDINATE = new PlayerYCoordinatePlaceholder();
     public static final PlayerZCoordinatePlaceholder PLAYER_Z_COORDINATE = new PlayerZCoordinatePlaceholder();
     public static final CurrentServerIpPlaceholder CURRENT_SERVER_IP = new CurrentServerIpPlaceholder();
+    public static final CurrentDimensionPlaceholder CURRENT_DIMENSION = new CurrentDimensionPlaceholder();
     public static final PlayerAttackStrengthPercentagePlaceholder PLAYER_ATTACK_STRENGTH_PERCENTAGE = new PlayerAttackStrengthPercentagePlaceholder();
     public static final PlayerGamemodePlaceholder PLAYER_GAMEMODE = new PlayerGamemodePlaceholder();
     public static final PlayerViewDirectionPlaceholder PLAYER_VIEW_DIRECTION = new PlayerViewDirectionPlaceholder();
@@ -258,6 +259,7 @@ public class Placeholders {
         PlaceholderRegistry.register(PLAYER_Y_COORDINATE);
         PlaceholderRegistry.register(PLAYER_Z_COORDINATE);
         PlaceholderRegistry.register(CURRENT_SERVER_IP);
+        PlaceholderRegistry.register(CURRENT_DIMENSION);
         PlaceholderRegistry.register(PLAYER_ATTACK_STRENGTH_PERCENTAGE);
         PlaceholderRegistry.register(PLAYER_GAMEMODE);
         PlaceholderRegistry.register(PLAYER_VIEW_DIRECTION);
