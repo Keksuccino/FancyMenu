@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
+- Added "Slot Item Food Point Restore Amount" placeholder that returns the amount of food/hunger points the food in the given slot would restore when eating it (#1418)
 - Added "Current Player Hunger Saturation" placeholder that returns the saturation level of the player (#1416)
 - Added "Current Biome" placeholder that returns the biome the player is in (has option to return the display name of biomes, otherwise returns the biome key) (#1428)
 - Added "Current Dimension" placeholder that returns the dimension the player is in (has option to return the display name of Vanilla dimensions, otherwise returns dimension key) (#1437)
