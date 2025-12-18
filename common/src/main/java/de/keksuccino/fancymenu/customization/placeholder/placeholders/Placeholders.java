@@ -120,6 +120,7 @@ public class Placeholders {
     public static final MaxPlayerHungerPlaceholder MAX_PLAYER_HUNGER = new MaxPlayerHungerPlaceholder();
     public static final CurrentPlayerHungerPercentagePlaceholder CURRENT_PLAYER_HUNGER_PERCENTAGE = new CurrentPlayerHungerPercentagePlaceholder();
     public static final CurrentPlayerArmorPlaceholder CURRENT_PLAYER_ARMOR = new CurrentPlayerArmorPlaceholder();
+    public static final PlayerArmorToughnessPlaceholder PLAYER_ARMOR_TOUGHNESS = new PlayerArmorToughnessPlaceholder();
     public static final MaxPlayerArmorPlaceholder MAX_PLAYER_ARMOR = new MaxPlayerArmorPlaceholder();
     public static final CurrentPlayerArmorPercentagePlaceholder CURRENT_PLAYER_ARMOR_PERCENTAGE = new CurrentPlayerArmorPercentagePlaceholder();
     public static final CurrentPlayerExpProgressPlaceholder CURRENT_PLAYER_EXP_PROGRESS = new CurrentPlayerExpProgressPlaceholder();
@@ -242,6 +243,7 @@ public class Placeholders {
         PlaceholderRegistry.register(MAX_PLAYER_HUNGER);
         PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER_PERCENTAGE);
         PlaceholderRegistry.register(CURRENT_PLAYER_ARMOR);
+        PlaceholderRegistry.register(PLAYER_ARMOR_TOUGHNESS);
         PlaceholderRegistry.register(MAX_PLAYER_ARMOR);
         PlaceholderRegistry.register(CURRENT_PLAYER_ARMOR_PERCENTAGE);
         PlaceholderRegistry.register(CURRENT_PLAYER_EXP_PROGRESS);

@@ -2202,5 +2202,7 @@
   "fancymenu.placeholders.world.inventory_item_count": "Inventory Item Count",
   "fancymenu.placeholders.world.inventory_item_count.desc": "Returns the total count of an item type in the player inventory.\nTakes the key of the target item to search for.\nWhen the target is empty, it counts all item types.\nReturns '0' when not in a world.",
   "fancymenu.placeholders.world.slot_item_count": "Slot Item Count",
-  "fancymenu.placeholders.world.slot_item_count.desc": "Returns the item count of the item in the given inventory slot.\nTakes a slot number to point to an inventory slot.\nReturns '0' when not in a world or the slot is empty."
+  "fancymenu.placeholders.world.slot_item_count.desc": "Returns the item count of the item in the given inventory slot.\nTakes a slot number to point to an inventory slot.\nReturns '0' when not in a world or the slot is empty.",
+  "fancymenu.placeholders.world.player_armor_toughness": "Player Armor Toughness",
+  "fancymenu.placeholders.world.player_armor_toughness.desc": "Returns the total armor toughness value of the player.\nReturns '0.0' when not in a world."
 }
