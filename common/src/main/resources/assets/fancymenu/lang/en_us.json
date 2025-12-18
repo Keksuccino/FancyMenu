@@ -2204,5 +2204,7 @@
   "fancymenu.placeholders.world.slot_item_count": "Slot Item Count",
   "fancymenu.placeholders.world.slot_item_count.desc": "Returns the item count of the item in the given inventory slot.\nTakes a slot number to point to an inventory slot.\nReturns '0' when not in a world or the slot is empty.",
   "fancymenu.placeholders.world.player_armor_toughness": "Player Armor Toughness",
-  "fancymenu.placeholders.world.player_armor_toughness.desc": "Returns the total armor toughness value of the player.\nReturns '0.0' when not in a world."
+  "fancymenu.placeholders.world.player_armor_toughness.desc": "Returns the total armor toughness value of the player.\nReturns '0.0' when not in a world.",
+  "fancymenu.placeholders.world.slot_item_durability": "Slot Item Durability",
+  "fancymenu.placeholders.world.slot_item_durability.desc": "Returns durability information of the item in the given inventory slot.\nTakes a slot number to point to an inventory slot.\n\nValues:\n§eformat§r = current, max, damage, or percentage\n\nReturns '0' when not in a world, the slot is empty, or the item has no durability."
 }
