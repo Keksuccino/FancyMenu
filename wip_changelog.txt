@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
+- Added "Clicks Per Second" placeholder that returns the clicks per second (CPS) for the given mouse button (left/right) (#1383)
 - Added "Slot Item Durability" placeholder that returns durability information of the item in the given inventory slot (#1382)
   - Supports multiple return formats (current, max, damage, percentage)
 - Added "Player Armor Toughness" placeholder that returns the player's total armor toughness (#1384)
