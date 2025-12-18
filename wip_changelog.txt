@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
+- Added "Current Dimension" placeholder that returns the dimension the player is in (has option to return the display name of Vanilla dimensions) (#1437)
 - Added "Extract ZIP File In Game Directory" action to extract ZIP files in the game directory or the default .minecraft folder (#1394)
   - Also added a listener called "On ZIP Extracted via Action" that triggers once the ZIP finished extracting
 - Added "Open File/Folder In Game Directory" action that opens a file/folder in the game directory or the default .minecraft folder (#1395)
