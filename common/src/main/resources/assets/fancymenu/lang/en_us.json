@@ -2197,6 +2197,10 @@
   "fancymenu.placeholders.world.current_biome.desc": "Returns the biome the player is currently in.\nSet \"as_key\" to true (minecraft:forest) or false (Forest).",
   "fancymenu.placeholders.world.current_player_hunger_saturation": "Current Player Hunger Saturation",
   "fancymenu.placeholders.world.current_player_hunger_saturation.desc": "Returns the current hunger saturation value of the player.\nReturns '0.0' when not in a world.",
-  "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount": "Slot Item Food Point Restore Amount",
-  "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount.desc": "Returns the amount of food points the item in the given inventory slot will restore when eating it.\nTakes a slot number to point to an inventory slot.\nReturns '0.0' when not in a world, the slot is empty, or the item is not food."
+  "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount": "Inventory Slot Food Point Restore Amount",
+  "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount.desc": "Returns the amount of food points the item in the given inventory slot will restore when eating it.\nTakes a slot number to point to an inventory slot.\nReturns '0.0' when not in a world, the slot is empty, or the item is not food.",
+  "fancymenu.placeholders.world.inventory_item_count": "Inventory Item Count",
+  "fancymenu.placeholders.world.inventory_item_count.desc": "Returns the total count of an item type in the player inventory.\nTakes the key of the target item to search for.\nWhen the target is empty, it counts all item types.\nReturns '0' when not in a world.",
+  "fancymenu.placeholders.world.slot_item_count": "Slot Item Count",
+  "fancymenu.placeholders.world.slot_item_count.desc": "Returns the item count of the item in the given inventory slot.\nTakes a slot number to point to an inventory slot.\nReturns '0' when not in a world or the slot is empty."
 }

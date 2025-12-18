@@ -101,6 +101,8 @@ public class Placeholders {
     public static final CurrentPlayerHealthPlaceholder CURRENT_PLAYER_HEALTH = new CurrentPlayerHealthPlaceholder();
     public static final GameTimePlaceholder GAME_TIME = new GameTimePlaceholder();
     public static final SlotItemPlaceholder SLOT_ITEM = new SlotItemPlaceholder();
+    public static final InventoryItemCountPlaceholder INVENTORY_ITEM_COUNT = new InventoryItemCountPlaceholder();
+    public static final SlotItemCountPlaceholder SLOT_ITEM_COUNT = new SlotItemCountPlaceholder();
     public static final InventorySlotFoodPointRestoreAmountPlaceholder INVENTORY_SLOT_FOOD_POINT_RESTORE_AMOUNT = new InventorySlotFoodPointRestoreAmountPlaceholder();
     public static final ItemCategoryPlaceholder ITEM_CATEGORY = new ItemCategoryPlaceholder();
     public static final HoveredInventoryItemPlaceholder HOVERED_INVENTORY_ITEM = new HoveredInventoryItemPlaceholder();
@@ -251,6 +253,8 @@ public class Placeholders {
         PlaceholderRegistry.register(CURRENT_MOUNT_JUMP_METER);
         PlaceholderRegistry.register(GAME_TIME);
         PlaceholderRegistry.register(SLOT_ITEM);
+        PlaceholderRegistry.register(INVENTORY_ITEM_COUNT);
+        PlaceholderRegistry.register(SLOT_ITEM_COUNT);
         PlaceholderRegistry.register(INVENTORY_SLOT_FOOD_POINT_RESTORE_AMOUNT);
         PlaceholderRegistry.register(ITEM_CATEGORY);
         PlaceholderRegistry.register(HOVERED_INVENTORY_ITEM);
