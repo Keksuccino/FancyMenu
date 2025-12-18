@@ -2190,5 +2190,7 @@
   "fancymenu.dimensions.minecraft.the_nether": "The Nether",
   "fancymenu.dimensions.minecraft.the_end": "The End",
   "fancymenu.placeholders.world.item_category": "Item Category",
-  "fancymenu.placeholders.world.item_category.desc": "Returns the creative inventory category of the given item.\nTakes an item key as input.\nSet \"as_key\" to true to return the category key (minecraft:building_blocks) instead of the display name.\nReturns an empty value when the player is not in a world.\nReturns \"UNKNOWN\" if the item has no category or is invalid."
+  "fancymenu.placeholders.world.item_category.desc": "Returns the creative inventory category of the given item.\nTakes an item key as input.\nSet \"as_key\" to true to return the category key (minecraft:building_blocks) instead of the display name.\nReturns an empty value when the player is not in a world.\nReturns \"UNKNOWN\" if the item has no category or is invalid.",
+  "fancymenu.placeholders.world.hovered_inventory_item": "Hovered Inventory Item",
+  "fancymenu.placeholders.world.hovered_inventory_item.desc": "Returns the key of the hovered item in the currently open inventory.\nReturns an empty value when no inventory is open or no item is hovered."
 }
