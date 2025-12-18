@@ -1,7 +1,8 @@
 
 CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
-- Added "Current Dimension" placeholder that returns the dimension the player is in (has option to return the display name of Vanilla dimensions) (#1437)
+- Added "Current Biome" placeholder that returns the biome the player is in (has option to return the display name of biomes, otherwise returns the biome key) (#1428)
+- Added "Current Dimension" placeholder that returns the dimension the player is in (has option to return the display name of Vanilla dimensions, otherwise returns dimension key) (#1437)
 - Added "Item Category" placeholder that returns the creative tab category of the input item key (#1435)
 - Added "Hovered Inventory Item" placeholder that returns the item that is hovered in the currently open inventory (player inventory, chest, etc.) (#1434)
 - Added "Extract ZIP File In Game Directory" action to extract ZIP files in the game directory or the default .minecraft folder (#1394)
