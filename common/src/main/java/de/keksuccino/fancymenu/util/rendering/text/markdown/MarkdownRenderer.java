@@ -20,8 +20,10 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
@@ -103,6 +105,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean dragging;
     @Nullable
     protected TextEventHandler textEventHandler = null;
+    protected final Set<String> hoveredTextEventIds = new HashSet<>();
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     protected final List<ConsumingSupplier<MarkdownTextLine, Boolean>> lineRenderValidators = new ArrayList<>();
@@ -708,6 +711,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     public void resetHovered() {
         this.resetHovered(this.fragments);
+        this.hoveredTextEventIds.clear();
     }
 
     protected void resetHovered(@NotNull List<MarkdownTextFragment> fragments) {
@@ -728,19 +732,24 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     protected void updateTextHoverEvents() {
         if (this.textEventHandler == null) {
+            this.hoveredTextEventIds.clear();
             return;
         }
         List<MarkdownTextFragment.TextHoverEvent> hoverEvents = new ArrayList<>();
         this.collectHoverEvents(this.fragments, hoverEvents);
+        Set<String> currentlyHovered = new HashSet<>();
         for (MarkdownTextFragment.TextHoverEvent hoverEvent : hoverEvents) {
-            boolean hoveredNow = hoverEvent.isHovered();
-            if (hoveredNow && !hoverEvent.wasHovered) {
-                hoverEvent.wasHovered = true;
-                this.fireTextHoverEvent(hoverEvent.identifier);
-            } else if (!hoveredNow && hoverEvent.wasHovered) {
-                hoverEvent.wasHovered = false;
+            if (hoverEvent.isHovered()) {
+                currentlyHovered.add(hoverEvent.identifier);
             }
         }
+        for (String eventId : currentlyHovered) {
+            if (!this.hoveredTextEventIds.contains(eventId)) {
+                this.fireTextHoverEvent(eventId);
+            }
+        }
+        this.hoveredTextEventIds.clear();
+        this.hoveredTextEventIds.addAll(currentlyHovered);
     }
 
     protected void collectHoverEvents(@NotNull List<MarkdownTextFragment> fragments, @NotNull List<MarkdownTextFragment.TextHoverEvent> events) {
