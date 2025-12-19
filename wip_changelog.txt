@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
+- Added a file browser for Minecraft resources to the "Choose Resource" screen, so you can now browse nearly all resources loaded via resource packs like a normal directory
 - Added click events to Markdown, which let's you use a listener to listen for specific text clicks in Markdown text (used for the Text element, etc.) (#1366)
   - The formatting for a click event is very similar to hyperlinks: "[some clickable text](click:unique_text_click_event_id)"
   - Listen to text clicks by using the "On Markdown Text Clicked" listener
