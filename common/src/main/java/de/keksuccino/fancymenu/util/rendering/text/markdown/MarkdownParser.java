@@ -48,6 +48,8 @@ public class MarkdownParser {
     private static final String FORMATTING_CODE_IMAGE_PREFIX = "![";
     private static final String FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX = "[![";
     private static final String FORMATTING_CODE_HYPERLINK_INNER_PREFIX = "](";
+    private static final String FORMATTING_CODE_TEXT_CLICK_EVENT_PREFIX = "click:";
+    private static final String FORMATTING_CODE_TEXT_HOVER_EVENT_PREFIX = "hover:";
     private static final char OPEN_ROUND_BRACKETS_CHAR = '(';
     private static final char CLOSE_ROUND_BRACKETS_CHAR = ')';
     private static final String CLOSE_ROUND_BRACKETS = ")";
@@ -407,7 +409,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Hyperlink
-                if ((c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.hyperlink == null) && (builder.codeBlockContext == null) && !builder.plainText) {
+                if ((c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.hyperlink == null) && (builder.clickEvent == null) && (builder.hoverEvent == null) && (builder.codeBlockContext == null) && !builder.plainText) {
                     String s2 = StringUtils.substring(markdownText, indexPlusOne);
                     if (StringUtils.contains(s2, FORMATTING_CODE_HYPERLINK_INNER_PREFIX) && StringUtils.contains(s2, CLOSE_ROUND_BRACKETS_CHAR)) {
                         String hyperlink = getHyperlinkFromLine(subText);
@@ -417,16 +419,27 @@ public class MarkdownParser {
                                 boolean endsWithSpace = builder.text.toString().endsWith(" ");
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, endsWithSpace));
                             }
+                            builder.linkTargetRaw = hyperlink;
+                            String clickEventId = getTextClickEventId(hyperlink);
+                            if (clickEventId != null) {
+                                builder.clickEvent = new MarkdownTextFragment.TextClickEvent(clickEventId);
+                                continue;
+                            }
+                            String hoverEventId = getTextHoverEventId(hyperlink);
+                            if (hoverEventId != null) {
+                                builder.hoverEvent = new MarkdownTextFragment.TextHoverEvent(hoverEventId);
+                                continue;
+                            }
                             builder.hyperlink = new Hyperlink();
                             builder.hyperlink.link = hyperlink;
                             continue;
                         }
                     }
                 }
-                if ((c == CLOSE_SQUARE_BRACKETS_CHAR) && (builder.hyperlink != null)) {
+                if ((c == CLOSE_SQUARE_BRACKETS_CHAR) && ((builder.hyperlink != null) || (builder.clickEvent != null) || (builder.hoverEvent != null))) {
                     if (StringUtils.startsWith(subText, FORMATTING_CODE_HYPERLINK_INNER_PREFIX)) {
                         // Check if there's whitespace after the closing parenthesis to determine endOfWord
-                        int skipLength = 2 + builder.hyperlink.link.length();
+                        int skipLength = 2 + ((builder.linkTargetRaw != null) ? builder.linkTargetRaw.length() : 0);
                         boolean hasSpaceAfter = false;
                         if (index + skipLength < markdownText.length()) {
                             char afterChar = markdownText.charAt(index + skipLength);
@@ -435,6 +448,9 @@ public class MarkdownParser {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, hasSpaceAfter));
                         charsToSkip = skipLength;
                         builder.hyperlink = null;
+                        builder.clickEvent = null;
+                        builder.hoverEvent = null;
+                        builder.linkTargetRaw = null;
                         continue;
                     }
                 }
@@ -852,6 +868,28 @@ public class MarkdownParser {
     }
 
     @Nullable
+    protected static String getTextClickEventId(@NotNull String hyperlink) {
+        if (StringUtils.startsWithIgnoreCase(hyperlink, FORMATTING_CODE_TEXT_CLICK_EVENT_PREFIX)) {
+            String id = StringUtils.trim(StringUtils.substring(hyperlink, FORMATTING_CODE_TEXT_CLICK_EVENT_PREFIX.length()));
+            if (!id.isEmpty()) {
+                return id;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    protected static String getTextHoverEventId(@NotNull String hyperlink) {
+        if (StringUtils.startsWithIgnoreCase(hyperlink, FORMATTING_CODE_TEXT_HOVER_EVENT_PREFIX)) {
+            String id = StringUtils.trim(StringUtils.substring(hyperlink, FORMATTING_CODE_TEXT_HOVER_EVENT_PREFIX.length()));
+            if (!id.isEmpty()) {
+                return id;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
     protected static String getHyperlinkFromLine(String line) {
         if (StringUtils.startsWith(line, OPEN_SQUARE_BRACKETS) && StringUtils.contains(line, FORMATTING_CODE_HYPERLINK_INNER_PREFIX) && StringUtils.contains(line, CLOSE_ROUND_BRACKETS)) {
             boolean beforeClosedBrackets = true;
@@ -1069,6 +1107,9 @@ public class MarkdownParser {
         @NotNull
         protected MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
         protected Hyperlink hyperlink = null;
+        protected MarkdownTextFragment.TextClickEvent clickEvent = null;
+        protected MarkdownTextFragment.TextHoverEvent hoverEvent = null;
+        protected String linkTargetRaw = null;
         @NotNull
         protected HeadlineType headlineType = HeadlineType.NONE;
         protected QuoteContext quoteContext = null;
@@ -1106,6 +1147,14 @@ public class MarkdownParser {
             frag.hyperlink = hyperlink;
             if (hyperlink != null) {
                 hyperlink.hyperlinkFragments.add(frag);
+            }
+            frag.clickEvent = clickEvent;
+            if (clickEvent != null) {
+                clickEvent.eventFragments.add(frag);
+            }
+            frag.hoverEvent = hoverEvent;
+            if (hoverEvent != null) {
+                hoverEvent.eventFragments.add(frag);
             }
             frag.headlineType = headlineType;
             frag.quoteContext = quoteContext;

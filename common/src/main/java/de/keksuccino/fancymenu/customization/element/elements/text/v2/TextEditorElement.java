@@ -188,6 +188,20 @@ public class TextEditorElement extends AbstractEditorElement {
                         true, DrawableColor.of(7, 113, 252).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
+        this.addStringInputContextMenuEntryTo(markdownMenu, "click_event_color", TextEditorElement.class,
+                        consumes -> consumes.getElement().markdownRenderer.getTextClickEventColor().getHex(),
+                        (textEditorElement, s) -> textEditorElement.getElement().markdownRenderer.setTextClickEventColor(DrawableColor.of(s)),
+                        null, false, false, Component.translatable("fancymenu.elements.text.markdown.click_event.color"),
+                        true, DrawableColor.of(7, 113, 252).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+                .setStackable(true);
+
+        this.addStringInputContextMenuEntryTo(markdownMenu, "hover_event_color", TextEditorElement.class,
+                        consumes -> consumes.getElement().markdownRenderer.getTextHoverEventColor().getHex(),
+                        (textEditorElement, s) -> textEditorElement.getElement().markdownRenderer.setTextHoverEventColor(DrawableColor.of(s)),
+                        null, false, false, Component.translatable("fancymenu.elements.text.markdown.hover_event.color"),
+                        true, DrawableColor.of(7, 113, 252).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+                .setStackable(true);
+
         markdownMenu.addSeparatorEntry("separator_after_hyperlink");
 
         this.addStringInputContextMenuEntryTo(markdownMenu, "quote_color", TextEditorElement.class,

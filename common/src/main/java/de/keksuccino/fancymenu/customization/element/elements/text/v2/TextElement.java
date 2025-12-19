@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -104,6 +105,30 @@ public class TextElement extends AbstractElement {
                 return false;
             }
             return true;
+        });
+
+        this.markdownRenderer.setTextEventHandler(new MarkdownRenderer.TextEventHandler() {
+            @Override
+            public void onTextClickEvent(@NotNull String eventId) {
+                if (TextElement.this.isEditor() || !TextElement.this.interactable) {
+                    return;
+                }
+                if (eventId.isEmpty()) {
+                    return;
+                }
+                Listeners.ON_TEXT_CLICKED.onTextClicked(eventId);
+            }
+
+            @Override
+            public void onTextHoverEvent(@NotNull String eventId) {
+                if (TextElement.this.isEditor() || !TextElement.this.interactable) {
+                    return;
+                }
+                if (eventId.isEmpty()) {
+                    return;
+                }
+                Listeners.ON_TEXT_HOVERED.onTextHovered(eventId);
+            }
         });
 
     }

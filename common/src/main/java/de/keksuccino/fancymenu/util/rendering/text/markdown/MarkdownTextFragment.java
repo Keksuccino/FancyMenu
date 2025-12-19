@@ -48,6 +48,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     @NotNull
     public MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
     public Hyperlink hyperlink = null;
+    public TextClickEvent clickEvent = null;
+    public TextHoverEvent hoverEvent = null;
     @NotNull
     public HeadlineType headlineType = HeadlineType.NONE;
     public QuoteContext quoteContext = null;
@@ -68,7 +70,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         this.hovered = this.isMouseOver(mouseX, mouseY);
 
-        if ((this.hyperlink != null) && this.hovered) {
+        if (this.isLinkLike() && this.hovered) {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
         }
 
@@ -225,7 +227,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                     fragment.render(graphics, mouseX, mouseY, partial); // Pass actual mouse coords for hover/click detection
                     
                     // Check if any hyperlink in the table is hovered
-                    if (fragment.hyperlink != null && fragment.hovered) {
+                    if (fragment.isLinkLike() && fragment.hovered) {
                         CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
                     }
                 }
@@ -387,12 +389,24 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 style = style.withUnderlined(true);
             }
         }
+        if (this.clickEvent != null) {
+            style = style.withColor(this.parent.getTextClickEventColor().getColorInt());
+            if (this.clickEvent.isHovered()) {
+                style = style.withUnderlined(true);
+            }
+        }
+        if (this.hoverEvent != null) {
+            style = style.withColor(this.parent.getTextHoverEventColor().getColorInt());
+            if (this.hoverEvent.isHovered()) {
+                style = style.withUnderlined(true);
+            }
+        }
         boolean addSpaceComponentAtEnd = false;
         String t = this.text;
-        if ((this.hyperlink != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
+        if (this.isLinkLike() && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
             //Remove spaces at line end that would look ugly when underlined
             t = t.substring(0, t.length()-1);
-        } else if ((this.hyperlink != null) && (ListUtils.getLast(this.hyperlink.hyperlinkFragments) == this) && t.endsWith(" ")) {
+        } else if (this.isLinkLike() && this.isLastLinkLikeFragment() && t.endsWith(" ")) {
             //Make space at the end not underlined without removing it completely
             t = t.substring(0, t.length()-1);
             addSpaceComponentAtEnd = true;
@@ -414,6 +428,23 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             comp.append(Component.literal(" ").setStyle(Style.EMPTY.withUnderlined(false)));
         }
         return comp;
+    }
+
+    protected boolean isLinkLike() {
+        return (this.hyperlink != null) || (this.clickEvent != null) || (this.hoverEvent != null);
+    }
+
+    protected boolean isLastLinkLikeFragment() {
+        if (this.hyperlink != null) {
+            return ListUtils.getLast(this.hyperlink.hyperlinkFragments) == this;
+        }
+        if (this.clickEvent != null) {
+            return ListUtils.getLast(this.clickEvent.eventFragments) == this;
+        }
+        if (this.hoverEvent != null) {
+            return ListUtils.getLast(this.hoverEvent.eventFragments) == this;
+        }
+        return false;
     }
 
     protected void updateWidth() {
@@ -611,6 +642,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             return false;
         }
         
+        if ((this.clickEvent != null) && this.hovered) {
+            this.parent.fireTextClickEvent(this.clickEvent.identifier);
+            return true;
+        }
+
         // Handle regular hyperlink clicks
         if ((this.hyperlink != null) && this.hovered) {
             WebUtils.openWebLink(this.hyperlink.link);
@@ -639,6 +675,43 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         public boolean isHovered() {
             for (MarkdownTextFragment f : this.hyperlinkFragments) {
+                if (f.hovered) return true;
+            }
+            return false;
+        }
+
+    }
+
+    public static class TextClickEvent {
+
+        public final String identifier;
+        public final List<MarkdownTextFragment> eventFragments = new ArrayList<>();
+
+        public TextClickEvent(@NotNull String identifier) {
+            this.identifier = identifier;
+        }
+
+        public boolean isHovered() {
+            for (MarkdownTextFragment f : this.eventFragments) {
+                if (f.hovered) return true;
+            }
+            return false;
+        }
+
+    }
+
+    public static class TextHoverEvent {
+
+        public final String identifier;
+        public final List<MarkdownTextFragment> eventFragments = new ArrayList<>();
+        public boolean wasHovered = false;
+
+        public TextHoverEvent(@NotNull String identifier) {
+            this.identifier = identifier;
+        }
+
+        public boolean isHovered() {
+            for (MarkdownTextFragment f : this.eventFragments) {
                 if (f.hovered) return true;
             }
             return false;

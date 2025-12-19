@@ -140,6 +140,14 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         if (hyperlinkColor != null) {
             element.markdownRenderer.setHyperlinkColor(DrawableColor.of(hyperlinkColor));
         }
+        String clickEventColor = serialized.getValue("click_event_color");
+        if (clickEventColor != null) {
+            element.markdownRenderer.setTextClickEventColor(DrawableColor.of(clickEventColor));
+        }
+        String hoverEventColor = serialized.getValue("hover_event_color");
+        if (hoverEventColor != null) {
+            element.markdownRenderer.setTextHoverEventColor(DrawableColor.of(hoverEventColor));
+        }
 
         String quoteColor = serialized.getValue("quote_color");
         if (quoteColor != null) {
@@ -269,6 +277,8 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         serializeTo.putProperty("headline_line_color", element.markdownRenderer.getHeadlineUnderlineColor().getHex());
         serializeTo.putProperty("separation_line_color", element.markdownRenderer.getSeparationLineColor().getHex());
         serializeTo.putProperty("hyperlink_color", element.markdownRenderer.getHyperlinkColor().getHex());
+        serializeTo.putProperty("click_event_color", element.markdownRenderer.getTextClickEventColor().getHex());
+        serializeTo.putProperty("hover_event_color", element.markdownRenderer.getTextHoverEventColor().getHex());
         serializeTo.putProperty("quote_color", element.markdownRenderer.getQuoteColor().getHex());
         serializeTo.putProperty("quote_indent", "" + element.markdownRenderer.getQuoteIndent());
         serializeTo.putProperty("quote_italic", "" + element.markdownRenderer.isQuoteItalic());

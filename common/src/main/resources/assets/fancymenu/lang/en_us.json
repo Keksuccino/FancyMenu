@@ -2241,5 +2241,11 @@
   "fancymenu.elements.parallax.intensity_x": "Set Parallax Intensity (X)",
   "fancymenu.elements.parallax.intensity_x.desc": "The horizontal intensity of the parallax effect.\nThis should be a value between 0.0 (no movement) and 1.0 (maximum movement).",
   "fancymenu.elements.parallax.intensity_y": "Set Parallax Intensity (Y)",
-  "fancymenu.elements.parallax.intensity_y.desc": "The vertical intensity of the parallax effect.\nThis should be a value between 0.0 (no movement) and 1.0 (maximum movement)."
+  "fancymenu.elements.parallax.intensity_y.desc": "The vertical intensity of the parallax effect.\nThis should be a value between 0.0 (no movement) and 1.0 (maximum movement).",
+  "fancymenu.elements.text.markdown.click_event.color": "Click Event Color",
+  "fancymenu.elements.text.markdown.hover_event.color": "Hover Event Color",
+  "fancymenu.listeners.on_text_clicked": "On Markdown Text Clicked",
+  "fancymenu.listeners.on_text_clicked.desc": "This listener triggers when a click event in a Markdown text is clicked.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$text_event_id §r= The unique identifier from the click event markdown.",
+  "fancymenu.listeners.on_text_hovered": "On Markdown Text Hovered",
+  "fancymenu.listeners.on_text_hovered.desc": "This listener triggers when a hover event in a Markdown text is hovered.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$text_event_id §r= The unique identifier from the hover event markdown."
 }

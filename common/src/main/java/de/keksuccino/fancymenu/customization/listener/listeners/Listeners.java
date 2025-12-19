@@ -11,6 +11,8 @@ public class Listeners {
     public static final OnMouseButtonClickedListener ON_MOUSE_BUTTON_CLICKED = new OnMouseButtonClickedListener();
     public static final OnMouseButtonReleasedListener ON_MOUSE_BUTTON_RELEASED = new OnMouseButtonReleasedListener();
     public static final OnMouseScrolledListener ON_MOUSE_SCROLLED = new OnMouseScrolledListener();
+    public static final OnTextClickedListener ON_TEXT_CLICKED = new OnTextClickedListener();
+    public static final OnTextHoveredListener ON_TEXT_HOVERED = new OnTextHoveredListener();
     public static final OnOpenScreenListener ON_OPEN_SCREEN = new OnOpenScreenListener();
     public static final OnCloseScreenListener ON_CLOSE_SCREEN = new OnCloseScreenListener();
     public static final OnQuitMinecraftListener ON_QUIT_MINECRAFT = new OnQuitMinecraftListener();
@@ -87,6 +89,8 @@ public class Listeners {
         ListenerRegistry.register(ON_MOUSE_BUTTON_CLICKED);
         ListenerRegistry.register(ON_MOUSE_BUTTON_RELEASED);
         ListenerRegistry.register(ON_MOUSE_SCROLLED);
+        ListenerRegistry.register(ON_TEXT_CLICKED);
+        ListenerRegistry.register(ON_TEXT_HOVERED);
         ListenerRegistry.register(ON_OPEN_SCREEN);
         ListenerRegistry.register(ON_CLOSE_SCREEN);
         ListenerRegistry.register(ON_QUIT_MINECRAFT);
