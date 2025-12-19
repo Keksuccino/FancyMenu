@@ -18,6 +18,8 @@ public class EditorElementBorderDisplay implements Renderable {
 
     private static final int LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU = 2;
     private static final int LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU = 1;
+    private static final int DISPLAY_OUTSIDE_PADDING_FANCYMENU = 2;
+    private static final int DISPLAY_INSIDE_PADDING_FANCYMENU = 2;
 
     public final AbstractEditorElement editorElement;
     public Font font = Minecraft.getInstance().font;
@@ -28,6 +30,7 @@ public class EditorElementBorderDisplay implements Renderable {
     protected List<Component> renderLines = new ArrayList<>();
     protected int width = 0;
     protected int height = 0;
+    protected boolean renderInsideFallback = false;
 
     public EditorElementBorderDisplay(@NotNull AbstractEditorElement editorElement, @NotNull DisplayPosition defaultPosition, @Nullable DisplayPosition... alternativePositions) {
         this.defaultPosition = defaultPosition;
@@ -49,37 +52,42 @@ public class EditorElementBorderDisplay implements Renderable {
 
     protected void renderDisplayLines(GuiGraphics graphics) {
 
-        int x = this.editorElement.getX();
-        int y = this.editorElement.getY() - this.getHeight() - 2;
+        int eleX = this.editorElement.getX();
+        int eleY = this.editorElement.getY();
+        int eleW = this.editorElement.getWidth();
+        int eleH = this.editorElement.getHeight();
+        int padding = this.renderInsideFallback ? DISPLAY_INSIDE_PADDING_FANCYMENU : DISPLAY_OUTSIDE_PADDING_FANCYMENU;
+        int x = eleX + (this.renderInsideFallback ? padding : 0);
+        int y = this.renderInsideFallback ? eleY + padding : eleY - this.getHeight() - padding;
         boolean leftAligned = true;
         if (this.currentPosition == DisplayPosition.TOP_RIGHT) {
-            x = this.editorElement.getX() + this.editorElement.getWidth() - this.getWidth();
+            x = eleX + eleW - this.getWidth() - (this.renderInsideFallback ? padding : 0);
             leftAligned = false;
         }
         if (this.currentPosition == DisplayPosition.RIGHT_TOP) {
-            x = this.editorElement.getX() + this.editorElement.getWidth() + 2;
-            y = this.editorElement.getY();
+            x = this.renderInsideFallback ? eleX + eleW - this.getWidth() - padding : eleX + eleW + padding;
+            y = this.renderInsideFallback ? eleY + padding : eleY;
         }
         if (this.currentPosition == DisplayPosition.RIGHT_BOTTOM) {
-            x = this.editorElement.getX() + this.editorElement.getWidth() + 2;
-            y = this.editorElement.getY() + this.editorElement.getHeight() - this.getHeight();
+            x = this.renderInsideFallback ? eleX + eleW - this.getWidth() - padding : eleX + eleW + padding;
+            y = this.renderInsideFallback ? eleY + eleH - this.getHeight() - padding : eleY + eleH - this.getHeight();
         }
         if (this.currentPosition == DisplayPosition.BOTTOM_RIGHT) {
-            x = this.editorElement.getX() + this.editorElement.getWidth() - this.getWidth();
-            y = this.editorElement.getY() + this.editorElement.getHeight() + 2;
+            x = eleX + eleW - this.getWidth() - (this.renderInsideFallback ? padding : 0);
+            y = this.renderInsideFallback ? eleY + eleH - this.getHeight() - padding : eleY + eleH + padding;
             leftAligned = false;
         }
         if (this.currentPosition == DisplayPosition.BOTTOM_LEFT) {
-            y = this.editorElement.getY() + this.editorElement.getHeight() + 2;
+            y = this.renderInsideFallback ? eleY + eleH - this.getHeight() - padding : eleY + eleH + padding;
         }
         if (this.currentPosition == DisplayPosition.LEFT_BOTTOM) {
-            x = this.editorElement.getX() - this.getWidth() - 2;
-            y = this.editorElement.getY() + this.editorElement.getHeight() - this.getHeight();
+            x = this.renderInsideFallback ? eleX + padding : eleX - this.getWidth() - padding;
+            y = this.renderInsideFallback ? eleY + eleH - this.getHeight() - padding : eleY + eleH - this.getHeight();
             leftAligned = false;
         }
         if (this.currentPosition == DisplayPosition.LEFT_TOP) {
-            x = this.editorElement.getX() - this.getWidth() - 2;
-            y = this.editorElement.getY();
+            x = this.renderInsideFallback ? eleX + padding : eleX - this.getWidth() - padding;
+            y = this.renderInsideFallback ? eleY + padding : eleY;
             leftAligned = false;
         }
 
@@ -138,7 +146,9 @@ public class EditorElementBorderDisplay implements Renderable {
             }
         }
         this.height = (this.height > 0) ? this.height - 2 : 0;
-        this.currentPosition = this.findPosition();
+        List<DisplayPosition> possiblePositions = this.getPossiblePositions();
+        this.renderInsideFallback = possiblePositions.isEmpty();
+        this.currentPosition = this.findPosition(possiblePositions);
     }
 
     protected float getScale() {
@@ -155,9 +165,13 @@ public class EditorElementBorderDisplay implements Renderable {
 
     @NotNull
     protected DisplayPosition findPosition() {
+        return this.findPosition(this.getPossiblePositions());
+    }
+
+    @NotNull
+    protected DisplayPosition findPosition(@NotNull List<DisplayPosition> possiblePositions) {
         List<DisplayPosition> allowedPositions = new ArrayList<>(this.alternativePositions);
         allowedPositions.add(0, this.defaultPosition);
-        List<DisplayPosition> possiblePositions = this.getPossiblePositions();
         for (DisplayPosition p : allowedPositions) {
             if (possiblePositions.contains(p)) {
                 return p;
