@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface IMixinFilePackResources {
 
     @Accessor("zipFileAccess")
-    Object getZipFileAccess_FancyMenu();
+    FilePackResources.SharedZipFileAccess getZipFileAccess_FancyMenu();
 
     @Accessor("prefix")
     String getPrefix_FancyMenu();

@@ -225,8 +225,8 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
 
     private void collectLocationsFromFilePack(@NotNull FilePackResources pack, @NotNull Set<ResourceLocation> output) {
         IMixinFilePackResources accessor = (IMixinFilePackResources) pack;
-        Object zipAccess = accessor.getZipFileAccess_FancyMenu();
-        if (!(zipAccess instanceof IMixinFilePackResourcesSharedZipFileAccess zipAccessor)) return;
+        IMixinFilePackResourcesSharedZipFileAccess zipAccessor = (IMixinFilePackResourcesSharedZipFileAccess) accessor.getZipFileAccess_FancyMenu();
+        if (zipAccessor == null) return;
         ZipFile zipFile = zipAccessor.getOrCreateZipFile_FancyMenu();
         if (zipFile == null) return;
         String prefix = accessor.getPrefix_FancyMenu();
