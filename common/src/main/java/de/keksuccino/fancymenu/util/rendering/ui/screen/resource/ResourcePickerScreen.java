@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.resource;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
@@ -33,40 +34,19 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.CompositePackResources;
-import net.minecraft.server.packs.FilePackResources;
-import net.minecraft.server.packs.PackResources;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.PathPackResources;
-import net.minecraft.server.packs.VanillaPackResources;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.sounds.SoundEvents;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 @SuppressWarnings("unused")
 public class ResourcePickerScreen extends Screen {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ResourceLocation GO_UP_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/go_up_icon.png");
     private static final ResourceLocation FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_icon.png");
@@ -558,145 +538,9 @@ public class ResourcePickerScreen extends Screen {
     @NotNull
     protected Set<ResourceLocation> getAllResourceLocations() {
         if (this.cachedResourceLocations == null) {
-            this.cachedResourceLocations = new HashSet<>();
-            try {
-                ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
-                resourceManager.listPacks().forEach(pack -> this.collectLocationsFromPack(pack, this.cachedResourceLocations));
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to scan resource packs for ResourcePickerScreen!", ex);
-            }
+            this.cachedResourceLocations = new HashSet<>(Services.PLATFORM.getLoadedClientResourceLocations());
         }
         return this.cachedResourceLocations;
-    }
-
-    protected void collectLocationsFromPack(@NotNull PackResources pack, @NotNull Set<ResourceLocation> output) {
-        try {
-            if (pack instanceof CompositePackResources composite) {
-                List<PackResources> stack = getCompositePackResourcesStack(composite);
-                if (stack != null) {
-                    for (PackResources nested : stack) {
-                        this.collectLocationsFromPack(nested, output);
-                    }
-                } else {
-                    PackResources primary = getFieldValue(composite, "primaryPackResources", PackResources.class);
-                    if (primary != null) {
-                        this.collectLocationsFromPack(primary, output);
-                    }
-                }
-                return;
-            }
-            if (pack instanceof FilePackResources filePack) {
-                this.collectLocationsFromFilePack(filePack, output);
-                return;
-            }
-            if (pack instanceof PathPackResources pathPack) {
-                this.collectLocationsFromPathPack(pathPack, output);
-                return;
-            }
-            if (pack instanceof VanillaPackResources vanillaPack) {
-                this.collectLocationsFromVanillaPack(vanillaPack, output);
-            }
-        } catch (Exception ex) {
-            LOGGER.warn("[FANCYMENU] Failed to scan resource pack: " + pack, ex);
-        }
-    }
-
-    protected void collectLocationsFromPathPack(@NotNull PathPackResources pack, @NotNull Set<ResourceLocation> output) {
-        Path root = getFieldValue(pack, "root", Path.class);
-        if (root == null) return;
-        Path assetsRoot = root.resolve(PackType.CLIENT_RESOURCES.getDirectory());
-        this.collectLocationsFromRoot(assetsRoot, output);
-    }
-
-    @SuppressWarnings("unchecked")
-    protected void collectLocationsFromVanillaPack(@NotNull VanillaPackResources pack, @NotNull Set<ResourceLocation> output) {
-        Map<PackType, List<Path>> pathsForType = getFieldValue(pack, "pathsForType", Map.class);
-        if (pathsForType == null) return;
-        List<Path> roots = pathsForType.get(PackType.CLIENT_RESOURCES);
-        if (roots == null) return;
-        for (Path root : roots) {
-            this.collectLocationsFromRoot(root, output);
-        }
-    }
-
-    protected void collectLocationsFromRoot(@NotNull Path assetsRoot, @NotNull Set<ResourceLocation> output) {
-        if (!Files.exists(assetsRoot) || !Files.isDirectory(assetsRoot)) return;
-        try (DirectoryStream<Path> namespaces = Files.newDirectoryStream(assetsRoot)) {
-            for (Path namespaceDir : namespaces) {
-                if (!Files.isDirectory(namespaceDir)) continue;
-                String namespace = namespaceDir.getFileName().toString();
-                if (!ResourceLocation.isValidNamespace(namespace)) continue;
-                try (Stream<Path> files = Files.walk(namespaceDir)) {
-                    files.filter(Files::isRegularFile).forEach(file -> {
-                        String path = namespaceDir.relativize(file).toString().replace(File.separatorChar, '/');
-                        if (path.isEmpty() || path.endsWith(".mcmeta")) return;
-                        ResourceLocation location = ResourceLocation.tryBuild(namespace, path);
-                        if (location != null) output.add(location);
-                    });
-                }
-            }
-        } catch (Exception ex) {
-            LOGGER.warn("[FANCYMENU] Failed to scan resource root: " + assetsRoot, ex);
-        }
-    }
-
-    protected void collectLocationsFromFilePack(@NotNull FilePackResources pack, @NotNull Set<ResourceLocation> output) {
-        Object zipAccess = getFieldValue(pack, "zipFileAccess", Object.class);
-        ZipFile zipFile = getZipFile(zipAccess);
-        if (zipFile == null) return;
-        String prefix = getFieldValue(pack, "prefix", String.class);
-        if (prefix == null) prefix = "";
-        String basePrefix = prefix.isEmpty() ? "" : prefix + "/";
-        String assetsPrefix = basePrefix + PackType.CLIENT_RESOURCES.getDirectory() + "/";
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        while (entries.hasMoreElements()) {
-            ZipEntry entry = entries.nextElement();
-            if (entry.isDirectory()) continue;
-            String name = entry.getName();
-            if (!name.startsWith(assetsPrefix)) continue;
-            String remainder = name.substring(assetsPrefix.length());
-            if (remainder.isEmpty()) continue;
-            int slashIndex = remainder.indexOf('/');
-            if (slashIndex <= 0) continue;
-            String namespace = remainder.substring(0, slashIndex);
-            if (!ResourceLocation.isValidNamespace(namespace)) continue;
-            String path = remainder.substring(slashIndex + 1);
-            if (path.isEmpty() || path.endsWith(".mcmeta")) continue;
-            ResourceLocation location = ResourceLocation.tryBuild(namespace, path);
-            if (location != null) output.add(location);
-        }
-    }
-
-    @Nullable
-    @SuppressWarnings("unchecked")
-    protected List<PackResources> getCompositePackResourcesStack(@NotNull CompositePackResources pack) {
-        return getFieldValue(pack, "packResourcesStack", List.class);
-    }
-
-    @Nullable
-    protected ZipFile getZipFile(@Nullable Object zipAccess) {
-        if (zipAccess == null) return null;
-        try {
-            Method method = zipAccess.getClass().getDeclaredMethod("getOrCreateZipFile");
-            method.setAccessible(true);
-            return (ZipFile) method.invoke(zipAccess);
-        } catch (Exception ex) {
-            LOGGER.warn("[FANCYMENU] Failed to access zip file for resource pack.", ex);
-            return null;
-        }
-    }
-
-    @Nullable
-    protected <T> T getFieldValue(@NotNull Object target, @NotNull String fieldName, @NotNull Class<T> type) {
-        try {
-            Field field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            Object value = field.get(target);
-            if (type.isInstance(value)) return type.cast(value);
-        } catch (Exception ex) {
-            LOGGER.warn("[FANCYMENU] Failed to access field " + fieldName + " on " + target.getClass().getName(), ex);
-        }
-        return null;
     }
 
     protected boolean currentIsRootDirectory() {
