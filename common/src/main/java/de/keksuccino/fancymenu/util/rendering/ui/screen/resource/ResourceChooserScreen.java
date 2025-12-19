@@ -31,6 +31,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -40,6 +41,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -62,6 +65,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     protected boolean allowLocation = true;
     protected boolean allowLocal = true;
     protected boolean allowWeb = true;
+    @Nullable
     protected CycleButton<ResourceSourceType> resourceSourceTypeCycleButton;
     protected ExtendedEditBox editBox;
     protected boolean showWarningLegacyLocal = false;
@@ -129,19 +133,19 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     @Override
     protected void initCells() {
 
-        LocalizedGenericValueCycle<ResourceSourceType> sourceTypeCycle = ResourceSourceType.LOCATION.cycle();
-        if (!this.allowLocation) sourceTypeCycle.removeValue(ResourceSourceType.LOCATION);
-        if (!this.allowLocal) sourceTypeCycle.removeValue(ResourceSourceType.LOCAL);
-        if (!this.allowWeb) sourceTypeCycle.removeValue(ResourceSourceType.WEB);
+        List<ResourceSourceType> allowedSourceTypes = new ArrayList<>(3);
+        if (this.allowLocation) allowedSourceTypes.add(ResourceSourceType.LOCATION);
+        if (this.allowLocal) allowedSourceTypes.add(ResourceSourceType.LOCAL);
+        if (this.allowWeb) allowedSourceTypes.add(ResourceSourceType.WEB);
 
-        if (sourceTypeCycle.getValues().isEmpty()) {
+        if (allowedSourceTypes.isEmpty()) {
             throw new IllegalStateException("There needs to be at least one allowed source type!");
         }
 
         //Fix resource type if selected is not allowed
-        if (!sourceTypeCycle.getValues().contains(this.resourceSourceType)) {
+        if (!allowedSourceTypes.contains(this.resourceSourceType)) {
             this.resourceSource = null;
-            this.resourceSourceType = sourceTypeCycle.getValues().get(0);
+            this.resourceSourceType = allowedSourceTypes.get(0);
         }
 
         boolean isLocal = (this.resourceSourceType == ResourceSourceType.LOCAL);
@@ -156,19 +160,27 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         this.addStartEndSpacerCell();
 
-        this.resourceSourceTypeCycleButton = new CycleButton<>(0, 0, 20, 20, sourceTypeCycle, (value, button) -> {
-            //Reset the source when changing the source type, because it is not valid anymore
-            this.resourceSource = null;
-            this.resourceSourceType = value;
-            this.rebuild();
-        });
-        this.resourceSourceTypeCycleButton.setTooltipSupplier(consumes -> {
-            if (this.resourceSourceType == ResourceSourceType.LOCATION) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc"));
-            if (this.resourceSourceType == ResourceSourceType.LOCAL) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.local.desc"));
-            return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.web.desc"));
-        });
-        this.resourceSourceTypeCycleButton.setSelectedValue(this.resourceSourceType);
-        this.addWidgetCell(this.resourceSourceTypeCycleButton, true);
+        if (allowedSourceTypes.size() > 1) {
+            LocalizedGenericValueCycle<ResourceSourceType> sourceTypeCycle = buildSourceTypeCycle(allowedSourceTypes, this.resourceSourceType);
+            this.resourceSourceTypeCycleButton = new CycleButton<>(0, 0, 20, 20, sourceTypeCycle, (value, button) -> {
+                //Reset the source when changing the source type, because it is not valid anymore
+                this.resourceSource = null;
+                this.resourceSourceType = value;
+                this.rebuild();
+            });
+            this.resourceSourceTypeCycleButton.setTooltipSupplier(consumes -> {
+                if (this.resourceSourceType == ResourceSourceType.LOCATION) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc"));
+                if (this.resourceSourceType == ResourceSourceType.LOCAL) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.local.desc"));
+                return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.web.desc"));
+            });
+            this.resourceSourceTypeCycleButton.setSelectedValue(this.resourceSourceType);
+            this.addWidgetCell(this.resourceSourceTypeCycleButton, true);
+        } else {
+            ResourceSourceType singleType = allowedSourceTypes.get(0);
+            Component sourceTypeLabel = Component.translatable(singleType.getLocalizationKeyBase(), singleType.getValueComponent());
+            this.addLabelCell(sourceTypeLabel);
+            this.resourceSourceTypeCycleButton = null;
+        }
 
         this.addCellGroupEndSpacerCell();
 
@@ -241,6 +253,16 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         this.addStartEndSpacerCell();
 
+    }
+
+    @NotNull
+    protected LocalizedGenericValueCycle<ResourceSourceType> buildSourceTypeCycle(@NotNull List<ResourceSourceType> allowedSourceTypes, @NotNull ResourceSourceType selected) {
+        LocalizedGenericValueCycle<ResourceSourceType> cycle = LocalizedGenericValueCycle.of(ResourceSourceType.LOCATION.getLocalizationKeyBase(), allowedSourceTypes.toArray(new ResourceSourceType[0]));
+        cycle.setCycleComponentStyleSupplier(consumes -> consumes.getCycleComponentStyle());
+        cycle.setValueComponentStyleSupplier(consumes -> consumes.getValueComponentStyle());
+        cycle.setValueNameSupplier(consumes -> I18n.get(consumes.getValueLocalizationKey()));
+        cycle.setCurrentValue(selected);
+        return cycle;
     }
 
     @Override
