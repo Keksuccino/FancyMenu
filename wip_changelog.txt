@@ -33,6 +33,7 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 - Added "Is Active Cursor Type" requirement that checks if a specific standard cursor type (normal, pointing hand, writing cursor, etc.) is currently the active cursor (#1430)
 - Ported "Is Player Using Item" requirement from Spiffy (#1401)
 - Ported "Is Player In Structure" requirement from Spiffy (#1402)
+- The border display of elements in the layout editor (position, anchor, rotation, etc.) now renders inside the element when there's not enough space to render it outside (#1380)
 - Fixed "Splash Text" elements not resolving placeholders anymore in MC 1.21.10+ (#1457)
 
 %changelog:end%
