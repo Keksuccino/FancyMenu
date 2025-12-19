@@ -36,6 +36,7 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 - The border display of elements in the layout editor (position, anchor, rotation, etc.) now renders inside the element when there's not enough space to render it outside (#1380)
 - The Markdown text color formatting code now also supports common HTML-like color names in addition to HEX, so you can now do "%#red%This is red text%#%" for example (#1368)
   - Available color names: black, silver, gray, grey, white, maroon, red, purple, fuchsia, magenta, green, lime, olive, yellow, navy, blue, teal, aqua, cyan, transparent
+- The Parallax intensity for elements and menu backgrounds can now be configured individually for the X and Y axis (instead of combined setting for both, like before) (#1378)
 - Fixed "Splash Text" elements not resolving placeholders anymore in MC 1.21.10+ (#1353, #1457)
 - Fixed tooltip not showing in file chooser for files that have invalid names (uppercase letters, spaces, etc.)
 
