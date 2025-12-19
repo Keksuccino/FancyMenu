@@ -5,6 +5,9 @@ import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 public class DrawableColor {
@@ -12,6 +15,7 @@ public class DrawableColor {
     public static final DrawableColor EMPTY = DrawableColor.of(new Color(255, 255, 255));
     public static final DrawableColor WHITE = DrawableColor.of(new Color(255, 255, 255));
     public static final DrawableColor BLACK = DrawableColor.of(new Color(0, 0, 0));
+    private static final Map<String, String> HTML_NAMED_COLORS = createHtmlColorNameMap();
 
     protected Color color;
     protected int colorInt;
@@ -57,6 +61,30 @@ public class DrawableColor {
         c.colorInt = c.color.getRGB();
         c.hex = hex;
         return c;
+    }
+
+    /**
+     * Creates a {@link DrawableColor} out of the given HTML-like color {@link String}.<br>
+     * Supports hex colors (#RGB, #RGBA, #RRGGBB, #RRGGBBAA) and basic HTML color names.<br>
+     * Returns {@link DrawableColor#EMPTY} if the method failed to parse the color.
+     */
+    @NotNull
+    public static DrawableColor ofHtml(@NotNull String color) {
+        Objects.requireNonNull(color);
+        String cleaned = color.trim();
+        if (cleaned.isEmpty()) return EMPTY;
+        String normalized = cleaned.toLowerCase(Locale.ROOT);
+        String normalizedHex = normalizeHtmlHex(normalized);
+        if (normalizedHex != null) {
+            DrawableColor parsed = of(normalizedHex);
+            if (parsed != EMPTY) return parsed;
+        }
+        String namedHex = HTML_NAMED_COLORS.get(normalized);
+        if (namedHex != null) {
+            DrawableColor parsed = of(namedHex);
+            if (parsed != EMPTY) return parsed;
+        }
+        return EMPTY;
     }
 
     /** Creates a {@link DrawableColor} out of the given RGB integers. The alpha channel will get defaulted to 255. **/
@@ -170,6 +198,65 @@ public class DrawableColor {
             return String.format("#%02X%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
         } catch (Exception ignored) {}
         return null;
+    }
+
+    @Nullable
+    private static String normalizeHtmlHex(@NotNull String value) {
+        String hex = value;
+        if (hex.startsWith("#")) {
+            hex = hex.substring(1);
+        }
+        if (!isHtmlHexLength(hex.length())) return null;
+        if (!isHexString(hex)) return null;
+        if ((hex.length() == 3) || (hex.length() == 4)) {
+            StringBuilder expanded = new StringBuilder(hex.length() * 2);
+            for (int i = 0; i < hex.length(); i++) {
+                char c = hex.charAt(i);
+                expanded.append(c).append(c);
+            }
+            hex = expanded.toString();
+        }
+        return "#" + hex;
+    }
+
+    private static boolean isHtmlHexLength(int length) {
+        return (length == 3) || (length == 4) || (length == 6) || (length == 8);
+    }
+
+    private static boolean isHexString(@NotNull String hex) {
+        for (int i = 0; i < hex.length(); i++) {
+            char c = hex.charAt(i);
+            boolean isDigit = (c >= '0') && (c <= '9');
+            boolean isLowerHex = (c >= 'a') && (c <= 'f');
+            boolean isUpperHex = (c >= 'A') && (c <= 'F');
+            if (!(isDigit || isLowerHex || isUpperHex)) return false;
+        }
+        return true;
+    }
+
+    private static Map<String, String> createHtmlColorNameMap() {
+        Map<String, String> map = new HashMap<>();
+        map.put("black", "#000000");
+        map.put("silver", "#c0c0c0");
+        map.put("gray", "#808080");
+        map.put("grey", "#808080");
+        map.put("white", "#ffffff");
+        map.put("maroon", "#800000");
+        map.put("red", "#ff0000");
+        map.put("purple", "#800080");
+        map.put("fuchsia", "#ff00ff");
+        map.put("magenta", "#ff00ff");
+        map.put("green", "#008000");
+        map.put("lime", "#00ff00");
+        map.put("olive", "#808000");
+        map.put("yellow", "#ffff00");
+        map.put("navy", "#000080");
+        map.put("blue", "#0000ff");
+        map.put("teal", "#008080");
+        map.put("aqua", "#00ffff");
+        map.put("cyan", "#00ffff");
+        map.put("transparent", "#00000000");
+        return map;
     }
 
     /**

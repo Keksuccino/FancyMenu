@@ -250,21 +250,19 @@ public class MarkdownParser {
                     }
                 }
 
-                //Handle HEX Coloring
+                //Handle Color Formatting
                 if (c == PERCENTAGE_CHAR) {
                     if (StringUtils.startsWith(subLine, FORMATTING_CODE_HEX_COLOR_PREFIX) && !StringUtils.startsWith(subLine, FORMATTING_CODE_HEX_COLOR_SUFFIX) && (builder.textColor == null) && (builder.codeBlockContext == null) && !builder.plainText) {
-                        String s = (subLine.length() >= 11) ? StringUtils.substring(subLine, 1, 11) : EMPTY_STRING;
-                        if (!StringUtils.endsWith(s, PERCENTAGE)) {
-                            s = (subLine.length() >= 9) ? StringUtils.substring(subLine, 1, 9) : EMPTY_STRING;
-                        }
-                        if (StringUtils.endsWith(s, PERCENTAGE) && StringUtils.contains(subText, FORMATTING_CODE_HEX_COLOR_SUFFIX)) {
-                            DrawableColor color = DrawableColor.of(StringUtils.substring(s, 0, s.length()-1));
+                        int endIndex = StringUtils.indexOf(subLine, PERCENTAGE_CHAR, 2);
+                        if ((endIndex > 1) && StringUtils.contains(subText, FORMATTING_CODE_HEX_COLOR_SUFFIX)) {
+                            String colorText = StringUtils.substring(subLine, 2, endIndex);
+                            DrawableColor color = DrawableColor.ofHtml(colorText);
                             if (color != DrawableColor.EMPTY) {
                                 if (isStartOfLine || !builder.text.isEmpty()) {
                                     lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                                 }
                                 builder.textColor = color;
-                                charsToSkip = s.length();
+                                charsToSkip = endIndex;
                                 continue;
                             }
                         }
