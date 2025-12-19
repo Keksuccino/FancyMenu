@@ -205,6 +205,25 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         });
         sourceInputCell.setEditorPresetTextSupplier(consumes -> consumes.editBox.getValueWithoutPrefixSuffix());
 
+        if (this.resourceSourceType == ResourceSourceType.LOCATION) {
+            this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.resources.chooser_screen.choose_location"), var1 -> {
+                ResourceLocation startLocation = null;
+                if ((this.resourceSource != null) && !this.resourceSource.trim().isEmpty()) {
+                    String source = PlaceholderParser.replacePlaceholders(this.resourceSource, false);
+                    startLocation = ResourceLocation.tryParse(source);
+                }
+                ResourcePickerScreen picker = new ResourcePickerScreen(startLocation, this.allowedFileTypes, location -> {
+                    if (location != null) {
+                        String s = ResourceSourceType.LOCATION.getSourcePrefix() + location;
+                        this.setSource(s, false);
+                    }
+                    this.rebuild();
+                    Minecraft.getInstance().setScreen(this);
+                });
+                Minecraft.getInstance().setScreen(picker);
+            }), true);
+        }
+
         if (isLocal) {
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.resources.chooser_screen.choose_local"), var1 -> {
                 File startDir = LayoutHandler.ASSETS_DIR;

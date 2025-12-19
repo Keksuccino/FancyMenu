@@ -2247,5 +2247,8 @@
   "fancymenu.listeners.on_text_clicked": "On Markdown Text Clicked",
   "fancymenu.listeners.on_text_clicked.desc": "This listener triggers when a click event in a Markdown text is clicked.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$text_event_id §r= The unique identifier from the click event markdown.",
   "fancymenu.listeners.on_text_hovered": "On Markdown Text Hovered",
-  "fancymenu.listeners.on_text_hovered.desc": "This listener triggers when a hover event in a Markdown text is hovered.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$text_event_id §r= The unique identifier from the hover event markdown."
+  "fancymenu.listeners.on_text_hovered.desc": "This listener triggers when a hover event in a Markdown text is hovered.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$text_event_id §r= The unique identifier from the hover event markdown.",
+  "fancymenu.resources.chooser_screen.choose_location": "Choose Resource Location",
+  "fancymenu.ui.resourcepicker.choose.resource": "Choose Resource Location",
+  "fancymenu.ui.resourcepicker.resources": "Resources"
 }
