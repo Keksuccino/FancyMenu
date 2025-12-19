@@ -37,5 +37,6 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 - The Markdown text color formatting code now also supports common HTML-like color names in addition to HEX, so you can now do "%#red%This is red text%#%" for example (#1368)
   - Available color names: black, silver, gray, grey, white, maroon, red, purple, fuchsia, magenta, green, lime, olive, yellow, navy, blue, teal, aqua, cyan, transparent
 - Fixed "Splash Text" elements not resolving placeholders anymore in MC 1.21.10+ (#1353, #1457)
+- Fixed tooltip not showing in file chooser for files that have invalid names (uppercase letters, spaces, etc.)
 
 %changelog:end%
