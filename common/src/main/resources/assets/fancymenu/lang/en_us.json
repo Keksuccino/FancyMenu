@@ -2237,5 +2237,6 @@
   "fancymenu.requirements.is_active_cursor_type.value.not_allowed": "Not Allowed",
   "fancymenu.actions.blocks.add.delay": "Add Delay",
   "fancymenu.actions.blocks.delay": "DELAY (%s ms)",
-  "fancymenu.actions.blocks.delay.edit": "Edit Delay (ms)"
+  "fancymenu.actions.blocks.delay.edit": "Edit Delay (ms)",
+  "fancymenu.actions.blocks.add.delay.desc": "Adds a Delay block that waits for the specified time before running its contained actions.\n\nThe rest of the script keeps running while the delay counts down.\nDelay time is in milliseconds.\n\nKeep in mind the delay resets when the screen gets re-initialized (for example after resizing the window or closing and reopening the screen).\n\nThis is useful for timed sequences, cooldowns or spacing actions."
 }

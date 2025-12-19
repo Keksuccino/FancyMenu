@@ -327,7 +327,8 @@ public class ActionScriptEditorScreen extends Screen {
             ExecutableEntry target = this.getContextMenuTargetEntry();
             menu.closeMenu();
             this.onAddDelay(target);
-        }).setIcon(ContextMenu.IconFactory.getIcon("add"));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.actions.blocks.add.delay.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("add"));
 
         this.rightClickContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
