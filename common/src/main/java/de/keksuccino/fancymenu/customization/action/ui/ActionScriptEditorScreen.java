@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.FolderExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
@@ -23,6 +24,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -33,6 +35,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -319,6 +322,13 @@ public class ActionScriptEditorScreen extends Screen {
             this.onAddWhile(target);
         }).setIcon(ContextMenu.IconFactory.getIcon("add"));
 
+        this.rightClickContextMenu.addClickableEntry("add_delay", Component.translatable("fancymenu.actions.blocks.add.delay"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
+            menu.closeMenu();
+            this.onAddDelay(target);
+        }).setIcon(ContextMenu.IconFactory.getIcon("add"));
+
         this.rightClickContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             ExecutableEntry target = this.getContextMenuTargetEntry();
@@ -578,6 +588,33 @@ public class ActionScriptEditorScreen extends Screen {
                 Minecraft.getInstance().setScreen(this);
             });
             Minecraft.getInstance().setScreen(s);
+        } else if (targetExecutable instanceof DelayExecutableBlock block) {
+            TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFiler().convertToLegacyFilter(), call -> {
+                if (call != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
+                    if ((currentEntry != null) && (currentEntry.executable instanceof DelayExecutableBlock currentBlock)) {
+                        String normalized = call.trim();
+                        if (normalized.isEmpty()) {
+                            normalized = DelayExecutableBlock.DEFAULT_DELAY_MS;
+                        }
+                        if (!Objects.equals(currentBlock.getDelayMsRaw(), normalized)) {
+                            this.createUndoPoint();
+                            currentBlock.setDelayMs(normalized);
+                            this.updateActionInstanceScrollArea(true);
+                            this.focusEntryForExecutable(currentBlock, true, true);
+                        }
+                    }
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            s.setMultilineMode(false);
+            s.setPlaceholdersAllowed(false);
+            s.setText(block.getDelayMsRaw());
+            s.setTextValidator(editor -> {
+                String text = Objects.requireNonNullElse(editor.getText(), "").trim();
+                return !text.isEmpty() && de.keksuccino.konkrete.math.MathUtils.isLong(text) && Long.parseLong(text) >= 0L;
+            });
+            Minecraft.getInstance().setScreen(s);
         }
     }
 
@@ -662,6 +699,27 @@ public class ActionScriptEditorScreen extends Screen {
                 this.finalizeExecutableAddition(block, resolvedReference, true);
             }
             Minecraft.getInstance().setScreen(this);
+        });
+        Minecraft.getInstance().setScreen(s);
+    }
+
+    protected void onAddDelay(@Nullable ExecutableEntry selectionReference) {
+        final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
+        TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFiler().convertToLegacyFilter(), call -> {
+            if (call != null) {
+                ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
+                DelayExecutableBlock block = new DelayExecutableBlock();
+                block.setDelayMs(call);
+                this.finalizeExecutableAddition(block, resolvedReference, true);
+            }
+            Minecraft.getInstance().setScreen(this);
+        });
+        s.setMultilineMode(false);
+        s.setPlaceholdersAllowed(false);
+        s.setText(DelayExecutableBlock.DEFAULT_DELAY_MS);
+        s.setTextValidator(editor -> {
+            String text = Objects.requireNonNullElse(editor.getText(), "").trim();
+            return !text.isEmpty() && de.keksuccino.konkrete.math.MathUtils.isLong(text) && Long.parseLong(text) >= 0L;
         });
         Minecraft.getInstance().setScreen(s);
     }
@@ -1034,6 +1092,8 @@ public class ActionScriptEditorScreen extends Screen {
             base = theme.actions_entry_background_color_else.getColor();
         } else if (entry.executable instanceof WhileExecutableBlock) {
             base = theme.actions_entry_background_color_while.getColor();
+        } else if (entry.executable instanceof DelayExecutableBlock) {
+            base = theme.actions_entry_background_color_delay.getColor();
         } else if (entry.executable instanceof FolderExecutableBlock) {
             base = theme.actions_entry_background_color_folder.getColor();
         } else if (entry.executable instanceof AbstractExecutableBlock) {
@@ -1403,7 +1463,7 @@ public class ActionScriptEditorScreen extends Screen {
             this.startInlineNameEditing(selected);
             return true;
         }
-        if ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock) || (selected.executable instanceof WhileExecutableBlock)) {
+        if ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock) || (selected.executable instanceof WhileExecutableBlock) || (selected.executable instanceof DelayExecutableBlock)) {
             this.onEdit(this.getSelectedEntry());
             return true;
         }
@@ -2222,7 +2282,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     protected void moveUp(ExecutableEntry entry) {
         if (entry != null) {
-            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock)) {
+            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock) || (entry.executable instanceof DelayExecutableBlock)) {
                 boolean manualUpdate = false;
                 if (this.scriptEntriesScrollArea.getEntries().indexOf(entry) == 1) {
                     this.moveAfter(entry, BEFORE_FIRST);
@@ -2299,7 +2359,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     protected void moveDown(ExecutableEntry entry) {
         if (entry != null) {
-            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock)) {
+            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock) || (entry.executable instanceof DelayExecutableBlock)) {
                 boolean manualUpdate = false;
                 if ((entry.getParentBlock() != this.executableBlock) && (entry.getParentBlock().getAppendedBlock() == null) && (entry.getParentBlock().getExecutables().indexOf(entry.executable) == entry.getParentBlock().getExecutables().size()-1)) {
                     ExecutableEntry parentBlock = this.findEntryForExecutable(entry.getParentBlock());
@@ -2490,6 +2550,8 @@ public class ActionScriptEditorScreen extends Screen {
             } else if (b instanceof IfExecutableBlock ifBlock && ifBlock.isCollapsed()) {
                 skipChildren = true;
             } else if (b instanceof WhileExecutableBlock whileBlock && whileBlock.isCollapsed()) {
+                skipChildren = true;
+            } else if (b instanceof DelayExecutableBlock delayBlock && delayBlock.isCollapsed()) {
                 skipChildren = true;
             }
             if (!skipChildren) {
@@ -2849,6 +2911,9 @@ public class ActionScriptEditorScreen extends Screen {
             } else if (this.executable instanceof WhileExecutableBlock) {
                 idle = theme.actions_entry_background_color_while.getColor();
                 hover = theme.actions_entry_background_color_while_hover.getColor();
+            } else if (this.executable instanceof DelayExecutableBlock) {
+                idle = theme.actions_entry_background_color_delay.getColor();
+                hover = theme.actions_entry_background_color_delay_hover.getColor();
             } else if (this.executable instanceof FolderExecutableBlock) {
                 idle = theme.actions_entry_background_color_folder.getColor();
                 hover = theme.actions_entry_background_color_folder_hover.getColor();
@@ -2914,6 +2979,13 @@ public class ActionScriptEditorScreen extends Screen {
                     requirements += i.requirement.getDisplayName();
                 }
                 MutableComponent display = Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                if (b.isCollapsed()) {
+                    display = display.append(this.createCollapsedSuffixComponent(theme));
+                }
+                this.displayNameComponent = display;
+                this.valueComponent = Component.empty();
+            } else if (this.executable instanceof DelayExecutableBlock b) {
+                MutableComponent display = Component.translatable("fancymenu.actions.blocks.delay", Component.literal(b.getDelayMsRaw())).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
                 }
@@ -3031,6 +3103,13 @@ public class ActionScriptEditorScreen extends Screen {
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
                 graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+            } else if (this.executable instanceof DelayExecutableBlock delayBlock) {
+                int toggleX = renderX + 5;
+                int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
+                this.renderCollapseToggle(graphics, toggleX, toggleY, delayBlock.isCollapsed());
+                int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
+                int textY = centerYLine1 - (this.font.lineHeight / 2);
+                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
             } else if (this.executable instanceof ElseIfExecutableBlock) {
                 int indicatorX = renderX + 5;
                 int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
@@ -3087,7 +3166,7 @@ public class ActionScriptEditorScreen extends Screen {
             if (this.leftMouseDownDragging) {
                 if ((this.leftMouseDownDraggingPosX != MouseInput.getMouseX()) || (this.leftMouseDownDraggingPosY != MouseInput.getMouseY())) {
                     // Only allow dragging for specific entries
-                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof FolderExecutableBlock)) {
+                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof FolderExecutableBlock)) {
                         this.dragging = true;
                     }
                 }
@@ -3111,7 +3190,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         private int calculateWidth() {
             int w;
-            if ((this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof ElseIfExecutableBlock) || (this.executable instanceof ElseExecutableBlock)) {
+            if ((this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ElseIfExecutableBlock) || (this.executable instanceof ElseExecutableBlock)) {
                 int textWidth = this.font.width(this.displayNameComponent);
                 w = 5 + COLLAPSE_TOGGLE_SIZE + 3 + textWidth + 5;
             } else {
@@ -3235,7 +3314,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         protected boolean canToggleCollapse() {
-            return (this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock);
+            return (this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock);
         }
 
         protected boolean isMouseOverCollapseToggle(int mouseX, int mouseY) {
@@ -3268,6 +3347,9 @@ public class ActionScriptEditorScreen extends Screen {
                 toggled = true;
             } else if (this.executable instanceof WhileExecutableBlock whileBlock) {
                 whileBlock.setCollapsed(!whileBlock.isCollapsed());
+                toggled = true;
+            } else if (this.executable instanceof DelayExecutableBlock delayBlock) {
+                delayBlock.setCollapsed(!delayBlock.isCollapsed());
                 toggled = true;
             }
             if (toggled) {

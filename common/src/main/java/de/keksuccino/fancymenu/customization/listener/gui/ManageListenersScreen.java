@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
@@ -343,7 +344,15 @@ public class ManageListenersScreen extends CellScreen {
             for (Executable nested : whileBlock.getExecutables()) {
                 lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
             }
-            
+        } else if (executable instanceof DelayExecutableBlock delayBlock) {
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
+                    .append(Component.translatable("fancymenu.actions.blocks.delay", Component.literal(delayBlock.getDelayMsRaw()))
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
+
+            for (Executable nested : delayBlock.getExecutables()) {
+                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
+            }
         } else if (executable instanceof AbstractExecutableBlock) {
             // For any other abstract executable blocks
             lines.add(Component.literal(indent + "• ")

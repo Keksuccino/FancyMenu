@@ -42,6 +42,8 @@ public class LightUIColorTheme extends UIColorTheme {
         actions_entry_background_color_else_hover = DrawableColor.of(new Color(229, 209, 182));
         actions_entry_background_color_while = DrawableColor.of(new Color(204, 235, 227));
         actions_entry_background_color_while_hover = DrawableColor.of(new Color(188, 222, 212));
+        actions_entry_background_color_delay = DrawableColor.of(new Color(240, 229, 189));
+        actions_entry_background_color_delay_hover = DrawableColor.of(new Color(226, 214, 175));
         actions_entry_background_color_folder = DrawableColor.of(new Color(242, 213, 219));
         actions_entry_background_color_folder_hover = DrawableColor.of(new Color(230, 199, 206));
         actions_entry_background_color_generic_block = DrawableColor.of(new Color(229, 229, 229));

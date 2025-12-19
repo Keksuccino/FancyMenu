@@ -2234,5 +2234,8 @@
   "fancymenu.requirements.is_active_cursor_type.value.resize_nwse": "Resize NWSE",
   "fancymenu.requirements.is_active_cursor_type.value.resize_nesw": "Resize NESW",
   "fancymenu.requirements.is_active_cursor_type.value.resize_all": "Resize All",
-  "fancymenu.requirements.is_active_cursor_type.value.not_allowed": "Not Allowed"
+  "fancymenu.requirements.is_active_cursor_type.value.not_allowed": "Not Allowed",
+  "fancymenu.actions.blocks.add.delay": "Add Delay",
+  "fancymenu.actions.blocks.delay": "DELAY (%s ms)",
+  "fancymenu.actions.blocks.delay.edit": "Edit Delay (ms)"
 }
