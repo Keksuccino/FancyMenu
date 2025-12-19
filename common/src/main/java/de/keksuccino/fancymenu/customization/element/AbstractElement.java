@@ -141,15 +141,25 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 */
 	public boolean invertParallax = false;
 	/**
-	 * Controls the intensity of the parallax effect.
+	 * Controls the horizontal intensity of the parallax effect.
 	 * Range is 0.0 to 1.0 where:
 	 * - 0.0 means no movement
 	 * - 1.0 means maximum movement
 	 * Default is 0.5 for medium intensity.
 	 */
 	@NotNull
-	public String parallaxIntensityString = "0.5";
-	public float lastParallaxIntensity = -10000.0F;
+	public String parallaxIntensityXString = "0.5";
+	/**
+	 * Controls the vertical intensity of the parallax effect.
+	 * Range is 0.0 to 1.0 where:
+	 * - 0.0 means no movement
+	 * - 1.0 means maximum movement
+	 * Default is 0.5 for medium intensity.
+	 */
+	@NotNull
+	public String parallaxIntensityYString = "0.5";
+	public float lastParallaxIntensityX = -10000.0F;
+	public float lastParallaxIntensityY = -10000.0F;
 	public boolean loadOncePerSession = false;
 	@NotNull
 	public DrawableColor inEditorColor = DrawableColor.of(Color.ORANGE);
@@ -259,7 +269,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.cachedMouseX = mouseX;
 		this.cachedMouseY = mouseY;
 
-		this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
+		this.lastParallaxIntensityX = SerializationUtils.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityXString));
+		this.lastParallaxIntensityY = SerializationUtils.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityYString));
 
 		this.tickBaseOpacity();
 
@@ -716,7 +727,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			// Calculate parallax offset using cached mouse position
 			float centerX = getScreenWidth() / 2f;
 			float offsetX = this.cachedMouseX - centerX;
-			float parallaxOffset = offsetX * this.lastParallaxIntensity * 0.1f; // Scale factor to control maximum movement
+			float parallaxOffset = offsetX * this.lastParallaxIntensityX * 0.1f; // Scale factor to control maximum movement
 
 			// Apply offset based on direction
 			x += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
@@ -767,7 +778,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			// Calculate parallax offset using cached mouse position
 			float centerY = getScreenHeight() / 2f;
 			float offsetY = this.cachedMouseY - centerY;
-			float parallaxOffset = offsetY * this.lastParallaxIntensity * 0.1f; // Scale factor to control maximum movement
+			float parallaxOffset = offsetY * this.lastParallaxIntensityY * 0.1f; // Scale factor to control maximum movement
 
 			// Apply offset based on direction
 			y += (int) (invertParallax ? parallaxOffset : -parallaxOffset);

@@ -784,20 +784,27 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 							consumes -> consumes.element.enableParallax,
 							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.enableParallax = aBoolean,
 							"fancymenu.elements.parallax")
-					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.desc")));
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.desc")));
 
-			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity", AbstractEditorElement.class,
-							consumes -> consumes.element.parallaxIntensityString,
-							(element1, s) -> element1.element.parallaxIntensityString = s,
-							null, false, true, Component.translatable("fancymenu.elements.parallax.intensity"),
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_x", AbstractEditorElement.class,
+							consumes -> consumes.element.parallaxIntensityXString,
+							(element1, s) -> element1.element.parallaxIntensityXString = s,
+							null, false, true, Component.translatable("fancymenu.elements.parallax.intensity_x"),
 							true, "0.5", null, null)
-					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.desc")));
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_x.desc")));
+
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_y", AbstractEditorElement.class,
+							consumes -> consumes.element.parallaxIntensityYString,
+							(element1, s) -> element1.element.parallaxIntensityYString = s,
+							null, false, true, Component.translatable("fancymenu.elements.parallax.intensity_y"),
+							true, "0.5", null, null)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_y.desc")));
 
 			this.addToggleContextMenuEntryTo(this.rightClickMenu, "invert_parallax", AbstractEditorElement.class,
 							consumes -> consumes.element.invertParallax,
 							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.invertParallax = aBoolean,
 							"fancymenu.elements.parallax.invert")
-					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.invert.desc")));
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.invert.desc")));
 
 		}
 

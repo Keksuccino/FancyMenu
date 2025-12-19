@@ -50,7 +50,24 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
         if (soundSource != null) background.soundSource = Objects.requireNonNullElse(getSoundSourceByName(soundSource), SoundSource.MASTER);
 
         background.parallaxEnabled = SerializationUtils.deserializeBoolean(background.parallaxEnabled, serialized.getValue("parallax"));
-        background.parallaxIntensityString = Objects.requireNonNullElse(serialized.getValue("parallax_intensity"), "0.02");
+        String parallaxIntensityX = serialized.getValue("parallax_intensity_x");
+        String parallaxIntensityY = serialized.getValue("parallax_intensity_y");
+
+        String legacyParallaxIntensity = null;
+        if (parallaxIntensityX == null || parallaxIntensityY == null) {
+            legacyParallaxIntensity = Objects.requireNonNullElse(serialized.getValue("parallax_intensity"), "0.02");
+        }
+
+        if (parallaxIntensityX == null && parallaxIntensityY == null) {
+            parallaxIntensityX = legacyParallaxIntensity;
+            parallaxIntensityY = legacyParallaxIntensity;
+        } else {
+            if (parallaxIntensityX == null) parallaxIntensityX = (parallaxIntensityY != null) ? parallaxIntensityY : legacyParallaxIntensity;
+            if (parallaxIntensityY == null) parallaxIntensityY = (parallaxIntensityX != null) ? parallaxIntensityX : legacyParallaxIntensity;
+        }
+
+        background.parallaxIntensityXString = parallaxIntensityX;
+        background.parallaxIntensityYString = parallaxIntensityY;
         background.invertParallax = SerializationUtils.deserializeBoolean(background.invertParallax, serialized.getValue("invert_parallax"));
 
         return background;
@@ -70,7 +87,8 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
         serialized.putProperty("sound_source", background.soundSource.getName());
 
         serialized.putProperty("parallax", "" + background.parallaxEnabled);
-        serialized.putProperty("parallax_intensity", background.parallaxIntensityString);
+        serialized.putProperty("parallax_intensity_x", background.parallaxIntensityXString);
+        serialized.putProperty("parallax_intensity_y", background.parallaxIntensityYString);
         serialized.putProperty("invert_parallax", "" + background.invertParallax);
 
         return serialized;

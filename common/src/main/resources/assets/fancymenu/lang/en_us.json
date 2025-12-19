@@ -278,8 +278,6 @@
   "fancymenu.backgrounds.image.configure.invert_parallax.desc": "When ENABLED, the parallax effect will move in the SAME direction\nas the mouse, otherwise it moves in the opposite direction.",
   "fancymenu.backgrounds.image.configure.no_image_chosen": "§xYou need to choose an image or set an image URL first!",
   "fancymenu.backgrounds.image.configure.parallax": "Parallax Effect: %s",
-  "fancymenu.backgrounds.image.configure.parallax_intensity": "Set Parallax Effect Intensity",
-  "fancymenu.backgrounds.image.configure.parallax_intensity.desc": "The intensity of the parallax effect.\nNeeds to be a value between 0.0 (no movement) and 1.0 (maximum movement).",
   "fancymenu.backgrounds.image.configure.repeat": "Repeat Texture: %s",
   "fancymenu.backgrounds.image.configure.slide": "Slide Wide Images From Left To Right: %s",
   "fancymenu.backgrounds.image.desc": "Well, it's an image.\nWorks with JPEG, PNG, APNG, GIF and FMA (FancyMenu Animation).\nSupports local and web images.",
@@ -739,9 +737,6 @@
   "fancymenu.elements.music_controller.play_world_music.desc": "This type of music plays in menus when a world is loaded.\nIt's basically the normal world music that\nkeeps playing in menus that don't pause the game,\nlike the inventory in SP and every menu in MP.",
   "fancymenu.elements.parallax": "Parallax Effect: %s",
   "fancymenu.elements.parallax.desc": "If a parallax effect should get added to the element's position.\n\nThe parallax effect only works while not in the editor!",
-  "fancymenu.elements.parallax.intensity": "Set Parallax Intensity",
-  "fancymenu.elements.parallax.intensity.desc": "The intensity of the parallax effect.\nThis should be a value between 0.0 (no movement) and 1.0 (maximum movement).",
-  "fancymenu.elements.parallax.intensity.invalid_value": "This needs to be a value between 0.0 (no movement) and 1.0 (maximum movement)!",
   "fancymenu.elements.parallax.invert": "Invert Parallax Movement: %s",
   "fancymenu.elements.parallax.invert.desc": "When ENABLED, the element will move WITH the mouse.\nWhen disabled, it will move in the opposite direction of the mouse.",
   "fancymenu.elements.player_entity": "Player Entity",
@@ -2238,5 +2233,13 @@
   "fancymenu.actions.blocks.add.delay": "Add Delay",
   "fancymenu.actions.blocks.delay": "DELAY (%s ms)",
   "fancymenu.actions.blocks.delay.edit": "Edit Delay (ms)",
-  "fancymenu.actions.blocks.add.delay.desc": "Adds a Delay block that waits for the specified time before running its contained actions.\n\nThe rest of the script keeps running while the delay counts down.\nDelay time is in milliseconds.\n\nKeep in mind the delay resets when the screen gets re-initialized (for example after resizing the window or closing and reopening the screen).\n\nThis is useful for timed sequences, cooldowns or spacing actions."
+  "fancymenu.actions.blocks.add.delay.desc": "Adds a Delay block that waits for the specified time before running its contained actions.\n\nThe rest of the script keeps running while the delay counts down.\nDelay time is in milliseconds.\n\nKeep in mind the delay resets when the screen gets re-initialized (for example after resizing the window or closing and reopening the screen).\n\nThis is useful for timed sequences, cooldowns or spacing actions.",
+  "fancymenu.backgrounds.image.configure.parallax_intensity_x": "Set Parallax Effect Intensity (X)",
+  "fancymenu.backgrounds.image.configure.parallax_intensity_x.desc": "The horizontal intensity of the parallax effect.\nNeeds to be a value between 0.0 (no movement) and 1.0 (maximum movement).",
+  "fancymenu.backgrounds.image.configure.parallax_intensity_y": "Set Parallax Effect Intensity (Y)",
+  "fancymenu.backgrounds.image.configure.parallax_intensity_y.desc": "The vertical intensity of the parallax effect.\nNeeds to be a value between 0.0 (no movement) and 1.0 (maximum movement).",
+  "fancymenu.elements.parallax.intensity_x": "Set Parallax Intensity (X)",
+  "fancymenu.elements.parallax.intensity_x.desc": "The horizontal intensity of the parallax effect.\nThis should be a value between 0.0 (no movement) and 1.0 (maximum movement).",
+  "fancymenu.elements.parallax.intensity_y": "Set Parallax Intensity (Y)",
+  "fancymenu.elements.parallax.intensity_y.desc": "The vertical intensity of the parallax effect.\nThis should be a value between 0.0 (no movement) and 1.0 (maximum movement)."
 }

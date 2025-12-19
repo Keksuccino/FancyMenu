@@ -89,17 +89,29 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
             b.setIsActiveSupplier(consumes -> !this.background.slideLeftRight);
         }
 
-        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity"), var1 -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x"), var1 -> {
             final Screen currentScreen = Minecraft.getInstance().screen;
-            TextEditorScreen s = TextEditorScreen.build(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity"), null, callback -> {
+            TextEditorScreen s = TextEditorScreen.build(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x"), null, callback -> {
                 if (callback != null) {
-                    this.background.parallaxIntensityString = callback;
+                    this.background.parallaxIntensityXString = callback;
                 }
                 Minecraft.getInstance().setScreen(currentScreen);
             });
-            s.setText(this.background.parallaxIntensityString);
+            s.setText(this.background.parallaxIntensityXString);
             Minecraft.getInstance().setScreen(s);
-        }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.image.configure.parallax_intensity.desc"))), true);
+        }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc"))), true);
+
+        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y"), var1 -> {
+            final Screen currentScreen = Minecraft.getInstance().screen;
+            TextEditorScreen s = TextEditorScreen.build(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y"), null, callback -> {
+                if (callback != null) {
+                    this.background.parallaxIntensityYString = callback;
+                }
+                Minecraft.getInstance().setScreen(currentScreen);
+            });
+            s.setText(this.background.parallaxIntensityYString);
+            Minecraft.getInstance().setScreen(s);
+        }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc"))), true);
 
         WidgetCell invertParallaxCell = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.backgrounds.image.configure.invert_parallax", this.background.invertParallax), true, (value, button) -> {
             this.background.invertParallax = value.getAsBoolean();

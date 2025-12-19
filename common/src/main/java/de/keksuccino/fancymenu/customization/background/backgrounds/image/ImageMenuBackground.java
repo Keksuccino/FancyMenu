@@ -26,8 +26,12 @@ public class ImageMenuBackground extends MenuBackground {
     public boolean parallaxEnabled = false;
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
     @NotNull
-    public String parallaxIntensityString = "0.02";
-    public float lastParallaxIntensity = -10000.0F;
+    public String parallaxIntensityXString = "0.02";
+    /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
+    @NotNull
+    public String parallaxIntensityYString = "0.02";
+    public float lastParallaxIntensityX = -10000.0F;
+    public float lastParallaxIntensityY = -10000.0F;
     /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
     public boolean invertParallax = false;
     public boolean restartAnimatedOnMenuLoad = false;
@@ -69,7 +73,8 @@ public class ImageMenuBackground extends MenuBackground {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
+        this.lastParallaxIntensityX = SerializationUtils.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityXString));
+        this.lastParallaxIntensityY = SerializationUtils.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityYString));
 
         RenderSystem.enableBlend();
 
@@ -123,8 +128,8 @@ public class ImageMenuBackground extends MenuBackground {
         float directionMultiplier = invertParallax ? 1.0f : -1.0f;
 
         // Calculate offset based on screen dimensions and center-adjusted mouse position
-        float xOffset = directionMultiplier * this.lastParallaxIntensity * mouseXPercent * getScreenWidth() * 0.5f;
-        float yOffset = directionMultiplier * this.lastParallaxIntensity * mouseYPercent * getScreenHeight() * 0.5f;
+        float xOffset = directionMultiplier * this.lastParallaxIntensityX * mouseXPercent * getScreenWidth() * 0.5f;
+        float yOffset = directionMultiplier * this.lastParallaxIntensityY * mouseYPercent * getScreenHeight() * 0.5f;
 
         return new float[]{xOffset, yOffset};
 
@@ -136,8 +141,8 @@ public class ImageMenuBackground extends MenuBackground {
 
         if (parallaxEnabled) {
             // Create expanded area for parallax movement
-            int expandedWidth = (int)(getScreenWidth() * (1.0F + this.lastParallaxIntensity));
-            int expandedHeight = (int)(getScreenHeight() * (1.0F + this.lastParallaxIntensity));
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + this.lastParallaxIntensityX));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + this.lastParallaxIntensityY));
 
             // Center the expanded area and apply parallax offset
             int baseX = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
@@ -177,10 +182,11 @@ public class ImageMenuBackground extends MenuBackground {
 
     protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
         // Calculate base size with reduced parallax expansion
-        float parallaxScale = parallaxEnabled ? (1.0F + this.lastParallaxIntensity) : 1.0F;
+        float parallaxScaleX = parallaxEnabled ? (1.0F + this.lastParallaxIntensityX) : 1.0F;
+        float parallaxScaleY = parallaxEnabled ? (1.0F + this.lastParallaxIntensityY) : 1.0F;
         int[] baseSize = ratio.getAspectRatioSizeByMinimumSize(
-                (int)(getScreenWidth() * parallaxScale),
-                (int)(getScreenHeight() * parallaxScale)
+                (int)(getScreenWidth() * parallaxScaleX),
+                (int)(getScreenHeight() * parallaxScaleY)
         );
 
         // Calculate centered position with adjusted parallax offset
@@ -201,8 +207,8 @@ public class ImageMenuBackground extends MenuBackground {
         graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
         if (parallaxEnabled) {
             // Reduce the expansion amount for parallax
-            int expandedWidth = (int)(getScreenWidth() * (1.0F + this.lastParallaxIntensity));
-            int expandedHeight = (int)(getScreenHeight() * (1.0F + this.lastParallaxIntensity));
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + this.lastParallaxIntensityX));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + this.lastParallaxIntensityY));
 
             // Center the expanded area and apply parallax offset
             int x = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
