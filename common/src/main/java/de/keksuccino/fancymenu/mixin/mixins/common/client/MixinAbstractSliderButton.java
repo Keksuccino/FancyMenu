@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -180,7 +181,8 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     @Unique
     @Override
     public @Nullable RenderableResource getCustomSliderBackgroundNormalFancyMenu() {
-        return this.customSliderBackgroundNormalFancyMenu;
+        if (this.customSliderBackgroundNormalFancyMenu != null) return this.customSliderBackgroundNormalFancyMenu;
+        return GlobalCustomizationHandler.getCustomSliderBackground();
     }
 
     @Unique
@@ -192,7 +194,8 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     @Unique
     @Override
     public @Nullable RenderableResource getCustomSliderBackgroundHighlightedFancyMenu() {
-        return this.customSliderBackgroundHighlightedFancyMenu;
+        if (this.customSliderBackgroundHighlightedFancyMenu != null) return this.customSliderBackgroundHighlightedFancyMenu;
+        return GlobalCustomizationHandler.getCustomSliderBackground();
     }
 
     @Unique

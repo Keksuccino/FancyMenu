@@ -4,18 +4,22 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -55,6 +59,34 @@ public abstract class MixinScreen implements CustomizableScreen {
     @Inject(method = "renderBlurredBackground", at = @At("HEAD"), cancellable = true)
     private void head_renderBlurredBackground_FancyMenu(float f, CallbackInfo info) {
         if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
+    }
+
+    @Inject(method = "renderPanorama", at = @At("HEAD"), cancellable = true)
+    private void before_renderPanorama_FancyMenu(GuiGraphics graphics, float partial, CallbackInfo info) {
+        LocalTexturePanoramaRenderer panorama = GlobalCustomizationHandler.getCustomBackgroundPanorama();
+        if (panorama != null) {
+            float previousOpacity = panorama.opacity;
+            panorama.opacity = 1.0F;
+            panorama.render(graphics, 0, 0, partial);
+            panorama.opacity = previousOpacity;
+            info.cancel();
+        }
+    }
+
+    @Inject(method = "renderMenuBackgroundTexture", at = @At("HEAD"), cancellable = true)
+    private static void before_renderMenuBackgroundTexture_FancyMenu(GuiGraphics graphics, ResourceLocation location, int x, int y, float uOffset, float vOffset, int width, int height, CallbackInfo info) {
+        RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
+        if (customBackground == null) return;
+        ResourceLocation customLocation = customBackground.getResourceLocation();
+        if (customLocation == null) return;
+        int textureWidth = customBackground.getWidth();
+        int textureHeight = customBackground.getHeight();
+        if (textureWidth <= 0 || textureHeight <= 0) return;
+        RenderSystem.enableBlend();
+        RenderingUtils.blitRepeat(graphics, customLocation, x, y, width, height, textureWidth, textureHeight);
+        RenderingUtils.resetShaderColor(graphics);
+        RenderSystem.disableBlend();
+        info.cancel();
     }
 
 	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))

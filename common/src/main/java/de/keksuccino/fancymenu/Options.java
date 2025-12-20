@@ -26,6 +26,17 @@ public class Options extends AbstractOptions {
     public final Option<String> customWindowIcon32 = new Option<>(config, "custom_window_icon_32", "", "window");
     public final Option<String> customWindowIconMacOS = new Option<>(config, "custom_window_icon_macos", "", "window");
     public final Option<String> customWindowTitle = new Option<>(config, "custom_window_title", "", "window");
+    public final Option<String> globalButtonBackgroundNormal = new Option<>(config, "global_button_background_normal", "", "global_customizations");
+    public final Option<String> globalButtonBackgroundHover = new Option<>(config, "global_button_background_hover", "", "global_customizations");
+    public final Option<String> globalButtonBackgroundInactive = new Option<>(config, "global_button_background_inactive", "", "global_customizations");
+    public final Option<String> globalSliderBackground = new Option<>(config, "global_slider_background", "", "global_customizations");
+    public final Option<String> globalSliderHandleNormal = new Option<>(config, "global_slider_handle_normal", "", "global_customizations");
+    public final Option<String> globalSliderHandleHover = new Option<>(config, "global_slider_handle_hover", "", "global_customizations");
+    public final Option<String> globalSliderHandleInactive = new Option<>(config, "global_slider_handle_inactive", "", "global_customizations");
+    public final Option<String> globalBackgroundPanorama = new Option<>(config, "global_background_panorama", "", "global_customizations");
+    public final Option<String> globalMenuMusicTracks = new Option<>(config, "global_menu_music_tracks", "", "global_customizations");
+    public final Option<String> globalButtonClickSound = new Option<>(config, "global_button_click_sound", "", "global_customizations");
+    public final Option<String> globalMenuBackgroundTexture = new Option<>(config, "global_menu_background_texture", "", "global_customizations");
 
     public final Option<Boolean> showMultiplayerScreenServerIcons = new Option<>(config, "show_multiplayer_screen_server_icons", true, "multiplayer_screen");
 

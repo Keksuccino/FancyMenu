@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.events.screen.CloseScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
@@ -116,6 +117,7 @@ public class ScreenCustomizationEvents {
 	@SuppressWarnings("all")
 	@EventListener
 	public void onTick(ClientTickEvent.Pre e) {
+		GlobalCustomizationHandler.tickMenuMusic();
 
 		if (Minecraft.getInstance().screen == null) {
 			this.lastScreen = null;

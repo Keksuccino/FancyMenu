@@ -4,9 +4,9 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerHandler;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.MusicManager;
@@ -104,7 +104,7 @@ public abstract class MixinMusicManager {
     private SoundInstance currentMusic;
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
-    private void cancelTickIfMusicDisabledViaController_FancyMenu(CallbackInfo info) {
+    private void cancel_tick_FancyMenu(CallbackInfo info) {
         if (Minecraft.getInstance().level == null) {
             if (!MusicControllerHandler.shouldPlayMenuMusic()) info.cancel();
         } else {
@@ -113,15 +113,17 @@ public abstract class MixinMusicManager {
     }
 
     @Inject(method = "startPlaying", at = @At("HEAD"), cancellable = true)
-    private void stopMusicIfDisabledInConfigFancyMenu(Music music, CallbackInfo info) {
-        if ((Minecraft.getInstance().level == null) && !FancyMenu.getOptions().playVanillaMenuMusic.getValue()) {
-            this.stopPlaying();
-            info.cancel();
+    private void cancel_startPlaying_FancyMenu(Music music, CallbackInfo info) {
+        if (Minecraft.getInstance().level == null) {
+            if (!FancyMenu.getOptions().playVanillaMenuMusic.getValue() || GlobalCustomizationHandler.hasCustomMenuMusicTracks()) {
+                this.stopPlaying();
+                info.cancel();
+            }
         }
     }
 
     @Inject(method = "startPlaying", at = @At("RETURN"))
-    private void after_startPlayingFancyMenu(Music music, CallbackInfo info) {
+    private void after_startPlaying_FancyMenu(Music music, CallbackInfo info) {
         if ((this.currentMusic != null) && (this.currentMusic.getSound() != SoundManager.EMPTY_SOUND)) {
             this.fireMusicTrackStartedFancyMenu(this.currentMusic);
         } else {
@@ -131,12 +133,12 @@ public abstract class MixinMusicManager {
     }
 
     @Inject(method = "stopPlaying()V", at = @At("HEAD"))
-    private void before_stopPlayingFancyMenu(CallbackInfo info) {
+    private void before_stopPlaying_FancyMenu(CallbackInfo info) {
         this.pendingStoppedMusic_FancyMenu = this.currentMusic;
     }
 
     @Inject(method = "stopPlaying()V", at = @At("RETURN"))
-    private void after_stopPlayingFancyMenu(CallbackInfo info) {
+    private void after_stopPlaying_FancyMenu(CallbackInfo info) {
         if (this.pendingStoppedMusic_FancyMenu != null) {
             this.fireMusicTrackStoppedFancyMenu(this.pendingStoppedMusic_FancyMenu);
         }
@@ -147,7 +149,7 @@ public abstract class MixinMusicManager {
             method = "tick",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/sounds/MusicManager;currentMusic:Lnet/minecraft/client/resources/sounds/SoundInstance;", opcode = Opcodes.PUTFIELD)
     )
-    private void wrap_setCurrentMusicFancyMenu(MusicManager instance, SoundInstance value, Operation<Void> operation) {
+    private void wrap_setCurrentMusic_FancyMenu(MusicManager instance, SoundInstance value, Operation<Void> operation) {
         SoundInstance previous = this.currentMusic;
         operation.call(instance, value);
         if ((previous != null) && (value == null)) {

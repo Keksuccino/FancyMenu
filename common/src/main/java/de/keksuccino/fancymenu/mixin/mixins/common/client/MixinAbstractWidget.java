@@ -1,17 +1,20 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -152,10 +155,18 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	}
 	
 	@Inject(method = "playDownSound", at = @At(value = "HEAD"), cancellable = true)
-	private void beforeWidgetClickSoundFancyMenu(SoundManager manager, CallbackInfo info) {
+	private void before_playDownSound_FancyMenu(SoundManager manager, CallbackInfo info) {
 		if (this.customClickSoundFancyMenu != null) {
 			this.customClickSoundFancyMenu.stop();
 			this.customClickSoundFancyMenu.play();
+			info.cancel();
+			return;
+		}
+		IAudio globalClickSound = GlobalCustomizationHandler.getCustomButtonClickSound();
+		if (globalClickSound != null) {
+			globalClickSound.setSoundChannel(SoundSource.MASTER);
+			globalClickSound.stop();
+			globalClickSound.play();
 			info.cancel();
 		}
 	}
@@ -459,7 +470,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Override
 	public @Nullable RenderableResource getCustomBackgroundNormalFancyMenu() {
-		return this.customBackgroundNormalFancyMenu;
+		if (this.customBackgroundNormalFancyMenu != null) return this.customBackgroundNormalFancyMenu;
+		return this.getGlobalBackgroundNormal_FancyMenu();
 	}
 
 	@Unique
@@ -471,7 +483,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Override
 	public @Nullable RenderableResource getCustomBackgroundHoverFancyMenu() {
-		return this.customBackgroundHoverFancyMenu;
+		if (this.customBackgroundHoverFancyMenu != null) return this.customBackgroundHoverFancyMenu;
+		return this.getGlobalBackgroundHover_FancyMenu();
 	}
 
 	@Unique
@@ -531,7 +544,35 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Override
 	public @Nullable RenderableResource getCustomBackgroundInactiveFancyMenu() {
-		return this.customBackgroundInactiveFancyMenu;
+		if (this.customBackgroundInactiveFancyMenu != null) return this.customBackgroundInactiveFancyMenu;
+		return this.getGlobalBackgroundInactive_FancyMenu();
+	}
+
+	@Unique
+	@Nullable
+	private RenderableResource getGlobalBackgroundNormal_FancyMenu() {
+		if ((Object)this instanceof AbstractSliderButton) {
+			return GlobalCustomizationHandler.getCustomSliderHandleNormal();
+		}
+		return GlobalCustomizationHandler.getCustomButtonBackgroundNormal();
+	}
+
+	@Unique
+	@Nullable
+	private RenderableResource getGlobalBackgroundHover_FancyMenu() {
+		if ((Object)this instanceof AbstractSliderButton) {
+			return GlobalCustomizationHandler.getCustomSliderHandleHover();
+		}
+		return GlobalCustomizationHandler.getCustomButtonBackgroundHover();
+	}
+
+	@Unique
+	@Nullable
+	private RenderableResource getGlobalBackgroundInactive_FancyMenu() {
+		if ((Object)this instanceof AbstractSliderButton) {
+			return GlobalCustomizationHandler.getCustomSliderHandleInactive();
+		}
+		return GlobalCustomizationHandler.getCustomButtonBackgroundInactive();
 	}
 
 	@Unique
