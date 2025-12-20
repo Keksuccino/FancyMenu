@@ -36,11 +36,13 @@ public class ManageAudiosScreen extends CellScreen {
         this.tempAudios = new ArrayList<>(audios);
         this.element = element;
         this.editor = editor;
+        this.setSearchBarEnabled(true);
     }
 
     @Override
     protected void initCells() {
-        this.addSpacerCell(10);
+
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
         for (AudioElement.AudioInstance instance : this.tempAudios) {
             MutableComponent sourceName = Component.literal("[").append(instance.supplier.getSourceType().getValueComponent().setStyle(Style.EMPTY)).append("] ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
@@ -56,7 +58,8 @@ public class ManageAudiosScreen extends CellScreen {
             }
         }
 
-        this.addStartEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+
     }
 
     @Override

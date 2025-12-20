@@ -32,19 +32,21 @@ public class TargetElementManagerScreen extends CellScreen {
         this.parentLayoutEditor = editorElement.editor;
         this.callback = callback;
         this.targets = new ArrayList<>(this.element.targetElements);
+        this.setSearchBarEnabled(true);
     }
 
     @Override
     protected void initCells() {
 
-        this.addStartEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
         // Header
         this.addLabelCell(Component.translatable("fancymenu.elements.animation_controller.manage_targets.info")
-                .setStyle(Style.EMPTY.withItalic(true)));
+                .setStyle(Style.EMPTY.withItalic(true)))
+                .setIgnoreSearch();
 
-        this.addCellGroupEndSpacerCell();
-        this.addCellGroupEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
         // List current targets
         if (this.targets.isEmpty()) {
@@ -63,7 +65,8 @@ public class TargetElementManagerScreen extends CellScreen {
             }
         }
 
-        this.addStartEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+
     }
 
     @Override

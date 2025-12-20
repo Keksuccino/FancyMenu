@@ -31,12 +31,13 @@ public class ManageResourcePreLoadScreen extends CellScreen {
     public ManageResourcePreLoadScreen(@NotNull Consumer<Boolean> callback) {
         super(Component.translatable("fancymenu.resources.pre_loading.manage"));
         this.callback = callback;
+        this.setSearchBarEnabled(true);
     }
 
     @Override
     protected void initCells() {
 
-        this.addSpacerCell(10);
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
         for (ResourceSource source : ResourcePreLoader.getRegisteredResourceSources(this.cachedSerialized)) {
 
@@ -55,7 +56,7 @@ public class ManageResourcePreLoadScreen extends CellScreen {
 
         }
 
-        this.addStartEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
     }
 

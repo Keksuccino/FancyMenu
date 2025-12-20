@@ -25,12 +25,13 @@ public class ManageGlobalMenuMusicTracksScreen extends CellScreen {
         super(Component.translatable("fancymenu.global_customizations.menu_music_tracks.manage"));
         this.callback = callback;
         this.cachedTracks.addAll(GlobalCustomizationHandler.getCustomMenuMusicTracks());
+        this.setSearchBarEnabled(true);
     }
 
     @Override
     protected void initCells() {
 
-        this.addSpacerCell(10);
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
         if (this.cachedTracks.isEmpty()) {
             this.addLabelCell(Component.translatable("fancymenu.global_customizations.menu_music_tracks.empty")
@@ -45,7 +46,7 @@ public class ManageGlobalMenuMusicTracksScreen extends CellScreen {
             }
         }
 
-        this.addStartEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
     }
 
