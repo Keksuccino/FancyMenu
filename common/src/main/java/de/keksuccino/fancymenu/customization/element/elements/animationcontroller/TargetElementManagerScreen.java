@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -61,7 +60,6 @@ public class TargetElementManagerScreen extends CellScreen {
                 label = label.append(Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.label", target.timingOffsetMs)
                         .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt())));
                 this.addCell(new TargetEntryCell(target, label));
-                this.addCellGroupEndSpacerCell();
             }
         }
 
@@ -97,6 +95,38 @@ public class TargetElementManagerScreen extends CellScreen {
         });
         this.addRightSideDefaultSpacer();
 
+        this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.edit"), button -> {
+            AnimationControllerElement.TargetElement target = this.getSelectedTarget();
+            if (target == null) return;
+            TextInputScreen inputScreen = TextInputScreen.build(Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.input"), CharacterFilter.buildIntegerFilter(), result -> {
+                if (result != null) {
+                    String trimmed = result.trim();
+                    int offsetMs = 0;
+                    if (!trimmed.isEmpty()) {
+                        try {
+                            offsetMs = Integer.parseInt(trimmed);
+                        } catch (NumberFormatException ignored) {
+                            offsetMs = 0;
+                        }
+                    }
+                    target.timingOffsetMs = offsetMs;
+                }
+                Minecraft.getInstance().setScreen(this);
+                this.rebuild();
+            });
+            inputScreen.setText("" + target.timingOffsetMs);
+            Minecraft.getInstance().setScreen(inputScreen);
+        }).setIsActiveSupplier(consumes -> (this.getSelectedTarget() != null));
+        this.addRightSideDefaultSpacer();
+
+        this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove"), button -> {
+            AnimationControllerElement.TargetElement target = this.getSelectedTarget();
+            if (target == null) return;
+            this.targets.remove(target);
+            this.rebuild();
+        }).setIsActiveSupplier(consumes -> (this.getSelectedTarget() != null));
+        this.addRightSideDefaultSpacer();
+
         this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id"), button -> {
             TextInputScreen inputScreen = TextInputScreen.build(Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id.input"), null, result -> {
                 boolean removed = false;
@@ -122,6 +152,21 @@ public class TargetElementManagerScreen extends CellScreen {
         return ids;
     }
 
+    protected AnimationControllerElement.TargetElement getSelectedTarget() {
+        RenderCell cell = this.getSelectedCell();
+        if (cell != null) {
+            String id = cell.getMemoryValue("target_id");
+            if (id != null) {
+                for (AnimationControllerElement.TargetElement target : this.targets) {
+                    if (id.equals(target.targetElementId)) {
+                        return target;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     protected void onCancel() {
         this.callback.accept(null);
@@ -136,58 +181,17 @@ public class TargetElementManagerScreen extends CellScreen {
 
         protected final AnimationControllerElement.TargetElement targetElement;
         protected final Component label;
-        protected final ExtendedButton editOffsetButton;
-        protected final ExtendedButton removeButton;
 
         protected TargetEntryCell(@NotNull AnimationControllerElement.TargetElement targetElement, @NotNull Component label) {
             this.targetElement = targetElement;
             this.label = label;
-            this.editOffsetButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.edit"), button -> {
-                TextInputScreen inputScreen = TextInputScreen.build(Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.input"), CharacterFilter.buildIntegerFilter(), result -> {
-                    if (result != null) {
-                        String trimmed = result.trim();
-                        int offsetMs = 0;
-                        if (!trimmed.isEmpty()) {
-                            try {
-                                offsetMs = Integer.parseInt(trimmed);
-                            } catch (NumberFormatException ignored) {
-                                offsetMs = 0;
-                            }
-                        }
-                        this.targetElement.timingOffsetMs = offsetMs;
-                    }
-                    Minecraft.getInstance().setScreen(TargetElementManagerScreen.this);
-                    TargetElementManagerScreen.this.rebuild();
-                });
-                inputScreen.setText("" + this.targetElement.timingOffsetMs);
-                Minecraft.getInstance().setScreen(inputScreen);
-            });
-            this.removeButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove"), button -> {
-                TargetElementManagerScreen.this.targets.remove(this.targetElement);
-                TargetElementManagerScreen.this.rebuild();
-            });
-            UIBase.applyDefaultWidgetSkinTo(this.editOffsetButton);
-            UIBase.applyDefaultWidgetSkinTo(this.removeButton);
-            this.children().add(this.editOffsetButton);
-            this.children().add(this.removeButton);
             this.setSearchStringSupplier(() -> this.label.getString());
+            this.putMemoryValue("target_id", targetElement.targetElementId);
+            this.setSelectable(true);
         }
 
         @Override
         public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            int removeButtonWidth = Minecraft.getInstance().font.width(this.removeButton.getMessage()) + 10;
-            if (removeButtonWidth < 80) removeButtonWidth = 80;
-            int editOffsetButtonWidth = Minecraft.getInstance().font.width(this.editOffsetButton.getMessage()) + 10;
-            if (editOffsetButtonWidth < 80) editOffsetButtonWidth = 80;
-            this.removeButton.setWidth(removeButtonWidth);
-            this.removeButton.setHeight(20);
-            this.removeButton.setX(this.getX() + this.getWidth() - this.removeButton.getWidth());
-            this.removeButton.setY(this.getY() + (this.getHeight() - this.removeButton.getHeight()) / 2);
-            this.editOffsetButton.setWidth(editOffsetButtonWidth);
-            this.editOffsetButton.setHeight(20);
-            this.editOffsetButton.setX(this.removeButton.getX() - this.editOffsetButton.getWidth() - 4);
-            this.editOffsetButton.setY(this.removeButton.getY());
-
             RenderingUtils.resetShaderColor(graphics);
             int textY = this.getY() + (this.getHeight() - Minecraft.getInstance().font.lineHeight) / 2;
             UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.label, this.getX(), textY);
