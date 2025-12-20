@@ -50,6 +50,9 @@ public class CheckboxElementBuilder extends ElementBuilder<CheckboxElement, Chec
         element.backgroundTextureHover = deserializeImageResourceSupplier(serialized.getValue("background_texture_hover"));
         element.backgroundTextureInactive = deserializeImageResourceSupplier(serialized.getValue("background_texture_inactive"));
         element.checkmarkTexture = deserializeImageResourceSupplier(serialized.getValue("checkmark_texture"));
+
+        element.variableMode = deserializeBoolean(element.variableMode, serialized.getValue("variable_mode"));
+        element.linkedVariable = serialized.getValue("linked_variable");
         
         element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
         
@@ -103,6 +106,11 @@ public class CheckboxElementBuilder extends ElementBuilder<CheckboxElement, Chec
         }
         if (element.checkmarkTexture != null) {
             serializeTo.putProperty("checkmark_texture", element.checkmarkTexture.getSourceWithPrefix());
+        }
+
+        serializeTo.putProperty("variable_mode", "" + element.variableMode);
+        if (element.linkedVariable != null) {
+            serializeTo.putProperty("linked_variable", element.linkedVariable);
         }
         
         serializeTo.putProperty("navigatable", "" + element.navigatable);

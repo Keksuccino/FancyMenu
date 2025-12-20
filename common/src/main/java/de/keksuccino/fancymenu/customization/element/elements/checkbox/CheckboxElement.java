@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -22,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
+import java.util.Objects;
 
 public class CheckboxElement extends AbstractElement implements ExecutableElement {
 
@@ -39,6 +41,9 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     public ResourceSupplier<ITexture> backgroundTextureHover = null;
     @Nullable
     public ResourceSupplier<ITexture> backgroundTextureInactive = null;
+    public boolean variableMode = false;
+    @Nullable
+    public String linkedVariable;
     public ResourceSupplier<IAudio> hoverSound;
     public ResourceSupplier<IAudio> clickSound;
     public boolean navigatable = true;
@@ -57,23 +62,29 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
      * Call this after setting a new block instance.
      */
     public void prepareExecutableBlock() {
-        this.actionExecutor.addValuePlaceholder("value", () -> "" + CheckboxStatesHandler.getForCheckboxElement(this));
+        this.actionExecutor.addValuePlaceholder("value", () -> "" + this.getCheckboxStateForPlaceholders());
     }
 
     /**
      * Call this after setting a new container instance.
      */
     public void prepareLoadingRequirementContainer() {
-        this.loadingRequirementContainer.addValuePlaceholder("value", () -> "" + CheckboxStatesHandler.getForCheckboxElement(this));
+        this.loadingRequirementContainer.addValuePlaceholder("value", () -> "" + this.getCheckboxStateForPlaceholders());
     }
 
     @Override
     public void afterConstruction() {
         this.checkbox = new CheckboxButton(0, 0, 20, 20, (checkbox, state) -> {
-            CheckboxStatesHandler.setForCheckboxElement(this, state);
+            if (this.variableMode && this.linkedVariable != null) {
+                if (!isEditor()) {
+                    VariableHandler.setVariable(this.linkedVariable, Boolean.toString(state));
+                }
+            } else {
+                CheckboxStatesHandler.setForCheckboxElement(this, state);
+            }
             this.actionExecutor.execute();
         });
-        this.checkbox.setCheckboxState(CheckboxStatesHandler.getForCheckboxElement(this), false);
+        this.syncCheckboxStateOnLoad();
     }
 
     @Override
@@ -96,7 +107,8 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     protected void updateWidget() {
 
         if (this.checkbox == null) return;
-        
+
+        this.syncCheckboxStateFromVariable();
         this.updateWidgetActiveState();
         this.updateWidgetVisibility();
         this.updateWidgetAlpha();
@@ -108,6 +120,47 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         this.updateWidgetPosition();
         this.updateWidgetNavigatable();
 
+    }
+
+    protected void syncCheckboxStateOnLoad() {
+        if (this.checkbox == null) return;
+        boolean state = CheckboxStatesHandler.getForCheckboxElement(this);
+        if (this.variableMode && this.linkedVariable != null) {
+            if (VariableHandler.variableExists(this.linkedVariable)) {
+                String value = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+                state = this.parseBooleanVariableValue(value);
+            } else if (!isEditor()) {
+                VariableHandler.setVariable(this.linkedVariable, Boolean.toString(state));
+            }
+        }
+        this.checkbox.setCheckboxState(state, false);
+    }
+
+    protected void syncCheckboxStateFromVariable() {
+        if (this.checkbox == null) return;
+        if (!this.variableMode || this.linkedVariable == null) return;
+        if (!VariableHandler.variableExists(this.linkedVariable)) return;
+        String value = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+        boolean state = this.parseBooleanVariableValue(value);
+        if (this.checkbox.getCheckboxState() != state) {
+            this.checkbox.setCheckboxState(state, false);
+        }
+    }
+
+    protected boolean getCheckboxStateForPlaceholders() {
+        if (this.variableMode && this.linkedVariable != null) {
+            if (VariableHandler.variableExists(this.linkedVariable)) {
+                String value = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+                return this.parseBooleanVariableValue(value);
+            }
+        }
+        return CheckboxStatesHandler.getForCheckboxElement(this);
+    }
+
+    protected boolean parseBooleanVariableValue(@Nullable String value) {
+        if (value == null) return false;
+        String trimmed = value.trim();
+        return trimmed.equalsIgnoreCase("true") || trimmed.equals("1");
     }
 
     protected void updateWidgetActiveState() {

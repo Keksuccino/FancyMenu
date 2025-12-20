@@ -51,6 +51,26 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
                 .setStackable(false);
 
+        this.rightClickMenu.addSeparatorEntry("checkbox_separator_variable");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "variable_mode", CheckboxEditorElement.class,
+                        consumes -> consumes.getElement().variableMode,
+                        (checkboxEditorElement, aBoolean) -> checkboxEditorElement.getElement().variableMode = aBoolean,
+                        "fancymenu.elements.checkbox.variable_mode")
+                .setStackable(false)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.variable_mode.desc")));
+
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_variable",
+                        consumes -> (consumes instanceof CheckboxEditorElement),
+                        consumes -> ((CheckboxElement)consumes.element).linkedVariable,
+                        (element1, s) -> ((CheckboxElement)element1.element).linkedVariable = s,
+                        null, false, false, Component.translatable("fancymenu.elements.checkbox.editor.set_variable"),
+                        true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
+                .setStackable(false)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.editor.set_variable.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("script"))
+                .addIsActiveSupplier((menu, entry) -> this.getElement().variableMode);
+
         this.rightClickMenu.addSeparatorEntry("checkbox_separator_1");
 
         this.addTextureSettings();
