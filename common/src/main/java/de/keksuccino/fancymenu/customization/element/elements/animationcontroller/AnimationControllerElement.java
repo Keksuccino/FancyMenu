@@ -22,6 +22,9 @@ public class AnimationControllerElement extends AbstractElement {
     public boolean offsetMode = false;
     public boolean ignoreSize = false;
     public boolean ignorePosition = false;
+    public boolean randomTimingOffsetMode = false;
+    public int randomTimingOffsetMinMs = 0;
+    public int randomTimingOffsetMaxMs = 0;
 
     public AnimationControllerElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -63,7 +66,7 @@ public class AnimationControllerElement extends AbstractElement {
                         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
                         if (layer != null) {
                             AbstractElement target = layer.getElementByInstanceIdentifier(targetElement.targetElementId);
-                            if (target != null) targetElement.animationApplied = AnimationControllerHandler.applyAnimation(this, target);
+                            if (target != null) targetElement.animationApplied = AnimationControllerHandler.applyAnimation(this, targetElement, target);
                         }
                     }
                 } else {
@@ -84,13 +87,19 @@ public class AnimationControllerElement extends AbstractElement {
     public static class TargetElement {
 
         public String targetElementId;
-        public boolean animationApplied = false;
+        public int timingOffsetMs = 0;
+        public transient boolean animationApplied = false;
 
         public TargetElement() {
         }
 
         public TargetElement(String targetElementId) {
             this.targetElementId = targetElementId;
+        }
+
+        public TargetElement(String targetElementId, int timingOffsetMs) {
+            this.targetElementId = targetElementId;
+            this.timingOffsetMs = timingOffsetMs;
         }
 
     }

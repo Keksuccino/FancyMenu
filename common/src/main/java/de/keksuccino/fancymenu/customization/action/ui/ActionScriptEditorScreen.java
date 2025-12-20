@@ -590,7 +590,7 @@ public class ActionScriptEditorScreen extends Screen {
             });
             Minecraft.getInstance().setScreen(s);
         } else if (targetExecutable instanceof DelayExecutableBlock block) {
-            TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFiler().convertToLegacyFilter(), call -> {
+            TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFilter().convertToLegacyFilter(), call -> {
                 if (call != null) {
                     ExecutableEntry currentEntry = this.findEntryForExecutable(block);
                     if ((currentEntry != null) && (currentEntry.executable instanceof DelayExecutableBlock currentBlock)) {
@@ -706,7 +706,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     protected void onAddDelay(@Nullable ExecutableEntry selectionReference) {
         final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
-        TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFiler().convertToLegacyFilter(), call -> {
+        TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFilter().convertToLegacyFilter(), call -> {
             if (call != null) {
                 ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 DelayExecutableBlock block = new DelayExecutableBlock();

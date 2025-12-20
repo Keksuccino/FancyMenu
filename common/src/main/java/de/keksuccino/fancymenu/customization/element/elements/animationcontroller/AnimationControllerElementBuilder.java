@@ -25,6 +25,7 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new Gson();
     private static final Type KEYFRAME_LIST_TYPE = new TypeToken<ArrayList<AnimationKeyframe>>(){}.getType();
+    private static final Type TARGETS_LIST_TYPE = new TypeToken<ArrayList<AnimationControllerElement.TargetElement>>(){}.getType();
     private static final Type IDS_LIST_TYPE = new TypeToken<ArrayList<String>>(){}.getType();
 
     public AnimationControllerElementBuilder() {
@@ -45,15 +46,32 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
 
         AnimationControllerElement element = buildDefaultInstance();
 
+        boolean loadedTargets = false;
         try {
-            // Deserialize target element IDs
-            String targetIds = serialized.getValue("target_element_ids");
-            if (targetIds != null) {
-                ArrayList<String> ids = Objects.requireNonNullElse(GSON.fromJson(targetIds, IDS_LIST_TYPE), new ArrayList<>());
-                ids.forEach(s -> element.targetElements.add(new AnimationControllerElement.TargetElement(s)));
+            // Deserialize target elements (with offsets)
+            String targetElementsJson = serialized.getValue("target_elements");
+            if (targetElementsJson != null) {
+                ArrayList<AnimationControllerElement.TargetElement> targets = Objects.requireNonNullElse(GSON.fromJson(targetElementsJson, TARGETS_LIST_TYPE), new ArrayList<>());
+                targets.stream()
+                        .filter(target -> target != null && target.targetElementId != null && !target.targetElementId.isEmpty())
+                        .forEach(element.targetElements::add);
+                loadedTargets = true;
             }
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to deserialize target element IDs of AnimationControllerElement!", ex);
+            LOGGER.error("[FANCYMENU] Failed to deserialize target elements of AnimationControllerElement!", ex);
+        }
+
+        if (!loadedTargets) {
+            try {
+                // Deserialize legacy target element IDs
+                String targetIds = serialized.getValue("target_element_ids");
+                if (targetIds != null) {
+                    ArrayList<String> ids = Objects.requireNonNullElse(GSON.fromJson(targetIds, IDS_LIST_TYPE), new ArrayList<>());
+                    ids.forEach(s -> element.targetElements.add(new AnimationControllerElement.TargetElement(s)));
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to deserialize target element IDs of AnimationControllerElement!", ex);
+            }
         }
 
         // Deserialize keyframes
@@ -81,6 +99,12 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
 
         element.ignorePosition = SerializationUtils.deserializeBoolean(element.ignorePosition, serialized.getValue("ignore_position"));
 
+        element.randomTimingOffsetMode = SerializationUtils.deserializeBoolean(element.randomTimingOffsetMode, serialized.getValue("random_timing_offset_mode"));
+
+        element.randomTimingOffsetMinMs = SerializationUtils.deserializeNumber(Integer.class, element.randomTimingOffsetMinMs, serialized.getValue("random_timing_offset_min_ms"));
+
+        element.randomTimingOffsetMaxMs = SerializationUtils.deserializeNumber(Integer.class, element.randomTimingOffsetMaxMs, serialized.getValue("random_timing_offset_max_ms"));
+
         return element;
 
     }
@@ -88,8 +112,10 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
     @Override
     protected SerializedElement serializeElement(@NotNull AnimationControllerElement element, @NotNull SerializedElement serializeTo) {
 
-        // Serialize target element IDs
+        // Serialize target elements (with offsets)
         if (!element.targetElements.isEmpty()) {
+            ArrayList<AnimationControllerElement.TargetElement> targets = new ArrayList<>(element.targetElements);
+            serializeTo.putProperty("target_elements", GSON.toJson(targets, TARGETS_LIST_TYPE));
             ArrayList<String> ids = new ArrayList<>();
             element.targetElements.forEach(targetElement -> ids.add(targetElement.targetElementId));
             serializeTo.putProperty("target_element_ids", GSON.toJson(ids, IDS_LIST_TYPE));
@@ -108,6 +134,12 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
         serializeTo.putProperty("ignore_size", "" + element.ignoreSize);
 
         serializeTo.putProperty("ignore_position", "" + element.ignorePosition);
+
+        serializeTo.putProperty("random_timing_offset_mode", "" + element.randomTimingOffsetMode);
+
+        serializeTo.putProperty("random_timing_offset_min_ms", "" + element.randomTimingOffsetMinMs);
+
+        serializeTo.putProperty("random_timing_offset_max_ms", "" + element.randomTimingOffsetMaxMs);
 
         return serializeTo;
 

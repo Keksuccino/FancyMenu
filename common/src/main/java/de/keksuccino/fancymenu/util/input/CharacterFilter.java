@@ -10,13 +10,13 @@ public class CharacterFilter {
 
     @NotNull
     public static CharacterFilter buildDecimalFiler() {
-        CharacterFilter f = buildIntegerFiler();
+        CharacterFilter f = buildIntegerFilter();
         f.addAllowedCharacters(".");
         return f;
     }
 
     @NotNull
-    public static CharacterFilter buildIntegerFiler() {
+    public static CharacterFilter buildIntegerFilter() {
         CharacterFilter f = new CharacterFilter();
         f.addAllowedCharacters("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "+");
         return f;

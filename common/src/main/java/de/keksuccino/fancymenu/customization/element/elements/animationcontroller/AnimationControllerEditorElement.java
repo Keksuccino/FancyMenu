@@ -3,8 +3,10 @@ package de.keksuccino.fancymenu.customization.element.elements.animationcontroll
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -71,6 +73,45 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_position.desc")))
                 .setStackable(false);
 
+        this.rightClickMenu.addSeparatorEntry("separator_before_random_timing_offsets");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "random_timing_offsets", AnimationControllerEditorElement.class,
+                        consumes -> consumes.getElement().randomTimingOffsetMode,
+                        (element, aBoolean) -> element.getElement().randomTimingOffsetMode = aBoolean,
+                        "fancymenu.elements.animation_controller.random_timing_offsets")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.desc")))
+                .setStackable(false);
+
+        this.rightClickMenu.addClickableEntry("random_timing_offsets_range", Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"),
+                        (menu, entry) -> {
+                            DualTextInputScreen s = DualTextInputScreen.build(
+                                    Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"),
+                                    Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range.min"),
+                                    Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range.max"),
+                                    CharacterFilter.buildIntegerFilter(),
+                                    callback -> {
+                                        if (callback != null) {
+                                            int min = parseOffsetValue(callback.getKey(), this.getElement().randomTimingOffsetMinMs);
+                                            int max = parseOffsetValue(callback.getValue(), this.getElement().randomTimingOffsetMaxMs);
+                                            if (min > max) {
+                                                int temp = min;
+                                                min = max;
+                                                max = temp;
+                                            }
+                                            this.editor.history.saveSnapshot();
+                                            this.getElement().randomTimingOffsetMinMs = min;
+                                            this.getElement().randomTimingOffsetMaxMs = max;
+                                        }
+                                        Minecraft.getInstance().setScreen(this.editor);
+                                    });
+                            s.setFirstText("" + this.getElement().randomTimingOffsetMinMs);
+                            s.setSecondText("" + this.getElement().randomTimingOffsetMaxMs);
+                            s.setAllowPlaceholders(false);
+                            Minecraft.getInstance().setScreen(s);
+                        })
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.range.desc")))
+                .setStackable(false);
+
         this.rightClickMenu.addSeparatorEntry("separator_after_manage");
 
         this.rightClickMenu.addClickableEntry("manage_targets", Component.translatable("fancymenu.elements.animation_controller.manage_targets"),
@@ -94,6 +135,18 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
 
     protected AnimationControllerElement getElement() {
         return (AnimationControllerElement) this.element;
+    }
+
+    protected int parseOffsetValue(@NotNull String value, int fallback) {
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(trimmed);
+        } catch (NumberFormatException ignored) {
+            return fallback;
+        }
     }
 
 }

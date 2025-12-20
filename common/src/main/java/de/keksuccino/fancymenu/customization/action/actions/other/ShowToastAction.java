@@ -160,7 +160,7 @@ public class ShowToastAction extends Action {
             this.addStartEndSpacerCell();
 
             this.addLabelCell(Component.translatable("fancymenu.actions.show_toast.edit.width"));
-            TextInputCell widthCell = this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
+            TextInputCell widthCell = this.addTextInputCell(CharacterFilter.buildIntegerFilter(), false, false)
                     .setEditListener(s -> this.config.width = parseInteger(s, this.config.width, MIN_WIDTH, MAX_WIDTH))
                     .setText(String.valueOf(this.config.width));
             widthCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.width.desc")));
@@ -168,7 +168,7 @@ public class ShowToastAction extends Action {
             this.addCellGroupEndSpacerCell();
 
             this.addLabelCell(Component.translatable("fancymenu.actions.show_toast.edit.duration"));
-            TextInputCell durationCell = this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
+            TextInputCell durationCell = this.addTextInputCell(CharacterFilter.buildIntegerFilter(), false, false)
                     .setEditListener(s -> this.config.durationMs = parseLong(s, this.config.durationMs, MIN_DURATION_MS, MAX_DURATION_MS))
                     .setText(String.valueOf(this.config.durationMs));
             durationCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.duration.desc")));

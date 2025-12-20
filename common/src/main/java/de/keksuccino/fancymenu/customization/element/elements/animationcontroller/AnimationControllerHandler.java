@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.animationcontroll
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
+import de.keksuccino.fancymenu.util.MathUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +16,7 @@ public class AnimationControllerHandler {
     private static final List<String> ANIMATED_MEMORY = new ArrayList<>();
     private static final List<String> FINISHED_ANIMATIONS = new ArrayList<>();
 
-    public static boolean applyAnimation(@NotNull AnimationControllerElement controller, @Nullable AbstractElement targetElement) {
+    public static boolean applyAnimation(@NotNull AnimationControllerElement controller, @NotNull AnimationControllerElement.TargetElement targetConfig, @Nullable AbstractElement targetElement) {
 
         if ((targetElement == null) || !controller.shouldRender()) {
             return false;
@@ -33,7 +34,8 @@ public class AnimationControllerHandler {
         // Start new animation state if not already running or update state if already running
         AnimationState state;
         if (!RUNNING_ANIMATIONS.containsKey(targetId)) {
-            state = new AnimationState(keyframes, System.currentTimeMillis(), targetElement, controller);
+            int timingOffsetMs = resolveTimingOffsetMs(controller, targetConfig);
+            state = new AnimationState(keyframes, System.currentTimeMillis() + timingOffsetMs, targetElement, controller, timingOffsetMs);
             RUNNING_ANIMATIONS.put(targetId, state);
         } else {
             state = RUNNING_ANIMATIONS.get(targetId);
@@ -43,6 +45,21 @@ public class AnimationControllerHandler {
 
         return true;
 
+    }
+
+    private static int resolveTimingOffsetMs(@NotNull AnimationControllerElement controller, @NotNull AnimationControllerElement.TargetElement targetConfig) {
+        int timingOffsetMs = targetConfig.timingOffsetMs;
+        if (controller.randomTimingOffsetMode) {
+            int min = controller.randomTimingOffsetMinMs;
+            int max = controller.randomTimingOffsetMaxMs;
+            if (min > max) {
+                int temp = min;
+                min = max;
+                max = temp;
+            }
+            timingOffsetMs += MathUtils.getRandomNumberInRange(min, max);
+        }
+        return timingOffsetMs;
     }
 
     public static void tick() {
@@ -217,6 +234,7 @@ public class AnimationControllerHandler {
         protected long startTime;
         protected AbstractElement targetElement;
         protected AnimationControllerElement controller;
+        protected int timingOffsetMs;
 
         // Store original element properties
         protected int originalPosOffsetX;
@@ -226,12 +244,13 @@ public class AnimationControllerHandler {
         protected ElementAnchorPoint originalAnchorPoint;
         protected boolean originalStickyAnchor;
 
-        protected AnimationState(List<AnimationKeyframe> keyframes, long startTime, AbstractElement targetElement, AnimationControllerElement controller) {
+        protected AnimationState(List<AnimationKeyframe> keyframes, long startTime, AbstractElement targetElement, AnimationControllerElement controller, int timingOffsetMs) {
 
             this.keyframes = keyframes;
             this.startTime = startTime;
             this.targetElement = targetElement;
             this.controller = controller;
+            this.timingOffsetMs = timingOffsetMs;
 
         }
 

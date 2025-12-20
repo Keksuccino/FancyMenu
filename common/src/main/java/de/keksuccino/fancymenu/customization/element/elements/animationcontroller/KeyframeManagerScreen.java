@@ -324,7 +324,7 @@ public class KeyframeManagerScreen extends Screen {
                 super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
-        this.smoothingDistanceInput.setCharacterFilter(CharacterFilter.buildIntegerFiler());
+        this.smoothingDistanceInput.setCharacterFilter(CharacterFilter.buildIntegerFilter());
         this.smoothingDistanceInput.setIsVisibleSupplier(consumes -> this.isShowingSmoothingInput);
         this.smoothingDistanceInput.setMaxLength(6); // Reasonable limit for ms value
         UIBase.applyDefaultWidgetSkinTo(this.smoothingDistanceInput);
@@ -343,7 +343,7 @@ public class KeyframeManagerScreen extends Screen {
                 super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
-        this.timestampInput.setCharacterFilter(CharacterFilter.buildIntegerFiler());
+        this.timestampInput.setCharacterFilter(CharacterFilter.buildIntegerFilter());
         this.timestampInput.setIsVisibleSupplier(consumes -> this.isShowingTimestampInput);
         this.timestampInput.setMaxLength(20);
         UIBase.applyDefaultWidgetSkinTo(this.timestampInput);

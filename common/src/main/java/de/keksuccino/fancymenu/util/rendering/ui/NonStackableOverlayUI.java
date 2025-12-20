@@ -309,7 +309,7 @@ public class NonStackableOverlayUI {
                 () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
                 s -> {
                     if (MathUtils.isInteger(s)) setter.accept(Integer.valueOf(s));
-                }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerFiler(),
+                }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerFilter(),
                 false, false, (textValidator != null) ? textValidator : defaultIntegerValidator, textValidatorUserFeedback, onCloseEditor);
     }
 
@@ -357,7 +357,7 @@ public class NonStackableOverlayUI {
                 () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
                 s -> {
                     if (MathUtils.isLong(s)) setter.accept(Long.valueOf(s));
-                }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerFiler(),
+                }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerFilter(),
                 false, false, (textValidator != null) ? textValidator : defaultLongValidator, textValidatorUserFeedback, onCloseEditor);
     }
 

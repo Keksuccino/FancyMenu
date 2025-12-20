@@ -1943,7 +1943,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				(e, s) -> {
 					if (MathUtils.isInteger(s)) targetFieldSetter.accept(e, Integer.valueOf(s));
 				},
-				CharacterFilter.buildIntegerFiler(), false, false, label, addResetOption, "" + defaultValue,
+				CharacterFilter.buildIntegerFilter(), false, false, label, addResetOption, "" + defaultValue,
 				(textValidator != null) ? textValidator : defaultIntegerValidator, textValidatorUserFeedback);
 	}
 
@@ -1965,7 +1965,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				(e, s) -> {
 					if (MathUtils.isLong(s)) targetFieldSetter.accept(e, Long.valueOf(s));
 				},
-				CharacterFilter.buildIntegerFiler(), false, false, label, addResetOption, "" + defaultValue,
+				CharacterFilter.buildIntegerFilter(), false, false, label, addResetOption, "" + defaultValue,
 				(textValidator != null) ? textValidator : defaultLongValidator, textValidatorUserFeedback);
 	}
 

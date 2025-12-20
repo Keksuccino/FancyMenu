@@ -2284,5 +2284,14 @@
   "fancymenu.elements.checkbox.editor.set_variable.desc": "Link this checkbox to a variable.\nUse the variable name.\n\nThe variable can be a new\nor an existing variable.",
   "fancymenu.listeners.on_item_hovered_in_inventory": "On Item Hovered In Inventory",
   "fancymenu.listeners.on_item_hovered_in_inventory.desc": "This listener triggers once when the player starts hovering an item in any inventory (player inventory, chest, etc.).\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$item_key §r= The resource location of the hovered item\n- §z$$item_display_name_string §r= The plain text display name of the hovered item\n- §z$$item_display_name_json §r= The serialized raw JSON text component of the hovered item",
-  "fancymenu.custom_guis.build.world_background_overlay.desc": "If the vanilla background blur/tint should be rendered while showing the world behind the GUI."
+  "fancymenu.custom_guis.build.world_background_overlay.desc": "If the vanilla background blur/tint should be rendered while showing the world behind the GUI.",
+  "fancymenu.elements.animation_controller.manage_targets.offset.label": "Timing Offset: %s ms",
+  "fancymenu.elements.animation_controller.manage_targets.offset.edit": "Edit Timing Offset",
+  "fancymenu.elements.animation_controller.manage_targets.offset.input": "Timing Offset (ms):",
+  "fancymenu.elements.animation_controller.random_timing_offsets": "Random Timing Offsets: %s",
+  "fancymenu.elements.animation_controller.random_timing_offsets.desc": "When enabled, each target gets an additional random timing offset within the configured range.",
+  "fancymenu.elements.animation_controller.random_timing_offsets.range": "Random Timing Offset Range",
+  "fancymenu.elements.animation_controller.random_timing_offsets.range.desc": "Configure the minimum and maximum random timing offset in milliseconds.",
+  "fancymenu.elements.animation_controller.random_timing_offsets.range.min": "Minimum Timing Offset (ms)",
+  "fancymenu.elements.animation_controller.random_timing_offsets.range.max": "Maximum Timing Offset (ms)"
 }

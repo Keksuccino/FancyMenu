@@ -573,7 +573,7 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_scroll_list_customizations");
 
 		menu.addClickableEntry("layout_index", Component.translatable("fancymenu.editor.layout.index"), (menu1, entry) -> {
-					TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.editor.layout.index"), CharacterFilter.buildIntegerFiler(), s1 -> {
+					TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.editor.layout.index"), CharacterFilter.buildIntegerFilter(), s1 -> {
 						if ((s1 != null) && MathUtils.isInteger(s1)) {
 							editor.history.saveSnapshot();
 							editor.layout.layoutIndex = Integer.parseInt(s1);
@@ -595,7 +595,7 @@ public class LayoutEditorUI {
 				.setIcon(ContextMenu.IconFactory.getIcon("random"));
 
 		menu.addClickableEntry("random_mode_group", Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), (menu1, entry) -> {
-					Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerFiler(), call -> {
+					Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerFilter(), call -> {
 						if (call != null) {
 							if (!MathUtils.isInteger(call)) {
 								call = "1";

@@ -88,7 +88,7 @@ public class InputFieldElement extends AbstractElement {
 
     public enum InputFieldType {
 
-        INTEGER_ONLY("integer", CharacterFilter.buildIntegerFiler()),
+        INTEGER_ONLY("integer", CharacterFilter.buildIntegerFilter()),
         DECIMAL_ONLY("decimal", CharacterFilter.buildDecimalFiler()),
         URL("url", CharacterFilter.buildUrlFilter()),
         TEXT("text", null);

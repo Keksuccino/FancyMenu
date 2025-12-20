@@ -391,7 +391,7 @@ public class SendHttpRequestAction extends Action {
 
             // Timeout
             this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.timeout"));
-            this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
+            this.addTextInputCell(CharacterFilter.buildIntegerFilter(), false, false)
                     .setEditListener(s -> {
                         try {
                             this.config.timeout = Integer.parseInt(s);
