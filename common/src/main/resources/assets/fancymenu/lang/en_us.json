@@ -2276,5 +2276,6 @@
   "fancymenu.global_customizations.menu_music_tracks.clear.confirm": "Remove all custom menu music tracks?",
   "fancymenu.global_customizations.menu_music_tracks.empty": "No custom menu music tracks configured.",
   "fancymenu.global_customizations.button_click_sound": "Custom Button Click Sound",
-  "fancymenu.global_customizations.menu_background_texture": "Custom Menu Background Texture"
+  "fancymenu.global_customizations.menu_background_texture": "Custom Menu Background Texture",
+  "fancymenu.global_customizations.slider_textures": "Custom Slider Textures"
 }

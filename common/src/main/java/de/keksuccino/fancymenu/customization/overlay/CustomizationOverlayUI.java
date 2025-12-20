@@ -159,7 +159,8 @@ public class CustomizationOverlayUI {
                             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                         }))
                 .addIsActiveSupplier((menu, entry) -> !ScrollScreenNormalizer.isBlacklisted(screen))
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.scroll_screen_normalizer.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.scroll_screen_normalizer.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("scroll"));
 
         customizationMenu.addClickableEntry("force_close_current_screen", Component.translatable("fancymenu.overlay.menu_bar.customization.close_current_screen"), (menu, entry) -> {
             menu.closeMenu();
@@ -316,7 +317,7 @@ public class CustomizationOverlayUI {
 
         customizationMenu.addSubMenuEntry("global_customizations", Component.translatable("fancymenu.overlay.menu_bar.customization.global_customizations"), buildGlobalCustomizationMenu(emptyImageSupplier))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.global_customizations.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("settings"));
+                .setIcon(ContextMenu.IconFactory.getIcon("edit"));
 
         customizationMenu.addSeparatorEntry("separator_after_global_customizations");
 
@@ -387,7 +388,8 @@ public class CustomizationOverlayUI {
                     });
                     Minecraft.getInstance().setScreen(s);
                 })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.listeners.manage.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.listeners.manage.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("ear"));
 
         customizationMenu.addClickableEntry("pre_load_resources", Component.translatable("fancymenu.resources.pre_loading"),
                         (menu, entry) -> {
@@ -629,15 +631,19 @@ public class CustomizationOverlayUI {
 
         globalCustomizationsMenu.addSeparatorEntry("separator_after_button_textures");
 
-        NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(globalCustomizationsMenu, "slider_background_texture", emptyImageSupplier,
-                        GlobalCustomizationHandler::getCustomSliderBackgroundSupplier,
-                        supplier -> FancyMenu.getOptions().globalSliderBackground.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
-                        Component.translatable("fancymenu.global_customizations.slider_background"), true, null, true, true, true)
+        ContextMenu sliderTexturesMenu = new ContextMenu();
+        globalCustomizationsMenu.addSubMenuEntry("slider_textures", Component.translatable("fancymenu.global_customizations.slider_textures"), sliderTexturesMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
+        NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(sliderTexturesMenu, "slider_background_texture", emptyImageSupplier,
+                        GlobalCustomizationHandler::getCustomSliderBackgroundSupplier,
+                        supplier -> FancyMenu.getOptions().globalSliderBackground.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
+                        Component.translatable("fancymenu.global_customizations.slider_background"), true, null, true, true, true);
+
+        sliderTexturesMenu.addSeparatorEntry("separator_after_slider_background");
+
         ContextMenu sliderHandleMenu = new ContextMenu();
-        globalCustomizationsMenu.addSubMenuEntry("slider_handle_textures", Component.translatable("fancymenu.global_customizations.slider_handle_textures"), sliderHandleMenu)
-                .setIcon(ContextMenu.IconFactory.getIcon("image"));
+        sliderTexturesMenu.addSubMenuEntry("slider_handle_textures", Component.translatable("fancymenu.global_customizations.slider_handle_textures"), sliderHandleMenu);
 
         NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(sliderHandleMenu, "slider_handle_normal", emptyImageSupplier,
                 GlobalCustomizationHandler::getCustomSliderHandleNormalSupplier,
