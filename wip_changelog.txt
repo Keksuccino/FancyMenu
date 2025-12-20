@@ -14,6 +14,8 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 - Added hover events to Markdown, which let's you use a listener to listen for specific text hovers in Markdown text (used for the Text element, etc.) (#1366)
   - The formatting for a hover event is very similar to hyperlinks: "[some hoverable text](hover:unique_text_hover_event_id)"
   - Listen to text hovers by using the "On Markdown Text Hovered" listener
+- Added a "timing offset" feature to the "Element Animator" element that makes it possible to apply start timing offsets individually for each controlled element (#1379)
+  - There's also a "random timing offset" mode that randomly applies offsets in a specified range to all controlled elements
 - Added a "Delay" block to the action script system that waits for the specified time before running its contained actions (The rest of the script keeps running while the delay counts down) (#1397)
 - Added a "Variable Mode" for the "Checkbox" element that lets you link checkboxes directly to a FancyMenu variable (#1256)
 - Added "Text Input Field Value" placeholder that returns the current value of an input field (text box) by its element identifier (#1391)
