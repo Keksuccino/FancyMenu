@@ -2283,5 +2283,6 @@
   "fancymenu.elements.checkbox.editor.set_variable": "Link To Variable",
   "fancymenu.elements.checkbox.editor.set_variable.desc": "Link this checkbox to a variable.\nUse the variable name.\n\nThe variable can be a new\nor an existing variable.",
   "fancymenu.listeners.on_item_hovered_in_inventory": "On Item Hovered In Inventory",
-  "fancymenu.listeners.on_item_hovered_in_inventory.desc": "This listener triggers once when the player starts hovering an item in any inventory (player inventory, chest, etc.).\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$item_key §r= The resource location of the hovered item\n- §z$$item_display_name_string §r= The plain text display name of the hovered item\n- §z$$item_display_name_json §r= The serialized raw JSON text component of the hovered item"
+  "fancymenu.listeners.on_item_hovered_in_inventory.desc": "This listener triggers once when the player starts hovering an item in any inventory (player inventory, chest, etc.).\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$item_key §r= The resource location of the hovered item\n- §z$$item_display_name_string §r= The plain text display name of the hovered item\n- §z$$item_display_name_json §r= The serialized raw JSON text component of the hovered item",
+  "fancymenu.custom_guis.build.world_background_overlay.desc": "If the vanilla background blur/tint should be rendered while showing the world behind the GUI."
 }

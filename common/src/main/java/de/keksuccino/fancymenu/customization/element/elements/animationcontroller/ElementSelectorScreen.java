@@ -44,7 +44,7 @@ public class ElementSelectorScreen extends CellScreen {
     @Override
     protected void initCells() {
 
-        this.addStartEndSpacerCell().setIgnoreSearch();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
         // Get all available elements
         List<AbstractEditorElement> elements = new ArrayList<>();
@@ -71,7 +71,7 @@ public class ElementSelectorScreen extends CellScreen {
             this.addCell(new ElementCell(element)).setSelectable(true);
         }
 
-        this.addStartEndSpacerCell().setIgnoreSearch();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
     }
 

@@ -25,16 +25,19 @@ public class ManageCustomGuisScreen extends CellScreen {
             guis.add(g.copy());
         }
         this.onCloseRunnable = onClose;
+        this.setSearchBarEnabled(true);
     }
 
     @Override
     protected void initCells() {
 
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+
         for (CustomGui gui : this.guis) {
             this.addCell(new CustomGuiCell(gui)).setSelectable(true);
         }
 
-        this.addSpacerCell(20);
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
     }
 

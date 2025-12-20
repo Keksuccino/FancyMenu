@@ -80,31 +80,33 @@ public class CustomGuiBaseScreen extends Screen {
 	}
 
 	@Override
-	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         boolean popup = this.gui.popupMode && (this.parentScreen != null);
         boolean popupOverlay = popup && this.gui.popupModeBackgroundOverlay;
-		if (popup) {
+        boolean renderWorldBackground = this.gui.worldBackground;
+        boolean renderBackgroundOverlay = !renderWorldBackground || this.gui.worldBackgroundOverlay;
+        if (popup) {
             this.renderPopupMenuBackgroundScreen(graphics, mouseX, mouseY, partial);
         } else {
-            if ((Minecraft.getInstance().level == null) || !this.gui.worldBackground) {
+            if ((Minecraft.getInstance().level == null) || !renderWorldBackground) {
                 this.renderPanorama(graphics, partial);
             }
         }
         if (popup) {
             RenderingUtils.setOverrideBackgroundBlurRadius(7);
         }
-		try {
-            if (!popup || popupOverlay) {
+        try {
+            if ((!popup && renderBackgroundOverlay) || (popup && popupOverlay)) {
                 this.renderBlurredBackground(partial);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error while rendering background blur in Custom GUI!", ex);
         }
         RenderingUtils.resetOverrideBackgroundBlurRadius();
-		if (!popup) {
+        if (!popup && renderBackgroundOverlay) {
             this.renderMenuBackground(graphics);
         }
-	}
+    }
 
     protected void renderPopupMenuBackgroundScreen(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (this.gui.popupModeBackgroundOverlay) RenderingUtils.setMenuBlurringBlocked(true);
