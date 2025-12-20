@@ -76,6 +76,7 @@ public class Listeners {
     public static final OnOtherPlayerDiedListener ON_OTHER_PLAYER_DIED = new OnOtherPlayerDiedListener();
     public static final OnItemPickedUpListener ON_ITEM_PICKED_UP = new OnItemPickedUpListener();
     public static final OnItemDroppedListener ON_ITEM_DROPPED = new OnItemDroppedListener();
+    public static final OnItemHoveredInInventoryListener ON_ITEM_HOVERED_IN_INVENTORY = new OnItemHoveredInInventoryListener();
     public static final OnItemConsumedListener ON_ITEM_CONSUMED = new OnItemConsumedListener();
     public static final OnItemUsedListener ON_ITEM_USED = new OnItemUsedListener();
     public static final OnItemBrokeListener ON_ITEM_BROKE = new OnItemBrokeListener();
@@ -157,6 +158,7 @@ public class Listeners {
         ListenerRegistry.register(ON_OTHER_PLAYER_DIED);
         ListenerRegistry.register(ON_ITEM_PICKED_UP);
         ListenerRegistry.register(ON_ITEM_DROPPED);
+        ListenerRegistry.register(ON_ITEM_HOVERED_IN_INVENTORY);
         ListenerRegistry.register(ON_ITEM_CONSUMED);
         ListenerRegistry.register(ON_ITEM_USED);
         ListenerRegistry.register(ON_ITEM_BROKE);
