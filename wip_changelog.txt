@@ -58,5 +58,6 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 - The "Manage Custom GUIs" screen now has a search bar
 - There's now an option to toggle on/off the screen background overlay in Custom GUIs while in a world (the blur/dark tint) (#1441)
 - Fixed "Splash Text" elements not resolving placeholders anymore in MC 1.21.10+ (#1353, #1457)
+- Fixed "Replace Text" placeholder can’t replace literal "\" characters (#1456)
 
 %changelog:end%
