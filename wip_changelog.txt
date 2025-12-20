@@ -15,6 +15,7 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
   - The formatting for a hover event is very similar to hyperlinks: "[some hoverable text](hover:unique_text_hover_event_id)"
   - Listen to text hovers by using the "On Markdown Text Hovered" listener
 - Added a "Delay" block to the action script system that waits for the specified time before running its contained actions (The rest of the script keeps running while the delay counts down) (#1397)
+- Added a "Variable Mode" for the "Checkbox" element that lets you link checkboxes directly to a FancyMenu variable (#1256)
 - Added "Text Input Field Value" placeholder that returns the current value of an input field (text box) by its element identifier (#1391)
 - Added "Current World Seed" placeholder that returns the seed of the current world (#1354)
 - Added "Clicks Per Second" placeholder that returns the clicks per second (CPS) for the given mouse button (left/right) (#1383)
