@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiGraphics;
@@ -182,6 +183,9 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     @Override
     public @Nullable RenderableResource getCustomSliderBackgroundNormalFancyMenu() {
         if (this.customSliderBackgroundNormalFancyMenu != null) return this.customSliderBackgroundNormalFancyMenu;
+        if ((Object)this instanceof AbstractExtendedSlider slider) {
+            if (slider.getSliderBackgroundColorNormal() != null) return null;
+        }
         return GlobalCustomizationHandler.getCustomSliderBackground();
     }
 
@@ -195,6 +199,9 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     @Override
     public @Nullable RenderableResource getCustomSliderBackgroundHighlightedFancyMenu() {
         if (this.customSliderBackgroundHighlightedFancyMenu != null) return this.customSliderBackgroundHighlightedFancyMenu;
+        if ((Object)this instanceof AbstractExtendedSlider slider) {
+            if (slider.getSliderBackgroundColorHighlighted() != null) return null;
+        }
         return GlobalCustomizationHandler.getCustomSliderBackground();
     }
 

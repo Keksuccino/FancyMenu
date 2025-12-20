@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -551,6 +553,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Nullable
 	private RenderableResource getGlobalBackgroundNormal_FancyMenu() {
+		if (this.hasFancyMenuColorBackgroundNormal_FancyMenu()) return null;
 		if ((Object)this instanceof AbstractSliderButton) {
 			return GlobalCustomizationHandler.getCustomSliderHandleNormal();
 		}
@@ -560,6 +563,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Nullable
 	private RenderableResource getGlobalBackgroundHover_FancyMenu() {
+		if (this.hasFancyMenuColorBackgroundHover_FancyMenu()) return null;
 		if ((Object)this instanceof AbstractSliderButton) {
 			return GlobalCustomizationHandler.getCustomSliderHandleHover();
 		}
@@ -569,10 +573,44 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Nullable
 	private RenderableResource getGlobalBackgroundInactive_FancyMenu() {
+		if (this.hasFancyMenuColorBackgroundInactive_FancyMenu()) return null;
 		if ((Object)this instanceof AbstractSliderButton) {
 			return GlobalCustomizationHandler.getCustomSliderHandleInactive();
 		}
 		return GlobalCustomizationHandler.getCustomButtonBackgroundInactive();
+	}
+
+	@Unique
+	private boolean hasFancyMenuColorBackgroundNormal_FancyMenu() {
+		if ((Object)this instanceof ExtendedButton button) {
+			return button.getBackgroundColorNormal() != null;
+		}
+		if ((Object)this instanceof AbstractExtendedSlider slider) {
+			return slider.getSliderHandleColorNormal() != null;
+		}
+		return false;
+	}
+
+	@Unique
+	private boolean hasFancyMenuColorBackgroundHover_FancyMenu() {
+		if ((Object)this instanceof ExtendedButton button) {
+			return button.getBackgroundColorHover() != null;
+		}
+		if ((Object)this instanceof AbstractExtendedSlider slider) {
+			return slider.getSliderHandleColorHover() != null;
+		}
+		return false;
+	}
+
+	@Unique
+	private boolean hasFancyMenuColorBackgroundInactive_FancyMenu() {
+		if ((Object)this instanceof ExtendedButton button) {
+			return button.getBackgroundColorInactive() != null;
+		}
+		if ((Object)this instanceof AbstractExtendedSlider slider) {
+			return slider.getSliderHandleColorInactive() != null;
+		}
+		return false;
 	}
 
 	@Unique
