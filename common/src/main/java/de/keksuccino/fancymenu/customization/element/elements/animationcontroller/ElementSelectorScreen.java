@@ -38,12 +38,13 @@ public class ElementSelectorScreen extends CellScreen {
         this.callback = callback;
         this.filter = filter;
         this.elementIds = elementIds;
+        this.setSearchBarEnabled(true);
     }
 
     @Override
     protected void initCells() {
 
-        this.addStartEndSpacerCell();
+        this.addStartEndSpacerCell().setIgnoreSearch();
 
         // Get all available elements
         List<AbstractEditorElement> elements = new ArrayList<>();
@@ -70,7 +71,7 @@ public class ElementSelectorScreen extends CellScreen {
             this.addCell(new ElementCell(element)).setSelectable(true);
         }
 
-        this.addStartEndSpacerCell();
+        this.addStartEndSpacerCell().setIgnoreSearch();
 
     }
 
