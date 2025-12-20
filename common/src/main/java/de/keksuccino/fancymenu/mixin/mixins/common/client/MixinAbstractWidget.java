@@ -13,6 +13,7 @@ import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
@@ -554,6 +555,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Nullable
 	private RenderableResource getGlobalBackgroundNormal_FancyMenu() {
 		if (this.hasFancyMenuColorBackgroundNormal_FancyMenu()) return null;
+		if ((Object)this instanceof ImageButton) return null;
 		if ((Object)this instanceof AbstractSliderButton) {
 			return GlobalCustomizationHandler.getCustomSliderHandleNormal();
 		}
@@ -564,6 +566,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Nullable
 	private RenderableResource getGlobalBackgroundHover_FancyMenu() {
 		if (this.hasFancyMenuColorBackgroundHover_FancyMenu()) return null;
+		if ((Object)this instanceof ImageButton) return null;
 		if ((Object)this instanceof AbstractSliderButton) {
 			return GlobalCustomizationHandler.getCustomSliderHandleHover();
 		}
@@ -574,6 +577,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Nullable
 	private RenderableResource getGlobalBackgroundInactive_FancyMenu() {
 		if (this.hasFancyMenuColorBackgroundInactive_FancyMenu()) return null;
+		if ((Object)this instanceof ImageButton) return null;
 		if ((Object)this instanceof AbstractSliderButton) {
 			return GlobalCustomizationHandler.getCustomSliderHandleInactive();
 		}
