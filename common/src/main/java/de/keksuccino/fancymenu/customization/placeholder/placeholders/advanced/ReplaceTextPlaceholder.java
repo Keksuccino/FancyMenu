@@ -48,12 +48,16 @@ public class ReplaceTextPlaceholder extends Placeholder {
                     return pattern.matcher(text).replaceFirst(replacement);
                 }
             } else {
-                // For literal replacement, escape regex special characters
-                String quotedSearch = Pattern.quote(search);
+                String resolvedSearch = unescapeLiteralValue(search);
+                String resolvedReplacement = unescapeLiteralValue(replacement);
                 if (replaceAll) {
-                    return text.replaceAll(quotedSearch, replacement);
+                    return text.replace(resolvedSearch, resolvedReplacement);
                 } else {
-                    return text.replaceFirst(quotedSearch, replacement);
+                    int index = text.indexOf(resolvedSearch);
+                    if (index < 0) {
+                        return text;
+                    }
+                    return text.substring(0, index) + resolvedReplacement + text.substring(index + resolvedSearch.length());
                 }
             }
         } catch (PatternSyntaxException e) {
@@ -63,6 +67,36 @@ public class ReplaceTextPlaceholder extends Placeholder {
             LOGGER.error("[FANCYMENU] Error in 'Replace Text' placeholder: " + dps.placeholderString, e);
             return text;
         }
+    }
+
+    @NotNull
+    private static String unescapeLiteralValue(@NotNull String value) {
+        StringBuilder result = new StringBuilder(value.length());
+        boolean escaped = false;
+
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (escaped) {
+                if ((c == '\\') || (c == '\"') || (c == '{') || (c == '}')) {
+                    result.append(c);
+                } else {
+                    result.append('\\').append(c);
+                }
+                escaped = false;
+                continue;
+            }
+            if (c == '\\') {
+                escaped = true;
+                continue;
+            }
+            result.append(c);
+        }
+
+        if (escaped) {
+            result.append('\\');
+        }
+
+        return result.toString();
     }
 
     @Override

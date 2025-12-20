@@ -468,7 +468,7 @@ public class PlaceholderParser {
                     if (currentIndex >= currentValueStartIndex) {
                         if (c == APOSTROPHE_CHAR) {
                             if (currentValueName != null) {
-                                if ((inValueDepth == 0) && !StringUtils.startsWith(StringUtils.substring(valueString, currentIndex-1), BACKSLASH) && isEndOfValueContent(placeholder, valueString, currentIndex)) {
+                                if ((inValueDepth == 0) && !isEscaped(valueString, currentIndex) && isEndOfValueContent(placeholder, valueString, currentIndex)) {
                                     String valueContent = StringUtils.substring(valueString, currentValueStartIndex, currentIndex);
                                     values.put(currentValueName, valueContent);
                                     currentValueName = null;
@@ -482,10 +482,10 @@ public class PlaceholderParser {
                                 }
                             }
                         }
-                        if ((c == OPEN_CURLY_BRACKETS_CHAR) && (currentValueName != null) && !StringUtils.startsWith(StringUtils.substring(valueString, currentIndex-1), BACKSLASH)) {
+                        if ((c == OPEN_CURLY_BRACKETS_CHAR) && (currentValueName != null) && !isEscaped(valueString, currentIndex)) {
                             inValueDepth++;
                         }
-                        if ((c == CLOSE_CURLY_BRACKETS_CHAR) && (currentValueName != null) && !StringUtils.startsWith(StringUtils.substring(valueString, currentIndex-1), BACKSLASH)) {
+                        if ((c == CLOSE_CURLY_BRACKETS_CHAR) && (currentValueName != null) && !isEscaped(valueString, currentIndex)) {
                             if (inValueDepth > 0) inValueDepth--;
                         }
                     }
@@ -505,6 +505,17 @@ public class PlaceholderParser {
                 return nextValue != null;
             }
             return false;
+        }
+
+        private static boolean isEscaped(@NotNull String valueString, int index) {
+            int backslashCount = 0;
+            for (int i = index - 1; i >= 0; i--) {
+                if (valueString.charAt(i) != BACKSLASH_CHAR) {
+                    break;
+                }
+                backslashCount++;
+            }
+            return (backslashCount % 2) == 1;
         }
 
         /**
