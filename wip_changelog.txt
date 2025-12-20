@@ -53,6 +53,7 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
   - Available color names: black, silver, gray, grey, white, maroon, red, purple, fuchsia, magenta, green, lime, olive, yellow, navy, blue, teal, aqua, cyan, transparent
 - The Parallax intensity for elements and menu backgrounds can now be configured individually for the X and Y axis (instead of combined setting for both, like before) (#1378)
 - The "Select Element" screen of the "Element Animator" element now has a search bar (#1452)
+- The "Manage Custom GUIs" screen now has a search bar
 - Fixed "Splash Text" elements not resolving placeholders anymore in MC 1.21.10+ (#1353, #1457)
 
 %changelog:end%
