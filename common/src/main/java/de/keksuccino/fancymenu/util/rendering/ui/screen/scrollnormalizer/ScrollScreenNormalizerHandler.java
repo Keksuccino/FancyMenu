@@ -74,7 +74,8 @@ public class ScrollScreenNormalizerHandler {
         saveToFile();
     }
 
-    public static boolean shouldNormalize(@NotNull Screen screen) {
+    public static boolean shouldNormalize(Screen screen) {
+        if (screen == null) return false;
         loadFromFile();
         String id = ScreenIdentifierHandler.getIdentifierOfScreen(screen);
         if (!NORMALIZE_SCREEN_MAP.containsKey(id)) return false;
