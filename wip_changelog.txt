@@ -3,7 +3,7 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
 - Added a new type of customizations: Global Customizations (#1355)
   - These customizations are different to most others in the mod, because they do not need you to enable customizations for a screen to apply them
-  - Can be accessed via "menu bar -> Customization -> Global Customizations"
+  - Can be accessed via "menu bar -> Customization -> Global Customizations" while NOT in the layout editor
   - Allows you to change Vanilla button textures globally for all screens without using a resource pack
   - Allows you to change Vanilla menu music globally for all screens without using a resource pack
   - Many of the customization options previously located in "menu bar -> Customization -> Settings" (like custom window icon/title, etc.) are now located in the new "Global Customizations" menu
