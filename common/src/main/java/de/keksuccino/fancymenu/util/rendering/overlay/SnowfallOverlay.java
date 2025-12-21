@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.eastereggs;
+package de.keksuccino.fancymenu.util.rendering.overlay;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -38,6 +38,7 @@ public class SnowfallOverlay extends AbstractWidget {
     private final List<Snowflake> snowflakes = new ArrayList<>();
     private final List<AccumulationArea> collisionAreas = new ArrayList<>();
     private AccumulationArea bottomArea;
+    private boolean accumulationEnabled = true;
     private int lastWidth = -1;
     private int lastHeight = -1;
     private long lastUpdateMs = -1L;
@@ -62,9 +63,13 @@ public class SnowfallOverlay extends AbstractWidget {
         }
 
         boolean sizeChanged = ensureSnowflakes(overlayWidth, overlayHeight);
-        ensureAccumulationAreas(overlayWidth, overlayHeight, sizeChanged);
-        updateSnowflakes(overlayWidth, overlayHeight);
-        renderAccumulation(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
+        if (this.accumulationEnabled) {
+            ensureAccumulationAreas(overlayWidth, overlayHeight, sizeChanged);
+        }
+        updateSnowflakes(overlayWidth, overlayHeight, this.accumulationEnabled);
+        if (this.accumulationEnabled) {
+            renderAccumulation(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
+        }
 
         for (Snowflake flake : this.snowflakes) {
             float swayOffset = Mth.sin(flake.swayTime) * flake.swayAmplitude;
@@ -96,6 +101,10 @@ public class SnowfallOverlay extends AbstractWidget {
 
     public void clearCollisionAreas() {
         this.collisionAreas.clear();
+    }
+
+    public void setAccumulationEnabled(boolean accumulationEnabled) {
+        this.accumulationEnabled = accumulationEnabled;
     }
 
     private boolean ensureSnowflakes(int width, int height) {
@@ -140,7 +149,7 @@ public class SnowfallOverlay extends AbstractWidget {
         }
     }
 
-    private void updateSnowflakes(int width, int height) {
+    private void updateSnowflakes(int width, int height, boolean accumulateSnow) {
         long now = System.currentTimeMillis();
         if (this.lastUpdateMs < 0L) {
             this.lastUpdateMs = now;
@@ -164,9 +173,11 @@ public class SnowfallOverlay extends AbstractWidget {
             flake.x += (flake.driftSpeed + this.wind) * deltaSeconds;
             flake.swayTime += flake.swaySpeed * deltaSeconds;
 
-            float effectiveX = flake.x + Mth.sin(flake.swayTime) * flake.swayAmplitude;
-            if (handleSnowCollision(flake, effectiveX, previousY, width, height)) {
-                continue;
+            if (accumulateSnow) {
+                float effectiveX = flake.x + Mth.sin(flake.swayTime) * flake.swayAmplitude;
+                if (handleSnowCollision(flake, effectiveX, previousY, width, height)) {
+                    continue;
+                }
             }
 
             if (flake.y > height + flake.size) {
