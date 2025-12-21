@@ -49,26 +49,26 @@ public class SnowDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
         ContextMenuUtils.addToggleContextMenuEntryTo(menu, "accumulate_snow",
                         () -> instance.snowAccumulation,
                         aBoolean -> instance.snowAccumulation = aBoolean,
-                        "fancymenu.screen_overlays.snow.accumulate_snow")
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.screen_overlays.snow.accumulate_snow.desc")));
+                        "fancymenu.decoration_overlays.snow.accumulate_snow")
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.accumulate_snow.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "snow_color", Component.translatable("fancymenu.screen_overlays.snow.color"),
+        ContextMenuUtils.addInputContextMenuEntryTo(menu, "snow_color", Component.translatable("fancymenu.decoration_overlays.snow.color"),
                         () -> instance.snowColorHex,
                         s -> instance.snowColorHex = s, true,
                         "#FFFFFF", null, false, true, null, null)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.screen_overlays.snow.color.desc")));
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.color.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "snow_intensity", Component.translatable("fancymenu.screen_overlays.snow.intensity"),
+        ContextMenuUtils.addInputContextMenuEntryTo(menu, "snow_intensity", Component.translatable("fancymenu.decoration_overlays.snow.intensity"),
                         () -> instance.snowIntensity,
                         s -> instance.snowIntensity = s, true,
                         "1.0", null, false, true, null, null)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.screen_overlays.snow.intensity.desc")));
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.intensity.desc")));
 
     }
 
     @Override
     public @NotNull Component getDisplayName() {
-        return Component.translatable("fancymenu.screen_overlays.snow");
+        return Component.translatable("fancymenu.decoration_overlays.snow");
     }
 
     @Override

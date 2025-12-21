@@ -3,8 +3,10 @@ package de.keksuccino.fancymenu.customization.layout;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
+import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlayRegistry;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
@@ -164,6 +166,11 @@ public class Layout extends LayoutBase {
                 set.putContainer(serializedMenuBackground);
             }
         }
+
+        // Decoration Overlays
+        this.decorationOverlays.forEach((type, pair) -> {
+            set.putContainer(pair.getKey()._serialize(pair.getValue()));
+        });
 
         if (this.openAudio != null) {
             PropertyContainer ps = new PropertyContainer("customization");
@@ -410,6 +417,13 @@ public class Layout extends LayoutBase {
                 MenuBackground legacyBackground = convertLegacyMenuBackground(serialized);
                 if ((legacyBackground != null) && layout.menuBackgrounds.isEmpty()) layout.menuBackgrounds.add(legacyBackground);
             }
+
+            // Decoration Overlays
+            DecorationOverlayRegistry.getAll().forEach(builder -> {
+                var overlayInstances = builder._deserializeAll(serialized);
+                if (overlayInstances.isEmpty()) overlayInstances = List.of(builder.buildDefaultInstance());
+                layout.decorationOverlays.put(builder.getIdentifier(), Pair.of(builder, overlayInstances.get(0)));
+            });
 
             //Handle Scroll List Customizations
             PropertyContainer scrollListCustomizations = serialized.getFirstContainerOfType("scroll_list_customization");

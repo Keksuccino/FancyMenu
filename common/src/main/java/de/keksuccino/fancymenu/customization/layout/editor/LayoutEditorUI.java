@@ -546,6 +546,11 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_keep_background_aspect");
 
+        menu.addSubMenuEntry("decoration_overlays", Component.translatable("fancymenu.editor.decoration_overlays"), buildDecorationOverlaysMenu(editor))
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.editor.decoration_overlays.desc")));
+
+        menu.addSeparatorEntry("separator_after_decoration_overlays");
+
 		if ((editor.layoutTargetScreen != null) && !editor.layout.isUniversalLayout()) {
 
 			ContextMenuUtils.addInputContextMenuEntryTo(menu, "edit_menu_title", Component.translatable("fancymenu.helper.editor.edit_menu_title"),
@@ -766,6 +771,21 @@ public class LayoutEditorUI {
 		return menu;
 
 	}
+
+    @NotNull
+    public static ContextMenu buildDecorationOverlaysMenu(@NotNull LayoutEditorScreen editor) {
+
+        ContextMenu menu = new ContextMenu();
+
+        editor.layout.decorationOverlays.forEach((type, pair) -> {
+            var entry = menu.addSubMenuEntry("overlay_" + type, pair.getKey().getDisplayName(), pair.getKey()._buildConfigurationMenu(pair.getValue()));
+            var desc = pair.getKey().getDescription();
+            if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> Tooltip.of(desc));
+        });
+
+        return menu;
+
+    }
 
 	@NotNull
 	public static ContextMenu buildScrollListCustomizationsContextMenu(@NotNull LayoutEditorScreen editor) {

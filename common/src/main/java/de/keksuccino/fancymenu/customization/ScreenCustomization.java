@@ -5,6 +5,7 @@ import java.util.*;
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.DecorationOverlays;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
@@ -93,6 +94,8 @@ public class ScreenCustomization {
 		Placeholders.registerAll();
 
 		MenuBackgrounds.registerAll();
+
+        DecorationOverlays.registerAll();
 
 		Elements.registerAll();
 

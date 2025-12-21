@@ -3,13 +3,17 @@ package de.keksuccino.fancymenu.customization.layout;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +24,8 @@ public class LayoutBase {
 
     @NotNull
     public final List<MenuBackground> menuBackgrounds = new ArrayList<>();
+    @NotNull
+    public final Map<String, Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay>> decorationOverlays = new LinkedHashMap<>();
     public boolean preserveBackgroundAspectRatio = false;
     public ResourceSupplier<IAudio> openAudio;
     public ResourceSupplier<IAudio> closeAudio;
@@ -108,6 +114,9 @@ public class LayoutBase {
                 if (!layout.closeScreenExecutableBlocks.isEmpty()) {
                     stacked.closeScreenExecutableBlocks.addAll(layout.closeScreenExecutableBlocks);
                 }
+                layout.decorationOverlays.forEach((type, pair) -> {
+                    if (pair.getValue().showOverlay) stacked.decorationOverlays.put(type, pair);
+                });
 
             }
         }

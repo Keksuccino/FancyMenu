@@ -73,7 +73,7 @@ public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorat
 
     @ApiStatus.Internal
     @NotNull
-    public PropertyContainer _serialize(@NotNull O instanceToSerialize) {
+    public PropertyContainer _serialize(@NotNull AbstractDecorationOverlay instanceToSerialize) {
 
         PropertyContainer serializeTo = new PropertyContainer(OVERLAY_PROPERTY_CONTAINER_TYPE);
         serializeTo.setInvulnerableProperties(true);
@@ -82,7 +82,7 @@ public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorat
         serializeTo.putProperty(INSTANCE_IDENTIFIER_KEY, instanceToSerialize.getInstanceIdentifier());
         serializeTo.putProperty(SHOW_OVERLAY_KEY, instanceToSerialize.showOverlay);
 
-        this.serialize(instanceToSerialize, serializeTo);
+        this.serialize((O) instanceToSerialize, serializeTo);
 
         return serializeTo;
 
@@ -92,18 +92,18 @@ public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorat
 
     @ApiStatus.Internal
     @NotNull
-    public ContextMenu _buildConfigurationMenu(@NotNull O instance) {
+    public ContextMenu _buildConfigurationMenu(@NotNull AbstractDecorationOverlay instance) {
 
         ContextMenu menu = new ContextMenu();
 
         ContextMenuUtils.addToggleContextMenuEntryTo(menu, "show_overlay",
                 () -> instance.showOverlay,
                 aBoolean -> instance.showOverlay = aBoolean,
-                "fancymenu.screen_overlay.show_overlay");
+                "fancymenu.decoration_overlay.show_overlay");
 
         menu.addSeparatorEntry("separator_after_show_overlay_toggle");
 
-        this.buildConfigurationMenu(instance, menu);
+        this.buildConfigurationMenu((O) instance, menu);
 
         return menu;
 
