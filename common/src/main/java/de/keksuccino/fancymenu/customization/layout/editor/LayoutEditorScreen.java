@@ -206,6 +206,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		if (!this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 
+        this.layout.decorationOverlays.forEach((type, pair) -> pair.getValue().onScreenInitializedOrResized(this));
+
 		this.layout.menuBackgrounds.forEach(MenuBackground::onAfterEnable);
 
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
@@ -256,6 +258,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.renderBackground(graphics, mouseX, mouseY, partial);
 
 		this.renderElements(graphics, mouseX, mouseY, partial);
+
+        this.layout.decorationOverlays.forEach((type, pair) -> {
+            if (pair.getValue().showOverlay) pair.getValue().render(graphics, mouseX, mouseY, partial);
+        });
 
 		this.renderMouseSelectionRectangle(graphics, mouseX, mouseY);
 

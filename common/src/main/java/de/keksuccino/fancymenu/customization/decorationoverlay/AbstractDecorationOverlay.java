@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -48,6 +49,10 @@ public abstract class AbstractDecorationOverlay implements Renderable {
     protected static int getScreenHeight() {
         var s = getScreen();
         return (s != null) ? s.height : 1;
+    }
+
+    protected static boolean isEditor() {
+        return (getScreen() instanceof LayoutEditorScreen);
     }
 
 }

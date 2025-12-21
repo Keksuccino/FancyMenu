@@ -778,7 +778,7 @@ public class LayoutEditorUI {
         ContextMenu menu = new ContextMenu();
 
         editor.layout.decorationOverlays.forEach((type, pair) -> {
-            var entry = menu.addSubMenuEntry("overlay_" + type, pair.getKey().getDisplayName(), pair.getKey()._buildConfigurationMenu(pair.getValue()));
+            var entry = menu.addSubMenuEntry("overlay_" + type, pair.getKey().getDisplayName(), pair.getKey()._buildConfigurationMenu(pair.getValue(), editor));
             var desc = pair.getKey().getDescription();
             if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> Tooltip.of(desc));
         });

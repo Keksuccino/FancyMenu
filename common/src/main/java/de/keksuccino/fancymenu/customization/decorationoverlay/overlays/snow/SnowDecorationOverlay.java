@@ -60,6 +60,8 @@ public class SnowDecorationOverlay extends AbstractDecorationOverlay {
 
         this.overlay.clearCollisionAreas();
 
+        if (isEditor()) return;
+
         screen.children().forEach(listener -> {
             if ((listener instanceof Button b) && !(listener instanceof PlainTextButton)) {
                 this.overlay.addCollisionArea(b.getX(), b.getY(), b.getWidth(), b.getHeight());

@@ -367,6 +367,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 		}
 
+        this.layoutBase.decorationOverlays.forEach((type, pair) -> pair.getValue().onScreenInitializedOrResized(e.getScreen()));
+
 	}
 
 	@EventListener
@@ -422,6 +424,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		for (AbstractElement element : new ArrayList<>(this.normalElements.foregroundElements)) {
 			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
+
+        this.layoutBase.decorationOverlays.forEach((type, pair) -> {
+            if (pair.getValue().showOverlay) pair.getValue().render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+        });
 
 	}
 

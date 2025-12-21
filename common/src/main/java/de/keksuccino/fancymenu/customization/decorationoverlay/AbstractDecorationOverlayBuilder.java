@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
@@ -88,22 +89,25 @@ public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorat
 
     }
 
-    protected abstract void buildConfigurationMenu(@NotNull O instance, @NotNull ContextMenu menu);
+    protected abstract void buildConfigurationMenu(@NotNull O instance, @NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor);
 
     @ApiStatus.Internal
     @NotNull
-    public ContextMenu _buildConfigurationMenu(@NotNull AbstractDecorationOverlay instance) {
+    public ContextMenu _buildConfigurationMenu(@NotNull AbstractDecorationOverlay instance, @NotNull LayoutEditorScreen editor) {
 
         ContextMenu menu = new ContextMenu();
 
         ContextMenuUtils.addToggleContextMenuEntryTo(menu, "show_overlay",
                 () -> instance.showOverlay,
-                aBoolean -> instance.showOverlay = aBoolean,
+                aBoolean -> {
+                    editor.history.saveSnapshot();
+                    instance.showOverlay = aBoolean;
+                },
                 "fancymenu.decoration_overlay.show_overlay");
 
         menu.addSeparatorEntry("separator_after_show_overlay_toggle");
 
-        this.buildConfigurationMenu((O) instance, menu);
+        this.buildConfigurationMenu((O) instance, menu, editor);
 
         return menu;
 
