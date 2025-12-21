@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.overlay;
 
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class SnowfallOverlay extends AbstractWidget {
+public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget {
 
     private static final int AREA_PER_SNOWFLAKE = 9000;
     private static final int MIN_SNOWFLAKES = 80;
@@ -84,10 +85,6 @@ public class SnowfallOverlay extends AbstractWidget {
             graphics.fill(renderX, renderY, renderX + flake.size, renderY + flake.size, flake.color);
         }
 
-    }
-
-    @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
     public void addCollisionArea(int x, int y, int width, int height) {
@@ -303,6 +300,28 @@ public class SnowfallOverlay extends AbstractWidget {
             return min;
         }
         return min + this.random.nextInt(max - min + 1);
+    }
+
+    @Override
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return false;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return false;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
     }
 
     private static final class AccumulationArea {
