@@ -15,7 +15,7 @@ public class SnowOverlay extends AbstractOverlay {
     public String snowColorHex = "#FFFFFF";
     @NotNull
     public String snowIntensity = "1.0";
-    public boolean buildUpSnow = true;
+    public boolean snowAccumulation = true;
     protected final SnowfallOverlay overlay = new SnowfallOverlay(0, 0);
     protected String lastSnowColorString = null;
     protected String lastSnowIntensityString = null;
@@ -24,7 +24,7 @@ public class SnowOverlay extends AbstractOverlay {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         // Update snow accumulation
-        this.overlay.setAccumulationEnabled(this.buildUpSnow);
+        this.overlay.setAccumulationEnabled(this.snowAccumulation);
 
         // Update snow color
         String colorString = PlaceholderParser.replacePlaceholders(this.snowColorHex);

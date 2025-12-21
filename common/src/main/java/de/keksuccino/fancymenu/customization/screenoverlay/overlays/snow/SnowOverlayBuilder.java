@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.screenoverlay.overlays.snow;
 import de.keksuccino.fancymenu.customization.screenoverlay.AbstractOverlayBuilder;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import org.jetbrains.annotations.NotNull;
+import java.util.Objects;
 
 public class SnowOverlayBuilder extends AbstractOverlayBuilder<SnowOverlay> {
 
@@ -20,18 +21,20 @@ public class SnowOverlayBuilder extends AbstractOverlayBuilder<SnowOverlay> {
     }
 
     @Override
-    public @NotNull SnowOverlay deserializeFromProperties(@NotNull PropertyContainer container) {
+    protected void deserialize(@NotNull SnowOverlay instanceToWrite, @NotNull PropertyContainer deserializeFrom) {
 
-        var instance = buildDefaultInstance();
-
-        instance;
-
-        return instance;
+        instanceToWrite.snowColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(SNOW_COLOR_KEY), instanceToWrite.snowColorHex);
+        instanceToWrite.snowIntensity = Objects.requireNonNullElse(deserializeFrom.getValue(SNOW_INTENSITY_KEY), instanceToWrite.snowIntensity);
+        instanceToWrite.snowAccumulation = deserializeBoolean(instanceToWrite.snowAccumulation, deserializeFrom.getValue(SNOW_ACCUMULATION_KEY));
 
     }
 
     @Override
-    public void serializeToProperties(@NotNull SnowOverlay instance, @NotNull PropertyContainer container) {
+    protected void serialize(@NotNull SnowOverlay instanceToSerialize, @NotNull PropertyContainer serializeTo) {
+
+        serializeTo.putProperty(SNOW_COLOR_KEY, instanceToSerialize.snowColorHex);
+        serializeTo.putProperty(SNOW_INTENSITY_KEY, instanceToSerialize.snowIntensity);
+        serializeTo.putProperty(SNOW_ACCUMULATION_KEY, instanceToSerialize.snowAccumulation);
 
     }
 

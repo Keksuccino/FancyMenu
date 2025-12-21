@@ -1,22 +1,29 @@
 package de.keksuccino.fancymenu.customization.screenoverlay;
 
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 
-public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> {
+public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> extends SerializationUtils {
 
-    protected static final String OVERLAY_PROPERTY_PREFIX = "screen_overlay";
-    protected static final String OVERLAY_INSTANCE_IDENTIFIER_PROPERTY_PREFIX = "screen_overlay_instance";
+    protected static final CharacterFilter IDENTIFIER_VALIDATOR = CharacterFilter.buildResourceNameFilter();
+
+    protected static final String OVERLAY_PROPERTY_CONTAINER_TYPE = "screen_overlay";
+
+    private static final String OVERLAY_TYPE_KEY = "overlay_type";
+    private static final String INSTANCE_IDENTIFIER_KEY = "instance_identifier";
 
     @NotNull
     protected final String identifier;
 
     public AbstractOverlayBuilder(@NotNull String identifier) {
-        if (identifier.contains(":")) throw new RuntimeException("Using ':' in overlay identifiers is not allowed!");
+        if (!IDENTIFIER_VALIDATOR.isAllowedText(identifier)) throw new RuntimeException("You can only use [a-z], [0-9], [_], [-] in overlay identifiers!");
+        if (identifier.contains(":") || identifier.contains(".")) throw new RuntimeException("Using ':' and '.' in overlay identifiers is not allowed!");
         this.identifier = Objects.requireNonNull(identifier);
     }
 
@@ -28,84 +35,49 @@ public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> {
     @NotNull
     public abstract O buildDefaultInstance();
 
-    @NotNull
-    protected abstract O deserializeFromProperties(@NotNull O instanceToWrite, @NotNull PropertyContainer deserializeFrom);
+    protected abstract void deserialize(@NotNull O instanceToWrite, @NotNull PropertyContainer deserializeFrom);
 
     @ApiStatus.Internal
     @NotNull
-    public List<O> _deserializeAllFromProperties(@NotNull PropertyContainer deserializeFrom) {
+    public List<O> _deserializeAll(@NotNull PropertyContainerSet deserializeFrom) {
 
         List<O> instances = new ArrayList<>();
-        List<String> instanceIds = this.findAllOverlayInstancesInProperties(deserializeFrom);
+        List<PropertyContainer> serializedInstances = deserializeFrom.getContainersOfType(OVERLAY_PROPERTY_CONTAINER_TYPE);
 
-        instanceIds.forEach(instanceIdentifier -> {
+        serializedInstances.forEach(serialized -> {
+            String overlayType = serialized.getValue(OVERLAY_TYPE_KEY);
+            if (this.getIdentifier().equals(overlayType)) {
 
+                var instance = this.buildDefaultInstance();
+
+                instance.setInstanceIdentifier(Objects.requireNonNullElse(serialized.getValue(INSTANCE_IDENTIFIER_KEY), ScreenCustomization.generateUniqueIdentifier()));
+
+                this.deserialize(instance, serialized);
+
+                instances.add(instance);
+
+            }
         });
 
         return instances;
 
     }
 
-    protected abstract void serializeToProperties(@NotNull O instanceToRead, @NotNull PropertyContainer serializeTo);
+    protected abstract void serialize(@NotNull O instanceToSerialize, @NotNull PropertyContainer serializeTo);
 
     @ApiStatus.Internal
-    public void _serializeToProperties(@NotNull O instanceToRead, @NotNull PropertyContainer serializeTo) {
-
-        // Instance identifier
-        serializeTo.putProperty(OVERLAY_INSTANCE_IDENTIFIER_PROPERTY_PREFIX + ":" + this.getIdentifier() + ":" + instanceToRead.getInstanceIdentifier(), "");
-
-        this.serializeToProperties(instanceToRead, serializeTo);
-
-    }
-
     @NotNull
-    protected String getPropertyKeyPrefix(@NotNull O instance) {
-        return OVERLAY_PROPERTY_PREFIX + ":" + this.getIdentifier() + ":" + instance.getInstanceIdentifier() + ":";
-    }
+    public PropertyContainer _serialize(@NotNull O instanceToSerialize) {
 
-    @Nullable
-    protected String deserializeValue(@NotNull O instance, @NotNull PropertyContainer from, @NotNull String key) {
-        var prefix = getPropertyKeyPrefix(instance);
-        return from.getValue(prefix + key);
-    }
+        PropertyContainer serializeTo = new PropertyContainer(OVERLAY_PROPERTY_CONTAINER_TYPE);
+        serializeTo.setInvulnerableProperties(true);
 
-    protected void serializeValue(@NotNull O instance, @NotNull PropertyContainer to, @NotNull String key, @Nullable String value) {
-        if (value == null) return;
-        var prefix = getPropertyKeyPrefix(instance);
-        to.putProperty(prefix + key, value);
-    }
+        serializeTo.putProperty(OVERLAY_TYPE_KEY, this.getIdentifier());
+        serializeTo.putProperty(INSTANCE_IDENTIFIER_KEY, instanceToSerialize.getInstanceIdentifier());
 
-    @NotNull
-    protected List<String> findAllOverlayInstancesInProperties(@NotNull PropertyContainer container) {
-        List<String> ids = new ArrayList<>();
-        container.getProperties().keySet().forEach(key -> {
-            if (key.startsWith(OVERLAY_INSTANCE_IDENTIFIER_PROPERTY_PREFIX + ":" + this.getIdentifier() + ":")) {
-                ids.add(key.split(":", 3)[2]);
-            }
-        });
-        return ids;
-    }
+        this.serialize(instanceToSerialize, serializeTo);
 
-    @Nullable
-    protected Map<String, String> findAllPropertiesForInstance(@NotNull String instanceIdentifier, @NotNull PropertyContainer container) {
-
-        Map<String, String> properties = new LinkedHashMap<>();
-
-
-
-        return properties.isEmpty() ? null : properties;
-
-    }
-
-    protected record OverlayPropertyKey(@NotNull String builderIdentifier, @NotNull String instanceIdentifier, @NotNull String key) {
-
-        @Nullable
-        protected static OverlayPropertyKey parse(@NotNull String key) {
-            if (!key.startsWith(OVERLAY_PROPERTY_PREFIX + ":")) return null;
-            var a = key.split(":", 4);
-            if (a.length < 4) return null;
-            return new OverlayPropertyKey(a[1], a[2], a[3]);
-        }
+        return serializeTo;
 
     }
 
