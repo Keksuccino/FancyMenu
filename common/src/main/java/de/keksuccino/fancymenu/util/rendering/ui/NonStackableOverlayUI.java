@@ -34,8 +34,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@SuppressWarnings("unused")
-public class NonStackableOverlayUI {
+@SuppressWarnings("all")
+public interface NonStackableOverlayUI {
 
     public static ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, ResourceSupplier<ITexture> defaultValue, @NotNull Supplier<ResourceSupplier<ITexture>> targetFieldGetter, @NotNull Consumer<ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, () -> ResourceChooserScreen.image(null, file -> {}), ResourceSupplier::image, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);

@@ -5,11 +5,13 @@ import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
-public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> extends SerializationUtils {
+public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> implements SerializationUtils, NonStackableOverlayUI {
 
     protected static final CharacterFilter IDENTIFIER_VALIDATOR = CharacterFilter.buildResourceNameFilter();
 
@@ -17,6 +19,7 @@ public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> extends 
 
     private static final String OVERLAY_TYPE_KEY = "overlay_type";
     private static final String INSTANCE_IDENTIFIER_KEY = "instance_identifier";
+    private static final String SHOW_OVERLAY_KEY = "show_overlay";
 
     @NotNull
     protected final String identifier;
@@ -51,6 +54,7 @@ public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> extends 
                 var instance = this.buildDefaultInstance();
 
                 instance.setInstanceIdentifier(Objects.requireNonNullElse(serialized.getValue(INSTANCE_IDENTIFIER_KEY), ScreenCustomization.generateUniqueIdentifier()));
+                instance.showOverlay = SerializationUtils.deserializeBoolean(instance.showOverlay, serialized.getValue(SHOW_OVERLAY_KEY));
 
                 this.deserialize(instance, serialized);
 
@@ -74,10 +78,21 @@ public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> extends 
 
         serializeTo.putProperty(OVERLAY_TYPE_KEY, this.getIdentifier());
         serializeTo.putProperty(INSTANCE_IDENTIFIER_KEY, instanceToSerialize.getInstanceIdentifier());
+        serializeTo.putProperty(SHOW_OVERLAY_KEY, instanceToSerialize.showOverlay);
 
         this.serialize(instanceToSerialize, serializeTo);
 
         return serializeTo;
+
+    }
+
+    @ApiStatus.Internal
+    @NotNull
+    public ContextMenu _buildConfigurationMenu(@NotNull O instance) {
+
+        ContextMenu menu = new ContextMenu();
+
+        return menu;
 
     }
 

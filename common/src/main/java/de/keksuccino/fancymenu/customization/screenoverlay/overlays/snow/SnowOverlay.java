@@ -6,6 +6,9 @@ import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.overlay.SnowfallOverlay;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.PlainTextButton;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
@@ -49,6 +52,19 @@ public class SnowOverlay extends AbstractOverlay {
         this.overlay.setWidth(getScreenWidth());
         this.overlay.setHeight(getScreenHeight());
         this.overlay.render(graphics, mouseX, mouseY, partial);
+
+    }
+
+    @Override
+    public void onScreenInitializedOrResized(@NotNull Screen screen) {
+
+        this.overlay.clearCollisionAreas();
+
+        screen.children().forEach(listener -> {
+            if ((listener instanceof Button b) && !(listener instanceof PlainTextButton)) {
+                this.overlay.addCollisionArea(b.getX(), b.getY(), b.getWidth(), b.getHeight());
+            }
+        });
 
     }
 

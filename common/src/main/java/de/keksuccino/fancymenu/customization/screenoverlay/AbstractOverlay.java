@@ -5,13 +5,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractOverlay implements Renderable {
 
     @NotNull
-    protected String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
+    private String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
+    @ApiStatus.Internal
+    public boolean showOverlay = false;
 
     @NotNull
     public String getInstanceIdentifier() {

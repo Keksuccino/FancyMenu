@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("all")
-public class SerializationUtils {
+public interface SerializationUtils {
 
     @Nullable
     public static ResourceSupplier<ITexture> deserializeImageResourceSupplier(@Nullable String resourceSource) {
