@@ -2303,5 +2303,14 @@
   "fancymenu.decoration_overlays.snow.color": "Snow Color [HEX]",
   "fancymenu.decoration_overlays.snow.color.desc": "The color of the snow, as HEX color, starting with #.",
   "fancymenu.decoration_overlays.snow.intensity": "Snow Intensity",
-  "fancymenu.decoration_overlays.snow.intensity.desc": "The intensity of the snowfall. Needs to be a value between 0.0 and 2.0."
+  "fancymenu.decoration_overlays.snow.intensity.desc": "The intensity of the snowfall. Needs to be a value between 0.0 and 2.0.",
+  "fancymenu.decoration_overlays.rain": "Rainfall",
+  "fancymenu.decoration_overlays.rain.puddles": "Enable Puddles: %s",
+  "fancymenu.decoration_overlays.rain.puddles.desc": "If puddles should appear when raindrops hit surfaces.",
+  "fancymenu.decoration_overlays.rain.drips": "Enable Drips: %s",
+  "fancymenu.decoration_overlays.rain.drips.desc": "If drips should appear below surfaces and buttons.",
+  "fancymenu.decoration_overlays.rain.color": "Rain Color [HEX]",
+  "fancymenu.decoration_overlays.rain.color.desc": "The color of the rain, as HEX color, starting with #.",
+  "fancymenu.decoration_overlays.rain.intensity": "Rain Intensity",
+  "fancymenu.decoration_overlays.rain.intensity.desc": "The intensity of the rainfall. Needs to be a value between 0.0 and 2.0."
 }
