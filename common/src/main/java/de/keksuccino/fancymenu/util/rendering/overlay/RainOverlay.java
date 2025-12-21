@@ -67,6 +67,8 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     private float windTarget = 0.0F;
     private long nextWindChangeMs = 0L;
     private int currentPuddleTarget = 0;
+    private boolean puddlesEnabled = true;
+    private boolean dripsEnabled = true;
 
     public RainOverlay(int width, int height) {
         super(0, 0, width, height, Component.empty());
@@ -87,19 +89,35 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         ensureSurfaceAreas(overlayWidth, overlayHeight, sizeChanged);
         float deltaSeconds = computeDeltaSeconds(sizeChanged);
         if (deltaSeconds <= 0.0F) {
-            renderPuddles(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
-            renderDrips(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
+            if (this.puddlesEnabled) {
+                renderPuddles(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
+            }
+            if (this.dripsEnabled) {
+                renderDrips(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
+            }
             renderRaindrops(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
             return;
         }
 
         updateWind(System.currentTimeMillis(), deltaSeconds);
-        updatePuddles(overlayWidth, overlayHeight, deltaSeconds, sizeChanged);
+        if (this.puddlesEnabled) {
+            updatePuddles(overlayWidth, deltaSeconds, sizeChanged);
+        } else if (!this.puddles.isEmpty()) {
+            this.puddles.clear();
+        }
         updateRaindrops(overlayWidth, overlayHeight, deltaSeconds);
-        updateDrips(overlayHeight, deltaSeconds, sizeChanged);
+        if (this.dripsEnabled) {
+            updateDrips(overlayHeight, deltaSeconds, sizeChanged);
+        } else if (!this.drips.isEmpty()) {
+            this.drips.clear();
+        }
 
-        renderPuddles(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
-        renderDrips(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
+        if (this.puddlesEnabled) {
+            renderPuddles(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
+        }
+        if (this.dripsEnabled) {
+            renderDrips(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
+        }
         renderRaindrops(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
     }
 
@@ -137,6 +155,21 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         this.collisionAreas.clear();
         this.puddles.clear();
         this.drips.clear();
+    }
+
+    public void setPuddlesEnabled(boolean enabled) {
+        this.puddlesEnabled = enabled;
+        if (!enabled) {
+            this.puddles.clear();
+            this.drips.clear();
+        }
+    }
+
+    public void setDripsEnabled(boolean enabled) {
+        this.dripsEnabled = enabled;
+        if (!enabled) {
+            this.drips.clear();
+        }
     }
 
     private void ensureSurfaceAreas(int width, int height, boolean sizeChanged) {
@@ -191,7 +224,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
             }
 
             if (drop.y > height + drop.length) {
-                if (this.puddles.size() < this.currentPuddleTarget + 2 && this.random.nextFloat() < PUDDLE_SPLASH_CHANCE) {
+                if (this.puddlesEnabled && this.puddles.size() < this.currentPuddleTarget + 2 && this.random.nextFloat() < PUDDLE_SPLASH_CHANCE) {
                     spawnRandomPuddle(width);
                 }
                 resetRaindrop(drop, width, height, false);
@@ -230,14 +263,16 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         float currentBottom = drop.y + drop.length;
         float previousBottom = previousY + drop.length;
         if (currentBottom >= surfaceY && previousBottom < surfaceY) {
-            spawnPuddleAt(area, effectiveX, true);
+            if (this.puddlesEnabled) {
+                spawnPuddleAt(area, effectiveX, this.dripsEnabled);
+            }
             resetRaindrop(drop, width, height, false);
             return true;
         }
         return false;
     }
 
-    private void updatePuddles(int width, int height, float deltaSeconds, boolean sizeChanged) {
+    private void updatePuddles(int width, float deltaSeconds, boolean sizeChanged) {
         if (sizeChanged) {
             this.puddles.clear();
             this.drips.clear();
@@ -423,7 +458,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         if (area == null) {
             return;
         }
-        spawnPuddleAt(area, area.x + this.random.nextFloat() * area.width, true);
+        spawnPuddleAt(area, area.x + this.random.nextFloat() * area.width, this.dripsEnabled);
     }
 
     private SurfaceArea pickSurfaceArea(int width) {
