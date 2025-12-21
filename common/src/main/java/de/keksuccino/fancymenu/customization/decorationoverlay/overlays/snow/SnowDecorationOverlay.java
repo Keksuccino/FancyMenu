@@ -1,7 +1,7 @@
-package de.keksuccino.fancymenu.customization.screenoverlay.overlays.snow;
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.snow;
 
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.customization.screenoverlay.AbstractOverlay;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.overlay.SnowfallOverlay;
@@ -12,7 +12,7 @@ import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
-public class SnowOverlay extends AbstractOverlay {
+public class SnowDecorationOverlay extends AbstractDecorationOverlay {
 
     @NotNull
     public String snowColorHex = "#FFFFFF";

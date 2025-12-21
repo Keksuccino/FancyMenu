@@ -1,6 +1,6 @@
-package de.keksuccino.fancymenu.customization.screenoverlay.overlays.snow;
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.snow;
 
-import de.keksuccino.fancymenu.customization.screenoverlay.AbstractOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -10,23 +10,23 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
-public class SnowOverlayBuilder extends AbstractOverlayBuilder<SnowOverlay> {
+public class SnowDecorationOverlayBuilder extends AbstractDecorationOverlayBuilder<SnowDecorationOverlay> {
 
     private static final String SNOW_COLOR_KEY = "snow_color_hex";
     private static final String SNOW_INTENSITY_KEY = "snow_intensity";
     private static final String SNOW_ACCUMULATION_KEY = "snow_accumulation";
 
-    public SnowOverlayBuilder() {
+    public SnowDecorationOverlayBuilder() {
         super("snowfall");
     }
 
     @Override
-    public @NotNull SnowOverlay buildDefaultInstance() {
-        return new SnowOverlay();
+    public @NotNull SnowDecorationOverlay buildDefaultInstance() {
+        return new SnowDecorationOverlay();
     }
 
     @Override
-    protected void deserialize(@NotNull SnowOverlay instanceToWrite, @NotNull PropertyContainer deserializeFrom) {
+    protected void deserialize(@NotNull SnowDecorationOverlay instanceToWrite, @NotNull PropertyContainer deserializeFrom) {
 
         instanceToWrite.snowColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(SNOW_COLOR_KEY), instanceToWrite.snowColorHex);
         instanceToWrite.snowIntensity = Objects.requireNonNullElse(deserializeFrom.getValue(SNOW_INTENSITY_KEY), instanceToWrite.snowIntensity);
@@ -35,7 +35,7 @@ public class SnowOverlayBuilder extends AbstractOverlayBuilder<SnowOverlay> {
     }
 
     @Override
-    protected void serialize(@NotNull SnowOverlay instanceToSerialize, @NotNull PropertyContainer serializeTo) {
+    protected void serialize(@NotNull SnowDecorationOverlay instanceToSerialize, @NotNull PropertyContainer serializeTo) {
 
         serializeTo.putProperty(SNOW_COLOR_KEY, instanceToSerialize.snowColorHex);
         serializeTo.putProperty(SNOW_INTENSITY_KEY, instanceToSerialize.snowIntensity);
@@ -44,7 +44,7 @@ public class SnowOverlayBuilder extends AbstractOverlayBuilder<SnowOverlay> {
     }
 
     @Override
-    protected void buildConfigurationMenu(@NotNull SnowOverlay instance, @NotNull ContextMenu menu) {
+    protected void buildConfigurationMenu(@NotNull SnowDecorationOverlay instance, @NotNull ContextMenu menu) {
 
         ContextMenuUtils.addToggleContextMenuEntryTo(menu, "accumulate_snow",
                         () -> instance.snowAccumulation,

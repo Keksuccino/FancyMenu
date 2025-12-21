@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.screenoverlay;
+package de.keksuccino.fancymenu.customization.decorationoverlay;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.SerializationUtils;
@@ -11,23 +11,22 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 
-public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> extends SerializationUtils {
+public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorationOverlay> extends SerializationUtils {
 
     protected static final CharacterFilter IDENTIFIER_VALIDATOR = CharacterFilter.buildResourceNameFilter();
 
-    protected static final String OVERLAY_PROPERTY_CONTAINER_TYPE = "screen_overlay";
+    protected static final String OVERLAY_PROPERTY_CONTAINER_TYPE = "decoration_overlay";
 
     private static final String OVERLAY_TYPE_KEY = "overlay_type";
     private static final String INSTANCE_IDENTIFIER_KEY = "instance_identifier";
-    private static final String SHOW_OVERLAY_KEY = "show_overlay";
+    private static final String SHOW_OVERLAY_KEY = "show_decoration_overlay";
 
     @NotNull
     protected final String identifier;
 
-    public AbstractOverlayBuilder(@NotNull String identifier) {
+    public AbstractDecorationOverlayBuilder(@NotNull String identifier) {
         if (!IDENTIFIER_VALIDATOR.isAllowedText(identifier)) throw new RuntimeException("You can only use [a-z], [0-9], [_], [-] in overlay identifiers!");
         if (identifier.contains(":") || identifier.contains(".")) throw new RuntimeException("Using ':' and '.' in overlay identifiers is not allowed!");
         this.identifier = Objects.requireNonNull(identifier);

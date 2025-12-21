@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.screenoverlay;
+package de.keksuccino.fancymenu.customization.decorationoverlay;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import net.minecraft.client.Minecraft;
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class AbstractOverlay implements Renderable {
+public abstract class AbstractDecorationOverlay implements Renderable {
 
     @NotNull
     private String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
