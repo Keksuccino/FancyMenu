@@ -5,13 +5,16 @@ import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
-import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
+import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.*;
 
-public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> implements SerializationUtils, NonStackableOverlayUI {
+public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> extends SerializationUtils {
 
     protected static final CharacterFilter IDENTIFIER_VALIDATOR = CharacterFilter.buildResourceNameFilter();
 
@@ -54,7 +57,7 @@ public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> implemen
                 var instance = this.buildDefaultInstance();
 
                 instance.setInstanceIdentifier(Objects.requireNonNullElse(serialized.getValue(INSTANCE_IDENTIFIER_KEY), ScreenCustomization.generateUniqueIdentifier()));
-                instance.showOverlay = SerializationUtils.deserializeBoolean(instance.showOverlay, serialized.getValue(SHOW_OVERLAY_KEY));
+                instance.showOverlay = deserializeBoolean(instance.showOverlay, serialized.getValue(SHOW_OVERLAY_KEY));
 
                 this.deserialize(instance, serialized);
 
@@ -86,14 +89,31 @@ public abstract class AbstractOverlayBuilder<O extends AbstractOverlay> implemen
 
     }
 
+    protected abstract void buildConfigurationMenu(@NotNull O instance, @NotNull ContextMenu menu);
+
     @ApiStatus.Internal
     @NotNull
     public ContextMenu _buildConfigurationMenu(@NotNull O instance) {
 
         ContextMenu menu = new ContextMenu();
 
+        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "show_overlay",
+                () -> instance.showOverlay,
+                aBoolean -> instance.showOverlay = aBoolean,
+                "fancymenu.screen_overlay.show_overlay");
+
+        menu.addSeparatorEntry("separator_after_show_overlay_toggle");
+
+        this.buildConfigurationMenu(instance, menu);
+
         return menu;
 
     }
+
+    @NotNull
+    public abstract Component getDisplayName();
+
+    @Nullable
+    public abstract Component getDescription();
 
 }

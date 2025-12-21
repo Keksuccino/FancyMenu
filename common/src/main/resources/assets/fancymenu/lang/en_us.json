@@ -2293,5 +2293,13 @@
   "fancymenu.elements.animation_controller.random_timing_offsets.range": "Random Timing Offset Range",
   "fancymenu.elements.animation_controller.random_timing_offsets.range.desc": "Configure the minimum and maximum random timing offset in milliseconds.",
   "fancymenu.elements.animation_controller.random_timing_offsets.range.min": "Minimum Timing Offset (ms)",
-  "fancymenu.elements.animation_controller.random_timing_offsets.range.max": "Maximum Timing Offset (ms)"
+  "fancymenu.elements.animation_controller.random_timing_offsets.range.max": "Maximum Timing Offset (ms)",
+  "fancymenu.screen_overlay.show_overlay": "Show Overlay: %s",
+  "fancymenu.screen_overlays.snow": "Snowfall",
+  "fancymenu.screen_overlays.snow.accumulate_snow": "Accumulate Snow: %s",
+  "fancymenu.screen_overlays.snow.accumulate_snow.desc": "If snow should slowly build up at the bottom of the screen and on buttons.",
+  "fancymenu.screen_overlays.snow.color": "Snow Color [HEX]",
+  "fancymenu.screen_overlays.snow.color.desc": "The color of the snow, as HEX color, starting with #.",
+  "fancymenu.screen_overlays.snow.intensity": "Snow Intensity",
+  "fancymenu.screen_overlays.snow.intensity.desc": "The intensity of the snowfall. Needs to be a value between 0.0 and 2.0."
 }

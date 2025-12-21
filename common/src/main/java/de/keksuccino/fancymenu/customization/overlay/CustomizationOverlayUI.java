@@ -32,7 +32,7 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
-import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
+import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
@@ -526,7 +526,7 @@ public class CustomizationOverlayUI {
 
         customizationSettingsMenu.addSeparatorEntry("separator_after_advanced_mode");
 
-        NonStackableOverlayUI.addLongInputContextMenuEntryTo(customizationSettingsMenu, "placeholder_caching_duration",
+        ContextMenuUtils.addLongInputContextMenuEntryTo(customizationSettingsMenu, "placeholder_caching_duration",
                         Component.translatable("fancymenu.settings.caching.placeholders.set"),
                         () -> FancyMenu.getOptions().placeholderCachingDurationMs.getValue(),
                         duration -> FancyMenu.getOptions().placeholderCachingDurationMs.setValue(duration),
@@ -536,7 +536,7 @@ public class CustomizationOverlayUI {
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.settings.caching.placeholders.set.desc")));
 
-        NonStackableOverlayUI.addLongInputContextMenuEntryTo(customizationSettingsMenu, "requirement_caching_duration",
+        ContextMenuUtils.addLongInputContextMenuEntryTo(customizationSettingsMenu, "requirement_caching_duration",
                         Component.translatable("fancymenu.settings.caching.requirements.set"),
                         () -> FancyMenu.getOptions().requirementCachingDurationMs.getValue(),
                         duration -> FancyMenu.getOptions().requirementCachingDurationMs.setValue(duration),
@@ -575,7 +575,7 @@ public class CustomizationOverlayUI {
         globalCustomizationsMenu.addSubMenuEntry("window_icon", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon"), buildWindowIconMenu())
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
-        NonStackableOverlayUI.addInputContextMenuEntryTo(globalCustomizationsMenu, "window_title", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_title"),
+        ContextMenuUtils.addInputContextMenuEntryTo(globalCustomizationsMenu, "window_title", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_title"),
                         () -> FancyMenu.getOptions().customWindowTitle.getValue(),
                         s -> {
                             FancyMenu.getOptions().customWindowTitle.setValue(s);
@@ -589,7 +589,7 @@ public class CustomizationOverlayUI {
 
         globalCustomizationsMenu.addSeparatorEntry("separator_after_window_title");
 
-        NonStackableOverlayUI.addIntegerInputContextMenuEntryTo(globalCustomizationsMenu, "default_gui_scale",
+        ContextMenuUtils.addIntegerInputContextMenuEntryTo(globalCustomizationsMenu, "default_gui_scale",
                         Component.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale"),
                         () -> FancyMenu.getOptions().defaultGuiScale.getValue(),
                         integer -> FancyMenu.getOptions().defaultGuiScale.setValue(integer),
@@ -613,17 +613,17 @@ public class CustomizationOverlayUI {
 
         ResourceSupplier<IAudio> emptyAudioSupplier = ResourceSupplier.empty(IAudio.class, FileMediaType.AUDIO);
 
-        NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(buttonBackgroundMenu, "button_background_normal", emptyImageSupplier,
+        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(buttonBackgroundMenu, "button_background_normal", emptyImageSupplier,
                 GlobalCustomizationHandler::getCustomButtonBackgroundNormalSupplier,
                 supplier -> FancyMenu.getOptions().globalButtonBackgroundNormal.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
                 Component.translatable("fancymenu.global_customizations.button_backgrounds.normal"), true, null, true, true, true);
 
-        NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(buttonBackgroundMenu, "button_background_hover", emptyImageSupplier,
+        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(buttonBackgroundMenu, "button_background_hover", emptyImageSupplier,
                 GlobalCustomizationHandler::getCustomButtonBackgroundHoverSupplier,
                 supplier -> FancyMenu.getOptions().globalButtonBackgroundHover.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
                 Component.translatable("fancymenu.global_customizations.button_backgrounds.hover"), true, null, true, true, true);
 
-        NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(buttonBackgroundMenu, "button_background_inactive", emptyImageSupplier,
+        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(buttonBackgroundMenu, "button_background_inactive", emptyImageSupplier,
                 GlobalCustomizationHandler::getCustomButtonBackgroundInactiveSupplier,
                 supplier -> FancyMenu.getOptions().globalButtonBackgroundInactive.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
                 Component.translatable("fancymenu.global_customizations.button_backgrounds.inactive"), true, null, true, true, true);
@@ -634,7 +634,7 @@ public class CustomizationOverlayUI {
         globalCustomizationsMenu.addSubMenuEntry("slider_textures", Component.translatable("fancymenu.global_customizations.slider_textures"), sliderTexturesMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
-        NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(sliderTexturesMenu, "slider_background_texture", emptyImageSupplier,
+        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(sliderTexturesMenu, "slider_background_texture", emptyImageSupplier,
                         GlobalCustomizationHandler::getCustomSliderBackgroundSupplier,
                         supplier -> FancyMenu.getOptions().globalSliderBackground.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
                         Component.translatable("fancymenu.global_customizations.slider_background"), true, null, true, true, true);
@@ -644,24 +644,24 @@ public class CustomizationOverlayUI {
         ContextMenu sliderHandleMenu = new ContextMenu();
         sliderTexturesMenu.addSubMenuEntry("slider_handle_textures", Component.translatable("fancymenu.global_customizations.slider_handle_textures"), sliderHandleMenu);
 
-        NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(sliderHandleMenu, "slider_handle_normal", emptyImageSupplier,
+        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(sliderHandleMenu, "slider_handle_normal", emptyImageSupplier,
                 GlobalCustomizationHandler::getCustomSliderHandleNormalSupplier,
                 supplier -> FancyMenu.getOptions().globalSliderHandleNormal.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
                 Component.translatable("fancymenu.global_customizations.slider_handle_textures.normal"), true, null, true, true, true);
 
-        NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(sliderHandleMenu, "slider_handle_hover", emptyImageSupplier,
+        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(sliderHandleMenu, "slider_handle_hover", emptyImageSupplier,
                 GlobalCustomizationHandler::getCustomSliderHandleHoverSupplier,
                 supplier -> FancyMenu.getOptions().globalSliderHandleHover.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
                 Component.translatable("fancymenu.global_customizations.slider_handle_textures.hover"), true, null, true, true, true);
 
-        NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(sliderHandleMenu, "slider_handle_inactive", emptyImageSupplier,
+        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(sliderHandleMenu, "slider_handle_inactive", emptyImageSupplier,
                 GlobalCustomizationHandler::getCustomSliderHandleInactiveSupplier,
                 supplier -> FancyMenu.getOptions().globalSliderHandleInactive.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
                 Component.translatable("fancymenu.global_customizations.slider_handle_textures.inactive"), true, null, true, true, true);
 
         globalCustomizationsMenu.addSeparatorEntry("separator_after_slider_textures");
 
-        NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(globalCustomizationsMenu, "menu_background_texture", emptyImageSupplier,
+        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(globalCustomizationsMenu, "menu_background_texture", emptyImageSupplier,
                         GlobalCustomizationHandler::getCustomMenuBackgroundSupplier,
                         supplier -> FancyMenu.getOptions().globalMenuBackgroundTexture.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
                         Component.translatable("fancymenu.global_customizations.menu_background_texture"), true, null, true, true, true)
@@ -724,7 +724,7 @@ public class CustomizationOverlayUI {
 
         globalCustomizationsMenu.addSeparatorEntry("separator_after_menu_music");
 
-        NonStackableOverlayUI.addAudioResourceChooserContextMenuEntryTo(globalCustomizationsMenu, "button_click_sound", emptyAudioSupplier,
+        ContextMenuUtils.addAudioResourceChooserContextMenuEntryTo(globalCustomizationsMenu, "button_click_sound", emptyAudioSupplier,
                         GlobalCustomizationHandler::getCustomButtonClickSoundSupplier,
                         supplier -> FancyMenu.getOptions().globalButtonClickSound.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
                         Component.translatable("fancymenu.global_customizations.button_click_sound"), true, null, true, true, true)
@@ -754,7 +754,7 @@ public class CustomizationOverlayUI {
         FileTypeGroup<?> pngFileGroup = FileTypeGroup.of(FileTypes.PNG_IMAGE);
         pngFileGroup.setDisplayName(FileTypeGroups.IMAGE_GROUP_COMPONENT);
 
-        NonStackableOverlayUI.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_16",
+        ContextMenuUtils.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_16",
                         Component.empty(),
                         () -> FancyMenu.getOptions().customWindowIcon16.getValue(),
                         s -> {
@@ -798,7 +798,7 @@ public class CustomizationOverlayUI {
                     return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_16", notFound);
                 });
 
-        NonStackableOverlayUI.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_32",
+        ContextMenuUtils.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_32",
                         Component.empty(),
                         () -> FancyMenu.getOptions().customWindowIcon32.getValue(),
                         s -> {
@@ -845,7 +845,7 @@ public class CustomizationOverlayUI {
         FileTypeGroup<?> macOsIconTypeGroup = FileTypeGroup.of(new ImageFileType(FileCodec.empty(ITexture.class), null, "icns"));
         macOsIconTypeGroup.setDisplayName(Component.translatable("fancymenu.file_types.icns"));
 
-        NonStackableOverlayUI.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_macos",
+        ContextMenuUtils.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_macos",
                         Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos"),
                         () -> FancyMenu.getOptions().customWindowIconMacOS.getValue(),
                         s -> {
@@ -885,7 +885,7 @@ public class CustomizationOverlayUI {
 
         FileTypeGroup<ImageFileType> introFileTypeGroup = FileTypeGroup.of(FileTypes.APNG_IMAGE, FileTypes.GIF_IMAGE, FileTypes.FMA_IMAGE);
 
-        NonStackableOverlayUI.addGenericResourceChooserContextMenuEntryTo(gameIntroMenu, "set_game_intro",
+        ContextMenuUtils.addGenericResourceChooserContextMenuEntryTo(gameIntroMenu, "set_game_intro",
                 () -> new ResourceChooserScreen<>(Component.empty(), introFileTypeGroup, null, s -> {}),
                 ResourceSupplier::image, emptyImageSupplier,
                 () -> {
@@ -910,7 +910,7 @@ public class CustomizationOverlayUI {
                     FancyMenu.getOptions().gameIntroFadeOut.setValue(cycle.getAsBoolean());
                 }));
 
-        NonStackableOverlayUI.addInputContextMenuEntryTo(gameIntroMenu, "game_intro_set_custom_skip_text",
+        ContextMenuUtils.addInputContextMenuEntryTo(gameIntroMenu, "game_intro_set_custom_skip_text",
                         Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text"),
                         () -> {
                             String s = FancyMenu.getOptions().gameIntroCustomSkipText.getValue();

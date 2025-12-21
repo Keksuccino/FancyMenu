@@ -26,7 +26,7 @@ import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
-import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
+import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
@@ -263,7 +263,7 @@ public class LayoutEditorUI {
 								.addCycleListener(cycle -> FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.setValue(cycle.getAsBoolean())))
 				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.change_anchor_on_element_hover.desc")));
 
-		NonStackableOverlayUI.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_hover_charging_time",
+		ContextMenuUtils.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_hover_charging_time",
 						Component.translatable("fancymenu.editor.anchor_overlay.charging_time"),
 						() -> FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.getValue(),
 						aDouble -> FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.setValue(aDouble),
@@ -279,7 +279,7 @@ public class LayoutEditorUI {
 								.addCycleListener(cycle -> FancyMenu.getOptions().invertAnchorOverlayColor.setValue(cycle.getAsBoolean())))
 				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.invert_colors.desc")));
 
-		NonStackableOverlayUI.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_base_color",
+		ContextMenuUtils.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_base_color",
 						Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_base"),
 						() -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.getValue(),
 						s -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.setValue(s),
@@ -287,7 +287,7 @@ public class LayoutEditorUI {
 						null, false, false, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null, null)
 				.setIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
-		NonStackableOverlayUI.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_border_color",
+		ContextMenuUtils.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_border_color",
 						Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_border"),
 						() -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.getValue(),
 						s -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.setValue(s),
@@ -297,7 +297,7 @@ public class LayoutEditorUI {
 
 		windowMenu.addSeparatorEntry("separator_after_custom_anchor_overlay_border_color");
 
-		NonStackableOverlayUI.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_normal",
+		ContextMenuUtils.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_normal",
 						Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal"),
 						() -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getValue()),
 						aDouble -> FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.setValue(aDouble.floatValue()),
@@ -305,7 +305,7 @@ public class LayoutEditorUI {
 						0.0D, 1.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal.slider_label", ((int)(consumes * 100.0D)) + "%"))
 				.setIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
-		NonStackableOverlayUI.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_busy",
+		ContextMenuUtils.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_busy",
 						Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy"),
 						() -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getValue()),
 						aDouble -> FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.setValue(aDouble.floatValue()),
@@ -548,7 +548,7 @@ public class LayoutEditorUI {
 
 		if ((editor.layoutTargetScreen != null) && !editor.layout.isUniversalLayout()) {
 
-			NonStackableOverlayUI.addInputContextMenuEntryTo(menu, "edit_menu_title", Component.translatable("fancymenu.helper.editor.edit_menu_title"),
+			ContextMenuUtils.addInputContextMenuEntryTo(menu, "edit_menu_title", Component.translatable("fancymenu.helper.editor.edit_menu_title"),
 							() -> editor.layout.customMenuTitle,
 							s -> {
 								editor.history.saveSnapshot();
@@ -653,7 +653,7 @@ public class LayoutEditorUI {
 				})
 				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
-		NonStackableOverlayUI.addIntegerInputContextMenuEntryTo(menu, "forced_gui_scale", Component.translatable("fancymenu.editor.rightclick.scale"),
+		ContextMenuUtils.addIntegerInputContextMenuEntryTo(menu, "forced_gui_scale", Component.translatable("fancymenu.editor.rightclick.scale"),
 						() -> (int) editor.layout.forcedScale,
 						integer -> {
 							editor.history.saveSnapshot();
@@ -684,7 +684,7 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_forced_scale");
 
-		NonStackableOverlayUI.addAudioResourceChooserContextMenuEntryTo(menu, "open_audio",
+		ContextMenuUtils.addAudioResourceChooserContextMenuEntryTo(menu, "open_audio",
 						null,
 						() -> editor.layout.openAudio,
 						iAudioResourceSupplier -> {
@@ -696,7 +696,7 @@ public class LayoutEditorUI {
 				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.open_audio.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
-		NonStackableOverlayUI.addAudioResourceChooserContextMenuEntryTo(menu, "close_audio",
+		ContextMenuUtils.addAudioResourceChooserContextMenuEntryTo(menu, "close_audio",
 						null,
 						() -> editor.layout.closeAudio,
 						iAudioResourceSupplier -> {
@@ -772,7 +772,7 @@ public class LayoutEditorUI {
 
 		ContextMenu menu = new ContextMenu();
 
-		NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(menu, "header_texture",
+		ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(menu, "header_texture",
 						null,
 						() -> editor.layout.scrollListHeaderTexture,
 						iTextureResourceSupplier -> {
@@ -783,7 +783,7 @@ public class LayoutEditorUI {
 						true, null, true, true, true)
 				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
-		NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(menu, "footer_texture",
+		ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(menu, "footer_texture",
 						null,
 						() -> editor.layout.scrollListFooterTexture,
 						iTextureResourceSupplier -> {
