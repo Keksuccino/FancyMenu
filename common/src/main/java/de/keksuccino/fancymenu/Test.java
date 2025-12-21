@@ -20,23 +20,23 @@ public class Test {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final SnowfallOverlay SNOWFALL_OVERLAY = ObjectUtils.build(() -> {
-        var o = new SnowfallOverlay(0, 0);
-        o.setColor(DrawableColor.of(new Color(255, 0, 221)).getColorInt());
-        o.setIntensity(1.5F);
-        return o;
-    });
-    private static final RainOverlay RAIN_OVERLAY = ObjectUtils.build(() -> {
-        var o = new RainOverlay(0, 0);
-        o.setColor(DrawableColor.of(new Color(80, 103, 16)).getColorInt());
-        o.setIntensity(1.5F);
-        return o;
-    });
-    private static final SunshineOverlay SUNSHINE_OVERLAY = ObjectUtils.build(() -> {
-        var o = new SunshineOverlay(0, 0);
-        o.setSide(SunshineOverlay.SunshineSide.RIGHT);
-        return o;
-    });
+//    private static final SnowfallOverlay SNOWFALL_OVERLAY = ObjectUtils.build(() -> {
+//        var o = new SnowfallOverlay(0, 0);
+//        o.setColor(DrawableColor.of(new Color(255, 0, 221)).getColorInt());
+//        o.setIntensity(1.5F);
+//        return o;
+//    });
+//    private static final RainOverlay RAIN_OVERLAY = ObjectUtils.build(() -> {
+//        var o = new RainOverlay(0, 0);
+//        o.setColor(DrawableColor.of(new Color(80, 103, 16)).getColorInt());
+//        o.setIntensity(1.5F);
+//        return o;
+//    });
+//    private static final SunshineOverlay SUNSHINE_OVERLAY = ObjectUtils.build(() -> {
+//        var o = new SunshineOverlay(0, 0);
+//        o.setSide(SunshineOverlay.SunshineSide.RIGHT);
+//        return o;
+//    });
 
     @EventListener(priority = EventPriority.VERY_LOW)
     public void onRenderPost(RenderScreenEvent.Post e) {
