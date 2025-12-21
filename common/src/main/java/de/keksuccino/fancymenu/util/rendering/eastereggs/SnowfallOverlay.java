@@ -9,6 +9,7 @@ import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SnowfallOverlay extends AbstractWidget {
@@ -29,9 +30,16 @@ public class SnowfallOverlay extends AbstractWidget {
     private static final float MAX_DELTA_SECONDS = 0.1F;
     private static final int MIN_ALPHA = 150;
     private static final int MAX_ALPHA = 255;
+    private static final float ACCUMULATION_PER_FLAKE = 0.14F;
+    private static final float ACCUMULATION_BIG_BONUS = 0.08F;
+    private static final float ACCUMULATION_NEIGHBOR_FACTOR = 0.2F;
+    private static final float MAX_ACCUMULATION_HEIGHT = 3.0F;
+    private static final int ACCUMULATION_COLOR = (230 << 24) | 0xFFFFFF;
 
     private final RandomSource random = RandomSource.create();
     private final List<Snowflake> snowflakes = new ArrayList<>();
+    private final List<AccumulationArea> collisionAreas = new ArrayList<>();
+    private AccumulationArea bottomArea;
     private int lastWidth = -1;
     private int lastHeight = -1;
     private long lastUpdateMs = -1L;
@@ -55,8 +63,10 @@ public class SnowfallOverlay extends AbstractWidget {
             return;
         }
 
-        ensureSnowflakes(overlayWidth, overlayHeight);
+        boolean sizeChanged = ensureSnowflakes(overlayWidth, overlayHeight);
+        ensureAccumulationAreas(overlayWidth, overlayHeight, sizeChanged);
         updateSnowflakes(overlayWidth, overlayHeight);
+        renderAccumulation(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
 
         for (Snowflake flake : this.snowflakes) {
             float swayOffset = Mth.sin(flake.swayTime) * flake.swayAmplitude;
@@ -77,9 +87,23 @@ public class SnowfallOverlay extends AbstractWidget {
     protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
-    private void ensureSnowflakes(int width, int height) {
+    public void addCollisionArea(int x, int y, int width, int height) {
+        if (width <= 0 || height < 0) {
+            return;
+        }
+        AccumulationArea area = new AccumulationArea(x, y, width, height, MAX_ACCUMULATION_HEIGHT);
+        area.ensureHeights();
+        this.collisionAreas.add(area);
+    }
+
+    public void clearCollisionAreas() {
+        this.collisionAreas.clear();
+    }
+
+    private boolean ensureSnowflakes(int width, int height) {
         int desiredCount = Mth.clamp((width * height) / AREA_PER_SNOWFLAKE, MIN_SNOWFLAKES, MAX_SNOWFLAKES);
-        if (this.lastWidth != width || this.lastHeight != height) {
+        boolean sizeChanged = this.lastWidth != width || this.lastHeight != height;
+        if (sizeChanged) {
             this.snowflakes.clear();
             for (int i = 0; i < desiredCount; i++) {
                 this.snowflakes.add(createSnowflake(width, height, true));
@@ -87,7 +111,7 @@ public class SnowfallOverlay extends AbstractWidget {
             this.lastWidth = width;
             this.lastHeight = height;
             this.lastUpdateMs = System.currentTimeMillis();
-            return;
+            return true;
         }
 
         while (this.snowflakes.size() < desiredCount) {
@@ -95,6 +119,26 @@ public class SnowfallOverlay extends AbstractWidget {
         }
         while (this.snowflakes.size() > desiredCount) {
             this.snowflakes.remove(this.snowflakes.size() - 1);
+        }
+        return false;
+    }
+
+    private void ensureAccumulationAreas(int width, int height, boolean sizeChanged) {
+        if (this.bottomArea == null || sizeChanged) {
+            this.bottomArea = new AccumulationArea(0, height, width, 0, MAX_ACCUMULATION_HEIGHT);
+        } else {
+            this.bottomArea.setBounds(0, height, width, 0);
+        }
+        this.bottomArea.ensureHeights();
+        if (sizeChanged) {
+            this.bottomArea.clear();
+        }
+
+        for (AccumulationArea area : this.collisionAreas) {
+            area.ensureHeights();
+            if (sizeChanged) {
+                area.clear();
+            }
         }
     }
 
@@ -117,9 +161,15 @@ public class SnowfallOverlay extends AbstractWidget {
 
         float wrapPadding = 12.0F;
         for (Snowflake flake : this.snowflakes) {
+            float previousY = flake.y;
             flake.y += flake.fallSpeed * deltaSeconds;
             flake.x += (flake.driftSpeed + this.wind) * deltaSeconds;
             flake.swayTime += flake.swaySpeed * deltaSeconds;
+
+            float effectiveX = flake.x + Mth.sin(flake.swayTime) * flake.swayAmplitude;
+            if (handleSnowCollision(flake, effectiveX, previousY, width, height)) {
+                continue;
+            }
 
             if (flake.y > height + flake.size) {
                 resetSnowflake(flake, width, height, false);
@@ -134,6 +184,43 @@ public class SnowfallOverlay extends AbstractWidget {
         }
     }
 
+    private boolean handleSnowCollision(Snowflake flake, float effectiveX, float previousY, int width, int height) {
+        if (this.bottomArea != null && checkCollisionAndDeposit(flake, this.bottomArea, effectiveX, previousY, width, height)) {
+            return true;
+        }
+        for (AccumulationArea area : this.collisionAreas) {
+            if (checkCollisionAndDeposit(flake, area, effectiveX, previousY, width, height)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkCollisionAndDeposit(Snowflake flake, AccumulationArea area, float effectiveX, float previousY, int width, int height) {
+        if (!area.isValid()) {
+            return false;
+        }
+        if (effectiveX < area.x || effectiveX >= area.x + area.width) {
+            return false;
+        }
+        int index = area.getIndex(effectiveX - area.x);
+        float existingHeight = area.getHeightAt(index);
+        float surfaceY = area.y - existingHeight;
+        float currentBottom = flake.y + flake.size;
+        float previousBottom = previousY + flake.size;
+        if (currentBottom >= surfaceY && previousBottom < surfaceY) {
+            float deposit = ACCUMULATION_PER_FLAKE + (flake.size == 2 ? ACCUMULATION_BIG_BONUS : 0.0F);
+            if (existingHeight > 0.01F) {
+                deposit *= 1.0F + (existingHeight / MAX_ACCUMULATION_HEIGHT) * 0.8F;
+            }
+            deposit *= nextRange(0.85F, 1.15F);
+            area.deposit(index, deposit);
+            resetSnowflake(flake, width, height, false);
+            return true;
+        }
+        return false;
+    }
+
     private void updateWind(long now, float deltaSeconds) {
         if (now >= this.nextWindChangeMs) {
             this.windTarget = nextRange(WIND_MIN, WIND_MAX);
@@ -141,6 +228,48 @@ public class SnowfallOverlay extends AbstractWidget {
         }
         float response = 0.15F * deltaSeconds;
         this.wind += (this.windTarget - this.wind) * response;
+    }
+
+    private void renderAccumulation(GuiGraphics graphics, int overlayX, int overlayY, int overlayWidth, int overlayHeight) {
+        if (this.bottomArea != null) {
+            renderAccumulationArea(graphics, this.bottomArea, overlayX, overlayY, overlayWidth, overlayHeight);
+        }
+        for (AccumulationArea area : this.collisionAreas) {
+            renderAccumulationArea(graphics, area, overlayX, overlayY, overlayWidth, overlayHeight);
+        }
+    }
+
+    private void renderAccumulationArea(GuiGraphics graphics, AccumulationArea area, int overlayX, int overlayY, int overlayWidth, int overlayHeight) {
+        if (!area.isValid()) {
+            return;
+        }
+        int startX = Math.max(0, area.x);
+        int endX = Math.min(overlayWidth, area.x + area.width);
+        if (startX >= endX) {
+            return;
+        }
+        int baseY = overlayY + area.y;
+        int maxY = overlayY + overlayHeight;
+        if (baseY < overlayY || baseY > maxY) {
+            return;
+        }
+
+        for (int x = startX; x < endX; x++) {
+            int index = x - area.x;
+            float height = area.getHeightAt(index);
+            if (height <= 0.01F) {
+                continue;
+            }
+            int intHeight = Mth.ceil(height);
+            int topY = baseY - intHeight;
+            if (topY < overlayY) {
+                topY = overlayY;
+            }
+            if (topY >= baseY) {
+                continue;
+            }
+            graphics.fill(overlayX + x, topY, overlayX + x + 1, baseY, ACCUMULATION_COLOR);
+        }
     }
 
     private Snowflake createSnowflake(int width, int height, boolean spawnInside) {
@@ -170,6 +299,79 @@ public class SnowfallOverlay extends AbstractWidget {
             return min;
         }
         return min + this.random.nextInt(max - min + 1);
+    }
+
+    private static final class AccumulationArea {
+        private int x;
+        private int y;
+        private int width;
+        private int height;
+        private final float maxHeight;
+        private float[] heights;
+
+        private AccumulationArea(int x, int y, int width, int height, float maxHeight) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            this.maxHeight = maxHeight;
+        }
+
+        private void setBounds(int x, int y, int width, int height) {
+            if (this.x == x && this.y == y && this.width == width && this.height == height) {
+                return;
+            }
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            this.heights = null;
+        }
+
+        private boolean isValid() {
+            return this.width > 0;
+        }
+
+        private void ensureHeights() {
+            if (this.width <= 0) {
+                this.heights = new float[0];
+                return;
+            }
+            if (this.heights == null || this.heights.length != this.width) {
+                this.heights = new float[this.width];
+            }
+        }
+
+        private void clear() {
+            if (this.heights != null && this.heights.length > 0) {
+                Arrays.fill(this.heights, 0.0F);
+            }
+        }
+
+        private int getIndex(float localX) {
+            return Mth.clamp(Mth.floor(localX), 0, this.width - 1);
+        }
+
+        private float getHeightAt(int index) {
+            if (this.heights == null || index < 0 || index >= this.heights.length) {
+                return 0.0F;
+            }
+            return this.heights[index];
+        }
+
+        private void deposit(int index, float amount) {
+            if (this.heights == null || index < 0 || index >= this.heights.length) {
+                return;
+            }
+            this.heights[index] = Math.min(this.maxHeight, this.heights[index] + amount);
+            float neighbor = amount * ACCUMULATION_NEIGHBOR_FACTOR;
+            if (index > 0) {
+                this.heights[index - 1] = Math.min(this.maxHeight, this.heights[index - 1] + neighbor);
+            }
+            if (index + 1 < this.heights.length) {
+                this.heights[index + 1] = Math.min(this.maxHeight, this.heights[index + 1] + neighbor);
+            }
+        }
     }
 
     private static final class Snowflake {
