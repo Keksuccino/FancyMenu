@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
@@ -46,9 +47,41 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
     private float wind = 0.0F;
     private float windTarget = 0.0F;
     private long nextWindChangeMs = 0L;
+    private float intensity = 1.0F;
+    private int snowColor = 0xFFFFFFFF;
+    private int accumulationColor = ACCUMULATION_COLOR;
+    private float snowAlphaScale = 1.0F;
 
     public SnowfallOverlay(int width, int height) {
         super(0, 0, width, height, Component.empty());
+    }
+
+    public void setIntensity(float intensity) {
+        this.intensity = Mth.clamp(intensity, 0.0F, 2.0F);
+    }
+
+    public float getIntensity() {
+        return this.intensity;
+    }
+
+    public void setColor(int color) {
+        float previousAlphaScale = this.snowAlphaScale;
+        this.snowColor = color;
+        this.snowAlphaScale = resolveAlphaScale(color);
+        updateAccumulationColor();
+        if (!this.snowflakes.isEmpty()) {
+            int rgb = color & 0x00FFFFFF;
+            for (Snowflake flake : this.snowflakes) {
+                int alpha = FastColor.ARGB32.alpha(flake.color);
+                int unscaledAlpha = previousAlphaScale > 0.0F ? Mth.clamp(Math.round(alpha / previousAlphaScale), 0, 255) : alpha;
+                int scaledAlpha = Mth.clamp(Math.round(unscaledAlpha * this.snowAlphaScale), 0, 255);
+                flake.color = (scaledAlpha << 24) | rgb;
+            }
+        }
+    }
+
+    public int getColor() {
+        return this.snowColor;
     }
 
     @Override
@@ -105,7 +138,9 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
     }
 
     private boolean ensureSnowflakes(int width, int height) {
-        int desiredCount = Mth.clamp((width * height) / AREA_PER_SNOWFLAKE, MIN_SNOWFLAKES, MAX_SNOWFLAKES);
+        float effectiveIntensity = Mth.clamp(this.intensity, 0.0F, 2.0F);
+        int baseCount = Mth.clamp((width * height) / AREA_PER_SNOWFLAKE, MIN_SNOWFLAKES, MAX_SNOWFLAKES);
+        int desiredCount = Mth.clamp(Mth.floor(baseCount * effectiveIntensity), 0, MAX_SNOWFLAKES);
         boolean sizeChanged = this.lastWidth != width || this.lastHeight != height;
         if (sizeChanged) {
             this.snowflakes.clear();
@@ -269,7 +304,7 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
             if (topY >= baseY) {
                 continue;
             }
-            graphics.fill(overlayX + x, topY, overlayX + x + 1, baseY, ACCUMULATION_COLOR);
+            graphics.fill(overlayX + x, topY, overlayX + x + 1, baseY, this.accumulationColor);
         }
     }
 
@@ -288,7 +323,7 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
         flake.swayAmplitude = nextRange(MIN_SWAY_AMPLITUDE, MAX_SWAY_AMPLITUDE);
         flake.swaySpeed = nextRange(MIN_SWAY_SPEED, MAX_SWAY_SPEED);
         flake.swayTime = this.random.nextFloat() * ((float)Math.PI * 2.0F);
-        flake.color = (nextInt(MIN_ALPHA, MAX_ALPHA) << 24) | 0xFFFFFF;
+        flake.color = resolveSnowflakeColor();
     }
 
     private float nextRange(float min, float max) {
@@ -300,6 +335,27 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
             return min;
         }
         return min + this.random.nextInt(max - min + 1);
+    }
+
+    private float resolveAlphaScale(int color) {
+        int alpha = FastColor.ARGB32.alpha(color);
+        if (alpha <= 0) {
+            alpha = 255;
+        }
+        return Mth.clamp(alpha / 255.0F, 0.0F, 1.0F);
+    }
+
+    private void updateAccumulationColor() {
+        int rgb = this.snowColor & 0x00FFFFFF;
+        int baseAlpha = FastColor.ARGB32.alpha(ACCUMULATION_COLOR);
+        int alpha = Mth.clamp(Math.round(baseAlpha * this.snowAlphaScale), 0, 255);
+        this.accumulationColor = (alpha << 24) | rgb;
+    }
+
+    private int resolveSnowflakeColor() {
+        int baseAlpha = nextInt(MIN_ALPHA, MAX_ALPHA);
+        int scaledAlpha = Mth.clamp(Math.round(baseAlpha * this.snowAlphaScale), 0, 255);
+        return (scaledAlpha << 24) | (this.snowColor & 0x00FFFFFF);
     }
 
     @Override

@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
@@ -69,9 +70,36 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     private int currentPuddleTarget = 0;
     private boolean puddlesEnabled = true;
     private boolean dripsEnabled = true;
+    private float intensity = 1.0F;
+    private int rainColor = (255 << 24) | DROP_RGB;
+    private int dropRgb = DROP_RGB;
+    private int puddleRgb = PUDDLE_RGB;
+    private int dripRgb = DRIP_RGB;
+    private float rainAlphaScale = 1.0F;
 
     public RainOverlay(int width, int height) {
         super(0, 0, width, height, Component.empty());
+    }
+
+    public void setIntensity(float intensity) {
+        this.intensity = Mth.clamp(intensity, 0.0F, 2.0F);
+    }
+
+    public float getIntensity() {
+        return this.intensity;
+    }
+
+    public void setColor(int color) {
+        this.rainColor = color;
+        this.rainAlphaScale = resolveAlphaScale(color);
+        int rgb = color & 0x00FFFFFF;
+        this.dropRgb = rgb;
+        this.puddleRgb = rgb;
+        this.dripRgb = rgb;
+    }
+
+    public int getColor() {
+        return this.rainColor;
     }
 
     @Override
@@ -122,7 +150,9 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     }
 
     private boolean ensureRaindrops(int width, int height) {
-        int desiredCount = Mth.clamp((width * height) / AREA_PER_DROP, MIN_DROPS, MAX_DROPS);
+        float effectiveIntensity = Mth.clamp(this.intensity, 0.0F, 2.0F);
+        int baseCount = Mth.clamp((width * height) / AREA_PER_DROP, MIN_DROPS, MAX_DROPS);
+        int desiredCount = Mth.clamp(Mth.floor(baseCount * effectiveIntensity), 0, MAX_DROPS);
         boolean sizeChanged = this.lastWidth != width || this.lastHeight != height;
         if (sizeChanged) {
             this.raindrops.clear();
@@ -335,8 +365,8 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
                 }
                 float progress = i / (float)segments;
                 float fade = 0.6F + progress * 0.25F;
-                int alpha = Mth.clamp(Mth.floor(drop.alpha * fade), 0, 255);
-                int color = (alpha << 24) | DROP_RGB;
+                int alpha = Mth.clamp(Mth.floor(drop.alpha * fade * this.rainAlphaScale), 0, 255);
+                int color = (alpha << 24) | this.dropRgb;
                 graphics.fill(x, y, x + 1, y + 1, color);
             }
         }
@@ -348,11 +378,11 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         }
         for (PuddleLine puddle : this.puddles) {
             float fade = getPuddleFade(puddle);
-            int alpha = Mth.clamp(Mth.floor(puddle.baseAlpha * fade), 0, 255);
+            int alpha = Mth.clamp(Mth.floor(puddle.baseAlpha * fade * this.rainAlphaScale), 0, 255);
             if (alpha <= 0) {
                 continue;
             }
-            int color = (alpha << 24) | PUDDLE_RGB;
+            int color = (alpha << 24) | this.puddleRgb;
             float halfLength = puddle.radius;
             int baseY = Mth.floor(overlayY + puddle.y);
             if (baseY < overlayY || baseY >= overlayY + overlayHeight) {
@@ -376,11 +406,11 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         }
         for (Drip drip : this.drips) {
             float fade = getDripFade(drip);
-            int alpha = Mth.clamp(Mth.floor(drip.alpha * fade), 0, 255);
+            int alpha = Mth.clamp(Mth.floor(drip.alpha * fade * this.rainAlphaScale), 0, 255);
             if (alpha <= 0) {
                 continue;
             }
-            int color = (alpha << 24) | DRIP_RGB;
+            int color = (alpha << 24) | this.dripRgb;
             int x = overlayX + Mth.floor(drip.x);
             int top = overlayY + Mth.floor(drip.y);
             int bottom = overlayY + Mth.ceil(drip.y + drip.length);
@@ -431,8 +461,10 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         for (SurfaceArea area : this.collisionAreas) {
             surfaceWidth += Math.max(0, area.width);
         }
-        int target = surfaceWidth / 55;
-        return Mth.clamp(target, 4, 28);
+        int baseTarget = Mth.clamp(surfaceWidth / 55, 4, 28);
+        float effectiveIntensity = Mth.clamp(this.intensity, 0.0F, 2.0F);
+        int target = Mth.floor(baseTarget * effectiveIntensity);
+        return Mth.clamp(target, 0, MAX_PUDDLES);
     }
 
     private Raindrop createRaindrop(int width, int height, boolean spawnInside) {
@@ -545,6 +577,14 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
             return min;
         }
         return min + this.random.nextInt(max - min + 1);
+    }
+
+    private float resolveAlphaScale(int color) {
+        int alpha = FastColor.ARGB32.alpha(color);
+        if (alpha <= 0) {
+            alpha = 255;
+        }
+        return Mth.clamp(alpha / 255.0F, 0.0F, 1.0F);
     }
 
     @Override
