@@ -32,6 +32,7 @@ public class SnowfallOverlay extends AbstractWidget {
     private static final int MAX_ALPHA = 255;
     private static final float MAX_ACCUMULATION_HEIGHT = 3.0F;
     private static final int ACCUMULATION_COLOR = (230 << 24) | 0xFFFFFF;
+    private static final int STACK_MIN_CONNECTED = 5;
 
     private final RandomSource random = RandomSource.create();
     private final List<Snowflake> snowflakes = new ArrayList<>();
@@ -362,16 +363,52 @@ public class SnowfallOverlay extends AbstractWidget {
             if (this.layers == null || index < 0 || index >= this.layers.length) {
                 return;
             }
-            addLayer(index);
+            addLayerIfAllowed(index);
             if (stacked) {
-                addLayer(index);
+                addLayerIfAllowed(index);
             }
         }
 
-        private void addLayer(int index) {
-            if (this.layers[index] < this.maxLayers) {
-                this.layers[index]++;
+        private void addLayerIfAllowed(int index) {
+            if (this.layers[index] >= this.maxLayers) {
+                return;
             }
+            int desiredLayer = this.layers[index] + 1;
+            if (desiredLayer == 1) {
+                this.layers[index]++;
+                return;
+            }
+            int requiredLayer = desiredLayer - 1;
+            if (!hasConnectedRun(index, requiredLayer, STACK_MIN_CONNECTED)) {
+                return;
+            }
+            this.layers[index]++;
+        }
+
+        private boolean hasConnectedRun(int index, int requiredLayer, int minLength) {
+            if (this.layers[index] < requiredLayer) {
+                return false;
+            }
+            int count = 1;
+            for (int i = index - 1; i >= 0; i--) {
+                if (this.layers[i] < requiredLayer) {
+                    break;
+                }
+                count++;
+                if (count >= minLength) {
+                    return true;
+                }
+            }
+            for (int i = index + 1; i < this.layers.length; i++) {
+                if (this.layers[i] < requiredLayer) {
+                    break;
+                }
+                count++;
+                if (count >= minLength) {
+                    return true;
+                }
+            }
+            return count >= minLength;
         }
     }
 
