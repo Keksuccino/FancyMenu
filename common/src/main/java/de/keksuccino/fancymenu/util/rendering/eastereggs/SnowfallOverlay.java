@@ -30,9 +30,6 @@ public class SnowfallOverlay extends AbstractWidget {
     private static final float MAX_DELTA_SECONDS = 0.1F;
     private static final int MIN_ALPHA = 150;
     private static final int MAX_ALPHA = 255;
-    private static final float ACCUMULATION_PER_FLAKE = 0.14F;
-    private static final float ACCUMULATION_BIG_BONUS = 0.08F;
-    private static final float ACCUMULATION_NEIGHBOR_FACTOR = 0.2F;
     private static final float MAX_ACCUMULATION_HEIGHT = 3.0F;
     private static final int ACCUMULATION_COLOR = (230 << 24) | 0xFFFFFF;
 
@@ -204,17 +201,12 @@ public class SnowfallOverlay extends AbstractWidget {
             return false;
         }
         int index = area.getIndex(effectiveX - area.x);
-        float existingHeight = area.getHeightAt(index);
-        float surfaceY = area.y - existingHeight;
+        int existingLayers = area.getLayerAt(index);
+        float surfaceY = area.y - existingLayers;
         float currentBottom = flake.y + flake.size;
         float previousBottom = previousY + flake.size;
         if (currentBottom >= surfaceY && previousBottom < surfaceY) {
-            float deposit = ACCUMULATION_PER_FLAKE + (flake.size == 2 ? ACCUMULATION_BIG_BONUS : 0.0F);
-            if (existingHeight > 0.01F) {
-                deposit *= 1.0F + (existingHeight / MAX_ACCUMULATION_HEIGHT) * 0.8F;
-            }
-            deposit *= nextRange(0.85F, 1.15F);
-            area.deposit(index, deposit);
+            area.deposit(index, existingLayers > 0);
             resetSnowflake(flake, width, height, false);
             return true;
         }
@@ -306,15 +298,15 @@ public class SnowfallOverlay extends AbstractWidget {
         private int y;
         private int width;
         private int height;
-        private final float maxHeight;
-        private float[] heights;
+        private final int maxLayers;
+        private int[] layers;
 
         private AccumulationArea(int x, int y, int width, int height, float maxHeight) {
             this.x = x;
             this.y = y;
             this.width = width;
             this.height = height;
-            this.maxHeight = maxHeight;
+            this.maxLayers = Math.max(1, Mth.floor(maxHeight));
         }
 
         private void setBounds(int x, int y, int width, int height) {
@@ -325,7 +317,7 @@ public class SnowfallOverlay extends AbstractWidget {
             this.y = y;
             this.width = width;
             this.height = height;
-            this.heights = null;
+            this.layers = null;
         }
 
         private boolean isValid() {
@@ -334,17 +326,17 @@ public class SnowfallOverlay extends AbstractWidget {
 
         private void ensureHeights() {
             if (this.width <= 0) {
-                this.heights = new float[0];
+                this.layers = new int[0];
                 return;
             }
-            if (this.heights == null || this.heights.length != this.width) {
-                this.heights = new float[this.width];
+            if (this.layers == null || this.layers.length != this.width) {
+                this.layers = new int[this.width];
             }
         }
 
         private void clear() {
-            if (this.heights != null && this.heights.length > 0) {
-                Arrays.fill(this.heights, 0.0F);
+            if (this.layers != null && this.layers.length > 0) {
+                Arrays.fill(this.layers, 0);
             }
         }
 
@@ -353,23 +345,32 @@ public class SnowfallOverlay extends AbstractWidget {
         }
 
         private float getHeightAt(int index) {
-            if (this.heights == null || index < 0 || index >= this.heights.length) {
+            if (this.layers == null || index < 0 || index >= this.layers.length) {
                 return 0.0F;
             }
-            return this.heights[index];
+            return this.layers[index];
         }
 
-        private void deposit(int index, float amount) {
-            if (this.heights == null || index < 0 || index >= this.heights.length) {
+        private int getLayerAt(int index) {
+            if (this.layers == null || index < 0 || index >= this.layers.length) {
+                return 0;
+            }
+            return this.layers[index];
+        }
+
+        private void deposit(int index, boolean stacked) {
+            if (this.layers == null || index < 0 || index >= this.layers.length) {
                 return;
             }
-            this.heights[index] = Math.min(this.maxHeight, this.heights[index] + amount);
-            float neighbor = amount * ACCUMULATION_NEIGHBOR_FACTOR;
-            if (index > 0) {
-                this.heights[index - 1] = Math.min(this.maxHeight, this.heights[index - 1] + neighbor);
+            addLayer(index);
+            if (stacked) {
+                addLayer(index);
             }
-            if (index + 1 < this.heights.length) {
-                this.heights[index + 1] = Math.min(this.maxHeight, this.heights[index + 1] + neighbor);
+        }
+
+        private void addLayer(int index) {
+            if (this.layers[index] < this.maxLayers) {
+                this.layers[index]++;
             }
         }
     }
