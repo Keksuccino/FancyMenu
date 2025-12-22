@@ -26,7 +26,6 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.elem
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element.VideoElementPlaytimePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element.VideoElementVolumePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.world.*;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.scoreboard.*;
 
 public class Placeholders {
 
@@ -181,22 +180,9 @@ public class Placeholders {
     public static final TextCharacterCountPlaceholder TEXT_CHARACTER_COUNT = new TextCharacterCountPlaceholder();
     public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
     public static final ClipboardContentPlaceholder CLIPBOARD_CONTENT = new ClipboardContentPlaceholder();
-    public static final ScoreboardPlayerTeamPlaceholder SCOREBOARD_PLAYER_TEAM = new ScoreboardPlayerTeamPlaceholder();
     public static final ClientSideNbtDataGetPlaceholder NBT_DATA_GET = new ClientSideNbtDataGetPlaceholder();
     public static final ServerSideNbtDataGetPlaceholder NBT_DATA_GET_SERVER = new ServerSideNbtDataGetPlaceholder();
     public static final WorldPlayersListPlaceholder WORLD_PLAYERS_LIST = new WorldPlayersListPlaceholder();
-    public static final ScoreboardScorePlaceholder SCOREBOARD_SCORE = new ScoreboardScorePlaceholder();
-    public static final ScoreboardObjectivesListPlaceholder SCOREBOARD_OBJECTIVES_LIST = new ScoreboardObjectivesListPlaceholder();
-    public static final ScoreboardTrackedPlayersPlaceholder SCOREBOARD_TRACKED_PLAYERS = new ScoreboardTrackedPlayersPlaceholder();
-    public static final ScoreboardDisplaySlotPlaceholder SCOREBOARD_DISPLAY_SLOT = new ScoreboardDisplaySlotPlaceholder();
-    public static final ScoreboardHasScorePlaceholder SCOREBOARD_HAS_SCORE = new ScoreboardHasScorePlaceholder();
-    public static final ScoreboardObjectiveDisplayNamePlaceholder SCOREBOARD_OBJECTIVE_DISPLAY_NAME = new ScoreboardObjectiveDisplayNamePlaceholder();
-    public static final ScoreboardObjectiveCriteriaPlaceholder SCOREBOARD_OBJECTIVE_CRITERIA = new ScoreboardObjectiveCriteriaPlaceholder();
-    public static final ScoreboardObjectiveRenderTypePlaceholder SCOREBOARD_OBJECTIVE_RENDER_TYPE = new ScoreboardObjectiveRenderTypePlaceholder();
-    public static final ScoreboardPlayerScoresListPlaceholder SCOREBOARD_PLAYER_SCORES_LIST = new ScoreboardPlayerScoresListPlaceholder();
-    public static final ScoreboardObjectiveCountPlaceholder SCOREBOARD_OBJECTIVE_COUNT = new ScoreboardObjectiveCountPlaceholder();
-    public static final PlayerHasTagPlaceholder PLAYER_HAS_TAG = new PlayerHasTagPlaceholder();
-    public static final PlayerTagsListPlaceholder PLAYER_TAGS_LIST = new PlayerTagsListPlaceholder();
     public static final FileTextPlaceholder FILE_TEXT = new FileTextPlaceholder();
     public static final WorldSaveNamesPlaceholder LEVEL_SAVE_NAMES = new WorldSaveNamesPlaceholder();
     public static final WorldSaveDataPlaceholder LEVEL_SAVE_DATA = new WorldSaveDataPlaceholder();
@@ -291,8 +277,6 @@ public class Placeholders {
         PlaceholderRegistry.register(MAX_PLAYER_OXYGEN);
         PlaceholderRegistry.register(CURRENT_PLAYER_OXYGEN_PERCENTAGE);
         PlaceholderRegistry.register(WORLD_PLAYERS_LIST);
-        PlaceholderRegistry.register(PLAYER_HAS_TAG);
-        PlaceholderRegistry.register(PLAYER_TAGS_LIST);
         PlaceholderRegistry.register(LEVEL_SAVE_NAMES);
         PlaceholderRegistry.register(LEVEL_SAVE_DATA);
 
@@ -385,19 +369,6 @@ public class Placeholders {
         PlaceholderRegistry.register(TEXT_CHARACTER_COUNT);
         PlaceholderRegistry.register(TEXT_WIDTH);
         PlaceholderRegistry.register(CLIPBOARD_CONTENT);
-
-        //Scoreboard
-        PlaceholderRegistry.register(SCOREBOARD_SCORE);
-        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVES_LIST);
-        PlaceholderRegistry.register(SCOREBOARD_TRACKED_PLAYERS);
-        PlaceholderRegistry.register(SCOREBOARD_DISPLAY_SLOT);
-        PlaceholderRegistry.register(SCOREBOARD_HAS_SCORE);
-        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_DISPLAY_NAME);
-        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_CRITERIA);
-        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_RENDER_TYPE);
-        PlaceholderRegistry.register(SCOREBOARD_PLAYER_SCORES_LIST);
-        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_COUNT);
-        PlaceholderRegistry.register(SCOREBOARD_PLAYER_TEAM);
 
     }
 
