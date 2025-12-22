@@ -499,8 +499,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 				}
 			}
 
-			RenderingUtils.resetShaderColor(graphics);
-
 		}
 
 	}
