@@ -103,6 +103,8 @@ public class PlayerEntityElement extends AbstractElement {
 
     @Nullable
     protected WrappedFancyPlayerWidget widget = null;
+    protected Exception widgetConstructionFirstFail = null;
+    protected Exception widgetConstructionSecondFail = null;
 
     public PlayerEntityElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -112,7 +114,11 @@ public class PlayerEntityElement extends AbstractElement {
     public void afterConstruction() {
         super.afterConstruction();
         if (FancyEntityRendererUtils.isFerLoaded()) {
-            this.widget = WrappedFancyPlayerWidget.build(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+            try {
+                this.widget = WrappedFancyPlayerWidget.build(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+            } catch (Exception ex) {
+                this.widgetConstructionFirstFail = ex;
+            }
         }
     }
 
@@ -120,6 +126,18 @@ public class PlayerEntityElement extends AbstractElement {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
+
+            // Re-try constructing widget if first attempt failed
+            if ((this.widgetConstructionFirstFail != null) && (this.widgetConstructionSecondFail == null)) {
+                if (FancyEntityRendererUtils.isFerLoaded()) {
+                    try {
+                        this.widget = WrappedFancyPlayerWidget.build(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                    } catch (Exception ex) {
+                        this.widgetConstructionSecondFail = ex;
+                        LOGGER.error("[FANCYMENU] Failed to construct widget for PlayerEntityElement! Both construction attempts failed!", ex);
+                    }
+                }
+            }
 
             if (this.widget == null) {
 

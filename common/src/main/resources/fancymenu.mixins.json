@@ -56,6 +56,7 @@
     "client.MixinGLFW",
     "client.MixinGuiGraphics",
     "client.MixinImageButton",
+    "client.MixinInventoryScreen",
     "client.MixinKeyboardHandler",
     "client.MixinLevelLoadingScreen",
     "client.MixinLevelLoadStatusManager",
