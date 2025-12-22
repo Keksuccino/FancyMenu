@@ -67,6 +67,10 @@
 - More of FancyMenu's list-based screens now have search bars
 - There's now an option to toggle on/off the screen background overlay in Custom GUIs while in a world (the blur/dark tint) (#1441)
 - The Book button in the Inventory screen now has a persistent identifier ("inventory_screen_book_button") to hopefully improve how the customization engine can interact with it (#1098)
+- Temporarily REMOVED all placeholders related to the scoreboard, because they never worked correctly and basically need a full rewrite
+  - I will add scoreboard placeholders back in the future, but for now it makes no sense to keep them in
+  - I also normally never just remove features without prior warning, but I felt it was the only correct action here
+  - Removed placeholders: Scoreboard Player Team, Scoreboard Score, Scoreboard Objectives List, Scoreboard Tracked Players, Scoreboard Display Slot, Scoreboard Has Score, Scoreboard Objective Display Name, Scoreboard Objective Criteria, Scoreboard Objective Render Type, Scoreboard Player Scores List, Scoreboard Objective Count
 
 ### Bug Fixes
 
