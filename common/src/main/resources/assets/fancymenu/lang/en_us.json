@@ -2321,7 +2321,7 @@
   "fancymenu.decoration_overlays.fireflies.color": "Firefly Color [HEX]",
   "fancymenu.decoration_overlays.fireflies.color.desc": "The color of the fireflies, as HEX color, starting with #.",
   "fancymenu.decoration_overlays.fireflies.intensity": "Firefly Intensity",
-  "fancymenu.decoration_overlays.fireflies.intensity.desc": "The intensity of the firefly groups. Needs to be a value between 0.0 and 2.0.",
+  "fancymenu.decoration_overlays.fireflies.intensity.desc": "Controls how many firefly groups (and fireflies) appear. Needs to be a value between 0.0 and 2.0.",
   "fancymenu.decoration_overlays.fireflies.group_size": "Group Size",
-  "fancymenu.decoration_overlays.fireflies.group_size.desc": "The size of firefly groups. Needs to be a value between 0.5 and 2.0."
+  "fancymenu.decoration_overlays.fireflies.group_size.desc": "Scales the radius of each group (how spread out they are). Needs to be a value between 0.5 and 2.0."
 }

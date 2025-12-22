@@ -25,7 +25,8 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
     private static final float GROUP_DRIFT_MIN = 3.0F;
     private static final float GROUP_DRIFT_MAX = 10.0F;
     private static final float GROUP_DRIFT_RESPONSE = 0.35F;
-    private static final float GROUP_FOLLOW_RADIUS = 150.0F;
+    private static final float GROUP_FOLLOW_START_RADIUS = 70.0F;
+    private static final float GROUP_FOLLOW_STOP_RADIUS = 110.0F;
     private static final float GROUP_FOLLOW_MIN_SPEED = 8.0F;
     private static final float GROUP_FOLLOW_MAX_SPEED = 65.0F;
     private static final float GROUP_FOLLOW_ACCEL = 1.6F;
@@ -235,7 +236,7 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
     }
 
     private void updateGroupMovement(FireflyGroup group, int width, int height, int mouseX, int mouseY, float deltaSeconds, long now) {
-        boolean following = this.followMouse && isMouseNearGroup(group, mouseX, mouseY);
+        boolean following = this.followMouse && updateFollowState(group, mouseX, mouseY);
         if (following) {
             float dx = mouseX - group.x;
             float dy = mouseY - group.y;
@@ -286,11 +287,18 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         }
     }
 
-    private boolean isMouseNearGroup(FireflyGroup group, int mouseX, int mouseY) {
+    private boolean updateFollowState(FireflyGroup group, int mouseX, int mouseY) {
         float dx = mouseX - group.x;
         float dy = mouseY - group.y;
-        float radius = GROUP_FOLLOW_RADIUS + group.radius * 0.6F;
-        return (dx * dx + dy * dy) <= radius * radius;
+        float startRadius = GROUP_FOLLOW_START_RADIUS + group.radius * 0.5F;
+        float stopRadius = GROUP_FOLLOW_STOP_RADIUS + group.radius * 0.65F;
+        float distSquared = dx * dx + dy * dy;
+        if (group.following) {
+            group.following = distSquared <= stopRadius * stopRadius;
+        } else {
+            group.following = distSquared <= startRadius * startRadius;
+        }
+        return group.following;
     }
 
     private void updateFireflies(FireflyGroup group, int width, int height, float deltaSeconds) {
@@ -401,8 +409,33 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         if (area == null || !area.isValid()) {
             return;
         }
-        float targetX = area.x + this.random.nextFloat() * area.width;
-        float targetY = area.y;
+        float targetX;
+        float targetY;
+        if (area == this.bottomArea) {
+            targetX = area.x + this.random.nextFloat() * area.width;
+            targetY = area.y;
+        } else {
+            int areaWidth = Math.max(1, area.width);
+            int areaHeight = Math.max(1, area.height);
+            switch (this.random.nextInt(4)) {
+                case 0 -> {
+                    targetX = area.x + this.random.nextFloat() * areaWidth;
+                    targetY = area.y;
+                }
+                case 1 -> {
+                    targetX = area.x + this.random.nextFloat() * areaWidth;
+                    targetY = area.y + areaHeight - 1.0F;
+                }
+                case 2 -> {
+                    targetX = area.x;
+                    targetY = area.y + this.random.nextFloat() * areaHeight;
+                }
+                default -> {
+                    targetX = area.x + areaWidth - 1.0F;
+                    targetY = area.y + this.random.nextFloat() * areaHeight;
+                }
+            }
+        }
         firefly.state = FireflyState.LANDING;
         firefly.targetX = Mth.clamp(targetX, 0.0F, width - 1.0F);
         firefly.targetY = Mth.clamp(targetY, 0.0F, height - 1.0F);
@@ -624,6 +657,7 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         private float baseRadius;
         private float radius;
         private float followCharge;
+        private boolean following;
         private final List<Firefly> fireflies = new ArrayList<>();
     }
 
