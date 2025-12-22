@@ -68,5 +68,6 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 - Fixed "Replace Text" placeholder can’t replace literal "\" characters (#1456)
 - Fixed branding and copyright text in the Title screen being affected by the opacity of other elements/buttons in some Minecraft versions (#1460)
 - Fixed a Vanilla bug that made icons of icon buttons (Language and Accessibility buttons) not react to opacity changes in some Minecraft versions
+- Fixed (at least tried to fix) a crash related to "Player Entity" elements sometimes failing to get constructed (#1323)
 
 %changelog:end%
