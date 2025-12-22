@@ -55,6 +55,18 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     private static final int DRIP_MAX_ALPHA = 150;
     private static final int DRIP_RGB = 0xA9C9E8;
 
+    private static final int THUNDER_RGB_BASE = 0xEAF6FF;
+    private static final int THUNDER_RGB_VARIANCE = 14;
+    private static final float THUNDER_PULSE_MIN_DURATION = 0.06F;
+    private static final float THUNDER_PULSE_MAX_DURATION = 0.18F;
+    private static final float THUNDER_GAP_MIN = 0.05F;
+    private static final float THUNDER_GAP_MAX = 0.18F;
+    private static final float THUNDER_BURST_MIN_DELAY = 4.0F;
+    private static final float THUNDER_BURST_MAX_DELAY = 9.5F;
+    private static final float THUNDER_INTENSITY_MIN = 0.35F;
+    private static final float THUNDER_INTENSITY_MAX = 0.95F;
+    private static final int THUNDER_ALPHA_MAX = 190;
+
     private final RandomSource random = RandomSource.create();
     private final List<Raindrop> raindrops = new ArrayList<>();
     private final List<PuddleLine> puddles = new ArrayList<>();
@@ -70,12 +82,20 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     private int currentPuddleTarget = 0;
     private boolean puddlesEnabled = true;
     private boolean dripsEnabled = true;
+    private boolean thunderEnabled = false;
     private float intensity = 1.0F;
     private int rainColor = (255 << 24) | DROP_RGB;
     private int dropRgb = DROP_RGB;
     private int puddleRgb = PUDDLE_RGB;
     private int dripRgb = DRIP_RGB;
     private float rainAlphaScale = 1.0F;
+    private float thunderPulseTime = 0.0F;
+    private float thunderPulseDuration = 0.0F;
+    private float thunderPulseIntensity = 0.0F;
+    private int thunderPulseRgb = THUNDER_RGB_BASE;
+    private float thunderGapTime = 0.0F;
+    private int thunderPulsesRemaining = 0;
+    private long nextThunderMs = 0L;
 
     public RainOverlay(int width, int height) {
         super(0, 0, width, height, Component.empty());
@@ -102,6 +122,16 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         return this.rainColor;
     }
 
+    public void setThunderEnabled(boolean enabled) {
+        this.thunderEnabled = enabled;
+        if (!enabled) {
+            this.thunderPulseTime = 0.0F;
+            this.thunderGapTime = 0.0F;
+            this.thunderPulsesRemaining = 0;
+            this.nextThunderMs = 0L;
+        }
+    }
+
     @Override
     protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int overlayX = this.getX();
@@ -124,10 +154,12 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
                 renderDrips(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
             }
             renderRaindrops(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
+            renderThunder(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
             return;
         }
 
         updateWind(System.currentTimeMillis(), deltaSeconds);
+        updateThunder(System.currentTimeMillis(), deltaSeconds);
         if (this.puddlesEnabled) {
             updatePuddles(overlayWidth, deltaSeconds, sizeChanged);
         } else if (!this.puddles.isEmpty()) {
@@ -147,6 +179,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
             renderDrips(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
         }
         renderRaindrops(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
+        renderThunder(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
     }
 
     private boolean ensureRaindrops(int width, int height) {
@@ -199,6 +232,43 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         this.dripsEnabled = enabled;
         if (!enabled) {
             this.drips.clear();
+        }
+    }
+
+    private void updateThunder(long now, float deltaSeconds) {
+        if (!this.thunderEnabled) {
+            return;
+        }
+        if (this.nextThunderMs == 0L) {
+            scheduleNextThunder(now);
+        }
+
+        if (this.thunderPulseTime > 0.0F) {
+            this.thunderPulseTime -= deltaSeconds;
+            if (this.thunderPulseTime <= 0.0F) {
+                this.thunderPulseTime = 0.0F;
+                if (this.thunderPulsesRemaining > 0) {
+                    this.thunderGapTime = nextRange(THUNDER_GAP_MIN, THUNDER_GAP_MAX);
+                }
+            }
+            return;
+        }
+
+        if (this.thunderGapTime > 0.0F) {
+            this.thunderGapTime -= deltaSeconds;
+            if (this.thunderGapTime <= 0.0F && this.thunderPulsesRemaining > 0) {
+                startThunderPulse();
+            }
+            return;
+        }
+
+        if (this.thunderPulsesRemaining > 0) {
+            startThunderPulse();
+            return;
+        }
+
+        if (now >= this.nextThunderMs) {
+            startThunderBurst(now);
         }
     }
 
@@ -428,6 +498,21 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         }
     }
 
+    private void renderThunder(GuiGraphics graphics, int overlayX, int overlayY, int overlayWidth, int overlayHeight) {
+        if (!this.thunderEnabled || this.thunderPulseTime <= 0.0F || this.thunderPulseDuration <= 0.0F) {
+            return;
+        }
+        float progress = 1.0F - (this.thunderPulseTime / this.thunderPulseDuration);
+        float pulse = progress <= 0.5F ? progress * 2.0F : (1.0F - progress) * 2.0F;
+        float intensity = pulse * this.thunderPulseIntensity;
+        int alpha = Mth.clamp(Mth.floor(intensity * THUNDER_ALPHA_MAX * this.rainAlphaScale), 0, 255);
+        if (alpha <= 0) {
+            return;
+        }
+        int color = (alpha << 24) | this.thunderPulseRgb;
+        graphics.fill(overlayX, overlayY, overlayX + overlayWidth, overlayY + overlayHeight, color);
+    }
+
     private float getPuddleFade(PuddleLine puddle) {
         float fadeDuration = puddle.lifeTime * PUDDLE_FADE_FRACTION;
         if (fadeDuration <= 0.0F) {
@@ -577,6 +662,35 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
             return min;
         }
         return min + this.random.nextInt(max - min + 1);
+    }
+
+    private void startThunderBurst(long now) {
+        this.thunderPulsesRemaining = nextInt(2, 5);
+        startThunderPulse();
+        scheduleNextThunder(now);
+    }
+
+    private void startThunderPulse() {
+        this.thunderPulseDuration = nextRange(THUNDER_PULSE_MIN_DURATION, THUNDER_PULSE_MAX_DURATION);
+        this.thunderPulseTime = this.thunderPulseDuration;
+        this.thunderPulseIntensity = nextRange(THUNDER_INTENSITY_MIN, THUNDER_INTENSITY_MAX);
+        this.thunderPulseRgb = randomThunderRgb();
+        this.thunderPulsesRemaining = Math.max(0, this.thunderPulsesRemaining - 1);
+    }
+
+    private void scheduleNextThunder(long now) {
+        long delayMs = (long)(nextRange(THUNDER_BURST_MIN_DELAY, THUNDER_BURST_MAX_DELAY) * 1000.0F);
+        this.nextThunderMs = now + delayMs;
+    }
+
+    private int randomThunderRgb() {
+        int baseR = (THUNDER_RGB_BASE >> 16) & 0xFF;
+        int baseG = (THUNDER_RGB_BASE >> 8) & 0xFF;
+        int baseB = THUNDER_RGB_BASE & 0xFF;
+        int r = Mth.clamp(baseR + nextInt(-THUNDER_RGB_VARIANCE, THUNDER_RGB_VARIANCE), 0, 255);
+        int g = Mth.clamp(baseG + nextInt(-THUNDER_RGB_VARIANCE, THUNDER_RGB_VARIANCE), 0, 255);
+        int b = Mth.clamp(baseB + nextInt(-THUNDER_RGB_VARIANCE, THUNDER_RGB_VARIANCE), 0, 255);
+        return (r << 16) | (g << 8) | b;
     }
 
     private float resolveAlphaScale(int color) {

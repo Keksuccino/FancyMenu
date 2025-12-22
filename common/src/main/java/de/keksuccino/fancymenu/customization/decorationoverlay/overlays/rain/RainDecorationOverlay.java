@@ -21,6 +21,7 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay {
     public String rainIntensity = "1.0";
     public boolean rainPuddles = true;
     public boolean rainDrips = true;
+    public boolean rainThunder = false;
     protected final RainOverlay overlay = new RainOverlay(0, 0);
     protected String lastRainColorString = null;
     protected String lastRainIntensityString = null;
@@ -31,6 +32,7 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay {
         // Update puddles
         this.overlay.setPuddlesEnabled(this.rainPuddles);
         this.overlay.setDripsEnabled(this.rainDrips);
+        this.overlay.setThunderEnabled(this.rainThunder);
 
         // Update rain color
         String colorString = PlaceholderParser.replacePlaceholders(this.rainColorHex);

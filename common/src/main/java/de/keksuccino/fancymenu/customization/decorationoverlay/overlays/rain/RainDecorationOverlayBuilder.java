@@ -18,6 +18,7 @@ public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
     private static final String RAIN_INTENSITY_KEY = "rain_intensity";
     private static final String RAIN_PUDDLES_KEY = "rain_puddles";
     private static final String RAIN_DRIPS_KEY = "rain_drips";
+    private static final String RAIN_THUNDER_KEY = "rain_thunder";
 
     public RainDecorationOverlayBuilder() {
         super("rainfall");
@@ -35,6 +36,7 @@ public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
         instanceToWrite.rainIntensity = Objects.requireNonNullElse(deserializeFrom.getValue(RAIN_INTENSITY_KEY), instanceToWrite.rainIntensity);
         instanceToWrite.rainPuddles = deserializeBoolean(instanceToWrite.rainPuddles, deserializeFrom.getValue(RAIN_PUDDLES_KEY));
         instanceToWrite.rainDrips = deserializeBoolean(instanceToWrite.rainDrips, deserializeFrom.getValue(RAIN_DRIPS_KEY));
+        instanceToWrite.rainThunder = deserializeBoolean(instanceToWrite.rainThunder, deserializeFrom.getValue(RAIN_THUNDER_KEY));
 
     }
 
@@ -45,6 +47,7 @@ public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
         serializeTo.putProperty(RAIN_INTENSITY_KEY, instanceToSerialize.rainIntensity);
         serializeTo.putProperty(RAIN_PUDDLES_KEY, instanceToSerialize.rainPuddles);
         serializeTo.putProperty(RAIN_DRIPS_KEY, instanceToSerialize.rainDrips);
+        serializeTo.putProperty(RAIN_THUNDER_KEY, instanceToSerialize.rainThunder);
 
     }
 
@@ -68,6 +71,15 @@ public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
                         },
                         "fancymenu.decoration_overlays.rain.drips")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.drips.desc")));
+
+        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "rain_thunder",
+                        () -> instance.rainThunder,
+                        aBoolean -> {
+                            editor.history.saveSnapshot();
+                            instance.rainThunder = aBoolean;
+                        },
+                        "fancymenu.decoration_overlays.rain.thunder")
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.thunder.desc")));
 
         ContextMenuUtils.addInputContextMenuEntryTo(menu, "rain_color", Component.translatable("fancymenu.decoration_overlays.rain.color"),
                         () -> instance.rainColorHex,
