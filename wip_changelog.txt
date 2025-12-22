@@ -1,5 +1,7 @@
 
-CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
+## CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
+
+### New Features and Improvements
 
 - Added a new kind/category of customizations: Global Customizations (#1355)
   - These customizations are different to most others in the mod, because they do not need you to enable customizations for a screen to apply them
@@ -64,6 +66,9 @@ CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 - The Parallax intensity for elements and menu backgrounds can now be configured individually for the X and Y axis (instead of combined setting for both, like before) (#1378)
 - More of FancyMenu's list-based screens now have search bars
 - There's now an option to toggle on/off the screen background overlay in Custom GUIs while in a world (the blur/dark tint) (#1441)
+
+### Bug Fixes
+
 - Fixed "Splash Text" elements not resolving placeholders anymore in MC 1.21.10+ (#1353, #1457)
 - Fixed "Replace Text" placeholder can’t replace literal "\" characters (#1456)
 - Fixed branding and copyright text in the Title screen being affected by the opacity of other elements/buttons in some Minecraft versions (#1460)
