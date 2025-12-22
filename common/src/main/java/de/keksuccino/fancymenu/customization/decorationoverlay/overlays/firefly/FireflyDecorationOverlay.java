@@ -18,14 +18,16 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay {
     @NotNull
     public String fireflyColorHex = "#FFE08A";
     @NotNull
-    public String fireflyIntensity = "1.0";
+    public String fireflyGroupDensity = "1.0";
+    public String fireflyGroupAmount = "1.0";
     @NotNull
     public String fireflyGroupSize = "1.0";
     public boolean fireflyFollowMouse = true;
     public boolean fireflyLanding = true;
     protected final FireflyOverlay overlay = new FireflyOverlay(0, 0);
     protected String lastFireflyColorString = null;
-    protected String lastFireflyIntensityString = null;
+    protected String lastFireflyGroupDensityString = null;
+    protected String lastFireflyGroupAmountString = null;
     protected String lastFireflyGroupSizeString = null;
 
     @Override
@@ -40,16 +42,28 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay {
             this.overlay.setColor(DrawableColor.of(colorString).getColorInt());
         }
 
-        String intensityString = PlaceholderParser.replacePlaceholders(this.fireflyIntensity);
-        if (!Objects.equals(intensityString, this.lastFireflyIntensityString)) {
-            this.lastFireflyIntensityString = intensityString;
-            float intensityValue;
-            if (MathUtils.isFloat(intensityString)) {
-                intensityValue = Float.parseFloat(intensityString);
+        String densityString = PlaceholderParser.replacePlaceholders(this.fireflyGroupDensity);
+        if (!Objects.equals(densityString, this.lastFireflyGroupDensityString)) {
+            this.lastFireflyGroupDensityString = densityString;
+            float densityValue;
+            if (MathUtils.isFloat(densityString)) {
+                densityValue = Float.parseFloat(densityString);
             } else {
-                intensityValue = 1.0F;
+                densityValue = 1.0F;
             }
-            this.overlay.setIntensity(intensityValue);
+            this.overlay.setGroupDensity(densityValue);
+        }
+
+        String amountString = PlaceholderParser.replacePlaceholders(this.fireflyGroupAmount);
+        if (!Objects.equals(amountString, this.lastFireflyGroupAmountString)) {
+            this.lastFireflyGroupAmountString = amountString;
+            float amountValue;
+            if (MathUtils.isFloat(amountString)) {
+                amountValue = Float.parseFloat(amountString);
+            } else {
+                amountValue = 1.0F;
+            }
+            this.overlay.setGroupAmount(amountValue);
         }
 
         String groupSizeString = PlaceholderParser.replacePlaceholders(this.fireflyGroupSize);

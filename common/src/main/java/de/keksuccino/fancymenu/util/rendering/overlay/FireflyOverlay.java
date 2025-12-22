@@ -20,6 +20,8 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
     private static final int MAX_GROUPS = 24;
     private static final int MIN_FIREFLIES = 4;
     private static final int MAX_FIREFLIES = 18;
+    private static final float MIN_MULTIPLIER = 0.1F;
+    private static final float MAX_MULTIPLIER = 4.0F;
     private static final float MIN_GROUP_RADIUS = 18.0F;
     private static final float MAX_GROUP_RADIUS = 58.0F;
     private static final float GROUP_DRIFT_MIN = 3.0F;
@@ -57,7 +59,8 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
     private int lastWidth = -1;
     private int lastHeight = -1;
     private long lastUpdateMs = -1L;
-    private float intensity = 1.0F;
+    private float groupAmount = 1.0F;
+    private float groupDensity = 1.0F;
     private float groupSize = 1.0F;
     private int fireflyColor = 0xFFFFE08A;
     private float fireflyAlphaScale = 1.0F;
@@ -68,12 +71,20 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         super(0, 0, width, height, Component.empty());
     }
 
-    public void setIntensity(float intensity) {
-        this.intensity = Mth.clamp(intensity, 0.0F, 2.0F);
+    public void setGroupAmount(float groupAmount) {
+        this.groupAmount = Mth.clamp(groupAmount, MIN_MULTIPLIER, MAX_MULTIPLIER);
     }
 
-    public float getIntensity() {
-        return this.intensity;
+    public float getGroupAmount() {
+        return this.groupAmount;
+    }
+
+    public void setGroupDensity(float groupDensity) {
+        this.groupDensity = Mth.clamp(groupDensity, MIN_MULTIPLIER, MAX_MULTIPLIER);
+    }
+
+    public float getGroupDensity() {
+        return this.groupDensity;
     }
 
     public void setGroupSize(float groupSize) {
@@ -139,10 +150,11 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
     }
 
     private boolean ensureGroups(int width, int height) {
-        float effectiveIntensity = Mth.clamp(this.intensity, 0.0F, 2.0F);
+        float effectiveGroupAmount = Mth.clamp(this.groupAmount, MIN_MULTIPLIER, MAX_MULTIPLIER);
         int baseCount = Mth.clamp((width * height) / AREA_PER_GROUP, MIN_GROUPS, MAX_GROUPS);
-        int desiredGroups = Mth.clamp(Mth.floor(baseCount * effectiveIntensity), 0, MAX_GROUPS);
-        if (effectiveIntensity > 0.01F && desiredGroups == 0) {
+        int maxGroups = Mth.floor(MAX_GROUPS * MAX_MULTIPLIER);
+        int desiredGroups = Mth.clamp(Mth.floor(baseCount * effectiveGroupAmount), 0, maxGroups);
+        if (effectiveGroupAmount > 0.01F && desiredGroups == 0) {
             desiredGroups = 1;
         }
         boolean sizeChanged = this.lastWidth != width || this.lastHeight != height;
@@ -151,7 +163,7 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
             this.groups.clear();
             if (desiredGroups > 0) {
                 for (int i = 0; i < desiredGroups; i++) {
-                    this.groups.add(createGroup(width, height, effectiveIntensity));
+                    this.groups.add(createGroup(width, height, this.groupDensity));
                 }
             }
             this.lastWidth = width;
@@ -161,14 +173,14 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         }
 
         while (this.groups.size() < desiredGroups) {
-            this.groups.add(createGroup(width, height, effectiveIntensity));
+            this.groups.add(createGroup(width, height, this.groupDensity));
         }
         while (this.groups.size() > desiredGroups) {
             this.groups.remove(this.groups.size() - 1);
         }
 
         if (!this.groups.isEmpty()) {
-            int desiredPerGroup = getDesiredFirefliesPerGroup(effectiveIntensity);
+            int desiredPerGroup = getDesiredFirefliesPerGroup(this.groupDensity);
             for (FireflyGroup group : this.groups) {
                 ensureFireflies(group, desiredPerGroup);
             }
@@ -176,13 +188,11 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         return false;
     }
 
-    private int getDesiredFirefliesPerGroup(float effectiveIntensity) {
-        if (effectiveIntensity <= 0.01F) {
-            return 0;
-        }
-        float intensityFactor = Mth.clamp(effectiveIntensity / 2.0F, 0.0F, 1.0F);
-        int desired = MIN_FIREFLIES + Mth.floor((MAX_FIREFLIES - MIN_FIREFLIES) * intensityFactor);
-        return Mth.clamp(desired, MIN_FIREFLIES, MAX_FIREFLIES);
+    private int getDesiredFirefliesPerGroup(float densityMultiplier) {
+        int basePerGroup = Mth.floor((MIN_FIREFLIES + MAX_FIREFLIES) * 0.5F);
+        int desired = Mth.floor(basePerGroup * Mth.clamp(densityMultiplier, MIN_MULTIPLIER, MAX_MULTIPLIER));
+        int maxPerGroup = Mth.floor(MAX_FIREFLIES * MAX_MULTIPLIER);
+        return Mth.clamp(desired, 1, maxPerGroup);
     }
 
     private void ensureFireflies(FireflyGroup group, int desiredCount) {
@@ -499,7 +509,7 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         return Mth.clamp(Math.round(baseAlpha * alphaScale), 0, 255);
     }
 
-    private FireflyGroup createGroup(int width, int height, float intensity) {
+    private FireflyGroup createGroup(int width, int height, float densityMultiplier) {
         FireflyGroup group = new FireflyGroup();
         group.baseRadius = nextRange(MIN_GROUP_RADIUS, MAX_GROUP_RADIUS);
         group.radius = group.baseRadius * this.groupSize;
@@ -507,7 +517,7 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         group.y = this.random.nextFloat() * height;
         group.nextDriftChangeMs = 0L;
         group.followCharge = 0.0F;
-        int desiredPerGroup = getDesiredFirefliesPerGroup(intensity);
+        int desiredPerGroup = getDesiredFirefliesPerGroup(densityMultiplier);
         for (int i = 0; i < desiredPerGroup; i++) {
             Firefly firefly = createFirefly(group.radius);
             firefly.worldX = group.x + firefly.offsetX;
