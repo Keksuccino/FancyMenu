@@ -24,6 +24,7 @@ dependencies {
     }
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.7'
+    annotationProcessor group: 'org.ow2.asm', name: 'asm-util', version: '9.7'
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
     compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
     compileOnly "com.github.Keksuccino:japng:0.5.3"

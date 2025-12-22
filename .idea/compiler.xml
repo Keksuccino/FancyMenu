@@ -6,18 +6,6 @@
         <outputRelativeToContentRoot value="true" />
         <option name="defaultObfuscationEnv" value="named:intermediary" />
         <option name="inMapFileNamedIntermediary" value="E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
-        <option name="outMapFileNamedIntermediary" value="E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.main.tiny" />
-        <option name="outRefMapFile" value="E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\classes\java\main\fancymenu.refmap.json" />
-        <option name="quiet" value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-common/0.4.1/a7f425cc49de7f10d008a9a676f5f023ebac13bb/mixinextras-common-0.4.1.jar" />
-        </processorPath>
-        <module name="fancymenu-1.21.1.common.main" />
-      </profile>
-      <profile name="Gradle Imported" enabled="true">
-        <outputRelativeToContentRoot value="true" />
-        <option name="defaultObfuscationEnv" value="named:intermediary" />
-        <option name="inMapFileNamedIntermediary" value="E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
         <option name="outMapFileNamedIntermediary" value="E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\fabric\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.main.tiny" />
         <option name="outRefMapFile" value="E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\fabric\build\classes\java\main\fancymenu.refmap.json" />
         <option name="quiet" value="true" />
@@ -33,6 +21,22 @@
           <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-common/0.3.5/5de895137aa0478675b6ecf7602d9652b05dc37e/mixinextras-common-0.3.5.jar" />
         </processorPath>
         <module name="fancymenu-1.21.1.forge.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="E:\CODING\.GRADLE_CACHE\caches\fabric-loom\1.21.1\loom.mappings.1_21_1.layered+hash.730628366-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\loom-cache\mixin-map-loom.mappings.1_21_1.layered+hash.730628366-v2.main.tiny" />
+        <option name="outRefMapFile" value="E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.1\common\build\classes\java\main\fancymenu.refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/org.ow2.asm/asm-util/9.7/c0655519f24d92af2202cb681cd7c1569df6ead6/asm-util-9.7.jar" />
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-common/0.4.1/a7f425cc49de7f10d008a9a676f5f023ebac13bb/mixinextras-common-0.4.1.jar" />
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/org.ow2.asm/asm-analysis/9.7/e4a258b7eb96107106c0599f0061cfc1832fe07a/asm-analysis-9.7.jar" />
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/org.ow2.asm/asm-tree/9.7/e446a17b175bfb733b87c5c2560ccb4e57d69f1a/asm-tree-9.7.jar" />
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/modules-2/files-2.1/org.ow2.asm/asm/9.7/73d7b3086e14beb604ced229c302feff6449723/asm-9.7.jar" />
+        </processorPath>
+        <module name="fancymenu-1.21.1.common.main" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="21" />
