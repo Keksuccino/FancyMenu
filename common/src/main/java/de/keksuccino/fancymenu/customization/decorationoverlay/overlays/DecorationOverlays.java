@@ -4,18 +4,21 @@ import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlay
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.firefly.FireflyDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.rain.RainDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.snow.SnowDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.stringlights.StringLightsDecorationOverlayBuilder;
 
 public class DecorationOverlays {
 
     public static final SnowDecorationOverlayBuilder SNOW = new SnowDecorationOverlayBuilder();
     public static final RainDecorationOverlayBuilder RAIN = new RainDecorationOverlayBuilder();
     public static final FireflyDecorationOverlayBuilder FIREFLIES = new FireflyDecorationOverlayBuilder();
+    public static final StringLightsDecorationOverlayBuilder STRING_LIGHTS = new StringLightsDecorationOverlayBuilder();
 
     public static void registerAll() {
 
         DecorationOverlayRegistry.register(SNOW);
         DecorationOverlayRegistry.register(RAIN);
         DecorationOverlayRegistry.register(FIREFLIES);
+        DecorationOverlayRegistry.register(STRING_LIGHTS);
 
     }
 
