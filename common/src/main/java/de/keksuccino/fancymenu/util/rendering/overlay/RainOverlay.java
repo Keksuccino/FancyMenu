@@ -84,6 +84,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     private boolean dripsEnabled = true;
     private boolean thunderEnabled = false;
     private float intensity = 1.0F;
+    private float thunderBrightness = 1.0F;
     private int rainColor = (255 << 24) | DROP_RGB;
     private int dropRgb = DROP_RGB;
     private int puddleRgb = PUDDLE_RGB;
@@ -130,6 +131,10 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
             this.thunderPulsesRemaining = 0;
             this.nextThunderMs = 0L;
         }
+    }
+
+    public void setThunderBrightness(float brightness) {
+        this.thunderBrightness = Mth.clamp(brightness, 0.1F, 2.0F);
     }
 
     @Override
@@ -504,7 +509,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         }
         float progress = 1.0F - (this.thunderPulseTime / this.thunderPulseDuration);
         float pulse = progress <= 0.5F ? progress * 2.0F : (1.0F - progress) * 2.0F;
-        float intensity = pulse * this.thunderPulseIntensity;
+        float intensity = pulse * this.thunderPulseIntensity * this.thunderBrightness;
         int alpha = Mth.clamp(Mth.floor(intensity * THUNDER_ALPHA_MAX * this.rainAlphaScale), 0, 255);
         if (alpha <= 0) {
             return;

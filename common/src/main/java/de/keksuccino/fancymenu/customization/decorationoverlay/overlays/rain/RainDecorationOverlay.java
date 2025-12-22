@@ -19,12 +19,15 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay {
     public String rainColorHex = "#CFE7FF";
     @NotNull
     public String rainIntensity = "1.0";
+    @NotNull
+    public String rainThunderBrightness = "1.0";
     public boolean rainPuddles = true;
     public boolean rainDrips = true;
     public boolean rainThunder = false;
     protected final RainOverlay overlay = new RainOverlay(0, 0);
     protected String lastRainColorString = null;
     protected String lastRainIntensityString = null;
+    protected String lastRainThunderBrightnessString = null;
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -52,6 +55,18 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay {
                 lastRainIntensity = 1.0f;
             }
             this.overlay.setIntensity(lastRainIntensity);
+        }
+
+        String thunderBrightnessString = PlaceholderParser.replacePlaceholders(this.rainThunderBrightness);
+        if (!Objects.equals(thunderBrightnessString, this.lastRainThunderBrightnessString)) {
+            this.lastRainThunderBrightnessString = thunderBrightnessString;
+            float lastThunderBrightness;
+            if (MathUtils.isFloat(thunderBrightnessString)) {
+                lastThunderBrightness = Float.parseFloat(thunderBrightnessString);
+            } else {
+                lastThunderBrightness = 1.0F;
+            }
+            this.overlay.setThunderBrightness(lastThunderBrightness);
         }
 
         this.overlay.setWidth(getScreenWidth());

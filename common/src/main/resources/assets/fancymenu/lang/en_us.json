@@ -2326,6 +2326,8 @@
   "fancymenu.decoration_overlays.fireflies.group_amount.desc": "Controls how many groups spawn. Needs to be a value between 0.1 and 4.0.",
   "fancymenu.decoration_overlays.fireflies.group_size": "Group Size",
   "fancymenu.decoration_overlays.fireflies.group_size.desc": "Scales the radius of each group (how spread out they are). Needs to be a value between 0.5 and 2.0.",
-  "fancymenu.decoration_overlays.rain.thunder": "Thunder Flash: %s",
-  "fancymenu.decoration_overlays.rain.thunder.desc": "If rain should occasionally flash like thunder."
+  "fancymenu.decoration_overlays.rain.thunder": "Thunder Flashes: %s",
+  "fancymenu.decoration_overlays.rain.thunder.desc": "If rain should occasionally flash like thunder.\n\n§zWARNING: This makes the screen flash! Do not use this if you react sensitive to flashing lights!",
+  "fancymenu.decoration_overlays.rain.thunder_brightness": "Thunder Flash Brightness",
+  "fancymenu.decoration_overlays.rain.thunder_brightness.desc": "Scales the brightness of thunder flashes. Needs to be a value between 0.1 and 2.0."
 }
