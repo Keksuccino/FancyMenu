@@ -70,7 +70,7 @@
 
 ### Breaking Changes
 
-- REMOVED all placeholders related to the scoreboard, because they never worked correctly and basically need a full rewrite
+- REMOVED all placeholders related to the scoreboard, because they never worked correctly and basically need a full rewrite (#1198)
   - I will add scoreboard placeholders back in the future, but for now it makes no sense to keep them in
   - I also normally never just remove features without prior warning, but I felt it was the only correct action here
   - Removed placeholders: Scoreboard Player Team, Scoreboard Score, Scoreboard Objectives List, Scoreboard Tracked Players, Scoreboard Display Slot, Scoreboard Has Score, Scoreboard Objective Display Name, Scoreboard Objective Criteria, Scoreboard Objective Render Type, Scoreboard Player Scores List, Scoreboard Objective Count, Player Tags List, Player Has Tag
