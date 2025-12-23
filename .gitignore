@@ -18,3 +18,5 @@
 /neoforge/launcher.exe
 /neoforge/jar_output/
 /fabric/jar_output/
+/library_cached_sources/
+/minecraft_cached_sources/
