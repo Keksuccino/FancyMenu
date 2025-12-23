@@ -208,7 +208,7 @@ public class RenderingUtils {
      * Repeatedly renders a tileable (seamless) texture inside an area. Fills the area with the texture.
      *
      * @param graphics The {@link GuiGraphics} instance.
-     * @param location The {@link ResourceLocation} of the texture.
+     * @param location The {@link Identifier} of the texture.
      * @param x The X position the area should get rendered at.
      * @param y The Y position the area should get rendered at.
      * @param areaRenderWidth The width of the area.
@@ -225,7 +225,7 @@ public class RenderingUtils {
      *
      * @param graphics The {@link GuiGraphics} instance.
      * @param renderType The render type.
-     * @param location The {@link ResourceLocation} of the texture.
+     * @param location The {@link Identifier} of the texture.
      * @param x The X position the area should get rendered at.
      * @param y The Y position the area should get rendered at.
      * @param areaRenderWidth The width of the area.

@@ -24,9 +24,9 @@ public class OnMusicTrackStoppedListener extends AbstractListener {
         super("music_track_stopped");
     }
 
-    public void onMusicTrackStopped(@Nullable String trackResourceLocation, @Nullable String trackEventLocation) {
+    public void onMusicTrackStopped(@Nullable String trackIdentifier, @Nullable String trackEventLocation) {
         this.cachedTrackIdentifier = (trackIdentifier != null && !trackIdentifier.isBlank()) ? trackIdentifier : trackEventLocation;
-        this.updateTrackInfoCache(trackResourceLocation, trackEventLocation);
+        this.updateTrackInfoCache(trackIdentifier, trackEventLocation);
         if ((trackIdentifier != null && !trackIdentifier.isBlank()) || (trackEventLocation != null && !trackEventLocation.isBlank())) {
             this.notifyAllInstances();
         }
@@ -40,8 +40,8 @@ public class OnMusicTrackStoppedListener extends AbstractListener {
         list.add(new CustomVariable("track_duration_ms", () -> Long.toString(Math.max(this.cachedTrackDurationMs, 0L))));
     }
 
-    private void updateTrackInfoCache(@Nullable String trackResourceLocation, @Nullable String eventResourceLocation) {
-        MusicTrackInfo info = MusicTrackInfoHelper.findTrackInfo(trackResourceLocation, eventResourceLocation);
+    private void updateTrackInfoCache(@Nullable String trackIdentifier, @Nullable String eventResourceLocation) {
+        MusicTrackInfo info = MusicTrackInfoHelper.findTrackInfo(trackIdentifier, eventResourceLocation);
         if (info != null) {
             this.cachedTrackDisplayName = info.getDisplayName();
             this.cachedTrackArtist = info.getArtist();

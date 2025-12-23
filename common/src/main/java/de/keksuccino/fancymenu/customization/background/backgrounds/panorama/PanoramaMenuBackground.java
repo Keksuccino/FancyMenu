@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRender
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
+
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;

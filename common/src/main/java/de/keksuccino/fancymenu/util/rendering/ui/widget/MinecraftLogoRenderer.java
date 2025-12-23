@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
+
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.RandomSource;

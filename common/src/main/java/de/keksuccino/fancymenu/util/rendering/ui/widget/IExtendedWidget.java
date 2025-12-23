@@ -1,11 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 
 public interface IExtendedWidget {

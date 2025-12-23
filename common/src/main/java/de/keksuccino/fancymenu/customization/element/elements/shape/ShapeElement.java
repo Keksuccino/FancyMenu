@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;

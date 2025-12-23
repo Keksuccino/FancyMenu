@@ -91,7 +91,7 @@ public class WavAudio implements IAudio, ALAudio {
             }
         } catch (Exception ex) {
             audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio from ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio from Identifier: " + location, ex);
         }
 
         return audio;

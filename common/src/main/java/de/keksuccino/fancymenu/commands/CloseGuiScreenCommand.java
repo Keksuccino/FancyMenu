@@ -8,6 +8,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -18,7 +19,7 @@ public class CloseGuiScreenCommand {
         d.register(Commands.literal("closeguiscreen").executes((stack) -> {
             return closeGui(stack.getSource(), null);
         }).then(Commands.argument("target_players", EntityArgument.players())
-                .requires(stack -> stack.hasPermission(2))
+                .requires(stack -> stack.permissions().hasPermission(Permissions.COMMANDS_ADMIN))
                 .executes(stack -> {
                     return closeGui(stack.getSource(), EntityArgument.getPlayers(stack, "target_players"));
                 })));

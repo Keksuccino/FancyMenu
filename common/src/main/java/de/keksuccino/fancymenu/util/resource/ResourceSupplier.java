@@ -136,14 +136,14 @@ public class ResourceSupplier<R extends Resource> {
 
     /**
      * Only works if this {@link ResourceSupplier}'s resource type is a {@link RenderableResource}.<br>
-     * The {@link BiConsumer}'s {@link Resource} and {@link ResourceLocation} is never NULL!<br><br>
+     * The {@link BiConsumer}'s {@link Resource} and {@link Identifier} is never NULL!<br><br>
      *
-     * The {@link BiConsumer}'s {@link ResourceLocation} is the {@link RenderableResource}'s
-     * current {@link ResourceLocation} ({@link RenderableResource#getResourceLocation()}).
+     * The {@link BiConsumer}'s {@link Identifier} is the {@link RenderableResource}'s
+     * current {@link Identifier} ({@link RenderableResource#getResourceLocation()}).
      * You should always use the provided location instead of calling {@link RenderableResource#getResourceLocation()},
      * because some types of resources asynchronously change that method's return value.
      */
-    public void forRenderable(@NotNull BiConsumer<R, ResourceLocation> task) {
+    public void forRenderable(@NotNull BiConsumer<R, Identifier> task) {
         R resource = this.get();
         if (resource instanceof RenderableResource r) {
             Identifier loc = r.getResourceLocation();

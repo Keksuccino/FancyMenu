@@ -200,7 +200,7 @@ public class FileTypes {
     }
 
     /**
-     * Tries to find the {@link FileType} of a {@link ResourceLocation} file.
+     * Tries to find the {@link FileType} of a {@link Identifier} file.
      */
     @Nullable
     public static FileType<?> getLocationType(@NotNull Identifier location) {
@@ -239,7 +239,7 @@ public class FileTypes {
 
     /**
      * Tries to find the {@link FileType} of a resource source.<br>
-     * Resource sources can be web URLs, local paths or {@link ResourceLocation}s (namespace:path).
+     * Resource sources can be web URLs, local paths or {@link Identifier}s (namespace:path).
      */
     @Nullable
     public static FileType<?> getType(@NotNull ResourceSource resourceSource, boolean doAdvancedWebChecks) {

@@ -12,7 +12,7 @@ public interface RenderableResource extends Resource {
     public static final Identifier FULLY_TRANSPARENT_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
 
     /**
-     * Some resource types asynchronously update their current {@link ResourceLocation},
+     * Some resource types asynchronously update their current {@link Identifier},
      * so make sure to always cache the location returned by this method before using it.
      */
     @Nullable Identifier getResourceLocation();

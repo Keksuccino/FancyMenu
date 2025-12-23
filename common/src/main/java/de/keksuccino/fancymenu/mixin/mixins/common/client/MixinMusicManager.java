@@ -7,9 +7,7 @@ import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.Mu
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.Sound;
-import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
-import net.minecraft.client.sounds.MusicInfo;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.resources.Identifier;
@@ -83,7 +81,7 @@ public abstract class MixinMusicManager {
                 return resolvedLocation.toString();
             }
         }
-        Identifier fallback = soundInstance.getLocation();
+        Identifier fallback = soundInstance.getIdentifier();
         return (fallback != null) ? fallback.toString() : null;
     }
 
@@ -93,7 +91,7 @@ public abstract class MixinMusicManager {
         if (soundInstance == null) {
             return null;
         }
-        Identifier location = soundInstance.getLocation();
+        Identifier location = soundInstance.getIdentifier();
         return (location != null) ? location.toString() : null;
     }
 
@@ -114,7 +112,7 @@ public abstract class MixinMusicManager {
     }
 
     @Inject(method = "startPlaying", at = @At("HEAD"), cancellable = true)
-    private void stopMusicIfDisabledInConfigFancyMenu(MusicInfo music, CallbackInfo info) {
+    private void stopMusicIfDisabledInConfigFancyMenu(Music music, CallbackInfo info) {
         if ((Minecraft.getInstance().level == null) && !FancyMenu.getOptions().playVanillaMenuMusic.getValue()) {
             this.stopPlaying();
             info.cancel();
@@ -122,7 +120,7 @@ public abstract class MixinMusicManager {
     }
 
     @Inject(method = "startPlaying", at = @At("RETURN"))
-    private void after_startPlayingFancyMenu(MusicInfo music, CallbackInfo info) {
+    private void after_startPlayingFancyMenu(Music music, CallbackInfo info) {
         if ((this.currentMusic != null) && (this.currentMusic.getSound() != SoundManager.EMPTY_SOUND)) {
             this.fireMusicTrackStartedFancyMenu(this.currentMusic);
         } else {

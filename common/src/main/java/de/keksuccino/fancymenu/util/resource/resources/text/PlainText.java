@@ -49,7 +49,7 @@ public class PlainText implements IText {
             of(Minecraft.getInstance().getResourceManager().open(location), location.toString(), text);
         } catch (Exception ex) {
             text.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read text content from ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read text content from Identifier: " + location, ex);
         }
 
         return text;

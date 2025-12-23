@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+
 import java.awt.Color;
 import java.util.*;
 

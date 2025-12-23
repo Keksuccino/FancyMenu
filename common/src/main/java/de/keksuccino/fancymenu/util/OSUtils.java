@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util;
 
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 
 public class OSUtils {
 

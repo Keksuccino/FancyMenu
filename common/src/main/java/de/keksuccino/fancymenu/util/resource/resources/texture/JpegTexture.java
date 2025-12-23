@@ -69,7 +69,7 @@ public class JpegTexture implements ITexture {
             }
         } catch (Exception ex) {
             texture.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read texture from ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read texture from Identifier: " + location, ex);
         }
         return texture;
 

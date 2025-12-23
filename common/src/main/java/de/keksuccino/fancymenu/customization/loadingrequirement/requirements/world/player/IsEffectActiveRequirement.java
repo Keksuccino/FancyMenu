@@ -106,12 +106,12 @@ public class IsEffectActiveRequirement extends LoadingRequirement {
         Minecraft.getInstance().setScreen(s);
     }
 
-    private static @NotNull List<ResourceLocation> getEffectKeys() {
-        List<ResourceLocation> keys = new ArrayList<>();
+    private static @NotNull List<Identifier> getEffectKeys() {
+        List<Identifier> keys = new ArrayList<>();
         try {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null) {
-                level.registryAccess().lookupOrThrow(Registries.MOB_EFFECT).listElementIds().forEach(key -> keys.add(key.location()));
+                level.registryAccess().lookupOrThrow(Registries.MOB_EFFECT).listElementIds().forEach(key -> keys.add(key.identifier()));
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get effect keys for 'Is Effect Active' loading requirement!", ex);

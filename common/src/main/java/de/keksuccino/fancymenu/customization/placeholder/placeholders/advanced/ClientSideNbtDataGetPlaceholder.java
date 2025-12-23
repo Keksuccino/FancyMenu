@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholder
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
-import net.minecraft.advancements.critereon.MinMaxBounds;
+import net.minecraft.advancements.criterion.MinMaxBounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -25,7 +25,6 @@ import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.DoubleTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -266,7 +265,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
         SortOrder sort = target.defaultSort;
         int limit = target.defaultLimit;
 
-        @Nullable Filter<ResourceLocation> typeFilter = null;
+        @Nullable Filter<Identifier> typeFilter = null;
         final List<Filter<String>> nameFilters = new ArrayList<>();
         final List<Filter<String>> tagFilters = new ArrayList<>();
 
@@ -377,7 +376,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
         );
         AABB bounds = buildBounds(origin, dx, dy, dz);
 
-        @Nullable Filter<ResourceLocation> finalTypeFilter = typeFilter;
+        @Nullable Filter<Identifier> finalTypeFilter = typeFilter;
         MinMaxBounds.Doubles finalDistance = distance;
         candidates.removeIf(entity -> !entityMatchesFilters(entity, finalTypeFilter, nameFilters, tagFilters, finalDistance, origin, bounds));
         if (candidates.isEmpty()) {
@@ -468,7 +467,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
 
     private boolean entityMatchesFilters(
             Entity entity,
-            @Nullable Filter<ResourceLocation> typeFilter,
+            @Nullable Filter<Identifier> typeFilter,
             List<Filter<String>> nameFilters,
             List<Filter<String>> tagFilters,
             MinMaxBounds.Doubles distance,

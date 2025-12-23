@@ -46,7 +46,7 @@ import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;

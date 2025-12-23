@@ -49,7 +49,7 @@ public abstract class FileCodec<T> {
     public static <T> FileCodec<T> generic(@NotNull Class<T> type, @NotNull ConsumingSupplier<InputStream, T> streamReader) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(streamReader);
-        ConsumingSupplier<ResourceLocation, T> locationReader = consumes -> {
+        ConsumingSupplier<Identifier, T> locationReader = consumes -> {
           try {
               InputStream in = Minecraft.getInstance().getResourceManager().open(consumes);
               return streamReader.get(in);
@@ -62,7 +62,7 @@ public abstract class FileCodec<T> {
     }
 
     @NotNull
-    public static <T> FileCodec<T> basic(@NotNull Class<T> type, @NotNull ConsumingSupplier<InputStream, T> streamReader, @NotNull ConsumingSupplier<ResourceLocation, T> locationReader) {
+    public static <T> FileCodec<T> basic(@NotNull Class<T> type, @NotNull ConsumingSupplier<InputStream, T> streamReader, @NotNull ConsumingSupplier<Identifier, T> locationReader) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(streamReader);
         return new FileCodec<T>() {
@@ -97,7 +97,7 @@ public abstract class FileCodec<T> {
     }
 
     @NotNull
-    public static <T> FileCodec<T> basicWithLocal(@NotNull Class<T> type, @NotNull ConsumingSupplier<InputStream, T> streamReader, @NotNull ConsumingSupplier<ResourceLocation, T> locationReader, @NotNull ConsumingSupplier<File, T> fileReader) {
+    public static <T> FileCodec<T> basicWithLocal(@NotNull Class<T> type, @NotNull ConsumingSupplier<InputStream, T> streamReader, @NotNull ConsumingSupplier<Identifier, T> locationReader, @NotNull ConsumingSupplier<File, T> fileReader) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(streamReader);
         Objects.requireNonNull(fileReader);
@@ -128,7 +128,7 @@ public abstract class FileCodec<T> {
     }
 
     @NotNull
-    public static <T> FileCodec<T> basicWithWeb(@NotNull Class<T> type, @NotNull ConsumingSupplier<InputStream, T> streamReader, @NotNull ConsumingSupplier<ResourceLocation, T> locationReader, @NotNull ConsumingSupplier<String, T> urlReader) {
+    public static <T> FileCodec<T> basicWithWeb(@NotNull Class<T> type, @NotNull ConsumingSupplier<InputStream, T> streamReader, @NotNull ConsumingSupplier<Identifier, T> locationReader, @NotNull ConsumingSupplier<String, T> urlReader) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(streamReader);
         Objects.requireNonNull(urlReader);
@@ -162,7 +162,7 @@ public abstract class FileCodec<T> {
     }
 
     @NotNull
-    public static <T> FileCodec<T> advanced(@NotNull Class<T> type, @NotNull ConsumingSupplier<InputStream, T> streamReader, @NotNull ConsumingSupplier<ResourceLocation, T> locationReader, @NotNull ConsumingSupplier<File, T> fileReader, @NotNull ConsumingSupplier<String, T> urlReader) {
+    public static <T> FileCodec<T> advanced(@NotNull Class<T> type, @NotNull ConsumingSupplier<InputStream, T> streamReader, @NotNull ConsumingSupplier<Identifier, T> locationReader, @NotNull ConsumingSupplier<File, T> fileReader, @NotNull ConsumingSupplier<String, T> urlReader) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(streamReader);
         Objects.requireNonNull(fileReader);

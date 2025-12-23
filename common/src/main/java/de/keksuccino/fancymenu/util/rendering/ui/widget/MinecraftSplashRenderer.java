@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinSplashRenderer;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

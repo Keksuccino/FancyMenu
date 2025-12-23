@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
@@ -102,12 +101,9 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderContents(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.renderBackground(graphics);
         this.renderLabelText(graphics);
-        if (this.isHovered()) {
-            graphics.requestCursor(this.isActive() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
-        }
     }
 
     protected void renderBackground(@NotNull GuiGraphics graphics) {

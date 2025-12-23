@@ -11,7 +11,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.entity.animal.parrot.Parrot;
 import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -366,7 +366,7 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
 
     /**
      * Sets whether the player is on fire.<br>
-     * If Soul Fire'd is installed, you can use {@link #setOnFire(boolean, ResourceLocation)} to specify the kind of fire.
+     * If Soul Fire'd is installed, you can use {@link #setOnFire(boolean, Identifier)} to specify the kind of fire.
      *
      * @param onFire whether the player is on fire.
      * @return {@code this}.

@@ -100,7 +100,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                 }
                 Identifier loc = Identifier.tryParse(resourceSource.getSourceWithoutPrefix());
                 if (loc == null) {
-                    LOGGER.error("[FANCYMENU] Failed to register location resource! Unable to parse ResourceLocation: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
+                    LOGGER.error("[FANCYMENU] Failed to register location resource! Unable to parse Identifier: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
                     this.addToFailedSources(resourceSource);
                     return null;
                 }

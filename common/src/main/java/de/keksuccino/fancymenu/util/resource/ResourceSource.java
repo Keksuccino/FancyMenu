@@ -11,7 +11,7 @@ import net.minecraft.resources.Identifier;
 
 /**
  * A {@link ResourceSource}, as the name says, is the source of a {@link Resource},
- * which can be a URL to a web file, a file path or a {@link ResourceLocation} (namespace:path).
+ * which can be a URL to a web file, a file path or a {@link Identifier} (namespace:path).
  */
 public class ResourceSource {
 

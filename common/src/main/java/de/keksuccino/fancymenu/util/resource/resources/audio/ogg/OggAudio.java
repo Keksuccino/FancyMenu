@@ -89,7 +89,7 @@ public class OggAudio implements IAudio, ALAudio {
             }
         } catch (Exception ex) {
             audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read OGG audio from ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio from Identifier: " + location, ex);
         }
 
         return audio;

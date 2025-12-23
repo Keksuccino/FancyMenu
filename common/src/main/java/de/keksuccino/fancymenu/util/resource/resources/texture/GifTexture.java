@@ -74,7 +74,7 @@ public class GifTexture implements ITexture, PlayableResource {
             of(Minecraft.getInstance().getResourceManager().open(location), location.toString(), texture);
         } catch (Exception ex) {
             texture.loadingFailed.set(true);
-            LOGGER.error("[FANCYMENU] Failed to read GIF image from ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read GIF image from Identifier: " + location, ex);
         }
 
         return texture;

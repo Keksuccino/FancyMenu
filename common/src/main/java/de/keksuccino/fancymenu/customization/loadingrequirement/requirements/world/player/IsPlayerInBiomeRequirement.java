@@ -103,8 +103,8 @@ public class IsPlayerInBiomeRequirement extends LoadingRequirement {
         Minecraft.getInstance().setScreen(s);
     }
 
-    private static @NotNull List<ResourceLocation> getBiomeKeys() {
-        List<ResourceLocation> keys = new ArrayList<>();
+    private static @NotNull List<Identifier> getBiomeKeys() {
+        List<Identifier> keys = new ArrayList<>();
         try {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null) {

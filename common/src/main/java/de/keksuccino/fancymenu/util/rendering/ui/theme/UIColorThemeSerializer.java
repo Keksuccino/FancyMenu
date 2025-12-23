@@ -68,7 +68,7 @@ public class UIColorThemeSerializer {
             CloseableUtils.closeQuietly(in);
             return deserializeTheme(json.toString());
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to deserialize FancyMenu theme from ResourceLocation: " + resource, ex);
+            LOGGER.error("[FANCYMENU] Failed to deserialize FancyMenu theme from Identifier: " + resource, ex);
         }
         CloseableUtils.closeQuietly(in);
         return null;

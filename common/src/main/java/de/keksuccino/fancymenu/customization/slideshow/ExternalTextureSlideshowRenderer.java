@@ -16,7 +16,7 @@ import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
+
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;

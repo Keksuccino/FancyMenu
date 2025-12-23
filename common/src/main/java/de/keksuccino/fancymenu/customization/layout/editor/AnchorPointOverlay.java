@@ -21,7 +21,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
+
 import net.minecraft.network.chat.Style;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;

@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar.ScrollBar;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;

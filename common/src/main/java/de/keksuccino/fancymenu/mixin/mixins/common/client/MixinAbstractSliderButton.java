@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.renderer.RenderType;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;

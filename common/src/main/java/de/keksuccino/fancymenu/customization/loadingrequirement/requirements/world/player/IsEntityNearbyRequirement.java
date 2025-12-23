@@ -128,8 +128,8 @@ public class IsEntityNearbyRequirement extends LoadingRequirement {
         Minecraft.getInstance().setScreen(s);
     }
 
-    private static @NotNull List<ResourceLocation> getEntityKeys() {
-        List<ResourceLocation> types = new ArrayList<>();
+    private static @NotNull List<Identifier> getEntityKeys() {
+        List<Identifier> types = new ArrayList<>();
         try {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null) {

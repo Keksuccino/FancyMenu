@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;

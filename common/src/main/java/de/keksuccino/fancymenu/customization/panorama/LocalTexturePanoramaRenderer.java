@@ -143,7 +143,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		// Create custom cube map texture
 		this.panoramaCubeMapTexture = new PanoramaCubeMapTexture(this.name != null ? this.name : "unnamed", this.panoramaImageSuppliers);
 		
-		// Register the texture with a unique ResourceLocation
+		// Register the texture with a unique Identifier
 		this.cubeMapLocation = Identifier.fromNamespaceAndPath("fancymenu", "panorama_" + this.uniqueId);
 		TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 		textureManager.register(this.cubeMapLocation, this.panoramaCubeMapTexture);

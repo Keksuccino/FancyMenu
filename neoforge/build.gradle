@@ -67,6 +67,7 @@ dependencies {
 	implementation "maven.modrinth:melody:1.0.15-1.21.11-neoforge"
 	implementation "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
 	implementation "de.keksuccino:mcef-neoforge:2.1.7-1.21.10"
+    compileOnly "net.objecthunter:exp4j:0.4.8"
 	compileOnly project(":common")
 }
 

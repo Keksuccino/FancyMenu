@@ -77,11 +77,11 @@ public class PngTexture implements ITexture {
                 CloseableUtils.closeQuietly(image);
             } else {
                 texture.loadingFailed = true;
-                LOGGER.error("[FANCYMENU] Failed to read texture from ResourceLocation! Resource not present: " + location, new IOException());
+                LOGGER.error("[FANCYMENU] Failed to read texture from Identifier! Resource not present: " + location, new IOException());
             }
         } catch (Exception ex) {
             texture.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read texture from ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read texture from Identifier: " + location, ex);
         }
         texture.loadedIntoMinecraft = true;
         texture.loadingCompleted = true;

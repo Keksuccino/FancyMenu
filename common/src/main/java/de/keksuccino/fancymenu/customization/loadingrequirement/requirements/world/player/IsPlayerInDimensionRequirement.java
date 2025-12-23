@@ -101,8 +101,8 @@ public class IsPlayerInDimensionRequirement extends LoadingRequirement {
         Minecraft.getInstance().setScreen(s);
     }
 
-    private static @NotNull List<ResourceLocation> getDimensionTypes() {
-        List<ResourceLocation> types = new ArrayList<>();
+    private static @NotNull List<Identifier> getDimensionTypes() {
+        List<Identifier> types = new ArrayList<>();
         try {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null) {

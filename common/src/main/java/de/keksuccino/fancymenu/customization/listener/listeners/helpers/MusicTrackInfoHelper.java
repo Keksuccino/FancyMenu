@@ -60,7 +60,7 @@ public final class MusicTrackInfoHelper {
      * Locates track metadata using the resolved audio resource (preferred) or the backing sound event.
      */
     @Nullable
-    public static MusicTrackInfo findTrackInfo(@Nullable String trackResourceLocation, @Nullable String eventResourceLocation) {
+    public static MusicTrackInfo findTrackInfo(@Nullable String trackIdentifier, @Nullable String eventResourceLocation) {
         String normalizedTrack = normalizeResourceLocation(trackResourceLocation);
         String normalizedEvent = normalizeEventLocation(eventResourceLocation);
 

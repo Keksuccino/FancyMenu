@@ -79,7 +79,7 @@ public class FmaTexture implements ITexture, PlayableResource {
             of(Minecraft.getInstance().getResourceManager().open(location), location.toString(), texture);
         } catch (Exception ex) {
             texture.loadingFailed.set(true);
-            LOGGER.error("[FANCYMENU] Failed to read FMA image from ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read FMA image from Identifier: " + location, ex);
         }
 
         return texture;

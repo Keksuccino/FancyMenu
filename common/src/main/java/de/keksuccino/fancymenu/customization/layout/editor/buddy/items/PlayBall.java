@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
+
 import net.minecraft.resources.Identifier;
 
 import java.util.Random;

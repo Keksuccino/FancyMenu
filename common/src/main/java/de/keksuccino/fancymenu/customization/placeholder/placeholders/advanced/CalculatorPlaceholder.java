@@ -4,8 +4,8 @@ import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholder
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.konkrete.objecthunter.exp4j.Expression;
-import de.keksuccino.konkrete.objecthunter.exp4j.ExpressionBuilder;
+import net.objecthunter.exp4j.Expression;
+import net.objecthunter.exp4j.ExpressionBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;

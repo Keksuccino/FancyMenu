@@ -76,7 +76,7 @@ public class ApngTexture implements ITexture, PlayableResource {
             of(Minecraft.getInstance().getResourceManager().open(location), location.toString(), texture);
         } catch (Exception ex) {
             texture.loadingFailed.set(true);
-            LOGGER.error("[FANCYMENU] Failed to read APNG image from ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read APNG image from Identifier: " + location, ex);
         }
 
         return texture;

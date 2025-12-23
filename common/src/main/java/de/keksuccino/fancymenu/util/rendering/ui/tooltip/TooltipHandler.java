@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;

@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ClassExtender;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -11,7 +10,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
