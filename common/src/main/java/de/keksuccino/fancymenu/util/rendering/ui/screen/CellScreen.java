@@ -89,7 +89,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     }
 
     public void rebuild() {
-        this.resize(Minecraft.getInstance(), this.width, this.height);
+        this.resize(this.width, this.height);
     }
 
     /**
@@ -344,10 +344,10 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             newScale--;
             if (newScale < 1) newScale = 1;
             WindowHandler.setGuiScale(newScale);
-            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+            this.resize(window.getGuiScaledWidth(), window.getGuiScaledHeight());
         } else if ((topRightSideWidget != null) && (topRightSideWidget.getY() >= 20) && resized) {
             RenderingUtils.resetGuiScale();
-            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+            this.resize(window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
 
         if (this.descriptionAreaEnabled) {

@@ -194,7 +194,8 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             // Render the text highlight
             if (highlightPos != cursorPos) {
                 int l1 = textX + this.font.width(text.substring(0, highlightPos));
-                graphics.textHighlight(finalTextXAfterCursor, textY - 1, l1 - 1, textY + 1 + 9);
+                boolean invert = true;
+                graphics.textHighlight(finalTextXAfterCursor, textY - 1, l1 - 1, textY + 1 + 9, invert);
             }
 
         }

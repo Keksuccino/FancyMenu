@@ -80,7 +80,7 @@ public class BuddyGuiButton implements Renderable {
             graphics.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
         } else {
             graphics.fill(x, y, x + this.width, y + this.height, backgroundColor);
-            graphics.submitOutline(x, y, this.width, this.height, 0xFF000000);
+            graphics.renderOutline(x, y, this.width, this.height, 0xFF000000);
         }
 
         // Draw button text

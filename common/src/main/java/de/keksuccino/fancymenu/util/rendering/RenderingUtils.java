@@ -4,6 +4,7 @@ import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScissorStack;
@@ -12,6 +13,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -422,15 +424,15 @@ public class RenderingUtils {
     }
 
     private static void innerBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, Identifier texture, float minX, float maxX, float minY, float maxY, float minU, float maxU, float minV, float maxV, int color) {
-        GpuTextureView textureView = Minecraft.getInstance().getTextureManager().getTexture(texture).getTextureView();
-        submitBlit(graphics, pipeline, textureView, minX, minY, maxX, maxY, minU, maxU, minV, maxV, color);
+        AbstractTexture absTex = Minecraft.getInstance().getTextureManager().getTexture(texture);
+        submitBlit(graphics, pipeline, absTex.getTextureView(), absTex.getSampler(), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color);
     }
 
-    private static void submitBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, GpuTextureView textureView, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
+    private static void submitBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, GpuTextureView textureView, GpuSampler gpuSampler, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
         ScreenRectangle scissorStackPeek = ((IMixinScissorStack)((IMixinGuiGraphics)graphics).get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
         ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
                 new FloatBlitRenderState(
-                        pipeline, TextureSetup.singleTexture(textureView), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, scissorStackPeek
+                        pipeline, TextureSetup.singleTexture(textureView, gpuSampler), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, scissorStackPeek
                 )
         );
     }

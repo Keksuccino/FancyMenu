@@ -136,8 +136,6 @@ public class TextEditorScreen extends Screen {
 
     public TextEditorScreen(@Nullable Component title, @Nullable CharacterFilter characterFilter, @NotNull Consumer<String> callback) {
         super((title != null) ? title : Component.literal(""));
-        this.minecraft = Minecraft.getInstance();
-        this.font = Minecraft.getInstance().font;
         this.characterFilter = characterFilter;
         this.callback = callback;
         this.addLine();

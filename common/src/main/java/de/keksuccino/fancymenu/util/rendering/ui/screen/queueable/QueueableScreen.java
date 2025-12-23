@@ -28,9 +28,9 @@ public class QueueableScreen extends Screen {
     }
 
     @Override
-    public void resize(@NotNull Minecraft mc, int width, int height) {
+    public void resize(int width, int height) {
         assertQueueableSetUpCorrectly();
-        super.resize(mc, width, height);
+        super.resize(width, height);
     }
 
     @Override
