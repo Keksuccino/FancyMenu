@@ -29,7 +29,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -688,7 +688,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             if (iconTexture != null) {
                 int[] size = iconTexture.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getWidth(), this.height);
                 DrawableColor iconColor = (this.iconTextureColor != null) ? this.iconTextureColor.get() : null;
-                ResourceLocation loc = (iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION;
+                Identifier loc = (iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION;
                 if (iconColor != null) {
                     graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1], iconColor.getColorInt());
                 } else {

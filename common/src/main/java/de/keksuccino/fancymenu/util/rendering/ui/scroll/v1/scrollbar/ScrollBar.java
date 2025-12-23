@@ -7,7 +7,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,8 +33,8 @@ public class ScrollBar {
     public int scrollAreaEndY;
     public Color idleBarColor;
     public Color hoverBarColor;
-    public ResourceLocation idleBarTexture;
-    public ResourceLocation hoverBarTexture;
+    public Identifier idleBarTexture;
+    public Identifier hoverBarTexture;
     public boolean active = true;
     protected boolean allowScrollWheel = false;
     protected float grabberScrollSpeed = 1.0F;
@@ -58,7 +58,7 @@ public class ScrollBar {
         this.hoverBarColor = hoverBarColor;
     }
 
-    public ScrollBar(@NotNull ScrollBarDirection direction, int grabberWidth, int grabberHeight, int scrollAreaStartX, int scrollAreaStartY, int scrollAreaEndX, int scrollAreaEndY, ResourceLocation idleBarTexture, ResourceLocation hoverBarTexture) {
+    public ScrollBar(@NotNull ScrollBarDirection direction, int grabberWidth, int grabberHeight, int scrollAreaStartX, int scrollAreaStartY, int scrollAreaEndX, int scrollAreaEndY, Identifier idleBarTexture, Identifier hoverBarTexture) {
         this(direction, grabberWidth, grabberHeight, scrollAreaStartX, scrollAreaStartY, scrollAreaEndX, scrollAreaEndY);
         this.idleBarTexture = idleBarTexture;
         this.hoverBarTexture = hoverBarTexture;

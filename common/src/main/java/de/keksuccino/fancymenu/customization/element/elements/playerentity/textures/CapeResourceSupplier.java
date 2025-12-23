@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +25,7 @@ import java.util.Objects;
 public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final ResourceLocation DEFAULT_CAPE_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/player_entity/default_cape_texture.png");
+    public static final Identifier DEFAULT_CAPE_LOCATION = Identifier.fromNamespaceAndPath("fancymenu", "textures/player_entity/default_cape_texture.png");
     public static final PngTexture DEFAULT_CAPE = PngTexture.location(DEFAULT_CAPE_LOCATION);
     protected static final Map<String, String> CACHED_PLAYER_NAME_CAPE_URLS = new HashMap<>();
 
@@ -103,8 +103,8 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
     }
 
     @NotNull
-    public ResourceLocation getCapeLocation() {
-        ResourceLocation loc = this.get().getResourceLocation();
+    public Identifier getCapeLocation() {
+        Identifier loc = this.get().getResourceLocation();
         return (loc != null) ? loc : DEFAULT_CAPE_LOCATION;
     }
 

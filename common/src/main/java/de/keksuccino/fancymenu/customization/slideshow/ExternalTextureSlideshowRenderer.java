@@ -17,7 +17,7 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -228,7 +228,7 @@ public class ExternalTextureSlideshowRenderer {
 				o = this.slideshowOpacity;
 			}
 			ITexture t = this.previous.get();
-			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
+			Identifier loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
 				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(o));
 			}
@@ -238,7 +238,7 @@ public class ExternalTextureSlideshowRenderer {
 	protected void renderCurrent(GuiGraphics graphics) {
 		if (this.current != null) {
 			ITexture t = this.current.get();
-			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
+			Identifier loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
 				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(this.slideshowOpacity));
 			}
@@ -248,7 +248,7 @@ public class ExternalTextureSlideshowRenderer {
 	protected void renderOverlay(GuiGraphics graphics) {
 		if (this.overlayTexture != null) {
 			ITexture t = this.overlayTexture.get();
-			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
+			Identifier loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
 				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, -1);
 			}

@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +28,7 @@ import java.util.Objects;
 public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final ResourceLocation DEFAULT_SKIN_LOCATION = ResourceLocation.parse("textures/entity/player/wide/zuri.png");
+    public static final Identifier DEFAULT_SKIN_LOCATION = Identifier.parse("textures/entity/player/wide/zuri.png");
     public static final PngTexture DEFAULT_SKIN = PngTexture.location(DEFAULT_SKIN_LOCATION);
     protected static final Map<String, SkinMetadata> CACHED_SKIN_METADATA = new HashMap<>();
 
@@ -162,8 +162,8 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
     }
 
     @NotNull
-    public ResourceLocation getSkinLocation() {
-        ResourceLocation loc = this.get().getResourceLocation();
+    public Identifier getSkinLocation() {
+        Identifier loc = this.get().getResourceLocation();
         return (loc != null) ? loc : DEFAULT_SKIN_LOCATION;
     }
 

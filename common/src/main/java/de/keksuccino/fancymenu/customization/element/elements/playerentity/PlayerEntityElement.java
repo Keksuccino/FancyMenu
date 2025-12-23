@@ -16,7 +16,7 @@ import net.minecraft.core.ClientAsset;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.entity.player.PlayerModelType;
@@ -242,8 +242,8 @@ public class PlayerEntityElement extends AbstractElement {
         if ((this.capeTextureSupplier != null) && this.capeTextureSupplier.hasNoCape()) {
             this.capeTextureSupplier = null;
         }
-        ResourceLocation skinLoc = (this.skinTextureSupplier != null) ? this.skinTextureSupplier.getSkinLocation() : SkinResourceSupplier.DEFAULT_SKIN_LOCATION;
-        ResourceLocation capeLoc = null;
+        Identifier skinLoc = (this.skinTextureSupplier != null) ? this.skinTextureSupplier.getSkinLocation() : SkinResourceSupplier.DEFAULT_SKIN_LOCATION;
+        Identifier capeLoc = null;
         if ((this.capeTextureSupplier != null) && !this.capeTextureSupplier.hasNoCape()) {
             capeLoc = this.capeTextureSupplier.getCapeLocation();
             if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
@@ -403,7 +403,7 @@ public class PlayerEntityElement extends AbstractElement {
                     this.lastFinalKey = keyFinal;
                     this.lastEnchanted = enchanted;
 
-                    Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(keyFinal));
+                    Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(keyFinal));
                     this.cachedStack = new ItemStack(item);
                     this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
 
@@ -456,9 +456,9 @@ public class PlayerEntityElement extends AbstractElement {
 
     }
 
-    public record ClientTexture(ResourceLocation texturePath) implements ClientAsset.Texture {
+    public record ClientTexture(Identifier texturePath) implements ClientAsset.Texture {
         @Override
-        public @NotNull ResourceLocation id() {
+        public @NotNull Identifier id() {
             return this.texturePath();
         }
     }

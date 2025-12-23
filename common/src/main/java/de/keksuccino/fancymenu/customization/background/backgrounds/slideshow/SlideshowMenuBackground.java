@@ -10,12 +10,12 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 public class SlideshowMenuBackground extends MenuBackground {
 
-    private static final ResourceLocation MISSING = ITexture.MISSING_TEXTURE_LOCATION;
+    private static final Identifier MISSING = ITexture.MISSING_TEXTURE_LOCATION;
 
     public String slideshowName;
 

@@ -9,7 +9,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.entity.player.PlayerSkin;
@@ -384,7 +384,7 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
      * @param fireType Soul Fire'd fire type.
      * @return {@code this}.
      */
-    public WrappedFancyPlayerWidget setOnFire(boolean onFire, ResourceLocation fireType) {
+    public WrappedFancyPlayerWidget setOnFire(boolean onFire, Identifier fireType) {
         wrapped.setOnFire(onFire, fireType);
         return this;
     }

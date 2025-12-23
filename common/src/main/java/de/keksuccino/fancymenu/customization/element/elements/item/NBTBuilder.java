@@ -6,7 +6,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,7 +26,7 @@ public class NBTBuilder {
             Stream<HolderLookup.RegistryLookup<?>> lookup = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY).listRegistries();
             ItemParser parser = new ItemParser(HolderLookup.Provider.create(lookup));
 
-            ResourceLocation itemKey = BuiltInRegistries.ITEM.getKey(target.getItem());
+            Identifier itemKey = BuiltInRegistries.ITEM.getKey(target.getItem());
             String dummyCommand = itemKey + nbtJson + " 1";
 
             ItemParser.ItemResult result = parser.parse(new StringReader(dummyCommand));

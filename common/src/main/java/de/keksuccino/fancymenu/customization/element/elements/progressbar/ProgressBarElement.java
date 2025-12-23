@@ -13,7 +13,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.apache.commons.lang3.StringUtils;
@@ -140,7 +140,7 @@ public class ProgressBarElement extends AbstractElement {
         if (barTextureSupplier != null) {
             ITexture texture = barTextureSupplier.get();
             if (texture != null) {
-                ResourceLocation loc = texture.getResourceLocation();
+                Identifier loc = texture.getResourceLocation();
                 if (loc != null) {
                     graphics.blit(RenderPipelines.GUI_TEXTURED, loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight, DrawableColor.WHITE.getColorIntWithAlpha(opacity));
                 }

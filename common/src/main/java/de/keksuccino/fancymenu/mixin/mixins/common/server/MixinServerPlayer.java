@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.level.StructureUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.StructureManager;
@@ -168,7 +168,7 @@ public class MixinServerPlayer {
         }
 
         Registry<Structure> registry = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
-        ResourceLocation location = registry.getKey(structure);
+        Identifier location = registry.getKey(structure);
         return (location != null) ? location.toString() : null;
     }
 

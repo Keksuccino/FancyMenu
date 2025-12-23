@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Represents a poop object that appears after the buddy poops.
@@ -12,7 +12,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 public class Poop {
 
-    public static final ResourceLocation TEXTURE_POOP = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/poop.png");
+    public static final Identifier TEXTURE_POOP = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/poop.png");
 
     public int x;
     public int y;

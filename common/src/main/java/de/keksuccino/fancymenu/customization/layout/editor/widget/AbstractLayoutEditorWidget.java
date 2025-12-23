@@ -21,7 +21,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -489,7 +489,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
             ITexture icon = this.iconSupplier.get(this);
             if (icon != null) {
-                ResourceLocation location = icon.getResourceLocation();
+                Identifier location = icon.getResourceLocation();
                 if (location != null) {
                     blitF(graphics, RenderPipelines.GUI_TEXTURED, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
                 }

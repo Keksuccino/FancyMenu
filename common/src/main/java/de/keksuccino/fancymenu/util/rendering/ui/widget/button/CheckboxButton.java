@@ -5,16 +5,16 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CheckboxButton extends ExtendedButton {
 
-    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_NORMAL_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_normal.png");
-    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_HOVER_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_hover.png");
-    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_INACTIVE_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_inactive.png");
-    public static final ResourceLocation CHECKBOX_CHECKMARK_TEXTURE_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/checkmark.png");
+    public static final Identifier CHECKBOX_BACKGROUND_TEXTURE_NORMAL_DEFAULT = Identifier.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_normal.png");
+    public static final Identifier CHECKBOX_BACKGROUND_TEXTURE_HOVER_DEFAULT = Identifier.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_hover.png");
+    public static final Identifier CHECKBOX_BACKGROUND_TEXTURE_INACTIVE_DEFAULT = Identifier.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_inactive.png");
+    public static final Identifier CHECKBOX_CHECKMARK_TEXTURE_DEFAULT = Identifier.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/checkmark.png");
 
     protected boolean checkboxState = false;
     @NotNull
@@ -61,9 +61,9 @@ public class CheckboxButton extends ExtendedButton {
     }
 
     @NotNull
-    public ResourceLocation getCheckboxCheckmarkTexture() {
+    public Identifier getCheckboxCheckmarkTexture() {
         if (this.customCheckmarkTexture != null) {
-            ResourceLocation loc = this.customCheckmarkTexture.getResourceLocation();
+            Identifier loc = this.customCheckmarkTexture.getResourceLocation();
             if (loc != null) return loc;
         }
         return CHECKBOX_CHECKMARK_TEXTURE_DEFAULT;
@@ -86,7 +86,7 @@ public class CheckboxButton extends ExtendedButton {
     }
 
     @NotNull
-    public ResourceLocation getCheckboxBackground() {
+    public Identifier getCheckboxBackground() {
         if (!this.isActive()) {
             return this.getCheckboxBackgroundTextureInactive();
         }
@@ -97,27 +97,27 @@ public class CheckboxButton extends ExtendedButton {
     }
 
     @NotNull
-    public ResourceLocation getCheckboxBackgroundTextureNormal() {
+    public Identifier getCheckboxBackgroundTextureNormal() {
         if (this.customBackgroundTextureNormal != null) {
-            ResourceLocation loc = this.customBackgroundTextureNormal.getResourceLocation();
+            Identifier loc = this.customBackgroundTextureNormal.getResourceLocation();
             if (loc != null) return loc;
         }
         return CHECKBOX_BACKGROUND_TEXTURE_NORMAL_DEFAULT;
     }
 
     @NotNull
-    public ResourceLocation getCheckboxBackgroundTextureHover() {
+    public Identifier getCheckboxBackgroundTextureHover() {
         if (this.customBackgroundTextureHover != null) {
-            ResourceLocation loc = this.customBackgroundTextureHover.getResourceLocation();
+            Identifier loc = this.customBackgroundTextureHover.getResourceLocation();
             if (loc != null) return loc;
         }
         return CHECKBOX_BACKGROUND_TEXTURE_HOVER_DEFAULT;
     }
 
     @NotNull
-    public ResourceLocation getCheckboxBackgroundTextureInactive() {
+    public Identifier getCheckboxBackgroundTextureInactive() {
         if (this.customBackgroundTextureInactive != null) {
-            ResourceLocation loc = this.customBackgroundTextureInactive.getResourceLocation();
+            Identifier loc = this.customBackgroundTextureInactive.getResourceLocation();
             if (loc != null) return loc;
         }
         return CHECKBOX_BACKGROUND_TEXTURE_INACTIVE_DEFAULT;

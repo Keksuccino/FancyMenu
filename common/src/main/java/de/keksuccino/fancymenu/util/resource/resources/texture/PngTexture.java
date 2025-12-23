@@ -18,7 +18,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,7 +33,7 @@ public class PngTexture implements ITexture {
     public static final ResourceSupplier<ITexture> FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of(FULLY_TRANSPARENT_TEXTURE.toString(), ResourceSourceType.LOCATION).getSourceWithPrefix());
 
     @Nullable
-    protected ResourceLocation resourceLocation;
+    protected Identifier resourceLocation;
     protected volatile int width = 10;
     protected volatile int height = 10;
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
@@ -41,7 +41,7 @@ public class PngTexture implements ITexture {
     protected volatile boolean loadedIntoMinecraft = false;
     protected volatile NativeImage nativeImage;
     protected DynamicTexture dynamicTexture;
-    protected ResourceLocation sourceLocation;
+    protected Identifier sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
     protected volatile boolean loadingCompleted = false;
@@ -52,7 +52,7 @@ public class PngTexture implements ITexture {
      * Supports JPEG and PNG textures.
      */
     @NotNull
-    public static PngTexture location(@NotNull ResourceLocation location) {
+    public static PngTexture location(@NotNull Identifier location) {
         return location(location, null);
     }
 
@@ -60,7 +60,7 @@ public class PngTexture implements ITexture {
      * Supports JPEG and PNG textures.
      */
     @NotNull
-    public static PngTexture location(@NotNull ResourceLocation location, @Nullable PngTexture writeTo) {
+    public static PngTexture location(@NotNull Identifier location, @Nullable PngTexture writeTo) {
 
         Objects.requireNonNull(location);
         PngTexture texture = (writeTo != null) ? writeTo : new PngTexture();
@@ -241,7 +241,7 @@ public class PngTexture implements ITexture {
     }
 
     @Nullable
-    public ResourceLocation getResourceLocation() {
+    public Identifier getResourceLocation() {
         if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
         if ((this.resourceLocation == null) && !this.loadedIntoMinecraft && (this.nativeImage != null)) {
             try {
@@ -311,8 +311,8 @@ public class PngTexture implements ITexture {
     }
 
     /**
-     * Only really closes textures that are NOT loaded via ResourceLocation.<br>
-     * Does basically nothing for ResourceLocation textures, because these are handled by Minecraft.
+     * Only really closes textures that are NOT loaded via Identifier.<br>
+     * Does basically nothing for Identifier textures, because these are handled by Minecraft.
      */
     @Override
     public void close() {

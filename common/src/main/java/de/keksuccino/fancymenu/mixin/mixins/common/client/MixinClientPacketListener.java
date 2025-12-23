@@ -15,7 +15,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundTakeItemEntityPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.stats.Stats;
 import net.minecraft.stats.StatsCounter;
 import net.minecraft.world.entity.Entity;
@@ -141,7 +141,7 @@ public class MixinClientPacketListener {
 
         String itemKey = null;
         if (!stack.isEmpty()) {
-            ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            Identifier itemLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
             if (itemLocation != null) {
                 itemKey = itemLocation.toString();
             }

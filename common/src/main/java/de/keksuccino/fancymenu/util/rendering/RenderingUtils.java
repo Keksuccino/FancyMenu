@@ -12,7 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,7 @@ public class RenderingUtils {
 
     public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
-    public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
+    public static final Identifier FULLY_TRANSPARENT_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
 
     private static final List<DeferredScreenRenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
     private static boolean lockDepthTest = false;
@@ -121,7 +121,7 @@ public class RenderingUtils {
      * @param textureWidth  The total width of the texture atlas.
      * @param textureHeight The total height of the texture atlas.
      */
-    public static void blitMirrored(@NotNull GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight) {
+    public static void blitMirrored(@NotNull GuiGraphics graphics, Identifier atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight) {
         // Delegate to the scaled version with a default white tint (-1)
         blitMirroredScaled(graphics, atlasLocation, x, y, u, v, spriteWidth, spriteHeight, spriteWidth, spriteHeight, textureWidth, textureHeight, -1);
     }
@@ -143,7 +143,7 @@ public class RenderingUtils {
      * @param textureHeight The total height of the texture atlas.
      * @param colorTint     The color tint to apply (ARGB format).
      */
-    public static void blitMirrored(@NotNull GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight, int colorTint) {
+    public static void blitMirrored(@NotNull GuiGraphics graphics, Identifier atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight, int colorTint) {
         blitMirroredScaled(graphics, atlasLocation, x, y, u, v, spriteWidth, spriteHeight, spriteWidth, spriteHeight, textureWidth, textureHeight, colorTint);
     }
 
@@ -169,7 +169,7 @@ public class RenderingUtils {
      * @param textureHeight The total height of the texture atlas.
      * @param color         The color tint to apply (ARGB format, -1 for white/no tint).
      */
-    public static void blitMirroredScaled(@NotNull GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int renderWidth, int renderHeight, int textureWidth, int textureHeight, int color) {
+    public static void blitMirroredScaled(@NotNull GuiGraphics graphics, Identifier atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int renderWidth, int renderHeight, int textureWidth, int textureHeight, int color) {
 
         // Push the current transformation matrix onto the stack to isolate our changes.
         graphics.pose().pushMatrix();
@@ -216,7 +216,7 @@ public class RenderingUtils {
      * @param texWidth The full width (in pixels) of the texture.
      * @param texHeight The full height (in pixels) of the texture.
      */
-    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight, int color) {
+    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull Identifier location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight, int color) {
         blitRepeat(graphics, RenderPipelines.GUI_TEXTURED, location, x, y, areaRenderWidth, areaRenderHeight, texWidth, texHeight, color);
     }
 
@@ -233,7 +233,7 @@ public class RenderingUtils {
      * @param texWidth The full width (in pixels) of the texture.
      * @param texHeight The full height (in pixels) of the texture.
      */
-    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull RenderPipeline renderType, @NotNull ResourceLocation location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight, int color) {
+    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull RenderPipeline renderType, @NotNull Identifier location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight, int color) {
         graphics.blit(renderType, location, x, y, 0.0F, 0.0F, areaRenderWidth, areaRenderHeight, texWidth, texHeight, color);
     }
 
@@ -241,7 +241,7 @@ public class RenderingUtils {
      * Renders a texture using nine-slice scaling with tiled edges and center.
      *
      * @param graphics The GuiGraphics instance to use for rendering
-     * @param texture The texture ResourceLocation to render
+     * @param texture The texture Identifier to render
      * @param x The x position to render at
      * @param y The y position to render at
      * @param width The desired width to render
@@ -254,7 +254,7 @@ public class RenderingUtils {
      * @param borderLeft The size of the left border
      * @param color The color to tint the texture with
      */
-    public static void blitNineSlicedTexture(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height,
+    public static void blitNineSlicedTexture(GuiGraphics graphics, Identifier texture, int x, int y, int width, int height,
                                              int textureWidth, int textureHeight,
                                              int borderTop, int borderRight, int borderBottom, int borderLeft, int color) {
 
@@ -267,7 +267,7 @@ public class RenderingUtils {
      *
      * @param graphics The GuiGraphics instance to use for rendering
      * @param renderType The render type.
-     * @param texture The texture ResourceLocation to render
+     * @param texture The texture Identifier to render
      * @param x The x position to render at
      * @param y The y position to render at
      * @param width The desired width to render
@@ -280,7 +280,7 @@ public class RenderingUtils {
      * @param borderLeft The size of the left border
      * @param color The color to tint the texture with
      */
-    public static void blitNineSlicedTexture(GuiGraphics graphics, @NotNull RenderPipeline renderType, ResourceLocation texture, int x, int y, int width, int height,
+    public static void blitNineSlicedTexture(GuiGraphics graphics, @NotNull RenderPipeline renderType, Identifier texture, int x, int y, int width, int height,
                                              int textureWidth, int textureHeight,
                                              int borderTop, int borderRight, int borderBottom, int borderLeft, int color) {
 
@@ -392,19 +392,19 @@ public class RenderingUtils {
         );
     }
 
-    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, int color) {
+    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, int color) {
         blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$6, $$7, $$8, $$9, color);
     }
 
-    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
+    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
         blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$6, $$7, $$8, $$9);
     }
 
-    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11) {
+    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11) {
         blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11, -1);
     }
 
-    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11, int color) {
+    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11, int color) {
         innerBlit(
                 graphics,
                 renderTypeFunc,
@@ -421,7 +421,7 @@ public class RenderingUtils {
         );
     }
 
-    private static void innerBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, ResourceLocation texture, float minX, float maxX, float minY, float maxY, float minU, float maxU, float minV, float maxV, int color) {
+    private static void innerBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, Identifier texture, float minX, float maxX, float minY, float maxY, float minU, float maxU, float minV, float maxV, int color) {
         GpuTextureView textureView = Minecraft.getInstance().getTextureManager().getTexture(texture).getTextureView();
         submitBlit(graphics, pipeline, textureView, minX, minY, maxX, maxY, minU, maxU, minV, maxV, color);
     }

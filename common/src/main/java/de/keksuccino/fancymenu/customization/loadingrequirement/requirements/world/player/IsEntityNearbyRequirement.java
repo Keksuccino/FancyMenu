@@ -19,7 +19,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -61,7 +61,7 @@ public class IsEntityNearbyRequirement extends LoadingRequirement {
                 int radius = SerializationUtils.deserializeNumber(Integer.class, 1, valsRaw[0]);
                 String entityKey = valsRaw[1];
                 for (Entity entity : getEntitiesAroundPlayer(player, level, radius)) {
-                    ResourceLocation loc = Services.PLATFORM.getEntityKey(entity.getType());
+                    Identifier loc = Services.PLATFORM.getEntityKey(entity.getType());
                     if (loc != null) {
                         if (loc.toString().equals(entityKey)) return true;
                     }

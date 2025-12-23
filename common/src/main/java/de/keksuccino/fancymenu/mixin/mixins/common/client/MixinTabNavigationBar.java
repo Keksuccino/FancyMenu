@@ -12,7 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.input.KeyEvent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,8 +28,8 @@ public class MixinTabNavigationBar {
     @Shadow @Final private static int HEIGHT;
     @Shadow private int width;
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"))
-    private boolean wrapHeaderSeparatorRenderingInRender_FancyMenu(GuiGraphics instance, RenderPipeline $$0, ResourceLocation $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int $$9) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
+    private boolean wrapHeaderSeparatorRenderingInRender_FancyMenu(GuiGraphics instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int $$9) {
         if (this.isBarPartOfCurrentScreen_FancyMenu()) {
             if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
                 ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);

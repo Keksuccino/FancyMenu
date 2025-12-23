@@ -36,7 +36,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +49,7 @@ import java.util.function.Consumer;
 public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends CellScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    protected static final PngTexture WARNING_TEXTURE = PngTexture.location(ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/warning_framed_24x24.png"));
+    protected static final PngTexture WARNING_TEXTURE = PngTexture.location(Identifier.fromNamespaceAndPath("fancymenu", "textures/warning_framed_24x24.png"));
 
     @Nullable
     protected FileTypeGroup<F> allowedFileTypes;
@@ -282,7 +282,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     protected void renderWarning(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if ((this.showWarningLegacyLocal || this.showWarningNoExtension) && (this.editBox != null)) {
-            ResourceLocation loc = WARNING_TEXTURE.getResourceLocation();
+            Identifier loc = WARNING_TEXTURE.getResourceLocation();
             if (loc != null) {
                 int h = this.editBox.getHeight() - 4;
                 int w = WARNING_TEXTURE.getAspectRatio().getAspectRatioWidth(h);

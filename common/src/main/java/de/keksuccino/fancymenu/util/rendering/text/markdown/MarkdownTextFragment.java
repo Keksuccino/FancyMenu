@@ -21,7 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     public QuoteContext quoteContext = null;
     public CodeBlockContext codeBlockContext = null;
     public boolean plainText = false;
-    public ResourceLocation font = null;
+    public Identifier font = null;
     public boolean hovered = false;
     public TableContext tableContext = null;
 

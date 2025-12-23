@@ -10,7 +10,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,8 +33,8 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     public float scrollAreaEndY;
     public Supplier<DrawableColor> idleBarColor;
     public Supplier<DrawableColor> hoverBarColor;
-    public ResourceLocation idleBarTexture;
-    public ResourceLocation hoverBarTexture;
+    public Identifier idleBarTexture;
+    public Identifier hoverBarTexture;
     public boolean active = true;
     protected boolean allowScrollWheel = false;
     protected float grabberScrollSpeed = 1.0F;
@@ -55,7 +55,7 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
         this.hoverBarColor = hoverBarColor;
     }
 
-    public ScrollBar(@NotNull ScrollBarDirection direction, float grabberWidth, float grabberHeight, float scrollAreaStartX, float scrollAreaStartY, float scrollAreaEndX, float scrollAreaEndY, @NotNull ResourceLocation idleBarTexture, @NotNull ResourceLocation hoverBarTexture) {
+    public ScrollBar(@NotNull ScrollBarDirection direction, float grabberWidth, float grabberHeight, float scrollAreaStartX, float scrollAreaStartY, float scrollAreaEndX, float scrollAreaEndY, @NotNull Identifier idleBarTexture, @NotNull Identifier hoverBarTexture) {
         this(direction, grabberWidth, grabberHeight, scrollAreaStartX, scrollAreaStartY, scrollAreaEndX, scrollAreaEndY);
         this.idleBarTexture = idleBarTexture;
         this.hoverBarTexture = hoverBarTexture;

@@ -9,7 +9,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public class PanoramaMenuBackground extends MenuBackground {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ResourceLocation MISSING = TextureManager.INTENTIONAL_MISSING_TEXTURE;
+    private static final Identifier MISSING = TextureManager.INTENTIONAL_MISSING_TEXTURE;
 
     public String panoramaName;
     protected String lastPanoramaName;

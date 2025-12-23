@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +30,7 @@ public class CursorElement extends AbstractElement {
     public ResourceSupplier<ITexture> textureSupplier;
     protected boolean cursorReady = false;
     @Nullable
-    protected ResourceLocation lastLocation;
+    protected Identifier lastLocation;
     protected int lastHotspotX;
     protected int lastHotspotY;
 
@@ -50,7 +50,7 @@ public class CursorElement extends AbstractElement {
                 if ((this.textureSupplier != null) && !this.editorPreviewMode) {
                     ITexture t = this.textureSupplier.get();
                     if (t != null) {
-                        ResourceLocation loc = t.getResourceLocation();
+                        Identifier loc = t.getResourceLocation();
                         if (loc != null) {
                             int[] size = t.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getAbsoluteWidth(), this.getAbsoluteHeight());
                             graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
@@ -75,7 +75,7 @@ public class CursorElement extends AbstractElement {
         if (this.textureSupplier != null) {
             ITexture t = this.textureSupplier.get();
             if (t instanceof PngTexture s) {
-                ResourceLocation loc = t.getResourceLocation();
+                Identifier loc = t.getResourceLocation();
                 if ((loc != this.lastLocation) || (this.lastHotspotX != this.hotspotX) || (this.lastHotspotY != this.hotspotY)) {
                     if (loc != null) {
                         this.cursorReady = false;

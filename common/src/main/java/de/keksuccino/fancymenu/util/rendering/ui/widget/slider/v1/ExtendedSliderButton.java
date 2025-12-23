@@ -22,7 +22,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
@@ -33,10 +33,10 @@ import java.util.function.Consumer;
 @Deprecated
 public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
-    public static final ResourceLocation SLIDER_SPRITE = ResourceLocation.parse("widget/slider");
-    public static final ResourceLocation HIGHLIGHTED_SPRITE = ResourceLocation.parse("widget/slider_highlighted");
-    public static final ResourceLocation SLIDER_HANDLE_SPRITE = ResourceLocation.parse("widget/slider_handle");
-    public static final ResourceLocation SLIDER_HANDLE_HIGHLIGHTED_SPRITE = ResourceLocation.parse("widget/slider_handle_highlighted");
+    public static final Identifier SLIDER_SPRITE = Identifier.parse("widget/slider");
+    public static final Identifier HIGHLIGHTED_SPRITE = Identifier.parse("widget/slider_highlighted");
+    public static final Identifier SLIDER_HANDLE_SPRITE = Identifier.parse("widget/slider_handle");
+    public static final Identifier SLIDER_HANDLE_HIGHLIGHTED_SPRITE = Identifier.parse("widget/slider_handle_highlighted");
 
     protected static boolean leftDownGlobal = false;
 
@@ -75,11 +75,11 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         this.applyValueCallback = applyValueCallback;
     }
 
-    public ResourceLocation getSprite() {
+    public Identifier getSprite() {
         return this.isFocused() && !((IMixinAbstractSliderButton)this).getCanChangeValueFancyMenu() ? HIGHLIGHTED_SPRITE : SLIDER_SPRITE;
     }
 
-    public ResourceLocation getHandleSprite() {
+    public Identifier getHandleSprite() {
         return !this.isHovered && !((IMixinAbstractSliderButton)this).getCanChangeValueFancyMenu() ? SLIDER_HANDLE_SPRITE : SLIDER_HANDLE_HIGHLIGHTED_SPRITE;
     }
 

@@ -11,7 +11,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,7 +59,7 @@ public interface CustomizableSlider {
      * Returns if the slider should render its Vanilla background (true) or not (false).
      */
     default boolean renderSliderBackgroundFancyMenu(GuiGraphics graphics, AbstractSliderButton widget, boolean canChangeValue) {
-        ResourceLocation location = null;
+        Identifier location = null;
         RenderableResource texture = null;
         if (widget.isFocused() && !canChangeValue) {
             if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.pause();

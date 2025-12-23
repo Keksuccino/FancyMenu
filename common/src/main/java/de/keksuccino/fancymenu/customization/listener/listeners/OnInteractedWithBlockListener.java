@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +28,7 @@ public class OnInteractedWithBlockListener extends AbstractListener {
     }
 
     public void onBlockInteracted(@NotNull BlockPos blockPos, @NotNull BlockState blockState) {
-        ResourceLocation blockLocation = BuiltInRegistries.BLOCK.getKey(blockState.getBlock());
+        Identifier blockLocation = BuiltInRegistries.BLOCK.getKey(blockState.getBlock());
         this.cachedBlockKey = blockLocation != null ? blockLocation.toString() : null;
         this.cachedBlockPosX = Integer.toString(blockPos.getX());
         this.cachedBlockPosY = Integer.toString(blockPos.getY());

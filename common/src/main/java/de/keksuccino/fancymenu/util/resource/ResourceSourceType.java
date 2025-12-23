@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.util.resource;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
@@ -58,7 +58,7 @@ public enum ResourceSourceType implements LocalizedCycleEnum<ResourceSourceType>
         //If no prefix, try to get source type the classic way
         if (TextValidators.BASIC_URL_TEXT_VALIDATOR.get(getWithoutSourcePrefix(resourceSource))) return WEB;
         if (resourceSource.contains(":")) {
-            if (ResourceLocation.tryParse(getWithoutSourcePrefix(resourceSource)) != null) return LOCATION;
+            if (Identifier.tryParse(getWithoutSourcePrefix(resourceSource)) != null) return LOCATION;
         }
 
         //Fallback type and no-prefix return, if source is not WEB and not LOCATION

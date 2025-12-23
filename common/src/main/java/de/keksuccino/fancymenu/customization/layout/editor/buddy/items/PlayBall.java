@@ -5,7 +5,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Random;
 
@@ -14,7 +14,7 @@ import java.util.Random;
  */
 public class PlayBall {
 
-    public static final ResourceLocation TEXTURE_BALL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/ball.png");
+    public static final Identifier TEXTURE_BALL = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/ball.png");
     public static final int CATCH_DISTANCE = 25; // Increased from 15 to make giving the ball easier
     public static final int INACTIVITY_TIMEOUT = 400; // Ball despawns after 20 seconds of no interaction
     public static final int USER_INACTIVITY_TIMEOUT = 200; // Ball despawns after 10 seconds of no USER interaction

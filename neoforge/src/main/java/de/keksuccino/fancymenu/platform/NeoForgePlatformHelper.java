@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
 import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -82,7 +82,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public @Nullable ResourceLocation getItemKey(@NotNull Item item) {
+    public @Nullable Identifier getItemKey(@NotNull Item item) {
         try {
             return BuiltInRegistries.ITEM.getKey(item);
         } catch (Exception ex) {
@@ -92,7 +92,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public @Nullable ResourceLocation getEffectKey(@NotNull MobEffect effect) {
+    public @Nullable Identifier getEffectKey(@NotNull MobEffect effect) {
         try {
             return BuiltInRegistries.MOB_EFFECT.getKey(effect);
         } catch (Exception ex) {
@@ -102,7 +102,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public @Nullable ResourceLocation getEntityKey(@NotNull EntityType<?> type) {
+    public @Nullable Identifier getEntityKey(@NotNull EntityType<?> type) {
         try {
             return BuiltInRegistries.ENTITY_TYPE.getKey(type);
         } catch (Exception ex) {

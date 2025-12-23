@@ -48,7 +48,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -144,7 +144,7 @@ public class ActionScriptEditorScreen extends Screen {
     protected int minimapTotalEntriesHeight = 0;
     @Nullable
     protected ActionInstance clipboardActionInstance = null;
-    private static final ResourceLocation ILLEGAL_ACTION_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/not_allowed.png");
+    private static final Identifier ILLEGAL_ACTION_ICON = Identifier.fromNamespaceAndPath("fancymenu", "textures/not_allowed.png");
     private static final AspectRatio ILLEGAL_ACTION_ICON_RATIO = new AspectRatio(32, 32);
     private static final long ILLEGAL_ACTION_VISIBLE_DURATION_MS = 1500L;
     private static final long ILLEGAL_ACTION_FADE_DURATION_MS = 300L;

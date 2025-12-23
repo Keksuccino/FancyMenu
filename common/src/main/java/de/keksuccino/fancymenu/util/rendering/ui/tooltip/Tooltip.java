@@ -18,7 +18,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -131,7 +131,7 @@ public class Tooltip implements Renderable {
         if (this.vanillaLike || ((this.backgroundTexture == null) && (this.backgroundColor == null))) {
             this.renderVanillaLikeBackground(graphics, x, y, this.getWidth(), this.getHeight());
         } else if (this.backgroundTexture != null) {
-            ResourceLocation loc = this.backgroundTexture.getResourceLocation();
+            Identifier loc = this.backgroundTexture.getResourceLocation();
             if (loc != null) {
                 graphics.blit(RenderPipelines.GUI_TEXTURED, loc, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
             }

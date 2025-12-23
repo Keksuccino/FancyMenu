@@ -11,7 +11,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,7 +62,7 @@ public class TooltipHandler {
         }
     }
 
-    public void setVanillaTooltip(@NotNull GuiGraphics graphics, @NotNull List<Component> lines, @NotNull Optional<TooltipComponent> tooltipImage, int x, int y, @Nullable ResourceLocation background) {
+    public void setVanillaTooltip(@NotNull GuiGraphics graphics, @NotNull List<Component> lines, @NotNull Optional<TooltipComponent> tooltipImage, int x, int y, @Nullable Identifier background) {
         List<ClientTooltipComponent> tooltipLines = lines.stream().map(Component::getVisualOrderText).map(ClientTooltipComponent::create).collect(Util.toMutableList());
         tooltipImage.ifPresent(component -> tooltipLines.add(tooltipLines.isEmpty() ? 0 : 1, ClientTooltipComponent.create(component)));
         this.vanillaTooltip = () -> graphics.renderTooltip(Minecraft.getInstance().font, tooltipLines, x, y, DefaultTooltipPositioner.INSTANCE, background);

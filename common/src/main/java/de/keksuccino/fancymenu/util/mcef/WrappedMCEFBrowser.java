@@ -16,7 +16,7 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
@@ -50,7 +50,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected volatile boolean loopAllVideos = false;
     protected volatile boolean hideVideoControls = false;
     protected final UUID genericIdentifier = UUID.randomUUID();
-    protected final ResourceLocation frameLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "mcef_browser_frame_texture_" + this.genericIdentifier.toString().toLowerCase().replace("-", ""));
+    protected final Identifier frameLocation = Identifier.fromNamespaceAndPath("fancymenu", "mcef_browser_frame_texture_" + this.genericIdentifier.toString().toLowerCase().replace("-", ""));
     protected final BrowserFrameTexture frameTexture = new BrowserFrameTexture(-1, this.frameLocation.toString());
 
     // Track if initialization is complete for this browser
@@ -494,7 +494,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     @NotNull
-    public ResourceLocation getFrameLocation() {
+    public Identifier getFrameLocation() {
         this.updateFrameTexture();
         if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
         return this.frameLocation;

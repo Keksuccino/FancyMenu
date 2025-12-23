@@ -22,7 +22,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -635,9 +635,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     public static class LayerElementEntry extends ScrollAreaEntry {
 
-        protected static final ResourceLocation MOVE_UP_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_up.png");
-        protected static final ResourceLocation MOVE_DOWN_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_down.png");
-        protected static final ResourceLocation EYE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/eye_icon.png"); // 30x26 pixels
+        protected static final Identifier MOVE_UP_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_up.png");
+        protected static final Identifier MOVE_DOWN_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_down.png");
+        protected static final Identifier EYE_ICON_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/eye_icon.png"); // 30x26 pixels
 
         protected AbstractEditorElement element;
         protected LayerLayoutEditorWidget layerWidget;
@@ -940,8 +940,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     public static class VanillaLayerElementEntry extends ScrollAreaEntry {
 
-        protected static final ResourceLocation MOVE_TO_TOP_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_top.png");
-        protected static final ResourceLocation MOVE_BEHIND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_bottom.png");
+        protected static final Identifier MOVE_TO_TOP_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_top.png");
+        protected static final Identifier MOVE_BEHIND_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_bottom.png");
 
         protected LayerLayoutEditorWidget layerWidget;
         protected boolean moveTopBottomButtonHovered = false;
@@ -962,7 +962,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
              
 
-            ResourceLocation loc = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE;
+            Identifier loc = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE;
             blitF(graphics, RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
 
             UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f)));

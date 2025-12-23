@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -47,7 +47,7 @@ public class GifTexture implements ITexture, PlayableResource {
     protected final AtomicInteger cycles = new AtomicInteger(0);
     /** How many times the GIF should loop. Value <= 0 means infinite loops. **/
     protected final AtomicInteger numPlays = new AtomicInteger(0);
-    protected ResourceLocation sourceLocation;
+    protected Identifier sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
     protected final AtomicBoolean loadingCompleted = new AtomicBoolean(false);
@@ -58,12 +58,12 @@ public class GifTexture implements ITexture, PlayableResource {
     protected final AtomicBoolean closed = new AtomicBoolean(false);
 
     @NotNull
-    public static GifTexture location(@NotNull ResourceLocation location) {
+    public static GifTexture location(@NotNull Identifier location) {
         return location(location, null);
     }
 
     @NotNull
-    public static GifTexture location(@NotNull ResourceLocation location, @Nullable GifTexture writeTo) {
+    public static GifTexture location(@NotNull Identifier location, @Nullable GifTexture writeTo) {
 
         Objects.requireNonNull(location);
         GifTexture texture = (writeTo != null) ? writeTo : new GifTexture();
@@ -308,7 +308,7 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Nullable
     @Override
-    public ResourceLocation getResourceLocation() {
+    public Identifier getResourceLocation() {
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
         this.lastResourceLocationCall = System.currentTimeMillis();
         this.startTickerIfNeeded();
@@ -468,7 +468,7 @@ public class GifTexture implements ITexture, PlayableResource {
         protected final ByteArrayOutputStream closeAfterLoading;
         protected DynamicTexture dynamicTexture;
         protected volatile NativeImage nativeImage;
-        protected ResourceLocation resourceLocation;
+        protected Identifier resourceLocation;
         protected boolean loaded = false;
 
         protected GifFrame(int index, ByteArrayInputStream frameInputStream, long delayMs, ByteArrayOutputStream closeAfterLoading) {

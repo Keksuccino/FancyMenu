@@ -5,14 +5,14 @@ import de.keksuccino.fancymenu.networking.PacketPayloadBaseNeoForge;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class BridgePacketPayloadNeoForge extends PacketPayloadBaseNeoForge implements CustomPacketPayload {
 
-    public static final Type<BridgePacketPayloadNeoForge> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath("fancymenu", "fancymenu_bridge_packet"));
+    public static final Type<BridgePacketPayloadNeoForge> TYPE = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("fancymenu", "fancymenu_bridge_packet"));
     public static final StreamCodec<FriendlyByteBuf, BridgePacketPayloadNeoForge> CODEC = CustomPacketPayload.codec(BridgePacketPayloadNeoForge::write, BridgePacketPayloadNeoForge::new);
 
     public String dataWithIdentifier;

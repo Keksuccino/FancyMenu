@@ -10,7 +10,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -478,7 +478,7 @@ public class MixinLocalPlayer implements LocalPlayerDrowningTracker {
 
                     double fluidSurface = (double)y + fluidState.getHeight(clientLevel, mutablePos);
                     if (fluidSurface >= box.minY) {
-                        ResourceLocation fluidLocation = BuiltInRegistries.FLUID.getKey(fluidState.getType());
+                        Identifier fluidLocation = BuiltInRegistries.FLUID.getKey(fluidState.getType());
                         String key = (fluidLocation != null) ? fluidLocation.toString() : null;
                         return new FluidContactInfo(true, key);
                     }
@@ -533,12 +533,12 @@ public class MixinLocalPlayer implements LocalPlayerDrowningTracker {
         }
         Entity causingEntity = damageSource.getEntity();
         if (causingEntity != null) {
-            ResourceLocation entityLocation = BuiltInRegistries.ENTITY_TYPE.getKey(causingEntity.getType());
+            Identifier entityLocation = BuiltInRegistries.ENTITY_TYPE.getKey(causingEntity.getType());
             return entityLocation != null ? entityLocation.toString() : null;
         }
         Entity directEntity = damageSource.getDirectEntity();
         if (directEntity != null) {
-            ResourceLocation entityLocation = BuiltInRegistries.ENTITY_TYPE.getKey(directEntity.getType());
+            Identifier entityLocation = BuiltInRegistries.ENTITY_TYPE.getKey(directEntity.getType());
             return entityLocation != null ? entityLocation.toString() : null;
         }
         return null;
@@ -602,7 +602,7 @@ public class MixinLocalPlayer implements LocalPlayerDrowningTracker {
     private ItemStack wrap_removeFromSelected_FancyMenu(Inventory inventory, boolean fullStack, Operation<ItemStack> operation) {
         ItemStack removed = operation.call(inventory, fullStack);
         if (!removed.isEmpty()) {
-            ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(removed.getItem());
+            Identifier itemLocation = BuiltInRegistries.ITEM.getKey(removed.getItem());
             String itemKey = itemLocation != null ? itemLocation.toString() : null;
             Listeners.ON_ITEM_DROPPED.onItemDropped(itemKey);
         }

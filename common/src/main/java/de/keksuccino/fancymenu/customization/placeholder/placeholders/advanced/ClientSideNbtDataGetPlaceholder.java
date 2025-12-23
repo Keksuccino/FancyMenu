@@ -26,7 +26,7 @@ import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.DoubleTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
@@ -278,7 +278,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
                     if (!value.isEmpty()) {
                         boolean inverted = value.startsWith("!");
                         String raw = inverted ? value.substring(1) : value;
-                        ResourceLocation typeId = parseResourceLocation(raw);
+                        Identifier typeId = parseResourceLocation(raw);
                         if (typeId != null) {
                             typeFilter = new Filter<>(typeId, inverted);
                         }
@@ -567,10 +567,10 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
         }
     }
 
-    private ResourceLocation parseResourceLocation(String raw) {
+    private Identifier parseResourceLocation(String raw) {
         if (raw == null || raw.isEmpty()) return null;
         String normalized = raw.contains(":") ? raw : "minecraft:" + raw;
-        return ResourceLocation.tryParse(normalized.toLowerCase(Locale.ROOT));
+        return Identifier.tryParse(normalized.toLowerCase(Locale.ROOT));
     }
 
     private List<OptionValue> parseSelectorOptions(String raw) {

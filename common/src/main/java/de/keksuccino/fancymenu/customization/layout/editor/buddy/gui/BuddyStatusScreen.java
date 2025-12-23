@@ -14,7 +14,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -37,10 +37,10 @@ public class BuddyStatusScreen implements Renderable {
     private static final int SCREEN_BORDER_HEIGHT = 293;
 
     // GUI Texture
-    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
-    private static final ResourceLocation BACKGROUND_BORDER_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background_border.png");
-    private static final ResourceLocation TAB_BUTTON_TEXTURE_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_normal.png");
-    private static final ResourceLocation TAB_BUTTON_TEXTURE_SELECTED = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_selected.png");
+    private static final Identifier BACKGROUND_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
+    private static final Identifier BACKGROUND_BORDER_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background_border.png");
+    private static final Identifier TAB_BUTTON_TEXTURE_NORMAL = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_normal.png");
+    private static final Identifier TAB_BUTTON_TEXTURE_SELECTED = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_selected.png");
 
     // Tab Indices
     private static final int TAB_STATS = 0;
@@ -305,7 +305,7 @@ public class BuddyStatusScreen implements Renderable {
             boolean isSelected = (i == currentTab);
 
             // Draw tab button background using proper button textures
-            ResourceLocation buttonTexture = isSelected ? TAB_BUTTON_TEXTURE_SELECTED : TAB_BUTTON_TEXTURE_NORMAL;
+            Identifier buttonTexture = isSelected ? TAB_BUTTON_TEXTURE_SELECTED : TAB_BUTTON_TEXTURE_NORMAL;
             
             // Render button background
             graphics.blit(RenderPipelines.GUI_TEXTURED, buttonTexture, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);

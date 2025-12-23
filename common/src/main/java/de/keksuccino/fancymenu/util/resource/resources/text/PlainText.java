@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +24,7 @@ public class PlainText implements IText {
 
     @Nullable
     protected volatile List<String> lines = null;
-    protected ResourceLocation sourceLocation;
+    protected Identifier sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
     protected volatile boolean decoded = false;
@@ -33,12 +33,12 @@ public class PlainText implements IText {
     protected volatile boolean closed = false;
 
     @NotNull
-    public static PlainText location(@NotNull ResourceLocation location) {
+    public static PlainText location(@NotNull Identifier location) {
         return location(location, null);
     }
 
     @NotNull
-    public static PlainText location(@NotNull ResourceLocation location, @Nullable PlainText writeTo) {
+    public static PlainText location(@NotNull Identifier location, @Nullable PlainText writeTo) {
 
         Objects.requireNonNull(location);
         PlainText text = (writeTo != null) ? writeTo : new PlainText();

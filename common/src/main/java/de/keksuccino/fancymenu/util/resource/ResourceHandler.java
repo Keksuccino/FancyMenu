@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.util.resource;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +32,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
      * This method should only return NULL if the resource failed to get registered!<br>
      * {@link Resource}s should finish loading itself asynchronously after construction, so there's no other reason for returning NULL here.
      *
-     * @param resourceSource Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
+     * @param resourceSource Can be a URL to a web resource, a path to a local resource or a Identifier (namespace:path).
      * @return The requested {@link Resource} or NULL if the {@link Resource} failed to get registered.
      */
     @Nullable
@@ -98,7 +98,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                     this.addToFailedSources(resourceSource);
                     return null;
                 }
-                ResourceLocation loc = ResourceLocation.tryParse(resourceSource.getSourceWithoutPrefix());
+                Identifier loc = Identifier.tryParse(resourceSource.getSourceWithoutPrefix());
                 if (loc == null) {
                     LOGGER.error("[FANCYMENU] Failed to register location resource! Unable to parse ResourceLocation: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
                     this.addToFailedSources(resourceSource);
@@ -208,7 +208,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
      * Releases a resource.<br>
      * This will unregister the resource and close it.
      *
-     * @param key The key of the registered resource. In most cases, this is its resource source and can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
+     * @param key The key of the registered resource. In most cases, this is its resource source and can be a URL to a web resource, a path to a local resource or a Identifier (namespace:path).
      * @param isKeyResourceSource If the given key is a resource source.
      */
     public void release(@NotNull String key, boolean isKeyResourceSource) {

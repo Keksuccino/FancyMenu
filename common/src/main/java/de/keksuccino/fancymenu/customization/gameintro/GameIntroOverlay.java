@@ -26,7 +26,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -107,7 +107,7 @@ public class GameIntroOverlay extends Overlay {
             int x = (this.width / 2) - (aspectWidth / 2);
             int y = (this.height / 2) - (aspectHeight / 2);
 
-            ResourceLocation location = r.getResourceLocation();
+            Identifier location = r.getResourceLocation();
             if (location != null) {
                  
                 graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));

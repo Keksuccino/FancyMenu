@@ -43,7 +43,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +53,7 @@ import java.util.function.Consumer;
 @SuppressWarnings("all")
 public class LayoutEditorUI {
 
-	private static final PngTexture CLOSE_EDITOR_TEXTURE = PngTexture.location(ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/menubar/icons/close.png"));
+	private static final PngTexture CLOSE_EDITOR_TEXTURE = PngTexture.location(Identifier.fromNamespaceAndPath("fancymenu", "textures/menubar/icons/close.png"));
 
 	private static MenuBar grandfatheredMenuBar = null;
 

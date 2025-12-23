@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.QuoteContext;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -226,9 +226,9 @@ public class MarkdownParser {
                             String fontName = StringUtils.split(afterPrefix, PERCENTAGE, 2)[0];
                             if (RESOURCE_NAME_FILTER.isAllowedText(fontName)) {
                                 if (StringUtils.contains(subText, FORMATTING_CODE_FONT_SUFFIX)) {
-                                    ResourceLocation font = null;
+                                    Identifier font = null;
                                     try {
-                                        font = ResourceLocation.parse(fontName);
+                                        font = Identifier.parse(fontName);
                                     } catch (Exception ignore) {}
                                     if (font != null) {
                                         if (isStartOfLine || !builder.text.isEmpty()) {
@@ -1075,7 +1075,7 @@ public class MarkdownParser {
         protected HeadlineType headlineType = HeadlineType.NONE;
         protected QuoteContext quoteContext = null;
         protected CodeBlockContext codeBlockContext = null;
-        protected ResourceLocation font = null;
+        protected Identifier font = null;
         protected boolean plainText = false;
         protected MarkdownTextFragment.TableContext tableContext = null;
 

@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +48,7 @@ public class ResourceSupplier<R extends Resource> {
     /**
      * Returns a new {@link ResourceSupplier} for an image source.
      *
-     * @param source Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
+     * @param source Can be a URL to a web resource, a path to a local resource or a Identifier (namespace:path).
      *               Sources support placeholders and the {@link ResourceSupplier} will update itself when the placeholders change.
      */
     @NotNull
@@ -59,7 +59,7 @@ public class ResourceSupplier<R extends Resource> {
     /**
      * Returns a new {@link ResourceSupplier} for an audio source.
      *
-     * @param source Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
+     * @param source Can be a URL to a web resource, a path to a local resource or a Identifier (namespace:path).
      *               Sources support placeholders and the {@link ResourceSupplier} will update itself when the placeholders change.
      */
     @NotNull
@@ -71,7 +71,7 @@ public class ResourceSupplier<R extends Resource> {
     /**
      * Returns a new {@link ResourceSupplier} for a video source.
      *
-     * @param source Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
+     * @param source Can be a URL to a web resource, a path to a local resource or a Identifier (namespace:path).
      *               Sources support placeholders and the {@link ResourceSupplier} will update itself when the placeholders change.
      */
     @NotNull
@@ -82,7 +82,7 @@ public class ResourceSupplier<R extends Resource> {
     /**
      * Returns a new {@link ResourceSupplier} for a text source.
      *
-     * @param source Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
+     * @param source Can be a URL to a web resource, a path to a local resource or a Identifier (namespace:path).
      *               Sources support placeholders and the {@link ResourceSupplier} will update itself when the placeholders change.
      */
     @NotNull
@@ -146,7 +146,7 @@ public class ResourceSupplier<R extends Resource> {
     public void forRenderable(@NotNull BiConsumer<R, ResourceLocation> task) {
         R resource = this.get();
         if (resource instanceof RenderableResource r) {
-            ResourceLocation loc = r.getResourceLocation();
+            Identifier loc = r.getResourceLocation();
             if (loc != null) task.accept(resource, loc);
         }
     }

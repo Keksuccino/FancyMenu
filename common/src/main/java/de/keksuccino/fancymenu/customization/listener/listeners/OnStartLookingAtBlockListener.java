@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -121,7 +121,7 @@ public class OnStartLookingAtBlockListener extends AbstractListener {
             BlockPos pos = hitResult.getBlockPos().immutable();
             BlockState state = level.getBlockState(pos);
             ResourceKey<Level> levelKey = level.dimension();
-            ResourceLocation blockKeyLocation = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+            Identifier blockKeyLocation = BuiltInRegistries.BLOCK.getKey(state.getBlock());
             String blockKey = (blockKeyLocation != null) ? blockKeyLocation.toString() : null;
             return new LookedBlockData(pos, state, levelKey, blockKey, distance);
         }

@@ -9,14 +9,14 @@ import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class SimpleToast implements Toast {
 
-    protected static final ResourceLocation BACKGROUND_SPRITE = ResourceLocation.withDefaultNamespace("toast/tutorial");
+    protected static final Identifier BACKGROUND_SPRITE = Identifier.withDefaultNamespace("toast/tutorial");
     
     public static final int PROGRESS_BAR_WIDTH = 154;
     public static final int PROGRESS_BAR_HEIGHT = 1;
@@ -60,7 +60,7 @@ public class SimpleToast implements Toast {
     @Override
     public void render(@NotNull GuiGraphics graphics, @NotNull Font font, long visibilityTime) {
 
-        ResourceLocation customBack = this.getCustomBackground();
+        Identifier customBack = this.getCustomBackground();
         if (customBack == null) {
             graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BACKGROUND_SPRITE, 0, 0, this.width(), this.height());
         } else {
@@ -115,7 +115,7 @@ public class SimpleToast implements Toast {
     }
 
     @Nullable
-    protected ResourceLocation getCustomBackground() {
+    protected Identifier getCustomBackground() {
         if (this.customBackground != null) {
             ITexture tex = this.customBackground.get();
             if (tex != null) {
@@ -141,13 +141,13 @@ public class SimpleToast implements Toast {
 
     public static class Icon {
 
-        protected ResourceLocation location;
+        protected Identifier location;
         protected ResourceSupplier<ITexture> supplier;
 
         /**
          * A 20x20 pixels icon texture for displaying in the toast.
          */
-        public Icon(@NotNull ResourceLocation textureLocation) {
+        public Icon(@NotNull Identifier textureLocation) {
             this.location = textureLocation;
         }
 
@@ -159,14 +159,14 @@ public class SimpleToast implements Toast {
         }
 
         public void render(GuiGraphics graphics, int x, int y) {
-            ResourceLocation icon = this.getIcon();
+            Identifier icon = this.getIcon();
             if (icon != null) {
                 graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0.0F, 0.0F, 20, 20, 20, 20);
             }
         }
 
         @Nullable
-        protected ResourceLocation getIcon() {
+        protected Identifier getIcon() {
             if (this.location != null) return this.location;
             if (this.supplier != null) {
                 ITexture tex = this.supplier.get();

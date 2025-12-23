@@ -24,7 +24,7 @@ import net.minecraft.client.renderer.CachedPerspectiveProjectionMatrixBuffer;
 import net.minecraft.client.renderer.CubeMap;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +58,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	@Nullable
 	private PanoramaCubeMapTexture panoramaCubeMapTexture = null;
 	@Nullable
-	private ResourceLocation cubeMapLocation = null;
+	private Identifier cubeMapLocation = null;
 	@Nullable
 	private CachedPerspectiveProjectionMatrixBuffer projectionMatrixBuffer = null;
 	private final String uniqueId = UUID.randomUUID().toString();
@@ -144,7 +144,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.panoramaCubeMapTexture = new PanoramaCubeMapTexture(this.name != null ? this.name : "unnamed", this.panoramaImageSuppliers);
 		
 		// Register the texture with a unique ResourceLocation
-		this.cubeMapLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "panorama_" + this.uniqueId);
+		this.cubeMapLocation = Identifier.fromNamespaceAndPath("fancymenu", "panorama_" + this.uniqueId);
 		TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 		textureManager.register(this.cubeMapLocation, this.panoramaCubeMapTexture);
 		
@@ -222,7 +222,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
 			if (texture != null) {
-				ResourceLocation location = texture.getResourceLocation();
+				Identifier location = texture.getResourceLocation();
 				if (location != null) {
 					graphics.blit(RenderPipelines.GUI_TEXTURED, location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH, ARGB.white(this.opacity));
 				}

@@ -48,7 +48,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -59,8 +59,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final ResourceLocation MENU_BACKGROUND = ResourceLocation.parse("textures/gui/menu_background.png");
-	public static final ResourceLocation INWORLD_MENU_BACKGROUND = ResourceLocation.parse("textures/gui/inworld_menu_background.png");
+	public static final Identifier MENU_BACKGROUND = Identifier.parse("textures/gui/menu_background.png");
+	public static final Identifier INWORLD_MENU_BACKGROUND = Identifier.parse("textures/gui/inworld_menu_background.png");
 
 	protected String screenIdentifier;
 	public LayoutBase layoutBase = new LayoutBase();
@@ -449,7 +449,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			if (!canRenderCustom) return;
 
 			if (headerTexture != null) {
-				ResourceLocation loc = headerTexture.getResourceLocation();
+				Identifier loc = headerTexture.getResourceLocation();
 				if (loc != null) {
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(list.getWidth(), list.getY());
@@ -469,7 +469,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			}
 
 			if (footerTexture != null) {
-				ResourceLocation loc = footerTexture.getResourceLocation();
+				Identifier loc = footerTexture.getResourceLocation();
 				if (loc != null) {
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int footerOriginalHeight = ScreenUtils.getScreenHeight() - list.getBottom();
@@ -508,7 +508,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? this.layoutBase.scrollListHeaderTexture.get() : null;
 
 			if (headerTexture != null) {
-				ResourceLocation loc = headerTexture.getResourceLocation();
+				Identifier loc = headerTexture.getResourceLocation();
 				if (loc != null) {
 					e.setCanceled(true);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
@@ -573,7 +573,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	}
 
 	public static void renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
-		ResourceLocation location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
+		Identifier location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
 		graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, y, 0, 0.0F, 0, width, height, 32, 32);
 	}
 

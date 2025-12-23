@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.NativeImageUtil;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +28,7 @@ public class JpegTexture implements ITexture {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nullable
-    protected ResourceLocation resourceLocation;
+    protected Identifier resourceLocation;
     protected volatile int width = 10;
     protected volatile int height = 10;
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
@@ -36,7 +36,7 @@ public class JpegTexture implements ITexture {
     protected volatile boolean loadedIntoMinecraft = false;
     protected volatile NativeImage nativeImage;
     protected DynamicTexture dynamicTexture;
-    protected ResourceLocation sourceLocation;
+    protected Identifier sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
     protected volatile boolean loadingCompleted = false;
@@ -47,7 +47,7 @@ public class JpegTexture implements ITexture {
      * Supports JPEG and PNG textures.
      */
     @NotNull
-    public static JpegTexture location(@NotNull ResourceLocation location) {
+    public static JpegTexture location(@NotNull Identifier location) {
         return location(location, null);
     }
 
@@ -55,7 +55,7 @@ public class JpegTexture implements ITexture {
      * Supports JPEG and PNG textures.
      */
     @NotNull
-    public static JpegTexture location(@NotNull ResourceLocation location, @Nullable JpegTexture writeTo) {
+    public static JpegTexture location(@NotNull Identifier location, @Nullable JpegTexture writeTo) {
 
         Objects.requireNonNull(location);
         JpegTexture texture = (writeTo != null) ? writeTo : new JpegTexture();
@@ -250,14 +250,14 @@ public class JpegTexture implements ITexture {
     }
 
     @Nullable
-    public ResourceLocation getResourceLocation() {
+    public Identifier getResourceLocation() {
         if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
         if ((this.resourceLocation == null) && !this.loadedIntoMinecraft && (this.nativeImage != null)) {
             try {
                 this.dynamicTexture = new DynamicTexture(() -> UUID.randomUUID().toString(), this.nativeImage);
                 this.resourceLocation = this.registerAbstractTexture(this.dynamicTexture);
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to get ResourceLocation of JpegTexture!", ex);
+                LOGGER.error("[FANCYMENU] Failed to get Identifier of JpegTexture!", ex);
             }
             this.loadedIntoMinecraft = true;
         }
@@ -309,8 +309,8 @@ public class JpegTexture implements ITexture {
     }
 
     /**
-     * Only really closes textures that are NOT loaded via ResourceLocation.<br>
-     * Does basically nothing for ResourceLocation textures, because these are handled by Minecraft.
+     * Only really closes textures that are NOT loaded via Identifier.<br>
+     * Does basically nothing for Identifier textures, because these are handled by Minecraft.
      */
     @Override
     public void close() {

@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy.animation;
 
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.fancymenu.util.MathUtils;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +18,7 @@ public class AnimationState {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final ResourceLocation TEXTURE_ATLAS = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/buddy_atlas.png");
+    public static final Identifier TEXTURE_ATLAS = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/buddy_atlas.png");
     public static final int SPRITE_WIDTH = 32;
     public static final int SPRITE_HEIGHT = 32;
     public static final int ATLAS_COLUMNS = 4; // 4 animation frames per row

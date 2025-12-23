@@ -13,7 +13,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -65,7 +65,7 @@ public interface CustomizableWidget {
         boolean renderVanilla = true;
         if (customBackground != null) {
             if (customBackground instanceof PlayableResource p) p.play();
-            ResourceLocation location = customBackground.getResourceLocation();
+            Identifier location = customBackground.getResourceLocation();
             if (location != null) {
                 renderVanilla = false;
                 if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {

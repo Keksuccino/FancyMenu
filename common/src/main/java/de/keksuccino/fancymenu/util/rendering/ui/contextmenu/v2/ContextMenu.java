@@ -26,7 +26,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -41,10 +41,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ResourceLocation SUB_CONTEXT_MENU_ARROW_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/context_menu_sub_arrow.png");
-    private static final ResourceLocation CONTEXT_MENU_TOOLTIP_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/context_menu_tooltip.png");
-    private static final ResourceLocation SCROLL_UP_ARROW = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_up_arrow.png");
-    private static final ResourceLocation SCROLL_DOWN_ARROW = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_down_arrow.png");
+    private static final Identifier SUB_CONTEXT_MENU_ARROW_ICON = Identifier.fromNamespaceAndPath("fancymenu", "textures/contextmenu/context_menu_sub_arrow.png");
+    private static final Identifier CONTEXT_MENU_TOOLTIP_ICON = Identifier.fromNamespaceAndPath("fancymenu", "textures/contextmenu/context_menu_tooltip.png");
+    private static final Identifier SCROLL_UP_ARROW = Identifier.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_up_arrow.png");
+    private static final Identifier SCROLL_DOWN_ARROW = Identifier.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_down_arrow.png");
     private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
     private static final int SCROLL_INDICATOR_HEIGHT = 12; // Space reserved for arrows
 
@@ -1315,7 +1315,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         @Nullable
         protected Supplier<Component> shortcutTextSupplier;
         @Nullable
-        protected ResourceLocation icon;
+        protected Identifier icon;
         protected boolean tooltipIconHovered = false;
         protected boolean tooltipActive = false;
         protected long tooltipIconHoverStart = -1;
@@ -1413,14 +1413,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         @Nullable
-        public ResourceLocation getIcon() {
+        public Identifier getIcon() {
             return this.icon;
         }
 
         /**
          * Icons should be 10x10 pixels and completely white. No other colors should be used.
          */
-        public T setIcon(@Nullable ResourceLocation icon) {
+        public T setIcon(@Nullable Identifier icon) {
             this.icon = icon;
             return (T) this;
         }
@@ -1897,8 +1897,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     public static class IconFactory {
         @NotNull
-        public static ResourceLocation getIcon(@NotNull String iconName) {
-            return ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/icons/" + iconName + ".png");
+        public static Identifier getIcon(@NotNull String iconName) {
+            return Identifier.fromNamespaceAndPath("fancymenu", "textures/contextmenu/icons/" + iconName + ".png");
         }
     }
 }

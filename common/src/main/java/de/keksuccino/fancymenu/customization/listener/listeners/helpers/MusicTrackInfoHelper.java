@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.sounds.SoundManager;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +25,7 @@ import java.util.Locale;
 public final class MusicTrackInfoHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ResourceLocation MUSIC_TRACK_METADATA_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "metadata/minecraft_music_tracks.json");
+    private static final Identifier MUSIC_TRACK_METADATA_LOCATION = Identifier.fromNamespaceAndPath("fancymenu", "metadata/minecraft_music_tracks.json");
     private static final Gson GSON = new GsonBuilder().create();
     private static final Type MUSIC_TRACK_INFO_TYPE = new TypeToken<List<MusicTrackInfo>>() {}.getType();
 
@@ -84,11 +84,11 @@ public final class MusicTrackInfoHelper {
         if (sound == null || sound == SoundManager.EMPTY_SOUND || sound == SoundManager.INTENTIONALLY_EMPTY_SOUND) {
             return null;
         }
-        ResourceLocation path = sound.getPath();
+        Identifier path = sound.getPath();
         if (path != null) {
             return path.toString();
         }
-        ResourceLocation fallback = sound.getLocation();
+        Identifier fallback = sound.getLocation();
         return fallback != null ? fallback.toString() : null;
     }
 

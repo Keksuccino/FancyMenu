@@ -53,7 +53,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -374,7 +374,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 			//Header Texture
 			if (headerTexture != null) {
-				ResourceLocation loc = headerTexture.getResourceLocation();
+				Identifier loc = headerTexture.getResourceLocation();
 				if (loc != null) {
 					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, y0);
@@ -394,7 +394,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			}
 			//Footer Texture
 			if (footerTexture != null) {
-				ResourceLocation loc = footerTexture.getResourceLocation();
+				Identifier loc = footerTexture.getResourceLocation();
 				if (loc != null) {
 					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
 						int footerOriginalHeight = this.height - y1;

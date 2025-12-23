@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeSerializer;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -24,10 +24,10 @@ public class UIColorThemes {
     public static final LightUIColorTheme LIGHT = new LightUIColorTheme();
 
     // ASSET THEMES
-    public static final ResourceLocation OLED_PURPLE_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/oled_purple.json");
-    public static final ResourceLocation NETHER_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/nether.json");
-    public static final ResourceLocation BUTTER_DARK_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/butter_dark.json");
-    public static final ResourceLocation BUTTER_OLED_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/butter_oled.json");
+    public static final Identifier OLED_PURPLE_THEME_LOCATION = Identifier.fromNamespaceAndPath("fancymenu", "themes/oled_purple.json");
+    public static final Identifier NETHER_THEME_LOCATION = Identifier.fromNamespaceAndPath("fancymenu", "themes/nether.json");
+    public static final Identifier BUTTER_DARK_THEME_LOCATION = Identifier.fromNamespaceAndPath("fancymenu", "themes/butter_dark.json");
+    public static final Identifier BUTTER_OLED_THEME_LOCATION = Identifier.fromNamespaceAndPath("fancymenu", "themes/butter_oled.json");
 
     public static final UIColorTheme[] DEFAULT_THEMES = new UIColorTheme[]{ DARK, LIGHT };
 
@@ -62,7 +62,7 @@ public class UIColorThemes {
 
     }
 
-    private static void registerAssetTheme(@NotNull ResourceLocation themeLocation) {
+    private static void registerAssetTheme(@NotNull Identifier themeLocation) {
         UIColorTheme theme = UIColorThemeSerializer.deserializeThemeFromResource(themeLocation);
         if (theme != null) {
             UIColorThemeRegistry.register(theme);

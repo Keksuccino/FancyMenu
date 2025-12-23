@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
 
@@ -74,7 +74,7 @@ public class ImageMenuBackground extends MenuBackground {
 
         this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
 
-        ResourceLocation resourceLocation = null;
+        Identifier resourceLocation = null;
         ITexture tex = null;
         AspectRatio ratio = new AspectRatio(10, 10);
         if (this.textureSupplier != null) {
@@ -127,7 +127,7 @@ public class ImageMenuBackground extends MenuBackground {
         return new float[]{xOffset, yOffset};
     }
 
-    protected void renderRepeatBackground(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, ITexture tex, float[] parallaxOffset) {
+    protected void renderRepeatBackground(@NotNull GuiGraphics graphics, @NotNull Identifier resourceLocation, ITexture tex, float[] parallaxOffset) {
         if (parallaxEnabled) {
             // Create expanded area for parallax movement
             int expandedWidth = (int)(getScreenWidth() * (1.0F + this.lastParallaxIntensity));
@@ -149,7 +149,7 @@ public class ImageMenuBackground extends MenuBackground {
         }
     }
 
-    protected void renderSlideBackground(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+    protected void renderSlideBackground(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull Identifier resourceLocation, float[] parallaxOffset) {
         int w = ratio.getAspectRatioWidth(getScreenHeight());
         handleSlideAnimation(w);
         if (w <= getScreenWidth()) {
@@ -167,7 +167,7 @@ public class ImageMenuBackground extends MenuBackground {
         }
     }
 
-    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull Identifier resourceLocation, float[] parallaxOffset) {
         // Calculate base size with reduced parallax expansion
         float parallaxScale = parallaxEnabled ? (1.0F + this.lastParallaxIntensity) : 1.0F;
         int[] baseSize = ratio.getAspectRatioSizeByMinimumSize(
@@ -186,7 +186,7 @@ public class ImageMenuBackground extends MenuBackground {
                 ARGB.white(this.opacity));
     }
 
-    protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+    protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull Identifier resourceLocation, float[] parallaxOffset) {
         if (parallaxEnabled) {
             // Reduce the expansion amount for parallax
             int expandedWidth = (int)(getScreenWidth() * (1.0F + this.lastParallaxIntensity));

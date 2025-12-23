@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.server;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.entities.EntityEventPacket;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.NotNull;
@@ -32,13 +32,13 @@ public class MixinServerLevel {
     private void broadcastEntitySpawn_FancyMenu(@NotNull ServerLevel level, @NotNull Entity entity) {
         EntityEventPacket packet = new EntityEventPacket();
         packet.event_type = EntityEventPacket.EntityEventType.SPAWN;
-        ResourceLocation entityKeyLocation = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        Identifier entityKeyLocation = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
         packet.entity_key = (entityKeyLocation != null) ? entityKeyLocation.toString() : null;
         packet.entity_uuid = entity.getUUID().toString();
         packet.pos_x = entity.getX();
         packet.pos_y = entity.getY();
         packet.pos_z = entity.getZ();
-        ResourceLocation levelLocation = level.dimension().location();
+        Identifier levelLocation = level.dimension().location();
         packet.level_identifier = (levelLocation != null) ? levelLocation.toString() : null;
         if (level.getServer() == null) {
             return;

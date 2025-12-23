@@ -21,7 +21,7 @@ import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -34,9 +34,9 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static final WidgetSprites SPRITES = new WidgetSprites(
-            ResourceLocation.parse("widget/button"),
-            ResourceLocation.parse("widget/button_disabled"),
-            ResourceLocation.parse("widget/button_highlighted")
+            Identifier.parse("widget/button"),
+            Identifier.parse("widget/button_disabled"),
+            Identifier.parse("widget/button_highlighted")
     );
 
     protected final Minecraft mc = Minecraft.getInstance();

@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.platform.services;
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -52,13 +52,13 @@ public interface IPlatformHelper {
     InputConstants.Key getKeyMappingKey(KeyMapping keyMapping);
 
     @Nullable
-    ResourceLocation getItemKey(@NotNull Item item);
+    Identifier getItemKey(@NotNull Item item);
 
     @Nullable
-    ResourceLocation getEffectKey(@NotNull MobEffect effect);
+    Identifier getEffectKey(@NotNull MobEffect effect);
 
     @Nullable
-    ResourceLocation getEntityKey(@NotNull EntityType<?> type);
+    Identifier getEntityKey(@NotNull EntityType<?> type);
 
     @NotNull
     List<UniversalModContainer> getLoadedMods();

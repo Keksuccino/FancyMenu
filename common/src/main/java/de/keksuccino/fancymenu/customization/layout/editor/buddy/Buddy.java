@@ -19,7 +19,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -40,9 +40,9 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public static final Logger LOGGER = LogManager.getLogger();
 
     // Resource locations for textures
-    public static final ResourceLocation TEXTURE_ICON_WANTS_BEING_PET = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/heart.png");
-    public static final ResourceLocation TEXTURE_ICON_WANTS_TO_PLAY = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/play.png");
-    public static final ResourceLocation TEXTURE_THOUGHT_BUBBLE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/thought.png");
+    public static final Identifier TEXTURE_ICON_WANTS_BEING_PET = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/heart.png");
+    public static final Identifier TEXTURE_ICON_WANTS_TO_PLAY = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/play.png");
+    public static final Identifier TEXTURE_THOUGHT_BUBBLE = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/thought.png");
 
     // Game state
     public int buddyPosX;
@@ -343,7 +343,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         int iconX = bubbleX + (bubbleSize - iconSize) / 2;
         int iconY = bubbleY + 4; // Position icon in upper portion of bubble (was centered)
 
-        ResourceLocation icon = null;
+        Identifier icon = null;
 
         if (needsFood) {
             icon = FoodItem.TEXTURE_FOOD;

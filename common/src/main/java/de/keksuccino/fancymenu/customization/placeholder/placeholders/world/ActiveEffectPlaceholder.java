@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffectInstance;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,7 +35,7 @@ public class ActiveEffectPlaceholder extends Placeholder {
         if ((player != null) && (level != null)) {
             List<MobEffectInstance> effects = Ordering.natural().reverse().sortedCopy(player.getActiveEffects());
             if (effects.size() >= (index + 1)) {
-                ResourceLocation key = Services.PLATFORM.getEffectKey(effects.get(index).getEffect().value());
+                Identifier key = Services.PLATFORM.getEffectKey(effects.get(index).getEffect().value());
                 if (key != null) return key.toString();
             }
         }

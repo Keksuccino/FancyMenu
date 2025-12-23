@@ -13,7 +13,7 @@ import java.util.List;
 public class OnMusicTrackStoppedListener extends AbstractListener {
 
     @Nullable
-    private String cachedTrackResourceLocation;
+    private String cachedTrackIdentifier;
     @Nullable
     private String cachedTrackDisplayName;
     @Nullable
@@ -25,16 +25,16 @@ public class OnMusicTrackStoppedListener extends AbstractListener {
     }
 
     public void onMusicTrackStopped(@Nullable String trackResourceLocation, @Nullable String trackEventLocation) {
-        this.cachedTrackResourceLocation = (trackResourceLocation != null && !trackResourceLocation.isBlank()) ? trackResourceLocation : trackEventLocation;
+        this.cachedTrackIdentifier = (trackIdentifier != null && !trackIdentifier.isBlank()) ? trackIdentifier : trackEventLocation;
         this.updateTrackInfoCache(trackResourceLocation, trackEventLocation);
-        if ((trackResourceLocation != null && !trackResourceLocation.isBlank()) || (trackEventLocation != null && !trackEventLocation.isBlank())) {
+        if ((trackIdentifier != null && !trackIdentifier.isBlank()) || (trackEventLocation != null && !trackEventLocation.isBlank())) {
             this.notifyAllInstances();
         }
     }
 
     @Override
     protected void buildCustomVariablesAndAddToList(List<CustomVariable> list) {
-        list.add(new CustomVariable("track_resource_location", () -> this.cachedTrackResourceLocation != null ? this.cachedTrackResourceLocation : "ERROR"));
+        list.add(new CustomVariable("track_resource_location", () -> this.cachedTrackIdentifier != null ? this.cachedTrackIdentifier : "ERROR"));
         list.add(new CustomVariable("track_display_name", () -> this.cachedTrackDisplayName != null ? this.cachedTrackDisplayName : "UNKNOWN"));
         list.add(new CustomVariable("track_artist", () -> this.cachedTrackArtist != null ? this.cachedTrackArtist : "UNKNOWN"));
         list.add(new CustomVariable("track_duration_ms", () -> Long.toString(Math.max(this.cachedTrackDurationMs, 0L))));

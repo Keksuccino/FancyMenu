@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Objects;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * A {@link ResourceSource}, as the name says, is the source of a {@link Resource},

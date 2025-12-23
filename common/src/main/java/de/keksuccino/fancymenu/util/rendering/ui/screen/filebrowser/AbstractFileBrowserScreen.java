@@ -38,7 +38,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,9 +56,9 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     protected static final Logger LOGGER = LogManager.getLogger();
 
-    protected static final ResourceLocation GO_UP_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/go_up_icon.png");
-    protected static final ResourceLocation FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_icon.png");
-    protected static final ResourceLocation FOLDER_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/folder_icon.png");
+    protected static final Identifier GO_UP_ICON_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/go_up_icon.png");
+    protected static final Identifier FILE_ICON_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/file_icon.png");
+    protected static final Identifier FOLDER_ICON_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/folder_icon.png");
     protected static final Component FILE_TYPE_PREFIX_TEXT = Component.translatable("fancymenu.file_browser.file_type");
 
     @Nullable
@@ -239,7 +239,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         this.tickTextPreview();
         if (this.previewTextureSupplier != null) {
             ITexture t = this.previewTextureSupplier.get();
-            ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
+            Identifier loc = (t != null) ? t.getResourceLocation() : null;
             if (loc != null) {
                 AspectRatio ratio = t.getAspectRatio();
                 int[] size = ratio.getAspectRatioSizeByMaximumSize(200, (this.cancelButton.getY() - 50) - (50 + 15));
@@ -706,7 +706,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                  
 
                 //Render icon
-                ResourceLocation loc = this.file.isFile() ? FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
+                Identifier loc = this.file.isFile() ? FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
                 graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
 
                 //Render file name

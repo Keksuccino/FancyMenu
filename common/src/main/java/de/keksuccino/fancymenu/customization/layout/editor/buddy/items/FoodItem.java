@@ -4,14 +4,14 @@ import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Represents a food item that can be fed to the buddy.
  */
 public class FoodItem {
 
-    public static final ResourceLocation TEXTURE_FOOD = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/food.png");
+    public static final Identifier TEXTURE_FOOD = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/food.png");
 
     public int x;
     public int y;
