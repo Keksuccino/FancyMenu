@@ -60,9 +60,9 @@ public final class MusicTrackInfoHelper {
      * Locates track metadata using the resolved audio resource (preferred) or the backing sound event.
      */
     @Nullable
-    public static MusicTrackInfo findTrackInfo(@Nullable String trackIdentifier, @Nullable String eventResourceLocation) {
-        String normalizedTrack = normalizeResourceLocation(trackResourceLocation);
-        String normalizedEvent = normalizeEventLocation(eventResourceLocation);
+    public static MusicTrackInfo findTrackInfo(@Nullable String trackIdentifier, @Nullable String eventIdentifier) {
+        String normalizedTrack = normalizeIdentifier(trackIdentifier);
+        String normalizedEvent = normalizeEventIdentifier(eventIdentifier);
 
         MusicTrackInfo fallback = null;
         for (MusicTrackInfo info : getInfoForAllMusicTracks()) {
@@ -80,7 +80,7 @@ public final class MusicTrackInfoHelper {
      * Attempts to turn a {@link Sound} into the canonical resource path string used in metadata.
      */
     @Nullable
-    public static String extractTrackResourceLocation(@Nullable Sound sound) {
+    public static String extractTrackIdentifier(@Nullable Sound sound) {
         if (sound == null || sound == SoundManager.EMPTY_SOUND || sound == SoundManager.INTENTIONALLY_EMPTY_SOUND) {
             return null;
         }
@@ -111,7 +111,7 @@ public final class MusicTrackInfoHelper {
         return cachedMusicTrackMetadataJsonString;
     }
 
-    private static String normalizeResourceLocation(@Nullable String location) {
+    private static String normalizeIdentifier(@Nullable String location) {
         if (location == null) return null;
         String value = location.replace('\\', '/').trim();
         if (value.isEmpty()) return null;
@@ -125,7 +125,7 @@ public final class MusicTrackInfoHelper {
         return value.toLowerCase(Locale.ROOT);
     }
 
-    private static String normalizeEventLocation(@Nullable String location) {
+    private static String normalizeEventIdentifier(@Nullable String location) {
         if (location == null) return null;
         String value = location.trim();
         if (value.isEmpty()) return null;
@@ -151,7 +151,7 @@ public final class MusicTrackInfoHelper {
         private long durationMillis;
 
         private void initialize() {
-            this.normalizedResourcePath = normalizeResourceLocation(this.resource_location);
+            this.normalizedResourcePath = normalizeIdentifier(this.resource_location);
             this.durationMillis = parseDurationMillis(this.duration);
             if (this.display_name == null || this.display_name.isBlank()) {
                 this.display_name = "Unknown";

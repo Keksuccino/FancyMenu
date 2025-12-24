@@ -66,14 +66,14 @@ public interface CustomizableSlider {
             if (this.getCustomSliderBackgroundHighlightedFancyMenu() != null) {
                 if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.play();
                 texture = this.getCustomSliderBackgroundHighlightedFancyMenu();
-                location = this.getCustomSliderBackgroundHighlightedFancyMenu().getResourceLocation();
+                location = this.getCustomSliderBackgroundHighlightedFancyMenu().getIdentifier();
             }
         } else {
             if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.pause();
             if (this.getCustomSliderBackgroundNormalFancyMenu() != null) {
                 if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.play();
                 texture = this.getCustomSliderBackgroundNormalFancyMenu();
-                location = this.getCustomSliderBackgroundNormalFancyMenu().getResourceLocation();
+                location = this.getCustomSliderBackgroundNormalFancyMenu().getIdentifier();
             }
         }
         if (location != null) {

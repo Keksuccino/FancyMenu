@@ -140,7 +140,7 @@ public class ProgressBarElement extends AbstractElement {
         if (barTextureSupplier != null) {
             ITexture texture = barTextureSupplier.get();
             if (texture != null) {
-                Identifier loc = texture.getResourceLocation();
+                Identifier loc = texture.getIdentifier();
                 if (loc != null) {
                     graphics.blit(RenderPipelines.GUI_TEXTURED, loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight, DrawableColor.WHITE.getColorIntWithAlpha(opacity));
                 }

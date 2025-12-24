@@ -131,7 +131,7 @@ public class Tooltip implements Renderable {
         if (this.vanillaLike || ((this.backgroundTexture == null) && (this.backgroundColor == null))) {
             this.renderVanillaLikeBackground(graphics, x, y, this.getWidth(), this.getHeight());
         } else if (this.backgroundTexture != null) {
-            Identifier loc = this.backgroundTexture.getResourceLocation();
+            Identifier loc = this.backgroundTexture.getIdentifier();
             if (loc != null) {
                 graphics.blit(RenderPipelines.GUI_TEXTURED, loc, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
             }

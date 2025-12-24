@@ -119,7 +119,7 @@ public class SimpleToast implements Toast {
         if (this.customBackground != null) {
             ITexture tex = this.customBackground.get();
             if (tex != null) {
-                return tex.getResourceLocation();
+                return tex.getIdentifier();
             }
         }
         return null;
@@ -171,7 +171,7 @@ public class SimpleToast implements Toast {
             if (this.supplier != null) {
                 ITexture tex = this.supplier.get();
                 if (tex != null) {
-                    return tex.getResourceLocation();
+                    return tex.getIdentifier();
                 }
             }
             return null;

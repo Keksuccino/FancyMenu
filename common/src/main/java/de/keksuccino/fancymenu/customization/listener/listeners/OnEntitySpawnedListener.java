@@ -51,7 +51,7 @@ public class OnEntitySpawnedListener extends AbstractListener {
             this.isSameDimensionAsPlayer = false;
             return null;
         }
-        String playerLevelKey = minecraft.player.level() != null ? minecraft.player.level().dimension().location().toString() : null;
+        String playerLevelKey = minecraft.player.level() != null ? minecraft.player.level().dimension().identifier().toString() : null;
         boolean sameDimension = (levelKey != null && playerLevelKey != null && playerLevelKey.equals(levelKey)) || (levelKey == null && playerLevelKey == null);
         this.isSameDimensionAsPlayer = sameDimension;
         if (!sameDimension) {

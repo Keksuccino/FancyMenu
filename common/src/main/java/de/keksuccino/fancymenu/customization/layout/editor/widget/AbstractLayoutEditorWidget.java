@@ -489,7 +489,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
             ITexture icon = this.iconSupplier.get(this);
             if (icon != null) {
-                Identifier location = icon.getResourceLocation();
+                Identifier location = icon.getIdentifier();
                 if (location != null) {
                     blitF(graphics, RenderPipelines.GUI_TEXTURED, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
                 }

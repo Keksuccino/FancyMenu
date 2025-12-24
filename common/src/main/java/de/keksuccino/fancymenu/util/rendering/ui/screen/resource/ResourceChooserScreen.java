@@ -282,7 +282,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     protected void renderWarning(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if ((this.showWarningLegacyLocal || this.showWarningNoExtension) && (this.editBox != null)) {
-            Identifier loc = WARNING_TEXTURE.getResourceLocation();
+            Identifier loc = WARNING_TEXTURE.getIdentifier();
             if (loc != null) {
                 int h = this.editBox.getHeight() - 4;
                 int w = WARNING_TEXTURE.getAspectRatio().getAspectRatioWidth(h);

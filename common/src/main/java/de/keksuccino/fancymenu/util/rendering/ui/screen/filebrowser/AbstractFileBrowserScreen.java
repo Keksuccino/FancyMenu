@@ -239,7 +239,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         this.tickTextPreview();
         if (this.previewTextureSupplier != null) {
             ITexture t = this.previewTextureSupplier.get();
-            Identifier loc = (t != null) ? t.getResourceLocation() : null;
+            Identifier loc = (t != null) ? t.getIdentifier() : null;
             if (loc != null) {
                 AspectRatio ratio = t.getAspectRatio();
                 int[] size = ratio.getAspectRatioSizeByMaximumSize(200, (this.cancelButton.getY() - 50) - (50 + 15));

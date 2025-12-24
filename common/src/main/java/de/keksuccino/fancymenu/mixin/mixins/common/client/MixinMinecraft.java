@@ -180,7 +180,7 @@ public class MixinMinecraft {
 			screen = new TitleScreen();
 		} else if ((screen == null) && ((this.player != null) && this.player.isDeadOrDying())) {
 			if (this.player.shouldShowDeathScreen()) {
-				screen = new DeathScreen(null, this.level.getLevelData().isHardcore());
+				screen = new DeathScreen(null, this.level.getLevelData().isHardcore(), Minecraft.getInstance().player);
 			}
 		}
 		final Screen finalScreen = screen;
@@ -254,10 +254,11 @@ public class MixinMinecraft {
 		this.fireServerLeft_FancyMenu();
 	}
 
-	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;level:Lnet/minecraft/client/multiplayer/ClientLevel;", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.BEFORE))
-	private void beforeLevelClearedWorldLeftFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, CallbackInfo info) {
+	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;level:Lnet/minecraft/client/multiplayer/ClientLevel;", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.BEFORE))
+	private void beforeLevelClearedWorldLeftFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, boolean keepLevelResources, CallbackInfo info) {
 		WorldSessionTracker.handleWorldLeft((Minecraft)(Object)this);
 	}
+
 	@Inject(method = "clearClientLevel", at = @At("HEAD"))
 	private void beforeClearClientLevelFancyMenu(Screen nextScreen, CallbackInfo info) {
 		WorldSessionTracker.captureSnapshot((Minecraft) (Object) this);
@@ -302,7 +303,6 @@ public class MixinMinecraft {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.screen));
 	}
-
 
 	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(I)V", shift = At.Shift.AFTER))
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {

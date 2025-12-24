@@ -11,8 +11,10 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
+import net.minecraft.util.StringDecomposer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -161,7 +163,27 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
         }
         float safeScale = Math.max(0.0001F, this.scale);
         double relative = (mouseX - left) / safeScale;
-        return this.font.getSplitter().componentStyleAtWidth(this.getMessage(), Mth.floor(relative));
+        return this.getStyleAtWidth(this.getMessage(), (float) relative);
+    }
+
+    @Nullable
+    private Style getStyleAtWidth(@NotNull Component message, float width) {
+        if (width < 0.0F) {
+            return null;
+        }
+        final float[] currentWidth = new float[]{0.0F};
+        final Style[] result = new Style[]{null};
+        StringDecomposer.iterateFormatted(message, Style.EMPTY, (pos, style, codePoint) -> {
+            String text = new String(Character.toChars(codePoint));
+            float advance = this.font.getSplitter().stringWidth(FormattedText.of(text, style));
+            if (width <= currentWidth[0] + advance) {
+                result[0] = style;
+                return false;
+            }
+            currentWidth[0] += advance;
+            return true;
+        });
+        return result[0];
     }
 
     @Override

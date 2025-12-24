@@ -449,7 +449,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			if (!canRenderCustom) return;
 
 			if (headerTexture != null) {
-				Identifier loc = headerTexture.getResourceLocation();
+				Identifier loc = headerTexture.getIdentifier();
 				if (loc != null) {
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(list.getWidth(), list.getY());
@@ -469,7 +469,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			}
 
 			if (footerTexture != null) {
-				Identifier loc = footerTexture.getResourceLocation();
+				Identifier loc = footerTexture.getIdentifier();
 				if (loc != null) {
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int footerOriginalHeight = ScreenUtils.getScreenHeight() - list.getBottom();
@@ -508,7 +508,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? this.layoutBase.scrollListHeaderTexture.get() : null;
 
 			if (headerTexture != null) {
-				Identifier loc = headerTexture.getResourceLocation();
+				Identifier loc = headerTexture.getIdentifier();
 				if (loc != null) {
 					e.setCanceled(true);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {

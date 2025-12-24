@@ -139,14 +139,14 @@ public class ResourceSupplier<R extends Resource> {
      * The {@link BiConsumer}'s {@link Resource} and {@link Identifier} is never NULL!<br><br>
      *
      * The {@link BiConsumer}'s {@link Identifier} is the {@link RenderableResource}'s
-     * current {@link Identifier} ({@link RenderableResource#getResourceLocation()}).
-     * You should always use the provided location instead of calling {@link RenderableResource#getResourceLocation()},
+     * current {@link Identifier} ({@link RenderableResource#getIdentifier()}).
+     * You should always use the provided location instead of calling {@link RenderableResource#getIdentifier()},
      * because some types of resources asynchronously change that method's return value.
      */
     public void forRenderable(@NotNull BiConsumer<R, Identifier> task) {
         R resource = this.get();
         if (resource instanceof RenderableResource r) {
-            Identifier loc = r.getResourceLocation();
+            Identifier loc = r.getIdentifier();
             if (loc != null) task.accept(resource, loc);
         }
     }

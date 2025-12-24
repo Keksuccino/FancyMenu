@@ -52,7 +52,7 @@ public class IsPlayerInDimensionRequirement extends LoadingRequirement {
             ClientLevel level = Minecraft.getInstance().level;
             LocalPlayer player = Minecraft.getInstance().player;
             if ((level != null) && (player != null)) {
-                return value.equals(level.dimension().location().toString());
+                return value.equals(level.dimension().identifier().toString());
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle '" + this.getIdentifier() + "' loading requirement!", ex);
@@ -106,7 +106,7 @@ public class IsPlayerInDimensionRequirement extends LoadingRequirement {
         try {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null) {
-                level.registryAccess().lookupOrThrow(Registries.DIMENSION_TYPE).listElementIds().forEach(dimensionTypeResourceKey -> types.add(dimensionTypeResourceKey.location()));
+                level.registryAccess().lookupOrThrow(Registries.DIMENSION_TYPE).listElementIds().forEach(dimensionTypeResourceKey -> types.add(dimensionTypeResourceKey.identifier()));
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get dimension types for 'Is Player In Dimension' loading requirement!", ex);

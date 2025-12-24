@@ -34,7 +34,7 @@ public class SplashTextElement extends AbstractElement {
     public boolean refreshOnMenuReload = false;
     public Font font = Minecraft.getInstance().font;
     protected float baseScale = 1.8F;
-    protected String renderText = null;
+    protected RenderText renderText = null;
     protected String lastSource = null;
     protected SourceMode lastSourceMode = null;
     protected boolean refreshedOnMenuLoad = false;
@@ -85,7 +85,7 @@ public class SplashTextElement extends AbstractElement {
             if (this.sourceMode == SourceMode.VANILLA) {
                 SplashRenderer splashRenderer = Minecraft.getInstance().getSplashManager().getSplash();
                 // Assumes IMixinSplashRenderer correctly retrieves the splash text string
-                this.renderText = (splashRenderer != null) ? ((IMixinSplashRenderer)splashRenderer).getSplashFancyMenu() : "";
+                this.renderText = new RenderText((splashRenderer != null) ? ((IMixinSplashRenderer)splashRenderer).getSplashFancyMenu() : Component.empty(), null);
             }
             //TEXT FILE
             if (this.sourceMode == SourceMode.TEXT_FILE) {
@@ -96,9 +96,9 @@ public class SplashTextElement extends AbstractElement {
                         if (l != null) {
                             if (!l.isEmpty() && ((l.size() > 1) || (!l.get(0).trim().isEmpty()))) {
                                 int i = MathUtils.getRandomNumberInRange(0, l.size() - 1);
-                                this.renderText = l.get(i);
+                                this.renderText = new RenderText(null, l.get(i));
                             } else {
-                                this.renderText = "§cERROR: SPLASH FILE IS EMPTY";
+                                this.renderText = new RenderText(Component.literal("§cERROR: SPLASH FILE IS EMPTY"), null);
                             }
                         }
                     }
@@ -106,7 +106,7 @@ public class SplashTextElement extends AbstractElement {
             }
             //DIRECT
             if (this.sourceMode == SourceMode.DIRECT_TEXT) {
-                this.renderText = this.source;
+                this.renderText = new RenderText(null, this.source);
             }
         }
 
@@ -121,13 +121,13 @@ public class SplashTextElement extends AbstractElement {
     protected void renderSplash(GuiGraphics graphics) {
         if (this.renderText == null) {
             if (isEditor()) {
-                this.renderText = "< empty splash element >";
+                this.renderText = new RenderText(Component.literal("< empty splash element >"), null);
             } else {
                 return;
             }
         }
 
-        Component renderTextComponent = buildComponent(this.renderText);
+        var renderTextComponent = this.renderText.buildForRenderTick();
 
         // Calculate the "bounce" effect scale, same logic as vanilla.
         float bounceScale = this.baseScale;
@@ -191,4 +191,12 @@ public class SplashTextElement extends AbstractElement {
             return null;
         }
     }
+
+    protected record RenderText(@Nullable Component component, @Nullable String string) {
+        @NotNull
+        protected Component buildForRenderTick() {
+            return (this.component != null) ? this.component : buildComponent(Objects.requireNonNullElse(this.string, ""));
+        }
+    }
+
 }

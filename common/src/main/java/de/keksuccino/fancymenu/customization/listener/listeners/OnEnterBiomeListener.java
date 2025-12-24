@@ -35,7 +35,7 @@ public class OnEnterBiomeListener extends AbstractListener {
         }
 
         this.lastBiomeKey = biomeKey;
-        this.cachedBiomeKey = (biomeKey != null) ? biomeKey.location().toString() : null;
+        this.cachedBiomeKey = (biomeKey != null) ? biomeKey.identifier().toString() : null;
 
         if (biomeKey != null) {
             this.notifyAllInstances();

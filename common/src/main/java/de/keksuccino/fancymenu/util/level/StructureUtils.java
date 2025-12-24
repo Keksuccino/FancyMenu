@@ -125,7 +125,7 @@ public class StructureUtils {
     @NotNull
     public static List<String> convertStructureKeysToStrings(@NotNull List<ResourceKey<Structure>> keys) {
         List<String> stringKeys = new ArrayList<>();
-        keys.forEach(structureResourceKey -> stringKeys.add(structureResourceKey.location().toString()));
+        keys.forEach(structureResourceKey -> stringKeys.add(structureResourceKey.identifier().toString()));
         return stringKeys;
     }
 

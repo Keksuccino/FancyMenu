@@ -20,7 +20,7 @@ public class OnDimensionEnteredListener extends AbstractListener {
     }
 
     public void onDimensionEntered(@NotNull ResourceKey<Level> dimensionKey) {
-        this.cachedDimensionKey = dimensionKey.location().toString();
+        this.cachedDimensionKey = dimensionKey.identifier().toString();
         this.notifyAllInstances();
     }
 

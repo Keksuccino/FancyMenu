@@ -88,7 +88,7 @@ public class ImageElement extends AbstractElement {
 
             ITexture t = this.getTextureResource();
             if ((t != null) && t.isReady()) {
-                Identifier loc = t.getResourceLocation();
+                Identifier loc = t.getIdentifier();
                 if (loc != null) {
                     if (this.repeat) {
                         RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), tint);

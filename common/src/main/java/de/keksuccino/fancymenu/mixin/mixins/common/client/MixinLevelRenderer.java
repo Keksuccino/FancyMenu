@@ -42,7 +42,7 @@ public class MixinLevelRenderer {
         double interpolatedY = Mth.lerp(partialTicks, entity.yo, entity.getY());
         double interpolatedZ = Mth.lerp(partialTicks, entity.zo, entity.getZ());
         Vec3 entityPosition = new Vec3(interpolatedX, interpolatedY, interpolatedZ);
-        Vec3 cameraPosition = camera.getPosition();
+        Vec3 cameraPosition = camera.position();
         if (isEntityVisibleForListener_FancyMenu(entity, cameraPosition, entityPosition)) {
             double distance = entityPosition.distanceTo(cameraPosition);
             Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onEntityVisible(entity, distance);

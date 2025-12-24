@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.customization.panorama;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.AddressMode;
+import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.textures.TextureFormat;
@@ -129,8 +131,9 @@ public class PanoramaCubeMapTexture extends AbstractTexture {
         );
         
         this.textureView = device.createTextureView(this.texture);
-        this.setFilter(blur, false);
-        this.setClamp(clamp);
+        AddressMode addressMode = clamp ? AddressMode.CLAMP_TO_EDGE : AddressMode.REPEAT;
+        FilterMode filterMode = blur ? FilterMode.LINEAR : FilterMode.NEAREST;
+        this.sampler = RenderSystem.getSamplerCache().getSampler(addressMode, addressMode, filterMode, filterMode, false);
         
         // Write each face to its layer
         for (int i = 0; i < 6; i++) {

@@ -26,7 +26,7 @@ public class WidgetLocatorHandler {
     protected static void tryCache(@NotNull String screenIdentifier, boolean overrideCache) {
         Screen instance = ScreenInstanceFactory.tryConstruct(screenIdentifier);
         if (instance != null) {
-            instance.init(Minecraft.getInstance(), 1000, 1000);
+            instance.init(1000, 1000);
             tryCache(instance, overrideCache);
         } else {
             LOGGER.error("[FANCYMENU] WidgetLocatorHandler failed to construct instance of '" + screenIdentifier + "'! Unable to cache widgets!");

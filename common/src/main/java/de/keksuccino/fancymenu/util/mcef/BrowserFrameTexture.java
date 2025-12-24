@@ -13,20 +13,10 @@ public class BrowserFrameTexture extends AbstractTexture {
 
     public BrowserFrameTexture(int id, @NotNull String label) {
         this.browserGlTexture = new BrowserGlTexture(5, label, TextureFormat.RGBA8, 100, 100, 1, 1, id);
-        this.browserGlTexture.setTextureFilter(FilterMode.NEAREST, false);
         this.texture = this.browserGlTexture;
         GpuDevice device = RenderSystem.getDevice();
         this.textureView = device.createTextureView(this.texture);
-    }
-
-    @Override
-    public void setFilter(boolean $$0, boolean $$1) {
-        // do nothing
-    }
-
-    @Override
-    public void setClamp(boolean $$0) {
-        // do nothing
+        this.sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST, false);
     }
 
     public void setId(int id) {

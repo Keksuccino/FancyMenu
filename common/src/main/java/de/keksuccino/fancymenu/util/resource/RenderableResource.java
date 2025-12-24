@@ -15,7 +15,7 @@ public interface RenderableResource extends Resource {
      * Some resource types asynchronously update their current {@link Identifier},
      * so make sure to always cache the location returned by this method before using it.
      */
-    @Nullable Identifier getResourceLocation();
+    @Nullable Identifier getIdentifier();
 
     int getWidth();
 

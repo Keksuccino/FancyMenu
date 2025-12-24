@@ -307,10 +307,10 @@ public class ScreenCustomization {
                 if (setScreenOnFirstInit) {
                     Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
                 } else {
-                    Minecraft.getInstance().screen.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+                    Minecraft.getInstance().screen.init(Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
                 }
             } else {
-                Minecraft.getInstance().screen.resize(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+                Minecraft.getInstance().screen.resize(Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
             }
             ScrollScreenNormalizer.normalizeScrollableScreen(Minecraft.getInstance().screen);
             EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));

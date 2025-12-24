@@ -1,14 +1,10 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.llamalad7.mixinextras.injector.WrapWithCondition;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -27,19 +23,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.net.URI;
-
-@SuppressWarnings("deprecation")
 @WidgetifiedScreen
 @Mixin(DeathScreen.class)
 public abstract class MixinDeathScreen extends Screen {
 
-    @Shadow @Final @Nullable private Component causeOfDeath;
-    @Shadow private Component deathScore;
-
     @Unique private TextWidget titleTextFancyMenu;
     @Unique @Nullable private TextWidget causeOfDeathTextFancyMenu;
     @Unique private TextWidget deathScoreTextFancyMenu;
+
+    @Shadow @Final @Nullable private Component causeOfDeath;
+    @Shadow @Final private Component deathScore;
 
     // dummy constructor
     @SuppressWarnings("all")
@@ -73,32 +66,11 @@ public abstract class MixinDeathScreen extends Screen {
         }
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
-    private boolean cancel_renderCenteredText_FancyMenu(GuiGraphics instance, Font font, Component text, int x, int y, int color) {
-        if (!this.isCustomizableFancyMenu()) {
-            return true;
+    @Inject(method = "visitText", at = @At("HEAD"), cancellable = true)
+    private void before_visitText_FancyMenu(ActiveTextCollector collector, CallbackInfo info) {
+        if (this.isCustomizableFancyMenu()) {
+            info.cancel();
         }
-        if (this.isTitleComponentFancyMenu(text)) {
-            return false;
-        }
-        if (this.isCauseOfDeathComponentFancyMenu(text)) {
-            return false;
-        }
-        if (this.isDeathScoreComponentFancyMenu(text)) {
-            return false;
-        }
-        return true;
-    }
-
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;renderComponentHoverEffect(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Style;II)V"))
-    private boolean cancel_renderHover_FancyMenu(GuiGraphics instance, Font font, Style style, int mouseX, int mouseY) {
-        return !this.isCustomizableFancyMenu();
-    }
-
-    @WrapOperation(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/DeathScreen;clickUrlAction(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/Screen;Ljava/net/URI;)Z"))
-    private boolean cancel_handleComponentClicked_FancyMenu(Minecraft minecraft, Screen screen, URI uri, Operation<Boolean> original) {
-        if (!this.isCustomizableFancyMenu()) return original.call(minecraft, screen, uri);
-        return false;
     }
 
     @Inject(method = "render", at = @At("RETURN"))
@@ -123,9 +95,8 @@ public abstract class MixinDeathScreen extends Screen {
             return;
         }
         Style style = this.causeOfDeathTextFancyMenu.getStyleAtMouseX(event.x());
-        if (style != null && style.getClickEvent() != null && style.getClickEvent().action() == ClickEvent.Action.OPEN_URL) {
-            this.handleComponentClicked(style);
-            info.setReturnValue(false);
+        if (style != null && style.getClickEvent() instanceof ClickEvent.OpenUrl openUrl) {
+            info.setReturnValue(clickUrlAction(this.minecraft, this, openUrl.uri()));
         }
     }
 
@@ -144,25 +115,6 @@ public abstract class MixinDeathScreen extends Screen {
         if (style != null) {
             graphics.renderComponentHoverEffect(this.font, style, mouseX, mouseY);
         }
-    }
-
-    @Unique
-    private boolean isTitleComponentFancyMenu(@NotNull Component component) {
-        Component title = this.getTitle();
-        return component == title || component.equals(title);
-    }
-
-    @Unique
-    private boolean isCauseOfDeathComponentFancyMenu(@NotNull Component component) {
-        if (this.causeOfDeath == null) {
-            return false;
-        }
-        return component == this.causeOfDeath || component.equals(this.causeOfDeath);
-    }
-
-    @Unique
-    private boolean isDeathScoreComponentFancyMenu(@NotNull Component component) {
-        return component == this.deathScore || component.equals(this.deathScore);
     }
 
     @Unique

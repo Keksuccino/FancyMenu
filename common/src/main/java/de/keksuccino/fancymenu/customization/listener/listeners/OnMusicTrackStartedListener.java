@@ -40,8 +40,8 @@ public class OnMusicTrackStartedListener extends AbstractListener {
         list.add(new CustomVariable("track_duration_ms", () -> Long.toString(Math.max(this.cachedTrackDurationMs, 0L))));
     }
 
-    private void updateTrackInfoCache(@Nullable String trackIdentifier, @Nullable String eventResourceLocation) {
-        MusicTrackInfo info = MusicTrackInfoHelper.findTrackInfo(trackIdentifier, eventResourceLocation);
+    private void updateTrackInfoCache(@Nullable String trackIdentifier, @Nullable String eventIdentifier) {
+        MusicTrackInfo info = MusicTrackInfoHelper.findTrackInfo(trackIdentifier, eventIdentifier);
         if (info != null) {
             this.cachedTrackDisplayName = info.getDisplayName();
             this.cachedTrackArtist = info.getArtist();

@@ -7,7 +7,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.commands.Commands;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
+import net.minecraft.server.permissions.PermissionSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -50,14 +52,16 @@ public class HasPlayerPermissionLevelRequirement extends LoadingRequirement {
             LOGGER.warn("[FANCYMENU] Invalid permission level '{}' provided to '{}' requirement!", trimmed, this.getIdentifier());
             return false;
         }
-        if (requiredLevel < Commands.LEVEL_ALL) {
-            requiredLevel = Commands.LEVEL_ALL;
+        PermissionLevel permissionLevel = PermissionLevel.byId(requiredLevel);
+        if (permissionLevel == PermissionLevel.ALL) {
+            return true;
         }
         try {
             ClientLevel level = Minecraft.getInstance().level;
             LocalPlayer player = Minecraft.getInstance().player;
             if ((level != null) && (player != null)) {
-                return player.hasPermissions(requiredLevel);
+                PermissionSet permissionSet = player.permissions();
+                return permissionSet.hasPermission(new Permission.HasCommandLevel(permissionLevel));
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle '" + this.getIdentifier() + "' loading requirement!", ex);
@@ -87,7 +91,7 @@ public class HasPlayerPermissionLevelRequirement extends LoadingRequirement {
 
     @Override
     public String getValuePreset() {
-        return String.valueOf(Commands.LEVEL_GAMEMASTERS);
+        return String.valueOf(PermissionLevel.GAMEMASTERS.id());
     }
 
     @Override

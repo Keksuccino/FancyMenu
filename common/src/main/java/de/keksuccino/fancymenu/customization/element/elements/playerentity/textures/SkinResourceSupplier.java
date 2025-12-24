@@ -163,7 +163,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
 
     @NotNull
     public Identifier getSkinLocation() {
-        Identifier loc = this.get().getResourceLocation();
+        Identifier loc = this.get().getIdentifier();
         return (loc != null) ? loc : DEFAULT_SKIN_LOCATION;
     }
 

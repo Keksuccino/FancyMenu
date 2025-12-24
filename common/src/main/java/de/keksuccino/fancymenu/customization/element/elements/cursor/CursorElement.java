@@ -50,7 +50,7 @@ public class CursorElement extends AbstractElement {
                 if ((this.textureSupplier != null) && !this.editorPreviewMode) {
                     ITexture t = this.textureSupplier.get();
                     if (t != null) {
-                        Identifier loc = t.getResourceLocation();
+                        Identifier loc = t.getIdentifier();
                         if (loc != null) {
                             int[] size = t.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getAbsoluteWidth(), this.getAbsoluteHeight());
                             graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
@@ -75,7 +75,7 @@ public class CursorElement extends AbstractElement {
         if (this.textureSupplier != null) {
             ITexture t = this.textureSupplier.get();
             if (t instanceof PngTexture s) {
-                Identifier loc = t.getResourceLocation();
+                Identifier loc = t.getIdentifier();
                 if ((loc != this.lastLocation) || (this.lastHotspotX != this.hotspotX) || (this.lastHotspotY != this.hotspotY)) {
                     if (loc != null) {
                         this.cursorReady = false;

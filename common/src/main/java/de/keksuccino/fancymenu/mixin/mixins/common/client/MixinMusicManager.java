@@ -30,7 +30,7 @@ public abstract class MixinMusicManager {
 
     @Unique
     @Nullable
-    private String currentTrackResourceLocation_FancyMenu;
+    private String currentTrackIdentifier_FancyMenu;
 
     @Unique
     @Nullable
@@ -38,9 +38,9 @@ public abstract class MixinMusicManager {
 
     @Unique
     private void fireMusicTrackStartedFancyMenu(@Nullable SoundInstance soundInstance) {
-        String eventLocation = this.extractEventResourceLocationFancyMenu(soundInstance);
-        String trackLocation = this.extractTrackResourceLocationFancyMenu(soundInstance);
-        this.currentTrackResourceLocation_FancyMenu = trackLocation;
+        String eventLocation = this.extractEventIdentifierFancyMenu(soundInstance);
+        String trackLocation = this.extractTrackIdentifierFancyMenu(soundInstance);
+        this.currentTrackIdentifier_FancyMenu = trackLocation;
         this.currentTrackEventLocation_FancyMenu = eventLocation;
         if ((trackLocation != null) || (eventLocation != null)) {
             Listeners.ON_MUSIC_TRACK_STARTED.onMusicTrackStarted(trackLocation, eventLocation);
@@ -49,15 +49,15 @@ public abstract class MixinMusicManager {
 
     @Unique
     private void fireMusicTrackStoppedFancyMenu(@Nullable SoundInstance soundInstance) {
-        String eventLocation = this.extractEventResourceLocationFancyMenu(soundInstance);
+        String eventLocation = this.extractEventIdentifierFancyMenu(soundInstance);
         if (eventLocation == null) {
             eventLocation = this.currentTrackEventLocation_FancyMenu;
         }
-        String trackLocation = this.extractTrackResourceLocationFancyMenu(soundInstance);
+        String trackLocation = this.extractTrackIdentifierFancyMenu(soundInstance);
         if (trackLocation == null) {
-            trackLocation = this.currentTrackResourceLocation_FancyMenu;
+            trackLocation = this.currentTrackIdentifier_FancyMenu;
         }
-        this.currentTrackResourceLocation_FancyMenu = null;
+        this.currentTrackIdentifier_FancyMenu = null;
         this.currentTrackEventLocation_FancyMenu = null;
         if ((trackLocation != null) || (eventLocation != null)) {
             Listeners.ON_MUSIC_TRACK_STOPPED.onMusicTrackStopped(trackLocation, eventLocation);
@@ -66,7 +66,7 @@ public abstract class MixinMusicManager {
 
     @Unique
     @Nullable
-    private String extractTrackResourceLocationFancyMenu(@Nullable SoundInstance soundInstance) {
+    private String extractTrackIdentifierFancyMenu(@Nullable SoundInstance soundInstance) {
         if (soundInstance == null) {
             return null;
         }
@@ -87,7 +87,7 @@ public abstract class MixinMusicManager {
 
     @Unique
     @Nullable
-    private String extractEventResourceLocationFancyMenu(@Nullable SoundInstance soundInstance) {
+    private String extractEventIdentifierFancyMenu(@Nullable SoundInstance soundInstance) {
         if (soundInstance == null) {
             return null;
         }
@@ -124,7 +124,7 @@ public abstract class MixinMusicManager {
         if ((this.currentMusic != null) && (this.currentMusic.getSound() != SoundManager.EMPTY_SOUND)) {
             this.fireMusicTrackStartedFancyMenu(this.currentMusic);
         } else {
-            this.currentTrackResourceLocation_FancyMenu = null;
+            this.currentTrackIdentifier_FancyMenu = null;
             this.currentTrackEventLocation_FancyMenu = null;
         }
     }
@@ -152,8 +152,8 @@ public abstract class MixinMusicManager {
         if ((previous != null) && (value == null)) {
             this.fireMusicTrackStoppedFancyMenu(previous);
         } else if (value != null) {
-            this.currentTrackResourceLocation_FancyMenu = this.extractTrackResourceLocationFancyMenu(value);
-            this.currentTrackEventLocation_FancyMenu = this.extractEventResourceLocationFancyMenu(value);
+            this.currentTrackIdentifier_FancyMenu = this.extractTrackIdentifierFancyMenu(value);
+            this.currentTrackEventLocation_FancyMenu = this.extractEventIdentifierFancyMenu(value);
         }
     }
 }

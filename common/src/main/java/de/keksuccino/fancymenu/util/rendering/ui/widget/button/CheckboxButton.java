@@ -63,7 +63,7 @@ public class CheckboxButton extends ExtendedButton {
     @NotNull
     public Identifier getCheckboxCheckmarkTexture() {
         if (this.customCheckmarkTexture != null) {
-            Identifier loc = this.customCheckmarkTexture.getResourceLocation();
+            Identifier loc = this.customCheckmarkTexture.getIdentifier();
             if (loc != null) return loc;
         }
         return CHECKBOX_CHECKMARK_TEXTURE_DEFAULT;
@@ -99,7 +99,7 @@ public class CheckboxButton extends ExtendedButton {
     @NotNull
     public Identifier getCheckboxBackgroundTextureNormal() {
         if (this.customBackgroundTextureNormal != null) {
-            Identifier loc = this.customBackgroundTextureNormal.getResourceLocation();
+            Identifier loc = this.customBackgroundTextureNormal.getIdentifier();
             if (loc != null) return loc;
         }
         return CHECKBOX_BACKGROUND_TEXTURE_NORMAL_DEFAULT;
@@ -108,7 +108,7 @@ public class CheckboxButton extends ExtendedButton {
     @NotNull
     public Identifier getCheckboxBackgroundTextureHover() {
         if (this.customBackgroundTextureHover != null) {
-            Identifier loc = this.customBackgroundTextureHover.getResourceLocation();
+            Identifier loc = this.customBackgroundTextureHover.getIdentifier();
             if (loc != null) return loc;
         }
         return CHECKBOX_BACKGROUND_TEXTURE_HOVER_DEFAULT;
@@ -117,7 +117,7 @@ public class CheckboxButton extends ExtendedButton {
     @NotNull
     public Identifier getCheckboxBackgroundTextureInactive() {
         if (this.customBackgroundTextureInactive != null) {
-            Identifier loc = this.customBackgroundTextureInactive.getResourceLocation();
+            Identifier loc = this.customBackgroundTextureInactive.getIdentifier();
             if (loc != null) return loc;
         }
         return CHECKBOX_BACKGROUND_TEXTURE_INACTIVE_DEFAULT;

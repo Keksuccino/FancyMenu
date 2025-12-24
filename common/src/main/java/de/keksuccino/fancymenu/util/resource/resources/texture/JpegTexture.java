@@ -250,7 +250,7 @@ public class JpegTexture implements ITexture {
     }
 
     @Nullable
-    public Identifier getResourceLocation() {
+    public Identifier getIdentifier() {
         if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
         if ((this.resourceLocation == null) && !this.loadedIntoMinecraft && (this.nativeImage != null)) {
             try {

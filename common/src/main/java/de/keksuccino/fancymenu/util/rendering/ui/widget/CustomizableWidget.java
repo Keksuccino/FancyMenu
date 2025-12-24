@@ -7,6 +7,8 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -14,6 +16,8 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -64,7 +68,7 @@ public interface CustomizableWidget {
         boolean renderVanilla = true;
         if (customBackground != null) {
             if (customBackground instanceof PlayableResource p) p.play();
-            Identifier location = customBackground.getResourceLocation();
+            Identifier location = customBackground.getIdentifier();
             if (location != null) {
                 renderVanilla = false;
                 if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {
@@ -77,6 +81,41 @@ public interface CustomizableWidget {
             }
         }
         return renderVanilla;
+    }
+
+    default void renderScrollingLabel(GuiGraphics guiGraphics, Component text, int centerX, int minX, int minY, int maxX, int maxY, int color) {
+        Font font = Minecraft.getInstance().font;
+        int i = font.width(text);
+        int j = (minY + maxY - 9) / 2 + 1;
+        int k = maxX - minX;
+        if (i > k) {
+            int l = i - k;
+            double d = Util.getMillis() / 1000.0;
+            double e = Math.max(l * 0.5, 3.0);
+            double f = Math.sin((Math.PI / 2) * Math.cos((Math.PI * 2) * d / e)) / 2.0 + 0.5;
+            double g = Mth.lerp(f, 0.0, (double)l);
+            guiGraphics.enableScissor(minX, minY, maxX, maxY);
+            guiGraphics.drawString(font, text, minX - (int)g, j, color);
+            guiGraphics.disableScissor();
+        } else {
+            int l = Mth.clamp(centerX, minX + i / 2, maxX - i / 2);
+            guiGraphics.drawCenteredString(font, text, l, j, color);
+        }
+    }
+
+    default void renderScrollingLabel(GuiGraphics guiGraphics, Component text, int minX, int minY, int maxX, int maxY, int color) {
+        renderScrollingLabel(guiGraphics, text, (minX + maxX) / 2, minX, minY, maxX, maxY, color);
+    }
+
+    default void renderScrollingWidgetLabel(@NotNull AbstractWidget widget, @NotNull Component label, GuiGraphics guiGraphics, int color) {
+        int padding = 2;
+        int i = widget.getX() + padding;
+        int j = widget.getX() + widget.getWidth() - padding;
+        renderScrollingLabel(guiGraphics, label, i, widget.getY(), j, widget.getY() + widget.getHeight(), color);
+    }
+
+    default void renderScrollingWidgetLabel(@NotNull AbstractWidget widget, GuiGraphics guiGraphics, int color) {
+        renderScrollingWidgetLabel(widget, widget.getMessage(), guiGraphics, color);
     }
 
     void resetWidgetCustomizationsFancyMenu();

@@ -105,7 +105,7 @@ public class TooltipElement extends AbstractElement {
             // Render tooltip background
             if (this.backgroundTexture != null) {
                 ITexture tex = this.backgroundTexture.get();
-                if (tex != null && tex.getResourceLocation() != null) {
+                if (tex != null && tex.getIdentifier() != null) {
                     // Get texture dimensions
                     int textureWidth = Math.max(1, tex.getWidth());
                     int textureHeight = Math.max(1, tex.getHeight());
@@ -115,7 +115,7 @@ public class TooltipElement extends AbstractElement {
                     }
 
                     // Render custom background texture with nine-slicing
-                    RenderingUtils.blitNineSlicedTexture(graphics, tex.getResourceLocation(),
+                    RenderingUtils.blitNineSlicedTexture(graphics, tex.getIdentifier(),
                         x, y, width, height, 
                         textureWidth, textureHeight,
                         this.nineSliceBorderTop, this.nineSliceBorderRight, 

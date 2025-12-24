@@ -222,7 +222,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
 			if (texture != null) {
-				Identifier location = texture.getResourceLocation();
+				Identifier location = texture.getIdentifier();
 				if (location != null) {
 					graphics.blit(RenderPipelines.GUI_TEXTURED, location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH, ARGB.white(this.opacity));
 				}

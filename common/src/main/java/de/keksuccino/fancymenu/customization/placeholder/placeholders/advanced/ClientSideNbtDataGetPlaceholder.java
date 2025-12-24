@@ -277,7 +277,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
                     if (!value.isEmpty()) {
                         boolean inverted = value.startsWith("!");
                         String raw = inverted ? value.substring(1) : value;
-                        Identifier typeId = parseResourceLocation(raw);
+                        Identifier typeId = parseIdentifier(raw);
                         if (typeId != null) {
                             typeFilter = new Filter<>(typeId, inverted);
                         }
@@ -566,7 +566,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
         }
     }
 
-    private Identifier parseResourceLocation(String raw) {
+    private Identifier parseIdentifier(String raw) {
         if (raw == null || raw.isEmpty()) return null;
         String normalized = raw.contains(":") ? raw : "minecraft:" + raw;
         return Identifier.tryParse(normalized.toLowerCase(Locale.ROOT));

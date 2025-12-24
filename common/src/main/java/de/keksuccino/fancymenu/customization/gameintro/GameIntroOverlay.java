@@ -107,7 +107,7 @@ public class GameIntroOverlay extends Overlay {
             int x = (this.width / 2) - (aspectWidth / 2);
             int y = (this.height / 2) - (aspectHeight / 2);
 
-            Identifier location = r.getResourceLocation();
+            Identifier location = r.getIdentifier();
             if (location != null) {
                  
                 graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
@@ -164,7 +164,7 @@ public class GameIntroOverlay extends Overlay {
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
 
-        this.fadeTo.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+        this.fadeTo.init(Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 
         ScrollScreenNormalizer.normalizeScrollableScreen(this.fadeTo);
 

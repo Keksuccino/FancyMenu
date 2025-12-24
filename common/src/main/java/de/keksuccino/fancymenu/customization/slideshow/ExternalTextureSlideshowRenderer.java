@@ -228,7 +228,7 @@ public class ExternalTextureSlideshowRenderer {
 				o = this.slideshowOpacity;
 			}
 			ITexture t = this.previous.get();
-			Identifier loc = (t != null) ? t.getResourceLocation() : null;
+			Identifier loc = (t != null) ? t.getIdentifier() : null;
 			if (loc != null) {
 				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(o));
 			}
@@ -238,7 +238,7 @@ public class ExternalTextureSlideshowRenderer {
 	protected void renderCurrent(GuiGraphics graphics) {
 		if (this.current != null) {
 			ITexture t = this.current.get();
-			Identifier loc = (t != null) ? t.getResourceLocation() : null;
+			Identifier loc = (t != null) ? t.getIdentifier() : null;
 			if (loc != null) {
 				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(this.slideshowOpacity));
 			}
@@ -248,7 +248,7 @@ public class ExternalTextureSlideshowRenderer {
 	protected void renderOverlay(GuiGraphics graphics) {
 		if (this.overlayTexture != null) {
 			ITexture t = this.overlayTexture.get();
-			Identifier loc = (t != null) ? t.getResourceLocation() : null;
+			Identifier loc = (t != null) ? t.getIdentifier() : null;
 			if (loc != null) {
 				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, -1);
 			}

@@ -54,8 +54,8 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
         Vec3 playerPosition = player.position();
         double distanceToPlayer = soundPosition.distanceTo(playerPosition);
 
-        this.cachedSoundIdentifier = this.resolveSoundResourceLocation(sound);
-        this.cachedSoundDisplayName = this.resolveDisplayName(subtitle, this.cachedSoundResourceLocation);
+        this.cachedSoundIdentifier = this.resolveSoundIdentifier(sound);
+        this.cachedSoundDisplayName = this.resolveDisplayName(subtitle, this.cachedSoundIdentifier);
         this.cachedSoundOriginPosX = Double.toString(soundPosition.x);
         this.cachedSoundOriginPosY = Double.toString(soundPosition.y);
         this.cachedSoundOriginPosZ = Double.toString(soundPosition.z);
@@ -87,7 +87,7 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
     }
 
     @Nullable
-    private String resolveSoundResourceLocation(@NotNull SoundInstance sound) {
+    private String resolveSoundIdentifier(@NotNull SoundInstance sound) {
         Sound resolvedSound = sound.getSound();
         if ((resolvedSound != null) && (resolvedSound != SoundManager.EMPTY_SOUND) && (resolvedSound != SoundManager.INTENTIONALLY_EMPTY_SOUND)) {
             Identifier path = resolvedSound.getPath();
@@ -99,7 +99,7 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
                 return directLocation.toString();
             }
         }
-        Identifier fallback = sound.getLocation();
+        Identifier fallback = sound.getIdentifier();
         return (fallback != null) ? fallback.toString() : null;
     }
 

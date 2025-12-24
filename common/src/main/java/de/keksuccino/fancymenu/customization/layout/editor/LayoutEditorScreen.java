@@ -374,7 +374,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 			//Header Texture
 			if (headerTexture != null) {
-				Identifier loc = headerTexture.getResourceLocation();
+				Identifier loc = headerTexture.getIdentifier();
 				if (loc != null) {
 					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, y0);
@@ -394,7 +394,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			}
 			//Footer Texture
 			if (footerTexture != null) {
-				Identifier loc = footerTexture.getResourceLocation();
+				Identifier loc = footerTexture.getIdentifier();
 				if (loc != null) {
 					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
 						int footerOriginalHeight = this.height - y1;

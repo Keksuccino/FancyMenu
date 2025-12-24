@@ -130,7 +130,7 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
         if ((element instanceof SplashTextElement e) && (e.renderText != null)) {
-            return Component.literal(e.renderText);
+            return e.renderText.buildForRenderTick();
         }
         return Component.translatable("fancymenu.element.elements.splash_text");
     }

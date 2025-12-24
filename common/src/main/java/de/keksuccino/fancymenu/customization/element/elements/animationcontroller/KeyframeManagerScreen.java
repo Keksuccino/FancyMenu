@@ -371,10 +371,10 @@ public class KeyframeManagerScreen extends Screen {
             newScale--;
             if (newScale < 1) newScale = 1;
             WindowHandler.setGuiScale(newScale);
-            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+            this.resize(window.getGuiScaledWidth(), window.getGuiScaledHeight());
         } else if (!tooFarRight && resized) {
             RenderingUtils.resetGuiScale();
-            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+            this.resize(window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
 
     }

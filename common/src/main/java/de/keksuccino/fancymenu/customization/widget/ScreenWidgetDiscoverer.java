@@ -80,9 +80,9 @@ public class ScreenWidgetDiscoverer {
 
 			//This is to avoid NullPointers
 			if (!((IMixinScreen)screen).get_initialized_FancyMenu()) {
-				screen.init(Minecraft.getInstance(), screenWidth, screenHeight);
+				screen.init(screenWidth, screenHeight);
 			} else {
-				screen.resize(Minecraft.getInstance(), screenWidth, screenHeight);
+				screen.resize(screenWidth, screenHeight);
 			}
 
 			ScrollScreenNormalizer.normalizeScrollableScreen(screen);

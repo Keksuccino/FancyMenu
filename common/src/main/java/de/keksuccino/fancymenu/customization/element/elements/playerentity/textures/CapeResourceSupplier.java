@@ -104,7 +104,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
 
     @NotNull
     public Identifier getCapeLocation() {
-        Identifier loc = this.get().getResourceLocation();
+        Identifier loc = this.get().getIdentifier();
         return (loc != null) ? loc : DEFAULT_CAPE_LOCATION;
     }
 

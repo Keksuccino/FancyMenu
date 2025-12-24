@@ -82,7 +82,7 @@ public class ImageMenuBackground extends MenuBackground {
             if (background != null) {
                 tex = background;
                 ratio = background.getAspectRatio();
-                resourceLocation = background.getResourceLocation();
+                resourceLocation = background.getIdentifier();
             }
         }
         if ((resourceLocation == null) && (this.fallbackTextureSupplier != null)) {
@@ -90,7 +90,7 @@ public class ImageMenuBackground extends MenuBackground {
             if (fallback != null) {
                 tex = fallback;
                 ratio = fallback.getAspectRatio();
-                resourceLocation = fallback.getResourceLocation();
+                resourceLocation = fallback.getIdentifier();
             }
         }
 

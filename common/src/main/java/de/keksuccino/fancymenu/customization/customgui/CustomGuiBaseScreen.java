@@ -31,16 +31,16 @@ public class CustomGuiBaseScreen extends Screen {
     protected void init() {
         super.init();
         if (this.gui.popupMode) {
-            this.resizePopupMenuBackgroundScreen(Minecraft.getInstance(), this.width, this.height);
+            this.resizePopupMenuBackgroundScreen(this.width, this.height);
         }
     }
 
-    protected void resizePopupMenuBackgroundScreen(Minecraft minecraft, int width, int height) {
+    protected void resizePopupMenuBackgroundScreen(int width, int height) {
         try {
             if (this.parentScreen != null) {
                 Screen current = Minecraft.getInstance().screen;
                 Minecraft.getInstance().screen = this.parentScreen;
-                this.parentScreen.resize(minecraft, width, height);
+                this.parentScreen.resize(width, height);
                 Minecraft.getInstance().screen = current;
             }
         } catch (Exception ex) {

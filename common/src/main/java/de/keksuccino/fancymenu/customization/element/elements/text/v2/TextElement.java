@@ -195,7 +195,7 @@ public class TextElement extends AbstractElement {
         if (this.verticalScrollGrabberTextureNormal != null) {
             ITexture r = this.verticalScrollGrabberTextureNormal.get();
             if (r != null) {
-                this.scrollArea.verticalScrollBar.idleBarTexture = r.getResourceLocation();
+                this.scrollArea.verticalScrollBar.idleBarTexture = r.getIdentifier();
             }
         } else {
             this.scrollArea.verticalScrollBar.idleBarTexture = null;
@@ -203,7 +203,7 @@ public class TextElement extends AbstractElement {
         if (this.verticalScrollGrabberTextureHover != null) {
             ITexture r = this.verticalScrollGrabberTextureHover.get();
             if (r != null) {
-                this.scrollArea.verticalScrollBar.hoverBarTexture = r.getResourceLocation();
+                this.scrollArea.verticalScrollBar.hoverBarTexture = r.getIdentifier();
             }
         } else {
             this.scrollArea.verticalScrollBar.hoverBarTexture = null;
@@ -211,7 +211,7 @@ public class TextElement extends AbstractElement {
         if (this.horizontalScrollGrabberTextureNormal != null) {
             ITexture r = this.horizontalScrollGrabberTextureNormal.get();
             if (r != null) {
-                this.scrollArea.horizontalScrollBar.idleBarTexture = r.getResourceLocation();
+                this.scrollArea.horizontalScrollBar.idleBarTexture = r.getIdentifier();
             }
         } else {
             this.scrollArea.horizontalScrollBar.idleBarTexture = null;
@@ -219,7 +219,7 @@ public class TextElement extends AbstractElement {
         if (this.horizontalScrollGrabberTextureHover != null) {
             ITexture r = this.horizontalScrollGrabberTextureHover.get();
             if (r != null) {
-                this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getResourceLocation();
+                this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getIdentifier();
             }
         } else {
             this.scrollArea.horizontalScrollBar.hoverBarTexture = null;

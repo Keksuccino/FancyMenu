@@ -40,7 +40,7 @@ public class GifTexture implements ITexture, PlayableResource {
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile int width = 10;
     protected volatile int height = 10;
-    protected volatile long lastResourceLocationCall = -1;
+    protected volatile long lastIdentifierCall = -1;
     protected final AtomicBoolean tickerThreadRunning = new AtomicBoolean(false);
     protected final AtomicBoolean decoded = new AtomicBoolean(false);
     protected volatile boolean allFramesDecoded = false;
@@ -232,12 +232,12 @@ public class GifTexture implements ITexture, PlayableResource {
         if (!this.tickerThreadRunning.get() && !this.frames.isEmpty() && !this.maxLoopsReached && !this.closed.get()) {
 
             this.tickerThreadRunning.set(true);
-            this.lastResourceLocationCall = System.currentTimeMillis();
+            this.lastIdentifierCall = System.currentTimeMillis();
 
             new Thread(() -> {
 
                 //Automatically stop thread if APNG was inactive for >=10 seconds
-                while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
+                while ((this.lastIdentifierCall + 10000) > System.currentTimeMillis()) {
                     if (this.frames.isEmpty() || this.closed.get()) break;
                     //Don't tick frame if max loops reached
                     if (this.maxLoopsReached) break;
@@ -308,9 +308,9 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Nullable
     @Override
-    public Identifier getResourceLocation() {
+    public Identifier getIdentifier() {
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
-        this.lastResourceLocationCall = System.currentTimeMillis();
+        this.lastIdentifierCall = System.currentTimeMillis();
         this.startTickerIfNeeded();
         GifFrame frame = this.current;
         if (frame != null) {
