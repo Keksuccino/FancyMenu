@@ -48,8 +48,8 @@ public abstract class MixinLoadingOverlay {
 		}
 	}
 
-	@WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V"))
-	private void wrap_initScreen_in_tick_FancyMenu(Screen instance, Minecraft mc, int width, int height, Operation<Void> original) {
+	@WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V"))
+	private void wrap_initScreen_in_tick_FancyMenu(Screen instance, int width, int height, Operation<Void> original) {
 
 		if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
 			GameIntroHandler.introPlayed = true;
@@ -70,8 +70,9 @@ public abstract class MixinLoadingOverlay {
 		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
 		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
 
+        Minecraft mc = Minecraft.getInstance();
 		//Use window.getGuiScaledWidth/Height here to respect GUI scale modifications made in Init.Pre events
-		original.call(instance, mc, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+		original.call(instance, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
 
 		ScrollScreenNormalizer.normalizeScrollableScreen(instance);
 

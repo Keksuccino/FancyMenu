@@ -12,8 +12,4 @@ public interface IMixinGuiGraphics {
 
     @Accessor("scissorStack") GuiGraphics.ScissorStack get_scissorStack_FancyMenu();
 
-    @Accessor("deferredTooltip") Runnable get_deferredTooltip_FancyMenu();
-
-    @Accessor("deferredTooltip") void set_deferredTooltip_FancyMenu(Runnable runnable);
-
 }
