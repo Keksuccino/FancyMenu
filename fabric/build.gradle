@@ -29,7 +29,7 @@ dependencies {
     modImplementation "maven.modrinth:modmenu:17.0.0-beta.1"
     modImplementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
     modImplementation "de.keksuccino:mcef-fabric:2.1.7-1.21.10"
-    compileOnly "net.objecthunter:exp4j:0.4.8"
+    implementation "net.objecthunter:exp4j:0.4.8"
 
 }
 
