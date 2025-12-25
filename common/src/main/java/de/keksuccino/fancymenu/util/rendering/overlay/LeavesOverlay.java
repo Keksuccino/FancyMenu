@@ -43,7 +43,6 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
     private static final float GUST_MAX_STRENGTH = 95.0F;
     private static final float GUST_POWER_MIN = 0.65F;
     private static final float GUST_POWER_MAX = 2.2F;
-    private static final float GUST_LAND_BLOW_CHANCE = 0.85F;
     private static final float GUST_AIR_BLOW_CHANCE = 0.45F;
     private static final int WIND_RGB = 0xE3F2FF;
     private static final int WIND_ALPHA_MIN = 75;
@@ -238,13 +237,6 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         for (Leaf leaf : this.leaves) {
             if (leaf.landed) {
                 leaf.landTime += deltaSeconds;
-                if (currentGustId >= 0 && leaf.lastGustId != currentGustId && isGustHittingLeaf(leaf, gustX, gustBand)) {
-                    leaf.lastGustId = currentGustId;
-                    float blowChance = Mth.clamp(GUST_LAND_BLOW_CHANCE * (0.7F + gustPower * 0.35F), 0.25F, 0.98F);
-                    if (this.random.nextFloat() < blowChance) {
-                        blowLeaf(leaf, gustWind, gustPower);
-                    }
-                }
                 if (leaf.landTime >= leaf.landDuration + leaf.fadeDuration) {
                     resetLeaf(leaf, width, height, false);
                 }
