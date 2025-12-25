@@ -45,7 +45,6 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
     private static final float GUST_POWER_MAX = 2.2F;
     private static final float GUST_LAND_BLOW_CHANCE = 0.85F;
     private static final float GUST_AIR_BLOW_CHANCE = 0.45F;
-    private static final float WHIRL_GUST_CHANCE = 0.28F;
     private static final int WIND_RGB = 0xE3F2FF;
     private static final int WIND_ALPHA_MIN = 75;
     private static final int WIND_ALPHA_MAX = 160;
@@ -220,45 +219,30 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
 
     private void updateLeaves(int width, int height, float deltaSeconds) {
         WindGust activeGust = this.windBlowsEnabled ? this.windGust : null;
-        float gustWindX = 0.0F;
-        float gustWindY = 0.0F;
+        float gustWind = 0.0F;
         float gustX = 0.0F;
-        float gustY = 0.0F;
         float gustBand = 0.0F;
         float gustPower = 0.0F;
         int currentGustId = -1;
-        WindGustType gustType = null;
         if (activeGust != null) {
             float strengthScale = activeGust.getStrengthScale();
             gustPower = activeGust.power;
-            gustType = activeGust.type;
-            if (gustType == WindGustType.STRAIGHT) {
-                gustWindX = strengthScale * activeGust.strength * activeGust.direction;
-                gustX = activeGust.getX(width, this.scale);
-                gustBand = activeGust.getBandWidth(this.scale);
-            } else {
-                gustWindY = strengthScale * activeGust.strength;
-                gustX = activeGust.getWhirlX(width, this.scale);
-                gustY = activeGust.getWhirlY(height, this.scale);
-                gustBand = activeGust.getWhirlRadius(this.scale);
-            }
+            gustWind = strengthScale * activeGust.strength * activeGust.direction;
+            gustX = activeGust.getX(width, this.scale);
+            gustBand = activeGust.getBandWidth(this.scale);
             currentGustId = activeGust.id;
         }
 
-        float effectiveWind = this.wind + (gustType == WindGustType.STRAIGHT ? gustWindX : 0.0F);
+        float effectiveWind = this.wind + gustWind;
         float wrapPadding = 18.0F * this.scale;
         for (Leaf leaf : this.leaves) {
             if (leaf.landed) {
                 leaf.landTime += deltaSeconds;
-                if (currentGustId >= 0 && leaf.lastGustId != currentGustId && isGustHittingLeaf(leaf, activeGust, gustX, gustY, gustBand)) {
+                if (currentGustId >= 0 && leaf.lastGustId != currentGustId && isGustHittingLeaf(leaf, gustX, gustBand)) {
                     leaf.lastGustId = currentGustId;
                     float blowChance = Mth.clamp(GUST_LAND_BLOW_CHANCE * (0.7F + gustPower * 0.35F), 0.25F, 0.98F);
                     if (this.random.nextFloat() < blowChance) {
-                        if (gustType == WindGustType.WHIRL) {
-                            blowLeafWhirl(leaf, gustX, gustY, gustWindY, gustPower, activeGust.direction);
-                        } else {
-                            blowLeaf(leaf, gustWindX, 0.0F, gustPower, 1.35F);
-                        }
+                        blowLeaf(leaf, gustWind, gustPower);
                     }
                 }
                 if (leaf.landTime >= leaf.landDuration + leaf.fadeDuration) {
@@ -267,21 +251,17 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
                 continue;
             }
 
-            if (currentGustId >= 0 && leaf.lastGustId != currentGustId && isGustHittingLeaf(leaf, activeGust, gustX, gustY, gustBand)) {
+            if (currentGustId >= 0 && leaf.lastGustId != currentGustId && isGustHittingLeaf(leaf, gustX, gustBand)) {
                 leaf.lastGustId = currentGustId;
                 float blowChance = Mth.clamp(GUST_AIR_BLOW_CHANCE * (0.75F + gustPower * 0.3F), 0.1F, 0.9F);
                 if (this.random.nextFloat() < blowChance) {
-                    if (gustType == WindGustType.WHIRL) {
-                        applyWhirlKick(leaf, gustX, gustY, gustWindY, gustPower, activeGust.direction, 1.0F);
-                    } else {
-                        applyGustKick(leaf, gustWindX, 0.0F, gustPower, 1.0F);
-                    }
+                    applyGustKick(leaf, gustWind, gustPower, 1.0F);
                 }
             }
 
             float previousSwirlTime = leaf.swirlTime;
             float previousY = leaf.y;
-            leaf.y += (leaf.fallSpeed * this.fallSpeedMultiplier - leaf.gustLift) * deltaSeconds;
+            leaf.y += leaf.fallSpeed * this.fallSpeedMultiplier * deltaSeconds;
             leaf.x += (leaf.driftSpeed + effectiveWind + leaf.gustBoost) * deltaSeconds;
             updateGustKick(leaf, deltaSeconds);
             float swirlBoost = 0.0F;
@@ -313,18 +293,9 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         }
     }
 
-    private boolean isGustHittingLeaf(Leaf leaf, WindGust gust, float gustX, float gustY, float gustBand) {
-        if (gust == null) {
-            return false;
-        }
+    private boolean isGustHittingLeaf(Leaf leaf, float gustX, float gustBand) {
         float centerX = leaf.x + (leaf.width * 0.5F);
-        if (gust.type == WindGustType.STRAIGHT) {
-            return Math.abs(centerX - gustX) <= gustBand;
-        }
-        float centerY = leaf.y + (leaf.height * 0.5F);
-        float dx = centerX - gustX;
-        float dy = centerY - gustY;
-        return dx * dx + dy * dy <= gustBand * gustBand;
+        return Math.abs(centerX - gustX) <= gustBand;
     }
 
     private boolean handleLeafCollision(Leaf leaf, float effectiveX, float effectiveY, float previousEffectiveY) {
@@ -371,36 +342,25 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         }
         leaf.y = surfaceY - leaf.height;
         leaf.gustBoost = 0.0F;
-        leaf.gustLift = 0.0F;
         leaf.gustTime = 0.0F;
     }
 
-    private void blowLeaf(Leaf leaf, float gustWindX, float gustLift, float gustPower, float swirlMultiplier) {
+    private void blowLeaf(Leaf leaf, float gustWind, float gustPower) {
         leaf.landed = false;
         leaf.landTime = 0.0F;
         leaf.y = Math.max(-leaf.height, leaf.y - nextRange(6.0F, 18.0F) * this.scale);
         resetLeafMotion(leaf);
-        applyGustKick(leaf, gustWindX, gustLift, gustPower, swirlMultiplier);
-    }
-
-    private void blowLeafWhirl(Leaf leaf, float gustX, float gustY, float gustStrength, float gustPower, int direction) {
-        leaf.landed = false;
-        leaf.landTime = 0.0F;
-        leaf.y = Math.max(-leaf.height, leaf.y - nextRange(8.0F, 22.0F) * this.scale);
-        resetLeafMotion(leaf);
-        applyWhirlKick(leaf, gustX, gustY, gustStrength, gustPower, direction, 1.6F);
+        applyGustKick(leaf, gustWind, gustPower, 1.35F);
     }
 
     private void updateGustKick(Leaf leaf, float deltaSeconds) {
         if (leaf.gustTime <= 0.0F) {
             leaf.gustBoost = 0.0F;
-            leaf.gustLift = 0.0F;
         } else {
             leaf.gustTime -= deltaSeconds;
             if (leaf.gustTime <= 0.0F) {
                 leaf.gustTime = 0.0F;
                 leaf.gustBoost = 0.0F;
-                leaf.gustLift = 0.0F;
             }
         }
         if (leaf.gustSwirlTime > 0.0F) {
@@ -413,38 +373,20 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         }
     }
 
-    private void applyGustKick(Leaf leaf, float gustWindX, float gustLift, float gustPower, float swirlMultiplier) {
-        if (Math.abs(gustWindX) < 0.01F && gustLift < 0.01F) {
+    private void applyGustKick(Leaf leaf, float gustWind, float gustPower, float swirlMultiplier) {
+        if (Math.abs(gustWind) < 0.01F) {
             return;
         }
         float powerScale = 0.65F + gustPower * 0.35F;
-        leaf.gustBoost = gustWindX * nextRange(0.55F, 1.1F) * powerScale;
-        leaf.gustLift = gustLift * nextRange(0.7F, 1.15F) * powerScale;
+        leaf.gustBoost = gustWind * nextRange(0.55F, 1.1F) * powerScale;
         leaf.gustTime = nextRange(0.35F, 0.95F) * (0.85F + gustPower * 0.25F);
         leaf.gustSwirlBoost = nextRange(0.9F, 1.9F) * gustPower * swirlMultiplier;
         leaf.gustSwirlDuration = nextRange(0.55F, 1.25F);
         leaf.gustSwirlTime = leaf.gustSwirlDuration;
     }
 
-    private void applyWhirlKick(Leaf leaf, float gustX, float gustY, float gustStrength, float gustPower, int direction, float swirlMultiplier) {
-        if (gustStrength <= 0.01F) {
-            return;
-        }
-        float centerX = leaf.x + (leaf.width * 0.5F);
-        float centerY = leaf.y + (leaf.height * 0.5F);
-        float dx = centerX - gustX;
-        float dy = centerY - gustY;
-        float distance = Mth.sqrt(dx * dx + dy * dy);
-        float normalizedX = dx / Math.max(distance, 0.001F);
-        float normalizedY = dy / Math.max(distance, 0.001F);
-        float tangentX = direction > 0 ? -normalizedY : normalizedY;
-        float sidePush = tangentX * gustStrength * nextRange(0.35F, 0.75F);
-        float lift = gustStrength * nextRange(0.75F, 1.2F);
-        applyGustKick(leaf, sidePush, lift, gustPower, swirlMultiplier);
-    }
-
     private void updateWind(long now, float deltaSeconds) {
-        if (this.windStrength < 0.01F) {
+        if (this.windStrength <= 0.01F) {
             this.wind = 0.0F;
             this.windTarget = 0.0F;
             return;
@@ -464,7 +406,7 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
             }
             return;
         }
-        if (this.windStrength < 0.01F || this.intensity <= 0.0F) {
+        if (this.windStrength <= 0.01F || this.intensity <= 0.0F) {
             this.windGust = null;
             return;
         }
@@ -486,14 +428,6 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         float power = computeGustPower();
         float strength = nextRange(GUST_MIN_STRENGTH, GUST_MAX_STRENGTH) * this.windStrength * power;
         int direction = this.random.nextBoolean() ? 1 : -1;
-        WindGustType type = this.random.nextFloat() < WHIRL_GUST_CHANCE ? WindGustType.WHIRL : WindGustType.STRAIGHT;
-        if (type == WindGustType.WHIRL) {
-            float whirlX = nextRange(width * 0.15F, width * 0.85F);
-            float whirlRadius = nextRange(26.0F, 42.0F) * (0.75F + power * 0.45F);
-            this.windGust = new WindGust(++this.gustId, type, direction, strength, duration, power, 0.0F, whirlX, whirlRadius, new WindStreak[0]);
-            scheduleNextGust(now);
-            return;
-        }
         int streakCount = Mth.clamp(3 + this.random.nextInt(4) + Mth.floor(power - 1.0F), 3, 7);
         WindStreak[] streaks = new WindStreak[streakCount];
         float minY = height * 0.2F;
@@ -507,7 +441,7 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
             streaks[i] = new WindStreak(y, length, wobble, phase, offset);
         }
         float bandWidth = nextRange(32.0F, 50.0F) * (0.7F + power * 0.4F);
-        this.windGust = new WindGust(++this.gustId, type, direction, strength, duration, power, bandWidth, 0.0F, 0.0F, streaks);
+        this.windGust = new WindGust(++this.gustId, direction, strength, duration, power, bandWidth, streaks);
         scheduleNextGust(now);
     }
 
@@ -595,10 +529,6 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         }
         int alpha = Mth.clamp(Math.round(Mth.lerp(alphaScale, WIND_ALPHA_MIN, WIND_ALPHA_MAX)), 0, 255);
         int color = (alpha << 24) | WIND_RGB;
-        if (this.windGust.type == WindGustType.WHIRL) {
-            renderWindWhirl(graphics, overlayX, overlayY, overlayWidth, overlayHeight, color);
-            return;
-        }
         float gustX = this.windGust.getX(overlayWidth, this.scale);
         float padding = 26.0F * this.scale;
         if (gustX < -padding || gustX > overlayWidth + padding) {
@@ -617,36 +547,6 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
             int baseX = overlayX + Mth.floor(gustX + streak.offset);
             renderWindStreak(graphics, baseX, baseY, streak.length, color, directionRight, thicknessScale);
         }
-    }
-
-    private void renderWindWhirl(GuiGraphics graphics, int overlayX, int overlayY, int overlayWidth, int overlayHeight, int color) {
-        float centerX = this.windGust.getWhirlX(overlayWidth, this.scale);
-        float centerY = this.windGust.getWhirlY(overlayHeight, this.scale);
-        float radius = this.windGust.getWhirlRadius(this.scale);
-        float padding = radius + 24.0F * this.scale;
-        if (centerX < -padding || centerX > overlayWidth + padding || centerY < -padding || centerY > overlayHeight + padding) {
-            return;
-        }
-        int baseX = overlayX + Mth.floor(centerX);
-        int baseY = overlayY + Mth.floor(centerY);
-        int pointCount = Mth.clamp(10 + Mth.floor(this.windGust.power * 6.0F), 10, 20);
-        float maxRadius = radius * 0.85F;
-        float spin = this.windGust.time * (4.0F + this.windGust.power) * this.windGust.direction;
-        int thickness = Math.max(1, Math.round(this.scale * (0.9F + this.windGust.power * 0.25F)));
-
-        for (int arm = 0; arm < 2; arm++) {
-            float armOffset = arm * (float)Math.PI;
-            for (int i = 0; i < pointCount; i++) {
-                float t = pointCount > 1 ? i / (float)(pointCount - 1) : 0.0F;
-                float angle = spin + armOffset + t * ((float)Math.PI * 2.25F) * this.windGust.direction;
-                float radiusAt = t * maxRadius;
-                int pointX = baseX + Math.round(Mth.cos(angle) * radiusAt);
-                int pointY = baseY + Math.round(Mth.sin(angle) * radiusAt);
-                graphics.fill(pointX, pointY, pointX + thickness, pointY + thickness, color);
-            }
-        }
-
-        graphics.fill(baseX - thickness, baseY - thickness, baseX + thickness, baseY + thickness, color);
     }
 
     private void renderWindStreak(GuiGraphics graphics, int baseX, int baseY, float length, int color, boolean directionRight, float thicknessScale) {
@@ -697,7 +597,6 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         leaf.swirlSpeed = nextRange(MIN_SWIRL_SPEED, MAX_SWIRL_SPEED);
         leaf.swirlTime = this.random.nextFloat() * ((float)Math.PI * 2.0F);
         leaf.gustBoost = 0.0F;
-        leaf.gustLift = 0.0F;
         leaf.gustTime = 0.0F;
         leaf.gustSwirlBoost = 0.0F;
         leaf.gustSwirlTime = 0.0F;
@@ -790,7 +689,6 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         private float swirlSpeed;
         private float swirlTime;
         private float gustBoost;
-        private float gustLift;
         private float gustTime;
         private float gustSwirlBoost;
         private float gustSwirlTime;
@@ -809,34 +707,23 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         private int lastGustId;
     }
 
-    private enum WindGustType {
-        STRAIGHT,
-        WHIRL
-    }
-
     private static final class WindGust {
         private final int id;
-        private final WindGustType type;
         private final int direction;
         private final float strength;
         private final float duration;
         private final float power;
         private final float bandWidth;
-        private final float whirlX;
-        private final float whirlRadius;
         private final WindStreak[] streaks;
         private float time;
 
-        private WindGust(int id, WindGustType type, int direction, float strength, float duration, float power, float bandWidth, float whirlX, float whirlRadius, WindStreak[] streaks) {
+        private WindGust(int id, int direction, float strength, float duration, float power, float bandWidth, WindStreak[] streaks) {
             this.id = id;
-            this.type = type;
             this.direction = direction;
             this.strength = strength;
             this.duration = duration;
             this.power = power;
             this.bandWidth = bandWidth;
-            this.whirlX = whirlX;
-            this.whirlRadius = whirlRadius;
             this.streaks = streaks;
         }
 
@@ -858,21 +745,6 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
 
         private float getBandWidth(float scale) {
             return this.bandWidth * scale;
-        }
-
-        private float getWhirlX(int width, float scale) {
-            return this.whirlX;
-        }
-
-        private float getWhirlY(int height, float scale) {
-            float padding = 30.0F * scale;
-            float startY = height + padding;
-            float endY = -padding;
-            return Mth.lerp(getProgress(), startY, endY);
-        }
-
-        private float getWhirlRadius(float scale) {
-            return this.whirlRadius * scale;
         }
     }
 
