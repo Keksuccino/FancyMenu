@@ -70,6 +70,7 @@
 - More of FancyMenu's list-based screens now have search bars
 - There's now an option to toggle on/off the screen background overlay in Custom GUIs while in a world (the blur/dark tint) (#1441)
 - The Book button in the Inventory screen now has a persistent identifier ("inventory_screen_book_button") to hopefully improve how the customization engine can interact with it (#1098)
+- The "Progress Bar" element now supports nine-slicing for bar and background textures (#1444)
 
 ### Breaking Changes
 
