@@ -52,6 +52,8 @@
   - Force-executes a command in singleplayer as the integrated server, ignoring permissions and the cheats setting
   - Does nothing on multiplayer or when the world is opened to LAN
 - Added "Stop All Action Audios" action to stop all audio tracks started via the "Play Audio" action
+- Added "Animated Texture Started Playing" listener that triggers when an animated texture (FMA, APNG, GIF) starts playing
+- Added "Animated Texture Finished Playing" listener that triggers when an animated texture (FMA, APNG, GIF) finished playing
 - Added "On Item Hovered in Inventory" listener that triggers when the users hovers an item in any inventory (player inventory, chests, etc.) (#1432)
 - Added "Is Hardcore" requirement to check if the currently loaded world is in hardcore mode (#1387)
 - Added "Is MC Debug Overlay Enabled" requirement to check if the F3 debug overlay is enabled (#1436)
