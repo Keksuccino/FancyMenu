@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -35,9 +36,19 @@ public class ProgressBarElement extends AbstractElement {
     public DrawableColor barColor = DrawableColor.of(new Color(82, 149, 255));
     @Nullable
     public ResourceSupplier<ITexture> barTextureSupplier;
+    public boolean barNineSlice = false;
+    public int barNineSliceBorderTop = 5;
+    public int barNineSliceBorderRight = 5;
+    public int barNineSliceBorderBottom = 5;
+    public int barNineSliceBorderLeft = 5;
     public DrawableColor backgroundColor = DrawableColor.of(new Color(171, 200, 247));
     @Nullable
     public ResourceSupplier<ITexture> backgroundTextureSupplier;
+    public boolean backgroundNineSlice = false;
+    public int backgroundNineSliceBorderTop = 5;
+    public int backgroundNineSliceBorderRight = 5;
+    public int backgroundNineSliceBorderBottom = 5;
+    public int backgroundNineSliceBorderLeft = 5;
     public boolean useProgressForElementAnchor = false;
     public String progressSource = null;
     public ProgressValueMode progressValueMode = ProgressValueMode.PERCENTAGE;
@@ -141,7 +152,15 @@ public class ProgressBarElement extends AbstractElement {
                 ResourceLocation loc = texture.getResourceLocation();
                 if (loc != null) {
                     DrawableColor.WHITE.setAsShaderColor(graphics, this.opacity);
-                    graphics.blit(loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight);
+                    if (this.barNineSlice) {
+                        int textureWidth = Math.max(1, texture.getWidth());
+                        int textureHeight = Math.max(1, texture.getHeight());
+                        RenderingUtils.blitNineSlicedTexture(graphics, loc, progressX, progressY, progressWidth, progressHeight,
+                                textureWidth, textureHeight,
+                                this.barNineSliceBorderTop, this.barNineSliceBorderRight, this.barNineSliceBorderBottom, this.barNineSliceBorderLeft);
+                    } else {
+                        graphics.blit(loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight);
+                    }
                 }
             }
         }
@@ -168,7 +187,17 @@ public class ProgressBarElement extends AbstractElement {
         if (backgroundTextureSupplier != null) {
             backgroundTextureSupplier.forRenderable((texture, location) -> {
                 DrawableColor.WHITE.setAsShaderColor(graphics, this.opacity);
-                graphics.blit(location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight());
+                if (this.backgroundNineSlice) {
+                    int textureWidth = Math.max(1, texture.getWidth());
+                    int textureHeight = Math.max(1, texture.getHeight());
+                    RenderingUtils.blitNineSlicedTexture(graphics, location,
+                            getAbsoluteX(), getAbsoluteY(), getAbsoluteWidth(), getAbsoluteHeight(),
+                            textureWidth, textureHeight,
+                            this.backgroundNineSliceBorderTop, this.backgroundNineSliceBorderRight,
+                            this.backgroundNineSliceBorderBottom, this.backgroundNineSliceBorderLeft);
+                } else {
+                    graphics.blit(location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight());
+                }
             });
         } else if (backgroundColor != null) {
             float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(backgroundColor.getColorInt()) / 255.0F));

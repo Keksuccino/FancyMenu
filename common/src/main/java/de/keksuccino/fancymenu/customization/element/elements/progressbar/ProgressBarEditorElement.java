@@ -42,6 +42,40 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.bar_texture.desc")));
 
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "bar_nine_slice",
+                        ProgressBarEditorElement.class,
+                        consumes -> consumes.getElement().barNineSlice,
+                        (element, aBoolean) -> element.getElement().barNineSlice = aBoolean,
+                        "fancymenu.elements.progress_bar.bar_texture.nine_slice");
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "bar_nine_slice_border_top",
+                        ProgressBarEditorElement.class,
+                        consumes -> consumes.getElement().barNineSliceBorderTop,
+                        (element, value) -> element.getElement().barNineSliceBorderTop = value,
+                        Component.translatable("fancymenu.elements.progress_bar.bar_texture.nine_slice.border.top"),
+                        true, 5, null, null);
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "bar_nine_slice_border_right",
+                        ProgressBarEditorElement.class,
+                        consumes -> consumes.getElement().barNineSliceBorderRight,
+                        (element, value) -> element.getElement().barNineSliceBorderRight = value,
+                        Component.translatable("fancymenu.elements.progress_bar.bar_texture.nine_slice.border.right"),
+                        true, 5, null, null);
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "bar_nine_slice_border_bottom",
+                        ProgressBarEditorElement.class,
+                        consumes -> consumes.getElement().barNineSliceBorderBottom,
+                        (element, value) -> element.getElement().barNineSliceBorderBottom = value,
+                        Component.translatable("fancymenu.elements.progress_bar.bar_texture.nine_slice.border.bottom"),
+                        true, 5, null, null);
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "bar_nine_slice_border_left",
+                        ProgressBarEditorElement.class,
+                        consumes -> consumes.getElement().barNineSliceBorderLeft,
+                        (element, value) -> element.getElement().barNineSliceBorderLeft = value,
+                        Component.translatable("fancymenu.elements.progress_bar.bar_texture.nine_slice.border.left"),
+                        true, 5, null, null);
+
         this.rightClickMenu.addSeparatorEntry("separator_after_bar_entries");
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_background_color",
@@ -62,6 +96,40 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                         true, null, true, true, true)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.background_texture.desc")));
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "background_nine_slice",
+                        ProgressBarEditorElement.class,
+                        consumes -> consumes.getElement().backgroundNineSlice,
+                        (element, aBoolean) -> element.getElement().backgroundNineSlice = aBoolean,
+                        "fancymenu.elements.progress_bar.background_texture.nine_slice");
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "background_nine_slice_border_top",
+                        ProgressBarEditorElement.class,
+                        consumes -> consumes.getElement().backgroundNineSliceBorderTop,
+                        (element, value) -> element.getElement().backgroundNineSliceBorderTop = value,
+                        Component.translatable("fancymenu.elements.progress_bar.background_texture.nine_slice.border.top"),
+                        true, 5, null, null);
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "background_nine_slice_border_right",
+                        ProgressBarEditorElement.class,
+                        consumes -> consumes.getElement().backgroundNineSliceBorderRight,
+                        (element, value) -> element.getElement().backgroundNineSliceBorderRight = value,
+                        Component.translatable("fancymenu.elements.progress_bar.background_texture.nine_slice.border.right"),
+                        true, 5, null, null);
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "background_nine_slice_border_bottom",
+                        ProgressBarEditorElement.class,
+                        consumes -> consumes.getElement().backgroundNineSliceBorderBottom,
+                        (element, value) -> element.getElement().backgroundNineSliceBorderBottom = value,
+                        Component.translatable("fancymenu.elements.progress_bar.background_texture.nine_slice.border.bottom"),
+                        true, 5, null, null);
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "background_nine_slice_border_left",
+                        ProgressBarEditorElement.class,
+                        consumes -> consumes.getElement().backgroundNineSliceBorderLeft,
+                        (element, value) -> element.getElement().backgroundNineSliceBorderLeft = value,
+                        Component.translatable("fancymenu.elements.progress_bar.background_texture.nine_slice.border.left"),
+                        true, 5, null, null);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_background_entries");
 

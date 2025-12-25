@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays;
 
 import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlayRegistry;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.firefly.FireflyDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.leaves.LeavesDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.rain.RainDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.snow.SnowDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.stringlights.StringLightsDecorationOverlayBuilder;
@@ -12,6 +13,7 @@ public class DecorationOverlays {
     public static final RainDecorationOverlayBuilder RAIN = new RainDecorationOverlayBuilder();
     public static final FireflyDecorationOverlayBuilder FIREFLIES = new FireflyDecorationOverlayBuilder();
     public static final StringLightsDecorationOverlayBuilder STRING_LIGHTS = new StringLightsDecorationOverlayBuilder();
+    public static final LeavesDecorationOverlayBuilder LEAVES = new LeavesDecorationOverlayBuilder();
 
     public static void registerAll() {
 
@@ -19,6 +21,7 @@ public class DecorationOverlays {
         DecorationOverlayRegistry.register(RAIN);
         DecorationOverlayRegistry.register(FIREFLIES);
         DecorationOverlayRegistry.register(STRING_LIGHTS);
+        DecorationOverlayRegistry.register(LEAVES);
 
     }
 
