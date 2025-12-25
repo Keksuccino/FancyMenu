@@ -187,9 +187,10 @@ public class FireworksOverlay extends AbstractWidget implements NavigatableWidge
                 continue;
             }
             float eased = 1.0F - (1.0F - t) * (1.0F - t);
-            float sway = Mth.sin(eased * (float)Math.PI * rocket.swaySpeed + rocket.swayPhase) * rocket.swayAmplitude * (1.0F - t);
-            rocket.x = Mth.lerp(eased, rocket.startX, rocket.targetX) + sway;
-            rocket.y = Mth.lerp(eased, rocket.startY, rocket.targetY);
+            float glide = Mth.lerp(0.12F, t, eased);
+            float sway = Mth.sin(glide * (float)Math.PI * rocket.swaySpeed + rocket.swayPhase) * rocket.swayAmplitude * (1.0F - t);
+            rocket.x = Mth.lerp(glide, rocket.startX, rocket.targetX) + sway;
+            rocket.y = Mth.lerp(glide, rocket.startY, rocket.targetY);
         }
     }
 
@@ -358,6 +359,12 @@ public class FireworksOverlay extends AbstractWidget implements NavigatableWidge
             case BROCADE -> addBrocadeParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
             case SUNFLOWER -> addSunflowerParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
             case SPIDER -> addSpiderParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case FILLED_SPHERE -> addFilledSphereParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case NEBULA -> addNebulaParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case CORE_CLUSTER -> addCoreClusterParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case SUPER_BLOOM -> addSuperBloomParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case ORB -> addOrbParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case GLITTER_BALL -> addGlitterBallParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
         }
 
         if (this.random.nextFloat() < 0.35F) {
@@ -631,6 +638,62 @@ public class FireworksOverlay extends AbstractWidget implements NavigatableWidge
         addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.85F, sparkleChance * 0.4F, 0.05F, 0.45F);
     }
 
+    private void addFilledSphereParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        addFilledSphereParticles(explosion, palette, Math.max(12, count), baseSpeed, sizeScale, sparkleChance * 0.6F, 0.02F, 0.95F, 0.85F);
+    }
+
+    private void addNebulaParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int cloudCount = Math.max(12, (int)(count * 0.7F));
+        int coreCount = Math.max(6, count - cloudCount);
+        addFilledSphereParticles(explosion, palette, cloudCount, baseSpeed, sizeScale * 1.05F, sparkleChance * 0.45F, 0.02F, 0.5F, 1.35F);
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.9F, sparkleChance * 0.35F, 0.01F, 0.3F);
+    }
+
+    private void addCoreClusterParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int coreCount = Math.max(12, (int)(count * 0.7F));
+        int shellCount = Math.max(6, count - coreCount);
+        addFilledSphereParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.95F, sparkleChance * 0.5F, 0.01F, 0.55F, 1.6F);
+        addRadialParticles(explosion, palette, shellCount, baseSpeed * 0.65F, baseSpeed * 0.95F, sizeScale, sparkleChance * 0.45F);
+    }
+
+    private void addSuperBloomParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int outerCount = Math.max(12, (int)(count * 0.5F));
+        int coreCount = Math.max(10, (int)(count * 0.35F));
+        int innerCount = Math.max(6, count - outerCount - coreCount);
+        addRadialParticles(explosion, palette, outerCount, baseSpeed * 0.8F, baseSpeed * 1.05F, sizeScale, sparkleChance * 0.65F);
+        addFilledSphereParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.95F, sparkleChance * 0.55F, 0.03F, 0.65F, 1.1F);
+        addFilledCoreParticles(explosion, palette, innerCount, baseSpeed, sizeScale * 0.85F, sparkleChance * 0.4F, 0.02F, 0.35F);
+    }
+
+    private void addOrbParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int outerCount = Math.max(10, (int)(count * 0.45F));
+        int innerCount = Math.max(8, (int)(count * 0.35F));
+        int coreCount = Math.max(6, count - outerCount - innerCount);
+        addFilledSphereParticles(explosion, palette, outerCount, baseSpeed, sizeScale, sparkleChance * 0.45F, 0.4F, 1.05F, 0.6F);
+        addFilledSphereParticles(explosion, palette, innerCount, baseSpeed, sizeScale * 0.9F, sparkleChance * 0.5F, 0.1F, 0.55F, 1.0F);
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.85F, sparkleChance * 0.4F, 0.02F, 0.3F);
+    }
+
+    private void addGlitterBallParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int coreCount = Math.max(12, (int)(count * 0.65F));
+        int sparkleCount = Math.max(8, count - coreCount);
+        addFilledSphereParticles(explosion, palette, coreCount, baseSpeed, sizeScale, sparkleChance * 0.85F, 0.02F, 0.85F, 1.2F);
+        addSparkles(explosion, palette, sparkleCount, baseSpeed * 1.15F, sizeScale * 0.6F, 0.85F);
+    }
+
+    private void addFilledSphereParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance, float minSpeedFactor, float maxSpeedFactor, float radialPower) {
+        float speedRange = Math.max(0.001F, maxSpeedFactor - minSpeedFactor);
+        float power = Math.max(0.2F, radialPower);
+        for (int i = 0; i < count; i++) {
+            float angle = this.random.nextFloat() * ((float)Math.PI * 2.0F);
+            float radiusFactor = (float)Math.pow(this.random.nextFloat(), power);
+            float speed = baseSpeed * (minSpeedFactor + speedRange * radiusFactor);
+            float vx = Mth.cos(angle) * speed;
+            float vy = Mth.sin(angle) * speed;
+            explosion.particles.add(createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale, sparkleChance));
+        }
+    }
+
     private void addFilledCoreParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance, float minSpeedFactor, float maxSpeedFactor) {
         float speedRange = Math.max(0.001F, maxSpeedFactor - minSpeedFactor);
         for (int i = 0; i < count; i++) {
@@ -797,20 +860,23 @@ public class FireworksOverlay extends AbstractWidget implements NavigatableWidge
         DAHLIA,
         BROCADE,
         SUNFLOWER,
-        SPIDER
+        SPIDER,
+        FILLED_SPHERE,
+        NEBULA,
+        CORE_CLUSTER,
+        SUPER_BLOOM,
+        ORB,
+        GLITTER_BALL
     }
 
     private static final ExplosionShape[] SHAPE_POOL = new ExplosionShape[] {
             ExplosionShape.BALL,
             ExplosionShape.BALL,
-            ExplosionShape.BALL,
-            ExplosionShape.RING,
             ExplosionShape.RING,
             ExplosionShape.RING,
             ExplosionShape.STAR,
             ExplosionShape.STAR,
             ExplosionShape.STAR,
-            ExplosionShape.DOUBLE_RING,
             ExplosionShape.DOUBLE_RING,
             ExplosionShape.SPARK_BURST,
             ExplosionShape.SPARK_BURST,
@@ -835,7 +901,18 @@ public class FireworksOverlay extends AbstractWidget implements NavigatableWidge
             ExplosionShape.DAHLIA,
             ExplosionShape.BROCADE,
             ExplosionShape.SUNFLOWER,
-            ExplosionShape.SPIDER
+            ExplosionShape.SPIDER,
+            ExplosionShape.FILLED_SPHERE,
+            ExplosionShape.FILLED_SPHERE,
+            ExplosionShape.NEBULA,
+            ExplosionShape.NEBULA,
+            ExplosionShape.CORE_CLUSTER,
+            ExplosionShape.CORE_CLUSTER,
+            ExplosionShape.SUPER_BLOOM,
+            ExplosionShape.ORB,
+            ExplosionShape.ORB,
+            ExplosionShape.GLITTER_BALL,
+            ExplosionShape.GLITTER_BALL
     };
 
     private static final class Rocket {
