@@ -2304,7 +2304,6 @@
   "fancymenu.decoration_overlays.rain.thunder.desc": "If rain should occasionally flash like thunder.\n\n§zWARNING: This makes the screen flash! Do not use this if you react sensitive to flashing lights!",
   "fancymenu.decoration_overlays.rain.thunder_brightness": "Thunder Flash Brightness",
   "fancymenu.decoration_overlays.rain.thunder_brightness.desc": "Scales the brightness of thunder flashes. Needs to be a value between 0.1 and 2.0.",
-
   "fancymenu.decoration_overlays.string_lights": "String Lights",
   "fancymenu.decoration_overlays.string_lights.scale": "String Light Scale",
   "fancymenu.decoration_overlays.string_lights.scale.desc": "Scales bulb size and spacing. Needs to be a value between 0.35 and 2.5.",
