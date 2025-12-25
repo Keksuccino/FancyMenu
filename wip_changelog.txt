@@ -17,6 +17,7 @@
     - Rainfall, that makes it rain in menus, with forming puddles and dripping water from buttons (with customizable rain color and intensity)
     - Fireflies, to have groups of fireflies fly around in the menu and sometimes landing on the ground and on buttons (with customizable color, group amount, group density, group size, etc.)
       - Firefly groups will follow the mouse when you get close to them with the cursor
+    - String Lights, to have lots of possible string lights hang in the menu (it's possible to enable/disable each possible string light to create unique combinations with custom light color support, etc.)
 - Added a file browser for Minecraft resources to the "Choose Resource" screen, so you can now browse nearly all resources loaded via resource packs like a normal directory
 - Added click events to Markdown, which let's you use a listener to listen for specific text clicks in Markdown text (used for the Text element, etc.) (#1366)
   - The formatting for a click event is very similar to hyperlinks: "[some clickable text](click:unique_text_click_event_id)"
