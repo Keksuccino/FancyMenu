@@ -20,11 +20,14 @@ public class SnowDecorationOverlay extends AbstractDecorationOverlay {
     public String snowIntensity = "1.0";
     @NotNull
     public String snowScale = "1.0";
+    @NotNull
+    public String snowSpeed = "1.0";
     public boolean snowAccumulation = true;
     protected final SnowfallOverlay overlay = new SnowfallOverlay(0, 0);
     protected String lastSnowColorString = null;
     protected String lastSnowIntensityString = null;
     protected String lastSnowScaleString = null;
+    protected String lastSnowSpeedString = null;
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -63,6 +66,19 @@ public class SnowDecorationOverlay extends AbstractDecorationOverlay {
                 scaleValue = 1.0F;
             }
             this.overlay.setScale(scaleValue);
+        }
+
+        // Update snow speed
+        String speedString = PlaceholderParser.replacePlaceholders(this.snowSpeed);
+        if (!Objects.equals(speedString, this.lastSnowSpeedString)) {
+            this.lastSnowSpeedString = speedString;
+            float speedValue;
+            if (MathUtils.isFloat(speedString)) {
+                speedValue = Float.parseFloat(speedString);
+            } else {
+                speedValue = 1.0F;
+            }
+            this.overlay.setFallSpeedMultiplier(speedValue);
         }
 
         this.overlay.setWidth(getScreenWidth());

@@ -43,6 +43,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
     private final RandomSource random = RandomSource.create();
     private final EnumMap<StringLightsPosition, StringLight> strings = new EnumMap<>(StringLightsPosition.class);
     private final EnumMap<StringLightsPosition, Boolean> enabledPositions = new EnumMap<>(StringLightsPosition.class);
+    private final EnumMap<StringLightsPosition, Boolean> positionChristmasModes = new EnumMap<>(StringLightsPosition.class);
     private final EnumMap<StringLightsPosition, ColorSettings> positionColors = new EnumMap<>(StringLightsPosition.class);
     private int lastWidth = -1;
     private int lastHeight = -1;
@@ -98,6 +99,14 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
 
     public boolean isChristmasMode() {
         return this.christmasMode;
+    }
+
+    public void setPositionChristmasMode(@NotNull StringLightsPosition position, boolean christmasMode) {
+        this.positionChristmasModes.put(position, christmasMode);
+    }
+
+    public void clearPositionChristmasMode(@NotNull StringLightsPosition position) {
+        this.positionChristmasModes.remove(position);
     }
 
     public void setPositionEnabled(@NotNull StringLightsPosition position, boolean enabled) {
@@ -215,6 +224,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
             if (!isPositionEnabled(position)) {
                 continue;
             }
+            boolean christmasMode = resolveChristmasMode(position);
             ColorSettings colorSettings = this.positionColors.get(position);
             int baseColor = colorSettings != null ? colorSettings.color : this.baseColor;
             float alphaScale = colorSettings != null ? colorSettings.alphaScale : this.baseAlphaScale;
@@ -231,7 +241,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
             float controlY = midY + light.sag + windOffsetY;
 
             renderStringLine(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, stringThickness, stringColor);
-            renderBulbs(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, baseRgb, alphaScale);
+            renderBulbs(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, christmasMode, baseRgb, alphaScale);
         }
     }
 
@@ -248,7 +258,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
         }
     }
 
-    private void renderBulbs(GuiGraphics graphics, int overlayX, int overlayY, int overlayWidth, int overlayHeight, StringLight light, float controlX, float controlY, int baseRgb, float baseAlphaScale) {
+    private void renderBulbs(GuiGraphics graphics, int overlayX, int overlayY, int overlayWidth, int overlayHeight, StringLight light, float controlX, float controlY, boolean christmasMode, int baseRgb, float baseAlphaScale) {
         for (LightBulb bulb : light.bulbs) {
             float x = bezier(light.startX, controlX, light.endX, bulb.t);
             float y = bezier(light.startY, controlY, light.endY, bulb.t);
@@ -256,7 +266,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
             float flicker = 0.75F + 0.25F * Mth.sin(bulb.flickerTime + bulb.flickerPhase);
             float intensity = bulb.baseBrightness * (0.65F + 0.35F * flicker);
             float colorBrightness = Mth.clamp(intensity, 0.4F, 1.4F);
-            int rgb = applyBrightness(this.christmasMode ? bulb.christmasRgb : baseRgb, colorBrightness);
+            int rgb = applyBrightness(christmasMode ? bulb.christmasRgb : baseRgb, colorBrightness);
             float alphaScale = baseAlphaScale * Mth.clamp(0.55F + 0.45F * intensity, 0.0F, 1.0F);
             int alpha = Mth.clamp(Mth.floor(255 * alphaScale), 0, 255);
 
@@ -328,6 +338,11 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
         }
         this.lastUpdateMs = now;
         return deltaSeconds;
+    }
+
+    private boolean resolveChristmasMode(@NotNull StringLightsPosition position) {
+        Boolean override = this.positionChristmasModes.get(position);
+        return override != null ? override : this.christmasMode;
     }
 
     @Override

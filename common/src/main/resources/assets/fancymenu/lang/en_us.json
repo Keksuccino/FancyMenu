@@ -2353,5 +2353,21 @@
   "fancymenu.decoration_overlays.string_lights.color.loose_left_top": "Loose Left Top Color [HEX]",
   "fancymenu.decoration_overlays.string_lights.color.loose_left_top.desc": "The bulb color for the loose left top string, as HEX color, starting with #.",
   "fancymenu.decoration_overlays.string_lights.color.loose_right_top": "Loose Right Top Color [HEX]",
-  "fancymenu.decoration_overlays.string_lights.color.loose_right_top.desc": "The bulb color for the loose right top string, as HEX color, starting with #."
+  "fancymenu.decoration_overlays.string_lights.color.loose_right_top.desc": "The bulb color for the loose right top string, as HEX color, starting with #.",
+  "fancymenu.decoration_overlays.snow.speed": "Snowfall Speed",
+  "fancymenu.decoration_overlays.snow.speed.desc": "Controls how fast the snow falls. Needs to be a value between 0.01 and 5.0.",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.left_center_to_top_center": "Christmas Lights (Left Center to Top Center): %s",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.left_center_to_top_center.desc": "If the left center to top center bulbs should use colorful holiday lights instead of the base color.",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.right_center_to_top_center": "Christmas Lights (Right Center to Top Center): %s",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.right_center_to_top_center.desc": "If the right center to top center bulbs should use colorful holiday lights instead of the base color.",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_left_to_top_center": "Christmas Lights (Bottom Left to Top Center): %s",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_left_to_top_center.desc": "If the bottom left to top center bulbs should use colorful holiday lights instead of the base color.",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.top_left_to_top_right": "Christmas Lights (Upper Left to Upper Right): %s",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.top_left_to_top_right.desc": "If the upper edge bulbs should use colorful holiday lights instead of the base color.",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_left_to_bottom_right": "Christmas Lights (Lower Left to Lower Right): %s",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_left_to_bottom_right.desc": "If the lower edge bulbs should use colorful holiday lights instead of the base color.",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.loose_left_top": "Christmas Lights (Loose Left Top): %s",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.loose_left_top.desc": "If the loose left top bulbs should use colorful holiday lights instead of the base color.",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.loose_right_top": "Christmas Lights (Loose Right Top): %s",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.loose_right_top.desc": "If the loose right top bulbs should use colorful holiday lights instead of the base color."
 }

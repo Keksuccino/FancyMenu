@@ -21,6 +21,8 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
     private static final int MAX_SNOWFLAKES = 450;
     private static final float MIN_FALL_SPEED = 12.0F;
     private static final float MAX_FALL_SPEED = 40.0F;
+    private static final float MIN_FALL_SPEED_MULTIPLIER = 0.01F;
+    private static final float MAX_FALL_SPEED_MULTIPLIER = 5.0F;
     private static final float MIN_DRIFT_SPEED = -10.0F;
     private static final float MAX_DRIFT_SPEED = 10.0F;
     private static final float MIN_SWAY_AMPLITUDE = 2.0F;
@@ -52,6 +54,7 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
     private long nextWindChangeMs = 0L;
     private float intensity = 1.0F;
     private float scale = 1.0F;
+    private float fallSpeedMultiplier = 1.0F;
     private int snowColor = 0xFFFFFFFF;
     private int accumulationColor = ACCUMULATION_COLOR;
     private float snowAlphaScale = 1.0F;
@@ -74,6 +77,14 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
 
     public float getScale() {
         return this.scale;
+    }
+
+    public void setFallSpeedMultiplier(float fallSpeedMultiplier) {
+        this.fallSpeedMultiplier = Mth.clamp(fallSpeedMultiplier, MIN_FALL_SPEED_MULTIPLIER, MAX_FALL_SPEED_MULTIPLIER);
+    }
+
+    public float getFallSpeedMultiplier() {
+        return this.fallSpeedMultiplier;
     }
 
     public void setColor(int color) {
@@ -215,7 +226,7 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
         float wrapPadding = 12.0F;
         for (Snowflake flake : this.snowflakes) {
             float previousY = flake.y;
-            flake.y += flake.fallSpeed * deltaSeconds;
+            flake.y += flake.fallSpeed * this.fallSpeedMultiplier * deltaSeconds;
             flake.x += (flake.driftSpeed + this.wind) * deltaSeconds;
             flake.swayTime += flake.swaySpeed * deltaSeconds;
 
