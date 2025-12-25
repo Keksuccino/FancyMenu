@@ -18,6 +18,8 @@ public class LeavesDecorationOverlayBuilder extends AbstractDecorationOverlayBui
     private static final String LEAVES_COLOR_END_KEY = "leaves_color_end_hex";
     private static final String LEAVES_DENSITY_KEY = "leaves_density";
     private static final String LEAVES_WIND_INTENSITY_KEY = "leaves_wind_intensity";
+    private static final String LEAVES_WIND_BLOWS_KEY = "leaves_wind_blows";
+    private static final String LEAVES_FALL_SPEED_KEY = "leaves_fall_speed";
     private static final String LEAVES_SCALE_KEY = "leaves_scale";
 
     public LeavesDecorationOverlayBuilder() {
@@ -36,6 +38,8 @@ public class LeavesDecorationOverlayBuilder extends AbstractDecorationOverlayBui
         instanceToWrite.leavesColorEndHex = Objects.requireNonNullElse(deserializeFrom.getValue(LEAVES_COLOR_END_KEY), instanceToWrite.leavesColorEndHex);
         instanceToWrite.leavesDensity = Objects.requireNonNullElse(deserializeFrom.getValue(LEAVES_DENSITY_KEY), instanceToWrite.leavesDensity);
         instanceToWrite.leavesWindIntensity = Objects.requireNonNullElse(deserializeFrom.getValue(LEAVES_WIND_INTENSITY_KEY), instanceToWrite.leavesWindIntensity);
+        instanceToWrite.leavesWindBlows = deserializeBoolean(instanceToWrite.leavesWindBlows, deserializeFrom.getValue(LEAVES_WIND_BLOWS_KEY));
+        instanceToWrite.leavesFallSpeed = Objects.requireNonNullElse(deserializeFrom.getValue(LEAVES_FALL_SPEED_KEY), instanceToWrite.leavesFallSpeed);
         instanceToWrite.leavesScale = Objects.requireNonNullElse(deserializeFrom.getValue(LEAVES_SCALE_KEY), instanceToWrite.leavesScale);
 
     }
@@ -47,6 +51,8 @@ public class LeavesDecorationOverlayBuilder extends AbstractDecorationOverlayBui
         serializeTo.putProperty(LEAVES_COLOR_END_KEY, instanceToSerialize.leavesColorEndHex);
         serializeTo.putProperty(LEAVES_DENSITY_KEY, instanceToSerialize.leavesDensity);
         serializeTo.putProperty(LEAVES_WIND_INTENSITY_KEY, instanceToSerialize.leavesWindIntensity);
+        serializeTo.putProperty(LEAVES_WIND_BLOWS_KEY, instanceToSerialize.leavesWindBlows);
+        serializeTo.putProperty(LEAVES_FALL_SPEED_KEY, instanceToSerialize.leavesFallSpeed);
         serializeTo.putProperty(LEAVES_SCALE_KEY, instanceToSerialize.leavesScale);
 
     }
@@ -89,6 +95,24 @@ public class LeavesDecorationOverlayBuilder extends AbstractDecorationOverlayBui
                         }, true,
                         "1.0", null, false, true, null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.wind.desc")));
+
+        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "leaves_wind_blows",
+                        () -> instance.leavesWindBlows,
+                        aBoolean -> {
+                            editor.history.saveSnapshot();
+                            instance.leavesWindBlows = aBoolean;
+                        },
+                        "fancymenu.decoration_overlays.leaves.wind_blows")
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.wind_blows.desc")));
+
+        ContextMenuUtils.addInputContextMenuEntryTo(menu, "leaves_fall_speed", Component.translatable("fancymenu.decoration_overlays.leaves.fall_speed"),
+                        () -> instance.leavesFallSpeed,
+                        s -> {
+                            editor.history.saveSnapshot();
+                            instance.leavesFallSpeed = s;
+                        }, true,
+                        "1.0", null, false, true, null, null)
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.fall_speed.desc")));
 
         ContextMenuUtils.addInputContextMenuEntryTo(menu, "leaves_scale", Component.translatable("fancymenu.decoration_overlays.leaves.scale"),
                         () -> instance.leavesScale,

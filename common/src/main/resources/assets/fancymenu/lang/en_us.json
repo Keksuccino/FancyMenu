@@ -2367,7 +2367,7 @@
   "fancymenu.decoration_overlays.leaves.density": "Leaf Density",
   "fancymenu.decoration_overlays.leaves.density.desc": "Controls how many leaves appear. Needs to be a value between 0.0 and 2.0.",
   "fancymenu.decoration_overlays.leaves.wind": "Wind Intensity",
-  "fancymenu.decoration_overlays.leaves.wind.desc": "Controls how strong the wind is. Needs to be a value between 0.0 and 2.0.",
+  "fancymenu.decoration_overlays.leaves.wind.desc": "Controls base drift, gust strength, and gust frequency. Needs to be a value between 0.01 and 5.0.",
   "fancymenu.decoration_overlays.leaves.scale": "Leaf Overlay Scale",
   "fancymenu.decoration_overlays.leaves.scale.desc": "Scales leaves and wind animation. Needs to be a value between 1.0 and 5.0.",
   "fancymenu.elements.progress_bar.bar_texture.nine_slice": "Nine-Slice Bar Texture: %s",
@@ -2379,5 +2379,9 @@
   "fancymenu.elements.progress_bar.background_texture.nine_slice.border.top": "Background Texture Top Border Size [Pixels]",
   "fancymenu.elements.progress_bar.background_texture.nine_slice.border.right": "Background Texture Right Border Size [Pixels]",
   "fancymenu.elements.progress_bar.background_texture.nine_slice.border.bottom": "Background Texture Bottom Border Size [Pixels]",
-  "fancymenu.elements.progress_bar.background_texture.nine_slice.border.left": "Background Texture Left Border Size [Pixels]"
+  "fancymenu.elements.progress_bar.background_texture.nine_slice.border.left": "Background Texture Left Border Size [Pixels]",
+  "fancymenu.decoration_overlays.leaves.wind_blows": "Wind Blows: %s",
+  "fancymenu.decoration_overlays.leaves.wind_blows.desc": "Toggles the strong wind blows that push leaves around.",
+  "fancymenu.decoration_overlays.leaves.fall_speed": "Leaf Fall Speed",
+  "fancymenu.decoration_overlays.leaves.fall_speed.desc": "Controls how fast leaves fall. Needs to be a value between 0.01 and 5.0."
 }

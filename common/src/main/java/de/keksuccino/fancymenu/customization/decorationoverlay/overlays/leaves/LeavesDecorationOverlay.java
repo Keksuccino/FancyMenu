@@ -23,6 +23,9 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay {
     public String leavesDensity = "1.0";
     @NotNull
     public String leavesWindIntensity = "1.0";
+    public boolean leavesWindBlows = true;
+    @NotNull
+    public String leavesFallSpeed = "1.0";
     @NotNull
     public String leavesScale = "1.0";
     protected final LeavesOverlay overlay = new LeavesOverlay(0, 0);
@@ -30,6 +33,7 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay {
     protected String lastLeavesColorEndString = null;
     protected String lastLeavesDensityString = null;
     protected String lastLeavesWindIntensityString = null;
+    protected String lastLeavesFallSpeedString = null;
     protected String lastLeavesScaleString = null;
 
     @Override
@@ -65,6 +69,20 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay {
                 windValue = 1.0F;
             }
             this.overlay.setWindStrength(windValue);
+        }
+
+        this.overlay.setWindBlowsEnabled(this.leavesWindBlows);
+
+        String fallSpeedString = PlaceholderParser.replacePlaceholders(this.leavesFallSpeed);
+        if (!Objects.equals(fallSpeedString, this.lastLeavesFallSpeedString)) {
+            this.lastLeavesFallSpeedString = fallSpeedString;
+            float fallSpeedValue;
+            if (MathUtils.isFloat(fallSpeedString)) {
+                fallSpeedValue = Float.parseFloat(fallSpeedString);
+            } else {
+                fallSpeedValue = 1.0F;
+            }
+            this.overlay.setFallSpeedMultiplier(fallSpeedValue);
         }
 
         String scaleString = PlaceholderParser.replacePlaceholders(this.leavesScale);
