@@ -345,6 +345,19 @@ public class FireworksOverlay extends AbstractWidget implements NavigatableWidge
             case FAN -> addFanParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
             case HEART -> addHeartParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance * 0.6F);
             case CRACKLE -> addCrackleParticles(explosion, palette, count, baseSpeed, sizeScale);
+            case BLOOM -> addBloomParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case CHRYSANTHEMUM -> addChrysanthemumParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case CROWN -> addCrownParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case PEONY -> addPeonyParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case WILLOW -> addWillowParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case PALM -> addPalmParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case SPIRAL -> addSpiralParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case PINWHEEL -> addPinwheelParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case CROSSETTE -> addCrossetteParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case DAHLIA -> addDahliaParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case BROCADE -> addBrocadeParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case SUNFLOWER -> addSunflowerParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
+            case SPIDER -> addSpiderParticles(explosion, palette, count, baseSpeed, sizeScale, sparkleChance);
         }
 
         if (this.random.nextFloat() < 0.35F) {
@@ -439,6 +452,197 @@ public class FireworksOverlay extends AbstractWidget implements NavigatableWidge
         addSparkles(explosion, palette, Math.max(10, count / 3), baseSpeed * 1.45F, sizeScale * 0.55F, 0.85F);
     }
 
+    private void addBloomParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int outerCount = Math.max(8, (int)(count * 0.55F));
+        int coreCount = Math.max(6, count - outerCount);
+        addRadialParticles(explosion, palette, outerCount, baseSpeed * 0.75F, baseSpeed * 1.05F, sizeScale, sparkleChance * 0.7F);
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.95F, sparkleChance * 0.5F, 0.08F, 0.55F);
+    }
+
+    private void addChrysanthemumParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int petals = 6 + this.random.nextInt(6);
+        int outerCount = Math.max(10, (int)(count * 0.6F));
+        int coreCount = Math.max(6, count - outerCount);
+        for (int i = 0; i < outerCount; i++) {
+            float angle = this.random.nextFloat() * ((float)Math.PI * 2.0F);
+            float petalFactor = 0.6F + 0.4F * Math.abs(Mth.sin(angle * petals));
+            float speed = baseSpeed * petalFactor * nextRange(0.85F, 1.05F);
+            float vx = Mth.cos(angle) * speed;
+            float vy = Mth.sin(angle) * speed;
+            explosion.particles.add(createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale, sparkleChance * 0.7F));
+        }
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.9F, sparkleChance * 0.55F, 0.06F, 0.5F);
+    }
+
+    private void addCrownParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int ringCount = Math.max(10, (int)(count * 0.5F));
+        int coreCount = Math.max(6, count - ringCount);
+        addRadialParticles(explosion, palette, ringCount, baseSpeed * 0.95F, baseSpeed * 1.15F, sizeScale, sparkleChance * 0.55F);
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.9F, sparkleChance * 0.45F, 0.05F, 0.45F);
+        if (this.random.nextFloat() < 0.35F) {
+            addSparkles(explosion, palette, Math.max(6, coreCount / 2), baseSpeed * 1.15F, sizeScale * 0.6F, 0.65F);
+        }
+    }
+
+    private void addPeonyParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int outerCount = Math.max(10, (int)(count * 0.65F));
+        int coreCount = Math.max(6, count - outerCount);
+        addRadialParticles(explosion, palette, outerCount, baseSpeed * 0.75F, baseSpeed * 1.05F, sizeScale, sparkleChance * 0.7F);
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.95F, sparkleChance * 0.55F, 0.05F, 0.55F);
+    }
+
+    private void addWillowParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int outerCount = Math.max(10, (int)(count * 0.6F));
+        int coreCount = Math.max(6, count - outerCount);
+        for (int i = 0; i < outerCount; i++) {
+            float angle = this.random.nextFloat() * ((float)Math.PI * 2.0F);
+            float speed = baseSpeed * nextRange(0.35F, 0.6F);
+            float vx = Mth.cos(angle) * speed;
+            float vy = Mth.sin(angle) * speed;
+            Particle particle = createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale * 0.95F, sparkleChance * 0.4F);
+            particle.lifespan *= 1.35F;
+            particle.size *= 0.85F;
+            explosion.particles.add(particle);
+        }
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.85F, sparkleChance * 0.35F, 0.03F, 0.35F);
+    }
+
+    private void addPalmParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int arms = 4 + this.random.nextInt(4);
+        int outerCount = Math.max(arms * 4, (int)(count * 0.6F));
+        int coreCount = Math.max(6, count - outerCount);
+        for (int i = 0; i < outerCount; i++) {
+            int armIndex = this.random.nextInt(arms);
+            float armAngle = ((float)Math.PI * 2.0F) * (armIndex / (float)arms);
+            float angle = armAngle + nextRange(-0.25F, 0.25F);
+            float speed = baseSpeed * nextRange(0.9F, 1.25F);
+            float vx = Mth.cos(angle) * speed;
+            float vy = Mth.sin(angle) * speed;
+            explosion.particles.add(createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale, sparkleChance * 0.5F));
+        }
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.9F, sparkleChance * 0.4F, 0.05F, 0.5F);
+    }
+
+    private void addSpiralParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int outerCount = Math.max(10, (int)(count * 0.65F));
+        int coreCount = Math.max(6, count - outerCount);
+        float turns = 2.5F + this.random.nextFloat() * 2.5F;
+        for (int i = 0; i < outerCount; i++) {
+            float progress = i / (float)Math.max(1, outerCount - 1);
+            float angle = progress * ((float)Math.PI * 2.0F) * turns + nextRange(-0.15F, 0.15F);
+            float speed = baseSpeed * (0.45F + 0.75F * progress) * nextRange(0.9F, 1.05F);
+            float vx = Mth.cos(angle) * speed;
+            float vy = Mth.sin(angle) * speed;
+            explosion.particles.add(createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale, sparkleChance * 0.45F));
+        }
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.85F, sparkleChance * 0.4F, 0.04F, 0.45F);
+    }
+
+    private void addPinwheelParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int arms = 5 + this.random.nextInt(4);
+        int outerCount = Math.max(10, (int)(count * 0.7F));
+        int coreCount = Math.max(6, count - outerCount);
+        float rotation = (float)Math.PI * (1.5F + this.random.nextFloat());
+        for (int i = 0; i < outerCount; i++) {
+            float armProgress = this.random.nextFloat();
+            int armIndex = this.random.nextInt(arms);
+            float baseAngle = ((float)Math.PI * 2.0F) * (armIndex / (float)arms);
+            float angle = baseAngle + rotation * armProgress + nextRange(-0.1F, 0.1F);
+            float speed = baseSpeed * (0.55F + 0.75F * armProgress) * nextRange(0.9F, 1.1F);
+            float vx = Mth.cos(angle) * speed;
+            float vy = Mth.sin(angle) * speed;
+            explosion.particles.add(createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale, sparkleChance * 0.5F));
+        }
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.85F, sparkleChance * 0.45F, 0.05F, 0.5F);
+    }
+
+    private void addCrossetteParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int seedCount = Math.max(6, count / 6);
+        int coreCount = Math.max(6, count - seedCount * 4);
+        float splitSpeed = baseSpeed * 0.85F;
+        for (int i = 0; i < seedCount; i++) {
+            float angle = this.random.nextFloat() * ((float)Math.PI * 2.0F);
+            for (int j = 0; j < 4; j++) {
+                float splitAngle = angle + j * ((float)Math.PI / 2.0F);
+                float speed = splitSpeed * nextRange(0.8F, 1.15F);
+                float vx = Mth.cos(splitAngle) * speed;
+                float vy = Mth.sin(splitAngle) * speed;
+                explosion.particles.add(createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale, sparkleChance * 0.6F));
+            }
+        }
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.85F, sparkleChance * 0.45F, 0.05F, 0.45F);
+    }
+
+    private void addDahliaParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int petals = 7 + this.random.nextInt(6);
+        int outerCount = Math.max(10, (int)(count * 0.5F));
+        int innerCount = Math.max(6, (int)(count * 0.25F));
+        int coreCount = Math.max(6, count - outerCount - innerCount);
+        for (int i = 0; i < outerCount; i++) {
+            float angle = this.random.nextFloat() * ((float)Math.PI * 2.0F);
+            float petalFactor = 0.65F + 0.35F * Math.abs(Mth.sin(angle * petals));
+            float speed = baseSpeed * petalFactor * nextRange(0.9F, 1.1F);
+            float vx = Mth.cos(angle) * speed;
+            float vy = Mth.sin(angle) * speed;
+            explosion.particles.add(createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale, sparkleChance * 0.65F));
+        }
+        addRadialParticles(explosion, palette, innerCount, baseSpeed * 0.55F, baseSpeed * 0.75F, sizeScale * 0.9F, sparkleChance * 0.5F);
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.85F, sparkleChance * 0.4F, 0.04F, 0.4F);
+    }
+
+    private void addBrocadeParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int outerCount = Math.max(12, (int)(count * 0.6F));
+        int coreCount = Math.max(6, count - outerCount);
+        addRadialParticles(explosion, palette, outerCount, baseSpeed * 0.7F, baseSpeed * 1.0F, sizeScale, sparkleChance * 0.8F);
+        addSparkles(explosion, palette, Math.max(8, outerCount / 4), baseSpeed * 1.25F, sizeScale * 0.6F, 0.7F);
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.9F, sparkleChance * 0.45F, 0.05F, 0.5F);
+    }
+
+    private void addSunflowerParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int petals = 8 + this.random.nextInt(6);
+        int outerCount = Math.max(10, (int)(count * 0.6F));
+        int coreCount = Math.max(6, count - outerCount);
+        for (int i = 0; i < outerCount; i++) {
+            float angle = this.random.nextFloat() * ((float)Math.PI * 2.0F);
+            float petalFactor = 0.55F + 0.45F * Math.abs(Mth.sin(angle * petals));
+            float speed = baseSpeed * petalFactor * nextRange(0.85F, 1.1F);
+            float vx = Mth.cos(angle) * speed;
+            float vy = Mth.sin(angle) * speed;
+            explosion.particles.add(createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale, sparkleChance * 0.6F));
+        }
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.85F, sparkleChance * 0.45F, 0.04F, 0.45F);
+    }
+
+    private void addSpiderParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
+        int arms = 6 + this.random.nextInt(5);
+        int outerCount = Math.max(arms * 3, (int)(count * 0.65F));
+        int coreCount = Math.max(6, count - outerCount);
+        for (int i = 0; i < outerCount; i++) {
+            int armIndex = this.random.nextInt(arms);
+            float armAngle = ((float)Math.PI * 2.0F) * (armIndex / (float)arms);
+            float angle = armAngle + nextRange(-0.18F, 0.18F);
+            float speed = baseSpeed * nextRange(1.0F, 1.35F);
+            float vx = Mth.cos(angle) * speed;
+            float vy = Mth.sin(angle) * speed;
+            Particle particle = createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale, sparkleChance * 0.55F);
+            particle.lifespan *= 1.1F;
+            explosion.particles.add(particle);
+        }
+        addFilledCoreParticles(explosion, palette, coreCount, baseSpeed, sizeScale * 0.85F, sparkleChance * 0.4F, 0.05F, 0.45F);
+    }
+
+    private void addFilledCoreParticles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance, float minSpeedFactor, float maxSpeedFactor) {
+        float speedRange = Math.max(0.001F, maxSpeedFactor - minSpeedFactor);
+        for (int i = 0; i < count; i++) {
+            float angle = this.random.nextFloat() * ((float)Math.PI * 2.0F);
+            float bias = (float)Math.pow(this.random.nextFloat(), 1.6F);
+            float speed = baseSpeed * (minSpeedFactor + speedRange * bias);
+            float vx = Mth.cos(angle) * speed;
+            float vy = Mth.sin(angle) * speed;
+            explosion.particles.add(createParticle(explosion.x, explosion.y, vx, vy, palette, sizeScale, sparkleChance));
+        }
+    }
+
     private void addSparkles(Explosion explosion, int[] palette, int count, float baseSpeed, float sizeScale, float sparkleChance) {
         for (int i = 0; i < count; i++) {
             float angle = this.random.nextFloat() * ((float)Math.PI * 2.0F);
@@ -518,29 +722,7 @@ public class FireworksOverlay extends AbstractWidget implements NavigatableWidge
     }
 
     private ExplosionShape pickShape() {
-        float roll = this.random.nextFloat();
-        if (roll < 0.18F) {
-            return ExplosionShape.BALL;
-        }
-        if (roll < 0.32F) {
-            return ExplosionShape.RING;
-        }
-        if (roll < 0.48F) {
-            return ExplosionShape.STAR;
-        }
-        if (roll < 0.6F) {
-            return ExplosionShape.DOUBLE_RING;
-        }
-        if (roll < 0.74F) {
-            return ExplosionShape.SPARK_BURST;
-        }
-        if (roll < 0.84F) {
-            return ExplosionShape.FAN;
-        }
-        if (roll < 0.93F) {
-            return ExplosionShape.HEART;
-        }
-        return ExplosionShape.CRACKLE;
+        return SHAPE_POOL[this.random.nextInt(SHAPE_POOL.length)];
     }
 
     private float computeDeltaSeconds(boolean sizeChanged) {
@@ -602,8 +784,59 @@ public class FireworksOverlay extends AbstractWidget implements NavigatableWidge
         SPARK_BURST,
         FAN,
         HEART,
-        CRACKLE
+        CRACKLE,
+        BLOOM,
+        CHRYSANTHEMUM,
+        CROWN,
+        PEONY,
+        WILLOW,
+        PALM,
+        SPIRAL,
+        PINWHEEL,
+        CROSSETTE,
+        DAHLIA,
+        BROCADE,
+        SUNFLOWER,
+        SPIDER
     }
+
+    private static final ExplosionShape[] SHAPE_POOL = new ExplosionShape[] {
+            ExplosionShape.BALL,
+            ExplosionShape.BALL,
+            ExplosionShape.BALL,
+            ExplosionShape.RING,
+            ExplosionShape.RING,
+            ExplosionShape.RING,
+            ExplosionShape.STAR,
+            ExplosionShape.STAR,
+            ExplosionShape.STAR,
+            ExplosionShape.DOUBLE_RING,
+            ExplosionShape.DOUBLE_RING,
+            ExplosionShape.SPARK_BURST,
+            ExplosionShape.SPARK_BURST,
+            ExplosionShape.FAN,
+            ExplosionShape.FAN,
+            ExplosionShape.HEART,
+            ExplosionShape.HEART,
+            ExplosionShape.CRACKLE,
+            ExplosionShape.CRACKLE,
+            ExplosionShape.BLOOM,
+            ExplosionShape.BLOOM,
+            ExplosionShape.CHRYSANTHEMUM,
+            ExplosionShape.CROWN,
+            ExplosionShape.PEONY,
+            ExplosionShape.PEONY,
+            ExplosionShape.WILLOW,
+            ExplosionShape.WILLOW,
+            ExplosionShape.PALM,
+            ExplosionShape.SPIRAL,
+            ExplosionShape.PINWHEEL,
+            ExplosionShape.CROSSETTE,
+            ExplosionShape.DAHLIA,
+            ExplosionShape.BROCADE,
+            ExplosionShape.SUNFLOWER,
+            ExplosionShape.SPIDER
+    };
 
     private static final class Rocket {
         private float startX;
