@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture;
 import com.madgag.gif.fmsware.GifDecoder;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -53,6 +54,7 @@ public class GifTexture implements ITexture, PlayableResource {
     protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
     protected int frameRegistrationCounter = 0;
     protected volatile boolean maxLoopsReached = false;
+    protected volatile boolean pendingStartEvent = true;
     protected final AtomicBoolean closed = new AtomicBoolean(false);
 
     @NotNull
@@ -248,7 +250,10 @@ public class GifTexture implements ITexture, PlayableResource {
                             //Set initial (first) frame if current is NULL
                             if (this.current == null) {
                                 this.current = cachedFrames.get(0);
+                                this.maybeEmitStartEvent(cachedFrames, this.current);
                                 Thread.sleep(Math.max(20, cachedFrames.get(0).delayMs));
+                            } else {
+                                this.maybeEmitStartEvent(cachedFrames, this.current);
                             }
                             //Cache current frame to make sure it stays the same instance while working with it
                             GifFrame cachedCurrent = this.current;
@@ -263,19 +268,26 @@ public class GifTexture implements ITexture, PlayableResource {
                                     //Count cycles up if APNG should not loop infinitely (numPlays > 0 = finite loops)
                                     if (cachedNumPlays > 0) {
                                         int newCycles = this.cycles.incrementAndGet();
-                                        if (newCycles >= cachedNumPlays) {
+                                        boolean willRestart = newCycles < cachedNumPlays;
+                                        this.notifyAnimatedTextureFinished(willRestart);
+                                        if (!willRestart) {
                                             this.maxLoopsReached = true;
                                             break; //end the while loop of the frame ticker
-                                        } else {
-                                            //If APNG has a finite number of loops but did not reach its max loops yet, reset to first frame, because end reached
-                                            newCurrent = cachedFrames.get(0);
                                         }
+                                        //If APNG has a finite number of loops but did not reach its max loops yet, reset to first frame, because end reached
+                                        newCurrent = cachedFrames.get(0);
+                                        this.pendingStartEvent = true;
                                     } else {
                                         //If APNG loops infinitely, reset to first frame, because end reached
+                                        this.notifyAnimatedTextureFinished(true);
                                         newCurrent = cachedFrames.get(0);
+                                        this.pendingStartEvent = true;
                                     }
                                 }
-                                if (newCurrent != null) this.current = newCurrent;
+                                if (newCurrent != null) {
+                                    this.current = newCurrent;
+                                    this.maybeEmitStartEvent(cachedFrames, this.current);
+                                }
                                 //Sleep for the new current frame's delay or sleep for 100ms if there's no new frame
                                 Thread.sleep(Math.max(20, (newCurrent != null) ? newCurrent.delayMs : 100));
                             } else {
@@ -368,11 +380,55 @@ public class GifTexture implements ITexture, PlayableResource {
 
     public void reset() {
         this.current = null;
+        this.pendingStartEvent = true;
         List<GifFrame> l = new ArrayList<>(this.frames);
         if (!l.isEmpty()) {
             this.current = l.get(0);
             this.cycles.set(0);
         }
+    }
+
+    private void maybeEmitStartEvent(@NotNull List<GifFrame> frames, @Nullable GifFrame currentFrame) {
+        if (!this.pendingStartEvent || currentFrame == null || frames.isEmpty()) return;
+        if (currentFrame != frames.get(0)) return;
+        this.pendingStartEvent = false;
+        this.notifyAnimatedTextureStarted(this.willRestartAfterCurrentCycle());
+    }
+
+    private boolean willRestartAfterCurrentCycle() {
+        int plays = this.numPlays.get();
+        if (plays <= 0) return true;
+        return (this.cycles.get() + 1) < plays;
+    }
+
+    private void notifyAnimatedTextureStarted(boolean willRestart) {
+        Listeners.ON_ANIMATED_TEXTURE_STARTED_PLAYING.onAnimatedTextureStartedPlaying(
+            this.resolveTextureSource(),
+            this.resolveTextureSourceType(),
+            willRestart
+        );
+    }
+
+    private void notifyAnimatedTextureFinished(boolean willRestart) {
+        Listeners.ON_ANIMATED_TEXTURE_FINISHED_PLAYING.onAnimatedTextureFinishedPlaying(
+            this.resolveTextureSource(),
+            this.resolveTextureSourceType(),
+            willRestart
+        );
+    }
+
+    private String resolveTextureSource() {
+        if (this.sourceURL != null) return this.sourceURL;
+        if (this.sourceFile != null) return this.sourceFile.getPath();
+        if (this.sourceLocation != null) return this.sourceLocation.toString();
+        return "ERROR";
+    }
+
+    private String resolveTextureSourceType() {
+        if (this.sourceURL != null) return "WEB";
+        if (this.sourceFile != null) return "LOCAL";
+        if (this.sourceLocation != null) return "RESOURCE_LOCATION";
+        return "UNKNOWN";
     }
 
     @Override

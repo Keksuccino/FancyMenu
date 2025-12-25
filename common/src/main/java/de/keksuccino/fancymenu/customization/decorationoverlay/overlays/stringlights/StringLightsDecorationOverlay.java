@@ -8,12 +8,27 @@ import de.keksuccino.fancymenu.util.rendering.overlay.StringLightsOverlay;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.EnumMap;
 import java.util.Objects;
 
 public class StringLightsDecorationOverlay extends AbstractDecorationOverlay {
 
     @NotNull
     public String stringLightsColorHex = "#FFD27A";
+    @NotNull
+    public String stringLightsLeftCenterToTopCenterColorHex = "#FFD27A";
+    @NotNull
+    public String stringLightsRightCenterToTopCenterColorHex = "#FFD27A";
+    @NotNull
+    public String stringLightsBottomLeftToTopCenterColorHex = "#FFD27A";
+    @NotNull
+    public String stringLightsTopLeftToTopRightColorHex = "#FFD27A";
+    @NotNull
+    public String stringLightsBottomLeftToBottomRightColorHex = "#FFD27A";
+    @NotNull
+    public String stringLightsLooseLeftTopColorHex = "#FFD27A";
+    @NotNull
+    public String stringLightsLooseRightTopColorHex = "#FFD27A";
     @NotNull
     public String stringLightsScale = "1.0";
     @NotNull
@@ -30,6 +45,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay {
     public boolean stringLightsLooseRightTop = false;
     protected final StringLightsOverlay overlay = new StringLightsOverlay(0, 0);
     protected String lastColorString = null;
+    protected final EnumMap<StringLightsOverlay.StringLightsPosition, String> lastPositionColorStrings = new EnumMap<>(StringLightsOverlay.StringLightsPosition.class);
     protected String lastScaleString = null;
     protected String lastWindStrengthString = null;
     protected String lastFlickerSpeedString = null;
@@ -37,11 +53,21 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        String colorString = PlaceholderParser.replacePlaceholders(this.stringLightsColorHex);
-        if (!Objects.equals(colorString, this.lastColorString)) {
-            this.lastColorString = colorString;
-            this.overlay.setColor(DrawableColor.of(colorString).getColorInt());
+        String baseColorString = PlaceholderParser.replacePlaceholders(this.stringLightsColorHex);
+        if (baseColorString == null || baseColorString.isBlank()) {
+            baseColorString = "#FFD27A";
         }
+        if (!Objects.equals(baseColorString, this.lastColorString)) {
+            this.lastColorString = baseColorString;
+            this.overlay.setColor(DrawableColor.of(baseColorString).getColorInt());
+        }
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.LEFT_CENTER_TO_TOP_CENTER, this.stringLightsLeftCenterToTopCenterColorHex, baseColorString);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.RIGHT_CENTER_TO_TOP_CENTER, this.stringLightsRightCenterToTopCenterColorHex, baseColorString);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_TOP_CENTER, this.stringLightsBottomLeftToTopCenterColorHex, baseColorString);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.TOP_LEFT_TO_TOP_RIGHT, this.stringLightsTopLeftToTopRightColorHex, baseColorString);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_BOTTOM_RIGHT, this.stringLightsBottomLeftToBottomRightColorHex, baseColorString);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.LOOSE_LEFT_TOP, this.stringLightsLooseLeftTopColorHex, baseColorString);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.LOOSE_RIGHT_TOP, this.stringLightsLooseRightTopColorHex, baseColorString);
 
         String scaleString = PlaceholderParser.replacePlaceholders(this.stringLightsScale);
         if (!Objects.equals(scaleString, this.lastScaleString)) {
@@ -92,5 +118,17 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay {
         this.overlay.setHeight(getScreenHeight());
         this.overlay.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    private void updatePositionColor(@NotNull StringLightsOverlay.StringLightsPosition position, @NotNull String colorHex, @NotNull String defaultColorHex) {
+        String resolvedColor = PlaceholderParser.replacePlaceholders(colorHex);
+        if (resolvedColor == null || resolvedColor.isBlank()) {
+            resolvedColor = defaultColorHex;
+        }
+        String lastColor = this.lastPositionColorStrings.get(position);
+        if (!Objects.equals(resolvedColor, lastColor)) {
+            this.lastPositionColorStrings.put(position, resolvedColor);
+            this.overlay.setPositionColor(position, DrawableColor.of(resolvedColor).getColorInt());
+        }
     }
 }

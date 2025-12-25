@@ -27,6 +27,8 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
     private static final float MAX_SWAY_AMPLITUDE = 10.0F;
     private static final float MIN_SWAY_SPEED = 0.35F;
     private static final float MAX_SWAY_SPEED = 1.1F;
+    private static final float MIN_SCALE = 1.0F;
+    private static final float MAX_SCALE = 6.0F;
     private static final float WIND_MIN = -8.0F;
     private static final float WIND_MAX = 8.0F;
     private static final float MAX_DELTA_SECONDS = 0.1F;
@@ -43,11 +45,13 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
     private boolean accumulationEnabled = true;
     private int lastWidth = -1;
     private int lastHeight = -1;
+    private float lastScale = -1.0F;
     private long lastUpdateMs = -1L;
     private float wind = 0.0F;
     private float windTarget = 0.0F;
     private long nextWindChangeMs = 0L;
     private float intensity = 1.0F;
+    private float scale = 1.0F;
     private int snowColor = 0xFFFFFFFF;
     private int accumulationColor = ACCUMULATION_COLOR;
     private float snowAlphaScale = 1.0F;
@@ -62,6 +66,14 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
 
     public float getIntensity() {
         return this.intensity;
+    }
+
+    public void setScale(float scale) {
+        this.scale = Mth.clamp(scale, MIN_SCALE, MAX_SCALE);
+    }
+
+    public float getScale() {
+        return this.scale;
     }
 
     public void setColor(int color) {
@@ -96,7 +108,8 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
             return;
         }
 
-        boolean sizeChanged = ensureSnowflakes(overlayWidth, overlayHeight);
+        boolean scaleChanged = Math.abs(this.scale - this.lastScale) > 0.001F;
+        boolean sizeChanged = ensureSnowflakes(overlayWidth, overlayHeight, scaleChanged);
         if (this.accumulationEnabled) {
             ensureAccumulationAreas(overlayWidth, overlayHeight, sizeChanged);
         }
@@ -137,11 +150,11 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
         this.accumulationEnabled = accumulationEnabled;
     }
 
-    private boolean ensureSnowflakes(int width, int height) {
+    private boolean ensureSnowflakes(int width, int height, boolean scaleChanged) {
         float effectiveIntensity = Mth.clamp(this.intensity, 0.0F, 2.0F);
         int baseCount = Mth.clamp((width * height) / AREA_PER_SNOWFLAKE, MIN_SNOWFLAKES, MAX_SNOWFLAKES);
         int desiredCount = Mth.clamp(Mth.floor(baseCount * effectiveIntensity), 0, MAX_SNOWFLAKES);
-        boolean sizeChanged = this.lastWidth != width || this.lastHeight != height;
+        boolean sizeChanged = this.lastWidth != width || this.lastHeight != height || scaleChanged;
         if (sizeChanged) {
             this.snowflakes.clear();
             for (int i = 0; i < desiredCount; i++) {
@@ -149,6 +162,7 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
             }
             this.lastWidth = width;
             this.lastHeight = height;
+            this.lastScale = this.scale;
             this.lastUpdateMs = System.currentTimeMillis();
             return true;
         }
@@ -315,7 +329,8 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
     }
 
     private void resetSnowflake(Snowflake flake, int width, int height, boolean spawnInside) {
-        flake.size = (this.random.nextFloat() < 0.2F) ? 2 : 1;
+        int baseSize = this.random.nextFloat() < 0.2F ? 2 : 1;
+        flake.size = Math.max(1, Mth.ceil(baseSize * this.scale));
         flake.x = this.random.nextFloat() * width;
         flake.y = spawnInside ? (this.random.nextFloat() * height) : -this.random.nextFloat() * (height * 0.5F);
         flake.fallSpeed = nextRange(MIN_FALL_SPEED, MAX_FALL_SPEED) * (flake.size == 2 ? 0.85F : 1.0F);

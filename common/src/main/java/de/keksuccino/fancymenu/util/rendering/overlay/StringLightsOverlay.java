@@ -43,6 +43,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
     private final RandomSource random = RandomSource.create();
     private final EnumMap<StringLightsPosition, StringLight> strings = new EnumMap<>(StringLightsPosition.class);
     private final EnumMap<StringLightsPosition, Boolean> enabledPositions = new EnumMap<>(StringLightsPosition.class);
+    private final EnumMap<StringLightsPosition, ColorSettings> positionColors = new EnumMap<>(StringLightsPosition.class);
     private int lastWidth = -1;
     private int lastHeight = -1;
     private float lastScale = -1.0F;
@@ -105,6 +106,20 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
 
     public boolean isPositionEnabled(@NotNull StringLightsPosition position) {
         return Boolean.TRUE.equals(this.enabledPositions.get(position));
+    }
+
+    public void setPositionColor(@NotNull StringLightsPosition position, int color) {
+        ColorSettings settings = this.positionColors.get(position);
+        if (settings == null) {
+            settings = new ColorSettings();
+            this.positionColors.put(position, settings);
+        }
+        settings.color = color;
+        settings.alphaScale = resolveAlphaScale(color);
+    }
+
+    public void clearPositionColor(@NotNull StringLightsPosition position) {
+        this.positionColors.remove(position);
     }
 
     @Override
@@ -193,16 +208,19 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
     }
 
     private void renderStrings(GuiGraphics graphics, int overlayX, int overlayY, int overlayWidth, int overlayHeight) {
-        int baseRgb = this.baseColor & 0x00FFFFFF;
         float stringThickness = Math.max(1.0F, BASE_STRING_THICKNESS * this.scale);
-        int stringAlpha = Mth.clamp(Mth.floor(210 * this.baseAlphaScale), 0, 255);
-        int stringColor = (stringAlpha << 24) | STRING_RGB;
 
         for (var entry : this.strings.entrySet()) {
             StringLightsPosition position = entry.getKey();
             if (!isPositionEnabled(position)) {
                 continue;
             }
+            ColorSettings colorSettings = this.positionColors.get(position);
+            int baseColor = colorSettings != null ? colorSettings.color : this.baseColor;
+            float alphaScale = colorSettings != null ? colorSettings.alphaScale : this.baseAlphaScale;
+            int baseRgb = baseColor & 0x00FFFFFF;
+            int stringAlpha = Mth.clamp(Mth.floor(210 * alphaScale), 0, 255);
+            int stringColor = (stringAlpha << 24) | STRING_RGB;
             StringLight light = entry.getValue();
             float midX = (light.startX + light.endX) * 0.5F;
             float midY = (light.startY + light.endY) * 0.5F;
@@ -213,7 +231,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
             float controlY = midY + light.sag + windOffsetY;
 
             renderStringLine(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, stringThickness, stringColor);
-            renderBulbs(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, baseRgb);
+            renderBulbs(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, baseRgb, alphaScale);
         }
     }
 
@@ -230,7 +248,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
         }
     }
 
-    private void renderBulbs(GuiGraphics graphics, int overlayX, int overlayY, int overlayWidth, int overlayHeight, StringLight light, float controlX, float controlY, int baseRgb) {
+    private void renderBulbs(GuiGraphics graphics, int overlayX, int overlayY, int overlayWidth, int overlayHeight, StringLight light, float controlX, float controlY, int baseRgb, float baseAlphaScale) {
         for (LightBulb bulb : light.bulbs) {
             float x = bezier(light.startX, controlX, light.endX, bulb.t);
             float y = bezier(light.startY, controlY, light.endY, bulb.t);
@@ -239,7 +257,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
             float intensity = bulb.baseBrightness * (0.65F + 0.35F * flicker);
             float colorBrightness = Mth.clamp(intensity, 0.4F, 1.4F);
             int rgb = applyBrightness(this.christmasMode ? bulb.christmasRgb : baseRgb, colorBrightness);
-            float alphaScale = this.baseAlphaScale * Mth.clamp(0.55F + 0.45F * intensity, 0.0F, 1.0F);
+            float alphaScale = baseAlphaScale * Mth.clamp(0.55F + 0.45F * intensity, 0.0F, 1.0F);
             int alpha = Mth.clamp(Mth.floor(255 * alphaScale), 0, 255);
 
             float glowSize = bulb.size * 2.1F;
@@ -391,5 +409,10 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
         private float flickerPhase;
         private float flickerTime;
         private int christmasRgb;
+    }
+
+    private static final class ColorSettings {
+        private int color;
+        private float alphaScale;
     }
 }

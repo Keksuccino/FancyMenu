@@ -24,6 +24,8 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
     private static final float MAX_MULTIPLIER = 4.0F;
     private static final float MIN_GROUP_RADIUS = 18.0F;
     private static final float MAX_GROUP_RADIUS = 58.0F;
+    private static final float MIN_SCALE = 1.0F;
+    private static final float MAX_SCALE = 4.0F;
     private static final float GROUP_DRIFT_MIN = 3.0F;
     private static final float GROUP_DRIFT_MAX = 10.0F;
     private static final float GROUP_DRIFT_RESPONSE = 0.35F;
@@ -62,6 +64,7 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
     private float groupAmount = 1.0F;
     private float groupDensity = 1.0F;
     private float groupSize = 1.0F;
+    private float fireflyScale = 1.0F;
     private int fireflyColor = 0xFFFFE08A;
     private float fireflyAlphaScale = 1.0F;
     private boolean followMouse = true;
@@ -98,6 +101,19 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
 
     public float getGroupSize() {
         return this.groupSize;
+    }
+
+    public void setScale(float scale) {
+        float clamped = Mth.clamp(scale, MIN_SCALE, MAX_SCALE);
+        if (Math.abs(clamped - this.fireflyScale) < 0.001F) {
+            return;
+        }
+        this.fireflyScale = clamped;
+        updateFireflyScale();
+    }
+
+    public float getScale() {
+        return this.fireflyScale;
     }
 
     public void setColor(int color) {
@@ -540,7 +556,8 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         firefly.flickerSpeed = nextRange(FIREFLY_FLICKER_SPEED_MIN, FIREFLY_FLICKER_SPEED_MAX);
         firefly.flickerTime = this.random.nextFloat() * ((float)Math.PI * 2.0F);
         firefly.brightness = nextRange(0.6F, 1.0F);
-        firefly.size = (this.random.nextFloat() < 0.18F) ? 2 : 1;
+        firefly.baseSize = (this.random.nextFloat() < 0.18F) ? 2 : 1;
+        firefly.size = resolveFireflySize(firefly.baseSize);
         firefly.state = FireflyState.FLYING;
         firefly.landingCooldown = nextRange(0.0F, FIREFLY_LAND_COOLDOWN_MAX);
         return firefly;
@@ -565,6 +582,18 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
                 }
             }
         }
+    }
+
+    private void updateFireflyScale() {
+        for (FireflyGroup group : this.groups) {
+            for (Firefly firefly : group.fireflies) {
+                firefly.size = resolveFireflySize(firefly.baseSize);
+            }
+        }
+    }
+
+    private int resolveFireflySize(int baseSize) {
+        return Math.max(1, Mth.ceil(baseSize * this.fireflyScale));
     }
 
     private LandingArea pickLandingArea(int width, int height) {
@@ -681,6 +710,7 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         private float flickerTime;
         private float flickerSpeed;
         private float brightness;
+        private int baseSize;
         private int size;
         private FireflyState state;
         private float targetX;

@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.fma;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.ThreadUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
@@ -58,6 +59,7 @@ public class FmaTexture implements ITexture, PlayableResource {
     protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
     protected int frameRegistrationCounter = 0;
     protected volatile boolean maxLoopsReached = false;
+    protected volatile boolean pendingStartEvent = true;
     protected final AtomicBoolean closed = new AtomicBoolean(false);
 
     @NotNull
@@ -274,6 +276,7 @@ public class FmaTexture implements ITexture, PlayableResource {
                             if (this.current == null) {
                                 FmaFrame first = !cachedIntroFrames.isEmpty() ? cachedIntroFrames.get(0) : cachedFrames.get(0);
                                 this.current = first;
+                                this.maybeEmitStartEvent(cachedFrames, cachedIntroFrames, this.current, this.introFinishedPlaying);
                                 Thread.sleep(Math.max(10, first.delayMs));
                             } else if (cachedSkipToFirstAfterIntro) {
                                 if (cachedFrames.isEmpty()) { //wait for first normal frame to be ready
@@ -283,7 +286,10 @@ public class FmaTexture implements ITexture, PlayableResource {
                                 this.skipToFirstNormalAfterIntro = false;
                                 FmaFrame firstNormal = cachedFrames.get(0);
                                 this.current = firstNormal;
+                                this.maybeEmitStartEvent(cachedFrames, cachedIntroFrames, this.current, this.introFinishedPlaying);
                                 Thread.sleep(Math.max(10, firstNormal.delayMs));
+                            } else {
+                                this.maybeEmitStartEvent(cachedFrames, cachedIntroFrames, this.current, cachedIntroFinished);
                             }
                             //Cache current frame to make sure it stays the same instance while working with it
                             FmaFrame cachedCurrent = this.current;
@@ -304,19 +310,26 @@ public class FmaTexture implements ITexture, PlayableResource {
                                     //Count cycles up if FMA should not loop infinitely (numPlays > 0 = finite loops)
                                     if (cachedNumPlays > 0) {
                                         int newCycles = this.cycles.incrementAndGet();
-                                        if (newCycles >= cachedNumPlays) {
+                                        boolean willRestart = newCycles < cachedNumPlays;
+                                        this.notifyAnimatedTextureFinished(willRestart);
+                                        if (!willRestart) {
                                             this.maxLoopsReached = true;
                                             break; //end the while loop of the frame ticker
-                                        } else {
-                                            //If FMA has a finite number of loops but did not reach its max loops yet, reset to first frame, because end reached
-                                            newCurrent = cachedFrames.get(0);
                                         }
+                                        //If FMA has a finite number of loops but did not reach its max loops yet, reset to first frame, because end reached
+                                        newCurrent = cachedFrames.get(0);
+                                        this.pendingStartEvent = true;
                                     } else {
                                         //If FMA loops infinitely, reset to first frame, because end reached
+                                        this.notifyAnimatedTextureFinished(true);
                                         newCurrent = cachedFrames.get(0);
+                                        this.pendingStartEvent = true;
                                     }
                                 }
-                                if (newCurrent != null) this.current = newCurrent;
+                                if (newCurrent != null) {
+                                    this.current = newCurrent;
+                                    this.maybeEmitStartEvent(cachedFrames, cachedIntroFrames, this.current, this.introFinishedPlaying);
+                                }
                                 //Sleep for the new current frame's delay or sleep for 100ms if there's no new frame
                                 Thread.sleep(Math.max(10, (newCurrent != null) ? newCurrent.delayMs : 100));
                             } else {
@@ -412,6 +425,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         this.introFinishedPlaying = false;
         this.skipToFirstNormalAfterIntro = false;
         this.current = null;
+        this.pendingStartEvent = true;
         List<FmaFrame> normalFrames = new ArrayList<>(this.frames);
         List<FmaFrame> introFrames = new ArrayList<>(this.introFrames);
         if (!introFrames.isEmpty()) {
@@ -420,6 +434,55 @@ public class FmaTexture implements ITexture, PlayableResource {
             this.current = normalFrames.get(0);
         }
         this.cycles.set(0);
+    }
+
+    private void maybeEmitStartEvent(@NotNull List<FmaFrame> frames, @NotNull List<FmaFrame> introFrames, @Nullable FmaFrame currentFrame, boolean introFinished) {
+        if (!this.pendingStartEvent || currentFrame == null) return;
+        FmaFrame firstFrame = null;
+        if (!introFrames.isEmpty() && !introFinished) {
+            firstFrame = introFrames.get(0);
+        } else if (!frames.isEmpty()) {
+            firstFrame = frames.get(0);
+        }
+        if (firstFrame == null || currentFrame != firstFrame) return;
+        this.pendingStartEvent = false;
+        this.notifyAnimatedTextureStarted(this.willRestartAfterCurrentCycle());
+    }
+
+    private boolean willRestartAfterCurrentCycle() {
+        int plays = this.numPlays.get();
+        if (plays <= 0) return true;
+        return (this.cycles.get() + 1) < plays;
+    }
+
+    private void notifyAnimatedTextureStarted(boolean willRestart) {
+        Listeners.ON_ANIMATED_TEXTURE_STARTED_PLAYING.onAnimatedTextureStartedPlaying(
+            this.resolveTextureSource(),
+            this.resolveTextureSourceType(),
+            willRestart
+        );
+    }
+
+    private void notifyAnimatedTextureFinished(boolean willRestart) {
+        Listeners.ON_ANIMATED_TEXTURE_FINISHED_PLAYING.onAnimatedTextureFinishedPlaying(
+            this.resolveTextureSource(),
+            this.resolveTextureSourceType(),
+            willRestart
+        );
+    }
+
+    private String resolveTextureSource() {
+        if (this.sourceURL != null) return this.sourceURL;
+        if (this.sourceFile != null) return this.sourceFile.getPath();
+        if (this.sourceLocation != null) return this.sourceLocation.toString();
+        return "ERROR";
+    }
+
+    private String resolveTextureSourceType() {
+        if (this.sourceURL != null) return "WEB";
+        if (this.sourceFile != null) return "LOCAL";
+        if (this.sourceLocation != null) return "RESOURCE_LOCATION";
+        return "UNKNOWN";
     }
 
     @Override

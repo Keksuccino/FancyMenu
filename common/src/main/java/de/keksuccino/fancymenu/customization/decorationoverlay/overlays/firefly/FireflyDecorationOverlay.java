@@ -22,6 +22,8 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay {
     public String fireflyGroupAmount = "1.0";
     @NotNull
     public String fireflyGroupSize = "1.0";
+    @NotNull
+    public String fireflyScale = "1.0";
     public boolean fireflyFollowMouse = true;
     public boolean fireflyLanding = true;
     protected final FireflyOverlay overlay = new FireflyOverlay(0, 0);
@@ -29,6 +31,7 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay {
     protected String lastFireflyGroupDensityString = null;
     protected String lastFireflyGroupAmountString = null;
     protected String lastFireflyGroupSizeString = null;
+    protected String lastFireflyScaleString = null;
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -76,6 +79,18 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay {
                 sizeValue = 1.0F;
             }
             this.overlay.setGroupSize(sizeValue);
+        }
+
+        String scaleString = PlaceholderParser.replacePlaceholders(this.fireflyScale);
+        if (!Objects.equals(scaleString, this.lastFireflyScaleString)) {
+            this.lastFireflyScaleString = scaleString;
+            float scaleValue;
+            if (MathUtils.isFloat(scaleString)) {
+                scaleValue = Float.parseFloat(scaleString);
+            } else {
+                scaleValue = 1.0F;
+            }
+            this.overlay.setScale(scaleValue);
         }
 
         this.overlay.setWidth(getScreenWidth());

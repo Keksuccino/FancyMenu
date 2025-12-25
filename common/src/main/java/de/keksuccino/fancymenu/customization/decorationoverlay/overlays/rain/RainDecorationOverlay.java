@@ -20,6 +20,8 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay {
     @NotNull
     public String rainIntensity = "1.0";
     @NotNull
+    public String rainScale = "1.0";
+    @NotNull
     public String rainThunderBrightness = "1.0";
     public boolean rainPuddles = true;
     public boolean rainDrips = true;
@@ -27,6 +29,7 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay {
     protected final RainOverlay overlay = new RainOverlay(0, 0);
     protected String lastRainColorString = null;
     protected String lastRainIntensityString = null;
+    protected String lastRainScaleString = null;
     protected String lastRainThunderBrightnessString = null;
 
     @Override
@@ -55,6 +58,18 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay {
                 lastRainIntensity = 1.0f;
             }
             this.overlay.setIntensity(lastRainIntensity);
+        }
+
+        String scaleString = PlaceholderParser.replacePlaceholders(this.rainScale);
+        if (!Objects.equals(scaleString, this.lastRainScaleString)) {
+            this.lastRainScaleString = scaleString;
+            float scaleValue;
+            if (MathUtils.isFloat(scaleString)) {
+                scaleValue = Float.parseFloat(scaleString);
+            } else {
+                scaleValue = 1.0F;
+            }
+            this.overlay.setScale(scaleValue);
         }
 
         String thunderBrightnessString = PlaceholderParser.replacePlaceholders(this.rainThunderBrightness);

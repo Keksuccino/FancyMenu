@@ -16,6 +16,7 @@ public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
 
     private static final String RAIN_COLOR_KEY = "rain_color_hex";
     private static final String RAIN_INTENSITY_KEY = "rain_intensity";
+    private static final String RAIN_SCALE_KEY = "rain_scale";
     private static final String RAIN_PUDDLES_KEY = "rain_puddles";
     private static final String RAIN_DRIPS_KEY = "rain_drips";
     private static final String RAIN_THUNDER_KEY = "rain_thunder";
@@ -35,6 +36,7 @@ public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
 
         instanceToWrite.rainColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(RAIN_COLOR_KEY), instanceToWrite.rainColorHex);
         instanceToWrite.rainIntensity = Objects.requireNonNullElse(deserializeFrom.getValue(RAIN_INTENSITY_KEY), instanceToWrite.rainIntensity);
+        instanceToWrite.rainScale = Objects.requireNonNullElse(deserializeFrom.getValue(RAIN_SCALE_KEY), instanceToWrite.rainScale);
         instanceToWrite.rainThunderBrightness = Objects.requireNonNullElse(deserializeFrom.getValue(RAIN_THUNDER_BRIGHTNESS_KEY), instanceToWrite.rainThunderBrightness);
         instanceToWrite.rainPuddles = deserializeBoolean(instanceToWrite.rainPuddles, deserializeFrom.getValue(RAIN_PUDDLES_KEY));
         instanceToWrite.rainDrips = deserializeBoolean(instanceToWrite.rainDrips, deserializeFrom.getValue(RAIN_DRIPS_KEY));
@@ -47,6 +49,7 @@ public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
 
         serializeTo.putProperty(RAIN_COLOR_KEY, instanceToSerialize.rainColorHex);
         serializeTo.putProperty(RAIN_INTENSITY_KEY, instanceToSerialize.rainIntensity);
+        serializeTo.putProperty(RAIN_SCALE_KEY, instanceToSerialize.rainScale);
         serializeTo.putProperty(RAIN_THUNDER_BRIGHTNESS_KEY, instanceToSerialize.rainThunderBrightness);
         serializeTo.putProperty(RAIN_PUDDLES_KEY, instanceToSerialize.rainPuddles);
         serializeTo.putProperty(RAIN_DRIPS_KEY, instanceToSerialize.rainDrips);
@@ -110,6 +113,15 @@ public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
                         }, true,
                         "1.0", null, false, true, null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.intensity.desc")));
+
+        ContextMenuUtils.addInputContextMenuEntryTo(menu, "rain_scale", Component.translatable("fancymenu.decoration_overlays.rain.scale"),
+                        () -> instance.rainScale,
+                        s -> {
+                            editor.history.saveSnapshot();
+                            instance.rainScale = s;
+                        }, true,
+                        "1.0", null, false, true, null, null)
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.scale.desc")));
 
     }
 

@@ -25,6 +25,8 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     private static final float MAX_DRIFT_SPEED = 18.0F;
     private static final float MIN_LENGTH = 7.0F;
     private static final float MAX_LENGTH = 18.0F;
+    private static final float MIN_SCALE = 1.0F;
+    private static final float MAX_SCALE = 3.0F;
     private static final float WIND_MIN = -35.0F;
     private static final float WIND_MAX = 35.0F;
     private static final float MAX_DELTA_SECONDS = 0.1F;
@@ -75,6 +77,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     private SurfaceArea bottomArea;
     private int lastWidth = -1;
     private int lastHeight = -1;
+    private float lastScale = -1.0F;
     private long lastUpdateMs = -1L;
     private float wind = 0.0F;
     private float windTarget = 0.0F;
@@ -84,6 +87,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     private boolean dripsEnabled = true;
     private boolean thunderEnabled = false;
     private float intensity = 1.0F;
+    private float scale = 1.0F;
     private float thunderBrightness = 1.0F;
     private int rainColor = (255 << 24) | DROP_RGB;
     private int dropRgb = DROP_RGB;
@@ -108,6 +112,14 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
 
     public float getIntensity() {
         return this.intensity;
+    }
+
+    public void setScale(float scale) {
+        this.scale = Mth.clamp(scale, MIN_SCALE, MAX_SCALE);
+    }
+
+    public float getScale() {
+        return this.scale;
     }
 
     public void setColor(int color) {
@@ -148,7 +160,8 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
             return;
         }
 
-        boolean sizeChanged = ensureRaindrops(overlayWidth, overlayHeight);
+        boolean scaleChanged = Math.abs(this.scale - this.lastScale) > 0.001F;
+        boolean sizeChanged = ensureRaindrops(overlayWidth, overlayHeight, scaleChanged);
         ensureSurfaceAreas(overlayWidth, overlayHeight, sizeChanged);
         float deltaSeconds = computeDeltaSeconds(sizeChanged);
         if (deltaSeconds <= 0.0F) {
@@ -187,11 +200,11 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         renderThunder(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
     }
 
-    private boolean ensureRaindrops(int width, int height) {
+    private boolean ensureRaindrops(int width, int height, boolean scaleChanged) {
         float effectiveIntensity = Mth.clamp(this.intensity, 0.0F, 2.0F);
         int baseCount = Mth.clamp((width * height) / AREA_PER_DROP, MIN_DROPS, MAX_DROPS);
         int desiredCount = Mth.clamp(Mth.floor(baseCount * effectiveIntensity), 0, MAX_DROPS);
-        boolean sizeChanged = this.lastWidth != width || this.lastHeight != height;
+        boolean sizeChanged = this.lastWidth != width || this.lastHeight != height || scaleChanged;
         if (sizeChanged) {
             this.raindrops.clear();
             for (int i = 0; i < desiredCount; i++) {
@@ -199,6 +212,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
             }
             this.lastWidth = width;
             this.lastHeight = height;
+            this.lastScale = this.scale;
             return true;
         }
 
@@ -564,7 +578,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     }
 
     private void resetRaindrop(Raindrop drop, int width, int height, boolean spawnInside) {
-        drop.length = nextRange(MIN_LENGTH, MAX_LENGTH);
+        drop.length = nextRange(MIN_LENGTH, MAX_LENGTH) * this.scale;
         drop.x = this.random.nextFloat() * width;
         drop.y = spawnInside ? (this.random.nextFloat() * height) : -this.random.nextFloat() * (height * 0.35F);
         drop.fallSpeed = nextRange(MIN_FALL_SPEED, MAX_FALL_SPEED);

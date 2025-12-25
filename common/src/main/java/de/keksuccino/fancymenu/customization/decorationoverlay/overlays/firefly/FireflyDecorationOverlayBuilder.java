@@ -19,6 +19,7 @@ public class FireflyDecorationOverlayBuilder extends AbstractDecorationOverlayBu
     private static final String FIREFLY_GROUP_DENSITY_KEY = "firefly_group_density";
     private static final String FIREFLY_GROUP_AMOUNT_KEY = "firefly_group_amount";
     private static final String FIREFLY_GROUP_SIZE_KEY = "firefly_group_size";
+    private static final String FIREFLY_SCALE_KEY = "firefly_scale";
     private static final String FIREFLY_FOLLOW_MOUSE_KEY = "firefly_follow_mouse";
     private static final String FIREFLY_LANDING_KEY = "firefly_landing";
 
@@ -41,6 +42,7 @@ public class FireflyDecorationOverlayBuilder extends AbstractDecorationOverlayBu
         instanceToWrite.fireflyGroupDensity = Objects.requireNonNullElse(groupDensity, Objects.requireNonNullElse(legacyIntensity, instanceToWrite.fireflyGroupDensity));
         instanceToWrite.fireflyGroupAmount = Objects.requireNonNullElse(groupAmount, Objects.requireNonNullElse(legacyIntensity, instanceToWrite.fireflyGroupAmount));
         instanceToWrite.fireflyGroupSize = Objects.requireNonNullElse(deserializeFrom.getValue(FIREFLY_GROUP_SIZE_KEY), instanceToWrite.fireflyGroupSize);
+        instanceToWrite.fireflyScale = Objects.requireNonNullElse(deserializeFrom.getValue(FIREFLY_SCALE_KEY), instanceToWrite.fireflyScale);
         instanceToWrite.fireflyFollowMouse = deserializeBoolean(instanceToWrite.fireflyFollowMouse, deserializeFrom.getValue(FIREFLY_FOLLOW_MOUSE_KEY));
         instanceToWrite.fireflyLanding = deserializeBoolean(instanceToWrite.fireflyLanding, deserializeFrom.getValue(FIREFLY_LANDING_KEY));
 
@@ -53,6 +55,7 @@ public class FireflyDecorationOverlayBuilder extends AbstractDecorationOverlayBu
         serializeTo.putProperty(FIREFLY_GROUP_DENSITY_KEY, instanceToSerialize.fireflyGroupDensity);
         serializeTo.putProperty(FIREFLY_GROUP_AMOUNT_KEY, instanceToSerialize.fireflyGroupAmount);
         serializeTo.putProperty(FIREFLY_GROUP_SIZE_KEY, instanceToSerialize.fireflyGroupSize);
+        serializeTo.putProperty(FIREFLY_SCALE_KEY, instanceToSerialize.fireflyScale);
         serializeTo.putProperty(FIREFLY_FOLLOW_MOUSE_KEY, instanceToSerialize.fireflyFollowMouse);
         serializeTo.putProperty(FIREFLY_LANDING_KEY, instanceToSerialize.fireflyLanding);
 
@@ -114,6 +117,15 @@ public class FireflyDecorationOverlayBuilder extends AbstractDecorationOverlayBu
                         }, true,
                         "1.0", null, false, true, null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.group_size.desc")));
+
+        ContextMenuUtils.addInputContextMenuEntryTo(menu, "firefly_scale", Component.translatable("fancymenu.decoration_overlays.fireflies.scale"),
+                        () -> instance.fireflyScale,
+                        s -> {
+                            editor.history.saveSnapshot();
+                            instance.fireflyScale = s;
+                        }, true,
+                        "1.0", null, false, true, null, null)
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.scale.desc")));
 
     }
 

@@ -15,6 +15,7 @@ public class SnowDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
 
     private static final String SNOW_COLOR_KEY = "snow_color_hex";
     private static final String SNOW_INTENSITY_KEY = "snow_intensity";
+    private static final String SNOW_SCALE_KEY = "snow_scale";
     private static final String SNOW_ACCUMULATION_KEY = "snow_accumulation";
 
     public SnowDecorationOverlayBuilder() {
@@ -31,6 +32,7 @@ public class SnowDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
 
         instanceToWrite.snowColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(SNOW_COLOR_KEY), instanceToWrite.snowColorHex);
         instanceToWrite.snowIntensity = Objects.requireNonNullElse(deserializeFrom.getValue(SNOW_INTENSITY_KEY), instanceToWrite.snowIntensity);
+        instanceToWrite.snowScale = Objects.requireNonNullElse(deserializeFrom.getValue(SNOW_SCALE_KEY), instanceToWrite.snowScale);
         instanceToWrite.snowAccumulation = deserializeBoolean(instanceToWrite.snowAccumulation, deserializeFrom.getValue(SNOW_ACCUMULATION_KEY));
 
     }
@@ -40,6 +42,7 @@ public class SnowDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
 
         serializeTo.putProperty(SNOW_COLOR_KEY, instanceToSerialize.snowColorHex);
         serializeTo.putProperty(SNOW_INTENSITY_KEY, instanceToSerialize.snowIntensity);
+        serializeTo.putProperty(SNOW_SCALE_KEY, instanceToSerialize.snowScale);
         serializeTo.putProperty(SNOW_ACCUMULATION_KEY, instanceToSerialize.snowAccumulation);
 
     }
@@ -73,6 +76,15 @@ public class SnowDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
                         }, true,
                         "1.0", null, false, true, null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.intensity.desc")));
+
+        ContextMenuUtils.addInputContextMenuEntryTo(menu, "snow_scale", Component.translatable("fancymenu.decoration_overlays.snow.scale"),
+                        () -> instance.snowScale,
+                        s -> {
+                            editor.history.saveSnapshot();
+                            instance.snowScale = s;
+                        }, true,
+                        "1.0", null, false, true, null, null)
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.scale.desc")));
 
     }
 
