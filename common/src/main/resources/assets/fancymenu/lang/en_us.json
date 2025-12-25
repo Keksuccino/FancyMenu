@@ -2355,5 +2355,9 @@
   "fancymenu.decoration_overlays.string_lights.position.loose_right_top.label": "Loose Right Top",
   "fancymenu.decoration_overlays.string_lights.string.show": "Show String Light: %s",
   "fancymenu.decoration_overlays.string_lights.string.christmas_mode": "Christmas Lights Mode: %s",
-  "fancymenu.decoration_overlays.string_lights.string.color": "Light Color [HEX]"
+  "fancymenu.decoration_overlays.string_lights.string.color": "Light Color [HEX]",
+  "fancymenu.decoration_overlays.string_lights.position.bottom_right_to_top_center.desc": "Show a string from the bottom-right edge to the top edge center.",
+  "fancymenu.decoration_overlays.string_lights.color.bottom_right_to_top_center.desc": "The bulb color for the bottom right to top center string, as HEX color, starting with #.",
+  "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_right_to_top_center.desc": "If the bottom right to top center bulbs should use colorful holiday lights instead of the base color.",
+  "fancymenu.decoration_overlays.string_lights.position.bottom_right_to_top_center.label": "Bottom Right to Top Center"
 }

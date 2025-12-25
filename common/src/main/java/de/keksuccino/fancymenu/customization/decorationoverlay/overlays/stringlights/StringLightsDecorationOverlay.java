@@ -22,6 +22,8 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay {
     @NotNull
     public String stringLightsBottomLeftToTopCenterColorHex = "#FFD27A";
     @NotNull
+    public String stringLightsBottomRightToTopCenterColorHex = "#FFD27A";
+    @NotNull
     public String stringLightsTopLeftToTopRightColorHex = "#FFD27A";
     @NotNull
     public String stringLightsBottomLeftToBottomRightColorHex = "#FFD27A";
@@ -38,6 +40,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay {
     public boolean stringLightsLeftCenterToTopCenter = true;
     public boolean stringLightsRightCenterToTopCenter = true;
     public boolean stringLightsBottomLeftToTopCenter = false;
+    public boolean stringLightsBottomRightToTopCenter = false;
     public boolean stringLightsTopLeftToTopRight = true;
     public boolean stringLightsBottomLeftToBottomRight = false;
     public boolean stringLightsLooseLeftTop = false;
@@ -45,6 +48,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay {
     public boolean stringLightsLeftCenterToTopCenterChristmasMode = false;
     public boolean stringLightsRightCenterToTopCenterChristmasMode = false;
     public boolean stringLightsBottomLeftToTopCenterChristmasMode = false;
+    public boolean stringLightsBottomRightToTopCenterChristmasMode = false;
     public boolean stringLightsTopLeftToTopRightChristmasMode = false;
     public boolean stringLightsBottomLeftToBottomRightChristmasMode = false;
     public boolean stringLightsLooseLeftTopChristmasMode = false;
@@ -61,6 +65,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay {
         updatePositionColor(StringLightsOverlay.StringLightsPosition.LEFT_CENTER_TO_TOP_CENTER, this.stringLightsLeftCenterToTopCenterColorHex, DEFAULT_COLOR_HEX);
         updatePositionColor(StringLightsOverlay.StringLightsPosition.RIGHT_CENTER_TO_TOP_CENTER, this.stringLightsRightCenterToTopCenterColorHex, DEFAULT_COLOR_HEX);
         updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_TOP_CENTER, this.stringLightsBottomLeftToTopCenterColorHex, DEFAULT_COLOR_HEX);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_RIGHT_TO_TOP_CENTER, this.stringLightsBottomRightToTopCenterColorHex, DEFAULT_COLOR_HEX);
         updatePositionColor(StringLightsOverlay.StringLightsPosition.TOP_LEFT_TO_TOP_RIGHT, this.stringLightsTopLeftToTopRightColorHex, DEFAULT_COLOR_HEX);
         updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_BOTTOM_RIGHT, this.stringLightsBottomLeftToBottomRightColorHex, DEFAULT_COLOR_HEX);
         updatePositionColor(StringLightsOverlay.StringLightsPosition.LOOSE_LEFT_TOP, this.stringLightsLooseLeftTopColorHex, DEFAULT_COLOR_HEX);
@@ -105,6 +110,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay {
         this.overlay.setPositionEnabled(StringLightsOverlay.StringLightsPosition.LEFT_CENTER_TO_TOP_CENTER, this.stringLightsLeftCenterToTopCenter);
         this.overlay.setPositionEnabled(StringLightsOverlay.StringLightsPosition.RIGHT_CENTER_TO_TOP_CENTER, this.stringLightsRightCenterToTopCenter);
         this.overlay.setPositionEnabled(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_TOP_CENTER, this.stringLightsBottomLeftToTopCenter);
+        this.overlay.setPositionEnabled(StringLightsOverlay.StringLightsPosition.BOTTOM_RIGHT_TO_TOP_CENTER, this.stringLightsBottomRightToTopCenter);
         this.overlay.setPositionEnabled(StringLightsOverlay.StringLightsPosition.TOP_LEFT_TO_TOP_RIGHT, this.stringLightsTopLeftToTopRight);
         this.overlay.setPositionEnabled(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_BOTTOM_RIGHT, this.stringLightsBottomLeftToBottomRight);
         this.overlay.setPositionEnabled(StringLightsOverlay.StringLightsPosition.LOOSE_LEFT_TOP, this.stringLightsLooseLeftTop);
@@ -112,6 +118,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay {
         this.overlay.setPositionChristmasMode(StringLightsOverlay.StringLightsPosition.LEFT_CENTER_TO_TOP_CENTER, this.stringLightsLeftCenterToTopCenterChristmasMode);
         this.overlay.setPositionChristmasMode(StringLightsOverlay.StringLightsPosition.RIGHT_CENTER_TO_TOP_CENTER, this.stringLightsRightCenterToTopCenterChristmasMode);
         this.overlay.setPositionChristmasMode(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_TOP_CENTER, this.stringLightsBottomLeftToTopCenterChristmasMode);
+        this.overlay.setPositionChristmasMode(StringLightsOverlay.StringLightsPosition.BOTTOM_RIGHT_TO_TOP_CENTER, this.stringLightsBottomRightToTopCenterChristmasMode);
         this.overlay.setPositionChristmasMode(StringLightsOverlay.StringLightsPosition.TOP_LEFT_TO_TOP_RIGHT, this.stringLightsTopLeftToTopRightChristmasMode);
         this.overlay.setPositionChristmasMode(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_BOTTOM_RIGHT, this.stringLightsBottomLeftToBottomRightChristmasMode);
         this.overlay.setPositionChristmasMode(StringLightsOverlay.StringLightsPosition.LOOSE_LEFT_TOP, this.stringLightsLooseLeftTopChristmasMode);

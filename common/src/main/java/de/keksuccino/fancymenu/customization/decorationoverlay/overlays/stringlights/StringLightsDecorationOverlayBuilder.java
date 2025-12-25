@@ -19,6 +19,7 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
     private static final String LIGHTS_LEFT_CENTER_TO_TOP_CENTER_COLOR_KEY = "string_lights_left_center_to_top_center_color_hex";
     private static final String LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_COLOR_KEY = "string_lights_right_center_to_top_center_color_hex";
     private static final String LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_COLOR_KEY = "string_lights_bottom_left_to_top_center_color_hex";
+    private static final String LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_COLOR_KEY = "string_lights_bottom_right_to_top_center_color_hex";
     private static final String LIGHTS_TOP_LEFT_TO_TOP_RIGHT_COLOR_KEY = "string_lights_top_left_to_top_right_color_hex";
     private static final String LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_COLOR_KEY = "string_lights_bottom_left_to_bottom_right_color_hex";
     private static final String LIGHTS_LOOSE_LEFT_TOP_COLOR_KEY = "string_lights_loose_left_top_color_hex";
@@ -30,6 +31,7 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
     private static final String LIGHTS_LEFT_CENTER_TO_TOP_CENTER_CHRISTMAS_KEY = "string_lights_left_center_to_top_center_christmas_mode";
     private static final String LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_CHRISTMAS_KEY = "string_lights_right_center_to_top_center_christmas_mode";
     private static final String LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_CHRISTMAS_KEY = "string_lights_bottom_left_to_top_center_christmas_mode";
+    private static final String LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_CHRISTMAS_KEY = "string_lights_bottom_right_to_top_center_christmas_mode";
     private static final String LIGHTS_TOP_LEFT_TO_TOP_RIGHT_CHRISTMAS_KEY = "string_lights_top_left_to_top_right_christmas_mode";
     private static final String LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_CHRISTMAS_KEY = "string_lights_bottom_left_to_bottom_right_christmas_mode";
     private static final String LIGHTS_LOOSE_LEFT_TOP_CHRISTMAS_KEY = "string_lights_loose_left_top_christmas_mode";
@@ -37,6 +39,7 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
     private static final String LIGHTS_LEFT_CENTER_TO_TOP_CENTER_KEY = "string_lights_left_center_to_top_center";
     private static final String LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_KEY = "string_lights_right_center_to_top_center";
     private static final String LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_KEY = "string_lights_bottom_left_to_top_center";
+    private static final String LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_KEY = "string_lights_bottom_right_to_top_center";
     private static final String LIGHTS_TOP_LEFT_TO_TOP_RIGHT_KEY = "string_lights_top_left_to_top_right";
     private static final String LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_KEY = "string_lights_bottom_left_to_bottom_right";
     private static final String LIGHTS_LOOSE_LEFT_TOP_KEY = "string_lights_loose_left_top";
@@ -58,6 +61,7 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
         instanceToWrite.stringLightsLeftCenterToTopCenterColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_LEFT_CENTER_TO_TOP_CENTER_COLOR_KEY), legacyColor);
         instanceToWrite.stringLightsRightCenterToTopCenterColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_COLOR_KEY), legacyColor);
         instanceToWrite.stringLightsBottomLeftToTopCenterColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_COLOR_KEY), legacyColor);
+        instanceToWrite.stringLightsBottomRightToTopCenterColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_COLOR_KEY), legacyColor);
         instanceToWrite.stringLightsTopLeftToTopRightColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_TOP_LEFT_TO_TOP_RIGHT_COLOR_KEY), legacyColor);
         instanceToWrite.stringLightsBottomLeftToBottomRightColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_COLOR_KEY), legacyColor);
         instanceToWrite.stringLightsLooseLeftTopColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_LOOSE_LEFT_TOP_COLOR_KEY), legacyColor);
@@ -68,6 +72,7 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
         instanceToWrite.stringLightsLeftCenterToTopCenter = deserializeBoolean(instanceToWrite.stringLightsLeftCenterToTopCenter, deserializeFrom.getValue(LIGHTS_LEFT_CENTER_TO_TOP_CENTER_KEY));
         instanceToWrite.stringLightsRightCenterToTopCenter = deserializeBoolean(instanceToWrite.stringLightsRightCenterToTopCenter, deserializeFrom.getValue(LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_KEY));
         instanceToWrite.stringLightsBottomLeftToTopCenter = deserializeBoolean(instanceToWrite.stringLightsBottomLeftToTopCenter, deserializeFrom.getValue(LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_KEY));
+        instanceToWrite.stringLightsBottomRightToTopCenter = deserializeBoolean(instanceToWrite.stringLightsBottomRightToTopCenter, deserializeFrom.getValue(LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_KEY));
         instanceToWrite.stringLightsTopLeftToTopRight = deserializeBoolean(instanceToWrite.stringLightsTopLeftToTopRight, deserializeFrom.getValue(LIGHTS_TOP_LEFT_TO_TOP_RIGHT_KEY));
         instanceToWrite.stringLightsBottomLeftToBottomRight = deserializeBoolean(instanceToWrite.stringLightsBottomLeftToBottomRight, deserializeFrom.getValue(LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_KEY));
         instanceToWrite.stringLightsLooseLeftTop = deserializeBoolean(instanceToWrite.stringLightsLooseLeftTop, deserializeFrom.getValue(LIGHTS_LOOSE_LEFT_TOP_KEY));
@@ -76,6 +81,7 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
         instanceToWrite.stringLightsLeftCenterToTopCenterChristmasMode = deserializeBoolean(legacyChristmasMode, deserializeFrom.getValue(LIGHTS_LEFT_CENTER_TO_TOP_CENTER_CHRISTMAS_KEY));
         instanceToWrite.stringLightsRightCenterToTopCenterChristmasMode = deserializeBoolean(legacyChristmasMode, deserializeFrom.getValue(LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_CHRISTMAS_KEY));
         instanceToWrite.stringLightsBottomLeftToTopCenterChristmasMode = deserializeBoolean(legacyChristmasMode, deserializeFrom.getValue(LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_CHRISTMAS_KEY));
+        instanceToWrite.stringLightsBottomRightToTopCenterChristmasMode = deserializeBoolean(legacyChristmasMode, deserializeFrom.getValue(LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_CHRISTMAS_KEY));
         instanceToWrite.stringLightsTopLeftToTopRightChristmasMode = deserializeBoolean(legacyChristmasMode, deserializeFrom.getValue(LIGHTS_TOP_LEFT_TO_TOP_RIGHT_CHRISTMAS_KEY));
         instanceToWrite.stringLightsBottomLeftToBottomRightChristmasMode = deserializeBoolean(legacyChristmasMode, deserializeFrom.getValue(LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_CHRISTMAS_KEY));
         instanceToWrite.stringLightsLooseLeftTopChristmasMode = deserializeBoolean(legacyChristmasMode, deserializeFrom.getValue(LIGHTS_LOOSE_LEFT_TOP_CHRISTMAS_KEY));
@@ -89,6 +95,7 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
         serializeTo.putProperty(LIGHTS_LEFT_CENTER_TO_TOP_CENTER_COLOR_KEY, instanceToSerialize.stringLightsLeftCenterToTopCenterColorHex);
         serializeTo.putProperty(LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_COLOR_KEY, instanceToSerialize.stringLightsRightCenterToTopCenterColorHex);
         serializeTo.putProperty(LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_COLOR_KEY, instanceToSerialize.stringLightsBottomLeftToTopCenterColorHex);
+        serializeTo.putProperty(LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_COLOR_KEY, instanceToSerialize.stringLightsBottomRightToTopCenterColorHex);
         serializeTo.putProperty(LIGHTS_TOP_LEFT_TO_TOP_RIGHT_COLOR_KEY, instanceToSerialize.stringLightsTopLeftToTopRightColorHex);
         serializeTo.putProperty(LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_COLOR_KEY, instanceToSerialize.stringLightsBottomLeftToBottomRightColorHex);
         serializeTo.putProperty(LIGHTS_LOOSE_LEFT_TOP_COLOR_KEY, instanceToSerialize.stringLightsLooseLeftTopColorHex);
@@ -99,6 +106,7 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
         serializeTo.putProperty(LIGHTS_LEFT_CENTER_TO_TOP_CENTER_KEY, instanceToSerialize.stringLightsLeftCenterToTopCenter);
         serializeTo.putProperty(LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_KEY, instanceToSerialize.stringLightsRightCenterToTopCenter);
         serializeTo.putProperty(LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_KEY, instanceToSerialize.stringLightsBottomLeftToTopCenter);
+        serializeTo.putProperty(LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_KEY, instanceToSerialize.stringLightsBottomRightToTopCenter);
         serializeTo.putProperty(LIGHTS_TOP_LEFT_TO_TOP_RIGHT_KEY, instanceToSerialize.stringLightsTopLeftToTopRight);
         serializeTo.putProperty(LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_KEY, instanceToSerialize.stringLightsBottomLeftToBottomRight);
         serializeTo.putProperty(LIGHTS_LOOSE_LEFT_TOP_KEY, instanceToSerialize.stringLightsLooseLeftTop);
@@ -106,6 +114,7 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
         serializeTo.putProperty(LIGHTS_LEFT_CENTER_TO_TOP_CENTER_CHRISTMAS_KEY, instanceToSerialize.stringLightsLeftCenterToTopCenterChristmasMode);
         serializeTo.putProperty(LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_CHRISTMAS_KEY, instanceToSerialize.stringLightsRightCenterToTopCenterChristmasMode);
         serializeTo.putProperty(LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_CHRISTMAS_KEY, instanceToSerialize.stringLightsBottomLeftToTopCenterChristmasMode);
+        serializeTo.putProperty(LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_CHRISTMAS_KEY, instanceToSerialize.stringLightsBottomRightToTopCenterChristmasMode);
         serializeTo.putProperty(LIGHTS_TOP_LEFT_TO_TOP_RIGHT_CHRISTMAS_KEY, instanceToSerialize.stringLightsTopLeftToTopRightChristmasMode);
         serializeTo.putProperty(LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_CHRISTMAS_KEY, instanceToSerialize.stringLightsBottomLeftToBottomRightChristmasMode);
         serializeTo.putProperty(LIGHTS_LOOSE_LEFT_TOP_CHRISTMAS_KEY, instanceToSerialize.stringLightsLooseLeftTopChristmasMode);
@@ -186,6 +195,19 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
                 "fancymenu.decoration_overlays.string_lights.position.bottom_left_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_left_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.color.bottom_left_to_top_center.desc");
+
+        addStringLightSubMenu(stringsMenu, editor,
+                "string_lights_bottom_right_to_top_center",
+                Component.translatable("fancymenu.decoration_overlays.string_lights.position.bottom_right_to_top_center.label"),
+                () -> instance.stringLightsBottomRightToTopCenter,
+                aBoolean -> instance.stringLightsBottomRightToTopCenter = aBoolean,
+                () -> instance.stringLightsBottomRightToTopCenterChristmasMode,
+                aBoolean -> instance.stringLightsBottomRightToTopCenterChristmasMode = aBoolean,
+                () -> instance.stringLightsBottomRightToTopCenterColorHex,
+                s -> instance.stringLightsBottomRightToTopCenterColorHex = s,
+                "fancymenu.decoration_overlays.string_lights.position.bottom_right_to_top_center.desc",
+                "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_right_to_top_center.desc",
+                "fancymenu.decoration_overlays.string_lights.color.bottom_right_to_top_center.desc");
 
         addStringLightSubMenu(stringsMenu, editor,
                 "string_lights_top_left_to_top_right",
