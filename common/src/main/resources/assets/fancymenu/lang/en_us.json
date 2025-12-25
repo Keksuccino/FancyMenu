@@ -2383,5 +2383,14 @@
   "fancymenu.decoration_overlays.leaves.wind_blows": "Wind Blows: %s",
   "fancymenu.decoration_overlays.leaves.wind_blows.desc": "Toggles the strong wind blows that push leaves around.",
   "fancymenu.decoration_overlays.leaves.fall_speed": "Leaf Fall Speed",
-  "fancymenu.decoration_overlays.leaves.fall_speed.desc": "Controls how fast leaves fall. Needs to be a value between 0.01 and 5.0."
+  "fancymenu.decoration_overlays.leaves.fall_speed.desc": "Controls how fast leaves fall. Needs to be a value between 0.01 and 5.0.",
+  "fancymenu.decoration_overlays.fireworks": "Fireworks",
+  "fancymenu.decoration_overlays.fireworks.show_rockets": "Show Rocket Flight: %s",
+  "fancymenu.decoration_overlays.fireworks.show_rockets.desc": "If the rockets should be visible while flying up before they explode.",
+  "fancymenu.decoration_overlays.fireworks.scale": "Fireworks Overlay Scale",
+  "fancymenu.decoration_overlays.fireworks.scale.desc": "Scales the overall fireworks overlay. Needs to be a value between 0.01 and 5.0.",
+  "fancymenu.decoration_overlays.fireworks.explosion_size": "Explosion Size",
+  "fancymenu.decoration_overlays.fireworks.explosion_size.desc": "Scales how large the explosions appear. Needs to be a value between 0.01 and 5.0.",
+  "fancymenu.decoration_overlays.fireworks.amount": "Explosion Amount",
+  "fancymenu.decoration_overlays.fireworks.amount.desc": "Controls how many explosions spawn. Needs to be a value between 0.01 and 5.0."
 }
