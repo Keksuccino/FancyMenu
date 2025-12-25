@@ -106,8 +106,6 @@ public class ProgressBarElement extends AbstractElement {
         int fullHeight = getAbsoluteHeight();
         int progressX = getAbsoluteX();
         int progressY = getAbsoluteY();
-        float offsetX = 0.0F;
-        float offsetY = 0.0F;
         int progressWidth = fullWidth;
         int progressHeight = fullHeight;
 
@@ -129,11 +127,9 @@ public class ProgressBarElement extends AbstractElement {
         // For left/up directions, adjust the starting point.
         if (direction == BarDirection.LEFT) {
             progressX += fullWidth - progressWidth;
-            offsetX = fullWidth - progressWidth;
         }
         if (direction == BarDirection.UP) {
             progressY += fullHeight - progressHeight;
-            offsetY = fullHeight - progressHeight;
         }
 
         // Cache the computed progress bar area.
@@ -152,14 +148,18 @@ public class ProgressBarElement extends AbstractElement {
                 ResourceLocation loc = texture.getResourceLocation();
                 if (loc != null) {
                     DrawableColor.WHITE.setAsShaderColor(graphics, this.opacity);
-                    if (this.barNineSlice) {
-                        int textureWidth = Math.max(1, texture.getWidth());
-                        int textureHeight = Math.max(1, texture.getHeight());
-                        RenderingUtils.blitNineSlicedTexture(graphics, loc, progressX, progressY, progressWidth, progressHeight,
-                                textureWidth, textureHeight,
-                                this.barNineSliceBorderTop, this.barNineSliceBorderRight, this.barNineSliceBorderBottom, this.barNineSliceBorderLeft);
-                    } else {
-                        graphics.blit(loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight);
+                    if (progressWidth > 0 && progressHeight > 0) {
+                        graphics.enableScissor(progressX, progressY, progressX + progressWidth, progressY + progressHeight);
+                        if (this.barNineSlice) {
+                            int textureWidth = Math.max(1, texture.getWidth());
+                            int textureHeight = Math.max(1, texture.getHeight());
+                            RenderingUtils.blitNineSlicedTexture(graphics, loc, getAbsoluteX(), getAbsoluteY(), fullWidth, fullHeight,
+                                    textureWidth, textureHeight,
+                                    this.barNineSliceBorderTop, this.barNineSliceBorderRight, this.barNineSliceBorderBottom, this.barNineSliceBorderLeft);
+                        } else {
+                            graphics.blit(loc, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, fullWidth, fullHeight, fullWidth, fullHeight);
+                        }
+                        graphics.disableScissor();
                     }
                 }
             }
