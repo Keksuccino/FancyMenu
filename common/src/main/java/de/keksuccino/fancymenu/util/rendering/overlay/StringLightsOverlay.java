@@ -19,6 +19,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
     private static final float BASE_BULB_SPACING = 30.0F;
     private static final float BASE_BULB_SIZE = 5.5F;
     private static final float BASE_STRING_THICKNESS = 1.6F;
+    private static final float BOTTOM_STRING_BOTTOM_MARGIN = 30.0F;
     private static final float MIN_SCALE = 0.35F;
     private static final float MAX_SCALE = 2.5F;
     private static final float MIN_WIND_STRENGTH = 0.0F;
@@ -183,10 +184,12 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
 
         int bulbCount = computeBulbCount(light.length, position.densityMultiplier);
         float bulbBaseSize = BASE_BULB_SIZE * this.scale * position.sizeMultiplier;
+        float maxBulbSize = 0.0F;
         for (int i = 0; i < bulbCount; i++) {
             LightBulb bulb = new LightBulb();
             bulb.t = (i + 1) / (float)(bulbCount + 1);
             bulb.size = bulbBaseSize * nextRange(0.75F, 1.25F);
+            maxBulbSize = Math.max(maxBulbSize, bulb.size);
             bulb.baseBrightness = nextRange(0.78F, 1.15F);
             bulb.flickerSpeed = nextRange(0.25F, 0.65F);
             bulb.flickerPhase = this.random.nextFloat() * ((float)Math.PI * 2.0F);
@@ -194,6 +197,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
             bulb.christmasRgb = CHRISTMAS_COLORS[this.random.nextInt(CHRISTMAS_COLORS.length)];
             light.bulbs.add(bulb);
         }
+        light.maxBulbSize = maxBulbSize;
 
         return light;
     }
@@ -239,6 +243,15 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
             float windOffsetY = Mth.cos(light.windTime * 0.7F + light.windPhase) * light.windAmplitude * 0.2F * windScale;
             float controlX = midX + windOffset;
             float controlY = midY + light.sag + windOffsetY;
+            if (position == StringLightsPosition.BOTTOM_LEFT_TO_BOTTOM_RIGHT) {
+                float glowHalf = light.maxBulbSize * 1.05F;
+                float margin = BOTTOM_STRING_BOTTOM_MARGIN + glowHalf + stringThickness * 0.5F;
+                float maxCurveY = overlayHeight - margin;
+                float maxControlY = (maxCurveY * 2.0F) - midY;
+                if (controlY > maxControlY) {
+                    controlY = maxControlY;
+                }
+            }
 
             renderStringLine(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, stringThickness, stringColor);
             renderBulbs(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, christmasMode, baseRgb, alphaScale);
@@ -373,7 +386,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
         BOTTOM_LEFT_TO_TOP_CENTER(0.0F, 0.95F, 0.5F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.28F, 1.05F, 1.0F, 1.05F),
         BOTTOM_RIGHT_TO_TOP_CENTER(1.0F, 0.95F, 0.5F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.28F, 1.05F, 1.0F, 1.05F),
         TOP_LEFT_TO_TOP_RIGHT(0.0F, 0.07F, 1.0F, 0.07F, 0.0F, 0.0F, 0.0F, 0.0F, 0.18F, 1.0F, 1.0F, 1.0F),
-        BOTTOM_LEFT_TO_BOTTOM_RIGHT(0.0F, 0.88F, 1.0F, 0.88F, 0.0F, 0.0F, 0.0F, 0.0F, 0.14F, 1.0F, 1.0F, 1.0F),
+        BOTTOM_LEFT_TO_BOTTOM_RIGHT(0.0F, 0.85F, 1.0F, 0.85F, 0.0F, 0.0F, 0.0F, 0.0F, 0.14F, 1.0F, 1.0F, 1.0F),
         LOOSE_LEFT_TOP(0.1667F, 0.0F, 0.1667F, 0.48F, 0.0F, -11.0F, 0.0F, 0.0F, 0.0F, 0.85F, 1.1F, 1.2F),
         LOOSE_RIGHT_TOP(0.8333F, 0.0F, 0.8333F, 0.48F, 0.0F, -11.0F, 0.0F, 0.0F, 0.0F, 0.85F, 1.1F, 1.2F);
 
@@ -419,6 +432,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
         private float windSpeed;
         private float windPhase;
         private float windTime;
+        private float maxBulbSize;
 
         private StringLight(StringLightsPosition position) {
             this.position = position;
