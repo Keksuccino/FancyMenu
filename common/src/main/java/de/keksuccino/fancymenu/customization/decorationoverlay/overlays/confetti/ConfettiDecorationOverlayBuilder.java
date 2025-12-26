@@ -15,6 +15,7 @@ import java.util.Objects;
 public class ConfettiDecorationOverlayBuilder extends AbstractDecorationOverlayBuilder<ConfettiDecorationOverlay> {
 
     private static final String CONFETTI_SCALE_KEY = "confetti_scale";
+    private static final String CONFETTI_FALL_SPEED_KEY = "confetti_fall_speed";
     private static final String CONFETTI_DENSITY_KEY = "confetti_burst_density";
     private static final String CONFETTI_AMOUNT_KEY = "confetti_burst_amount";
     private static final String CONFETTI_PARTICLE_CAP_KEY = "confetti_particle_cap";
@@ -35,6 +36,7 @@ public class ConfettiDecorationOverlayBuilder extends AbstractDecorationOverlayB
     protected void deserialize(@NotNull ConfettiDecorationOverlay instanceToWrite, @NotNull PropertyContainer deserializeFrom) {
 
         instanceToWrite.confettiScale = Objects.requireNonNullElse(deserializeFrom.getValue(CONFETTI_SCALE_KEY), instanceToWrite.confettiScale);
+        instanceToWrite.confettiFallSpeed = Objects.requireNonNullElse(deserializeFrom.getValue(CONFETTI_FALL_SPEED_KEY), instanceToWrite.confettiFallSpeed);
         instanceToWrite.confettiBurstDensity = Objects.requireNonNullElse(deserializeFrom.getValue(CONFETTI_DENSITY_KEY), instanceToWrite.confettiBurstDensity);
         instanceToWrite.confettiBurstAmount = Objects.requireNonNullElse(deserializeFrom.getValue(CONFETTI_AMOUNT_KEY), instanceToWrite.confettiBurstAmount);
         instanceToWrite.confettiParticleCap = Objects.requireNonNullElse(deserializeFrom.getValue(CONFETTI_PARTICLE_CAP_KEY), instanceToWrite.confettiParticleCap);
@@ -48,6 +50,7 @@ public class ConfettiDecorationOverlayBuilder extends AbstractDecorationOverlayB
     protected void serialize(@NotNull ConfettiDecorationOverlay instanceToSerialize, @NotNull PropertyContainer serializeTo) {
 
         serializeTo.putProperty(CONFETTI_SCALE_KEY, instanceToSerialize.confettiScale);
+        serializeTo.putProperty(CONFETTI_FALL_SPEED_KEY, instanceToSerialize.confettiFallSpeed);
         serializeTo.putProperty(CONFETTI_DENSITY_KEY, instanceToSerialize.confettiBurstDensity);
         serializeTo.putProperty(CONFETTI_AMOUNT_KEY, instanceToSerialize.confettiBurstAmount);
         serializeTo.putProperty(CONFETTI_PARTICLE_CAP_KEY, instanceToSerialize.confettiParticleCap);
@@ -86,6 +89,15 @@ public class ConfettiDecorationOverlayBuilder extends AbstractDecorationOverlayB
                         }, true,
                         "1.0", null, false, true, null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.scale.desc")));
+
+        ContextMenuUtils.addInputContextMenuEntryTo(menu, "confetti_fall_speed", Component.translatable("fancymenu.decoration_overlays.confetti.fall_speed"),
+                        () -> instance.confettiFallSpeed,
+                        s -> {
+                            editor.history.saveSnapshot();
+                            instance.confettiFallSpeed = s;
+                        }, true,
+                        "1.0", null, false, true, null, null)
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.fall_speed.desc")));
 
         ContextMenuUtils.addInputContextMenuEntryTo(menu, "confetti_density", Component.translatable("fancymenu.decoration_overlays.confetti.density"),
                         () -> instance.confettiBurstDensity,

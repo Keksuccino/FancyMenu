@@ -22,6 +22,8 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
     private static final float MAX_DENSITY = 5.0F;
     private static final float MIN_AMOUNT = 0.01F;
     private static final float MAX_AMOUNT = 5.0F;
+    private static final float MIN_FALL_SPEED_MULTIPLIER = 0.01F;
+    private static final float MAX_FALL_SPEED_MULTIPLIER = 5.0F;
     private static final float MAX_DELTA_SECONDS = 0.1F;
 
     private static final int AREA_PER_ACTIVE = 14000;
@@ -76,6 +78,7 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
     private float scale = 1.0F;
     private float burstDensity = 1.0F;
     private float burstAmount = 1.0F;
+    private float fallSpeedMultiplier = 1.0F;
     private boolean colorMixEnabled = true;
     private boolean autoSpawnEnabled = true;
     private int baseColor = 0xFFFFFFFF;
@@ -107,6 +110,14 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
 
     public float getBurstAmount() {
         return this.burstAmount;
+    }
+
+    public void setFallSpeedMultiplier(float fallSpeedMultiplier) {
+        this.fallSpeedMultiplier = Mth.clamp(fallSpeedMultiplier, MIN_FALL_SPEED_MULTIPLIER, MAX_FALL_SPEED_MULTIPLIER);
+    }
+
+    public float getFallSpeedMultiplier() {
+        return this.fallSpeedMultiplier;
     }
 
     public void setSettledCapOverride(int cap) {
@@ -241,7 +252,8 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
     private void updatePieces(int width, int height, float deltaSeconds) {
         updateSettled(width, height);
         float drag = Math.max(0.0F, 1.0F - DRAG * deltaSeconds);
-        float maxFall = MAX_FALL_SPEED * (0.7F + 0.3F * this.scale);
+        float fallSpeedMultiplier = this.fallSpeedMultiplier;
+        float maxFall = MAX_FALL_SPEED * (0.7F + 0.3F * this.scale) * fallSpeedMultiplier;
         float padding = DESPAWN_PADDING * this.scale;
         int maxSettled = getMaxSettledCount(width, height);
         Iterator<ConfettiPiece> iterator = this.activePieces.iterator();
@@ -249,7 +261,7 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
             ConfettiPiece piece = iterator.next();
             float previousY = piece.y;
 
-            piece.vy += GRAVITY * deltaSeconds;
+            piece.vy += GRAVITY * fallSpeedMultiplier * deltaSeconds;
             piece.vx *= drag;
             piece.vy *= drag;
             piece.vy = Math.min(piece.vy, maxFall);

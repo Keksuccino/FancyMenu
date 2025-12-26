@@ -57,28 +57,32 @@ public class InputFieldElement extends AbstractElement {
 
             this.editBox.render(graphics, mouseX, mouseY, partial);
 
-            //Update variable value on change
-            if (!isEditor()) {
-                if (this.linkedVariable != null) {
-                    if (!this.lastValue.equals(this.editBox.getValue())) {
-                        VariableHandler.setVariable(linkedVariable, this.editBox.getValue());
-                    }
-                    if (VariableHandler.variableExists(this.linkedVariable)) {
-                        String val = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
-                        if (!this.editBox.getValue().equals(val)) {
-                            this.editBox.setValue(val);
-                        }
-                    } else {
-                        this.editBox.setValue("");
-                    }
-                }
-                this.lastValue = this.editBox.getValue();
-            }
+            this.updateValue();
 
             RenderingUtils.resetShaderColor(graphics);
 
         }
 
+    }
+
+    public void updateValue() {
+        //Update variable value on change
+        if (!isEditor()) {
+            if (this.linkedVariable != null) {
+                if (!this.lastValue.equals(this.editBox.getValue())) {
+                    VariableHandler.setVariable(linkedVariable, this.editBox.getValue());
+                }
+                if (VariableHandler.variableExists(this.linkedVariable)) {
+                    String val = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+                    if (!this.editBox.getValue().equals(val)) {
+                        this.editBox.setValue(val);
+                    }
+                } else {
+                    this.editBox.setValue("");
+                }
+            }
+            this.lastValue = this.editBox.getValue();
+        }
     }
 
     public void updateWidgetBounds() {

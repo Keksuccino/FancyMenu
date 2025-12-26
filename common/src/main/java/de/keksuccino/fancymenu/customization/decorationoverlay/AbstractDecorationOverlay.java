@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public abstract class AbstractDecorationOverlay implements Renderable, ContainerEventHandler, NarratableEntry {
 
@@ -131,6 +132,22 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
         if (o instanceof EditBox b) return new CollisionBox(b.getX(), b.getY(), b.getWidth(), b.getHeight());
         if (o instanceof AbstractSliderButton s) return new CollisionBox(s.getX(), s.getY(), s.getWidth(), s.getHeight());
         return null;
+    }
+
+    protected static void visitCollisionBoxes(@NotNull Screen screen, @NotNull List<AbstractElement> elements, @NotNull Consumer<CollisionBox> consumer) {
+        if (isEditor()) return;
+        screen.children().forEach(listener -> {
+            var c = getAsCollisionBox(listener);
+            if (c != null) {
+                consumer.accept(c);
+            }
+        });
+        elements.forEach(element -> {
+            var c = getAsCollisionBox(element);
+            if (c != null) {
+                consumer.accept(c);
+            }
+        });
     }
 
     public record CollisionBox(int x, int y, int width, int height) {

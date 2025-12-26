@@ -7,8 +7,6 @@ import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.overlay.SnowfallOverlay;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 
@@ -95,21 +93,7 @@ public class SnowDecorationOverlay extends AbstractDecorationOverlay {
 
         this.overlay.clearCollisionAreas();
 
-        if (isEditor()) return;
-
-        screen.children().forEach(listener -> {
-            var c = getAsCollisionBox(listener);
-            if (c != null) {
-                this.overlay.addCollisionArea(c.x(), c.y(), c.width(), c.height());
-            }
-        });
-
-        elements.forEach(element -> {
-            var c = getAsCollisionBox(element);
-            if (c != null) {
-                this.overlay.addCollisionArea(c.x(), c.y(), c.width(), c.height());
-            }
-        });
+        visitCollisionBoxes(screen, elements, c -> this.overlay.addCollisionArea(c.x(), c.y(), c.width(), c.height()));
 
     }
 

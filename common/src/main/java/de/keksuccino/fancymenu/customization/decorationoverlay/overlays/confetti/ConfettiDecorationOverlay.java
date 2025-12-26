@@ -19,6 +19,8 @@ public class ConfettiDecorationOverlay extends AbstractDecorationOverlay {
     @NotNull
     public String confettiScale = "1.0";
     @NotNull
+    public String confettiFallSpeed = "1.0";
+    @NotNull
     public String confettiBurstDensity = "1.0";
     @NotNull
     public String confettiBurstAmount = "1.0";
@@ -30,6 +32,7 @@ public class ConfettiDecorationOverlay extends AbstractDecorationOverlay {
     public boolean confettiMouseClickMode = false;
     protected final ConfettiOverlay overlay = new ConfettiOverlay(0, 0);
     protected String lastScaleString = null;
+    protected String lastFallSpeedString = null;
     protected String lastDensityString = null;
     protected String lastAmountString = null;
     protected String lastCapString = null;
@@ -57,6 +60,18 @@ public class ConfettiDecorationOverlay extends AbstractDecorationOverlay {
                 scaleValue = 1.0F;
             }
             this.overlay.setScale(scaleValue);
+        }
+
+        String fallSpeedString = PlaceholderParser.replacePlaceholders(this.confettiFallSpeed);
+        if (!Objects.equals(fallSpeedString, this.lastFallSpeedString)) {
+            this.lastFallSpeedString = fallSpeedString;
+            float fallSpeedValue;
+            if (MathUtils.isFloat(fallSpeedString)) {
+                fallSpeedValue = Float.parseFloat(fallSpeedString);
+            } else {
+                fallSpeedValue = 1.0F;
+            }
+            this.overlay.setFallSpeedMultiplier(fallSpeedValue);
         }
 
         String densityString = PlaceholderParser.replacePlaceholders(this.confettiBurstDensity);
@@ -117,21 +132,7 @@ public class ConfettiDecorationOverlay extends AbstractDecorationOverlay {
 
         this.overlay.clearCollisionAreas();
 
-        if (isEditor()) return;
-
-        screen.children().forEach(listener -> {
-            var c = getAsCollisionBox(listener);
-            if (c != null) {
-                this.overlay.addCollisionArea(c.x(), c.y(), c.width(), c.height());
-            }
-        });
-
-        elements.forEach(element -> {
-            var c = getAsCollisionBox(element);
-            if (c != null) {
-                this.overlay.addCollisionArea(c.x(), c.y(), c.width(), c.height());
-            }
-        });
+        visitCollisionBoxes(screen, elements, c -> this.overlay.addCollisionArea(c.x(), c.y(), c.width(), c.height()));
 
     }
 
