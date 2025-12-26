@@ -51,6 +51,8 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
     private static final float DRAG = 0.12F;
     private static final float MAX_FALL_SPEED = 220.0F;
     private static final float DESPAWN_PADDING = 48.0F;
+    private static final float DESPAWN_TIME_SECONDS = 30.0F;
+    private static final float SUPPORT_EPSILON = 0.05F;
 
     private static final int MIN_ALPHA = 170;
     private static final int MAX_ALPHA = 255;
@@ -184,12 +186,10 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
 
         ensureLandingAreas(overlayWidth, overlayHeight);
         int maxActive = getMaxActiveCount(overlayWidth, overlayHeight);
-        int maxSettled = getMaxSettledCount(overlayWidth, overlayHeight);
-
         float deltaSeconds = computeDeltaSeconds(sizeChanged);
         if (deltaSeconds > 0.0F) {
             updateSpawn(overlayWidth, overlayHeight, deltaSeconds, maxActive);
-            updatePieces(overlayWidth, overlayHeight, deltaSeconds, maxSettled);
+            updatePieces(overlayWidth, overlayHeight, deltaSeconds);
         }
 
         renderPieces(graphics, overlayX, overlayY, overlayWidth, overlayHeight);
@@ -232,10 +232,8 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
         }
     }
 
-    private void updatePieces(int width, int height, float deltaSeconds, int maxSettled) {
-        if (this.activePieces.isEmpty()) {
-            return;
-        }
+    private void updatePieces(int width, int height, float deltaSeconds) {
+        updateSettled(width, height, deltaSeconds);
         float drag = Math.max(0.0F, 1.0F - DRAG * deltaSeconds);
         float maxFall = MAX_FALL_SPEED * (0.7F + 0.3F * this.scale);
         float padding = DESPAWN_PADDING * this.scale;
@@ -243,6 +241,11 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
         while (iterator.hasNext()) {
             ConfettiPiece piece = iterator.next();
             float previousY = piece.y;
+            piece.ageSeconds += deltaSeconds;
+            if (piece.ageSeconds >= DESPAWN_TIME_SECONDS) {
+                iterator.remove();
+                continue;
+            }
 
             piece.vy += GRAVITY * deltaSeconds;
             piece.vx *= drag;
@@ -260,7 +263,7 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
                     piece.vx = 0.0F;
                     piece.vy = 0.0F;
                     iterator.remove();
-                    addSettledPiece(piece, maxSettled);
+                    addSettledPiece(piece);
                     continue;
                 }
             }
@@ -314,12 +317,6 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
         int baseCount = Mth.clamp((width * height) / AREA_PER_ACTIVE, MIN_ACTIVE, MAX_ACTIVE);
         float multiplier = 0.55F + 0.3F * Mth.clamp(this.burstDensity, 0.0F, 2.5F) + 0.15F * Mth.clamp(this.burstAmount, 0.0F, 2.5F);
         return Mth.clamp(Math.round(baseCount * multiplier), MIN_ACTIVE, MAX_ACTIVE);
-    }
-
-    private int getMaxSettledCount(int width, int height) {
-        int baseCount = Mth.clamp((width * height) / AREA_PER_SETTLED, MIN_SETTLED, MAX_SETTLED);
-        float multiplier = 0.65F + 0.35F * Mth.clamp(this.burstDensity, 0.0F, 2.5F);
-        return Mth.clamp(Math.round(baseCount * multiplier), MIN_SETTLED, MAX_SETTLED);
     }
 
     private void spawnEdgeBursts(int width, int height, int maxActive) {
@@ -460,6 +457,44 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
         return bestSurface == Float.POSITIVE_INFINITY ? Float.NaN : bestSurface;
     }
 
+    private boolean isPieceSupported(ConfettiPiece piece, int width, int height) {
+        float bottom = piece.y + piece.height;
+        float left = piece.x;
+        float right = piece.x + piece.width;
+
+        float bottomSurface = this.bottomArea != null ? this.bottomArea.y : height;
+        if (isSurfaceMatch(bottom, bottomSurface) && overlapsX(left, right, 0.0F, width)) {
+            return true;
+        }
+
+        for (LandingArea area : this.collisionAreas) {
+            if (!overlapsX(left, right, area.x, area.x + area.width)) {
+                continue;
+            }
+            if (isSurfaceMatch(bottom, area.y)) {
+                return true;
+            }
+        }
+
+        for (ConfettiPiece other : this.settledPieces) {
+            if (other == piece) {
+                continue;
+            }
+            if (!overlapsX(left, right, other.x, other.x + other.width)) {
+                continue;
+            }
+            if (isSurfaceMatch(bottom, other.y)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isSurfaceMatch(float bottom, float surfaceY) {
+        return Math.abs(bottom - surfaceY) <= SUPPORT_EPSILON;
+    }
+
     private boolean overlapsX(float leftA, float rightA, float leftB, float rightB) {
         return rightA > leftB && leftA < rightB;
     }
@@ -508,26 +543,31 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
         return Mth.clamp(alpha / 255.0F, 0.0F, 1.0F);
     }
 
-    private void addSettledPiece(ConfettiPiece piece, int maxSettled) {
+    private void addSettledPiece(ConfettiPiece piece) {
         if (piece.width <= 0 || piece.height <= 0) {
             return;
         }
         this.settledPieces.add(piece);
-        trimSettledPieces(maxSettled);
     }
 
-    private void trimSettledPieces(int maxSettled) {
-        while (this.settledPieces.size() > maxSettled && !this.settledPieces.isEmpty()) {
-            int index = 0;
-            float highest = this.settledPieces.get(0).y;
-            for (int i = 1; i < this.settledPieces.size(); i++) {
-                float y = this.settledPieces.get(i).y;
-                if (y < highest) {
-                    highest = y;
-                    index = i;
-                }
+    private void updateSettled(int width, int height, float deltaSeconds) {
+        if (this.settledPieces.isEmpty()) {
+            return;
+        }
+        Iterator<ConfettiPiece> iterator = this.settledPieces.iterator();
+        while (iterator.hasNext()) {
+            ConfettiPiece piece = iterator.next();
+            piece.ageSeconds += deltaSeconds;
+            if (piece.ageSeconds >= DESPAWN_TIME_SECONDS) {
+                iterator.remove();
+                continue;
             }
-            this.settledPieces.remove(index);
+            if (!isPieceSupported(piece, width, height)) {
+                iterator.remove();
+                piece.vx = 0.0F;
+                piece.vy = 0.0F;
+                this.activePieces.add(piece);
+            }
         }
     }
 
@@ -609,6 +649,7 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
         private int width;
         private int height;
         private int color;
+        private float ageSeconds;
     }
 
 }
