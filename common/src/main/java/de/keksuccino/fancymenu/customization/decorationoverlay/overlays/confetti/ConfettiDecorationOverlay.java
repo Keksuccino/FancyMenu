@@ -7,15 +7,14 @@ import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.overlay.ConfettiOverlay;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.Objects;
 
 public class ConfettiDecorationOverlay extends AbstractDecorationOverlay {
+
+    public static final String DEFAULT_SETTLED_CAP = "500";
 
     @NotNull
     public String confettiScale = "1.0";
@@ -26,11 +25,14 @@ public class ConfettiDecorationOverlay extends AbstractDecorationOverlay {
     public boolean confettiColorMixMode = true;
     @NotNull
     public String confettiColorHex = "#FFFFFF";
+    @NotNull
+    public String confettiParticleCap = DEFAULT_SETTLED_CAP;
     public boolean confettiMouseClickMode = false;
     protected final ConfettiOverlay overlay = new ConfettiOverlay(0, 0);
     protected String lastScaleString = null;
     protected String lastDensityString = null;
     protected String lastAmountString = null;
+    protected String lastCapString = null;
     protected String lastColorString = null;
 
     @Override
@@ -79,6 +81,18 @@ public class ConfettiDecorationOverlay extends AbstractDecorationOverlay {
                 amountValue = 1.0F;
             }
             this.overlay.setBurstAmount(amountValue);
+        }
+
+        String capString = PlaceholderParser.replacePlaceholders(this.confettiParticleCap);
+        if (!Objects.equals(capString, this.lastCapString)) {
+            this.lastCapString = capString;
+            int capValue;
+            if (MathUtils.isInteger(capString)) {
+                capValue = Integer.parseInt(capString);
+            } else {
+                capValue = Integer.parseInt(DEFAULT_SETTLED_CAP);
+            }
+            this.overlay.setSettledCapOverride(capValue);
         }
 
         this.overlay.setWidth(getScreenWidth());

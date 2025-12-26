@@ -72,6 +72,7 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
     private long lastUpdateMs = -1L;
     private float spawnTimer = 0.0F;
     private int permanentPieceCount = 0;
+    private int settledCapOverride = -1;
     private float scale = 1.0F;
     private float burstDensity = 1.0F;
     private float burstAmount = 1.0F;
@@ -106,6 +107,10 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
 
     public float getBurstAmount() {
         return this.burstAmount;
+    }
+
+    public void setSettledCapOverride(int cap) {
+        this.settledCapOverride = Math.max(-1, cap);
     }
 
     public void setAutoSpawnEnabled(boolean autoSpawnEnabled) {
@@ -317,6 +322,9 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
     }
 
     private int getMaxSettledCount(int width, int height) {
+        if (this.settledCapOverride >= 0) {
+            return this.settledCapOverride;
+        }
         int baseCount = Mth.clamp((width * height) / AREA_PER_SETTLED, MIN_SETTLED, MAX_SETTLED);
         return Mth.clamp(baseCount, MIN_SETTLED, MAX_SETTLED);
     }

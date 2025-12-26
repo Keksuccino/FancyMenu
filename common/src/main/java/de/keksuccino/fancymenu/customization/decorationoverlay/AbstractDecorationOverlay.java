@@ -125,6 +125,7 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
 
     @Nullable
     protected static CollisionBox getAsCollisionBox(@NotNull Object o) {
+        if ((o instanceof AbstractElement e) && !e.shouldRender()) return null;
         if (o instanceof PlainTextButton) return null;
         if (o instanceof AbstractButton b) return new CollisionBox(b.getX(), b.getY(), b.getWidth(), b.getHeight());
         if (o instanceof EditBox b) return new CollisionBox(b.getX(), b.getY(), b.getWidth(), b.getHeight());

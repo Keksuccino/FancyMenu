@@ -17,6 +17,7 @@ public class ConfettiDecorationOverlayBuilder extends AbstractDecorationOverlayB
     private static final String CONFETTI_SCALE_KEY = "confetti_scale";
     private static final String CONFETTI_DENSITY_KEY = "confetti_burst_density";
     private static final String CONFETTI_AMOUNT_KEY = "confetti_burst_amount";
+    private static final String CONFETTI_PARTICLE_CAP_KEY = "confetti_particle_cap";
     private static final String CONFETTI_COLOR_MIX_KEY = "confetti_color_mix_mode";
     private static final String CONFETTI_COLOR_KEY = "confetti_color_hex";
     private static final String CONFETTI_MOUSE_CLICK_KEY = "confetti_mouse_click_mode";
@@ -36,6 +37,7 @@ public class ConfettiDecorationOverlayBuilder extends AbstractDecorationOverlayB
         instanceToWrite.confettiScale = Objects.requireNonNullElse(deserializeFrom.getValue(CONFETTI_SCALE_KEY), instanceToWrite.confettiScale);
         instanceToWrite.confettiBurstDensity = Objects.requireNonNullElse(deserializeFrom.getValue(CONFETTI_DENSITY_KEY), instanceToWrite.confettiBurstDensity);
         instanceToWrite.confettiBurstAmount = Objects.requireNonNullElse(deserializeFrom.getValue(CONFETTI_AMOUNT_KEY), instanceToWrite.confettiBurstAmount);
+        instanceToWrite.confettiParticleCap = Objects.requireNonNullElse(deserializeFrom.getValue(CONFETTI_PARTICLE_CAP_KEY), instanceToWrite.confettiParticleCap);
         instanceToWrite.confettiColorMixMode = deserializeBoolean(instanceToWrite.confettiColorMixMode, deserializeFrom.getValue(CONFETTI_COLOR_MIX_KEY));
         instanceToWrite.confettiColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(CONFETTI_COLOR_KEY), instanceToWrite.confettiColorHex);
         instanceToWrite.confettiMouseClickMode = deserializeBoolean(instanceToWrite.confettiMouseClickMode, deserializeFrom.getValue(CONFETTI_MOUSE_CLICK_KEY));
@@ -48,6 +50,7 @@ public class ConfettiDecorationOverlayBuilder extends AbstractDecorationOverlayB
         serializeTo.putProperty(CONFETTI_SCALE_KEY, instanceToSerialize.confettiScale);
         serializeTo.putProperty(CONFETTI_DENSITY_KEY, instanceToSerialize.confettiBurstDensity);
         serializeTo.putProperty(CONFETTI_AMOUNT_KEY, instanceToSerialize.confettiBurstAmount);
+        serializeTo.putProperty(CONFETTI_PARTICLE_CAP_KEY, instanceToSerialize.confettiParticleCap);
         serializeTo.putProperty(CONFETTI_COLOR_MIX_KEY, instanceToSerialize.confettiColorMixMode);
         serializeTo.putProperty(CONFETTI_COLOR_KEY, instanceToSerialize.confettiColorHex);
         serializeTo.putProperty(CONFETTI_MOUSE_CLICK_KEY, instanceToSerialize.confettiMouseClickMode);
@@ -101,6 +104,15 @@ public class ConfettiDecorationOverlayBuilder extends AbstractDecorationOverlayB
                         }, true,
                         "1.0", null, false, true, null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.amount.desc")));
+
+        ContextMenuUtils.addInputContextMenuEntryTo(menu, "confetti_particle_cap", Component.translatable("fancymenu.decoration_overlays.confetti.particle_cap"),
+                        () -> instance.confettiParticleCap,
+                        s -> {
+                            editor.history.saveSnapshot();
+                            instance.confettiParticleCap = s;
+                        }, true,
+                        ConfettiDecorationOverlay.DEFAULT_SETTLED_CAP, null, false, true, null, null)
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.particle_cap.desc")));
 
         ContextMenuUtils.addToggleContextMenuEntryTo(menu, "confetti_mouse_click_mode",
                         () -> instance.confettiMouseClickMode,

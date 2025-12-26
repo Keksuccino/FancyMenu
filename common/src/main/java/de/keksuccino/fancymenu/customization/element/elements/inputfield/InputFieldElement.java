@@ -33,6 +33,8 @@ public class InputFieldElement extends AbstractElement {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        if (this.editBox == null) return;
+
         if (this.shouldRender()) {
 
             RenderSystem.enableBlend();
@@ -51,10 +53,8 @@ public class InputFieldElement extends AbstractElement {
 
             this.editBox.setNavigatable(this.navigatable);
 
-            this.editBox.setX(this.getAbsoluteX());
-            this.editBox.setY(this.getAbsoluteY());
-            this.editBox.setWidth(this.getAbsoluteWidth());
-            ((IMixinAbstractWidget)this.editBox).setHeightFancyMenu(this.getAbsoluteHeight());
+            this.updateWidgetBounds();
+
             this.editBox.render(graphics, mouseX, mouseY, partial);
 
             //Update variable value on change
@@ -79,6 +79,19 @@ public class InputFieldElement extends AbstractElement {
 
         }
 
+    }
+
+    public void updateWidgetBounds() {
+        if (this.editBox == null) return;
+        this.editBox.setX(this.getAbsoluteX());
+        this.editBox.setY(this.getAbsoluteY());
+        this.editBox.setWidth(this.getAbsoluteWidth());
+        ((IMixinAbstractWidget)this.editBox).setHeightFancyMenu(this.getAbsoluteHeight());
+    }
+
+    @Override
+    public void afterConstruction() {
+        this.updateWidgetBounds();
     }
 
     @Override

@@ -156,15 +156,25 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
         if (!this.shouldRender()) return;
 
-        this.slider.setX(this.getAbsoluteX());
-        this.slider.setY(this.getAbsoluteY());
-        this.slider.setWidth(this.getAbsoluteWidth());
-        ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getAbsoluteHeight());
+        this.updateWidgetBounds();
 
         this.updateWidget();
 
         this.slider.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void afterConstruction() {
+        this.updateWidgetBounds();
+    }
+
+    public void updateWidgetBounds() {
+        if (this.slider == null) return;
+        this.slider.setX(this.getAbsoluteX());
+        this.slider.setY(this.getAbsoluteY());
+        this.slider.setWidth(this.getAbsoluteWidth());
+        ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getAbsoluteHeight());
     }
 
     public void updateWidget() {

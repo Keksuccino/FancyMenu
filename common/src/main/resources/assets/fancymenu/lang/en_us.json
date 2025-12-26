@@ -2406,5 +2406,7 @@
   "fancymenu.decoration_overlays.confetti.amount.desc": "Controls how often bursts spawn. Needs to be a value between 0.01 and 5.0.",
   "fancymenu.decoration_overlays.confetti.mouse_click_mode": "Mouse Click Confetti Mode: %s",
   "fancymenu.decoration_overlays.confetti.mouse_click_mode.desc": "If confetti should burst from the mouse cursor when clicking instead of spawning randomly.",
-  "fancymenu.elements.video_mcef.preserve_aspect_ratio": "Preserve Aspect Ratio: %s"
+  "fancymenu.elements.video_mcef.preserve_aspect_ratio": "Preserve Aspect Ratio: %s",
+  "fancymenu.decoration_overlays.confetti.particle_cap": "Landed Particle Cap",
+  "fancymenu.decoration_overlays.confetti.particle_cap.desc": "Limits how many confetti particles can land."
 }
