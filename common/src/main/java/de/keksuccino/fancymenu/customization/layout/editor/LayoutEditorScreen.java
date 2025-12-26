@@ -206,7 +206,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		if (!this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 
-        this.layout.decorationOverlays.forEach(pair -> pair.getValue().onScreenInitializedOrResized(this));
+        this.layout.decorationOverlays.forEach(pair -> {
+            pair.getValue().onScreenInitializedOrResized(this);
+            this.addWidget(pair.getValue());
+        });
 
 		this.layout.menuBackgrounds.forEach(MenuBackground::onAfterEnable);
 

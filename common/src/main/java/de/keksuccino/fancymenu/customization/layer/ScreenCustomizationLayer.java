@@ -367,7 +367,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 		}
 
-        this.layoutBase.decorationOverlays.forEach(pair -> pair.getValue().onScreenInitializedOrResized(e.getScreen()));
+        this.layoutBase.decorationOverlays.forEach(pair -> {
+            pair.getValue().onScreenInitializedOrResized(e.getScreen());
+            ((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(pair.getValue());
+        });
 
 	}
 

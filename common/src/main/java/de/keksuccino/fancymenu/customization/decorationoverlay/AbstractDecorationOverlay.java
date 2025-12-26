@@ -7,6 +7,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class AbstractDecorationOverlay implements Renderable, ContainerEventHandler {
+public abstract class AbstractDecorationOverlay implements Renderable, ContainerEventHandler, NarratableEntry {
 
     @NotNull
     private String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
@@ -88,6 +90,16 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
 
     @Override
     public void setFocused(@Nullable GuiEventListener focused) {
+        // do nothing
+    }
+
+    @Override
+    public @NotNull NarrationPriority narrationPriority() {
+        return NarrationPriority.NONE;
+    }
+
+    @Override
+    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
         // do nothing
     }
 
