@@ -367,7 +367,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 		}
 
-        this.layoutBase.decorationOverlays.forEach((type, pair) -> pair.getValue().onScreenInitializedOrResized(e.getScreen()));
+        this.layoutBase.decorationOverlays.forEach(pair -> pair.getValue().onScreenInitializedOrResized(e.getScreen()));
 
 	}
 
@@ -425,7 +425,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 
-        this.layoutBase.decorationOverlays.forEach((type, pair) -> {
+        this.layoutBase.decorationOverlays.forEach(pair -> {
             if (pair.getValue().showOverlay) pair.getValue().render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
         });
 

@@ -168,7 +168,7 @@ public class Layout extends LayoutBase {
         }
 
         // Decoration Overlays
-        this.decorationOverlays.forEach((type, pair) -> {
+        this.decorationOverlays.forEach(pair -> {
             set.putContainer(pair.getKey()._serialize(pair.getValue()));
         });
 
@@ -420,9 +420,10 @@ public class Layout extends LayoutBase {
 
             // Decoration Overlays
             DecorationOverlayRegistry.getAll().forEach(builder -> {
+                // Always add one instance of each overlay type, even if the layout does not contain a saved instance for the overlay type
                 var overlayInstances = builder._deserializeAll(serialized);
                 if (overlayInstances.isEmpty()) overlayInstances = List.of(builder.buildDefaultInstance());
-                layout.decorationOverlays.put(builder.getIdentifier(), Pair.of(builder, overlayInstances.get(0)));
+                layout.decorationOverlays.add(Pair.of(builder, overlayInstances.get(0)));
             });
 
             //Handle Scroll List Customizations

@@ -206,7 +206,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		if (!this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 
-        this.layout.decorationOverlays.forEach((type, pair) -> pair.getValue().onScreenInitializedOrResized(this));
+        this.layout.decorationOverlays.forEach(pair -> pair.getValue().onScreenInitializedOrResized(this));
 
 		this.layout.menuBackgrounds.forEach(MenuBackground::onAfterEnable);
 
@@ -259,7 +259,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.renderElements(graphics, mouseX, mouseY, partial);
 
-        this.layout.decorationOverlays.forEach((type, pair) -> {
+        this.layout.decorationOverlays.forEach(pair -> {
             if (pair.getValue().showOverlay) pair.getValue().render(graphics, mouseX, mouseY, partial);
         });
 

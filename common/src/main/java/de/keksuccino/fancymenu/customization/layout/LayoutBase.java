@@ -13,7 +13,6 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +24,7 @@ public class LayoutBase {
     @NotNull
     public final List<MenuBackground> menuBackgrounds = new ArrayList<>();
     @NotNull
-    public final Map<String, Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay>> decorationOverlays = new LinkedHashMap<>();
+    public final List<Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay>> decorationOverlays = new ArrayList<>();
     public boolean preserveBackgroundAspectRatio = false;
     public ResourceSupplier<IAudio> openAudio;
     public ResourceSupplier<IAudio> closeAudio;
@@ -114,8 +113,8 @@ public class LayoutBase {
                 if (!layout.closeScreenExecutableBlocks.isEmpty()) {
                     stacked.closeScreenExecutableBlocks.addAll(layout.closeScreenExecutableBlocks);
                 }
-                layout.decorationOverlays.forEach((type, pair) -> {
-                    if (pair.getValue().showOverlay) stacked.decorationOverlays.put(type, pair);
+                layout.decorationOverlays.forEach(pair -> {
+                    if (pair.getValue().showOverlay) stacked.decorationOverlays.add(pair);
                 });
 
             }
