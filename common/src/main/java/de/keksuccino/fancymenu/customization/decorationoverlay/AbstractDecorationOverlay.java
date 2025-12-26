@@ -5,17 +5,25 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class AbstractDecorationOverlay implements Renderable {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+public abstract class AbstractDecorationOverlay implements Renderable, ContainerEventHandler {
 
     @NotNull
     private String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
     @ApiStatus.Internal
     public boolean showOverlay = false;
+    private final List<GuiEventListener> children = new ArrayList<>();
+    private final List<Renderable> renderables = new ArrayList<>();
 
     @NotNull
     public String getInstanceIdentifier() {
@@ -29,11 +37,58 @@ public abstract class AbstractDecorationOverlay implements Renderable {
     @Override
     public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
+    public final void _render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        this.render(graphics, mouseX, mouseY, partial);
+
+        this.renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partial));
+
+    }
+
     /**
      * Gets called after the current {@link Screen} got initialized or resized.<br>
      * At this point all its widgets should be available.
      */
     public void onScreenInitializedOrResized(@NotNull Screen screen) {
+    }
+
+    @Override
+    public @NotNull List<? extends GuiEventListener> children() {
+        return this.children;
+    }
+
+    protected void addChild(@NotNull GuiEventListener child) {
+        this.children.add(Objects.requireNonNull(child));
+    }
+
+    protected <C extends Renderable & GuiEventListener> void addRenderableChild(@NotNull C child) {
+        this.children.add(Objects.requireNonNull(child));
+        this.renderables.add(child);
+    }
+
+    protected void removeChild(@NotNull GuiEventListener child) {
+        this.children.remove(child);
+        if (child instanceof Renderable r) this.renderables.remove(r);
+    }
+
+    @Override
+    public boolean isDragging() {
+        return false;
+    }
+
+    @Override
+    public void setDragging(boolean isDragging) {
+        // do nothing
+    }
+
+    @Override
+    public @Nullable GuiEventListener getFocused() {
+        return null;
+    }
+
+    @Override
+    public void setFocused(@Nullable GuiEventListener focused) {
+        // do nothing
     }
 
     @Nullable

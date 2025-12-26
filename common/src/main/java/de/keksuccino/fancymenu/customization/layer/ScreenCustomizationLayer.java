@@ -426,7 +426,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		}
 
         this.layoutBase.decorationOverlays.forEach(pair -> {
-            if (pair.getValue().showOverlay) pair.getValue().render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+            if (pair.getValue().showOverlay) pair.getValue()._render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
         });
 
 	}

@@ -260,7 +260,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.renderElements(graphics, mouseX, mouseY, partial);
 
         this.layout.decorationOverlays.forEach(pair -> {
-            if (pair.getValue().showOverlay) pair.getValue().render(graphics, mouseX, mouseY, partial);
+            if (pair.getValue().showOverlay) pair.getValue()._render(graphics, mouseX, mouseY, partial);
         });
 
 		this.renderMouseSelectionRectangle(graphics, mouseX, mouseY);
