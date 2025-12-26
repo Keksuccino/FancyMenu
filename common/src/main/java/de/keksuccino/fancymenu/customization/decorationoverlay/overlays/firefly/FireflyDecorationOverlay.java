@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.firefly;
 
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -11,6 +12,7 @@ import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Objects;
 
 public class FireflyDecorationOverlay extends AbstractDecorationOverlay {
@@ -100,15 +102,23 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay {
     }
 
     @Override
-    public void onScreenInitializedOrResized(@NotNull Screen screen) {
+    public void onScreenInitializedOrResized(@NotNull Screen screen, @NotNull List<AbstractElement> elements) {
 
         this.overlay.clearCollisionAreas();
 
         if (isEditor()) return;
 
         screen.children().forEach(listener -> {
-            if ((listener instanceof Button b) && !(listener instanceof PlainTextButton)) {
-                this.overlay.addCollisionArea(b.getX(), b.getY(), b.getWidth(), b.getHeight());
+            var c = getAsCollisionBox(listener);
+            if (c != null) {
+                this.overlay.addCollisionArea(c.x(), c.y(), c.width(), c.height());
+            }
+        });
+
+        elements.forEach(element -> {
+            var c = getAsCollisionBox(element);
+            if (c != null) {
+                this.overlay.addCollisionArea(c.x(), c.y(), c.width(), c.height());
             }
         });
 

@@ -1,10 +1,11 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -51,7 +52,7 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
      * Gets called after the current {@link Screen} got initialized or resized.<br>
      * At this point all its widgets should be available.
      */
-    public void onScreenInitializedOrResized(@NotNull Screen screen) {
+    public void onScreenInitializedOrResized(@NotNull Screen screen, @NotNull List<AbstractElement> elements) {
     }
 
     @Override
@@ -120,6 +121,18 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
 
     protected static boolean isEditor() {
         return (getScreen() instanceof LayoutEditorScreen);
+    }
+
+    @Nullable
+    protected static CollisionBox getAsCollisionBox(@NotNull Object o) {
+        if (o instanceof PlainTextButton) return null;
+        if (o instanceof AbstractButton b) return new CollisionBox(b.getX(), b.getY(), b.getWidth(), b.getHeight());
+        if (o instanceof EditBox b) return new CollisionBox(b.getX(), b.getY(), b.getWidth(), b.getHeight());
+        if (o instanceof AbstractSliderButton s) return new CollisionBox(s.getX(), s.getY(), s.getWidth(), s.getHeight());
+        return null;
+    }
+
+    public record CollisionBox(int x, int y, int width, int height) {
     }
 
 }

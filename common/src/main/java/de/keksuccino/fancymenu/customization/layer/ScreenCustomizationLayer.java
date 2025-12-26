@@ -8,6 +8,7 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.widget.RenderedGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
@@ -345,8 +346,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 					}
 				}
 			}
-			//Update vanilla widgets before render, so they don't get rendered uncustomized for one tick
-			if (ae instanceof VanillaWidgetElement v) {
+			//Update widgets before render, so they don't get rendered uncustomized for one tick
+			if (ae instanceof ButtonElement v) {
 				v.updateWidget();
 			}
 		}
@@ -368,8 +369,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		}
 
         this.layoutBase.decorationOverlays.forEach(pair -> {
-            pair.getValue().onScreenInitializedOrResized(e.getScreen());
-            ((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(pair.getValue());
+            pair.getValue().onScreenInitializedOrResized(e.getScreen(), this.allElements);
+            ((IMixinScreen)e.getScreen()).getChildrenFancyMenu().addFirst(pair.getValue());
         });
 
 	}
