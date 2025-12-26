@@ -38,6 +38,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     @Nullable
     public ResourceSource rawVideoUrlSource = null;
     public boolean loop = false;
+    public boolean preserveAspectRatio = true;
     /** Value between 0.0 and 1.0 **/
     public float volume = 1.0F;
     @NotNull
@@ -58,6 +59,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     protected float cachedActualVolume = -10000F;
     protected float lastCachedActualVolume = -11000F;
     protected Boolean lastPausedState = null;
+    protected Boolean lastPreserveAspectRatio = null;
     protected volatile long lastRenderTickTime = -1L;
     protected final AtomicReference<Float> cachedDuration = new AtomicReference<>(0F);
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
@@ -118,6 +120,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
                     videoPlayer = videoManager.getPlayer(playerId);
                     if (videoPlayer != null) {
                         videoPlayer.setFillScreen(true); // Enable fill screen by default
+                        videoPlayer.setPreserveAspectRatio(this.preserveAspectRatio);
                     }
                 }
             }
@@ -134,6 +137,11 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
                 this.videoPlayer.setLooping(this.loop);
             }
             this.lastLoop = this.loop;
+
+            if ((this.lastPreserveAspectRatio == null) || !Objects.equals(this.preserveAspectRatio, this.lastPreserveAspectRatio)) {
+                this.videoPlayer.setPreserveAspectRatio(this.preserveAspectRatio);
+            }
+            this.lastPreserveAspectRatio = this.preserveAspectRatio;
 
             // Update size and position of player if needed
             if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y) || (this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {

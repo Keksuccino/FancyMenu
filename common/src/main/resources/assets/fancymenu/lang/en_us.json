@@ -2392,5 +2392,19 @@
   "fancymenu.decoration_overlays.fireworks.explosion_size": "Explosion Size",
   "fancymenu.decoration_overlays.fireworks.explosion_size.desc": "Scales how large the explosions appear. Needs to be a value between 0.01 and 5.0.",
   "fancymenu.decoration_overlays.fireworks.amount": "Explosion Amount",
-  "fancymenu.decoration_overlays.fireworks.amount.desc": "Controls how many explosions spawn. Needs to be a value between 0.01 and 5.0."
+  "fancymenu.decoration_overlays.fireworks.amount.desc": "Controls how many explosions spawn. Needs to be a value between 0.01 and 5.0.",
+  "fancymenu.decoration_overlays.confetti": "Confetti",
+  "fancymenu.decoration_overlays.confetti.color_mix": "Color Mix Mode: %s",
+  "fancymenu.decoration_overlays.confetti.color_mix.desc": "If confetti should use random colorful colors instead of a single color.",
+  "fancymenu.decoration_overlays.confetti.color": "Confetti Color [HEX]",
+  "fancymenu.decoration_overlays.confetti.color.desc": "The confetti color, as HEX color, starting with #.",
+  "fancymenu.decoration_overlays.confetti.scale": "Confetti Scale",
+  "fancymenu.decoration_overlays.confetti.scale.desc": "Scales confetti particles. Needs to be a value between 0.25 and 5.0.",
+  "fancymenu.decoration_overlays.confetti.density": "Burst Density",
+  "fancymenu.decoration_overlays.confetti.density.desc": "Controls how many particles spawn per burst. Needs to be a value between 0.01 and 5.0.",
+  "fancymenu.decoration_overlays.confetti.amount": "Burst Amount",
+  "fancymenu.decoration_overlays.confetti.amount.desc": "Controls how often bursts spawn. Needs to be a value between 0.01 and 5.0.",
+  "fancymenu.decoration_overlays.confetti.mouse_click_mode": "Mouse Click Confetti Mode: %s",
+  "fancymenu.decoration_overlays.confetti.mouse_click_mode.desc": "If confetti should burst from the mouse cursor when clicking instead of spawning randomly.",
+  "fancymenu.elements.video_mcef.preserve_aspect_ratio": "Preserve Aspect Ratio: %s"
 }

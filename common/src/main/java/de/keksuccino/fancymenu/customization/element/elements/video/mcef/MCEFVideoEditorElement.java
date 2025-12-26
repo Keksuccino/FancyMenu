@@ -45,6 +45,13 @@ public class MCEFVideoEditorElement extends AbstractEditorElement {
                 .setStackable(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("reload"));
 
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "preserve_aspect_ratio", MCEFVideoEditorElement.class,
+                        element -> element.getElement().preserveAspectRatio,
+                        (element, aBoolean) -> element.getElement().preserveAspectRatio = aBoolean,
+                        "fancymenu.elements.video_mcef.preserve_aspect_ratio")
+                .setStackable(false)
+                .setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
+
         this.rightClickMenu.addSeparatorEntry("separator_after_toggle_loop");
 
         this.rightClickMenu.addClickableEntry("set_volume", Component.translatable("fancymenu.elements.video_mcef.volume"), (menu, entry) -> {

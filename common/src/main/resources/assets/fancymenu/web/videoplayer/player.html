@@ -50,6 +50,13 @@
             width: 100%;
             height: 100%;
         }
+
+        /* When aspect ratio should not be preserved */
+        .stretch video {
+            object-fit: fill;
+            width: 100%;
+            height: 100%;
+        }
         
         /* Hide the loader completely */
         #loader {
@@ -180,6 +187,21 @@
         const loader = elements.loader;
         const loaderText = elements.loaderText;
         
+        function applyFitClasses(preserveAspectRatio, fillScreen) {
+            if (!preserveAspectRatio) {
+                videoContainer.classList.add('stretch');
+                videoContainer.classList.remove('fill-screen');
+                return;
+            }
+
+            videoContainer.classList.remove('stretch');
+            if (fillScreen) {
+                videoContainer.classList.add('fill-screen');
+            } else {
+                videoContainer.classList.remove('fill-screen');
+            }
+        }
+
         // Initialize variables
         let videoSource = '';
         let videoBlob = null;
@@ -189,6 +211,8 @@
         const initialVolume = parseFloat(urlParams.get('volume')) || 1.0;
         const initialLoop = urlParams.get('loop') === 'true';
         const initialFillScreen = urlParams.get('fillScreen') === 'true';
+        const preserveAspectRatioParam = urlParams.get('preserveAspectRatio');
+        const initialPreserveAspectRatio = (preserveAspectRatioParam === null) ? true : preserveAspectRatioParam === 'true';
         // 'autoPlay' param means "should this video attempt to play as soon as it's loaded?"
         const wantsAutoplay = urlParams.get('autoPlay') !== 'false'; // Default to true if not specified or not 'false'
         const initialVideoPath = urlParams.get('video') || '';
@@ -198,9 +222,7 @@
         videoPlayer.controls = false; // Hide controls by default
         // videoPlayer.autoplay = wantsAutoplay; // We'll handle autoplay more explicitly
 
-        if (initialFillScreen) {
-            videoContainer.classList.add('fill-screen');
-        }
+        applyFitClasses(initialPreserveAspectRatio, initialFillScreen);
 
         // Make sure loader is always hidden
         if (loader) {
@@ -214,6 +236,7 @@
                 volume: initialVolume,
                 loop: initialLoop,
                 fillScreen: initialFillScreen,
+                preserveAspectRatio: initialPreserveAspectRatio,
                 muted: videoPlayer.muted, // Reflect actual initial muted state (browsers might force mute for autoplay)
                 videoLoadedAndReady: false, // True when video can actually start playing
                 playRequestPending: wantsAutoplay, // If initially wants autoplay, treat as a pending play request
@@ -303,11 +326,14 @@
             setFillScreen: function(shouldFill) {
                 log(`API called: setFillScreen(${shouldFill})`);
                 this.currentSettings.fillScreen = shouldFill;
-                if (shouldFill) {
-                    videoContainer.classList.add('fill-screen');
-                } else {
-                    videoContainer.classList.remove('fill-screen');
-                }
+                applyFitClasses(this.currentSettings.preserveAspectRatio, shouldFill);
+                return true;
+            },
+
+            setPreserveAspectRatio: function(shouldPreserve) {
+                log(`API called: setPreserveAspectRatio(${shouldPreserve})`);
+                this.currentSettings.preserveAspectRatio = shouldPreserve;
+                applyFitClasses(shouldPreserve, this.currentSettings.fillScreen);
                 return true;
             },
 
@@ -603,11 +629,7 @@
             videoPlayer.volume = window.videoPlayerAPI.currentSettings.volume;
             videoPlayer.loop = window.videoPlayerAPI.currentSettings.loop;
             videoPlayer.muted = window.videoPlayerAPI.currentSettings.muted; // Apply JS-side muted state
-            if (window.videoPlayerAPI.currentSettings.fillScreen) {
-                videoContainer.classList.add('fill-screen');
-            } else {
-                videoContainer.classList.remove('fill-screen');
-            }
+            applyFitClasses(window.videoPlayerAPI.currentSettings.preserveAspectRatio, window.videoPlayerAPI.currentSettings.fillScreen);
         }
         
         // Initial load if path provided in URL

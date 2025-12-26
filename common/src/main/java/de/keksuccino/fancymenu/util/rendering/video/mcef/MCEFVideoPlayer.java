@@ -33,6 +33,7 @@ public class MCEFVideoPlayer {
     protected volatile float volume = 1.0f;
     protected volatile boolean looping = false;
     protected volatile boolean fillScreen = false;
+    protected volatile boolean preserveAspectRatio = true;
     protected volatile String currentVideoPath = null;
     protected volatile boolean isMuted = false;
     protected volatile int posX = 0;
@@ -131,6 +132,7 @@ public class MCEFVideoPlayer {
         params.put("volume", String.valueOf(this.volume));
         params.put("loop", String.valueOf(this.looping));
         params.put("fillScreen", String.valueOf(this.fillScreen));
+        params.put("preserveAspectRatio", String.valueOf(this.preserveAspectRatio));
         // 'autoPlay' in player.html determines if *it* should try to play an initial video from URL or if play() is called early.
         // If Java side calls loadVideo then play(), player.html's playRequestPending handles it.
         // If player.html is loaded with a ?video=...&autoPlay=true, it will try.
@@ -322,6 +324,27 @@ public class MCEFVideoPlayer {
      */
     public boolean isFillScreen() {
         return this.fillScreen;
+    }
+
+    /**
+     * Sets whether the video should preserve its original aspect ratio.
+     *
+     * @param preserveAspectRatio True to preserve aspect ratio, false to stretch to fit
+     */
+    public void setPreserveAspectRatio(boolean preserveAspectRatio) {
+        this.preserveAspectRatio = preserveAspectRatio;
+        executeWhenInitialized(() -> {
+            executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setPreserveAspectRatio(" + preserveAspectRatio + "); }");
+        });
+    }
+
+    /**
+     * Checks if preserving the aspect ratio is enabled.
+     *
+     * @return True if aspect ratio is preserved, false otherwise
+     */
+    public boolean isPreserveAspectRatio() {
+        return this.preserveAspectRatio;
     }
     
     /**
