@@ -216,8 +216,7 @@ public class Property<T> {
      */
     public T tryGetNonNullElse(@NotNull T elseValue) {
         if (this.currentValue != null) return this.currentValue;
-        if (this.defaultValue != null) return this.defaultValue;
-        return Objects.requireNonNull(elseValue);
+        return Objects.requireNonNullElse(this.defaultValue, elseValue);
     }
 
     public Property<T> set(@Nullable T currentValue) {
