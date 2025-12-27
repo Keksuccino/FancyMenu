@@ -45,7 +45,7 @@ public class Property<T> {
         p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
             return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
                 Property<String> resolved = (Property<String>) consumes.getProperty(key);
-                if (resolved != null) return resolved.getKey();
+                if (resolved != null) return resolved.get();
                 return defaultValue;
             }, (b, s) -> {
                 Property<String> resolved = (Property<String>) b.getProperty(key);
