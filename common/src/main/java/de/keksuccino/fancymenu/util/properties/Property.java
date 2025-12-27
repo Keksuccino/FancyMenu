@@ -1,9 +1,12 @@
 package de.keksuccino.fancymenu.util.properties;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.file.type.FileMediaType;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -75,6 +78,45 @@ public class Property<T> {
     }
 
     @NotNull
+    public static Property<Integer> integerProperty(@NotNull String key, int defaultValue, int currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<Integer> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        p.deserializationCodec = Integer::valueOf;
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+            Integer defaultVal = property.getDefault();
+            int resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
+            if (placeholders) {
+                return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
+                    Property<Integer> resolved = (Property<Integer>) consumes.getProperty(key);
+                    Integer value = (resolved != null) ? resolved.get() : defaultVal;
+                    return (value != null) ? String.valueOf(value) : null;
+                }, (b, s) -> {
+                    if (s == null) return;
+                    try {
+                        Integer parsed = Integer.valueOf(s);
+                        Property<Integer> resolved = (Property<Integer>) b.getProperty(key);
+                        if (resolved != null) resolved.set(parsed);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }, null, false, true, Component.translatable(contextMenuEntryLocalizationKeyBase), true,
+                        (defaultVal != null) ? String.valueOf(defaultVal) : String.valueOf(defaultValue), null, null);
+            }
+            return builder.buildIntegerInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
+                Property<Integer> resolved = (Property<Integer>) consumes.getProperty(key);
+                return (resolved != null) ? resolved.get() : defaultVal;
+            }, (b, value) -> {
+                Property<Integer> resolved = (Property<Integer>) b.getProperty(key);
+                if (resolved != null) resolved.set(value);
+            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, null, null);
+        };
+        return p;
+    }
+
+    @NotNull
+    public static Property<Integer> integerProperty(@NotNull String key, int defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return integerProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
+    }
+
+    @NotNull
     public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, double currentValue) {
         Property<Double> p = new Property<>(key, defaultValue, currentValue);
         p.deserializationCodec = Double::valueOf;
@@ -86,6 +128,45 @@ public class Property<T> {
         Property<Double> p = new Property<>(key, defaultValue);
         p.deserializationCodec = Double::valueOf;
         return p;
+    }
+
+    @NotNull
+    public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, double currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<Double> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        p.deserializationCodec = Double::valueOf;
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+            Double defaultVal = property.getDefault();
+            double resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
+            if (placeholders) {
+                return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
+                    Property<Double> resolved = (Property<Double>) consumes.getProperty(key);
+                    Double value = (resolved != null) ? resolved.get() : defaultVal;
+                    return (value != null) ? String.valueOf(value) : null;
+                }, (b, s) -> {
+                    if (s == null) return;
+                    try {
+                        Double parsed = Double.valueOf(s);
+                        Property<Double> resolved = (Property<Double>) b.getProperty(key);
+                        if (resolved != null) resolved.set(parsed);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }, null, false, true, Component.translatable(contextMenuEntryLocalizationKeyBase), true,
+                        (defaultVal != null) ? String.valueOf(defaultVal) : String.valueOf(defaultValue), null, null);
+            }
+            return builder.buildDoubleInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
+                Property<Double> resolved = (Property<Double>) consumes.getProperty(key);
+                return (resolved != null) ? resolved.get() : defaultVal;
+            }, (b, value) -> {
+                Property<Double> resolved = (Property<Double>) b.getProperty(key);
+                if (resolved != null) resolved.set(value);
+            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, null, null);
+        };
+        return p;
+    }
+
+    @NotNull
+    public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return doubleProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
     }
 
     @NotNull
@@ -103,6 +184,45 @@ public class Property<T> {
     }
 
     @NotNull
+    public static Property<Long> longProperty(@NotNull String key, long defaultValue, long currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<Long> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        p.deserializationCodec = Long::valueOf;
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+            Long defaultVal = property.getDefault();
+            long resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
+            if (placeholders) {
+                return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
+                    Property<Long> resolved = (Property<Long>) consumes.getProperty(key);
+                    Long value = (resolved != null) ? resolved.get() : defaultVal;
+                    return (value != null) ? String.valueOf(value) : null;
+                }, (b, s) -> {
+                    if (s == null) return;
+                    try {
+                        Long parsed = Long.valueOf(s);
+                        Property<Long> resolved = (Property<Long>) b.getProperty(key);
+                        if (resolved != null) resolved.set(parsed);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }, null, false, true, Component.translatable(contextMenuEntryLocalizationKeyBase), true,
+                        (defaultVal != null) ? String.valueOf(defaultVal) : String.valueOf(defaultValue), null, null);
+            }
+            return builder.buildLongInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
+                Property<Long> resolved = (Property<Long>) consumes.getProperty(key);
+                return (resolved != null) ? resolved.get() : defaultVal;
+            }, (b, value) -> {
+                Property<Long> resolved = (Property<Long>) b.getProperty(key);
+                if (resolved != null) resolved.set(value);
+            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, null, null);
+        };
+        return p;
+    }
+
+    @NotNull
+    public static Property<Long> longProperty(@NotNull String key, long defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return longProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
+    }
+
+    @NotNull
     public static Property<Float> floatProperty(@NotNull String key, float defaultValue, float currentValue) {
         Property<Float> p = new Property<>(key, defaultValue, currentValue);
         p.deserializationCodec = Float::valueOf;
@@ -114,6 +234,45 @@ public class Property<T> {
         Property<Float> p = new Property<>(key, defaultValue);
         p.deserializationCodec = Float::valueOf;
         return p;
+    }
+
+    @NotNull
+    public static Property<Float> floatProperty(@NotNull String key, float defaultValue, float currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<Float> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        p.deserializationCodec = Float::valueOf;
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+            Float defaultVal = property.getDefault();
+            float resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
+            if (placeholders) {
+                return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
+                    Property<Float> resolved = (Property<Float>) consumes.getProperty(key);
+                    Float value = (resolved != null) ? resolved.get() : defaultVal;
+                    return (value != null) ? String.valueOf(value) : null;
+                }, (b, s) -> {
+                    if (s == null) return;
+                    try {
+                        Float parsed = Float.valueOf(s);
+                        Property<Float> resolved = (Property<Float>) b.getProperty(key);
+                        if (resolved != null) resolved.set(parsed);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }, null, false, true, Component.translatable(contextMenuEntryLocalizationKeyBase), true,
+                        (defaultVal != null) ? String.valueOf(defaultVal) : String.valueOf(defaultValue), null, null);
+            }
+            return builder.buildFloatInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
+                Property<Float> resolved = (Property<Float>) consumes.getProperty(key);
+                return (resolved != null) ? resolved.get() : defaultVal;
+            }, (b, value) -> {
+                Property<Float> resolved = (Property<Float>) b.getProperty(key);
+                if (resolved != null) resolved.set(value);
+            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, null, null);
+        };
+        return p;
+    }
+
+    @NotNull
+    public static Property<Float> floatProperty(@NotNull String key, float defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return floatProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
     }
 
     @NotNull
@@ -131,6 +290,25 @@ public class Property<T> {
     }
 
     @NotNull
+    public static Property<Boolean> booleanProperty(@NotNull String key, boolean defaultValue, boolean currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<Boolean> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        p.deserializationCodec = Boolean::valueOf;
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> builder.buildToggleContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
+            Property<Boolean> resolved = (Property<Boolean>) consumes.getProperty(key);
+            return (resolved != null) ? resolved.get() : property.getDefault();
+        }, (b, value) -> {
+            Property<Boolean> resolved = (Property<Boolean>) b.getProperty(key);
+            if (resolved != null) resolved.set(value);
+        }, contextMenuEntryLocalizationKeyBase);
+        return p;
+    }
+
+    @NotNull
+    public static Property<Boolean> booleanProperty(@NotNull String key, boolean defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return booleanProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
+    }
+
+    @NotNull
     public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @Nullable ResourceSource currentValue) {
         Property<ResourceSource> p = new Property<>(key, defaultValue, currentValue);
         p.deserializationCodec = ResourceSource::of;
@@ -144,6 +322,46 @@ public class Property<T> {
         p.deserializationCodec = ResourceSource::of;
         p.serializationCodec = ResourceSource::getSerializationSource;
         return p;
+    }
+
+    @NotNull
+    public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @Nullable ResourceSource currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<ResourceSource> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        p.deserializationCodec = ResourceSource::of;
+        p.serializationCodec = ResourceSource::getSerializationSource;
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+            ResourceSupplier<Resource> defaultSupplier = null;
+            ResourceSource defaultSource = property.getDefault();
+            if (defaultSource != null) {
+                defaultSupplier = new ResourceSupplier<>(Resource.class, FileMediaType.TEXT, defaultSource.getSourceWithPrefix());
+            }
+            return builder.buildGenericResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
+                    () -> ResourceChooserScreen.generic(null, null, file -> {}),
+                    source -> new ResourceSupplier<>(Resource.class, FileMediaType.TEXT, source),
+                    defaultSupplier,
+                    consumes -> {
+                        Property<ResourceSource> resolved = (Property<ResourceSource>) consumes.getProperty(key);
+                        ResourceSource value = (resolved != null) ? resolved.get() : defaultSource;
+                        if (value == null) return null;
+                        return new ResourceSupplier<>(Resource.class, FileMediaType.TEXT, value.getSourceWithPrefix());
+                    },
+                    (b, supplier) -> {
+                        Property<ResourceSource> resolved = (Property<ResourceSource>) b.getProperty(key);
+                        if (resolved == null) return;
+                        if (supplier == null) {
+                            resolved.set(null);
+                        } else {
+                            resolved.set(ResourceSource.of(supplier.getSourceWithPrefix()));
+                        }
+                    },
+                    Component.translatable(contextMenuEntryLocalizationKeyBase), true, null, null, true, true, true);
+        };
+        return p;
+    }
+
+    @NotNull
+    public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return resourceSourceProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
     @NotNull
@@ -174,6 +392,92 @@ public class Property<T> {
     }
 
     @NotNull
+    public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue, @Nullable ResourceSupplier<R> currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<ResourceSupplier<R>> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        p.deserializationCodec = consumes -> {
+            if (ITexture.class.isAssignableFrom(resourceType)) {
+                return (ResourceSupplier<R>) ResourceSupplier.image(consumes);
+            }
+            if (IAudio.class.isAssignableFrom(resourceType)) {
+                return (ResourceSupplier<R>) ResourceSupplier.audio(consumes);
+            }
+            if (IVideo.class.isAssignableFrom(resourceType)) {
+                return (ResourceSupplier<R>) ResourceSupplier.video(consumes);
+            }
+            if (IText.class.isAssignableFrom(resourceType)) {
+                return (ResourceSupplier<R>) ResourceSupplier.text(consumes);
+            }
+            throw new IllegalArgumentException("Unknown resource format! Unable to deserialize ResourceSupplier property!");
+        };
+        p.serializationCodec = ResourceSupplier::getSourceWithPrefix;
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+            if (ITexture.class.isAssignableFrom(resourceType)) {
+                return builder.buildImageResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
+                        (ResourceSupplier<ITexture>) property.getDefault(),
+                        consumes -> {
+                            Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) consumes.getProperty(key);
+                            ResourceSupplier<R> value = (resolved != null) ? resolved.get() : property.getDefault();
+                            return (ResourceSupplier<ITexture>) value;
+                        },
+                        (b, supplier) -> {
+                            Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
+                            if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
+                        },
+                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, null, true, true, true);
+            }
+            if (IAudio.class.isAssignableFrom(resourceType)) {
+                return builder.buildAudioResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
+                        (ResourceSupplier<IAudio>) property.getDefault(),
+                        consumes -> {
+                            Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) consumes.getProperty(key);
+                            ResourceSupplier<R> value = (resolved != null) ? resolved.get() : property.getDefault();
+                            return (ResourceSupplier<IAudio>) value;
+                        },
+                        (b, supplier) -> {
+                            Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
+                            if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
+                        },
+                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, null, true, true, true);
+            }
+            if (IVideo.class.isAssignableFrom(resourceType)) {
+                return builder.buildVideoResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
+                        (ResourceSupplier<IVideo>) property.getDefault(),
+                        consumes -> {
+                            Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) consumes.getProperty(key);
+                            ResourceSupplier<R> value = (resolved != null) ? resolved.get() : property.getDefault();
+                            return (ResourceSupplier<IVideo>) value;
+                        },
+                        (b, supplier) -> {
+                            Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
+                            if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
+                        },
+                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, null, true, true, true);
+            }
+            if (IText.class.isAssignableFrom(resourceType)) {
+                return builder.buildTextResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
+                        (ResourceSupplier<IText>) property.getDefault(),
+                        consumes -> {
+                            Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) consumes.getProperty(key);
+                            ResourceSupplier<R> value = (resolved != null) ? resolved.get() : property.getDefault();
+                            return (ResourceSupplier<IText>) value;
+                        },
+                        (b, supplier) -> {
+                            Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
+                            if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
+                        },
+                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, null, true, true, true);
+            }
+            throw new IllegalArgumentException("Unknown resource format! Unable to build ResourceSupplier context menu entry!");
+        };
+        return p;
+    }
+
+    @NotNull
+    public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return resourceSupplierProperty(resourceType, key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
+    }
+
+    @NotNull
     public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue, @Nullable DrawableColor currentValue) {
         Property<DrawableColor> p = new Property<>(key, defaultValue, currentValue);
         p.deserializationCodec = DrawableColor::of;
@@ -189,6 +493,36 @@ public class Property<T> {
         return p;
     }
 
+    @NotNull
+    public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue, @Nullable DrawableColor currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<DrawableColor> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        p.deserializationCodec = DrawableColor::of;
+        p.serializationCodec = DrawableColor::getHex;
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type,
+                consumes -> {
+                    Property<DrawableColor> resolved = (Property<DrawableColor>) consumes.getProperty(key);
+                    DrawableColor value = (resolved != null) ? resolved.get() : property.getDefault();
+                    return (value != null) ? value.getHex() : null;
+                },
+                (b, s) -> {
+                    if (s == null) return;
+                    DrawableColor parsed = DrawableColor.of(s);
+                    if (parsed != DrawableColor.EMPTY) {
+                        Property<DrawableColor> resolved = (Property<DrawableColor>) b.getProperty(key);
+                        if (resolved != null) resolved.set(parsed);
+                    }
+                },
+                null, false, placeholders, Component.translatable(contextMenuEntryLocalizationKeyBase), true,
+                (property.getDefault() != null) ? property.getDefault().getHex() : null,
+                (!placeholders) ? TextValidators.HEX_COLOR_TEXT_VALIDATOR : null, null);
+        return p;
+    }
+
+    @NotNull
+    public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return drawableColorProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
+    }
+
     protected Property(@NotNull String key, @Nullable T defaultValue, @Nullable T currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         this.key = Objects.requireNonNull(key);
         this.defaultValue = defaultValue;
@@ -196,11 +530,19 @@ public class Property<T> {
         this.contextMenuEntryLocalizationKeyBase = Objects.requireNonNull(contextMenuEntryLocalizationKeyBase);
     }
 
+    protected Property(@NotNull String key, @Nullable T defaultValue, @Nullable T currentValue) {
+        this(key, defaultValue, currentValue, key);
+    }
+
     protected Property(@NotNull String key, @Nullable T defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         this.key = Objects.requireNonNull(key);
         this.defaultValue = defaultValue;
         this.currentValue = defaultValue;
         this.contextMenuEntryLocalizationKeyBase = Objects.requireNonNull(contextMenuEntryLocalizationKeyBase);
+    }
+
+    protected Property(@NotNull String key, @Nullable T defaultValue) {
+        this(key, defaultValue, defaultValue, key);
     }
 
     public @NotNull String getKey() {
