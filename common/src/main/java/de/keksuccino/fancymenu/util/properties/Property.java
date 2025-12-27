@@ -11,10 +11,12 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
+import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.Objects;
 
 @SuppressWarnings("unused")
@@ -34,13 +36,22 @@ public class Property<T> {
     protected ConsumingSupplier<T, String> serializationCodec = Object::toString;
     @Nullable
     protected ContextMenuEntrySupplier contextMenuEntrySupplier;
+    @NotNull
+    protected String contextMenuEntryLocalizationKeyBase;
 
     @NotNull
-    public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue) {
-        Property<String> p = new Property<>(key, defaultValue, currentValue);
+    public static <P> Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<String> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = consumes -> consumes;
-        p.contextMenuEntrySupplier = b -> {
-            return b.
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+            return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
+                Property<String> resolved = (Property<String>) ((PropertyHolder)consumes).getProperty(key);
+                if (resolved != null) return resolved.getKey();
+                return defaultValue;
+            }, (b, s) -> {
+                Property<String> resolved = (Property<String>) ((PropertyHolder)b).getProperty(key);
+                if (resolved != null) resolved.set(s);
+            }, null, multiLine, placeholders, Component.translatable(contextMenuEntryLocalizationKeyBase), true, property.getDefault(), null, null);
         };
         return p;
     }
@@ -181,16 +192,18 @@ public class Property<T> {
         return p;
     }
 
-    protected Property(@NotNull String key, @Nullable T defaultValue, @Nullable T currentValue) {
+    protected Property(@NotNull String key, @Nullable T defaultValue, @Nullable T currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         this.key = Objects.requireNonNull(key);
         this.defaultValue = defaultValue;
         this.currentValue = currentValue;
+        this.contextMenuEntryLocalizationKeyBase = Objects.requireNonNull(contextMenuEntryLocalizationKeyBase);
     }
 
-    protected Property(@NotNull String key, @Nullable T defaultValue) {
+    protected Property(@NotNull String key, @Nullable T defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         this.key = Objects.requireNonNull(key);
         this.defaultValue = defaultValue;
         this.currentValue = defaultValue;
+        this.contextMenuEntryLocalizationKeyBase = Objects.requireNonNull(contextMenuEntryLocalizationKeyBase);
     }
 
     public @NotNull String getKey() {
@@ -276,14 +289,23 @@ public class Property<T> {
         return this;
     }
 
+    public @NotNull String getContextMenuEntryLocalizationKeyBase() {
+        return contextMenuEntryLocalizationKeyBase;
+    }
+
+    public Property<T> setContextMenuEntryLocalizationKeyBase(@NotNull String contextMenuEntryLocalizationKeyBase) {
+        this.contextMenuEntryLocalizationKeyBase = contextMenuEntryLocalizationKeyBase;
+        return this;
+    }
+
     public Property<T> setContextMenuEntrySupplier(@NotNull ContextMenuEntrySupplier contextMenuEntrySupplier) {
         this.contextMenuEntrySupplier = contextMenuEntrySupplier;
         return this;
     }
 
-    public <B> ContextMenu.ContextMenuEntry<?> buildContextMenuEntry(@NotNull ContextMenuBuilder<B> contextMenuBuilder) {
+    public <B, H extends PropertyHolder> ContextMenu.ContextMenuEntry<?> buildContextMenuEntry(@NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<B> contextMenuBuilder, @NotNull ContextMenu parentMenu) {
         Objects.requireNonNull(this.contextMenuEntrySupplier, "ContextMenuEntrySupplier is null! Can't build entry!");
-        return this.contextMenuEntrySupplier.get(Objects.requireNonNull(contextMenuBuilder));
+        return this.contextMenuEntrySupplier.get(Objects.requireNonNull(propertyHolderType), this, Objects.requireNonNull(contextMenuBuilder), Objects.requireNonNull(parentMenu));
     }
 
     @Override
@@ -304,7 +326,7 @@ public class Property<T> {
     @FunctionalInterface
     public interface ContextMenuEntrySupplier {
         @NotNull
-        <B> ContextMenu.ContextMenuEntry<?> get(@NotNull ContextMenuBuilder<B> contextMenuBuilder);
+        <B, H extends PropertyHolder, T> ContextMenu.ContextMenuEntry<?> get(@NotNull Class<H> propertyHolderType, @NotNull Property<T> property, @NotNull ContextMenuBuilder<B> contextMenuBuilder, @NotNull ContextMenu parentMenu);
     }
 
 }

@@ -13,6 +13,8 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -37,14 +39,14 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 @SuppressWarnings("deprecation")
-public abstract class AbstractEditorElement implements Renderable, GuiEventListener, ContextMenuBuilder<AbstractEditorElement> {
+public abstract class AbstractEditorElement implements Renderable, GuiEventListener, ContextMenuBuilder<AbstractEditorElement>, PropertyHolder {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -75,6 +77,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
         return 0.7F;
     };
 
+    @NotNull
 	public AbstractElement element;
 	public final EditorElementSettings settings;
 	public ContextMenu rightClickMenu;
@@ -136,11 +139,16 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		this.init();
 	}
 
-	public AbstractEditorElement(@Nonnull AbstractElement element, @Nonnull LayoutEditorScreen editor) {
+	public AbstractEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
 		this(element, editor, new EditorElementSettings());
 	}
 
-	public void init() {
+    @Override
+    public @NotNull Map<String, Property<?>> getPropertyMap() {
+        return this.element.getPropertyMap();
+    }
+
+    public void init() {
 
 		this.rightClickMenu.closeMenu();
 		this.rightClickMenu.clearEntries();

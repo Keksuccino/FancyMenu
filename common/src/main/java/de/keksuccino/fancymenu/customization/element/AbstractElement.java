@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -40,12 +41,10 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
+import java.util.*;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 
-public abstract class AbstractElement implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public abstract class AbstractElement implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget, PropertyHolder {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -55,6 +54,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public static final int STAY_ON_SCREEN_EDGE_ZONE_SIZE = 2;
 
 	public final ElementBuilder<?,?> builder;
+    private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
 	protected String anchorPointElementIdentifier = null;
 	protected AbstractElement cachedElementAnchorPointParent = null;
@@ -197,7 +197,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	protected String lastAdvancedHorizontalTiltDegrees;
 	protected boolean allowDepthTestManipulation = false;
     @NotNull
-    public final Property<Boolean> shouldBeAffectedByDecorationOverlays = Property.booleanProperty("should_be_affected_by_decoration_overlays", false);
+    public final Property<Boolean> shouldBeAffectedByDecorationOverlays = putProperty(Property.booleanProperty("should_be_affected_by_decoration_overlays", false));
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -205,7 +205,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
 	}
 
-	/**
+    @Override
+    public @NotNull Map<String, Property<?>> getPropertyMap() {
+        return this.propertyMap;
+    }
+
+    /**
 	 * Returns whether this element type supports rotation.
 	 * @return true if this element can be rotated, false otherwise
 	 */

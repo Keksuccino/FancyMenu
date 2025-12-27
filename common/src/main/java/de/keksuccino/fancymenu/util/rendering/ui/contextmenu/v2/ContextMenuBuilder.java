@@ -117,10 +117,9 @@ public interface ContextMenuBuilder<O> {
         return addTo.addEntry(buildVideoResourceChooserContextMenuEntry(addTo, entryIdentifier, elementType, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
-    @SuppressWarnings("all")
     default ContextMenu.ClickableContextMenuEntry<?> buildTextResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        ConsumingSupplier<O, ResourceSupplier<IText>> getter = (ConsumingSupplier<O, ResourceSupplier<IText>>) targetFieldGetter;
-        BiConsumer<O, ResourceSupplier<IText>> setter = (BiConsumer<O, ResourceSupplier<IText>>) targetFieldSetter;
+        ConsumingSupplier<O, ResourceSupplier<IText>> getter = targetFieldGetter;
+        BiConsumer<O, ResourceSupplier<IText>> setter = targetFieldSetter;
         return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
