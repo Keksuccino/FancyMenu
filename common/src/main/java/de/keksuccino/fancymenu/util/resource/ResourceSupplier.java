@@ -76,7 +76,8 @@ public class ResourceSupplier<R extends Resource> {
      */
     @NotNull
     public static ResourceSupplier<IVideo> video(@NotNull String source) {
-        return new ResourceSupplier<>(IVideo.class, FileMediaType.VIDEO, source);
+        return new ResourceSupplier<>(IVideo.class, FileMediaType.VIDEO, source)
+                .setOnUpdateResourceTask(PlayableResource::stop);
     }
 
     /**

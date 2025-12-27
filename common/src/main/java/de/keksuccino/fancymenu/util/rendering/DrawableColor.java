@@ -169,6 +169,11 @@ public class DrawableColor {
         return c;
     }
 
+    @Override
+    public String toString() {
+        return this.getHex();
+    }
+
     @Nullable
     protected static Color convertHexStringToColor(@NotNull String hex) {
         try {
