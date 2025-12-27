@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -195,6 +196,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public String advancedHorizontalTiltDegrees;
 	protected String lastAdvancedHorizontalTiltDegrees;
 	protected boolean allowDepthTestManipulation = false;
+    @NotNull
+    public final Property<Boolean> shouldBeAffectedByDecorationOverlays = Property.booleanProperty("should_be_affected_by_decoration_overlays", false);
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {

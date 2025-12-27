@@ -190,20 +190,37 @@ public class Property<T> {
         return key;
     }
 
-    public @Nullable T getDefaultValue() {
+    public @Nullable T getDefault() {
         return defaultValue;
     }
 
-    public Property<T> setDefaultValue(@Nullable T defaultValue) {
+    public Property<T> setDefault(@Nullable T defaultValue) {
         this.defaultValue = defaultValue;
         return this;
     }
 
-    public @Nullable T getCurrentValue() {
+    public @Nullable T get() {
         return currentValue;
     }
 
-    public Property<T> setCurrentValue(@Nullable T currentValue) {
+    /**
+     * First tries to return the current value if it is not null, else will try to return the default value, and will throw an error if both are null.
+     */
+    public T tryGetNonNull() {
+        if (this.currentValue != null) return this.currentValue;
+        return Objects.requireNonNull(this.defaultValue);
+    }
+
+    /**
+     * First tries to return the current value if it is not null, then tries to return the default value. If both are null, it will return {@code elseValue}.
+     */
+    public T tryGetNonNullElse(@NotNull T elseValue) {
+        if (this.currentValue != null) return this.currentValue;
+        if (this.defaultValue != null) return this.defaultValue;
+        return Objects.requireNonNull(elseValue);
+    }
+
+    public Property<T> set(@Nullable T currentValue) {
         this.currentValue = currentValue;
         return this;
     }
