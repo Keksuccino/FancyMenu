@@ -11,41 +11,25 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.util.*;
-import de.keksuccino.fancymenu.util.cycle.ValueCycle;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
-import de.keksuccino.fancymenu.util.file.FileFilter;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
-import de.keksuccino.fancymenu.util.file.type.FileType;
-import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
-import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
-import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.util.resource.Resource;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
-import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
-import de.keksuccino.fancymenu.util.resource.resources.text.IText;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -57,11 +41,10 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("deprecation")
-public abstract class AbstractEditorElement implements Renderable, GuiEventListener {
+public abstract class AbstractEditorElement implements Renderable, GuiEventListener, ContextMenuBuilder<AbstractEditorElement> {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -1688,414 +1671,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		return null;
 	}
 
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-		ConsumingSupplier<AbstractEditorElement, ResourceSupplier<ITexture>> getter = (ConsumingSupplier<AbstractEditorElement, ResourceSupplier<ITexture>>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, ResourceSupplier<ITexture>> setter = (BiConsumer<AbstractEditorElement, ResourceSupplier<ITexture>>) targetFieldSetter;
-		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.image(null, file -> {}), ResourceSupplier::image, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addAudioResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-		ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IAudio>> getter = (ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IAudio>>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, ResourceSupplier<IAudio>> setter = (BiConsumer<AbstractEditorElement, ResourceSupplier<IAudio>>) targetFieldSetter;
-		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.audio(null, file -> {}), ResourceSupplier::audio, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.AUDIO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addVideoResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-		ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IVideo>> getter = (ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IVideo>>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, ResourceSupplier<IVideo>> setter = (BiConsumer<AbstractEditorElement, ResourceSupplier<IVideo>>) targetFieldSetter;
-		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.video(null, file -> {}), ResourceSupplier::video, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.VIDEO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addTextResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-		ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IText>> getter = (ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IText>>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, ResourceSupplier<IText>> setter = (BiConsumer<AbstractEditorElement, ResourceSupplier<IText>>) targetFieldSetter;
-		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
-	}
-
-	@SuppressWarnings("all")
-	protected <R extends Resource, F extends FileType<R>, E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-		ConsumingSupplier<AbstractEditorElement, ResourceSupplier<R>> getter = (ConsumingSupplier<AbstractEditorElement, ResourceSupplier<R>>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, ResourceSupplier<R>> setter = (BiConsumer<AbstractEditorElement, ResourceSupplier<R>>) targetFieldSetter;
-		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, getter, setter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb);
-	}
-
-	protected <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-
-		ContextMenu subMenu = new ContextMenu();
-
-		subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.resources.choose"),
-				(menu, entry) -> {
-					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-					if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
-						String preSelectedSource = null;
-						List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> {
-							ResourceSupplier<R> supplier = targetFieldGetter.get(consumes);
-							if (supplier != null) return supplier.getSourceWithPrefix();
-							return null;
-						});
-						if (!allPaths.isEmpty() && ListUtils.allInListEqual(allPaths)) {
-							preSelectedSource = allPaths.get(0);
-						}
-						ResourceChooserScreen<R,F> chooserScreen = resourceChooserScreenBuilder.get();
-						chooserScreen.setFileFilter(fileFilter);
-						chooserScreen.setAllowedFileTypes(fileTypes);
-						chooserScreen.setSource(preSelectedSource, false);
-						chooserScreen.setLocationSourceAllowed(allowLocation);
-						chooserScreen.setLocalSourceAllowed(allowLocal);
-						chooserScreen.setWebSourceAllowed(allowWeb);
-						chooserScreen.setResourceSourceCallback(source -> {
-							if (source != null) {
-								this.editor.history.saveSnapshot();
-								for (AbstractEditorElement e : selectedElements) {
-									targetFieldSetter.accept(e, resourceSupplierBuilder.get(source));
-								}
-							}
-							Minecraft.getInstance().setScreen(this.editor);
-						});
-						Minecraft.getInstance().setScreen(chooserScreen);
-					}
-				}).setStackable(true);
-
-		if (addResetOption) {
-			subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.ui.resources.reset"),
-					(menu, entry) -> {
-						if (entry.getStackMeta().isFirstInStack()) {
-							List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-							this.editor.history.saveSnapshot();
-							for (AbstractEditorElement e : selectedElements) {
-								targetFieldSetter.accept(e, defaultValue);
-							}
-						}
-					}).setStackable(true);
-		}
-
-		Supplier<Component> currentValueDisplayLabelSupplier = () -> {
-			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-			if (selectedElements.size() == 1) {
-				Component valueComponent;
-				ResourceSupplier<R> supplier = targetFieldGetter.get(selectedElements.get(0));
-				String val = (supplier != null) ? supplier.getSourceWithoutPrefix() : null;
-				if (val == null) {
-					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-				} else {
-					val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
-					if (Minecraft.getInstance().font.width(val) > 150) {
-						val = new StringBuilder(val).reverse().toString();
-						val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
-						val = new StringBuilder(val).reverse().toString();
-						val = ".." + val;
-					}
-					valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-				}
-				return Component.translatable("fancymenu.ui.resources.current", valueComponent);
-			}
-			return Component.empty();
-		};
-		subMenu.addSeparatorEntry("separator_before_current_value_display")
-				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1);
-		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
-				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
-				.setClickSoundEnabled(false)
-				.setChangeBackgroundColorOnHover(false)
-				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1)
-				.setIcon(ContextMenu.IconFactory.getIcon("info"));
-
-		return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
-
-	}
-
-	protected ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ContextMenu subMenu = new ContextMenu();
-		ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) ->
-		{
-			if (entry.getStackMeta().isFirstInStack()) {
-				List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-				String defaultText = null;
-				List<String> targetValuesOfSelected = new ArrayList<>();
-				for (AbstractEditorElement e : selectedElements) {
-					targetValuesOfSelected.add(targetFieldGetter.get(e));
-				}
-				if (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(targetValuesOfSelected)) {
-					defaultText = targetFieldGetter.get(this);
-				}
-				Screen inputScreen;
-				if (!multiLineInput && !allowPlaceholders) {
-					TextInputScreen s = TextInputScreen.build(label, inputCharacterFilter, call -> {
-						if (call != null) {
-							this.editor.history.saveSnapshot();
-							for (AbstractEditorElement e : selectedElements) {
-								targetFieldSetter.accept(e, call);
-							}
-						}
-						menu.closeMenu();
-						Minecraft.getInstance().setScreen(this.editor);
-					});
-					if (textValidator != null) {
-						s.setTextValidator(consumes -> {
-							if (textValidatorUserFeedback != null) consumes.setTextValidatorUserFeedback(textValidatorUserFeedback.get(consumes.getText()));
-							return textValidator.get(consumes.getText());
-						});
-					}
-					s.setText(defaultText);
-					inputScreen = s;
-				} else {
-					TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
-						if (call != null) {
-							this.editor.history.saveSnapshot();
-							for (AbstractEditorElement e : selectedElements) {
-								targetFieldSetter.accept(e, call);
-							}
-						}
-						menu.closeMenu();
-						Minecraft.getInstance().setScreen(this.editor);
-					});
-					if (textValidator != null) {
-						s.setTextValidator(consumes -> {
-							if (textValidatorUserFeedback != null) consumes.setTextValidatorUserFeedback(textValidatorUserFeedback.get(consumes.getText()));
-							return textValidator.get(consumes.getText());
-						});
-					}
-					s.setText(defaultText);
-					s.setMultilineMode(multiLineInput);
-					s.setPlaceholdersAllowed(allowPlaceholders);
-					inputScreen = s;
-				}
-				Minecraft.getInstance().setScreen(inputScreen);
-			}
-		}).setStackable(true);
-
-		if (addResetOption) {
-			subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"), (menu, entry) -> {
-				if (entry.getStackMeta().isFirstInStack()) {
-					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-					this.editor.history.saveSnapshot();
-					for (AbstractEditorElement e : selectedElements) {
-						targetFieldSetter.accept(e, defaultValue);
-					}
-				}
-			}).setStackable(true);
-		}
-
-		Supplier<Component> currentValueDisplayLabelSupplier = () -> {
-			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-			if (selectedElements.size() == 1) {
-				Component valueComponent;
-				String val = targetFieldGetter.get(selectedElements.get(0));
-				if (val == null) {
-					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-				} else {
-					val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
-					if (Minecraft.getInstance().font.width(val) > 150) {
-						val = new StringBuilder(val).reverse().toString();
-						val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
-						val = new StringBuilder(val).reverse().toString();
-						val = ".." + val;
-					}
-					valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-				}
-				return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
-			}
-			return Component.empty();
-		};
-		subMenu.addSeparatorEntry("separator_before_current_value_display")
-				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1);
-		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
-				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
-				.setClickSoundEnabled(false)
-				.setChangeBackgroundColorOnHover(false)
-				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1)
-				.setIcon(ContextMenu.IconFactory.getIcon("info"));
-
-		return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
-
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull ConsumingSupplier<E, String> targetFieldGetter, @NotNull BiConsumer<E, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<AbstractEditorElement, String> getter = (ConsumingSupplier<AbstractEditorElement, String>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, String> setter = (BiConsumer<AbstractEditorElement, String>) targetFieldSetter;
-		return this.addInputContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
-	}
-
-	protected ContextMenu.ClickableContextMenuEntry<?> addGenericStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		return addInputContextMenuEntryTo(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull ConsumingSupplier<E, String> targetFieldGetter, @NotNull BiConsumer<E, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<AbstractEditorElement, String> getter = (ConsumingSupplier<AbstractEditorElement, String>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, String> setter = (BiConsumer<AbstractEditorElement, String>) targetFieldSetter;
-		return this.addGenericStringInputContextMenuEntryTo(addTo, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
-	}
-
-	protected ContextMenu.ClickableContextMenuEntry<?> addGenericIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Integer> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<String, Boolean> defaultIntegerValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isInteger(consumes);
-		return addInputContextMenuEntryTo(addTo, entryIdentifier, selectedElementsFilter,
-				consumes -> {
-					Integer i = targetFieldGetter.get(consumes);
-					if (i == null) i = 0;
-					return "" + i;
-				},
-				(e, s) -> {
-					if (MathUtils.isInteger(s)) targetFieldSetter.accept(e, Integer.valueOf(s));
-				},
-				CharacterFilter.buildIntegerFilter(), false, false, label, addResetOption, "" + defaultValue,
-				(textValidator != null) ? textValidator : defaultIntegerValidator, textValidatorUserFeedback);
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull ConsumingSupplier<E, Integer> targetFieldGetter, @NotNull BiConsumer<E, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<AbstractEditorElement, Integer> getter = (ConsumingSupplier<AbstractEditorElement, Integer>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, Integer> setter = (BiConsumer<AbstractEditorElement, Integer>) targetFieldSetter;
-		return this.addGenericIntegerInputContextMenuEntryTo(addTo, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
-	}
-
-	protected ContextMenu.ClickableContextMenuEntry<?> addGenericLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Long> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<String, Boolean> defaultLongValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isLong(consumes);
-		return addInputContextMenuEntryTo(addTo, entryIdentifier, selectedElementsFilter,
-				consumes -> {
-					Long l = targetFieldGetter.get(consumes);
-					if (l == null) l = 0L;
-					return "" + l;
-				},
-				(e, s) -> {
-					if (MathUtils.isLong(s)) targetFieldSetter.accept(e, Long.valueOf(s));
-				},
-				CharacterFilter.buildIntegerFilter(), false, false, label, addResetOption, "" + defaultValue,
-				(textValidator != null) ? textValidator : defaultLongValidator, textValidatorUserFeedback);
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull ConsumingSupplier<E, Long> targetFieldGetter, @NotNull BiConsumer<E, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<AbstractEditorElement, Long> getter = (ConsumingSupplier<AbstractEditorElement, Long>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, Long> setter = (BiConsumer<AbstractEditorElement, Long>) targetFieldSetter;
-		return this.addGenericLongInputContextMenuEntryTo(addTo, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
-	}
-
-	protected ContextMenu.ClickableContextMenuEntry<?> addGenericDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Double> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<String, Boolean> defaultDoubleValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isDouble(consumes);
-		return addInputContextMenuEntryTo(addTo, entryIdentifier, selectedElementsFilter,
-				consumes -> {
-					Double d = targetFieldGetter.get(consumes);
-					if (d == null) d = 0D;
-					return "" + d;
-				},
-				(e, s) -> {
-					if (MathUtils.isDouble(s)) targetFieldSetter.accept(e, Double.valueOf(s));
-				},
-				CharacterFilter.buildDecimalFiler(), false, false, label, addResetOption, "" + defaultValue,
-				(textValidator != null) ? textValidator : defaultDoubleValidator, textValidatorUserFeedback);
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull ConsumingSupplier<E, Double> targetFieldGetter, @NotNull BiConsumer<E, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<AbstractEditorElement, Double> getter = (ConsumingSupplier<AbstractEditorElement, Double>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, Double> setter = (BiConsumer<AbstractEditorElement, Double>) targetFieldSetter;
-		return this.addGenericDoubleInputContextMenuEntryTo(addTo, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
-	}
-
-	protected ContextMenu.ClickableContextMenuEntry<?> addGenericFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Float> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<String, Boolean> defaultFloatValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isFloat(consumes);
-		return addInputContextMenuEntryTo(addTo, entryIdentifier, selectedElementsFilter,
-				consumes -> {
-					Float f = targetFieldGetter.get(consumes);
-					if (f == null) f = 0F;
-					return "" + f;
-				},
-				(e, s) -> {
-					if (MathUtils.isFloat(s)) targetFieldSetter.accept(e, Float.valueOf(s));
-				},
-				CharacterFilter.buildDecimalFiler(), false, false, label, addResetOption, "" + defaultValue,
-				(textValidator != null) ? textValidator : defaultFloatValidator, textValidatorUserFeedback);
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull ConsumingSupplier<E, Float> targetFieldGetter, @NotNull BiConsumer<E, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-		ConsumingSupplier<AbstractEditorElement, Float> getter = (ConsumingSupplier<AbstractEditorElement, Float>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, Float> setter = (BiConsumer<AbstractEditorElement, Float>) targetFieldSetter;
-		return this.addGenericFloatInputContextMenuEntryTo(addTo, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
-	}
-
-	protected <V> ContextMenu.ClickableContextMenuEntry<?> addGenericCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, V> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, V> targetFieldSetter, @NotNull AbstractEditorElement.SwitcherContextMenuEntryLabelSupplier<V> labelSupplier) {
-		return addTo.addClickableEntry(entryIdentifier, Component.literal(""), (menu, entry) ->
-				{
-					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-					ValueCycle<V> cycle = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
-					this.editor.history.saveSnapshot();
-					if (!selectedElements.isEmpty() && entry.getStackMeta().isFirstInStack()) {
-						V next = cycle.next();
-						for (AbstractEditorElement e : selectedElements) {
-							targetFieldSetter.accept(e, next);
-						}
-					}
-				})
-				.setLabelSupplier((menu, entry) -> {
-					List<AbstractEditorElement> selectedElements = new ArrayList<>();
-					if (!entry.getStackMeta().getProperties().hasProperty("switcher")) {
-						selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-					}
-					ValueCycle<V> switcher = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
-					return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry<?>) entry, switcher.current());
-				}).setStackable(true);
-	}
-
-	@SuppressWarnings("all")
-	protected <V, E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @NotNull Class<E> elementType, @NotNull ConsumingSupplier<E, V> targetFieldGetter, @NotNull BiConsumer<E, V> targetFieldSetter, @NotNull AbstractEditorElement.SwitcherContextMenuEntryLabelSupplier<V> labelSupplier) {
-		ConsumingSupplier<AbstractEditorElement, V> getter = (ConsumingSupplier<AbstractEditorElement, V>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, V> setter = (BiConsumer<AbstractEditorElement, V>) targetFieldSetter;
-		return this.addGenericCycleContextMenuEntryTo(addTo, entryIdentifier, switcherValues, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, labelSupplier);
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addToggleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull ConsumingSupplier<E, Boolean> targetFieldGetter, @NotNull BiConsumer<E, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-		ConsumingSupplier<AbstractEditorElement, Boolean> getter = (ConsumingSupplier<AbstractEditorElement, Boolean>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, Boolean> setter = (BiConsumer<AbstractEditorElement, Boolean>) targetFieldSetter;
-		return addGenericCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.of(false, true), consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, (menu, entry, switcherValue) -> {
-			if (switcherValue && entry.isActive()) {
-				MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-				return Component.translatable(labelLocalizationKeyBase, enabled);
-			}
-			MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-			return Component.translatable(labelLocalizationKeyBase, disabled);
-		}).setStackable(true);
-	}
-
-	/**
-	 * Only supports old (legacy) toggle localization keys (format = localization.key.on / .off)!<br>
-	 * For newer localization keys, use <b>AbstractEditorElement#addToggleContextMenuEntryTo(...)</b> instead!
-	 */
-	@Deprecated
-	@Legacy("This is to be able to use old .on/.off localizations. Remove this in the future and update localizations.")
-	protected ContextMenu.ClickableContextMenuEntry<?> addGenericBooleanSwitcherContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Boolean> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-		return addGenericCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.of(false, true), selectedElementsFilter, targetFieldGetter, targetFieldSetter, (menu, entry, switcherValue) -> {
-			if (switcherValue && entry.isActive()) {
-				return Component.translatable(labelLocalizationKeyBase + ".on");
-			}
-			return Component.translatable(labelLocalizationKeyBase + ".off");
-		}).setStackable(true);
-	}
-
-	@SuppressWarnings("all")
-	protected <T, E extends AbstractEditorElement> ValueCycle<T> setupValueCycle(String toggleIdentifier, ValueCycle<T> cycle, List<E> elements, ContextMenu.ContextMenuStackMeta stackMeta, ConsumingSupplier<E, T> defaultValue) {
-		boolean hasProperty = stackMeta.getProperties().hasProperty(toggleIdentifier);
-		ValueCycle<T> t = stackMeta.getProperties().putPropertyIfAbsentAndGet(toggleIdentifier, cycle);
-		if (!elements.isEmpty()) {
-			E firstElement = elements.get(0);
-			if (!stackMeta.isPartOfStack()) {
-				t.setCurrentValue(defaultValue.get(firstElement));
-			} else if (!hasProperty) {
-				if (ListUtils.allInListEqual(ObjectUtils.getOfAllUnsafe((List<Object>)((Object)elements), (ConsumingSupplier<Object,Object>)((Object)defaultValue)))) {
-					t.setCurrentValue(defaultValue.get(firstElement));
-				}
-			}
-		}
-		return t;
-	}
-
 	protected List<AbstractEditorElement> getFilteredSelectedElementList(@Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter) {
 		return ListUtils.filterList(this.editor.getSelectedElements(), (consumes) -> {
 			if (selectedElementsFilter == null) {
@@ -2105,12 +1680,27 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		});
 	}
 
-	@FunctionalInterface
-	protected interface SwitcherContextMenuEntryLabelSupplier<V> {
-		Component get(ContextMenu menu, ContextMenu.ClickableContextMenuEntry<?> entry, V switcherValue);
-	}
+    @Override
+    public @NotNull List<AbstractEditorElement> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<AbstractEditorElement, Boolean> filter) {
+        return getFilteredSelectedElementList(filter);
+    }
 
-	public enum ResizeGrabberType {
+    @Override
+    public @NotNull AbstractEditorElement getSelf() {
+        return this;
+    }
+
+    @Override
+    public void saveSnapshot() {
+        this.editor.history.saveSnapshot();
+    }
+
+    @Override
+    public @Nullable Screen getContextMenuCallbackScreen() {
+        return this.editor;
+    }
+
+    public enum ResizeGrabberType {
 		TOP,
 		RIGHT,
 		BOTTOM,

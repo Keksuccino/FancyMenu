@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.util.properties;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -30,11 +32,16 @@ public class Property<T> {
     protected ConsumingSupplier<String, T> deserializationCodec;
     @Nullable
     protected ConsumingSupplier<T, String> serializationCodec = Object::toString;
+    @Nullable
+    protected ContextMenuEntrySupplier contextMenuEntrySupplier;
 
     @NotNull
     public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue) {
         Property<String> p = new Property<>(key, defaultValue, currentValue);
         p.deserializationCodec = consumes -> consumes;
+        p.contextMenuEntrySupplier = b -> {
+            return b.
+        };
         return p;
     }
 
@@ -228,7 +235,7 @@ public class Property<T> {
         return deserializationCodec;
     }
 
-    public Property<T> setDeserializationCodec(@Nullable ConsumingSupplier<String, T> deserializationCodec) {
+    public Property<T> setDeserializationCodec(@NotNull ConsumingSupplier<String, T> deserializationCodec) {
         this.deserializationCodec = deserializationCodec;
         return this;
     }
@@ -237,7 +244,7 @@ public class Property<T> {
         return serializationCodec;
     }
 
-    public Property<T> setSerializationCodec(@Nullable ConsumingSupplier<T, String> serializationCodec) {
+    public Property<T> setSerializationCodec(@NotNull ConsumingSupplier<T, String> serializationCodec) {
         this.serializationCodec = serializationCodec;
         return this;
     }
@@ -269,6 +276,16 @@ public class Property<T> {
         return this;
     }
 
+    public Property<T> setContextMenuEntrySupplier(@NotNull ContextMenuEntrySupplier contextMenuEntrySupplier) {
+        this.contextMenuEntrySupplier = contextMenuEntrySupplier;
+        return this;
+    }
+
+    public <B> ContextMenu.ContextMenuEntry<?> buildContextMenuEntry(@NotNull ContextMenuBuilder<B> contextMenuBuilder) {
+        Objects.requireNonNull(this.contextMenuEntrySupplier, "ContextMenuEntrySupplier is null! Can't build entry!");
+        return this.contextMenuEntrySupplier.get(Objects.requireNonNull(contextMenuBuilder));
+    }
+
     @Override
     @Nullable
     public String toString() {
@@ -282,6 +299,12 @@ public class Property<T> {
             LOGGER.error("[FANCYMENU] Failed to serialize property: " + this.getKey(), ex);
         }
         return null;
+    }
+
+    @FunctionalInterface
+    public interface ContextMenuEntrySupplier {
+        @NotNull
+        <B> ContextMenu.ContextMenuEntry<?> get(@NotNull ContextMenuBuilder<B> contextMenuBuilder);
     }
 
 }
