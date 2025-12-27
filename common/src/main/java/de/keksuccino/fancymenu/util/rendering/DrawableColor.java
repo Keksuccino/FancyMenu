@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
