@@ -7,6 +7,8 @@ import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -18,6 +20,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -31,22 +34,46 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
 
     @Nullable
     protected CheckboxButton checkbox;
-    @Nullable
-    public String tooltip;
-    @Nullable
-    public ResourceSupplier<ITexture> checkmarkTexture = null;
-    @Nullable
-    public ResourceSupplier<ITexture> backgroundTextureNormal = null;
-    @Nullable
-    public ResourceSupplier<ITexture> backgroundTextureHover = null;
-    @Nullable
-    public ResourceSupplier<ITexture> backgroundTextureInactive = null;
-    public boolean variableMode = false;
-    @Nullable
-    public String linkedVariable;
-    public ResourceSupplier<IAudio> hoverSound;
-    public ResourceSupplier<IAudio> clickSound;
-    public boolean navigatable = true;
+
+    public final Property<String> tooltip = putProperty(Property.stringProperty("description", null, true, true, "fancymenu.elements.button.tooltip")
+            .setContextMenuEntrySupplier((type, property, builder, menu) -> builder.buildStringInputContextMenuEntry(menu, "menu_entry_description",
+                    type,
+                    consumes -> {
+                        Property<String> resolved = (Property<String>) consumes.getProperty("description");
+                        String value = (resolved != null) ? resolved.get() : null;
+                        return (value != null) ? value.replace("%n%", "\n") : null;
+                    },
+                    (b, s) -> {
+                        Property<String> resolved = (Property<String>) b.getProperty("description");
+                        if (resolved == null) return;
+                        if (s != null) {
+                            s = s.replace("\n", "%n%");
+                        }
+                        resolved.set(s);
+                    },
+                    null, true, true, Component.translatable("fancymenu.elements.button.tooltip"),
+                    true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)));
+    public final Property<ResourceSupplier<ITexture>> checkmarkTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "checkmark_texture", null, "fancymenu.elements.checkbox.checkmark_texture"));
+    public final Property<ResourceSupplier<ITexture>> backgroundTextureNormal = putProperty(Property.resourceSupplierProperty(ITexture.class, "background_texture_normal", null, "fancymenu.elements.checkbox.background_texture_normal"));
+    public final Property<ResourceSupplier<ITexture>> backgroundTextureHover = putProperty(Property.resourceSupplierProperty(ITexture.class, "background_texture_hover", null, "fancymenu.elements.checkbox.background_texture_hover"));
+    public final Property<ResourceSupplier<ITexture>> backgroundTextureInactive = putProperty(Property.resourceSupplierProperty(ITexture.class, "background_texture_inactive", null, "fancymenu.elements.checkbox.background_texture_inactive"));
+    public final Property<Boolean> variableMode = putProperty(Property.booleanProperty("variable_mode", false, "fancymenu.elements.checkbox.variable_mode"));
+    public final Property<String> linkedVariable = putProperty(Property.stringProperty("linked_variable", null, false, false, "fancymenu.elements.checkbox.editor.set_variable")
+            .setContextMenuEntrySupplier((type, property, builder, menu) -> builder.buildStringInputContextMenuEntry(menu, "menu_entry_linked_variable",
+                    type,
+                    consumes -> {
+                        Property<String> resolved = (Property<String>) consumes.getProperty("linked_variable");
+                        return (resolved != null) ? resolved.get() : null;
+                    },
+                    (b, s) -> {
+                        Property<String> resolved = (Property<String>) b.getProperty("linked_variable");
+                        if (resolved != null) resolved.set(s);
+                    },
+                    null, false, false, Component.translatable("fancymenu.elements.checkbox.editor.set_variable"),
+                    true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)));
+    public final Property<ResourceSupplier<IAudio>> hoverSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "hoversound", null, "fancymenu.elements.button.hoversound"));
+    public final Property<ResourceSupplier<IAudio>> clickSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "clicksound", null, "fancymenu.elements.button.clicksound"));
+    public final Property<Boolean> navigatable = putProperty(Property.booleanProperty("navigatable", true, "fancymenu.elements.widgets.generic.navigatable"));
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
     @NotNull
@@ -75,9 +102,12 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     @Override
     public void afterConstruction() {
         this.checkbox = new CheckboxButton(0, 0, 20, 20, (checkbox, state) -> {
-            if (this.variableMode && this.linkedVariable != null) {
-                if (!isEditor()) {
-                    VariableHandler.setVariable(this.linkedVariable, Boolean.toString(state));
+            if (this.variableMode.tryGetNonNull()) {
+                String variable = this.linkedVariable.get();
+                if (variable != null) {
+                    if (!isEditor()) {
+                        VariableHandler.setVariable(variable, Boolean.toString(state));
+                    }
                 }
             } else {
                 CheckboxStatesHandler.setForCheckboxElement(this, state);
@@ -125,12 +155,15 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     protected void syncCheckboxStateOnLoad() {
         if (this.checkbox == null) return;
         boolean state = CheckboxStatesHandler.getForCheckboxElement(this);
-        if (this.variableMode && this.linkedVariable != null) {
-            if (VariableHandler.variableExists(this.linkedVariable)) {
-                String value = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
-                state = this.parseBooleanVariableValue(value);
-            } else if (!isEditor()) {
-                VariableHandler.setVariable(this.linkedVariable, Boolean.toString(state));
+        if (this.variableMode.tryGetNonNull()) {
+            String variable = this.linkedVariable.get();
+            if (variable != null) {
+                if (VariableHandler.variableExists(variable)) {
+                    String value = Objects.requireNonNull(VariableHandler.getVariable(variable)).getValue();
+                    state = this.parseBooleanVariableValue(value);
+                } else if (!isEditor()) {
+                    VariableHandler.setVariable(variable, Boolean.toString(state));
+                }
             }
         }
         this.checkbox.setCheckboxState(state, false);
@@ -138,9 +171,11 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
 
     protected void syncCheckboxStateFromVariable() {
         if (this.checkbox == null) return;
-        if (!this.variableMode || this.linkedVariable == null) return;
-        if (!VariableHandler.variableExists(this.linkedVariable)) return;
-        String value = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+        if (!this.variableMode.tryGetNonNull()) return;
+        String variable = this.linkedVariable.get();
+        if (variable == null) return;
+        if (!VariableHandler.variableExists(variable)) return;
+        String value = Objects.requireNonNull(VariableHandler.getVariable(variable)).getValue();
         boolean state = this.parseBooleanVariableValue(value);
         if (this.checkbox.getCheckboxState() != state) {
             this.checkbox.setCheckboxState(state, false);
@@ -148,9 +183,10 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     }
 
     protected boolean getCheckboxStateForPlaceholders() {
-        if (this.variableMode && this.linkedVariable != null) {
-            if (VariableHandler.variableExists(this.linkedVariable)) {
-                String value = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+        if (this.variableMode.tryGetNonNull()) {
+            String variable = this.linkedVariable.get();
+            if ((variable != null) && VariableHandler.variableExists(variable)) {
+                String value = Objects.requireNonNull(VariableHandler.getVariable(variable)).getValue();
                 return this.parseBooleanVariableValue(value);
             }
         }
@@ -170,7 +206,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
 
     protected void updateWidgetNavigatable() {
         if (this.checkbox instanceof NavigatableWidget w) {
-            w.setNavigatable(this.navigatable);
+            w.setNavigatable(this.navigatable.tryGetNonNull());
         }
     }
 
@@ -198,21 +234,24 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     }
 
     protected void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.checkbox != null) && this.checkbox.isHovered() && this.checkbox.visible && this.shouldRender() && !isEditor()) {
-            String tooltip = this.tooltip.replace("%n%", "\n");
-            TooltipHandler.INSTANCE.addWidgetTooltip(this.checkbox, Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
+        String tooltip = this.tooltip.get();
+        if ((tooltip != null) && (this.checkbox != null) && this.checkbox.isHovered() && this.checkbox.visible && this.shouldRender() && !isEditor()) {
+            String converted = tooltip.replace("%n%", "\n");
+            TooltipHandler.INSTANCE.addWidgetTooltip(this.checkbox, Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(converted), "\n")), false, true);
         }
     }
 
     protected void updateWidgetHoverSound() {
         if (this.checkbox instanceof CustomizableWidget w) {
-            w.setHoverSoundFancyMenu((this.hoverSound != null) ? this.hoverSound.get() : null);
+            ResourceSupplier<IAudio> supplier = this.hoverSound.get();
+            w.setHoverSoundFancyMenu((supplier != null) ? supplier.get() : null);
         }
     }
 
     protected void updateWidgetClickSound() {
         if (this.checkbox instanceof CustomizableWidget w) {
-            w.setCustomClickSoundFancyMenu((this.clickSound != null) ? this.clickSound.get() : null);
+            ResourceSupplier<IAudio> supplier = this.clickSound.get();
+            w.setCustomClickSoundFancyMenu((supplier != null) ? supplier.get() : null);
         }
     }
 
@@ -220,8 +259,9 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
 
         if (this.checkbox == null) return;
         
-        if (this.checkmarkTexture != null) {
-            ITexture texture = this.checkmarkTexture.get();
+        ResourceSupplier<ITexture> checkmarkSupplier = this.checkmarkTexture.get();
+        if (checkmarkSupplier != null) {
+            ITexture texture = checkmarkSupplier.get();
             if (texture != null) {
                 this.checkbox.setCustomCheckboxCheckmarkTexture(texture);
             }
@@ -229,8 +269,9 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
             this.checkbox.setCustomCheckboxCheckmarkTexture(null);
         }
 
-        if (this.backgroundTextureNormal != null) {
-            ITexture texture = this.backgroundTextureNormal.get();
+        ResourceSupplier<ITexture> normalSupplier = this.backgroundTextureNormal.get();
+        if (normalSupplier != null) {
+            ITexture texture = normalSupplier.get();
             if (texture != null) {
                 this.checkbox.setCustomBackgroundTextureNormal(texture);
             }
@@ -238,8 +279,9 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
             this.checkbox.setCustomBackgroundTextureNormal(null);
         }
 
-        if (this.backgroundTextureHover != null) {
-            ITexture texture = this.backgroundTextureHover.get();
+        ResourceSupplier<ITexture> hoverSupplier = this.backgroundTextureHover.get();
+        if (hoverSupplier != null) {
+            ITexture texture = hoverSupplier.get();
             if (texture != null) {
                 this.checkbox.setCustomBackgroundTextureHover(texture);
             }
@@ -247,8 +289,9 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
             this.checkbox.setCustomBackgroundTextureHover(null);
         }
 
-        if (this.backgroundTextureInactive != null) {
-            ITexture texture = this.backgroundTextureInactive.get();
+        ResourceSupplier<ITexture> inactiveSupplier = this.backgroundTextureInactive.get();
+        if (inactiveSupplier != null) {
+            ITexture texture = inactiveSupplier.get();
             if (texture != null) {
                 this.checkbox.setCustomBackgroundTextureInactive(texture);
             }

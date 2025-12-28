@@ -1,7 +1,10 @@
 package de.keksuccino.fancymenu.util.properties;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
+import de.keksuccino.fancymenu.util.file.type.FileType;
+import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -45,6 +48,8 @@ public class Property<T> {
     @NotNull
     protected String contextMenuEntryLocalizationKeyBase;
     protected boolean disabled = false;
+    @Nullable
+    protected ConsumingSupplier<String, Boolean> userInputTextValidator = null;
 
     @NotNull
     public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
@@ -58,7 +63,7 @@ public class Property<T> {
             }, (b, s) -> {
                 Property<String> resolved = (Property<String>) b.getProperty(key);
                 if (resolved != null) resolved.set(s);
-            }, null, multiLine, placeholders, Component.translatable(contextMenuEntryLocalizationKeyBase), true, property.getDefault(), null, null);
+            }, null, multiLine, placeholders, Component.translatable(contextMenuEntryLocalizationKeyBase), true, property.getDefault(), property.userInputTextValidator, null);
         };
         return p;
     }
@@ -81,7 +86,7 @@ public class Property<T> {
             }, (b, value) -> {
                 Property<Integer> resolved = (Property<Integer>) b.getProperty(key);
                 if (resolved != null) resolved.set(value);
-            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, null, null);
+            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -104,7 +109,7 @@ public class Property<T> {
             }, (b, value) -> {
                 Property<Double> resolved = (Property<Double>) b.getProperty(key);
                 if (resolved != null) resolved.set(value);
-            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, null, null);
+            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -127,7 +132,7 @@ public class Property<T> {
             }, (b, value) -> {
                 Property<Long> resolved = (Property<Long>) b.getProperty(key);
                 if (resolved != null) resolved.set(value);
-            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, null, null);
+            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -150,7 +155,7 @@ public class Property<T> {
             }, (b, value) -> {
                 Property<Float> resolved = (Property<Float>) b.getProperty(key);
                 if (resolved != null) resolved.set(value);
-            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, null, null);
+            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -180,7 +185,7 @@ public class Property<T> {
     }
 
     @NotNull
-    public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @Nullable ResourceSource currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+    public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @Nullable ResourceSource currentValue, @NotNull String contextMenuEntryLocalizationKeyBase, boolean allowLocal, boolean allowWeb, boolean allowLocation, @Nullable FileFilter fileFilter, @Nullable FileTypeGroup<FileType<Resource>> fileTypes, @NotNull FileMediaType fileMediaType) {
         Property<ResourceSource> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = ResourceSource::of;
         p.serializationCodec = consumes -> {
@@ -191,17 +196,17 @@ public class Property<T> {
             ResourceSupplier<Resource> defaultSupplier = null;
             ResourceSource defaultSource = property.getDefault();
             if (defaultSource != null) {
-                defaultSupplier = new ResourceSupplier<>(Resource.class, FileMediaType.TEXT, defaultSource.getSourceWithPrefix());
+                defaultSupplier = new ResourceSupplier<>(Resource.class, fileMediaType, defaultSource.getSourceWithPrefix());
             }
             return builder.buildGenericResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
                     () -> ResourceChooserScreen.generic(null, null, file -> {}),
-                    source -> new ResourceSupplier<>(Resource.class, FileMediaType.TEXT, source),
+                    source -> new ResourceSupplier<>(Resource.class, fileMediaType, source),
                     defaultSupplier,
                     consumes -> {
                         Property<ResourceSource> resolved = (Property<ResourceSource>) consumes.getProperty(key);
                         ResourceSource value = (resolved != null) ? resolved.get() : defaultSource;
                         if (value == null) return null;
-                        return new ResourceSupplier<>(Resource.class, FileMediaType.TEXT, value.getSourceWithPrefix());
+                        return new ResourceSupplier<>(Resource.class, fileMediaType, value.getSourceWithPrefix());
                     },
                     (b, supplier) -> {
                         Property<ResourceSource> resolved = (Property<ResourceSource>) b.getProperty(key);
@@ -212,18 +217,18 @@ public class Property<T> {
                             resolved.set(ResourceSource.of(supplier.getSourceWithPrefix()));
                         }
                     },
-                    Component.translatable(contextMenuEntryLocalizationKeyBase), true, null, null, true, true, true);
+                    Component.translatable(contextMenuEntryLocalizationKeyBase), true, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb);
         };
         return p;
     }
 
     @NotNull
-    public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        return resourceSourceProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
+    public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase, boolean allowLocal, boolean allowWeb, boolean allowLocation, @Nullable FileFilter fileFilter, @Nullable FileTypeGroup<FileType<Resource>> fileTypes, @NotNull FileMediaType fileMediaType) {
+        return resourceSourceProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase, allowLocal, allowWeb, allowLocation, fileFilter, fileTypes, fileMediaType);
     }
 
     @NotNull
-    public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue, @Nullable ResourceSupplier<R> currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+    public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue, @Nullable ResourceSupplier<R> currentValue, @NotNull String contextMenuEntryLocalizationKeyBase, boolean allowLocal, boolean allowWeb, boolean allowLocation, @Nullable FileFilter fileFilter) {
         Property<ResourceSupplier<R>> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = consumes -> {
             if (ITexture.class.isAssignableFrom(resourceType)) {
@@ -257,7 +262,7 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, null, true, true, true);
+                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             if (IAudio.class.isAssignableFrom(resourceType)) {
                 return builder.buildAudioResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
@@ -271,7 +276,7 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, null, true, true, true);
+                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             if (IVideo.class.isAssignableFrom(resourceType)) {
                 return builder.buildVideoResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
@@ -285,7 +290,7 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, null, true, true, true);
+                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             if (IText.class.isAssignableFrom(resourceType)) {
                 return builder.buildTextResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
@@ -299,7 +304,7 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, null, true, true, true);
+                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             throw new IllegalArgumentException("Unknown resource format! Unable to build ResourceSupplier context menu entry!");
         };
@@ -307,8 +312,8 @@ public class Property<T> {
     }
 
     @NotNull
-    public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        return resourceSupplierProperty(resourceType, key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
+    public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase, boolean allowLocal, boolean allowWeb, boolean allowLocation, @Nullable FileFilter fileFilter) {
+        return resourceSupplierProperty(resourceType, key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase, allowLocal, allowWeb, allowLocation, fileFilter);
     }
 
     @NotNull
@@ -425,6 +430,15 @@ public class Property<T> {
      */
     public Property<T> setDisabled(boolean disabled) {
         this.disabled = disabled;
+        return this;
+    }
+
+    public @Nullable ConsumingSupplier<String, Boolean> getUserInputTextValidator() {
+        return userInputTextValidator;
+    }
+
+    public Property<T> setUserInputTextValidator(@Nullable ConsumingSupplier<String, Boolean> userInputTextValidator) {
+        this.userInputTextValidator = userInputTextValidator;
         return this;
     }
 
