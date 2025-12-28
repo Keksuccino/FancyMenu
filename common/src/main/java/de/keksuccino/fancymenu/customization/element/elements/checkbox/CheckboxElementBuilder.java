@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +22,7 @@ public class CheckboxElementBuilder extends ElementBuilder<CheckboxElement, Chec
     @Override
     public @NotNull CheckboxElement buildDefaultInstance() {
         CheckboxElement element = new CheckboxElement(this);
+        element.shouldBeAffectedByDecorationOverlays.setDefault(true).set(true);
         element.baseWidth = 20;
         element.baseHeight = 20;
         return element;

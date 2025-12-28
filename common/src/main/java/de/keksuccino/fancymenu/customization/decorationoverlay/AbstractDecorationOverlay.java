@@ -126,7 +126,11 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
 
     @Nullable
     protected static CollisionBox getAsCollisionBox(@NotNull Object o) {
-        if ((o instanceof AbstractElement e) && !e.shouldRender()) return null;
+        if (o instanceof AbstractElement e) {
+            if (!e.shouldRender()) return null;
+            if (!e.shouldBeAffectedByDecorationOverlays.tryGetNonNull()) return null;
+            return new CollisionBox(e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight());
+        }
         if (o instanceof PlainTextButton) return null;
         if (o instanceof AbstractButton b) return new CollisionBox(b.getX(), b.getY(), b.getWidth(), b.getHeight());
         if (o instanceof EditBox b) return new CollisionBox(b.getX(), b.getY(), b.getWidth(), b.getHeight());
@@ -136,12 +140,12 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
 
     protected static void visitCollisionBoxes(@NotNull Screen screen, @NotNull List<AbstractElement> elements, @NotNull Consumer<CollisionBox> consumer) {
         if (isEditor()) return;
-        screen.children().forEach(listener -> {
-            var c = getAsCollisionBox(listener);
-            if (c != null) {
-                consumer.accept(c);
-            }
-        });
+//        screen.children().forEach(listener -> {
+//            var c = getAsCollisionBox(listener);
+//            if (c != null) {
+//                consumer.accept(c);
+//            }
+//        });
         elements.forEach(element -> {
             var c = getAsCollisionBox(element);
             if (c != null) {

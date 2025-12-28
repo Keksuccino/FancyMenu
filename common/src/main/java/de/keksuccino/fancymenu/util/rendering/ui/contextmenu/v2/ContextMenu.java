@@ -93,17 +93,29 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         this.rawWidth = 20;
         this.rawHeight = 0;
-        ContextMenuEntry<?> prev = null;
+
+        List<ContextMenuEntry<?>> visibleEntries = new ArrayList<>();
         for (ContextMenuEntry<?> e : this.entries) {
             e.addSpaceForIcon = addIconSpace;
-            //Don't render separator entries at the start and end of the menu OR if the previous entry was also a separator entry
-            if ((e instanceof SeparatorContextMenuEntry) && ((prev instanceof SeparatorContextMenuEntry) || ((e == this.entries.get(0)) || (e == this.entries.get(this.entries.size()-1))))) {
-                prev = e;
-                continue;
+            if (e.isVisible()) {
+                visibleEntries.add(e);
             }
-            //Don't render if hidden
-            if (!e.isVisible()) {
-                prev = e;
+        }
+
+        int startIndex = 0;
+        int endIndex = visibleEntries.size() - 1;
+        while (startIndex <= endIndex && visibleEntries.get(startIndex) instanceof SeparatorContextMenuEntry) {
+            startIndex++;
+        }
+        while (endIndex >= startIndex && visibleEntries.get(endIndex) instanceof SeparatorContextMenuEntry) {
+            endIndex--;
+        }
+
+        ContextMenuEntry<?> prev = null;
+        for (int i = startIndex; i <= endIndex; i++) {
+            ContextMenuEntry<?> e = visibleEntries.get(i);
+            //Merge separator entries when they would render in a row
+            if (e instanceof SeparatorContextMenuEntry && prev instanceof SeparatorContextMenuEntry) {
                 continue;
             }
             //Pre-tick

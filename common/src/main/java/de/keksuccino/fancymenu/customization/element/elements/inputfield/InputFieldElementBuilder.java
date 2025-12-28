@@ -22,12 +22,13 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
 
     @Override
     public @NotNull InputFieldElement buildDefaultInstance() {
-        InputFieldElement e = new InputFieldElement(this);
-        e.baseWidth = 100;
-        e.baseHeight = 20;
-        e.editBox = new ExtendedEditBox(Minecraft.getInstance().font, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight(), Component.empty());
-        e.editBox.setCharacterFilter(e.type.filter);
-        return e;
+        InputFieldElement element = new InputFieldElement(this);
+        element.shouldBeAffectedByDecorationOverlays.setDefault(true).set(true);
+        element.baseWidth = 100;
+        element.baseHeight = 20;
+        element.editBox = new ExtendedEditBox(Minecraft.getInstance().font, element.getAbsoluteX(), element.getAbsoluteY(), element.getAbsoluteWidth(), element.getAbsoluteHeight(), Component.empty());
+        element.editBox.setCharacterFilter(element.type.filter);
+        return element;
     }
 
     @Override

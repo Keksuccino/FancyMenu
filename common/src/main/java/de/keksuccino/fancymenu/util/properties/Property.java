@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -40,6 +41,7 @@ public class Property<T> {
     protected ContextMenuEntrySupplier<? extends PropertyHolder, T> contextMenuEntrySupplier;
     @NotNull
     protected String contextMenuEntryLocalizationKeyBase;
+    protected boolean disabled = false;
 
     @NotNull
     public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
@@ -360,9 +362,13 @@ public class Property<T> {
         return defaultValue;
     }
 
-    public Property<T> setDefault(@Nullable T defaultValue) {
-        this.defaultValue = defaultValue;
+    public Property<T> setDefault(@Nullable T value) {
+        this.defaultValue = value;
         return this;
+    }
+
+    public boolean isDefault() {
+        return Objects.equals(this.defaultValue, this.currentValue);
     }
 
     public @Nullable T get() {
@@ -385,8 +391,28 @@ public class Property<T> {
         return Objects.requireNonNullElse(this.defaultValue, elseValue);
     }
 
-    public Property<T> set(@Nullable T currentValue) {
-        this.currentValue = currentValue;
+    public Property<T> set(@Nullable T value) {
+        this.currentValue = value;
+        return this;
+    }
+
+    public Property<T> forceSet(@Nullable Object value) {
+        this.currentValue = (T) value;
+        return this;
+    }
+
+    /**
+     * If this property is set to disabled, which means you should not update its value, wire it in UIs or make any other changes to it.
+     */
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    /**
+     * Disabling the property causes {@link ContextMenuEntry}s of the property to be invisible in {@link ContextMenu}s, so users can't edit its value anymore.
+     */
+    public Property<T> setDisabled(boolean disabled) {
+        this.disabled = disabled;
         return this;
     }
 
@@ -453,7 +479,9 @@ public class Property<T> {
     public <H extends PropertyHolder> ContextMenu.ContextMenuEntry<?> buildContextMenuEntry(@NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu) {
         Objects.requireNonNull(this.contextMenuEntrySupplier, "ContextMenuEntrySupplier is null! Can't build entry!");
         ContextMenuEntrySupplier<H, T> supplier = (ContextMenuEntrySupplier<H, T>) this.contextMenuEntrySupplier;
-        return supplier.get(Objects.requireNonNull(propertyHolderType), this, Objects.requireNonNull(contextMenuBuilder), Objects.requireNonNull(parentContextMenu));
+        ContextMenuEntry<?> entry = supplier.get(Objects.requireNonNull(propertyHolderType), this, Objects.requireNonNull(contextMenuBuilder), Objects.requireNonNull(parentContextMenu));
+        if (entry != null) entry.addIsVisibleSupplier((menu, entry1) -> !this.disabled);
+        return entry;
     }
 
     public <H extends PropertyHolder> ContextMenu.ContextMenuEntry<?> buildContextMenuEntryAndAddTo(@NotNull ContextMenu addTo, @NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder) {

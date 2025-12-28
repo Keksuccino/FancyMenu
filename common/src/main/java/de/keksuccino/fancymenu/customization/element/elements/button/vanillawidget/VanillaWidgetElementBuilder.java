@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -51,7 +52,7 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
             }
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to serialize VanillaWidgetElement!", ex);
         }
 
         return null;
@@ -156,6 +157,13 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (e.sliderBackgroundTextureHighlighted != null) {
             stack.sliderBackgroundTextureHighlighted = e.sliderBackgroundTextureHighlighted;
         }
+
+        e.getPropertyMap().forEach((key, property) -> {
+            if (!property.isDefault()) {
+                Property<?> sp = stack.getProperty(key);
+                if (sp != null) sp.forceSet(property.get());
+            }
+        });
 
     }
 

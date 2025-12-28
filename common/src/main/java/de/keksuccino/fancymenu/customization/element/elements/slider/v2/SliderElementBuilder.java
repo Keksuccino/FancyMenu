@@ -26,14 +26,15 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
     @Override
     public @NotNull SliderElement buildDefaultInstance() {
-        SliderElement i = new SliderElement(this);
-        i.baseWidth = 100;
-        i.baseHeight = 20;
-        i.label = "New Slider: $$value";
-        i.listValues.addAll(List.of("some_value", "another_value", "third_value"));
-        i.minRangeValue = 0.0D;
-        i.maxRangeValue = 20.0D;
-        return i;
+        SliderElement element = new SliderElement(this);
+        element.shouldBeAffectedByDecorationOverlays.setDefault(true).set(true);
+        element.baseWidth = 100;
+        element.baseHeight = 20;
+        element.label = "New Slider: $$value";
+        element.listValues.addAll(List.of("some_value", "another_value", "third_value"));
+        element.minRangeValue = 0.0D;
+        element.maxRangeValue = 20.0D;
+        return element;
     }
 
     @Override
