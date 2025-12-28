@@ -177,7 +177,7 @@ public class PlayerEntityElement extends AbstractElement {
         if (this.widget != null) {
 
             this.widget.setShowName(this.showPlayerName);
-            this.widget.setName(this.playerName);
+            this.widget.setName(PlaceholderParser.replacePlaceholders(this.playerName));
             this.widget.setBaby(this.isBaby);
             this.widget.setHeadFollowsMouse(this.headFollowsMouse);
             this.widget.setBodyFollowsMouse(this.bodyFollowsMouse);
