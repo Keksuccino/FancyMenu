@@ -47,7 +47,7 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
                         consumes -> consumes.element.repeat,
                         (imageEditorElement, aBoolean) -> imageEditorElement.element.repeat = aBoolean,
                         "fancymenu.elements.image.repeat")
-                .setIsActiveSupplier((menu, entry) -> !this.element.nineSlice)
+                .addIsActiveSupplier((menu, entry) -> !this.element.nineSlice)
                 .setStackable(false);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_nine_slice_settings");
@@ -57,7 +57,7 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
                         consumes -> consumes.element.nineSlice,
                         (imageEditorElement, aBoolean) -> imageEditorElement.element.nineSlice = aBoolean,
                         "fancymenu.elements.image.nine_slice")
-                .setIsActiveSupplier((menu, entry) -> !this.element.repeat)
+                .addIsActiveSupplier((menu, entry) -> !this.element.repeat)
                 .setStackable(false);
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "nine_slice_border_x",
@@ -66,7 +66,7 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
                         (imageEditorElement, integer) -> imageEditorElement.element.nineSliceBorderX = integer,
                         Component.translatable("fancymenu.elements.image.nine_slice.border_x"), true, 5, null, null)
                 .setStackable(false)
-                .setIsActiveSupplier((menu, entry) -> !this.element.repeat);
+                .addIsActiveSupplier((menu, entry) -> !this.element.repeat);
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "nine_slice_border_y",
                         ImageEditorElement.class,
@@ -74,7 +74,7 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
                         (imageEditorElement, integer) -> imageEditorElement.element.nineSliceBorderY = integer,
                         Component.translatable("fancymenu.elements.image.nine_slice.border_y"), true, 5, null, null)
                 .setStackable(false)
-                .setIsActiveSupplier((menu, entry) -> !this.element.repeat);
+                .addIsActiveSupplier((menu, entry) -> !this.element.repeat);
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 
@@ -88,9 +88,9 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
         this.rightClickMenu.addSeparatorEntry("separator_after_restart_animated");
 
         this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.image.restore_aspect_ratio"), (menu, entry) -> {
-                    List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ImageEditorElement));
+                    List<AbstractEditorElement<?, ?>> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ImageEditorElement));
                     this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
+                    for (AbstractEditorElement<?, ?> e : selectedElements) {
                         ((ImageElement)e.element).restoreAspectRatio();
                     }
                 }).setStackable(true)

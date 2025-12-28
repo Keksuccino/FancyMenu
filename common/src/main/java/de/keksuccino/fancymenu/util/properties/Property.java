@@ -456,8 +456,8 @@ public class Property<T> {
         return supplier.get(Objects.requireNonNull(propertyHolderType), this, Objects.requireNonNull(contextMenuBuilder), Objects.requireNonNull(parentContextMenu));
     }
 
-    public <H extends PropertyHolder> void buildContextMenuEntryAndAddTo(@NotNull ContextMenu addTo, @NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder) {
-        addTo.addEntry(this.buildContextMenuEntry(propertyHolderType, contextMenuBuilder, addTo));
+    public <H extends PropertyHolder> ContextMenu.ContextMenuEntry<?> buildContextMenuEntryAndAddTo(@NotNull ContextMenu addTo, @NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder) {
+        return addTo.addEntry(this.buildContextMenuEntry(propertyHolderType, contextMenuBuilder, addTo));
     }
 
     @Override

@@ -24,7 +24,7 @@ public class SlideshowEditorElement extends AbstractEditorElement<SlideshowEdito
         super.init();
 
         this.rightClickMenu.addClickableEntry("choose_slideshow", Component.translatable("fancymenu.elements.slideshow.set_slideshow"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SlideshowEditorElement));
+            List<AbstractEditorElement<?,?>> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SlideshowEditorElement));
             String preSelectedSlideshow = null;
             List<String> allSlideshows = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((SlideshowElement)consumes.element).slideshowName);
             if (!allSlideshows.isEmpty() && ListUtils.allInListEqual(allSlideshows)) {
@@ -33,7 +33,7 @@ public class SlideshowEditorElement extends AbstractEditorElement<SlideshowEdito
             ChooseSlideshowScreen s = new ChooseSlideshowScreen(preSelectedSlideshow, (call) -> {
                 if (call != null) {
                     this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
+                    for (AbstractEditorElement<?,?> e : selectedElements) {
                         ((SlideshowElement)e.element).slideshowName = call;
                     }
                 }
@@ -43,9 +43,9 @@ public class SlideshowEditorElement extends AbstractEditorElement<SlideshowEdito
         }).setStackable(true);
 
         this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.slideshow.restore_aspect_ratio"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SlideshowEditorElement));
+            List<AbstractEditorElement<?,?>> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SlideshowEditorElement));
             this.editor.history.saveSnapshot();
-            for (AbstractEditorElement e : selectedElements) {
+            for (AbstractEditorElement<?,?> e : selectedElements) {
                 ((SlideshowElement)e.element).restoreAspectRatio();
             }
         }).setStackable(true)

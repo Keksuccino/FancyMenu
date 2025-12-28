@@ -27,6 +27,7 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
     @Override
     public @NotNull VanillaWidgetElement buildDefaultInstance() {
         VanillaWidgetElement element = new VanillaWidgetElement(this);
+        element.shouldBeAffectedByDecorationOverlays.setDefault(true).set(true);
         element.anchorPoint = ElementAnchorPoints.VANILLA;
         return element;
     }
@@ -83,7 +84,7 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
 
     @Override
     public @NotNull VanillaWidgetEditorElement wrapIntoEditorElement(@NotNull ButtonElement element, @NotNull LayoutEditorScreen editor) {
-        return new VanillaWidgetEditorElement(element, editor);
+        return new VanillaWidgetEditorElement((VanillaWidgetElement) element, editor);
     }
 
     //Stacking Step 3

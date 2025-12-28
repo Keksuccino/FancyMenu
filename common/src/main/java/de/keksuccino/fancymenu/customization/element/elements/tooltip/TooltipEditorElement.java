@@ -56,12 +56,12 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
         contentMenu.addClickableEntry("set_text", Component.translatable("fancymenu.elements.text.v2.source.input"),
                         (menu, entry) -> {
                             if (entry.getStackMeta().isFirstInStack()) {
-                                List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(e -> e instanceof TooltipEditorElement);
+                                List<TooltipEditorElement> selectedElements = this.getFilteredSelectedElementList(e -> e instanceof TooltipEditorElement);
                                 String defaultText = tooltipElement.source;
                                 TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.elements.text.v2.source.input"), null, (call) -> {
                                     if (call != null) {
                                         this.editor.history.saveSnapshot();
-                                        for (AbstractEditorElement e : selectedElements) {
+                                        for (AbstractEditorElement<?, ?> e : selectedElements) {
                                             ((TooltipElement)e.element).setSource(TooltipElement.SourceMode.DIRECT, call);
                                         }
                                     }
@@ -231,7 +231,5 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.mouse_following.desc")));
 
     }
-
-    @NotNull
 
 }

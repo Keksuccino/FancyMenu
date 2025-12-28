@@ -31,6 +31,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
     @Override
     public @NotNull ButtonElement buildDefaultInstance() {
         ButtonElement element = new ButtonElement(this);
+        element.shouldBeAffectedByDecorationOverlays.setDefault(true).set(true);
         element.baseWidth = 100;
         element.baseHeight = 20;
         element.label = "New Button";
