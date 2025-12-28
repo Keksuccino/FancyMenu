@@ -17,10 +17,10 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
 
     @Override
     public @NotNull ImageElement buildDefaultInstance() {
-        ImageElement i = new ImageElement(this);
-        i.baseWidth = 100;
-        i.baseHeight = 100;
-        return i;
+        ImageElement element = new ImageElement(this);
+        element.baseWidth = 100;
+        element.baseHeight = 100;
+        return element;
     }
 
     @Override
