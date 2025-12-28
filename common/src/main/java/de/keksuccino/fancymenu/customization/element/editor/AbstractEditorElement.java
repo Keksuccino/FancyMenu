@@ -45,32 +45,32 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-@SuppressWarnings("deprecation")
-public abstract class AbstractEditorElement implements Renderable, GuiEventListener, ContextMenuBuilder<AbstractEditorElement>, PropertyHolder {
+@SuppressWarnings({"deprecation", "unchecked"})
+public abstract class AbstractEditorElement<E extends AbstractEditorElement<?>> implements Renderable, GuiEventListener, ContextMenuBuilder<E>, PropertyHolder {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	protected static final ResourceLocation DRAGGING_NOT_ALLOWED_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/not_allowed.png");
 	protected static final ResourceLocation DEPRECATED_WARNING_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/warning_20x20.png");
-	protected static final ConsumingSupplier<AbstractEditorElement, Integer> BORDER_COLOR = (editorElement) -> {
+	protected static final ConsumingSupplier<AbstractEditorElement<?>, Integer> BORDER_COLOR = (editorElement) -> {
 		if (editorElement.isSelected()) {
 			return UIBase.getUIColorTheme().layout_editor_element_border_color_selected.getColorInt();
 		}
 		return UIBase.getUIColorTheme().layout_editor_element_border_color_normal.getColorInt();
 	};
-    protected static final ConsumingSupplier<AbstractEditorElement, Float> HORIZONTAL_TILT_CONTROLS_ALPHA = consumes -> {
+    protected static final ConsumingSupplier<AbstractEditorElement<?>, Float> HORIZONTAL_TILT_CONTROLS_ALPHA = consumes -> {
         if (consumes.horizontalTiltGrabber.hovered || consumes.isGettingHorizontalTilted()) {
             return 1.0F;
         }
         return 0.7F;
     };
-    protected static final ConsumingSupplier<AbstractEditorElement, Float> VERTICAL_TILT_CONTROLS_ALPHA = consumes -> {
+    protected static final ConsumingSupplier<AbstractEditorElement<?>, Float> VERTICAL_TILT_CONTROLS_ALPHA = consumes -> {
         if (consumes.verticalTiltGrabber.hovered || consumes.isGettingVerticalTilted()) {
             return 1.0F;
         }
         return 0.7F;
     };
-    protected static final ConsumingSupplier<AbstractEditorElement, Float> ROTATION_CONTROLS_ALPHA = consumes -> {
+    protected static final ConsumingSupplier<AbstractEditorElement<?>, Float> ROTATION_CONTROLS_ALPHA = consumes -> {
         if (consumes.rotationGrabber.hovered || consumes.isGettingRotated()) {
             return 1.0F;
         }
@@ -121,7 +121,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	public boolean recentlyResized = false;
 	public boolean movingCrumpleZonePassed = false;
 
-	private final List<AbstractEditorElement> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
+	private final List<AbstractEditorElement<?>> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
 
 	public AbstractEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
 		this.settings = (settings != null) ? settings : new EditorElementSettings();
@@ -142,6 +142,10 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	public AbstractEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
 		this(element, editor, new EditorElementSettings());
 	}
+
+    protected E self() {
+        return (E) this;
+    }
 
     @Override
     public @NotNull Map<String, Property<?>> getPropertyMap() {
@@ -200,7 +204,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		this.rightClickMenu.addSeparatorEntry("separator_2");
 
-		this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_in_editor_display_name", AbstractEditorElement.class,
+		this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_in_editor_display_name", (Class<E>) AbstractEditorElement.class,
 						consumes -> consumes.element.customElementLayerName,
 						(abstractEditorElement, s) -> abstractEditorElement.element.customElementLayerName = s,
 						null, false, false, Component.translatable("fancymenu.elements.in_editor_display_name"), true, null, null, null)
@@ -208,7 +212,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		if (this.settings.isInEditorColorSupported()) {
 
-			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_in_editor_color", AbstractEditorElement.class,
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_in_editor_color", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.inEditorColor.getHex(),
 							(element, s) -> element.element.inEditorColor = DrawableColor.of(s),
 							null, false, false, Component.translatable("fancymenu.elements.in_editor_color"),
@@ -218,6 +222,10 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		this.rightClickMenu.addSeparatorEntry("separator_after_set_in_editor_stuff");
+
+        this.element.shouldBeAffectedByDecorationOverlays.buildContextMenuEntryAndAddTo(this.rightClickMenu, (Class<E>) AbstractEditorElement.class, this);
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_should_be_affected_by_decoration_overlays");
 
 		if (this.settings.isAnchorPointChangeable()) {
 
@@ -289,7 +297,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		if (this.settings.isStayOnScreenAllowed()) {
 
-			this.addToggleContextMenuEntryTo(this.rightClickMenu, "stay_on_screen", AbstractEditorElement.class,
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "stay_on_screen", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.stayOnScreen,
 							(element1, aBoolean) -> element1.element.stayOnScreen = aBoolean,
 							"fancymenu.elements.element.stay_on_screen")
@@ -360,7 +368,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (this.settings.isStretchable()) {
 
 			this.addToggleContextMenuEntryTo(this.rightClickMenu, "stretch_x",
-							AbstractEditorElement.class,
+                            (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.stretchX,
 							(element1, aBoolean) -> element1.element.stretchX = aBoolean,
 							"fancymenu.elements.stretch.x")
@@ -369,7 +377,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"));
 
 			this.addToggleContextMenuEntryTo(this.rightClickMenu, "stretch_y",
-							AbstractEditorElement.class,
+                            (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.stretchY,
 							(element1, aBoolean) -> element1.element.stretchY = aBoolean,
 							"fancymenu.elements.stretch.y")
@@ -395,7 +403,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 							});
 							Minecraft.getInstance().setScreen(s);
 						} else if (entry.getStackMeta().isFirstInStack()) {
-							List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(element -> element.settings.isLoadingRequirementsEnabled());
+							List<E> selectedElements = this.getFilteredSelectedElementList(element -> element.settings.isLoadingRequirementsEnabled());
 							List<LoadingRequirementContainer> containers = ObjectUtils.getOfAll(LoadingRequirementContainer.class, selectedElements, consumes -> consumes.element.loadingRequirementContainer);
 							LoadingRequirementContainer containerToUseInManager = new LoadingRequirementContainer();
 							boolean allEqual = ListUtils.allInListEqual(containers);
@@ -430,7 +438,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		this.addToggleContextMenuEntryTo(this.rightClickMenu, "load_once_per_session", AbstractEditorElement.class,
+		this.addToggleContextMenuEntryTo(this.rightClickMenu, "load_once_per_session", (Class<E>) AbstractEditorElement.class,
 						consumes -> consumes.element.loadOncePerSession,
 						(element1, aBoolean) -> element1.element.loadOncePerSession = aBoolean,
 						"fancymenu.elements.element.load_once_per_session")
@@ -634,7 +642,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		if (this.settings.isAutoSizingAllowed()) {
 
-			this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", AbstractEditorElement.class,
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.autoSizing,
 							(abstractEditorElement, aBoolean) -> {
 								abstractEditorElement.element.setAutoSizingBaseWidthAndHeight();
@@ -650,7 +658,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		if (this.settings.isStickyAnchorAllowed()) {
 
-			this.addToggleContextMenuEntryTo(this.rightClickMenu, "sticky_anchor", AbstractEditorElement.class,
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "sticky_anchor", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.stickyAnchor,
 							(abstractEditorElement, aBoolean) -> {
 
@@ -678,7 +686,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 			this.rightClickMenu.addSeparatorEntry("separator_before_rotation").setStackable(true);
 
-			this.addToggleContextMenuEntryTo(this.rightClickMenu, "advanced_rotation_mode", AbstractEditorElement.class,
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "advanced_rotation_mode", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.advancedRotationMode,
 							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.advancedRotationMode = aBoolean,
 							"fancymenu.element.rotation.advanced_mode")
@@ -686,7 +694,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIcon(ContextMenu.IconFactory.getIcon("reload"))
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.advanced_mode.desc")));
 
-			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "rotation_degrees", AbstractEditorElement.class,
+			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "rotation_degrees", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.rotationDegrees,
 							(abstractEditorElement, aFloat) -> abstractEditorElement.element.rotationDegrees = aFloat,
 							Component.translatable("fancymenu.element.rotation.degrees"), true, 0, null, null)
@@ -695,7 +703,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIcon(ContextMenu.IconFactory.getIcon("reload"))
 					.addIsVisibleSupplier((menu, entry) -> !this.element.advancedRotationMode);
 
-			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "rotation_degrees_advanced", AbstractEditorElement.class,
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "rotation_degrees_advanced", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.advancedRotationDegrees,
 							(abstractEditorElement, s) -> abstractEditorElement.element.advancedRotationDegrees = s,
 							null, false, true, Component.translatable("fancymenu.element.rotation.degrees"),
@@ -711,7 +719,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 			this.rightClickMenu.addSeparatorEntry("separator_before_tilting").setStackable(true);
 
-			this.addToggleContextMenuEntryTo(this.rightClickMenu, "advanced_vertical_tilt_mode", AbstractEditorElement.class,
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "advanced_vertical_tilt_mode", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.advancedVerticalTiltMode,
 							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.advancedVerticalTiltMode = aBoolean,
 							"fancymenu.element.tilt.vertical.advanced_mode")
@@ -719,7 +727,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"))
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.advanced_mode.desc")));
 
-			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "vertical_tilt_degrees", AbstractEditorElement.class,
+			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "vertical_tilt_degrees", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.verticalTiltDegrees,
 							(abstractEditorElement, aFloat) -> abstractEditorElement.element.verticalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, aFloat)),
 							Component.translatable("fancymenu.element.tilt.vertical.degrees"), true, 0, null, null)
@@ -728,7 +736,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"))
 					.addIsVisibleSupplier((menu, entry) -> !this.element.advancedVerticalTiltMode);
 
-			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "vertical_tilt_degrees_advanced", AbstractEditorElement.class,
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "vertical_tilt_degrees_advanced", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.advancedVerticalTiltDegrees,
 							(abstractEditorElement, s) -> abstractEditorElement.element.advancedVerticalTiltDegrees = s,
 							null, false, true, Component.translatable("fancymenu.element.tilt.vertical.degrees"),
@@ -738,7 +746,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"))
 					.addIsVisibleSupplier((menu, entry) -> this.element.advancedVerticalTiltMode);
 
-			this.addToggleContextMenuEntryTo(this.rightClickMenu, "advanced_horizontal_tilt_mode", AbstractEditorElement.class,
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "advanced_horizontal_tilt_mode", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.advancedHorizontalTiltMode,
 							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.advancedHorizontalTiltMode = aBoolean,
 							"fancymenu.element.tilt.horizontal.advanced_mode")
@@ -746,7 +754,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"))
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.advanced_mode.desc")));
 
-			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "horizontal_tilt_degrees", AbstractEditorElement.class,
+			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "horizontal_tilt_degrees", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.horizontalTiltDegrees,
 							(abstractEditorElement, aFloat) -> abstractEditorElement.element.horizontalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, aFloat)),
 							Component.translatable("fancymenu.element.tilt.horizontal.degrees"), true, 0, null, null)
@@ -755,7 +763,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"))
 					.addIsVisibleSupplier((menu, entry) -> !this.element.advancedHorizontalTiltMode);
 
-			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "horizontal_tilt_degrees_advanced", AbstractEditorElement.class,
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "horizontal_tilt_degrees_advanced", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.advancedHorizontalTiltDegrees,
 							(abstractEditorElement, s) -> abstractEditorElement.element.advancedHorizontalTiltDegrees = s,
 							null, false, true, Component.translatable("fancymenu.element.tilt.horizontal.degrees"),
@@ -771,27 +779,27 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 			this.rightClickMenu.addSeparatorEntry("separator_before_parallax").setStackable(true);
 
-			this.addToggleContextMenuEntryTo(this.rightClickMenu, "enable_parallax", AbstractEditorElement.class,
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "enable_parallax", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.enableParallax,
 							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.enableParallax = aBoolean,
 							"fancymenu.elements.parallax")
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.desc")));
 
-			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_x", AbstractEditorElement.class,
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_x", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.parallaxIntensityXString,
 							(element1, s) -> element1.element.parallaxIntensityXString = s,
 							null, false, true, Component.translatable("fancymenu.elements.parallax.intensity_x"),
 							true, "0.5", null, null)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_x.desc")));
 
-			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_y", AbstractEditorElement.class,
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_y", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.parallaxIntensityYString,
 							(element1, s) -> element1.element.parallaxIntensityYString = s,
 							null, false, true, Component.translatable("fancymenu.elements.parallax.intensity_y"),
 							true, "0.5", null, null)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_y.desc")));
 
-			this.addToggleContextMenuEntryTo(this.rightClickMenu, "invert_parallax", AbstractEditorElement.class,
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "invert_parallax", (Class<E>) AbstractEditorElement.class,
 							consumes -> consumes.element.invertParallax,
 							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.invertParallax = aBoolean,
 							"fancymenu.elements.parallax.invert")
@@ -1679,8 +1687,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		return null;
 	}
 
-	protected List<AbstractEditorElement> getFilteredSelectedElementList(@Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter) {
+	protected List<E> getFilteredSelectedElementList(@Nullable ConsumingSupplier<E, Boolean> selectedElementsFilter) {
 		return ListUtils.filterList(this.editor.getSelectedElements(), (consumes) -> {
+            if (!(consumes instanceof E)) return false;
 			if (selectedElementsFilter == null) {
 				return true;
 			}
@@ -1689,13 +1698,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	}
 
     @Override
-    public @NotNull List<AbstractEditorElement> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<AbstractEditorElement, Boolean> filter) {
+    public @NotNull List<E> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<E, Boolean> filter) {
         return getFilteredSelectedElementList(filter);
     }
 
     @Override
-    public @NotNull AbstractEditorElement getSelf() {
-        return this;
+    public @NotNull E getSelf() {
+        return (E) this;
     }
 
     @Override

@@ -286,7 +286,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.advancedHorizontalTiltMode = deserializeBoolean(element.advancedHorizontalTiltMode, serialized.getValue("advanced_horizontal_tilt_mode"));
             element.advancedHorizontalTiltDegrees = serialized.getValue("advanced_horizontal_tilt_degrees");
 
-            element.shouldBeAffectedByDecorationOverlays.deserialize(serialized);
+            element.getPropertyMap().forEach((s, property) -> property.deserialize(serialized));
 
             element.afterConstruction();
 
@@ -431,7 +431,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("advanced_horizontal_tilt_mode", "" + element.advancedHorizontalTiltMode);
             sec.putProperty("advanced_horizontal_tilt_degrees", element.advancedHorizontalTiltDegrees);
 
-            element.shouldBeAffectedByDecorationOverlays.serialize(sec);
+            element.getPropertyMap().forEach((s, property) -> property.serialize(sec));
 
             return sec;
 

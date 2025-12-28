@@ -450,10 +450,14 @@ public class Property<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public <H extends PropertyHolder> ContextMenu.ContextMenuEntry<?> buildContextMenuEntry(@NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentMenu) {
+    public <H extends PropertyHolder> ContextMenu.ContextMenuEntry<?> buildContextMenuEntry(@NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu) {
         Objects.requireNonNull(this.contextMenuEntrySupplier, "ContextMenuEntrySupplier is null! Can't build entry!");
         ContextMenuEntrySupplier<H, T> supplier = (ContextMenuEntrySupplier<H, T>) this.contextMenuEntrySupplier;
-        return supplier.get(Objects.requireNonNull(propertyHolderType), this, Objects.requireNonNull(contextMenuBuilder), Objects.requireNonNull(parentMenu));
+        return supplier.get(Objects.requireNonNull(propertyHolderType), this, Objects.requireNonNull(contextMenuBuilder), Objects.requireNonNull(parentContextMenu));
+    }
+
+    public <H extends PropertyHolder> void buildContextMenuEntryAndAddTo(@NotNull ContextMenu addTo, @NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder) {
+        addTo.addEntry(this.buildContextMenuEntry(propertyHolderType, contextMenuBuilder, addTo));
     }
 
     @Override
@@ -474,7 +478,7 @@ public class Property<T> {
     @FunctionalInterface
     public interface ContextMenuEntrySupplier<H extends PropertyHolder, T> {
         @NotNull
-        ContextMenu.ContextMenuEntry<?> get(@NotNull Class<H> propertyHolderType, @NotNull Property<T> property, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentMenu);
+        ContextMenu.ContextMenuEntry<?> get(@NotNull Class<H> propertyHolderType, @NotNull Property<T> property, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu);
     }
 
 }

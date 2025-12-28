@@ -605,8 +605,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@NotNull
-	public List<AbstractEditorElement> getHoveredElements() {
-		List<AbstractEditorElement> elements = new ArrayList<>();
+	public List<AbstractEditorElement<?>> getHoveredElements() {
+		List<AbstractEditorElement<?>> elements = new ArrayList<>();
 		for (AbstractEditorElement e : this.getAllElements()) {
 			if (e.isHovered()) {
 				if (e.element.layerHiddenInEditor) continue;
@@ -619,7 +619,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Nullable
 	public AbstractEditorElement getTopHoveredElement() {
-		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
+		List<AbstractEditorElement<?>> hoveredElements = this.getHoveredElements();
 		return (!hoveredElements.isEmpty()) ? hoveredElements.get(hoveredElements.size()-1) : null;
 	}
 
@@ -1155,7 +1155,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			if (child.mouseReleased(mouseX, mouseY, button)) return true;
 		}
 
-		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
+		List<AbstractEditorElement<?>> hoveredElements = this.getHoveredElements();
 		AbstractEditorElement topHoverElement = !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
 
 		//Deselect hovered element on left-click if CTRL pressed
