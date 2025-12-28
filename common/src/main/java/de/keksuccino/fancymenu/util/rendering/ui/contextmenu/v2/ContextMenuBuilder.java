@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+@SuppressWarnings("unused")
 public interface ContextMenuBuilder<O> {
 
     static <O> ContextMenuBuilder<O> createStandalone(@NotNull Supplier<Screen> callbackScreenSupplier, @NotNull ConsumingSupplier<ConsumingSupplier<O, Boolean>, List<O>> stackableObjectsListSupplier, @NotNull Supplier<O> selfSupplier, @Nullable Runnable saveSnapshotTask) {
@@ -118,9 +119,7 @@ public interface ContextMenuBuilder<O> {
     }
 
     default ContextMenu.ClickableContextMenuEntry<?> buildTextResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        ConsumingSupplier<O, ResourceSupplier<IText>> getter = targetFieldGetter;
-        BiConsumer<O, ResourceSupplier<IText>> setter = targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
     default ContextMenu.ClickableContextMenuEntry<?> addTextResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
