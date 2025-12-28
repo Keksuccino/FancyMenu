@@ -410,13 +410,17 @@ public class Property<T> {
     }
 
     public Property<T> set(@Nullable T value) {
-        if (this.valueSetProcessor != null) value = this.valueSetProcessor.get(value);
+        if (value != null) {
+            if (this.valueSetProcessor != null) value = this.valueSetProcessor.get(value);
+        }
         this.currentValue = value;
         return this;
     }
 
     public Property<T> forceSet(@Nullable Object value) {
-        if (this.valueSetProcessor != null) value = this.valueSetProcessor.get((T) value);
+        if (value != null) {
+            if (this.valueSetProcessor != null) value = this.valueSetProcessor.get((T) value);
+        }
         this.currentValue = (T) value;
         return this;
     }
@@ -495,7 +499,7 @@ public class Property<T> {
         }
         try {
             String serialized = properties.getValue(this.getKey());
-            this.currentValue = (serialized != null) ? this.deserializationCodec.get(serialized) : this.defaultValue;
+            this.set((serialized != null) ? this.deserializationCodec.get(serialized) : this.defaultValue);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to deserialize property: " + this.getKey(), ex);
         }
@@ -550,7 +554,7 @@ public class Property<T> {
             return null;
         }
         try {
-            return this.serializationCodec.get(this.currentValue);
+            return (this.currentValue == null) ? null : this.serializationCodec.get(this.currentValue);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to serialize property: " + this.getKey(), ex);
         }
