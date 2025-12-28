@@ -355,24 +355,13 @@ public class Property<T> {
 
     protected Property(@NotNull String key, @Nullable T defaultValue, @Nullable T currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         this.key = Objects.requireNonNull(key);
-        this.defaultValue = defaultValue;
-        this.currentValue = currentValue;
+        this.setDefault(defaultValue);
+        this.set(currentValue);
         this.contextMenuEntryLocalizationKeyBase = Objects.requireNonNull(contextMenuEntryLocalizationKeyBase);
-    }
-
-    protected Property(@NotNull String key, @Nullable T defaultValue, @Nullable T currentValue) {
-        this(key, defaultValue, currentValue, key);
     }
 
     protected Property(@NotNull String key, @Nullable T defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        this.key = Objects.requireNonNull(key);
-        this.defaultValue = defaultValue;
-        this.currentValue = defaultValue;
-        this.contextMenuEntryLocalizationKeyBase = Objects.requireNonNull(contextMenuEntryLocalizationKeyBase);
-    }
-
-    protected Property(@NotNull String key, @Nullable T defaultValue) {
-        this(key, defaultValue, defaultValue, key);
+        this(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
     public @NotNull String getKey() {
@@ -393,31 +382,41 @@ public class Property<T> {
     }
 
     public @Nullable T get() {
-        return currentValue;
+        return this.processGet(this.currentValue);
     }
 
     /**
      * First tries to return the current value if it is not null, else will try to return the default value, and will throw an error if both are null.
      */
     public T tryGetNonNull() {
-        if (this.currentValue != null) return this.currentValue;
-        return Objects.requireNonNull(this.defaultValue);
+        var current = this.processGet(this.currentValue);
+        if (current != null) return current;
+        return Objects.requireNonNull(this.processGet(this.defaultValue));
     }
 
     /**
      * First tries to return the current value if it is not null, then tries to return the default value. If both are null, it will return {@code elseValue}.
      */
     public T tryGetNonNullElse(@NotNull T elseValue) {
-        if (this.currentValue != null) return this.currentValue;
-        return Objects.requireNonNullElse(this.defaultValue, elseValue);
+        var current = this.processGet(this.currentValue);
+        if (current != null) return current;
+        return Objects.requireNonNullElse(this.processGet(this.defaultValue), elseValue);
+    }
+
+    protected T processGet(@Nullable T get) {
+        if (get == null) return null;
+        if (this.valueGetProcessor != null) return this.valueGetProcessor.get(get);
+        return get;
     }
 
     public Property<T> set(@Nullable T value) {
+        if (this.valueSetProcessor != null) value = this.valueSetProcessor.get(value);
         this.currentValue = value;
         return this;
     }
 
     public Property<T> forceSet(@Nullable Object value) {
+        if (this.valueSetProcessor != null) value = this.valueSetProcessor.get((T) value);
         this.currentValue = (T) value;
         return this;
     }
@@ -451,7 +450,8 @@ public class Property<T> {
     }
 
     /**
-     * When the value of this property gets set, it goes through this processor if one is set. This makes it possible to, well, process the value before it actually gets set.
+     * When the value of this property gets set, it goes through this processor if one is set. This makes it possible to, well, process the value before it actually gets set.<br>
+     * Does NOT get applied to default values set via {@link Property#setDefault(Object)}!
      */
     public Property<T> setValueSetProcessor(@Nullable ConsumingSupplier<T, T> valueSetProcessor) {
         this.valueSetProcessor = valueSetProcessor;
