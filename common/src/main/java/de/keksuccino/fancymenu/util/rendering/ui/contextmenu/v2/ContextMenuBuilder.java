@@ -44,7 +44,7 @@ public interface ContextMenuBuilder<O> {
                 return callbackScreenSupplier.get();
             }
             @Override
-            public @NotNull O getSelf() {
+            public @NotNull O self() {
                 return selfSupplier.get();
             }
             @Override
@@ -70,7 +70,7 @@ public interface ContextMenuBuilder<O> {
      * Used to get the self-instance object for building {@link ContextMenu}s.
      */
     @NotNull
-    O getSelf();
+    O self();
 
     /**
      * Saves a snapshot to the history, if one is available. Mostly called right before changes are made.
@@ -239,7 +239,7 @@ public interface ContextMenuBuilder<O> {
                     targetValuesOfSelected.add(targetFieldGetter.get(e));
                 }
                 if (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(targetValuesOfSelected)) {
-                    defaultText = targetFieldGetter.get(this.getSelf());
+                    defaultText = targetFieldGetter.get(this.self());
                 }
                 Screen inputScreen;
                 if (!multiLineInput && !allowPlaceholders) {
