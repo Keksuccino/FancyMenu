@@ -47,13 +47,13 @@ public class Property<T> {
     protected ContextMenuEntrySupplier<? extends PropertyHolder, T> contextMenuEntrySupplier;
     @NotNull
     protected String contextMenuEntryLocalizationKeyBase;
-    protected boolean disabled = false;
     @Nullable
     protected ConsumingSupplier<String, Boolean> userInputTextValidator = null;
     @Nullable
     protected ConsumingSupplier<T, T> valueSetProcessor = null;
     @Nullable
     protected ConsumingSupplier<T, T> valueGetProcessor = null;
+    protected boolean disabled = false;
 
     @NotNull
     public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
