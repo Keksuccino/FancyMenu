@@ -31,7 +31,6 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
     @Override
     protected SerializedElement serializeElement(@NotNull ImageElement element, @NotNull SerializedElement serializeTo) {
         return serializeTo;
-
     }
 
     @Override
