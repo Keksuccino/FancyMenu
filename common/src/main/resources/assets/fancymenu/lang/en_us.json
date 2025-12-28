@@ -2410,5 +2410,6 @@
   "fancymenu.decoration_overlays.confetti.particle_cap": "Landed Particle Cap",
   "fancymenu.decoration_overlays.confetti.particle_cap.desc": "Limits how many confetti particles can land.",
   "fancymenu.decoration_overlays.confetti.fall_speed": "Confetti Fall Speed",
-  "fancymenu.decoration_overlays.confetti.fall_speed.desc": "Controls how fast confetti falls. Needs to be a value between 0.01 and 5.0."
+  "fancymenu.decoration_overlays.confetti.fall_speed.desc": "Controls how fast confetti falls. Needs to be a value between 0.01 and 5.0.",
+  "fancymenu.elements.abstract.should_be_affected_by_decoration_overlays": "Should Be Affected By Decoration Overlays: %s"
 }

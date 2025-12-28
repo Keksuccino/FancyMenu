@@ -64,42 +64,12 @@ public class Property<T> {
     }
 
     @NotNull
-    public static Property<Integer> integerProperty(@NotNull String key, int defaultValue, int currentValue) {
-        Property<Integer> p = new Property<>(key, defaultValue, currentValue);
-        p.deserializationCodec = Integer::valueOf;
-        return p;
-    }
-
-    @NotNull
-    public static Property<Integer> integerProperty(@NotNull String key, int defaultValue) {
-        Property<Integer> p = new Property<>(key, defaultValue);
-        p.deserializationCodec = Integer::valueOf;
-        return p;
-    }
-
-    @NotNull
-    public static Property<Integer> integerProperty(@NotNull String key, int defaultValue, int currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+    public static Property<Integer> integerProperty(@NotNull String key, int defaultValue, int currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Integer> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = Integer::valueOf;
         p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
             Integer defaultVal = property.getDefault();
             int resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
-            if (placeholders) {
-                return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
-                    Property<Integer> resolved = (Property<Integer>) consumes.getProperty(key);
-                    Integer value = (resolved != null) ? resolved.get() : defaultVal;
-                    return (value != null) ? String.valueOf(value) : null;
-                }, (b, s) -> {
-                    if (s == null) return;
-                    try {
-                        Integer parsed = Integer.valueOf(s);
-                        Property<Integer> resolved = (Property<Integer>) b.getProperty(key);
-                        if (resolved != null) resolved.set(parsed);
-                    } catch (NumberFormatException ignored) {
-                    }
-                }, null, false, true, Component.translatable(contextMenuEntryLocalizationKeyBase), true,
-                        (defaultVal != null) ? String.valueOf(defaultVal) : String.valueOf(defaultValue), null, null);
-            }
             return builder.buildIntegerInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
                 Property<Integer> resolved = (Property<Integer>) consumes.getProperty(key);
                 return (resolved != null) ? resolved.get() : defaultVal;
@@ -112,47 +82,17 @@ public class Property<T> {
     }
 
     @NotNull
-    public static Property<Integer> integerProperty(@NotNull String key, int defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        return integerProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
+    public static Property<Integer> integerProperty(@NotNull String key, int defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return integerProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
     @NotNull
-    public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, double currentValue) {
-        Property<Double> p = new Property<>(key, defaultValue, currentValue);
-        p.deserializationCodec = Double::valueOf;
-        return p;
-    }
-
-    @NotNull
-    public static Property<Double> doubleProperty(@NotNull String key, double defaultValue) {
-        Property<Double> p = new Property<>(key, defaultValue);
-        p.deserializationCodec = Double::valueOf;
-        return p;
-    }
-
-    @NotNull
-    public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, double currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+    public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, double currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Double> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = Double::valueOf;
         p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
             Double defaultVal = property.getDefault();
             double resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
-            if (placeholders) {
-                return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
-                    Property<Double> resolved = (Property<Double>) consumes.getProperty(key);
-                    Double value = (resolved != null) ? resolved.get() : defaultVal;
-                    return (value != null) ? String.valueOf(value) : null;
-                }, (b, s) -> {
-                    if (s == null) return;
-                    try {
-                        Double parsed = Double.valueOf(s);
-                        Property<Double> resolved = (Property<Double>) b.getProperty(key);
-                        if (resolved != null) resolved.set(parsed);
-                    } catch (NumberFormatException ignored) {
-                    }
-                }, null, false, true, Component.translatable(contextMenuEntryLocalizationKeyBase), true,
-                        (defaultVal != null) ? String.valueOf(defaultVal) : String.valueOf(defaultValue), null, null);
-            }
             return builder.buildDoubleInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
                 Property<Double> resolved = (Property<Double>) consumes.getProperty(key);
                 return (resolved != null) ? resolved.get() : defaultVal;
@@ -165,47 +105,17 @@ public class Property<T> {
     }
 
     @NotNull
-    public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        return doubleProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
+    public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return doubleProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
     @NotNull
-    public static Property<Long> longProperty(@NotNull String key, long defaultValue, long currentValue) {
-        Property<Long> p = new Property<>(key, defaultValue, currentValue);
-        p.deserializationCodec = Long::valueOf;
-        return p;
-    }
-
-    @NotNull
-    public static Property<Long> longProperty(@NotNull String key, long defaultValue) {
-        Property<Long> p = new Property<>(key, defaultValue);
-        p.deserializationCodec = Long::valueOf;
-        return p;
-    }
-
-    @NotNull
-    public static Property<Long> longProperty(@NotNull String key, long defaultValue, long currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+    public static Property<Long> longProperty(@NotNull String key, long defaultValue, long currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Long> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = Long::valueOf;
         p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
             Long defaultVal = property.getDefault();
             long resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
-            if (placeholders) {
-                return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
-                    Property<Long> resolved = (Property<Long>) consumes.getProperty(key);
-                    Long value = (resolved != null) ? resolved.get() : defaultVal;
-                    return (value != null) ? String.valueOf(value) : null;
-                }, (b, s) -> {
-                    if (s == null) return;
-                    try {
-                        Long parsed = Long.valueOf(s);
-                        Property<Long> resolved = (Property<Long>) b.getProperty(key);
-                        if (resolved != null) resolved.set(parsed);
-                    } catch (NumberFormatException ignored) {
-                    }
-                }, null, false, true, Component.translatable(contextMenuEntryLocalizationKeyBase), true,
-                        (defaultVal != null) ? String.valueOf(defaultVal) : String.valueOf(defaultValue), null, null);
-            }
             return builder.buildLongInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
                 Property<Long> resolved = (Property<Long>) consumes.getProperty(key);
                 return (resolved != null) ? resolved.get() : defaultVal;
@@ -218,47 +128,17 @@ public class Property<T> {
     }
 
     @NotNull
-    public static Property<Long> longProperty(@NotNull String key, long defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        return longProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
+    public static Property<Long> longProperty(@NotNull String key, long defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return longProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
     @NotNull
-    public static Property<Float> floatProperty(@NotNull String key, float defaultValue, float currentValue) {
-        Property<Float> p = new Property<>(key, defaultValue, currentValue);
-        p.deserializationCodec = Float::valueOf;
-        return p;
-    }
-
-    @NotNull
-    public static Property<Float> floatProperty(@NotNull String key, float defaultValue) {
-        Property<Float> p = new Property<>(key, defaultValue);
-        p.deserializationCodec = Float::valueOf;
-        return p;
-    }
-
-    @NotNull
-    public static Property<Float> floatProperty(@NotNull String key, float defaultValue, float currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+    public static Property<Float> floatProperty(@NotNull String key, float defaultValue, float currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Float> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = Float::valueOf;
         p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
             Float defaultVal = property.getDefault();
             float resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
-            if (placeholders) {
-                return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
-                    Property<Float> resolved = (Property<Float>) consumes.getProperty(key);
-                    Float value = (resolved != null) ? resolved.get() : defaultVal;
-                    return (value != null) ? String.valueOf(value) : null;
-                }, (b, s) -> {
-                    if (s == null) return;
-                    try {
-                        Float parsed = Float.valueOf(s);
-                        Property<Float> resolved = (Property<Float>) b.getProperty(key);
-                        if (resolved != null) resolved.set(parsed);
-                    } catch (NumberFormatException ignored) {
-                    }
-                }, null, false, true, Component.translatable(contextMenuEntryLocalizationKeyBase), true,
-                        (defaultVal != null) ? String.valueOf(defaultVal) : String.valueOf(defaultValue), null, null);
-            }
             return builder.buildFloatInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
                 Property<Float> resolved = (Property<Float>) consumes.getProperty(key);
                 return (resolved != null) ? resolved.get() : defaultVal;
@@ -271,22 +151,8 @@ public class Property<T> {
     }
 
     @NotNull
-    public static Property<Float> floatProperty(@NotNull String key, float defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        return floatProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
-    }
-
-    @NotNull
-    public static Property<Boolean> booleanProperty(@NotNull String key, boolean defaultValue, boolean currentValue) {
-        Property<Boolean> p = new Property<>(key, defaultValue, currentValue);
-        p.deserializationCodec = Boolean::valueOf;
-        return p;
-    }
-
-    @NotNull
-    public static Property<Boolean> booleanProperty(@NotNull String key, boolean defaultValue) {
-        Property<Boolean> p = new Property<>(key, defaultValue);
-        p.deserializationCodec = Boolean::valueOf;
-        return p;
+    public static Property<Float> floatProperty(@NotNull String key, float defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return floatProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
     @NotNull
@@ -306,22 +172,6 @@ public class Property<T> {
     @NotNull
     public static Property<Boolean> booleanProperty(@NotNull String key, boolean defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return booleanProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
-    }
-
-    @NotNull
-    public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @Nullable ResourceSource currentValue) {
-        Property<ResourceSource> p = new Property<>(key, defaultValue, currentValue);
-        p.deserializationCodec = ResourceSource::of;
-        p.serializationCodec = ResourceSource::getSerializationSource;
-        return p;
-    }
-
-    @NotNull
-    public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue) {
-        Property<ResourceSource> p = new Property<>(key, defaultValue);
-        p.deserializationCodec = ResourceSource::of;
-        p.serializationCodec = ResourceSource::getSerializationSource;
-        return p;
     }
 
     @NotNull
@@ -362,33 +212,6 @@ public class Property<T> {
     @NotNull
     public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return resourceSourceProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
-    }
-
-    @NotNull
-    public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue, @Nullable ResourceSupplier<R> currentValue) {
-        Property<ResourceSupplier<R>> p = new Property<>(key, defaultValue, currentValue);
-        p.deserializationCodec = consumes -> {
-            if (ITexture.class.isAssignableFrom(resourceType)) {
-                return (ResourceSupplier<R>) ResourceSupplier.image(consumes);
-            }
-            if (IAudio.class.isAssignableFrom(resourceType)) {
-                return (ResourceSupplier<R>) ResourceSupplier.audio(consumes);
-            }
-            if (IVideo.class.isAssignableFrom(resourceType)) {
-                return (ResourceSupplier<R>) ResourceSupplier.video(consumes);
-            }
-            if (IText.class.isAssignableFrom(resourceType)) {
-                return (ResourceSupplier<R>) ResourceSupplier.text(consumes);
-            }
-            throw new IllegalArgumentException("Unknown resource format! Unable to deserialize ResourceSupplier property!");
-        };
-        p.serializationCodec = ResourceSupplier::getSourceWithPrefix;
-        return p;
-    }
-
-    @NotNull
-    public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue) {
-        return resourceSupplierProperty(resourceType, key, defaultValue, defaultValue);
     }
 
     @NotNull
@@ -475,22 +298,6 @@ public class Property<T> {
     @NotNull
     public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return resourceSupplierProperty(resourceType, key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
-    }
-
-    @NotNull
-    public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue, @Nullable DrawableColor currentValue) {
-        Property<DrawableColor> p = new Property<>(key, defaultValue, currentValue);
-        p.deserializationCodec = DrawableColor::of;
-        p.serializationCodec = DrawableColor::getHex;
-        return p;
-    }
-
-    @NotNull
-    public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue) {
-        Property<DrawableColor> p = new Property<>(key, defaultValue);
-        p.deserializationCodec = DrawableColor::of;
-        p.serializationCodec = DrawableColor::getHex;
-        return p;
     }
 
     @NotNull

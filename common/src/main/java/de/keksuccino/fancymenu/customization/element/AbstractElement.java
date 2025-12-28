@@ -197,7 +197,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	protected String lastAdvancedHorizontalTiltDegrees;
 	protected boolean allowDepthTestManipulation = false;
     @NotNull
-    public final Property<Boolean> shouldBeAffectedByDecorationOverlays = putProperty(Property.booleanProperty("should_be_affected_by_decoration_overlays", false));
+    public final Property<Boolean> shouldBeAffectedByDecorationOverlays = putProperty(Property.booleanProperty("should_be_affected_by_decoration_overlays", false, "fancymenu.elements.abstract.should_be_affected_by_decoration_overlays"));
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
