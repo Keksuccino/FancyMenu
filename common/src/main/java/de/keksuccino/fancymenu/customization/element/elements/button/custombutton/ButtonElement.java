@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -74,6 +75,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public boolean nineSliceSliderHandle = false;
     public int nineSliceSliderHandleBorderX = 5;
     public int nineSliceSliderHandleBorderY = 5;
+    public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio"));
 
     protected static long lastTemplateUpdateButton = -1L;
     protected static ButtonElement lastTemplateButton = null;
