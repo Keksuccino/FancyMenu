@@ -56,7 +56,6 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import java.util.*;
 
-@SuppressWarnings("all")
 public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -73,7 +72,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public Screen layoutTargetScreen;
 	@NotNull
 	public Layout layout;
-	public List<AbstractEditorElement> normalEditorElements = new ArrayList<>();
+	public List<AbstractEditorElement<?, ?>> normalEditorElements = new ArrayList<>();
 	public List<VanillaWidgetEditorElement> vanillaWidgetEditorElements = new ArrayList<>();
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
 	public MenuBar menuBar;
@@ -89,7 +88,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected boolean elementMovingStarted = false;
 	protected boolean elementResizingStarted = false;
 	protected boolean mouseDraggingStarted = false;
-	protected List<AbstractEditorElement> currentlyDraggedElements = new ArrayList<>();
+	protected List<AbstractEditorElement<?, ?>> currentlyDraggedElements = new ArrayList<>();
 	protected int rightClickMenuOpenPosX = -1000;
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
@@ -242,7 +241,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			w.tick();
 		}
 
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			e.element.tick();
 		}
 
@@ -309,7 +308,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		//Render normal elements behind vanilla if renderBehindVanilla
 		if (this.layout.renderElementsBehindVanilla) {
-			for (AbstractEditorElement e : new ArrayList<>(this.normalEditorElements)) {
+			for (AbstractEditorElement<?, ?> e : new ArrayList<>(this.normalEditorElements)) {
 				if (!e.isSelected()) e.render(graphics, mouseX, mouseY, partial);
 			}
 		}
@@ -319,14 +318,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 		//Render normal elements before vanilla if NOT renderBehindVanilla
 		if (!this.layout.renderElementsBehindVanilla) {
-			for (AbstractEditorElement e : new ArrayList<>(this.normalEditorElements)) {
+			for (AbstractEditorElement<?, ?> e : new ArrayList<>(this.normalEditorElements)) {
 				if (!e.isSelected()) e.render(graphics, mouseX, mouseY, partial);
 			}
 		}
 
 		//Render selected elements last, so they're always visible
-		List<AbstractEditorElement> selected = this.getSelectedElements();
-		for (AbstractEditorElement e : selected) {
+		List<AbstractEditorElement<?, ?>> selected = this.getSelectedElements();
+		for (AbstractEditorElement<?, ?> e : selected) {
 			e.render(graphics, mouseX, mouseY, partial);
 		}
 
@@ -517,7 +516,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected void constructElementInstances() {
 
 		//Clear element lists
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			e.resetElementStates();
 		}
 		this.normalEditorElements.clear();
@@ -540,7 +539,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		//Wrap normal elements
 		for (AbstractElement e : ListUtils.mergeLists(normalElements.backgroundElements, normalElements.foregroundElements)) {
-			AbstractEditorElement editorElement = e.builder.wrapIntoEditorElementInternal(e, this);
+			AbstractEditorElement<?, ?> editorElement = e.builder.wrapIntoEditorElementInternal(e, this);
 			if (editorElement != null) {
 				this.normalEditorElements.add(editorElement);
 			}
@@ -564,7 +563,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.layout.serializedDeepElements.clear();
 
 		//Serialize normal elements
-		for (AbstractEditorElement e : this.normalEditorElements) {
+		for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
 			SerializedElement serialized = e.element.builder.serializeElementInternal(e.element);
 			if (serialized != null) {
 				this.layout.serializedElements.add(serialized);
@@ -581,10 +580,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@NotNull
-	public List<AbstractEditorElement> getAllElements() {
-		List<AbstractEditorElement> elements = new ArrayList<>();
-		List<AbstractEditorElement> selected = new ArrayList<>();
-		List<AbstractEditorElement> elementsFinal = new ArrayList<>();
+	public List<AbstractEditorElement<?, ?>> getAllElements() {
+		List<AbstractEditorElement<?, ?>> elements = new ArrayList<>();
+		List<AbstractEditorElement<?, ?>> selected = new ArrayList<>();
+		List<AbstractEditorElement<?, ?>> elementsFinal = new ArrayList<>();
 		if (this.layout.renderElementsBehindVanilla) {
 			elements.addAll(this.normalEditorElements);
 		}
@@ -593,7 +592,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			elements.addAll(this.normalEditorElements);
 		}
 		//Put selected elements at the end, because they are always on top
-		for (AbstractEditorElement e : elements) {
+		for (AbstractEditorElement<?, ?> e : elements) {
 			if (!e.isSelected()) {
 				elementsFinal.add(e);
 			} else {
@@ -605,9 +604,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@NotNull
-	public List<AbstractEditorElement<?>> getHoveredElements() {
-		List<AbstractEditorElement<?>> elements = new ArrayList<>();
-		for (AbstractEditorElement e : this.getAllElements()) {
+	public List<AbstractEditorElement<?, ?>> getHoveredElements() {
+		List<AbstractEditorElement<?, ?>> elements = new ArrayList<>();
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			if (e.isHovered()) {
 				if (e.element.layerHiddenInEditor) continue;
 				boolean hidden = (e instanceof HideableElement h) && h.isHidden();
@@ -618,14 +617,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@Nullable
-	public AbstractEditorElement getTopHoveredElement() {
-		List<AbstractEditorElement<?>> hoveredElements = this.getHoveredElements();
+	public AbstractEditorElement<?, ?> getTopHoveredElement() {
+		List<AbstractEditorElement<?, ?>> hoveredElements = this.getHoveredElements();
 		return (!hoveredElements.isEmpty()) ? hoveredElements.get(hoveredElements.size()-1) : null;
 	}
 
 	@NotNull
-	public List<AbstractEditorElement> getSelectedElements() {
-		List<AbstractEditorElement> l = new ArrayList<>();
+	public List<AbstractEditorElement<?, ?>> getSelectedElements() {
+		List<AbstractEditorElement<?, ?>> l = new ArrayList<>();
 		this.getAllElements().forEach(element -> {
 			if (element.isSelected()) l.add(element);
 		});
@@ -634,9 +633,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@SuppressWarnings("all")
 	@NotNull
-	protected <E extends AbstractEditorElement> List<E> getSelectedElementsOfType(@NotNull Class<E> type) {
+	protected <E extends AbstractEditorElement<?, ?>> List<E> getSelectedElementsOfType(@NotNull Class<E> type) {
 		List<E> l = new ArrayList<>();
-		for (AbstractEditorElement e : this.getSelectedElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getSelectedElements()) {
 			if (type.isAssignableFrom(e.getClass())) {
 				l.add((E)e);
 			}
@@ -645,9 +644,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@Nullable
-	public AbstractEditorElement getElementByInstanceIdentifier(@NotNull String instanceIdentifier) {
+	public AbstractEditorElement<?, ?> getElementByInstanceIdentifier(@NotNull String instanceIdentifier) {
 		instanceIdentifier = instanceIdentifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			if (e.element.getInstanceIdentifier().equals(instanceIdentifier)) {
 				return e;
 			}
@@ -656,20 +655,20 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	public void selectAllElements() {
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			if (e.element.layerHiddenInEditor) continue;
 			e.setSelected(true);
 		}
 	}
 
 	public void deselectAllElements() {
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			e.setSelected(false);
 		}
 	}
 
 	@SuppressWarnings("all")
-	public boolean deleteElement(@NotNull AbstractEditorElement element) {
+	public boolean deleteElement(@NotNull AbstractEditorElement<?, ?> element) {
 		if (element.settings.isDestroyable()) {
 			if (!element.settings.shouldHideInsteadOfDestroy()) {
 				this.normalEditorElements.remove(element);
@@ -686,7 +685,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		return false;
 	}
 
-	protected boolean isElementOverlappingArea(@NotNull AbstractEditorElement element, int xStart, int yStart, int xEnd, int yEnd) {
+	protected boolean isElementOverlappingArea(@NotNull AbstractEditorElement<?, ?> element, int xStart, int yStart, int xEnd, int yEnd) {
 		int elementStartX = element.getX();
 		int elementStartY = element.getY();
 		int elementEndX = element.getX() + element.getWidth();
@@ -695,20 +694,20 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	public boolean allSelectedElementsMovable() {
-		for (AbstractEditorElement e : this.getSelectedElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getSelectedElements()) {
 			if (e.element.layerHiddenInEditor) return false;
 			if (!e.settings.isMovable()) return false;
 		}
 		return true;
 	}
 
-	public boolean canMoveLayerUp(AbstractEditorElement element) {
+	public boolean canMoveLayerUp(AbstractEditorElement<?, ?> element) {
 		int index = this.normalEditorElements.indexOf(element);
 		if (index == -1) return false;
 		return index < this.normalEditorElements.size()-1;
 	}
 
-	public boolean canMoveLayerDown(AbstractEditorElement element) {
+	public boolean canMoveLayerDown(AbstractEditorElement<?, ?> element) {
 		int index = this.normalEditorElements.indexOf(element);
 		return index > 0;
 	}
@@ -717,15 +716,15 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	 * Returns the element the given one was moved above or NULL if there was no element above the given one.
 	 */
 	@Nullable
-	public AbstractEditorElement moveLayerUp(@NotNull AbstractEditorElement element) {
-		AbstractEditorElement movedAbove = null;
+	public AbstractEditorElement<?, ?> moveLayerUp(@NotNull AbstractEditorElement<?, ?> element) {
+		AbstractEditorElement<?, ?> movedAbove = null;
 		try {
 			if (this.normalEditorElements.contains(element)) {
-				List<AbstractEditorElement> newNormalEditorElements = new ArrayList<>();
+				List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>();
 				int index = this.normalEditorElements.indexOf(element);
 				int i = 0;
 				if (index < (this.normalEditorElements.size() - 1)) {
-					for (AbstractEditorElement e : this.normalEditorElements) {
+					for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
 						if (e != element) {
 							newNormalEditorElements.add(e);
 							if (i == index+1) {
@@ -748,15 +747,15 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	 * Returns the element the given one was moved behind or NULL if there was no element behind the given one.
 	 */
 	@Nullable
-	public AbstractEditorElement moveLayerDown(AbstractEditorElement element) {
-		AbstractEditorElement movedBehind = null;
+	public AbstractEditorElement<?, ?> moveLayerDown(AbstractEditorElement<?, ?> element) {
+		AbstractEditorElement<?, ?> movedBehind = null;
 		try {
 			if (this.normalEditorElements.contains(element)) {
-				List<AbstractEditorElement> newNormalEditorElements = new ArrayList<>();
+				List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>();
 				int index = this.normalEditorElements.indexOf(element);
 				int i = 0;
 				if (index > 0) {
-					for (AbstractEditorElement e : this.normalEditorElements) {
+					for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
 						if (e != element) {
 							if (i == index-1) {
 								newNormalEditorElements.add(element);
@@ -782,7 +781,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	 * @param targetIndex The index to move the element to (in the normalEditorElements list)
 	 * @return true if the move was successful, false otherwise
 	 */
-	public boolean moveLayerToPosition(AbstractEditorElement element, int targetIndex) {
+	public boolean moveLayerToPosition(AbstractEditorElement<?, ?> element, int targetIndex) {
 		try {
 			if (this.normalEditorElements.contains(element)) {
 				int sourceIndex = this.normalEditorElements.indexOf(element);
@@ -793,7 +792,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				}
 
 				// Create a new list for the reordered elements
-				List<AbstractEditorElement> newNormalEditorElements = new ArrayList<>(this.normalEditorElements);
+				List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>(this.normalEditorElements);
 
 				// Remove the element from its current position
 				newNormalEditorElements.remove(element);
@@ -831,10 +830,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		return false;
 	}
 
-	public void copyElementsToClipboard(AbstractEditorElement... elements) {
+	public void copyElementsToClipboard(AbstractEditorElement<?, ?>... elements) {
 		if ((elements != null) && (elements.length > 0)) {
 			COPIED_ELEMENTS_CLIPBOARD.clear();
-			for (AbstractEditorElement e : elements) {
+			for (AbstractEditorElement<?, ?> e : elements) {
 				if (e.element.layerHiddenInEditor) continue;
 				if (e.settings.isCopyable()) {
 					SerializedElement serialized = e.element.builder.serializeElementInternal(e.element);
@@ -854,7 +853,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				m.getKey().putProperty("instance_identifier", ScreenCustomization.generateUniqueIdentifier());
 				AbstractElement deserialized = m.getValue().deserializeElementInternal(m.getKey());
 				if (deserialized != null) {
-					AbstractEditorElement deserializedEditorElement = m.getValue().wrapIntoEditorElementInternal(deserialized, this);
+					AbstractEditorElement<?, ?> deserializedEditorElement = m.getValue().wrapIntoEditorElementInternal(deserialized, this);
 					if (deserializedEditorElement != null) {
 						this.normalEditorElements.add(deserializedEditorElement);
 						this.layoutEditorWidgets.forEach(widget -> widget.editorElementAdded(deserializedEditorElement));
@@ -929,9 +928,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	public void onUpdateSelectedElements() {
-		List<AbstractEditorElement> selected = this.getSelectedElements();
+		List<AbstractEditorElement<?, ?>> selected = this.getSelectedElements();
 		if (selected.size() > 1) {
-			for (AbstractEditorElement e : selected) {
+			for (AbstractEditorElement<?, ?> e : selected) {
 				e.setMultiSelected(true);
 			}
 		} else if (selected.size() == 1) {
@@ -958,7 +957,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	public void openElementContextMenuAtMouseIfPossible() {
 		this.closeActiveElementMenu();
-		List<AbstractEditorElement> selectedElements = this.getSelectedElements();
+		List<AbstractEditorElement<?, ?>> selectedElements = this.getSelectedElements();
 		if (selectedElements.size() == 1) {
 			this.activeElementContextMenu = selectedElements.get(0).rightClickMenu;
 			((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
@@ -999,7 +998,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@NotNull
-	public List<AbstractEditorElement> getCurrentlyDraggedElements() {
+	public List<AbstractEditorElement<?, ?>> getCurrentlyDraggedElements() {
 		return this.currentlyDraggedElements;
 	}
 
@@ -1007,11 +1006,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	 * Returns NULL if there was an error while trying to get the element chain.
 	 */
 	@Nullable
-	protected List<AbstractEditorElement> getElementChildChainOfExcluding(@NotNull AbstractEditorElement element) {
+	protected List<AbstractEditorElement<?, ?>> getElementChildChainOfExcluding(@NotNull AbstractEditorElement<?, ?> element) {
 		Objects.requireNonNull(element);
-		List<AbstractEditorElement> chain = new ArrayList<>();
+		List<AbstractEditorElement<?, ?>> chain = new ArrayList<>();
 		try {
-			AbstractEditorElement e = element;
+			AbstractEditorElement<?, ?> e = element;
 			while (true) {
 				e = this.getChildElementOf(e);
 				if (e == null) break;
@@ -1027,8 +1026,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@Nullable
-	protected AbstractEditorElement getChildElementOf(@NotNull AbstractEditorElement element) {
-		for (AbstractEditorElement e : this.getAllElements()) {
+	protected AbstractEditorElement<?, ?> getChildElementOf(@NotNull AbstractEditorElement<?, ?> element) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			String parentOfE = e.element.getAnchorPointElementIdentifier();
 			if ((parentOfE != null) && parentOfE.equals(element.element.getInstanceIdentifier())) return e;
 		}
@@ -1036,12 +1035,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	protected void moveSelectedElementsByXYOffset(int offsetX, int offsetY) {
-		List<AbstractEditorElement> selected = this.getSelectedElements();
+		List<AbstractEditorElement<?, ?>> selected = this.getSelectedElements();
 		if ((!selected.isEmpty()) && this.allSelectedElementsMovable()) {
 			this.history.saveSnapshot();
 		}
 		boolean multiSelect = selected.size() > 1;
-		for (AbstractEditorElement e : selected) {
+		for (AbstractEditorElement<?, ?> e : selected) {
 			if (this.allSelectedElementsMovable()) {
 				if (!multiSelect || !e.isElementAnchorAndParentIsSelected()) {
 					e.element.posOffsetX = e.element.posOffsetX + offsetX;
@@ -1071,7 +1070,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//Skip the first click out of the menu bar context menus
 		if (menuBarContextOpen) return true;
 
-		AbstractEditorElement topHoverElement = this.getTopHoveredElement();
+		AbstractEditorElement<?, ?> topHoverElement = this.getTopHoveredElement();
 
 		boolean topHoverGotSelected = false;
 		if (topHoverElement != null) {
@@ -1086,7 +1085,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 		boolean canStartMouseSelection = true;
 		//Handle mouse click for elements
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			e.mouseClicked(mouseX, mouseY, button);
 			if (e.isHovered() || e.isGettingResized() || (e.getHoveredResizeGrabber() != null)) {
 				canStartMouseSelection = false;
@@ -1101,7 +1100,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//Deselect all elements
 		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !hasControlDown()) {
 			if ((button == 0) || ((button == 1) && ((topHoverElement == null) || topHoverGotSelected))) {
-				for (AbstractEditorElement e : this.getAllElements()) {
+				for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 					if (!e.isGettingResized() && ((topHoverElement == null) || (e != topHoverElement))) e.setSelected(false);
 				}
 			}
@@ -1155,8 +1154,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			if (child.mouseReleased(mouseX, mouseY, button)) return true;
 		}
 
-		List<AbstractEditorElement<?>> hoveredElements = this.getHoveredElements();
-		AbstractEditorElement topHoverElement = !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
+		List<AbstractEditorElement<?, ?>> hoveredElements = this.getHoveredElements();
+		AbstractEditorElement<?, ?> topHoverElement = !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
 
 		//Deselect hovered element on left-click if CTRL pressed
 		if (!mouseWasInDraggingMode && !cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {
@@ -1166,7 +1165,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		boolean elementRecentlyMovedByDragging = false;
 
 		//Handle mouse released for all elements
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			if (e.recentlyMovedByDragging) elementRecentlyMovedByDragging = true;
 			e.mouseReleased(mouseX, mouseY, button);
 			e.recentlyLeftClickSelected = false;
@@ -1188,7 +1187,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (super.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
 
 		if (this.isMouseSelection) {
-			for (AbstractEditorElement e : this.getAllElements()) {
+			for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 				if (e.element.layerHiddenInEditor) continue;
 				boolean b = this.isElementOverlappingArea(e, Math.min(this.mouseSelectionStartX, (int)mouseX), Math.min(this.mouseSelectionStartY, (int)mouseY), Math.max(this.mouseSelectionStartX, (int)mouseX), Math.max(this.mouseSelectionStartY, (int)mouseY));
 				if (!b && hasControlDown()) continue; //skip deselect if CTRL pressed
@@ -1202,7 +1201,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.mouseDraggingStarted = true;
 		}
 
-		List<AbstractEditorElement> allElements = this.getAllElements();
+		List<AbstractEditorElement<?, ?>> allElements = this.getAllElements();
 
 		if (!this.elementResizingStarted) {
 			allElements.forEach(element -> element.updateResizingStartPos((int)mouseX, (int)mouseY));
@@ -1225,7 +1224,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			}
 			this.elementMovingStarted = true;
 		}
-		for (AbstractEditorElement e : allElements) {
+		for (AbstractEditorElement<?, ?> e : allElements) {
 			if (e.mouseDragged(mouseX, mouseY, button, $$3, $$4)) {
 				break;
 			}
@@ -1254,9 +1253,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		if (super.keyPressed(keycode, scancode, modifiers)) return true;
 
-		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
-			if (abstractEditorElement.element.layerHiddenInEditor) continue;
-			if (abstractEditorElement.keyPressed(keycode, scancode, modifiers)) return true;
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
+			if (e.element.layerHiddenInEditor) continue;
+			if (e.keyPressed(keycode, scancode, modifiers)) return true;
 		}
 
 		String key = GLFW.glfwGetKeyName(keycode, scancode);
@@ -1293,7 +1292,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		//CTRL + C
 		if (key.equals("c") && hasControlDown()) {
-			this.copyElementsToClipboard(this.getSelectedElements().toArray(new AbstractEditorElement[0]));
+			this.copyElementsToClipboard(this.getSelectedElements().toArray(new AbstractEditorElement<?, ?>[0]));
 			return true;
 		}
 
@@ -1334,7 +1333,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//DEL
 		if (keycode == InputConstants.KEY_DELETE) {
 			this.history.saveSnapshot();
-			for (AbstractEditorElement e : this.getSelectedElements()) {
+			for (AbstractEditorElement<?, ?> e : this.getSelectedElements()) {
 				if (e.element.layerHiddenInEditor) continue;
 				e.deleteElement();
 			}
@@ -1350,8 +1349,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.anchorPointOverlay.keyReleased(keycode, scancode, modifiers);
 
-		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
-			if (abstractEditorElement.keyReleased(keycode, scancode, modifiers)) return true;
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
+			if (e.keyReleased(keycode, scancode, modifiers)) return true;
 		}
 
 		return super.keyReleased(keycode, scancode, modifiers);

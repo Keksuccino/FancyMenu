@@ -46,31 +46,31 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 @SuppressWarnings({"deprecation", "unchecked"})
-public abstract class AbstractEditorElement<E extends AbstractEditorElement<?>> implements Renderable, GuiEventListener, ContextMenuBuilder<E>, PropertyHolder {
+public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?>, N extends AbstractElement> implements Renderable, GuiEventListener, ContextMenuBuilder<E>, PropertyHolder {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	protected static final ResourceLocation DRAGGING_NOT_ALLOWED_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/not_allowed.png");
 	protected static final ResourceLocation DEPRECATED_WARNING_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/warning_20x20.png");
-	protected static final ConsumingSupplier<AbstractEditorElement<?>, Integer> BORDER_COLOR = (editorElement) -> {
+	protected static final ConsumingSupplier<AbstractEditorElement<?, ?>, Integer> BORDER_COLOR = (editorElement) -> {
 		if (editorElement.isSelected()) {
 			return UIBase.getUIColorTheme().layout_editor_element_border_color_selected.getColorInt();
 		}
 		return UIBase.getUIColorTheme().layout_editor_element_border_color_normal.getColorInt();
 	};
-    protected static final ConsumingSupplier<AbstractEditorElement<?>, Float> HORIZONTAL_TILT_CONTROLS_ALPHA = consumes -> {
+    protected static final ConsumingSupplier<AbstractEditorElement<?, ?>, Float> HORIZONTAL_TILT_CONTROLS_ALPHA = consumes -> {
         if (consumes.horizontalTiltGrabber.hovered || consumes.isGettingHorizontalTilted()) {
             return 1.0F;
         }
         return 0.7F;
     };
-    protected static final ConsumingSupplier<AbstractEditorElement<?>, Float> VERTICAL_TILT_CONTROLS_ALPHA = consumes -> {
+    protected static final ConsumingSupplier<AbstractEditorElement<?, ?>, Float> VERTICAL_TILT_CONTROLS_ALPHA = consumes -> {
         if (consumes.verticalTiltGrabber.hovered || consumes.isGettingVerticalTilted()) {
             return 1.0F;
         }
         return 0.7F;
     };
-    protected static final ConsumingSupplier<AbstractEditorElement<?>, Float> ROTATION_CONTROLS_ALPHA = consumes -> {
+    protected static final ConsumingSupplier<AbstractEditorElement<?, ?>, Float> ROTATION_CONTROLS_ALPHA = consumes -> {
         if (consumes.rotationGrabber.hovered || consumes.isGettingRotated()) {
             return 1.0F;
         }
@@ -78,7 +78,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?>> 
     };
 
     @NotNull
-	public AbstractElement element;
+	public N element;
 	public final EditorElementSettings settings;
 	public ContextMenu rightClickMenu;
 	public EditorElementBorderDisplay topLeftDisplay = new EditorElementBorderDisplay(this, EditorElementBorderDisplay.DisplayPosition.TOP_LEFT, EditorElementBorderDisplay.DisplayPosition.LEFT_TOP, EditorElementBorderDisplay.DisplayPosition.BOTTOM_LEFT);
@@ -98,7 +98,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?>> 
 	protected int movingStartPosY = 0;
 	protected int resizingStartPosX = 0;
 	protected int resizingStartPosY = 0;
-	protected ResizeGrabber[] resizeGrabbers = new ResizeGrabber[]{new ResizeGrabber(ResizeGrabberType.TOP), new ResizeGrabber(ResizeGrabberType.RIGHT), new ResizeGrabber(ResizeGrabberType.BOTTOM), new ResizeGrabber(ResizeGrabberType.LEFT)};
+    protected final List<ResizeGrabber> resizeGrabbers = List.of(new ResizeGrabber(ResizeGrabberType.TOP), new ResizeGrabber(ResizeGrabberType.RIGHT), new ResizeGrabber(ResizeGrabberType.BOTTOM), new ResizeGrabber(ResizeGrabberType.LEFT));
 	protected ResizeGrabber activeResizeGrabber = null;
 	protected RotationGrabber rotationGrabber = new RotationGrabber();
 	protected boolean rotationGrabberActive = false;
@@ -121,9 +121,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?>> 
 	public boolean recentlyResized = false;
 	public boolean movingCrumpleZonePassed = false;
 
-	private final List<AbstractEditorElement<?>> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
+	private final List<AbstractEditorElement<?, ?>> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
 
-	public AbstractEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
+	public AbstractEditorElement(@NotNull N element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
 		this.settings = (settings != null) ? settings : new EditorElementSettings();
 		this.settings.editorElement = this;
 		this.editor = editor;
@@ -139,7 +139,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?>> 
 		this.init();
 	}
 
-	public AbstractEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+	public AbstractEditorElement(@NotNull N element, @NotNull LayoutEditorScreen editor) {
 		this(element, editor, new EditorElementSettings());
 	}
 
@@ -524,10 +524,10 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?>> 
 					.setStackable(true);
 
 			Supplier<Boolean> appearanceDelayIsActive = () -> {
-				List<AbstractEditorElement> selected = this.editor.getSelectedElements();
+				List<AbstractEditorElement<?, ?>> selected = this.editor.getSelectedElements();
 				selected.removeIf(e -> !e.settings.isDelayable());
 				if (selected.size() > 1) return true;
-				for (AbstractEditorElement e : selected) {
+				for (AbstractEditorElement<?, ?> e : selected) {
 					if (e.element.appearanceDelay == AbstractElement.AppearanceDelay.NO_DELAY) return false;
 				}
 				return true;
@@ -1688,13 +1688,20 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?>> 
 	}
 
 	protected List<E> getFilteredSelectedElementList(@Nullable ConsumingSupplier<E, Boolean> selectedElementsFilter) {
-		return ListUtils.filterList(this.editor.getSelectedElements(), (consumes) -> {
-            if (!(consumes instanceof E)) return false;
-			if (selectedElementsFilter == null) {
-				return true;
+		List<E> filtered = new ArrayList<>();
+		Class<?> selfClass = this.getClass();
+		for (AbstractEditorElement<?, ?> element : this.editor.getSelectedElements()) {
+			if (!selfClass.isInstance(element)) {
+				continue;
 			}
-			return selectedElementsFilter.get(consumes);
-		});
+			@SuppressWarnings("unchecked")
+			E casted = (E) element;
+			if (selectedElementsFilter != null && !selectedElementsFilter.get(casted)) {
+				continue;
+			}
+			filtered.add(casted);
+		}
+		return filtered;
 	}
 
     @Override
