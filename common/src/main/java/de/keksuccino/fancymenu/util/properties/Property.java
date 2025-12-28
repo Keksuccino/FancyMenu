@@ -67,7 +67,7 @@ public class Property<T> {
             }, (b, s) -> {
                 Property<String> resolved = (Property<String>) b.getProperty(key);
                 if (resolved != null) resolved.set(s);
-            }, null, multiLine, placeholders, Component.translatable(contextMenuEntryLocalizationKeyBase), true, property.getDefault(), property.userInputTextValidator, null);
+            }, null, multiLine, placeholders, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, property.getDefault(), property.userInputTextValidator, null);
         };
         return p;
     }
@@ -90,7 +90,7 @@ public class Property<T> {
             }, (b, value) -> {
                 Property<Integer> resolved = (Property<Integer>) b.getProperty(key);
                 if (resolved != null) resolved.set(value);
-            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, property.userInputTextValidator, null);
+            }, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -113,7 +113,7 @@ public class Property<T> {
             }, (b, value) -> {
                 Property<Double> resolved = (Property<Double>) b.getProperty(key);
                 if (resolved != null) resolved.set(value);
-            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, property.userInputTextValidator, null);
+            }, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -136,7 +136,7 @@ public class Property<T> {
             }, (b, value) -> {
                 Property<Long> resolved = (Property<Long>) b.getProperty(key);
                 if (resolved != null) resolved.set(value);
-            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, property.userInputTextValidator, null);
+            }, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -159,7 +159,7 @@ public class Property<T> {
             }, (b, value) -> {
                 Property<Float> resolved = (Property<Float>) b.getProperty(key);
                 if (resolved != null) resolved.set(value);
-            }, Component.translatable(contextMenuEntryLocalizationKeyBase), true, resolvedDefault, property.userInputTextValidator, null);
+            }, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -179,7 +179,7 @@ public class Property<T> {
         }, (b, value) -> {
             Property<Boolean> resolved = (Property<Boolean>) b.getProperty(key);
             if (resolved != null) resolved.set(value);
-        }, contextMenuEntryLocalizationKeyBase);
+        }, property.getContextMenuEntryLocalizationKeyBase());
         return p;
     }
 
@@ -221,7 +221,7 @@ public class Property<T> {
                             resolved.set(ResourceSource.of(supplier.getSourceWithPrefix()));
                         }
                     },
-                    Component.translatable(contextMenuEntryLocalizationKeyBase), true, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb);
+                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb);
         };
         return p;
     }
@@ -266,7 +266,7 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, fileFilter, allowLocation, allowLocal, allowWeb);
+                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             if (IAudio.class.isAssignableFrom(resourceType)) {
                 return builder.buildAudioResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
@@ -280,7 +280,7 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, fileFilter, allowLocation, allowLocal, allowWeb);
+                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             if (IVideo.class.isAssignableFrom(resourceType)) {
                 return builder.buildVideoResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
@@ -294,7 +294,7 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, fileFilter, allowLocation, allowLocal, allowWeb);
+                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             if (IText.class.isAssignableFrom(resourceType)) {
                 return builder.buildTextResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
@@ -308,7 +308,7 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(contextMenuEntryLocalizationKeyBase), true, fileFilter, allowLocation, allowLocal, allowWeb);
+                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             throw new IllegalArgumentException("Unknown resource format! Unable to build ResourceSupplier context menu entry!");
         };
@@ -342,7 +342,7 @@ public class Property<T> {
                         if (resolved != null) resolved.set(parsed);
                     }
                 },
-                null, false, placeholders, Component.translatable(contextMenuEntryLocalizationKeyBase), true,
+                null, false, placeholders, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true,
                 (property.getDefault() != null) ? property.getDefault().getHex() : null,
                 (!placeholders) ? TextValidators.HEX_COLOR_TEXT_VALIDATOR : null, null);
         return p;
