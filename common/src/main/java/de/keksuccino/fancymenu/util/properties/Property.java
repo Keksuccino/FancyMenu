@@ -50,6 +50,10 @@ public class Property<T> {
     protected boolean disabled = false;
     @Nullable
     protected ConsumingSupplier<String, Boolean> userInputTextValidator = null;
+    @Nullable
+    protected ConsumingSupplier<T, T> valueSetProcessor = null;
+    @Nullable
+    protected ConsumingSupplier<T, T> valueGetProcessor = null;
 
     @NotNull
     public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
@@ -439,6 +443,30 @@ public class Property<T> {
 
     public Property<T> setUserInputTextValidator(@Nullable ConsumingSupplier<String, Boolean> userInputTextValidator) {
         this.userInputTextValidator = userInputTextValidator;
+        return this;
+    }
+
+    public @Nullable ConsumingSupplier<T, T> getValueSetProcessor() {
+        return valueSetProcessor;
+    }
+
+    /**
+     * When the value of this property gets set, it goes through this processor if one is set. This makes it possible to, well, process the value before it actually gets set.
+     */
+    public Property<T> setValueSetProcessor(@Nullable ConsumingSupplier<T, T> valueSetProcessor) {
+        this.valueSetProcessor = valueSetProcessor;
+        return this;
+    }
+
+    public @Nullable ConsumingSupplier<T, T> getValueGetProcessor() {
+        return valueGetProcessor;
+    }
+
+    /**
+     * When the value of this property is returned by the getters, it goes through this processor if one is set. This makes it possible to, well, process the value before it actually gets returned.
+     */
+    public Property<T> setValueGetProcessor(@Nullable ConsumingSupplier<T, T> valueGetProcessor) {
+        this.valueGetProcessor = valueGetProcessor;
         return this;
     }
 
