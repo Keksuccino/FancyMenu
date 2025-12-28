@@ -19,15 +19,15 @@ public class BrowserEditorElement extends AbstractEditorElement<BrowserEditorEle
         super.init();
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "url", BrowserEditorElement.class,
-                        consumes -> consumes.getElement().url,
-                        (element1, s) -> element1.getElement().url = s,
+                        consumes -> consumes.element.url,
+                        (element1, s) -> element1.element.url = s,
                         null, false, true, Component.translatable("fancymenu.elements.browser.url"),
                         true, "https://docs.fancymenu.net", null, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.url.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "interactable", BrowserEditorElement.class,
-                        consumes -> consumes.getElement().interactable,
-                        (element, aBoolean) -> element.getElement().interactable = aBoolean,
+                        consumes -> consumes.element.interactable,
+                        (element, aBoolean) -> element.element.interactable = aBoolean,
                         "fancymenu.elements.browser.interactable")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.interactable.desc")))
                 .setStackable(true);
@@ -35,37 +35,34 @@ public class BrowserEditorElement extends AbstractEditorElement<BrowserEditorEle
         this.rightClickMenu.addSeparatorEntry("separator_after_interactable");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "hide_video_controls", BrowserEditorElement.class,
-                        consumes -> consumes.getElement().hideVideoControls,
-                        (element, aBoolean) -> element.getElement().hideVideoControls = aBoolean,
+                        consumes -> consumes.element.hideVideoControls,
+                        (element, aBoolean) -> element.element.hideVideoControls = aBoolean,
                         "fancymenu.elements.browser.hide_video_controls")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.hide_video_controls.desc")))
                 .setStackable(true);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "loop_videos", BrowserEditorElement.class,
-                        consumes -> consumes.getElement().loopVideos,
-                        (element, aBoolean) -> element.getElement().loopVideos = aBoolean,
+                        consumes -> consumes.element.loopVideos,
+                        (element, aBoolean) -> element.element.loopVideos = aBoolean,
                         "fancymenu.elements.browser.loop_videos")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.loop_videos.desc")))
                 .setStackable(true);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "mute_media", BrowserEditorElement.class,
-                        consumes -> consumes.getElement().muteMedia,
-                        (element, aBoolean) -> element.getElement().muteMedia = aBoolean,
+                        consumes -> consumes.element.muteMedia,
+                        (element, aBoolean) -> element.element.muteMedia = aBoolean,
                         "fancymenu.elements.browser.mute_media")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.mute_media.desc")))
                 .setStackable(true);
 
         this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "media_volume", BrowserEditorElement.class,
-                        consumes -> consumes.getElement().mediaVolume,
-                        (element1, aFloat) -> element1.getElement().mediaVolume = aFloat,
+                        consumes -> consumes.element.mediaVolume,
+                        (element1, aFloat) -> element1.element.mediaVolume = aFloat,
                         Component.translatable("fancymenu.elements.browser.media_volume"), true, 1.0F, null, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.media_volume.desc")))
                 .setStackable(true);
 
     }
 
-    public BrowserElement getElement() {
-        return (BrowserElement) this.element;
-    }
 
 }

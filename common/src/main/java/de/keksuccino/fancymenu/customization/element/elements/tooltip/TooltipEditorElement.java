@@ -47,8 +47,8 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
         this.addCycleContextMenuEntryTo(contentMenu, "source_mode",
                         List.of(TooltipElement.SourceMode.DIRECT, TooltipElement.SourceMode.RESOURCE),
                         TooltipEditorElement.class,
-                        e -> e.getElement().sourceMode,
-                        (e, mode) -> e.getElement().setSource(mode, null),
+                        e -> e.element.sourceMode,
+                        (e, mode) -> e.element.setSource(mode, null),
                         (menu, entry, value) -> value.getCycleComponent())
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.source_mode.desc")));
 
@@ -233,8 +233,5 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
     }
 
     @NotNull
-    public TooltipElement getElement() {
-        return (TooltipElement) this.element;
-    }
 
 }

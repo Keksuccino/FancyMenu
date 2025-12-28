@@ -26,17 +26,17 @@ public class AudioEditorElement extends AbstractEditorElement<AudioEditorElement
         super.init();
 
         this.rightClickMenu.addValueCycleEntry("play_mode",
-                        AudioElement.PlayMode.NORMAL.cycle(this.getElement().getPlayMode())
-                                .addCycleListener(playMode -> this.getElement().setPlayMode(playMode, true)))
+                        AudioElement.PlayMode.NORMAL.cycle(this.element.getPlayMode())
+                                .addCycleListener(playMode -> this.element.setPlayMode(playMode, true)))
                 .setStackable(false);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "loop", AudioEditorElement.class,
-                consumes -> consumes.getElement().isLooping(),
-                (audioEditorElement, aBoolean) -> audioEditorElement.getElement().setLooping(aBoolean, true),
+                consumes -> consumes.element.isLooping(),
+                (audioEditorElement, aBoolean) -> audioEditorElement.element.setLooping(aBoolean, true),
                 "fancymenu.elements.audio.looping");
 
         this.rightClickMenu.addClickableEntry("manage_tracks", Component.translatable("fancymenu.elements.audio.manage_audios"),
-                        (menu, entry) -> Minecraft.getInstance().setScreen(new ManageAudiosScreen(this.getElement(), this.getElement().audios, this.editor)))
+                        (menu, entry) -> Minecraft.getInstance().setScreen(new ManageAudiosScreen(this.element, this.element.audios, this.editor)))
                 .setStackable(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
@@ -45,15 +45,15 @@ public class AudioEditorElement extends AbstractEditorElement<AudioEditorElement
         this.addCycleContextMenuEntryTo(this.rightClickMenu, "sound_channel",
                         Arrays.asList(SoundSource.values()),
                         AudioEditorElement.class,
-                        consumes -> consumes.getElement().soundSource,
-                        (audioEditorElement, soundSource) -> audioEditorElement.getElement().setSoundSource(soundSource),
+                        consumes -> consumes.element.soundSource,
+                        (audioEditorElement, soundSource) -> audioEditorElement.element.setSoundSource(soundSource),
                         (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.audio.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))))
                 .setStackable(false);
 
         this.rightClickMenu.addClickableEntry("volume", Component.translatable("fancymenu.elements.audio.set_volume"), (menu, entry) -> {
-            Minecraft.getInstance().setScreen(new SetAudioVolumeScreen(this.getElement().volume, aFloat -> {
+            Minecraft.getInstance().setScreen(new SetAudioVolumeScreen(this.element.volume, aFloat -> {
                 if (aFloat != null) {
-                    this.getElement().setVolume(aFloat);
+                    this.element.setVolume(aFloat);
                 }
                 Minecraft.getInstance().setScreen(this.editor);
             }));
@@ -70,8 +70,5 @@ public class AudioEditorElement extends AbstractEditorElement<AudioEditorElement
 
     }
 
-    public AudioElement getElement() {
-        return (AudioElement) this.element;
-    }
 
 }

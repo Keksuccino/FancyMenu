@@ -19,8 +19,8 @@ public class ShapeEditorElement extends AbstractEditorElement<ShapeEditorElement
         super.init();
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color", ShapeEditorElement.class,
-                        consumes -> consumes.getElement().colorRaw,
-                        (shapeEditorElement, s) -> shapeEditorElement.getElement().colorRaw = s,
+                        consumes -> consumes.element.colorRaw,
+                        (shapeEditorElement, s) -> shapeEditorElement.element.colorRaw = s,
                         null, false, true, Component.translatable("fancymenu.elements.shape.color"),
                         true, "#FFFFFF", null, null)
                 .setStackable(true)
@@ -28,8 +28,5 @@ public class ShapeEditorElement extends AbstractEditorElement<ShapeEditorElement
 
     }
 
-    public ShapeElement getElement() {
-        return (ShapeElement) this.element;
-    }
 
 }

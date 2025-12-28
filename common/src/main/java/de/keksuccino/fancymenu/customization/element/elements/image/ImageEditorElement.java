@@ -27,15 +27,15 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
             Minecraft.getInstance().setScreen(ResourceChooserScreen.image(null, source -> {
                 if (source != null) {
                     this.editor.history.saveSnapshot();
-                    this.getElement().textureSupplier = ResourceSupplier.image(source);
+                    this.element.textureSupplier = ResourceSupplier.image(source);
                 }
                 Minecraft.getInstance().setScreen(this.editor);
-            }).setSource((this.getElement().textureSupplier != null) ? this.getElement().textureSupplier.getSourceWithPrefix() : null, false));
+            }).setSource((this.element.textureSupplier != null) ? this.element.textureSupplier.getSourceWithPrefix() : null, false));
         }).setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "image_tint", ImageEditorElement.class,
-                        consumes -> consumes.getElement().imageTint,
-                        (imageEditorElement, tint) -> imageEditorElement.getElement().imageTint = Objects.requireNonNullElse(tint, "#FFFFFF"),
+                        consumes -> consumes.element.imageTint,
+                        (imageEditorElement, tint) -> imageEditorElement.element.imageTint = Objects.requireNonNullElse(tint, "#FFFFFF"),
                         null, false, true, Component.translatable("fancymenu.elements.image.tint"),
                         true, "#FFFFFF", null, null)
                 .setStackable(true);
@@ -44,44 +44,44 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "repeat_texture",
                         ImageEditorElement.class,
-                        consumes -> consumes.getElement().repeat,
-                        (imageEditorElement, aBoolean) -> imageEditorElement.getElement().repeat = aBoolean,
+                        consumes -> consumes.element.repeat,
+                        (imageEditorElement, aBoolean) -> imageEditorElement.element.repeat = aBoolean,
                         "fancymenu.elements.image.repeat")
-                .setIsActiveSupplier((menu, entry) -> !this.getElement().nineSlice)
+                .setIsActiveSupplier((menu, entry) -> !this.element.nineSlice)
                 .setStackable(false);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_nine_slice_settings");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "nine_slice_texture",
                         ImageEditorElement.class,
-                        consumes -> consumes.getElement().nineSlice,
-                        (imageEditorElement, aBoolean) -> imageEditorElement.getElement().nineSlice = aBoolean,
+                        consumes -> consumes.element.nineSlice,
+                        (imageEditorElement, aBoolean) -> imageEditorElement.element.nineSlice = aBoolean,
                         "fancymenu.elements.image.nine_slice")
-                .setIsActiveSupplier((menu, entry) -> !this.getElement().repeat)
+                .setIsActiveSupplier((menu, entry) -> !this.element.repeat)
                 .setStackable(false);
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "nine_slice_border_x",
                         ImageEditorElement.class,
-                        consumes -> consumes.getElement().nineSliceBorderX,
-                        (imageEditorElement, integer) -> imageEditorElement.getElement().nineSliceBorderX = integer,
+                        consumes -> consumes.element.nineSliceBorderX,
+                        (imageEditorElement, integer) -> imageEditorElement.element.nineSliceBorderX = integer,
                         Component.translatable("fancymenu.elements.image.nine_slice.border_x"), true, 5, null, null)
                 .setStackable(false)
-                .setIsActiveSupplier((menu, entry) -> !this.getElement().repeat);
+                .setIsActiveSupplier((menu, entry) -> !this.element.repeat);
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "nine_slice_border_y",
                         ImageEditorElement.class,
-                        consumes -> consumes.getElement().nineSliceBorderY,
-                        (imageEditorElement, integer) -> imageEditorElement.getElement().nineSliceBorderY = integer,
+                        consumes -> consumes.element.nineSliceBorderY,
+                        (imageEditorElement, integer) -> imageEditorElement.element.nineSliceBorderY = integer,
                         Component.translatable("fancymenu.elements.image.nine_slice.border_y"), true, 5, null, null)
                 .setStackable(false)
-                .setIsActiveSupplier((menu, entry) -> !this.getElement().repeat);
+                .setIsActiveSupplier((menu, entry) -> !this.element.repeat);
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "restart_animated_on_menu_load",
                         ImageEditorElement.class,
-                        consumes -> consumes.getElement().restartAnimatedOnMenuLoad,
-                        (imageEditorElement, aBoolean) -> imageEditorElement.getElement().restartAnimatedOnMenuLoad = aBoolean,
+                        consumes -> consumes.element.restartAnimatedOnMenuLoad,
+                        (imageEditorElement, aBoolean) -> imageEditorElement.element.restartAnimatedOnMenuLoad = aBoolean,
                         "fancymenu.elements.image.restart_animated_on_menu_load")
                 .setStackable(true);
 
@@ -98,8 +98,5 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
 
     }
 
-    public ImageElement getElement() {
-        return (ImageElement) this.element;
-    }
 
 }

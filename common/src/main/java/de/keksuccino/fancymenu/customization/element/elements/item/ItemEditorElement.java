@@ -25,8 +25,8 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
 
         super.init();
 
-        ConsumingSupplier<ItemEditorElement, String> itemKeyTargetFieldGetter = consumes -> consumes.getElement().itemKey;
-        BiConsumer<ItemEditorElement, String> itemKeyTargetFieldSetter = (itemEditorElement, s) -> itemEditorElement.getElement().itemKey = s;
+        ConsumingSupplier<ItemEditorElement, String> itemKeyTargetFieldGetter = consumes -> consumes.element.itemKey;
+        BiConsumer<ItemEditorElement, String> itemKeyTargetFieldSetter = (itemEditorElement, s) -> itemEditorElement.element.itemKey = s;
 
         ContextMenu.ClickableContextMenuEntry<?> itemKeyEntry = this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_key", ItemEditorElement.class,
                         itemKeyTargetFieldGetter,
@@ -58,53 +58,50 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
         }
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_name", ItemEditorElement.class,
-                consumes -> consumes.getElement().itemName,
-                (itemEditorElement, s) -> itemEditorElement.getElement().itemName = s,
+                consumes -> consumes.element.itemName,
+                (itemEditorElement, s) -> itemEditorElement.element.itemName = s,
                 null, false, true, Component.translatable("fancymenu.elements.item.name"),
                 true, null, null, null);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_count", ItemEditorElement.class,
-                consumes -> consumes.getElement().itemCount,
-                (itemEditorElement, s) -> itemEditorElement.getElement().itemCount = s,
+                consumes -> consumes.element.itemCount,
+                (itemEditorElement, s) -> itemEditorElement.element.itemCount = s,
                 null, false, true, Component.translatable("fancymenu.elements.item.item_count"),
                 true, "1", null, null);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_lore", ItemEditorElement.class, consumes -> {
-                    if (consumes.getElement().lore != null) return consumes.getElement().lore.replace("%n%", "\n");
+                    if (consumes.element.lore != null) return consumes.element.lore.replace("%n%", "\n");
                     return "";
                 }, (itemEditorElement, s) -> {
                     if (s != null) {
-                        itemEditorElement.getElement().lore = s.replace("\n", "%n%");
-                        if (itemEditorElement.getElement().lore.isBlank()) itemEditorElement.getElement().lore = null;
+                        itemEditorElement.element.lore = s.replace("\n", "%n%");
+                        if (itemEditorElement.element.lore.isBlank()) itemEditorElement.element.lore = null;
                     } else {
-                        itemEditorElement.getElement().lore = null;
+                        itemEditorElement.element.lore = null;
                     }
                 }, null, true, true, Component.translatable("fancymenu.elements.item.lore"), true, null, null, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.lore.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "enchanted", ItemEditorElement.class,
-                consumes -> consumes.getElement().enchanted,
-                (itemEditorElement, aBoolean) -> itemEditorElement.getElement().enchanted = aBoolean,
+                consumes -> consumes.element.enchanted,
+                (itemEditorElement, aBoolean) -> itemEditorElement.element.enchanted = aBoolean,
                 "fancymenu.elements.item.enchanted");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "show_tooltip", ItemEditorElement.class,
-                consumes -> consumes.getElement().showTooltip,
-                (itemEditorElement, aBoolean) -> itemEditorElement.getElement().showTooltip = aBoolean,
+                consumes -> consumes.element.showTooltip,
+                (itemEditorElement, aBoolean) -> itemEditorElement.element.showTooltip = aBoolean,
                 "fancymenu.elements.item.show_tooltip");
 
         this.rightClickMenu.addSeparatorEntry("separator_before_nbt");
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "nbt_data", ItemEditorElement.class,
-                        consumes -> consumes.getElement().nbtData,
-                        (itemEditorElement, s) -> itemEditorElement.getElement().nbtData = s,
+                        consumes -> consumes.element.nbtData,
+                        (itemEditorElement, s) -> itemEditorElement.element.nbtData = s,
                         null, false, true, Component.translatable("fancymenu.elements.item.nbt"),
                         true, null, null, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.nbt.desc")));
 
     }
 
-    public ItemElement getElement() {
-        return (ItemElement) this.element;
-    }
 
 }

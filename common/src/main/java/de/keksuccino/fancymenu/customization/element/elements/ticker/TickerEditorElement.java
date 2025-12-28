@@ -28,10 +28,10 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
         super.init();
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.actions.screens.manage_screen.manage"), (menu, entry) -> {
-            ActionScriptEditorScreen s = new ActionScriptEditorScreen(this.getElement().actionExecutor, (call) -> {
+            ActionScriptEditorScreen s = new ActionScriptEditorScreen(this.element.actionExecutor, (call) -> {
                 if (call != null) {
                     this.editor.history.saveSnapshot();
-                    this.getElement().actionExecutor = call;
+                    this.element.actionExecutor = call;
                 }
                 Minecraft.getInstance().setScreen(this.editor);
             });
@@ -43,8 +43,8 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
         this.rightClickMenu.addSeparatorEntry("ticker_separator_1");
 
         this.addLongInputContextMenuEntryTo(this.rightClickMenu, "tick_delay", TickerEditorElement.class,
-                        consumes -> consumes.getElement().tickDelayMs,
-                        (tickerEditorElement, aLong) -> tickerEditorElement.getElement().tickDelayMs = Math.max(0L, aLong),
+                        consumes -> consumes.element.tickDelayMs,
+                        (tickerEditorElement, aLong) -> tickerEditorElement.element.tickDelayMs = Math.max(0L, aLong),
                         Component.translatable("fancymenu.elements.ticker.tick_delay"), true, 0L, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("timer"))
@@ -77,8 +77,5 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
 
     }
 
-    protected TickerElement getElement() {
-        return (TickerElement) this.element;
-    }
 
 }

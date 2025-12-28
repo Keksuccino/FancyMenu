@@ -19,11 +19,11 @@ public class DraggerEditorElement extends AbstractEditorElement<DraggerEditorEle
         super.init();
 
         addToggleContextMenuEntryTo(this.rightClickMenu, "save_drag_offset", DraggerEditorElement.class,
-                consumes -> consumes.getElement().saveDragOffset,
+                consumes -> consumes.element.saveDragOffset,
                 (draggerEditorElement, aBoolean) -> {
-                    draggerEditorElement.getElement().saveDragOffset = aBoolean;
+                    draggerEditorElement.element.saveDragOffset = aBoolean;
                     if (!aBoolean) {
-                        DraggerElementHandler.putMeta(draggerEditorElement.getElement().getInstanceIdentifier(), 0, 0);
+                        DraggerElementHandler.putMeta(draggerEditorElement.element.getInstanceIdentifier(), 0, 0);
                     }
                 },
                 "fancymenu.elements.dragger.save_offset")
@@ -31,8 +31,5 @@ public class DraggerEditorElement extends AbstractEditorElement<DraggerEditorEle
 
     }
 
-    public DraggerElement getElement() {
-        return (DraggerElement) this.element;
-    }
 
 }

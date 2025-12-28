@@ -43,12 +43,12 @@ public class SplashTextEditorElement extends AbstractEditorElement<SplashTextEdi
         this.addTextResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_source_file",
                         SplashTextEditorElement.class,
                         null,
-                        consumes -> consumes.getElement().textFileSupplier,
+                        consumes -> consumes.element.textFileSupplier,
                         (splashTextEditorElement, iTextResourceSupplier) -> {
-                            splashTextEditorElement.getElement().textFileSupplier = iTextResourceSupplier;
-                            if (iTextResourceSupplier != null) splashTextEditorElement.getElement().source = iTextResourceSupplier.getSourceWithPrefix();
-                            splashTextEditorElement.getElement().refresh();
-                            splashTextEditorElement.getElement().updateSplash();
+                            splashTextEditorElement.element.textFileSupplier = iTextResourceSupplier;
+                            if (iTextResourceSupplier != null) splashTextEditorElement.element.source = iTextResourceSupplier.getSourceWithPrefix();
+                            splashTextEditorElement.element.refresh();
+                            splashTextEditorElement.element.updateSplash();
                         },
                         Component.translatable("fancymenu.elements.splash.source_mode.text_file.set_source"),
                         false, null, true, true, true)
@@ -128,8 +128,5 @@ public class SplashTextEditorElement extends AbstractEditorElement<SplashTextEdi
 
     }
 
-    public SplashTextElement getElement() {
-        return (SplashTextElement) this.element;
-    }
 
 }

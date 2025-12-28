@@ -19,21 +19,18 @@ public class MusicControllerEditorElement extends AbstractEditorElement<MusicCon
         super.init();
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "play_menu_music", MusicControllerEditorElement.class,
-                        consumes -> consumes.getElement().playMenuMusic,
-                        (musicControllerEditorElement, aBoolean) -> musicControllerEditorElement.getElement().playMenuMusic = aBoolean,
+                        consumes -> consumes.element.playMenuMusic,
+                        (musicControllerEditorElement, aBoolean) -> musicControllerEditorElement.element.playMenuMusic = aBoolean,
                         "fancymenu.elements.music_controller.play_menu_music")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.music_controller.play_menu_music.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "play_world_music", MusicControllerEditorElement.class,
-                        consumes -> consumes.getElement().playWorldMusic,
-                        (musicControllerEditorElement, aBoolean) -> musicControllerEditorElement.getElement().playWorldMusic = aBoolean,
+                        consumes -> consumes.element.playWorldMusic,
+                        (musicControllerEditorElement, aBoolean) -> musicControllerEditorElement.element.playWorldMusic = aBoolean,
                         "fancymenu.elements.music_controller.play_world_music")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.music_controller.play_world_music.desc")));
 
     }
 
-    public MusicControllerElement getElement() {
-        return (MusicControllerElement) this.element;
-    }
 
 }

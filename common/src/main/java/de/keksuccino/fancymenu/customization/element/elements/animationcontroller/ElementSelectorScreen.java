@@ -59,8 +59,8 @@ public class ElementSelectorScreen extends CellScreen {
             this.elementIds.forEach(s -> {
                 if (!this.containsElement(elements, s)) {
                     ImageEditorElement dummy = Elements.IMAGE.wrapIntoEditorElement(Elements.IMAGE.buildDefaultInstance(), this.layoutEditor);
-                    dummy.getElement().customElementLayerName = "---";
-                    dummy.getElement().setInstanceIdentifier(s);
+                    dummy.element.customElementLayerName = "---";
+                    dummy.element.setInstanceIdentifier(s);
                     elements.add(dummy);
                 }
             });

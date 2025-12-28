@@ -28,7 +28,7 @@ public class TargetElementManagerScreen extends CellScreen {
 
     public TargetElementManagerScreen(@NotNull AnimationControllerEditorElement editorElement, @NotNull Consumer<List<AnimationControllerElement.TargetElement>> callback) {
         super(Component.translatable("fancymenu.elements.animation_controller.manage_targets"));
-        this.element = editorElement.getElement();
+        this.element = editorElement.element;
         this.parentLayoutEditor = editorElement.editor;
         this.callback = callback;
         this.targets = new ArrayList<>(this.element.targetElements);

@@ -28,8 +28,8 @@ public class CursorEditorElement extends AbstractEditorElement<CursorEditorEleme
                         () -> ResourceChooserScreen.image(null, file -> {}),
                         ResourceSupplier::image,
                         null,
-                        consumes -> consumes.getElement().textureSupplier,
-                        (cursorEditorElement, iTextureResourceSupplier) -> cursorEditorElement.getElement().textureSupplier = iTextureResourceSupplier,
+                        consumes -> consumes.element.textureSupplier,
+                        (cursorEditorElement, iTextureResourceSupplier) -> cursorEditorElement.element.textureSupplier = iTextureResourceSupplier,
                         Component.translatable("fancymenu.elements.cursor.cursor_texture"),
                         true, FileTypeGroup.of(FileTypes.PNG_IMAGE), null, true, true, false)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.cursor_texture.desc")))
@@ -39,16 +39,16 @@ public class CursorEditorElement extends AbstractEditorElement<CursorEditorEleme
         this.rightClickMenu.addSeparatorEntry("separator_after_cursor_texture").setStackable(true);
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "hotspot_x", CursorEditorElement.class,
-                        consumes -> consumes.getElement().hotspotX,
-                        (cursorEditorElement, integer) -> cursorEditorElement.getElement().hotspotX = integer,
+                        consumes -> consumes.element.hotspotX,
+                        (cursorEditorElement, integer) -> cursorEditorElement.element.hotspotX = integer,
                         Component.translatable("fancymenu.elements.cursor.hotspot_x"),
                         true, 0, MathUtils::isInteger, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.hotspot_x.desc")))
                 .setStackable(true);
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "hotspot_y", CursorEditorElement.class,
-                        consumes -> consumes.getElement().hotspotY,
-                        (cursorEditorElement, integer) -> cursorEditorElement.getElement().hotspotY = integer,
+                        consumes -> consumes.element.hotspotY,
+                        (cursorEditorElement, integer) -> cursorEditorElement.element.hotspotY = integer,
                         Component.translatable("fancymenu.elements.cursor.hotspot_y"),
                         true, 0, MathUtils::isInteger, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.hotspot_y.desc")))
@@ -57,10 +57,10 @@ public class CursorEditorElement extends AbstractEditorElement<CursorEditorEleme
         this.rightClickMenu.addSeparatorEntry("separator_after_hotspot_y").setStackable(true);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "editor_preview_mode", CursorEditorElement.class,
-                        consumes -> consumes.getElement().editorPreviewMode,
+                        consumes -> consumes.element.editorPreviewMode,
                         (cursorEditorElement, aBoolean) -> {
-                            cursorEditorElement.getElement().editorPreviewMode = aBoolean;
-                            cursorEditorElement.getElement().forceRebuildCursor();
+                            cursorEditorElement.element.editorPreviewMode = aBoolean;
+                            cursorEditorElement.element.forceRebuildCursor();
                         },
                         "fancymenu.elements.cursor.editor_preview_mode")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.editor_preview_mode.desc")))
@@ -68,8 +68,5 @@ public class CursorEditorElement extends AbstractEditorElement<CursorEditorEleme
 
     }
 
-    public CursorElement getElement() {
-        return (CursorElement) this.element;
-    }
 
 }
