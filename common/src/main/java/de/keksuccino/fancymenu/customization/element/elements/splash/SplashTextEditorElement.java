@@ -103,25 +103,25 @@ public class SplashTextEditorElement extends AbstractEditorElement<SplashTextEdi
                         true, DrawableColor.of(255, 255, 0).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "shadow",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).shadow,
-                        (element1, s) -> ((SplashTextElement)element1.element).shadow = s,
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "shadow",
+                        SplashTextEditorElement.class,
+                        element -> element.element.shadow,
+                        (element, s) -> element.element.shadow = s,
                         "fancymenu.elements.splash.shadow")
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("shadow"));
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "bouncing",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).bounce,
-                        (element1, s) -> ((SplashTextElement)element1.element).bounce = s,
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "bouncing",
+                        SplashTextEditorElement.class,
+                        element -> element.element.bounce,
+                        (element, s) -> element.element.bounce = s,
                         "fancymenu.elements.splash.bounce")
                 .setStackable(true);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "refresh_on_load",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).refreshOnMenuReload,
-                        (element1, s) -> ((SplashTextElement)element1.element).refreshOnMenuReload = s,
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "refresh_on_load",
+                        SplashTextEditorElement.class,
+                        element -> element.element.refreshOnMenuReload,
+                        (element, s) -> element.element.refreshOnMenuReload = s,
                         "fancymenu.elements.splash.refresh")
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.splash.refresh.desc")));

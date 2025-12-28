@@ -50,10 +50,10 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
                 .setIcon(ContextMenu.IconFactory.getIcon("timer"))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.tick_delay.desc")));
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "set_async",
-                        consumes -> (consumes instanceof TickerEditorElement),
-                        consumes -> ((TickerElement)consumes.element).isAsync,
-                        (element1, aBoolean) -> ((TickerElement)element1.element).isAsync = aBoolean,
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "set_async",
+                        TickerEditorElement.class,
+                        element -> element.element.isAsync,
+                        (element, aBoolean) -> element.element.isAsync = aBoolean,
                         "fancymenu.elements.ticker.async")
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.async.desc")));

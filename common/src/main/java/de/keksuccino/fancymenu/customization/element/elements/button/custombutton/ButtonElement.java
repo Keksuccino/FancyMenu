@@ -75,7 +75,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public boolean nineSliceSliderHandle = false;
     public int nineSliceSliderHandleBorderX = 5;
     public int nineSliceSliderHandleBorderY = 5;
-    public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio"));
+    public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
 
     protected static long lastTemplateUpdateButton = -1L;
     protected static ButtonElement lastTemplateButton = null;

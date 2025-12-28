@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
-import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.cycle.ValueCycle;
@@ -487,26 +486,24 @@ public interface ContextMenuBuilder<O> {
     }
 
     default <V> ContextMenu.ClickableContextMenuEntry<?> buildGenericCycleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
-        return new ContextMenu.ClickableContextMenuEntry<>(entryIdentifier, parentMenu, Component.literal(""), (menu, entry) ->
-                {
-                    List<O> selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
-                    ValueCycle<V> cycle = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
-                    this.saveSnapshot();
-                    if (!selectedElements.isEmpty() && entry.getStackMeta().isFirstInStack()) {
-                        V next = cycle.next();
-                        for (O e : selectedElements) {
-                            targetFieldSetter.accept(e, next);
-                        }
-                    }
-                })
-                .setLabelSupplier((menu, entry) -> {
-                    List<O> selectedElements = new ArrayList<>();
-                    if (!entry.getStackMeta().getProperties().hasProperty("switcher")) {
-                        selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
-                    }
-                    ValueCycle<V> switcher = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
-                    return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry<?>) entry, switcher.current());
-                }).setStackable(true);
+        return new ContextMenu.ClickableContextMenuEntry<>(entryIdentifier, parentMenu, Component.literal(""), (menu, entry) -> {
+            List<O> selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
+            ValueCycle<V> cycle = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
+            this.saveSnapshot();
+            if (!selectedElements.isEmpty() && entry.getStackMeta().isFirstInStack()) {
+                V next = cycle.next();
+                for (O e : selectedElements) {
+                    targetFieldSetter.accept(e, next);
+                }
+            }
+        }).setLabelSupplier((menu, entry) -> {
+            List<O> selectedElements = new ArrayList<>();
+            if (!entry.getStackMeta().getProperties().hasProperty("switcher")) {
+                selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
+            }
+            ValueCycle<V> switcher = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
+            return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry<?>) entry, switcher.current());
+        }).setStackable(true);
     }
 
     default <V> ContextMenu.ClickableContextMenuEntry<?> addGenericCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
@@ -542,27 +539,6 @@ public interface ContextMenuBuilder<O> {
         return addTo.addEntry(buildToggleContextMenuEntry(addTo, entryIdentifier, elementType, targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase));
     }
 
-    /**
-     * Only supports old (legacy) toggle localization keys (format = localization.key.on / .off)!<br>
-     * For newer localization keys, use <b>O#addToggleContextMenuEntryTo(...)</b> instead!
-     */
-    @Deprecated
-    @Legacy("This is to be able to use old .on/.off localizations. Remove this in the future and update localizations.")
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericBooleanSwitcherContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, Boolean> targetFieldGetter, @NotNull BiConsumer<O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-        return buildGenericCycleContextMenuEntry(parentMenu, entryIdentifier, ListUtils.of(false, true), selectedElementsFilter, targetFieldGetter, targetFieldSetter, (menu, entry, switcherValue) -> {
-            if (switcherValue && entry.isActive()) {
-                return Component.translatable(labelLocalizationKeyBase + ".on");
-            }
-            return Component.translatable(labelLocalizationKeyBase + ".off");
-        });
-    }
-
-    @Deprecated
-    @Legacy("This is to be able to use old .on/.off localizations. Remove this in the future and update localizations.")
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericBooleanSwitcherContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, Boolean> targetFieldGetter, @NotNull BiConsumer<O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-        return addTo.addEntry(buildGenericBooleanSwitcherContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase));
-    }
-
     @SuppressWarnings("all")
     default <T> ValueCycle<T> setupValueCycle(String toggleIdentifier, ValueCycle<T> cycle, List<O> elements, ContextMenu.ContextMenuStackMeta stackMeta, ConsumingSupplier <O, T> defaultValue) {
         boolean hasProperty = stackMeta.getProperties().hasProperty(toggleIdentifier);
@@ -584,5 +560,5 @@ public interface ContextMenuBuilder<O> {
     interface CycleContextMenuEntryLabelSupplier<V> {
         Component get(ContextMenu menu, ContextMenu.ClickableContextMenuEntry<?> entry, V switcherValue);
     }
-    
+
 }
