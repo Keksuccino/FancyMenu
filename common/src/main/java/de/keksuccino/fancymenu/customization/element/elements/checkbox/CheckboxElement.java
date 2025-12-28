@@ -20,7 +20,6 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -36,23 +35,9 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     protected CheckboxButton checkbox;
 
     public final Property<String> tooltip = putProperty(Property.stringProperty("description", null, true, true, "fancymenu.elements.button.tooltip")
-            .setContextMenuEntrySupplier((type, property, builder, menu) -> builder.buildStringInputContextMenuEntry(menu, "menu_entry_description",
-                    type,
-                    consumes -> {
-                        Property<String> resolved = (Property<String>) consumes.getProperty("description");
-                        String value = (resolved != null) ? resolved.get() : null;
-                        return (value != null) ? value.replace("%n%", "\n") : null;
-                    },
-                    (b, s) -> {
-                        Property<String> resolved = (Property<String>) b.getProperty("description");
-                        if (resolved == null) return;
-                        if (s != null) {
-                            s = s.replace("\n", "%n%");
-                        }
-                        resolved.set(s);
-                    },
-                    null, true, true, Component.translatable("fancymenu.elements.button.tooltip"),
-                    true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)));
+            .setUserInputTextValidator(TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR)
+            .setValueGetProcessor(value -> value.replace("%n%", "\n"))
+            .setValueSetProcessor(value -> (value != null) ? value.replace("\n", "%n%") : null));
     public final Property<ResourceSupplier<ITexture>> checkmarkTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "checkmark_texture", null, "fancymenu.elements.checkbox.checkmark_texture", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> backgroundTextureNormal = putProperty(Property.resourceSupplierProperty(ITexture.class, "background_texture_normal", null, "fancymenu.elements.checkbox.background_texture_normal", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> backgroundTextureHover = putProperty(Property.resourceSupplierProperty(ITexture.class, "background_texture_hover", null, "fancymenu.elements.checkbox.background_texture_hover", true, true, true, null));
