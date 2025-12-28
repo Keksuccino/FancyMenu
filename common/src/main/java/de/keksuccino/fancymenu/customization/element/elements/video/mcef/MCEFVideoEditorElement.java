@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.video.mcef;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.video.SetVideoVolumeScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -16,9 +15,9 @@ import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 
-public class MCEFVideoEditorElement extends AbstractEditorElement {
+public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEditorElement, MCEFVideoElement> {
 
-    public MCEFVideoEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public MCEFVideoEditorElement(@NotNull MCEFVideoElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 

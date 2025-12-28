@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.progressbar;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -12,9 +11,9 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 
-public class ProgressBarEditorElement extends AbstractEditorElement {
+public class ProgressBarEditorElement extends AbstractEditorElement<ProgressBarEditorElement, ProgressBarElement> {
 
-    public ProgressBarEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public ProgressBarEditorElement(@NotNull ProgressBarElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 

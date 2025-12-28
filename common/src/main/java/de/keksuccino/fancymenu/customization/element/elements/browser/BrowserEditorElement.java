@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.browser;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -8,9 +7,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class BrowserEditorElement extends AbstractEditorElement {
+public class BrowserEditorElement extends AbstractEditorElement<BrowserEditorElement, BrowserElement> {
 
-    public BrowserEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public BrowserEditorElement(@NotNull BrowserElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 

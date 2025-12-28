@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.audio;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -14,9 +13,9 @@ import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 
-public class AudioEditorElement extends AbstractEditorElement {
+public class AudioEditorElement extends AbstractEditorElement<AudioEditorElement, AudioElement> {
 
-    public AudioEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public AudioEditorElement(@NotNull AudioElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setInEditorColorSupported(true);
     }

@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.ui.ManageRequirementsScreen;
@@ -16,9 +15,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
 
-public class SliderEditorElement extends AbstractEditorElement {
+public class SliderEditorElement extends AbstractEditorElement<SliderEditorElement, SliderElement> {
 
-    public SliderEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public SliderEditorElement(@NotNull SliderElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 

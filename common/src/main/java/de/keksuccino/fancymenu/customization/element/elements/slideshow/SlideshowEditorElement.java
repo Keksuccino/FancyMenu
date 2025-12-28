@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.slideshow;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -13,9 +12,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class SlideshowEditorElement extends AbstractEditorElement {
+public class SlideshowEditorElement extends AbstractEditorElement<SlideshowEditorElement, SlideshowElement> {
 
-    public SlideshowEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public SlideshowEditorElement(@NotNull SlideshowElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 

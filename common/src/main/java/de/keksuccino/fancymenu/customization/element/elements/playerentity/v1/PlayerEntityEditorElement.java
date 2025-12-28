@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -11,9 +10,9 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("all")
-public class PlayerEntityEditorElement extends AbstractEditorElement {
+public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntityEditorElement, PlayerEntityElement> {
 
-    public PlayerEntityEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public PlayerEntityEditorElement(@NotNull PlayerEntityElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setFadeable(false);
         this.settings.setOpacityChangeable(false);

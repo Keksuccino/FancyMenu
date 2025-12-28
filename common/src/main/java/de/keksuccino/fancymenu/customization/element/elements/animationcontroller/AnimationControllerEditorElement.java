@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -12,9 +11,9 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 
-public class AnimationControllerEditorElement extends AbstractEditorElement {
+public class AnimationControllerEditorElement extends AbstractEditorElement<AnimationControllerEditorElement, AnimationControllerElement> {
 
-    public AnimationControllerEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public AnimationControllerEditorElement(@NotNull AnimationControllerElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setFadeable(false);
         this.settings.setAdvancedSizingSupported(false);
@@ -39,12 +38,12 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addClickableEntry("manage_keyframes", Component.translatable("fancymenu.elements.animation_controller.manage_keyframes"),
                         (menu, entry) -> {
                             KeyframeManagerScreen managerScreen = new KeyframeManagerScreen(
-                                    this.getElement(),
+                                    this.element,
                                     callback -> {
                                         if (callback != null) {
                                             this.editor.history.saveSnapshot();
-                                            this.getElement().keyframes = callback.keyframes();
-                                            this.getElement().offsetMode = callback.isOffsetMode();
+                                            this.element.keyframes = callback.keyframes();
+                                            this.element.offsetMode = callback.isOffsetMode();
                                         }
                                         Minecraft.getInstance().setScreen(this.editor);
                                     }
@@ -55,20 +54,20 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
                 .setStackable(false);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "loop", AnimationControllerEditorElement.class,
-                consumes -> consumes.getElement().loop,
-                (element, aBoolean) -> element.getElement().loop = aBoolean,
+                consumes -> consumes.element.loop,
+                (element, aBoolean) -> element.element.loop = aBoolean,
                 "fancymenu.elements.animation_controller.loop");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "ignore_size", AnimationControllerEditorElement.class,
-                        consumes -> consumes.getElement().ignoreSize,
-                        (element, aBoolean) -> element.getElement().ignoreSize = aBoolean,
+                        consumes -> consumes.element.ignoreSize,
+                        (element, aBoolean) -> element.element.ignoreSize = aBoolean,
                         "fancymenu.elements.animation_controller.ignore_size")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_size.desc")))
                 .setStackable(false);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "ignore_position", AnimationControllerEditorElement.class,
-                        consumes -> consumes.getElement().ignorePosition,
-                        (element, aBoolean) -> element.getElement().ignorePosition = aBoolean,
+                        consumes -> consumes.element.ignorePosition,
+                        (element, aBoolean) -> element.element.ignorePosition = aBoolean,
                         "fancymenu.elements.animation_controller.ignore_position")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_position.desc")))
                 .setStackable(false);
@@ -76,8 +75,8 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSeparatorEntry("separator_before_random_timing_offsets");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "random_timing_offsets", AnimationControllerEditorElement.class,
-                        consumes -> consumes.getElement().randomTimingOffsetMode,
-                        (element, aBoolean) -> element.getElement().randomTimingOffsetMode = aBoolean,
+                        consumes -> consumes.element.randomTimingOffsetMode,
+                        (element, aBoolean) -> element.element.randomTimingOffsetMode = aBoolean,
                         "fancymenu.elements.animation_controller.random_timing_offsets")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.desc")))
                 .setStackable(false);
@@ -91,21 +90,21 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
                                     CharacterFilter.buildIntegerFilter(),
                                     callback -> {
                                         if (callback != null) {
-                                            int min = parseOffsetValue(callback.getKey(), this.getElement().randomTimingOffsetMinMs);
-                                            int max = parseOffsetValue(callback.getValue(), this.getElement().randomTimingOffsetMaxMs);
+                                            int min = parseOffsetValue(callback.getKey(), this.element.randomTimingOffsetMinMs);
+                                            int max = parseOffsetValue(callback.getValue(), this.element.randomTimingOffsetMaxMs);
                                             if (min > max) {
                                                 int temp = min;
                                                 min = max;
                                                 max = temp;
                                             }
                                             this.editor.history.saveSnapshot();
-                                            this.getElement().randomTimingOffsetMinMs = min;
-                                            this.getElement().randomTimingOffsetMaxMs = max;
+                                            this.element.randomTimingOffsetMinMs = min;
+                                            this.element.randomTimingOffsetMaxMs = max;
                                         }
                                         Minecraft.getInstance().setScreen(this.editor);
                                     });
-                            s.setFirstText("" + this.getElement().randomTimingOffsetMinMs);
-                            s.setSecondText("" + this.getElement().randomTimingOffsetMaxMs);
+                            s.setFirstText("" + this.element.randomTimingOffsetMinMs);
+                            s.setSecondText("" + this.element.randomTimingOffsetMaxMs);
                             s.setAllowPlaceholders(false);
                             Minecraft.getInstance().setScreen(s);
                         })
@@ -121,7 +120,7 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
                                     callback -> {
                                         if (callback != null) {
                                             this.editor.history.saveSnapshot();
-                                            this.getElement().targetElements = new ArrayList<>(callback);
+                                            this.element.targetElements = new ArrayList<>(callback);
                                         }
                                         Minecraft.getInstance().setScreen(this.editor);
                                     }
@@ -131,10 +130,6 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_targets.desc")))
                 .setStackable(false);
 
-    }
-
-    protected AnimationControllerElement getElement() {
-        return (AnimationControllerElement) this.element;
     }
 
     protected int parseOffsetValue(@NotNull String value, int fallback) {

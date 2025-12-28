@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.shape;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -8,9 +7,9 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class ShapeEditorElement extends AbstractEditorElement {
+public class ShapeEditorElement extends AbstractEditorElement<ShapeEditorElement, ShapeElement> {
 
-    public ShapeEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public ShapeEditorElement(@NotNull ShapeElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 

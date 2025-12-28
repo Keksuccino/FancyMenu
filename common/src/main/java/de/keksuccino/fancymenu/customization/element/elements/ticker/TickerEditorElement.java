@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -12,9 +11,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class TickerEditorElement extends AbstractEditorElement {
+public class TickerEditorElement extends AbstractEditorElement<TickerEditorElement, TickerElement> {
 
-    public TickerEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public TickerEditorElement(@NotNull TickerElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setAdvancedSizingSupported(false);
         this.settings.setAdvancedPositioningSupported(false);

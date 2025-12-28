@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.splash;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -12,9 +11,9 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class SplashTextEditorElement extends AbstractEditorElement {
+public class SplashTextEditorElement extends AbstractEditorElement<SplashTextEditorElement, SplashTextElement> {
 
-    public SplashTextEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public SplashTextEditorElement(@NotNull SplashTextElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 

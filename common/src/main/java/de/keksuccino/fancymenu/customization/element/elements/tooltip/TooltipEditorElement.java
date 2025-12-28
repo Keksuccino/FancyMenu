@@ -14,7 +14,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
-public class TooltipEditorElement extends AbstractEditorElement {
+public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorElement, TooltipElement> {
 
     public TooltipEditorElement(@NotNull TooltipElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor, new EditorElementSettings() {{

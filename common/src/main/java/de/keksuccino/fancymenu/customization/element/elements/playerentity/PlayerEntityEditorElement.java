@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.item.ItemKeyScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -16,9 +15,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class PlayerEntityEditorElement extends AbstractEditorElement {
+public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntityEditorElement, PlayerEntityElement> {
 
-    public PlayerEntityEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public PlayerEntityEditorElement(@NotNull PlayerEntityElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setFadeable(false);
         this.settings.setOpacityChangeable(false);

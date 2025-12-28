@@ -1549,12 +1549,12 @@ public class KeyframeManagerScreen extends Screen {
 
     }
 
-    protected class PreviewEditorElement extends AbstractEditorElement {
+    protected class PreviewEditorElement extends AbstractEditorElement<PreviewEditorElement, PreviewElement> {
 
         protected boolean elementMovingStarted = false;
         protected boolean resizingStarted = false;
 
-        public PreviewEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+        public PreviewEditorElement(@NotNull PreviewElement element, @NotNull LayoutEditorScreen editor) {
             super(element, editor);
             // Only allow resizing, disable all other editor features
             this.settings.setFadeable(false);

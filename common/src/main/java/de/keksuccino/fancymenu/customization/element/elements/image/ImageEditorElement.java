@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.image;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -13,9 +12,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 
-public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement> {
+public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement, ImageElement> {
 
-    public ImageEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public ImageEditorElement(@NotNull ImageElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 

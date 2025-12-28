@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
@@ -16,9 +15,9 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 
-public class TextEditorElement extends AbstractEditorElement {
+public class TextEditorElement extends AbstractEditorElement<TextEditorElement, TextElement> {
 
-    public TextEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public TextEditorElement(@NotNull TextElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 

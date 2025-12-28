@@ -1,15 +1,14 @@
 package de.keksuccino.fancymenu.customization.element.elements.musiccontroller;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import org.jetbrains.annotations.NotNull;
 
-public class MusicControllerEditorElement extends AbstractEditorElement {
+public class MusicControllerEditorElement extends AbstractEditorElement<MusicControllerEditorElement, MusicControllerElement> {
 
-    public MusicControllerEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public MusicControllerEditorElement(@NotNull MusicControllerElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setInEditorColorSupported(true);
     }

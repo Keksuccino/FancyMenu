@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.checkbox;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
@@ -13,9 +12,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class CheckboxEditorElement extends AbstractEditorElement {
+public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorElement, CheckboxElement> {
 
-    public CheckboxEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public CheckboxEditorElement(@NotNull CheckboxElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 

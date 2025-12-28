@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.inputfield;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -11,9 +10,9 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class InputFieldEditorElement extends AbstractEditorElement {
+public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEditorElement, InputFieldElement> {
 
-    public InputFieldEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public InputFieldEditorElement(@NotNull InputFieldElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 
