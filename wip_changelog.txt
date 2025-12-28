@@ -78,6 +78,8 @@
 
 ### Breaking Changes
 
+- FOR DEVS: This version contains some large changes and refactors to some very fundamental parts of the mod, such as element-related classes, which means you need to update your addons to work with this new build. Sorry for the inconvenience, but it was about time to make some very needed improvements that will ultimately also be beneficial for other devs. Improvements include an improved serialization/deserialization process and more!
+
 - REMOVED all placeholders related to the scoreboard, because they never worked correctly and basically need a full rewrite (#1198)
   - I will add scoreboard placeholders back in the future, but for now it makes no sense to keep them in
   - I also normally never just remove features without prior warning, but I felt it was the only correct action here
