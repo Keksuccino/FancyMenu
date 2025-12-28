@@ -36,7 +36,10 @@ public class Property<T> {
     @Nullable
     protected ConsumingSupplier<String, T> deserializationCodec;
     @Nullable
-    protected ConsumingSupplier<T, String> serializationCodec = Object::toString;
+    protected ConsumingSupplier<T, String> serializationCodec = consumes -> {
+        if (consumes == null) return null;
+        return consumes.toString();
+    };
     @Nullable
     protected ContextMenuEntrySupplier<? extends PropertyHolder, T> contextMenuEntrySupplier;
     @NotNull
@@ -180,7 +183,10 @@ public class Property<T> {
     public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @Nullable ResourceSource currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<ResourceSource> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = ResourceSource::of;
-        p.serializationCodec = ResourceSource::getSerializationSource;
+        p.serializationCodec = consumes -> {
+            if (consumes == null) return null;
+            return consumes.getSerializationSource();
+        };
         p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
             ResourceSupplier<Resource> defaultSupplier = null;
             ResourceSource defaultSource = property.getDefault();
@@ -234,7 +240,10 @@ public class Property<T> {
             }
             throw new IllegalArgumentException("Unknown resource format! Unable to deserialize ResourceSupplier property!");
         };
-        p.serializationCodec = ResourceSupplier::getSourceWithPrefix;
+        p.serializationCodec = consumes -> {
+            if (consumes == null) return null;
+            return consumes.getSourceWithPrefix();
+        };
         p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
             if (ITexture.class.isAssignableFrom(resourceType)) {
                 return builder.buildImageResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
@@ -306,7 +315,10 @@ public class Property<T> {
     public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue, @Nullable DrawableColor currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<DrawableColor> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = DrawableColor::of;
-        p.serializationCodec = DrawableColor::getHex;
+        p.serializationCodec = consumes -> {
+            if (consumes == null) return null;
+            return consumes.getHex();
+        };
         p.contextMenuEntrySupplier = (type, property, builder, menu) -> builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type,
                 consumes -> {
                     Property<DrawableColor> resolved = (Property<DrawableColor>) consumes.getProperty(key);
@@ -454,7 +466,7 @@ public class Property<T> {
             return this;
         }
         try {
-            properties.putProperty(this.getKey(), this.serializationCodec.get(this.currentValue));
+            properties.putProperty(this.getKey(), (this.currentValue == null) ? null : this.serializationCodec.get(this.currentValue));
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to serialize property: " + this.getKey(), ex);
         }
