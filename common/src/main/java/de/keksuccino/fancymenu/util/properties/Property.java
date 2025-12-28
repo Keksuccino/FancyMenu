@@ -476,15 +476,15 @@ public class Property<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public <H extends PropertyHolder> ContextMenu.ContextMenuEntry<?> buildContextMenuEntry(@NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu) {
+    public <H extends PropertyHolder> ContextMenu.ClickableContextMenuEntry<?> buildContextMenuEntry(@NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu) {
         Objects.requireNonNull(this.contextMenuEntrySupplier, "ContextMenuEntrySupplier is null! Can't build entry!");
         ContextMenuEntrySupplier<H, T> supplier = (ContextMenuEntrySupplier<H, T>) this.contextMenuEntrySupplier;
-        ContextMenuEntry<?> entry = supplier.get(Objects.requireNonNull(propertyHolderType), this, Objects.requireNonNull(contextMenuBuilder), Objects.requireNonNull(parentContextMenu));
+        ContextMenu.ClickableContextMenuEntry<?> entry = supplier.get(Objects.requireNonNull(propertyHolderType), this, Objects.requireNonNull(contextMenuBuilder), Objects.requireNonNull(parentContextMenu));
         if (entry != null) entry.addIsVisibleSupplier((menu, entry1) -> !this.disabled);
         return entry;
     }
 
-    public <H extends PropertyHolder> ContextMenu.ContextMenuEntry<?> buildContextMenuEntryAndAddTo(@NotNull ContextMenu addTo, @NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder) {
+    public <H extends PropertyHolder> ContextMenu.ClickableContextMenuEntry<?> buildContextMenuEntryAndAddTo(@NotNull ContextMenu addTo, @NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder) {
         return addTo.addEntry(this.buildContextMenuEntry(propertyHolderType, contextMenuBuilder, addTo));
     }
 
@@ -506,7 +506,7 @@ public class Property<T> {
     @FunctionalInterface
     public interface ContextMenuEntrySupplier<H extends PropertyHolder, T> {
         @NotNull
-        ContextMenu.ContextMenuEntry<?> get(@NotNull Class<H> propertyHolderType, @NotNull Property<T> property, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu);
+        ContextMenu.ClickableContextMenuEntry<?> get(@NotNull Class<H> propertyHolderType, @NotNull Property<T> property, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu);
     }
 
 }

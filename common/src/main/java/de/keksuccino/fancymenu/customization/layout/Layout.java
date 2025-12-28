@@ -657,7 +657,7 @@ public class Layout extends LayoutBase {
                     ImageElement e = Elements.IMAGE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
-                        e.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("path"));
+                        e.textureSupplier.set(SerializationUtils.deserializeImageResourceSupplier(sec.getValue("path")));
                         elements.add(Elements.IMAGE.serializeElementInternal(e));
                         elementOrder.add(e.getInstanceIdentifier());
                     }
@@ -667,7 +667,7 @@ public class Layout extends LayoutBase {
                     ImageElement e = Elements.IMAGE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
-                        e.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("url"));
+                        e.textureSupplier.set(SerializationUtils.deserializeImageResourceSupplier(sec.getValue("url")));
                         elements.add(Elements.IMAGE.serializeElementInternal(e));
                         elementOrder.add(e.getInstanceIdentifier());
                     }

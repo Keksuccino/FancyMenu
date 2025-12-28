@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -21,19 +22,18 @@ public class ImageElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    public final Property<ResourceSupplier<ITexture>> textureSupplier = putProperty(Property.resourceSupplierProperty(ITexture.class, "source", null, "fancymenu.elements.image.set_source"));
+    public final Property<Boolean> repeat = putProperty(Property.booleanProperty("repeat_texture", false, "fancymenu.elements.image.repeat"));
+    public final Property<Boolean> nineSlice = putProperty(Property.booleanProperty("nine_slice_texture", false, "fancymenu.elements.image.nine_slice"));
+    public final Property<Integer> nineSliceBorderX = putProperty(Property.integerProperty("nine_slice_texture_border_x", 5, "fancymenu.elements.image.nine_slice.border_x"));
+    public final Property<Integer> nineSliceBorderY = putProperty(Property.integerProperty("nine_slice_texture_border_y", 5, "fancymenu.elements.image.nine_slice.border_y"));
+    public final Property<Boolean> restartAnimatedOnMenuLoad = putProperty(Property.booleanProperty("restart_animated_on_menu_load", false, "fancymenu.elements.image.restart_animated_on_menu_load"));
+    public final Property<String> imageTint = putProperty(Property.stringProperty("image_tint", "#FFFFFF", false, true, "fancymenu.elements.image.tint"));
+
     @Nullable
-    public ResourceSupplier<ITexture> textureSupplier;
-    public boolean repeat = false;
-    public boolean nineSlice = false;
-    public int nineSliceBorderX = 5;
-    public int nineSliceBorderY = 5;
-    public boolean restartAnimatedOnMenuLoad = false;
-    @NotNull
-    public String imageTint = "#FFFFFF";
+    protected String lastImageTint;
     @Nullable
-    public String lastImageTint;
-    @Nullable
-    private DrawableColor currentImageTint;
+    protected DrawableColor currentImageTint;
 
     public ImageElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -46,11 +46,14 @@ public class ImageElement extends AbstractElement {
         super.onOpenScreen();
 
         // Restart animated textures on menu load if enabled
-        if (this.restartAnimatedOnMenuLoad && (this.textureSupplier != null)) {
-            ITexture texture = this.textureSupplier.get();
-            if (texture instanceof PlayableResource r) {
-                r.stop();
-                r.play();
+        if (this.restartAnimatedOnMenuLoad.tryGetNonNull()) {
+            ResourceSupplier<ITexture> supplier = this.textureSupplier.get();
+            if (supplier != null) {
+                ITexture texture = supplier.get();
+                if (texture instanceof PlayableResource r) {
+                    r.stop();
+                    r.play();
+                }
             }
         }
 
@@ -58,12 +61,13 @@ public class ImageElement extends AbstractElement {
 
     protected void tickImageTint() {
 
-        String tint = PlaceholderParser.replacePlaceholders(this.imageTint);
+        String rawTint = this.imageTint.tryGetNonNullElse("#FFFFFF");
+        String tint = PlaceholderParser.replacePlaceholders(rawTint);
         if (!tint.equals(this.lastImageTint)) {
             this.currentImageTint = DrawableColor.of(tint);
             if (this.currentImageTint == DrawableColor.EMPTY) {
                 this.currentImageTint = DrawableColor.of("#FFFFFF");
-                LOGGER.error("[FANCYMENU] Failed to parse tint color for ImageElement! Defaulting to WHITE as tint because parsing failed for: " + tint + " (RAW: " + this.imageTint + ")", new IllegalStateException("Failed to parse image tint color"));
+                LOGGER.error("[FANCYMENU] Failed to parse tint color for ImageElement! Defaulting to WHITE as tint because parsing failed for: " + tint + " (RAW: " + rawTint + ")", new IllegalStateException("Failed to parse image tint color"));
             }
         }
         this.lastImageTint = tint;
@@ -91,10 +95,12 @@ public class ImageElement extends AbstractElement {
             if ((t != null) && t.isReady()) {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
-                    if (this.repeat) {
+                    if (this.repeat.tryGetNonNull()) {
                         RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
-                    } else if (this.nineSlice) {
-                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX);
+                    } else if (this.nineSlice.tryGetNonNull()) {
+                        int borderX = this.nineSliceBorderX.tryGetNonNull();
+                        int borderY = this.nineSliceBorderY.tryGetNonNull();
+                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), borderY, borderX, borderY, borderX);
                     } else {
                         graphics.blit(loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
                     }
@@ -112,8 +118,8 @@ public class ImageElement extends AbstractElement {
 
     @Nullable
     public ITexture getTextureResource() {
-        if (this.textureSupplier != null) return this.textureSupplier.get();
-        return null;
+        ResourceSupplier<ITexture> supplier = this.textureSupplier.get();
+        return (supplier != null) ? supplier.get() : null;
     }
 
     public void restoreAspectRatio() {
