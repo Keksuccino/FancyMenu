@@ -39,6 +39,10 @@ import java.util.function.Supplier;
 @SuppressWarnings("unused")
 public interface ContextMenuBuilder<O> {
 
+    String STACK_ACTION_IN_PROGRESS_KEY = "stack_action_in_progress";
+    String STACK_FORCE_APPLY_KEY = "stack_force_apply";
+    String STACK_SNAPSHOT_TAKEN_KEY = "stack_snapshot_taken";
+
     static <O> ContextMenuBuilder<O> createStandalone(@NotNull Supplier<Screen> callbackScreenSupplier, @NotNull ConsumingSupplier<ConsumingSupplier<O, Boolean>, List<O>> stackableObjectsListSupplier, @NotNull Supplier<O> selfSupplier, @Nullable Runnable saveSnapshotTask) {
         return new ContextMenuBuilder<>() {
             @Override
@@ -90,6 +94,73 @@ public interface ContextMenuBuilder<O> {
         return new StackContext<>(entry, this.getFilteredStackableObjectsList(filter));
     }
 
+    default boolean runStackedClickActions(@NotNull ContextMenu.ClickableContextMenuEntry<?> entry) {
+        ContextMenu.ContextMenuStackMeta stackMeta = entry.getStackMeta();
+        if (!stackMeta.isPartOfStack() || !stackMeta.isFirstInStack()) {
+            return false;
+        }
+        if (Boolean.TRUE.equals(stackMeta.getProperties().getBooleanProperty(STACK_ACTION_IN_PROGRESS_KEY))) {
+            return false;
+        }
+        stackMeta.getProperties().putProperty(STACK_ACTION_IN_PROGRESS_KEY, true);
+        stackMeta.getProperties().putProperty(STACK_FORCE_APPLY_KEY, true);
+        ContextMenu.ContextMenuEntry<?> current = entry;
+        java.util.HashSet<Object> handledGroups = new java.util.HashSet<>();
+        while (current != null) {
+            if (current instanceof ContextMenu.ClickableContextMenuEntry<?> clickable) {
+                Object groupKey = current.getStackGroupKey();
+                if (groupKey == null) {
+                    groupKey = current;
+                }
+                if (handledGroups.add(groupKey)) {
+                    clickable.runClickAction();
+                }
+            }
+            current = current.getStackMeta().getNextInStack();
+        }
+        stackMeta.getProperties().removeProperty(STACK_FORCE_APPLY_KEY);
+        stackMeta.getProperties().removeProperty(STACK_ACTION_IN_PROGRESS_KEY);
+        stackMeta.getProperties().removeProperty(STACK_SNAPSHOT_TAKEN_KEY);
+        return true;
+    }
+
+    default void applyStackAppliers(@NotNull ContextMenu.ContextMenuEntry<?> entry, @Nullable Object value) {
+        ContextMenu.ContextMenuEntry<?> current = entry;
+        while (current != null) {
+            ContextMenu.StackApplier applier = current.getStackApplier();
+            if (applier != null) {
+                applier.apply(current, value);
+            }
+            current = current.getStackMeta().getNextInStack();
+        }
+    }
+
+    default <V> StackValue<V> resolveStackValue(@NotNull ContextMenu.ContextMenuEntry<?> entry) {
+        List<V> values = new ArrayList<>();
+        ContextMenu.ContextMenuEntry<?> current = entry;
+        while (current != null) {
+            ContextMenu.StackValueSupplier supplier = current.getStackValueSupplier();
+            if (supplier != null) {
+                @SuppressWarnings("unchecked")
+                V value = (V) supplier.get(current);
+                values.add(value);
+            }
+            current = current.getStackMeta().getNextInStack();
+        }
+        if (values.isEmpty()) {
+            return StackValue.empty();
+        }
+        V first = values.get(0);
+        boolean mixed = false;
+        for (int i = 1; i < values.size(); i++) {
+            if (!Objects.equals(first, values.get(i))) {
+                mixed = true;
+                break;
+            }
+        }
+        return new StackValue<>(false, mixed, first);
+    }
+
     final class StackContext<O> {
 
         private final ContextMenu.ContextMenuEntry<?> entry;
@@ -105,6 +176,9 @@ public interface ContextMenuBuilder<O> {
         }
 
         public boolean isPrimary() {
+            if (Boolean.TRUE.equals(this.entry.getStackMeta().getProperties().getBooleanProperty(STACK_FORCE_APPLY_KEY))) {
+                return true;
+            }
             return !this.isStacked() || this.entry.getStackMeta().isFirstInStack();
         }
 
@@ -304,14 +378,18 @@ public interface ContextMenuBuilder<O> {
                         chooserScreen.setResourceSourceCallback(source -> {
                             if (source != null) {
                                 this.saveSnapshot();
-                                for (O e : selectedElements) {
-                                    targetFieldSetter.accept(e, resourceSupplierBuilder.get(source));
-                                }
+                                this.applyStackAppliers(entry, source);
                             }
                             Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
                         });
                         Minecraft.getInstance().setScreen(chooserScreen);
-                }).setStackable(true);
+                }).setStackable(true)
+                .setStackApplier((stackEntry, value) -> {
+                    if (!(value instanceof String source)) {
+                        return;
+                    }
+                    targetFieldSetter.accept(this.self(), resourceSupplierBuilder.get(source));
+                });
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.ui.resources.reset"),
@@ -321,8 +399,11 @@ public interface ContextMenuBuilder<O> {
                             return;
                         }
                         this.saveSnapshot();
-                        stack.apply(e -> targetFieldSetter.accept(e, defaultValue));
-                    }).setStackable(true);
+                        this.applyStackAppliers(entry, null);
+            }).setStackable(true)
+                    .setStackApplier((stackEntry, value) -> {
+                        targetFieldSetter.accept(this.self(), defaultValue);
+                    });
         }
 
         subMenu.addSeparatorEntry("separator_before_current_value_display")
@@ -385,9 +466,7 @@ public interface ContextMenuBuilder<O> {
                     TextInputScreen s = TextInputScreen.build(label, inputCharacterFilter, call -> {
                         if (call != null) {
                             this.saveSnapshot();
-                            for (O e : selectedElements) {
-                                targetFieldSetter.accept(e, call);
-                            }
+                            this.applyStackAppliers(entry, call);
                         }
                         menu.closeMenu();
                         Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
@@ -404,9 +483,7 @@ public interface ContextMenuBuilder<O> {
                     TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
                         if (call != null) {
                             this.saveSnapshot();
-                            for (O e : selectedElements) {
-                                targetFieldSetter.accept(e, call);
-                            }
+                            this.applyStackAppliers(entry, call);
                         }
                         menu.closeMenu();
                         Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
@@ -423,7 +500,13 @@ public interface ContextMenuBuilder<O> {
                     inputScreen = s;
                 }
             Minecraft.getInstance().setScreen(inputScreen);
-        }).setStackable(true);
+        }).setStackable(true)
+                .setStackApplier((stackEntry, value) -> {
+                    if (!(value instanceof String call)) {
+                        return;
+                    }
+                    targetFieldSetter.accept(this.self(), call);
+                });
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"), (menu, entry) -> {
@@ -432,8 +515,11 @@ public interface ContextMenuBuilder<O> {
                     return;
                 }
                 this.saveSnapshot();
-                stack.apply(e -> targetFieldSetter.accept(e, defaultValue));
-            }).setStackable(true);
+                this.applyStackAppliers(entry, null);
+            }).setStackable(true)
+                    .setStackApplier((stackEntry, value) -> {
+                        targetFieldSetter.accept(this.self(), defaultValue);
+                    });
         }
 
         subMenu.addSeparatorEntry("separator_before_current_value_display")
@@ -624,28 +710,39 @@ public interface ContextMenuBuilder<O> {
     }
 
     default <V> ContextMenu.ClickableContextMenuEntry<?> buildGenericCycleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
-        return new ContextMenu.ClickableContextMenuEntry<>(entryIdentifier, parentMenu, Component.literal(""), (menu, entry) -> {
-            StackContext<O> stack = this.stack(entry, selectedElementsFilter);
-            if (!stack.isPrimary() || stack.isEmpty()) {
+        ContextMenu.ClickableContextMenuEntry<?> entry = new ContextMenu.ClickableContextMenuEntry<>(entryIdentifier, parentMenu, Component.literal(""), (menu, entryRef) -> {
+            if (entryRef.getStackMeta().isPartOfStack() && !entryRef.getStackMeta().isFirstInStack()) {
                 return;
             }
-            StackValue<V> currentValue = stack.resolveValue(targetFieldGetter);
+            StackValue<V> currentValue = this.resolveStackValue(entryRef);
+            if (currentValue.isEmpty()) {
+                return;
+            }
             ValueCycle<V> cycle = ValueCycle.fromList(switcherValues);
             if (currentValue.hasCommonValue()) {
                 cycle.setCurrentValue(currentValue.getValue(), false);
             }
             V next = cycle.next();
             this.saveSnapshot();
-            stack.apply(e -> targetFieldSetter.accept(e, next));
-        }).setLabelSupplier((menu, entry) -> {
-            StackContext<O> stack = this.stack(entry, selectedElementsFilter);
-            StackValue<V> currentValue = stack.resolveValue(targetFieldGetter);
+            this.applyStackAppliers(entryRef, next);
+        });
+        entry.setLabelSupplier((menu, entryRef) -> {
+            StackValue<V> currentValue = this.resolveStackValue(entryRef);
             ValueCycle<V> cycle = ValueCycle.fromList(switcherValues);
             if (currentValue.hasCommonValue()) {
                 cycle.setCurrentValue(currentValue.getValue(), false);
             }
-            return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry<?>) entry, cycle.current());
-        }).setStackable(true);
+            return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry<?>) entryRef, cycle.current());
+        });
+        entry.setStackApplier((stackEntry, value) -> {
+            @SuppressWarnings("unchecked")
+            V casted = (V) value;
+            targetFieldSetter.accept(this.self(), casted);
+        });
+        entry.setStackValueSupplier(stackEntry -> targetFieldGetter.get(this.self()));
+        entry.setStackable(true);
+        entry.setStackGroupKey(this.self().getClass());
+        return entry;
     }
 
     default <V> ContextMenu.ClickableContextMenuEntry<?> addGenericCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {

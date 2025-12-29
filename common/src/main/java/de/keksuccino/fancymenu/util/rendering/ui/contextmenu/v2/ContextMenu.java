@@ -1170,6 +1170,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected Font font = Minecraft.getInstance().font;
         protected boolean addSpaceForIcon = false;
         protected boolean changeBackgroundColorOnHover = true;
+        @Nullable
+        protected StackApplier stackApplier;
+        @Nullable
+        protected StackValueSupplier stackValueSupplier;
+        @Nullable
+        protected Object stackGroupKey;
 
         public ContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
             this.identifier = identifier;
@@ -1300,6 +1306,39 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         @NotNull
         public ContextMenuStackMeta getStackMeta() {
             return this.stackMeta;
+        }
+
+        @Nullable
+        public StackApplier getStackApplier() {
+            return this.stackApplier;
+        }
+
+        @NotNull
+        public T setStackApplier(@Nullable StackApplier stackApplier) {
+            this.stackApplier = stackApplier;
+            return (T) this;
+        }
+
+        @Nullable
+        public StackValueSupplier getStackValueSupplier() {
+            return this.stackValueSupplier;
+        }
+
+        @NotNull
+        public T setStackValueSupplier(@Nullable StackValueSupplier stackValueSupplier) {
+            this.stackValueSupplier = stackValueSupplier;
+            return (T) this;
+        }
+
+        @Nullable
+        public Object getStackGroupKey() {
+            return this.stackGroupKey;
+        }
+
+        @NotNull
+        public T setStackGroupKey(@Nullable Object stackGroupKey) {
+            this.stackGroupKey = stackGroupKey;
+            return (T) this;
         }
 
         protected void onRemoved() {
@@ -1468,6 +1507,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (T) this;
         }
 
+        public void runClickAction() {
+            this.clickAction.onClick(this.parent, this);
+        }
+
         @Nullable
         public Component getShortcutText() {
             return (this.shortcutTextSupplier != null) ? this.shortcutTextSupplier.get(this.parent, this) : null;
@@ -1498,6 +1541,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
+            copy.stackApplier = this.stackApplier;
+            copy.stackValueSupplier = this.stackValueSupplier;
+            copy.stackGroupKey = this.stackGroupKey;
             return copy;
         }
 
@@ -1582,6 +1628,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
+            copy.stackApplier = this.stackApplier;
+            copy.stackValueSupplier = this.stackValueSupplier;
+            copy.stackGroupKey = this.stackGroupKey;
             return copy;
         }
 
@@ -1739,6 +1788,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.labelSupplier = this.labelSupplier;
             copy.icon = this.icon;
+            copy.stackApplier = this.stackApplier;
+            copy.stackValueSupplier = this.stackValueSupplier;
+            copy.stackGroupKey = this.stackGroupKey;
             return copy;
         }
 
@@ -1801,6 +1853,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
+            copy.stackApplier = this.stackApplier;
+            copy.stackValueSupplier = this.stackValueSupplier;
+            copy.stackGroupKey = this.stackGroupKey;
             return copy;
         }
 
@@ -1844,6 +1899,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         public SpacerContextMenuEntry copy() {
             SpacerContextMenuEntry e = new SpacerContextMenuEntry(this.identifier, this.parent);
             e.height = this.height;
+            e.stackApplier = this.stackApplier;
+            e.stackValueSupplier = this.stackValueSupplier;
+            e.stackGroupKey = this.stackGroupKey;
             return e;
         }
 
@@ -1895,6 +1953,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             this.stackable = stackable;
         }
 
+        @Nullable
+        public ContextMenuEntry<?> getNextInStack() {
+            return this.nextInStack;
+        }
+
     }
 
     public enum SubMenuOpeningSide {
@@ -1905,6 +1968,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @FunctionalInterface
     public interface Supplier<T> {
         T get(ContextMenu menu, ContextMenuEntry<?> entry);
+    }
+
+    @FunctionalInterface
+    public interface StackApplier {
+        void apply(ContextMenuEntry<?> entry, @Nullable Object value);
+    }
+
+    @FunctionalInterface
+    public interface StackValueSupplier {
+        @Nullable
+        Object get(ContextMenuEntry<?> entry);
     }
 
     @FunctionalInterface
