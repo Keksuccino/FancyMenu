@@ -1692,6 +1692,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 		return null;
 	}
 
+    @SuppressWarnings("unchecked")
 	protected List<E> getFilteredSelectedElementList(@Nullable ConsumingSupplier<E, Boolean> selectedElementsFilter) {
 		List<E> filtered = new ArrayList<>();
 		Class<?> selfClass = this.getClass();
@@ -1699,7 +1700,6 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 			if (!selfClass.isInstance(element)) {
 				continue;
 			}
-			@SuppressWarnings("unchecked")
 			E casted = (E) element;
 			if (selectedElementsFilter != null && !selectedElementsFilter.get(casted)) {
 				continue;
@@ -1709,9 +1709,19 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 		return filtered;
 	}
 
+    @SuppressWarnings("unchecked")
     @Override
     public @NotNull List<E> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<E, Boolean> filter) {
-        return getFilteredSelectedElementList(filter);
+        List<E> filtered = new ArrayList<>();
+        ConsumingSupplier<Object, Boolean> rawFilter = (ConsumingSupplier<Object, Boolean>) (Object) filter;
+        List<AbstractEditorElement<?, ?>> rawList = (List<AbstractEditorElement<?, ?>>) filtered;
+        for (AbstractEditorElement<?, ?> element : this.editor.getSelectedElements()) {
+            if (rawFilter != null && !rawFilter.get(element)) {
+                continue;
+            }
+            rawList.add(element);
+        }
+        return filtered;
     }
 
     @Override

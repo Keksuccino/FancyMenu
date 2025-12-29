@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
@@ -30,6 +31,8 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -185,13 +188,67 @@ public class Property<T> {
     public static Property<Boolean> booleanProperty(@NotNull String key, boolean defaultValue, boolean currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Boolean> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = Boolean::valueOf;
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> builder.buildToggleContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
-            Property<Boolean> resolved = (Property<Boolean>) consumes.getProperty(key);
-            return (resolved != null) ? resolved.get() : property.getDefault();
-        }, (b, value) -> {
-            Property<Boolean> resolved = (Property<Boolean>) b.getProperty(key);
-            if (resolved != null) resolved.set(value);
-        }, property.getContextMenuEntryLocalizationKeyBase());
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> new ContextMenu.ClickableContextMenuEntry<>("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), (contextMenu, entry) -> {
+            if (entry.getStackMeta().isPartOfStack() && !entry.getStackMeta().isFirstInStack()) {
+                return;
+            }
+            List<? extends PropertyHolder> holders = builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null);
+            if (holders.isEmpty()) {
+                return;
+            }
+            builder.saveSnapshot();
+            boolean allTrue = true;
+            boolean anyTrue = false;
+            for (PropertyHolder holder : holders) {
+                Property<Boolean> resolved = (Property<Boolean>) holder.getProperty(key);
+                Boolean value = (resolved != null) ? resolved.get() : property.getDefault();
+                if (value == null) {
+                    value = property.getDefault();
+                }
+                if (Boolean.TRUE.equals(value)) {
+                    anyTrue = true;
+                } else {
+                    allTrue = false;
+                }
+            }
+            boolean nextValue = !allTrue || !anyTrue;
+            for (PropertyHolder holder : holders) {
+                Property<Boolean> resolved = (Property<Boolean>) holder.getProperty(key);
+                if (resolved != null) {
+                    resolved.set(nextValue);
+                }
+            }
+        }).setLabelSupplier((contextMenu, entry) -> {
+            List<? extends PropertyHolder> holders = builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null);
+            boolean showEnabled = false;
+            if (holders.isEmpty()) {
+                showEnabled = Boolean.TRUE.equals(property.getDefault());
+            } else {
+                boolean allTrue = true;
+                boolean anyTrue = false;
+                boolean anyFalse = false;
+                for (PropertyHolder holder : holders) {
+                    Property<Boolean> resolved = (Property<Boolean>) holder.getProperty(key);
+                    Boolean value = (resolved != null) ? resolved.get() : property.getDefault();
+                    if (value == null) {
+                        value = property.getDefault();
+                    }
+                    if (Boolean.TRUE.equals(value)) {
+                        anyTrue = true;
+                    } else {
+                        anyFalse = true;
+                        allTrue = false;
+                    }
+                }
+                showEnabled = anyTrue && !anyFalse && allTrue;
+            }
+            if (showEnabled && entry.isActive()) {
+                MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                return Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), enabled);
+            }
+            MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+            return Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), disabled);
+        }).setStackable(true);
         return p;
     }
 
