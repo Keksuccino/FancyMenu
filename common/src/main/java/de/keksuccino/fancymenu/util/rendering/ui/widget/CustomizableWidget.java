@@ -173,6 +173,16 @@ public interface CustomizableWidget {
         if (a != null) a.stop();
     }
 
+    void setUnhoverSoundFancyMenu(@Nullable IAudio sound);
+
+    @Nullable
+    IAudio getUnhoverSoundFancyMenu();
+
+    default void stopUnhoverSoundFancyMenu() {
+        IAudio a = this.getUnhoverSoundFancyMenu();
+        if (a != null) a.stop();
+    }
+
     void setHiddenFancyMenu(boolean hidden);
 
     boolean isHiddenFancyMenu();

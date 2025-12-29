@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementCon
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
@@ -64,6 +65,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     @NotNull
     public RequirementContainer activeStateSupplier = new RequirementContainer();
     public ResourceSupplier<IAudio> hoverSound;
+    public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
 
     public SliderElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -180,6 +182,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public void updateWidget() {
         if (this.slider == null) return;
         this.updateWidgetHoverSound();
+        this.updateWidgetUnhoverSound();
         this.updateWidgetActiveState();
         this.updateWidgetTooltip();
         this.updateWidgetTexture();
@@ -189,6 +192,13 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public void updateWidgetHoverSound() {
         if (this.slider instanceof CustomizableWidget w) {
             w.setHoverSoundFancyMenu((this.getHoverSound() != null) ? this.getHoverSound().get() : null);
+        }
+    }
+
+    public void updateWidgetUnhoverSound() {
+        if (this.slider instanceof CustomizableWidget w) {
+            ResourceSupplier<IAudio> supplier = this.getUnhoverSound();
+            w.setUnhoverSoundFancyMenu((supplier != null) ? supplier.get() : null);
         }
     }
 
@@ -309,6 +319,10 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
     public ResourceSupplier<IAudio> getHoverSound() {
         return this.getTemplateProperty(template -> template.hoverSound, this.hoverSound);
+    }
+
+    public ResourceSupplier<IAudio> getUnhoverSound() {
+        return this.getTemplateProperty(template -> template.unhoverAudio.get(), this.unhoverAudio.get());
     }
 
     public ResourceSupplier<ITexture> getHandleTextureNormal() {

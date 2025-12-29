@@ -202,6 +202,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTooltip();
         this.updateWidgetLabels();
         this.updateWidgetHoverSound();
+        this.updateWidgetUnhoverSound();
         this.updateWidgetClickSound();
         this.updateWidgetTexture();
         this.updateWidgetSize();
@@ -267,6 +268,13 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public void updateWidgetHoverSound() {
         if (this.getWidget() instanceof CustomizableWidget w) {
             w.setHoverSoundFancyMenu((this.getPropertySource().hoverSound != null) ? this.getPropertySource().hoverSound.get() : null);
+        }
+    }
+
+    public void updateWidgetUnhoverSound() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            ResourceSupplier<IAudio> supplier = this.getPropertySource().unhoverAudio.get();
+            w.setUnhoverSoundFancyMenu((supplier != null) ? supplier.get() : null);
         }
     }
 

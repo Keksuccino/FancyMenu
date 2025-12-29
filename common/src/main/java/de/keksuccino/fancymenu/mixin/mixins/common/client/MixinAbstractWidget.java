@@ -53,6 +53,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private IAudio customClickSoundFancyMenu;
 	@Unique @Nullable
 	private IAudio hoverSoundFancyMenu;
+	@Unique @Nullable
+	private IAudio unhoverSoundFancyMenu;
 	@Unique
 	private boolean hiddenFancyMenu = false;
 	@Unique @Nullable
@@ -247,6 +249,12 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		});
 
 		this.addHoverOrFocusStateListenerFancyMenu(hoveredOrFocused -> {
+			if (!hoveredOrFocused && !this.hiddenFancyMenu && this.visible && this.active) {
+				this.handleUnhoverSoundFancyMenu();
+			}
+		});
+
+		this.addHoverOrFocusStateListenerFancyMenu(hoveredOrFocused -> {
 			CustomBackgroundResetBehavior behavior = this.getCustomBackgroundResetBehaviorFancyMenu();
 			if (hoveredOrFocused && ((behavior == CustomBackgroundResetBehavior.RESET_ON_HOVER) || (behavior == CustomBackgroundResetBehavior.RESET_ON_HOVER_AND_UNHOVER))) {
 				if (this.getCustomBackgroundNormalFancyMenu() instanceof PlayableResource p) p.stop();
@@ -267,6 +275,14 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.hoverSoundFancyMenu != null) {
 			this.hoverSoundFancyMenu.stop();
 			this.hoverSoundFancyMenu.play();
+		}
+	}
+
+	@Unique
+	private void handleUnhoverSoundFancyMenu() {
+		if (this.unhoverSoundFancyMenu != null) {
+			this.unhoverSoundFancyMenu.stop();
+			this.unhoverSoundFancyMenu.play();
 		}
 	}
 
@@ -369,6 +385,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setCustomBackgroundInactiveFancyMenu(null);
 		this.setCustomBackgroundResetBehaviorFancyMenu(CustomBackgroundResetBehavior.RESET_NEVER);
 		this.setHoverSoundFancyMenu(null);
+		this.setUnhoverSoundFancyMenu(null);
 		this.setCustomClickSoundFancyMenu(null);
 		this.setHiddenFancyMenu(false);
 		this.setCustomLabelFancyMenu(null);
@@ -456,6 +473,19 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public void setHoverSoundFancyMenu(@Nullable IAudio sound) {
 		this.hoverSoundFancyMenu = sound;
+	}
+
+	@Unique
+	@Nullable
+	@Override
+	public IAudio getUnhoverSoundFancyMenu() {
+		return this.unhoverSoundFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setUnhoverSoundFancyMenu(@Nullable IAudio sound) {
+		this.unhoverSoundFancyMenu = sound;
 	}
 
 	@Unique

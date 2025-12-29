@@ -29,10 +29,10 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
         this.addCycleContextMenuEntryTo(this.rightClickMenu, "slider_type",
                         Arrays.asList(SliderElement.SliderType.values()),
                         SliderEditorElement.class,
-                        consumes -> ((SliderElement)consumes.element).type,
+                        consumes -> consumes.element.type,
                         (sliderEditorElement, sliderType) -> {
-                            ((SliderElement)sliderEditorElement.element).type = sliderType;
-                            ((SliderElement)sliderEditorElement.element).buildSlider();
+                            sliderEditorElement.element.type = sliderType;
+                            sliderEditorElement.element.buildSlider();
                         },
                         (menu, entry, switcherValue) -> switcherValue.getCycleComponent())
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
@@ -40,17 +40,17 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_list_values",
                         SliderEditorElement.class,
                         consumes -> {
-                            List<String> values = ((SliderElement)consumes.element).listValues;
-                            String s = "";
+                            List<String> values = consumes.element.listValues;
+                            StringBuilder s = new StringBuilder();
                             for (String v : values) {
-                                if (s.length() > 0) s += "\n";
-                                s += v;
+                                if (!s.isEmpty()) s.append("\n");
+                                s.append(v);
                             }
-                            return s;
+                            return s.toString();
                         }, (element1, s) -> {
                             if (s != null) {
-                                ((SliderElement)element1.element).listValues = Arrays.asList(StringUtils.splitLines(s, "\n"));
-                                ((SliderElement)element1.element).buildSlider();
+                                element1.element.listValues = Arrays.asList(StringUtils.splitLines(s, "\n"));
+                                element1.element.buildSlider();
                             }
                         }, null, true, false,
                         Component.translatable("fancymenu.elements.slider.v2.type.list.set_list_values"),
@@ -64,48 +64,48 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                             return false;
                         }, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.list.set_list_values.desc")))
-                .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.LIST);
+                .addIsVisibleSupplier((menu, entry) -> (this.element).type == SliderElement.SliderType.LIST);
 
         this.addDoubleInputContextMenuEntryTo(this.rightClickMenu, "set_min_range_value",
                         SliderEditorElement.class,
-                        consumes -> ((SliderElement)consumes.element).minRangeValue,
+                        consumes -> consumes.element.minRangeValue,
                         (element, range) -> {
-                            ((SliderElement)element.element).minRangeValue = range;
-                            ((SliderElement)element.element).buildSlider();
+                            (element.element).minRangeValue = range;
+                            (element.element).buildSlider();
                         },
                         Component.translatable("fancymenu.elements.slider.v2.type.range.set_min"),
                         false, 0, null, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_min.desc")))
-                .setIsVisibleSupplier((menu, entry) -> (((SliderElement)this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || (((SliderElement)this.element).type == SliderElement.SliderType.INTEGER_RANGE));
+                .addIsVisibleSupplier((menu, entry) -> ((this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || ((this.element).type == SliderElement.SliderType.INTEGER_RANGE));
 
         this.addDoubleInputContextMenuEntryTo(this.rightClickMenu, "set_max_range_value",
                         SliderEditorElement.class,
-                        consumes -> ((SliderElement)consumes.element).maxRangeValue,
+                        consumes -> (consumes.element).maxRangeValue,
                         (element, range) -> {
-                            ((SliderElement)element.element).maxRangeValue = range;
-                            ((SliderElement)element.element).buildSlider();
+                            (element.element).maxRangeValue = range;
+                            (element.element).buildSlider();
                         },
                         Component.translatable("fancymenu.elements.slider.v2.type.range.set_max"),
                         false, 0, null, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_max.desc")))
-                .setIsVisibleSupplier((menu, entry) -> (((SliderElement)this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || (((SliderElement)this.element).type == SliderElement.SliderType.INTEGER_RANGE));
+                .addIsVisibleSupplier((menu, entry) -> ((this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || ((this.element).type == SliderElement.SliderType.INTEGER_RANGE));
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "rounding_decimal_place",
                         SliderEditorElement.class,
-                        consumes -> ((SliderElement)consumes.element).roundingDecimalPlace,
+                        consumes -> (consumes.element).roundingDecimalPlace,
                         (element, range) -> {
-                            ((SliderElement)element.element).roundingDecimalPlace = range;
-                            ((SliderElement)element.element).buildSlider();
+                            (element.element).roundingDecimalPlace = range;
+                            (element.element).buildSlider();
                         },
                         Component.translatable("fancymenu.elements.slider.v2.type.range.decimal.round"),
                         true, 2, null, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.decimal.round.desc")))
-                .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.DECIMAL_RANGE);
+                .addIsVisibleSupplier((menu, entry) -> (this.element).type == SliderElement.SliderType.DECIMAL_RANGE);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_pre_selected_value",
                         SliderEditorElement.class,
-                        consumes -> ((SliderElement)consumes.element).preSelectedValue,
-                        (sliderEditorElement, s) -> ((SliderElement)sliderEditorElement.element).preSelectedValue = s,
+                        consumes -> (consumes.element).preSelectedValue,
+                        (sliderEditorElement, s) -> (sliderEditorElement.element).preSelectedValue = s,
                         null, false, true, Component.translatable("fancymenu.elements.slider.v2.pre_selected"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.pre_selected.desc")))
@@ -115,10 +115,10 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.actions.screens.manage_screen.manage"),
                         (menu, entry) -> {
-                            ActionScriptEditorScreen s = new ActionScriptEditorScreen(((SliderElement)this.element).getExecutableBlock(), call -> {
+                            ActionScriptEditorScreen s = new ActionScriptEditorScreen((this.element).getExecutableBlock(), call -> {
                                 if (call != null) {
                                     this.editor.history.saveSnapshot();
-                                    ((SliderElement)this.element).executableBlock = call;
+                                    (this.element).executableBlock = call;
                                 }
                                 Minecraft.getInstance().setScreen(this.editor);
                             });
@@ -149,8 +149,8 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_label",
                         SliderEditorElement.class,
-                        consumes -> ((SliderElement)consumes.element).label,
-                        (sliderEditorElement, s) -> ((SliderElement)sliderEditorElement.element).label = s,
+                        consumes -> (consumes.element).label,
+                        (sliderEditorElement, s) -> (sliderEditorElement.element).label = s,
                         null, false, true, Component.translatable("fancymenu.elements.slider.v2.label"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.label.desc")))
@@ -166,12 +166,15 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         Component.translatable("fancymenu.elements.button.hoversound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
+        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+
         this.rightClickMenu.addSeparatorEntry("separator_after_hover_sound").setStackable(true);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",
                         SliderEditorElement.class,
                         consumes -> {
-                            String t = ((SliderElement)consumes.element).tooltip;
+                            String t = (consumes.element).tooltip;
                             if (t != null) t = t.replace("%n%", "\n");
                             return t;
                         },
@@ -179,7 +182,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                             if (s != null) {
                                 s = s.replace("\n", "%n%");
                             }
-                            ((SliderElement)element1.element).tooltip = s;
+                            (element1.element).tooltip = s;
                         },
                         null, true, true, Component.translatable("fancymenu.elements.button.tooltip"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
@@ -294,6 +297,5 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                 Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null);
 
     }
-
 
 }
