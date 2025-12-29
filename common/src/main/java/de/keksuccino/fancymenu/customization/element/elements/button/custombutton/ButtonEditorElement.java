@@ -98,7 +98,7 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                         Component.translatable("fancymenu.elements.button.hoversound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
-        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "click_sound",

@@ -228,7 +228,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
 		this.rightClickMenu.addSeparatorEntry("separator_after_set_in_editor_stuff");
 
-        this.element.shouldBeAffectedByDecorationOverlays.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this);
+        this.element.shouldBeAffectedByDecorationOverlays.buildContextMenuEntryAndAddTo(this.rightClickMenu, this);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_should_be_affected_by_decoration_overlays");
 

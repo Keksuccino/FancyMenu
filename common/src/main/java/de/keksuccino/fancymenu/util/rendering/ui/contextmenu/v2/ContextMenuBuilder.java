@@ -31,7 +31,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
@@ -84,11 +86,121 @@ public interface ContextMenuBuilder<O> {
     @NotNull
     List<O> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<O, Boolean> filter);
 
+    default StackContext<O> stack(@NotNull ContextMenu.ContextMenuEntry<?> entry, @Nullable ConsumingSupplier<O, Boolean> filter) {
+        return new StackContext<>(entry, this.getFilteredStackableObjectsList(filter));
+    }
+
+    final class StackContext<O> {
+
+        private final ContextMenu.ContextMenuEntry<?> entry;
+        private final List<O> elements;
+
+        private StackContext(@NotNull ContextMenu.ContextMenuEntry<?> entry, @NotNull List<O> elements) {
+            this.entry = entry;
+            this.elements = elements;
+        }
+
+        public boolean isStacked() {
+            return this.entry.getStackMeta().isPartOfStack();
+        }
+
+        public boolean isPrimary() {
+            return !this.isStacked() || this.entry.getStackMeta().isFirstInStack();
+        }
+
+        public boolean isEmpty() {
+            return this.elements.isEmpty();
+        }
+
+        @NotNull
+        public List<O> getElements() {
+            return this.elements;
+        }
+
+        @NotNull
+        public ContextMenu.ContextMenuStackMeta getStackMeta() {
+            return this.entry.getStackMeta();
+        }
+
+        public void apply(@NotNull Consumer<O> action) {
+            if (!this.isPrimary() || this.elements.isEmpty()) {
+                return;
+            }
+            for (O element : this.elements) {
+                action.accept(element);
+            }
+        }
+
+        @NotNull
+        public <V> StackValue<V> resolveValue(@NotNull ConsumingSupplier<O, V> getter) {
+            if (this.elements.isEmpty()) {
+                return StackValue.empty();
+            }
+            V first = getter.get(this.elements.get(0));
+            boolean mixed = false;
+            for (int i = 1; i < this.elements.size(); i++) {
+                V current = getter.get(this.elements.get(i));
+                if (!Objects.equals(first, current)) {
+                    mixed = true;
+                    break;
+                }
+            }
+            return new StackValue<>(false, mixed, first);
+        }
+
+    }
+
+    final class StackValue<V> {
+
+        private final boolean empty;
+        private final boolean mixed;
+        @Nullable
+        private final V value;
+
+        private StackValue(boolean empty, boolean mixed, @Nullable V value) {
+            this.empty = empty;
+            this.mixed = mixed;
+            this.value = value;
+        }
+
+        @NotNull
+        public static <V> StackValue<V> empty() {
+            return new StackValue<>(true, false, null);
+        }
+
+        public boolean isEmpty() {
+            return this.empty;
+        }
+
+        public boolean isMixed() {
+            return this.mixed;
+        }
+
+        public boolean hasCommonValue() {
+            return !this.empty && !this.mixed;
+        }
+
+        @Nullable
+        public V getValue() {
+            return this.value;
+        }
+
+    }
+
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildImageResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildImageResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<ITexture>> getter = (ConsumingSupplier<O, ResourceSupplier<ITexture>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<ITexture>> setter = (BiConsumer<O, ResourceSupplier<ITexture>>) targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.image(null, file -> {}), ResourceSupplier::image, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter, () -> ResourceChooserScreen.image(null, file -> {}), ResourceSupplier::image, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+    }
+
+    default ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildImageResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    }
+
+    @SuppressWarnings("all")
+    default ContextMenu.ClickableContextMenuEntry<?> buildImageResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return buildImageResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
     default ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
@@ -96,10 +208,19 @@ public interface ContextMenuBuilder<O> {
     }
 
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildAudioResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildAudioResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<IAudio>> getter = (ConsumingSupplier<O, ResourceSupplier<IAudio>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<IAudio>> setter = (BiConsumer<O, ResourceSupplier<IAudio>>) targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.audio(null, file -> {}), ResourceSupplier::audio, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.AUDIO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter, () -> ResourceChooserScreen.audio(null, file -> {}), ResourceSupplier::audio, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.AUDIO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+    }
+
+    default ContextMenu.ClickableContextMenuEntry<?> addAudioResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildAudioResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    }
+
+    @SuppressWarnings("all")
+    default ContextMenu.ClickableContextMenuEntry<?> buildAudioResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return buildAudioResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
     default ContextMenu.ClickableContextMenuEntry<?> addAudioResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
@@ -107,18 +228,35 @@ public interface ContextMenuBuilder<O> {
     }
 
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildVideoResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildVideoResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<IVideo>> getter = (ConsumingSupplier<O, ResourceSupplier<IVideo>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<IVideo>> setter = (BiConsumer<O, ResourceSupplier<IVideo>>) targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.video(null, file -> {}), ResourceSupplier::video, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.VIDEO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter, () -> ResourceChooserScreen.video(null, file -> {}), ResourceSupplier::video, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.VIDEO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+    }
+
+    default ContextMenu.ClickableContextMenuEntry<?> addVideoResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildVideoResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    }
+
+    @SuppressWarnings("all")
+    default ContextMenu.ClickableContextMenuEntry<?> buildVideoResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return buildVideoResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
     default ContextMenu.ClickableContextMenuEntry<?> addVideoResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         return addTo.addEntry(buildVideoResourceChooserContextMenuEntry(addTo, entryIdentifier, elementType, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
+    default ContextMenu.ClickableContextMenuEntry<?> buildTextResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter, () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+    }
+
+    default ContextMenu.ClickableContextMenuEntry<?> addTextResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildTextResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    }
+
     default ContextMenu.ClickableContextMenuEntry<?> buildTextResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildTextResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
     default ContextMenu.ClickableContextMenuEntry<?> addTextResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
@@ -142,8 +280,11 @@ public interface ContextMenuBuilder<O> {
 
         subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.resources.choose"),
                 (menu, entry) -> {
-                    List<O> selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
-                    if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
+                    StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                    if (!stack.isPrimary() || stack.isEmpty()) {
+                        return;
+                    }
+                    List<O> selectedElements = stack.getElements();
                         String preSelectedSource = null;
                         List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> {
                             ResourceSupplier<R> supplier = targetFieldGetter.get(consumes);
@@ -170,51 +311,48 @@ public interface ContextMenuBuilder<O> {
                             Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
                         });
                         Minecraft.getInstance().setScreen(chooserScreen);
-                    }
                 }).setStackable(true);
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.ui.resources.reset"),
                     (menu, entry) -> {
-                        if (entry.getStackMeta().isFirstInStack()) {
-                            List<O> selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
-                            this.saveSnapshot();
-                            for (O e : selectedElements) {
-                                targetFieldSetter.accept(e, defaultValue);
-                            }
+                        StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                        if (!stack.isPrimary() || stack.isEmpty()) {
+                            return;
                         }
+                        this.saveSnapshot();
+                        stack.apply(e -> targetFieldSetter.accept(e, defaultValue));
                     }).setStackable(true);
         }
 
-        Supplier<Component> currentValueDisplayLabelSupplier = () -> {
-            List<O> selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
-            if (selectedElements.size() == 1) {
-                Component valueComponent;
-                ResourceSupplier<R> supplier = targetFieldGetter.get(selectedElements.get(0));
-                String val = (supplier != null) ? supplier.getSourceWithoutPrefix() : null;
-                if (val == null) {
-                    valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-                } else {
-                    val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
-                    if (Minecraft.getInstance().font.width(val) > 150) {
-                        val = new StringBuilder(val).reverse().toString();
-                        val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
-                        val = new StringBuilder(val).reverse().toString();
-                        val = ".." + val;
-                    }
-                    valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-                }
-                return Component.translatable("fancymenu.ui.resources.current", valueComponent);
-            }
-            return Component.empty();
-        };
         subMenu.addSeparatorEntry("separator_before_current_value_display")
-                .addIsVisibleSupplier((menu, entry) -> this.getFilteredStackableObjectsList(selectedElementsFilter).size() == 1);
+                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedElementsFilter).getElements().size() == 1);
         subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
-                .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
+                .setLabelSupplier((menu, entry) -> {
+                    List<O> selectedElements = this.stack(entry, selectedElementsFilter).getElements();
+                    if (selectedElements.size() == 1) {
+                        Component valueComponent;
+                        ResourceSupplier<R> supplier = targetFieldGetter.get(selectedElements.get(0));
+                        String val = (supplier != null) ? supplier.getSourceWithoutPrefix() : null;
+                        if (val == null) {
+                            valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                        } else {
+                            val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
+                            if (Minecraft.getInstance().font.width(val) > 150) {
+                                val = new StringBuilder(val).reverse().toString();
+                                val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+                                val = new StringBuilder(val).reverse().toString();
+                                val = ".." + val;
+                            }
+                            valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                        }
+                        return Component.translatable("fancymenu.ui.resources.current", valueComponent);
+                    }
+                    return Component.empty();
+                })
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)
-                .addIsVisibleSupplier((menu, entry) -> this.getFilteredStackableObjectsList(selectedElementsFilter).size() == 1)
+                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedElementsFilter).getElements().size() == 1)
                 .setIcon(ContextMenu.IconFactory.getIcon("info"));
 
         return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu).setStackable(true);
@@ -229,17 +367,20 @@ public interface ContextMenuBuilder<O> {
         ContextMenu subMenu = new ContextMenu();
         ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) ->
         {
-            if (entry.getStackMeta().isFirstInStack()) {
-                List<O> selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
-                String defaultText = null;
-                List<String> targetValuesOfSelected = new ArrayList<>();
-                for (O e : selectedElements) {
-                    targetValuesOfSelected.add(targetFieldGetter.get(e));
-                }
-                if (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(targetValuesOfSelected)) {
-                    defaultText = targetFieldGetter.get(this.self());
-                }
-                Screen inputScreen;
+            StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+            if (!stack.isPrimary() || stack.isEmpty()) {
+                return;
+            }
+            List<O> selectedElements = stack.getElements();
+            String defaultText = null;
+            List<String> targetValuesOfSelected = new ArrayList<>();
+            for (O e : selectedElements) {
+                targetValuesOfSelected.add(targetFieldGetter.get(e));
+            }
+            if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
+                defaultText = targetFieldGetter.get(this.self());
+            }
+            Screen inputScreen;
                 if (!multiLineInput && !allowPlaceholders) {
                     TextInputScreen s = TextInputScreen.build(label, inputCharacterFilter, call -> {
                         if (call != null) {
@@ -281,50 +422,47 @@ public interface ContextMenuBuilder<O> {
                     s.setPlaceholdersAllowed(allowPlaceholders);
                     inputScreen = s;
                 }
-                Minecraft.getInstance().setScreen(inputScreen);
-            }
+            Minecraft.getInstance().setScreen(inputScreen);
         }).setStackable(true);
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"), (menu, entry) -> {
-                if (entry.getStackMeta().isFirstInStack()) {
-                    List<O> selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
-                    this.saveSnapshot();
-                    for (O e : selectedElements) {
-                        targetFieldSetter.accept(e, defaultValue);
-                    }
+                StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                if (!stack.isPrimary() || stack.isEmpty()) {
+                    return;
                 }
+                this.saveSnapshot();
+                stack.apply(e -> targetFieldSetter.accept(e, defaultValue));
             }).setStackable(true);
         }
 
-        Supplier<Component> currentValueDisplayLabelSupplier = () -> {
-            List<O> selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
-            if (selectedElements.size() == 1) {
-                Component valueComponent;
-                String val = targetFieldGetter.get(selectedElements.get(0));
-                if (val == null) {
-                    valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-                } else {
-                    val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
-                    if (Minecraft.getInstance().font.width(val) > 150) {
-                        val = new StringBuilder(val).reverse().toString();
-                        val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
-                        val = new StringBuilder(val).reverse().toString();
-                        val = ".." + val;
-                    }
-                    valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-                }
-                return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
-            }
-            return Component.empty();
-        };
         subMenu.addSeparatorEntry("separator_before_current_value_display")
-                .addIsVisibleSupplier((menu, entry) -> this.getFilteredStackableObjectsList(selectedElementsFilter).size() == 1);
+                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedElementsFilter).getElements().size() == 1);
         subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
-                .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
+                .setLabelSupplier((menu, entry) -> {
+                    List<O> selectedElements = this.stack(entry, selectedElementsFilter).getElements();
+                    if (selectedElements.size() == 1) {
+                        Component valueComponent;
+                        String val = targetFieldGetter.get(selectedElements.get(0));
+                        if (val == null) {
+                            valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                        } else {
+                            val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
+                            if (Minecraft.getInstance().font.width(val) > 150) {
+                                val = new StringBuilder(val).reverse().toString();
+                                val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+                                val = new StringBuilder(val).reverse().toString();
+                                val = ".." + val;
+                            }
+                            valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                        }
+                        return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+                    }
+                    return Component.empty();
+                })
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)
-                .addIsVisibleSupplier((menu, entry) -> this.getFilteredStackableObjectsList(selectedElementsFilter).size() == 1)
+                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedElementsFilter).getElements().size() == 1)
                 .setIcon(ContextMenu.IconFactory.getIcon("info"));
 
         return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu).setStackable(true);
@@ -487,22 +625,26 @@ public interface ContextMenuBuilder<O> {
 
     default <V> ContextMenu.ClickableContextMenuEntry<?> buildGenericCycleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
         return new ContextMenu.ClickableContextMenuEntry<>(entryIdentifier, parentMenu, Component.literal(""), (menu, entry) -> {
-            List<O> selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
-            ValueCycle<V> cycle = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
+            StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+            if (!stack.isPrimary() || stack.isEmpty()) {
+                return;
+            }
+            StackValue<V> currentValue = stack.resolveValue(targetFieldGetter);
+            ValueCycle<V> cycle = ValueCycle.fromList(switcherValues);
+            if (currentValue.hasCommonValue()) {
+                cycle.setCurrentValue(currentValue.getValue(), false);
+            }
+            V next = cycle.next();
             this.saveSnapshot();
-            if (!selectedElements.isEmpty() && entry.getStackMeta().isFirstInStack()) {
-                V next = cycle.next();
-                for (O e : selectedElements) {
-                    targetFieldSetter.accept(e, next);
-                }
-            }
+            stack.apply(e -> targetFieldSetter.accept(e, next));
         }).setLabelSupplier((menu, entry) -> {
-            List<O> selectedElements = new ArrayList<>();
-            if (!entry.getStackMeta().getProperties().hasProperty("switcher")) {
-                selectedElements = this.getFilteredStackableObjectsList(selectedElementsFilter);
+            StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+            StackValue<V> currentValue = stack.resolveValue(targetFieldGetter);
+            ValueCycle<V> cycle = ValueCycle.fromList(switcherValues);
+            if (currentValue.hasCommonValue()) {
+                cycle.setCurrentValue(currentValue.getValue(), false);
             }
-            ValueCycle<V> switcher = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
-            return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry<?>) entry, switcher.current());
+            return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry<?>) entry, cycle.current());
         }).setStackable(true);
     }
 
@@ -522,10 +664,10 @@ public interface ContextMenuBuilder<O> {
     }
 
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildToggleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericToggleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
         ConsumingSupplier<O, Boolean> getter = (ConsumingSupplier<O, Boolean>) targetFieldGetter;
         BiConsumer<O, Boolean> setter = (BiConsumer<O, Boolean>) targetFieldSetter;
-        return buildGenericCycleContextMenuEntry(parentMenu, entryIdentifier, ListUtils.of(false, true), consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, (menu, entry, switcherValue) -> {
+        return buildGenericCycleContextMenuEntry(parentMenu, entryIdentifier, ListUtils.of(false, true), selectedElementsFilter, getter, setter, (menu, entry, switcherValue) -> {
             if (switcherValue && entry.isActive()) {
                 MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
                 return Component.translatable(labelLocalizationKeyBase, enabled);
@@ -535,25 +677,17 @@ public interface ContextMenuBuilder<O> {
         });
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addToggleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-        return addTo.addEntry(buildToggleContextMenuEntry(addTo, entryIdentifier, elementType, targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase));
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericToggleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
+        return addTo.addEntry(buildGenericToggleContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase));
     }
 
     @SuppressWarnings("all")
-    default <T> ValueCycle<T> setupValueCycle(String toggleIdentifier, ValueCycle<T> cycle, List<O> elements, ContextMenu.ContextMenuStackMeta stackMeta, ConsumingSupplier <O, T> defaultValue) {
-        boolean hasProperty = stackMeta.getProperties().hasProperty(toggleIdentifier);
-        ValueCycle<T> t = stackMeta.getProperties().putPropertyIfAbsentAndGet(toggleIdentifier, cycle);
-        if (!elements.isEmpty()) {
-            O firstElement = elements.get(0);
-            if (!stackMeta.isPartOfStack()) {
-                t.setCurrentValue(defaultValue.get(firstElement));
-            } else if (!hasProperty) {
-                if (ListUtils.allInListEqual(ObjectUtils.getOfAllUnsafe((List<Object>)((Object)elements), (ConsumingSupplier<Object,Object>)((Object)defaultValue)))) {
-                    t.setCurrentValue(defaultValue.get(firstElement));
-                }
-            }
-        }
-        return t;
+    default ContextMenu.ClickableContextMenuEntry<?> buildToggleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
+        return buildGenericToggleContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase);
+    }
+
+    default ContextMenu.ClickableContextMenuEntry<?> addToggleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
+        return addTo.addEntry(buildToggleContextMenuEntry(addTo, entryIdentifier, elementType, targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase));
     }
 
     @FunctionalInterface

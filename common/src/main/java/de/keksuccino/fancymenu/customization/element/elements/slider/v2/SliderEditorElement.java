@@ -166,7 +166,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         Component.translatable("fancymenu.elements.button.hoversound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
-        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_hover_sound").setStackable(true);

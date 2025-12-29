@@ -62,13 +62,13 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
 
         this.rightClickMenu.addSeparatorEntry("separator_before_audios");
 
-        this.element.hoverSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.hoverSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
-        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
-        this.element.clickSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.clickSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");

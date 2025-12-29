@@ -16,10 +16,8 @@ import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.Resource;
@@ -31,14 +29,13 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
 
 @SuppressWarnings({"unchecked", "unused"})
 public class Property<T> {
@@ -74,16 +71,18 @@ public class Property<T> {
     public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<String> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = consumes -> consumes;
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
-            return builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
-                Property<String> resolved = (Property<String>) consumes.getProperty(key);
-                if (resolved != null) return resolved.get();
-                return defaultValue;
-            }, (b, s) -> {
-                Property<String> resolved = (Property<String>) b.getProperty(key);
-                if (resolved != null) resolved.set(s);
-            }, null, multiLine, placeholders, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, property.getDefault(), property.userInputTextValidator, null);
-        };
+        p.contextMenuEntrySupplier = (property, builder, menu) -> builder.buildGenericStringInputContextMenuEntry(menu, "menu_entry_" + key,
+                consumes -> consumes.getProperty(key) != null,
+                consumes -> {
+                    Property<String> resolved = (Property<String>) consumes.getProperty(key);
+                    if (resolved != null) return resolved.get();
+                    return defaultValue;
+                },
+                (b, s) -> {
+                    Property<String> resolved = (Property<String>) b.getProperty(key);
+                    if (resolved != null) resolved.set(s);
+                },
+                null, multiLine, placeholders, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, property.getDefault(), property.userInputTextValidator, null);
         return p;
     }
 
@@ -96,16 +95,20 @@ public class Property<T> {
     public static Property<Integer> integerProperty(@NotNull String key, int defaultValue, int currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Integer> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = Integer::valueOf;
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+        p.contextMenuEntrySupplier = (property, builder, menu) -> {
             Integer defaultVal = property.getDefault();
             int resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
-            return builder.buildIntegerInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
-                Property<Integer> resolved = (Property<Integer>) consumes.getProperty(key);
-                return (resolved != null) ? resolved.get() : defaultVal;
-            }, (b, value) -> {
-                Property<Integer> resolved = (Property<Integer>) b.getProperty(key);
-                if (resolved != null) resolved.set(value);
-            }, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
+            return builder.buildGenericIntegerInputContextMenuEntry(menu, "menu_entry_" + key,
+                    consumes -> consumes.getProperty(key) != null,
+                    consumes -> {
+                        Property<Integer> resolved = (Property<Integer>) consumes.getProperty(key);
+                        return (resolved != null) ? resolved.get() : defaultVal;
+                    },
+                    (b, value) -> {
+                        Property<Integer> resolved = (Property<Integer>) b.getProperty(key);
+                        if (resolved != null) resolved.set(value);
+                    },
+                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -119,16 +122,20 @@ public class Property<T> {
     public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, double currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Double> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = Double::valueOf;
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+        p.contextMenuEntrySupplier = (property, builder, menu) -> {
             Double defaultVal = property.getDefault();
             double resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
-            return builder.buildDoubleInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
-                Property<Double> resolved = (Property<Double>) consumes.getProperty(key);
-                return (resolved != null) ? resolved.get() : defaultVal;
-            }, (b, value) -> {
-                Property<Double> resolved = (Property<Double>) b.getProperty(key);
-                if (resolved != null) resolved.set(value);
-            }, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
+            return builder.buildGenericDoubleInputContextMenuEntry(menu, "menu_entry_" + key,
+                    consumes -> consumes.getProperty(key) != null,
+                    consumes -> {
+                        Property<Double> resolved = (Property<Double>) consumes.getProperty(key);
+                        return (resolved != null) ? resolved.get() : defaultVal;
+                    },
+                    (b, value) -> {
+                        Property<Double> resolved = (Property<Double>) b.getProperty(key);
+                        if (resolved != null) resolved.set(value);
+                    },
+                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -142,16 +149,20 @@ public class Property<T> {
     public static Property<Long> longProperty(@NotNull String key, long defaultValue, long currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Long> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = Long::valueOf;
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+        p.contextMenuEntrySupplier = (property, builder, menu) -> {
             Long defaultVal = property.getDefault();
             long resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
-            return builder.buildLongInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
-                Property<Long> resolved = (Property<Long>) consumes.getProperty(key);
-                return (resolved != null) ? resolved.get() : defaultVal;
-            }, (b, value) -> {
-                Property<Long> resolved = (Property<Long>) b.getProperty(key);
-                if (resolved != null) resolved.set(value);
-            }, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
+            return builder.buildGenericLongInputContextMenuEntry(menu, "menu_entry_" + key,
+                    consumes -> consumes.getProperty(key) != null,
+                    consumes -> {
+                        Property<Long> resolved = (Property<Long>) consumes.getProperty(key);
+                        return (resolved != null) ? resolved.get() : defaultVal;
+                    },
+                    (b, value) -> {
+                        Property<Long> resolved = (Property<Long>) b.getProperty(key);
+                        if (resolved != null) resolved.set(value);
+                    },
+                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -165,16 +176,20 @@ public class Property<T> {
     public static Property<Float> floatProperty(@NotNull String key, float defaultValue, float currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Float> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = Float::valueOf;
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+        p.contextMenuEntrySupplier = (property, builder, menu) -> {
             Float defaultVal = property.getDefault();
             float resolvedDefault = (defaultVal != null) ? defaultVal : defaultValue;
-            return builder.buildFloatInputContextMenuEntry(menu, "menu_entry_" + key, type, consumes -> {
-                Property<Float> resolved = (Property<Float>) consumes.getProperty(key);
-                return (resolved != null) ? resolved.get() : defaultVal;
-            }, (b, value) -> {
-                Property<Float> resolved = (Property<Float>) b.getProperty(key);
-                if (resolved != null) resolved.set(value);
-            }, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
+            return builder.buildGenericFloatInputContextMenuEntry(menu, "menu_entry_" + key,
+                    consumes -> consumes.getProperty(key) != null,
+                    consumes -> {
+                        Property<Float> resolved = (Property<Float>) consumes.getProperty(key);
+                        return (resolved != null) ? resolved.get() : defaultVal;
+                    },
+                    (b, value) -> {
+                        Property<Float> resolved = (Property<Float>) b.getProperty(key);
+                        if (resolved != null) resolved.set(value);
+                    },
+                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
         };
         return p;
     }
@@ -188,67 +203,20 @@ public class Property<T> {
     public static Property<Boolean> booleanProperty(@NotNull String key, boolean defaultValue, boolean currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Boolean> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = Boolean::valueOf;
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> new ContextMenu.ClickableContextMenuEntry<>("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), (contextMenu, entry) -> {
-            if (entry.getStackMeta().isPartOfStack() && !entry.getStackMeta().isFirstInStack()) {
-                return;
-            }
-            List<? extends PropertyHolder> holders = builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null);
-            if (holders.isEmpty()) {
-                return;
-            }
-            builder.saveSnapshot();
-            boolean allTrue = true;
-            boolean anyTrue = false;
-            for (PropertyHolder holder : holders) {
-                Property<Boolean> resolved = (Property<Boolean>) holder.getProperty(key);
-                Boolean value = (resolved != null) ? resolved.get() : property.getDefault();
-                if (value == null) {
-                    value = property.getDefault();
-                }
-                if (Boolean.TRUE.equals(value)) {
-                    anyTrue = true;
-                } else {
-                    allTrue = false;
-                }
-            }
-            boolean nextValue = !allTrue || !anyTrue;
-            for (PropertyHolder holder : holders) {
-                Property<Boolean> resolved = (Property<Boolean>) holder.getProperty(key);
-                if (resolved != null) {
-                    resolved.set(nextValue);
-                }
-            }
-        }).setLabelSupplier((contextMenu, entry) -> {
-            List<? extends PropertyHolder> holders = builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null);
-            boolean showEnabled = false;
-            if (holders.isEmpty()) {
-                showEnabled = Boolean.TRUE.equals(property.getDefault());
-            } else {
-                boolean allTrue = true;
-                boolean anyTrue = false;
-                boolean anyFalse = false;
-                for (PropertyHolder holder : holders) {
-                    Property<Boolean> resolved = (Property<Boolean>) holder.getProperty(key);
+        p.contextMenuEntrySupplier = (property, builder, menu) -> builder.buildGenericToggleContextMenuEntry(menu, "menu_entry_" + key,
+                consumes -> consumes.getProperty(key) != null,
+                consumes -> {
+                    Property<Boolean> resolved = (Property<Boolean>) consumes.getProperty(key);
                     Boolean value = (resolved != null) ? resolved.get() : property.getDefault();
-                    if (value == null) {
-                        value = property.getDefault();
+                    return (value != null) ? value : property.getDefault();
+                },
+                (b, value) -> {
+                    Property<Boolean> resolved = (Property<Boolean>) b.getProperty(key);
+                    if (resolved != null) {
+                        resolved.set(value);
                     }
-                    if (Boolean.TRUE.equals(value)) {
-                        anyTrue = true;
-                    } else {
-                        anyFalse = true;
-                        allTrue = false;
-                    }
-                }
-                showEnabled = anyTrue && !anyFalse && allTrue;
-            }
-            if (showEnabled && entry.isActive()) {
-                MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-                return Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), enabled);
-            }
-            MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-            return Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), disabled);
-        }).setStackable(true);
+                },
+                property.getContextMenuEntryLocalizationKeyBase());
         return p;
     }
 
@@ -265,13 +233,13 @@ public class Property<T> {
             if (consumes == null) return null;
             return consumes.getSerializationSource();
         };
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+        p.contextMenuEntrySupplier = (property, builder, menu) -> {
             ResourceSupplier<Resource> defaultSupplier = null;
             ResourceSource defaultSource = property.getDefault();
             if (defaultSource != null) {
                 defaultSupplier = new ResourceSupplier<>(Resource.class, fileMediaType, defaultSource.getSourceWithPrefix());
             }
-            return builder.buildGenericResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
+            return builder.buildGenericResourceChooserContextMenuEntry(menu, "menu_entry_" + key, consumes -> consumes.getProperty(key) != null,
                     () -> ResourceChooserScreen.generic(null, null, file -> {}),
                     source -> new ResourceSupplier<>(Resource.class, fileMediaType, source),
                     defaultSupplier,
@@ -322,9 +290,9 @@ public class Property<T> {
             if (consumes == null) return null;
             return consumes.getSourceWithPrefix();
         };
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> {
+        p.contextMenuEntrySupplier = (property, builder, menu) -> {
             if (ITexture.class.isAssignableFrom(resourceType)) {
-                return builder.buildImageResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
+                return builder.buildImageResourceChooserContextMenuEntry(menu, "menu_entry_" + key, consumes -> consumes.getProperty(key) != null,
                         (ResourceSupplier<ITexture>) property.getDefault(),
                         consumes -> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) consumes.getProperty(key);
@@ -338,7 +306,7 @@ public class Property<T> {
                         Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             if (IAudio.class.isAssignableFrom(resourceType)) {
-                return builder.buildAudioResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
+                return builder.buildAudioResourceChooserContextMenuEntry(menu, "menu_entry_" + key, consumes -> consumes.getProperty(key) != null,
                         (ResourceSupplier<IAudio>) property.getDefault(),
                         consumes -> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) consumes.getProperty(key);
@@ -352,7 +320,7 @@ public class Property<T> {
                         Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             if (IVideo.class.isAssignableFrom(resourceType)) {
-                return builder.buildVideoResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
+                return builder.buildVideoResourceChooserContextMenuEntry(menu, "menu_entry_" + key, consumes -> consumes.getProperty(key) != null,
                         (ResourceSupplier<IVideo>) property.getDefault(),
                         consumes -> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) consumes.getProperty(key);
@@ -366,7 +334,7 @@ public class Property<T> {
                         Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
             }
             if (IText.class.isAssignableFrom(resourceType)) {
-                return builder.buildTextResourceChooserContextMenuEntry(menu, "menu_entry_" + key, type,
+                return builder.buildTextResourceChooserContextMenuEntry(menu, "menu_entry_" + key, consumes -> consumes.getProperty(key) != null,
                         (ResourceSupplier<IText>) property.getDefault(),
                         consumes -> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) consumes.getProperty(key);
@@ -397,7 +365,8 @@ public class Property<T> {
             if (consumes == null) return null;
             return consumes.getHex();
         };
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> builder.buildStringInputContextMenuEntry(menu, "menu_entry_" + key, type,
+        p.contextMenuEntrySupplier = (property, builder, menu) -> builder.buildGenericStringInputContextMenuEntry(menu, "menu_entry_" + key,
+                consumes -> consumes.getProperty(key) != null,
                 consumes -> {
                     Property<DrawableColor> resolved = (Property<DrawableColor>) consumes.getProperty(key);
                     DrawableColor value = (resolved != null) ? resolved.get() : property.getDefault();
@@ -462,7 +431,7 @@ public class Property<T> {
                 return this;
             }
         };
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> new ContextMenu.ClickableContextMenuEntry<>("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), (contextMenu, entry) -> {
+        p.contextMenuEntrySupplier = (property, builder, menu) -> new ContextMenu.ClickableContextMenuEntry<>("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), (contextMenu, entry) -> {
             if (!entry.getStackMeta().isPartOfStack()) {
                 Property<RequirementContainer> resolved = (Property<RequirementContainer>) builder.self().getProperty(key);
                 RequirementContainer container = null;
@@ -487,7 +456,7 @@ public class Property<T> {
                 Minecraft.getInstance().setScreen(s);
             } else if (entry.getStackMeta().isFirstInStack()) {
                 List<RequirementContainer> containers = ObjectUtils.getOfAll(RequirementContainer.class,
-                        builder.getFilteredStackableObjectsList(consumes -> type.isAssignableFrom(consumes.getClass())),
+                        builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null),
                         consumes -> {
                             Property<RequirementContainer> resolved = (Property<RequirementContainer>) consumes.getProperty(key);
                             if (resolved == null) return null;
@@ -502,7 +471,7 @@ public class Property<T> {
                 ManageRequirementsScreen s = new ManageRequirementsScreen(containerToUseInManager, (call) -> {
                     if (call != null) {
                         builder.saveSnapshot();
-                        for (PropertyHolder holder : builder.getFilteredStackableObjectsList(consumes -> type.isAssignableFrom(consumes.getClass()))) {
+                        for (PropertyHolder holder : builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null)) {
                             Property<RequirementContainer> resolved = (Property<RequirementContainer>) holder.getProperty(key);
                             if (resolved != null) {
                                 resolved.set(call.copy(true));
@@ -583,7 +552,7 @@ public class Property<T> {
                 return this;
             }
         };
-        p.contextMenuEntrySupplier = (type, property, builder, menu) -> new ContextMenu.ClickableContextMenuEntry<>("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), (contextMenu, entry) -> {
+        p.contextMenuEntrySupplier = (property, builder, menu) -> new ContextMenu.ClickableContextMenuEntry<>("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), (contextMenu, entry) -> {
             if (!entry.getStackMeta().isPartOfStack()) {
                 Property<GenericExecutableBlock> resolved = (Property<GenericExecutableBlock>) builder.self().getProperty(key);
                 GenericExecutableBlock block = null;
@@ -608,7 +577,7 @@ public class Property<T> {
                 Minecraft.getInstance().setScreen(s);
             } else if (entry.getStackMeta().isFirstInStack()) {
                 List<GenericExecutableBlock> blocks = ObjectUtils.getOfAll(GenericExecutableBlock.class,
-                        builder.getFilteredStackableObjectsList(consumes -> type.isAssignableFrom(consumes.getClass())),
+                        builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null),
                         consumes -> {
                             Property<GenericExecutableBlock> resolved = (Property<GenericExecutableBlock>) consumes.getProperty(key);
                             if (resolved == null) return null;
@@ -623,7 +592,7 @@ public class Property<T> {
                 ActionScriptEditorScreen s = new ActionScriptEditorScreen(blockToUseInManager, (call) -> {
                     if (call != null) {
                         builder.saveSnapshot();
-                        for (PropertyHolder holder : builder.getFilteredStackableObjectsList(consumes -> type.isAssignableFrom(consumes.getClass()))) {
+                        for (PropertyHolder holder : builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null)) {
                             Property<GenericExecutableBlock> resolved = (Property<GenericExecutableBlock>) holder.getProperty(key);
                             if (resolved != null) {
                                 resolved.set(call.copy(true));
@@ -835,16 +804,16 @@ public class Property<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public <H extends PropertyHolder> ContextMenu.ClickableContextMenuEntry<?> buildContextMenuEntry(@NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu) {
+    public <H extends PropertyHolder> ContextMenu.ClickableContextMenuEntry<?> buildContextMenuEntry(@NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu) {
         Objects.requireNonNull(this.contextMenuEntrySupplier, "ContextMenuEntrySupplier is null! Can't build entry!");
         ContextMenuEntrySupplier<H, T> supplier = (ContextMenuEntrySupplier<H, T>) this.contextMenuEntrySupplier;
-        ContextMenu.ClickableContextMenuEntry<?> entry = supplier.get(Objects.requireNonNull(propertyHolderType), this, Objects.requireNonNull(contextMenuBuilder), Objects.requireNonNull(parentContextMenu));
+        ContextMenu.ClickableContextMenuEntry<?> entry = supplier.get(this, Objects.requireNonNull(contextMenuBuilder), Objects.requireNonNull(parentContextMenu));
         if (entry != null) entry.addIsVisibleSupplier((menu, entry1) -> !this.disabled);
         return entry;
     }
 
-    public <H extends PropertyHolder> ContextMenu.ClickableContextMenuEntry<?> buildContextMenuEntryAndAddTo(@NotNull ContextMenu addTo, @NotNull Class<H> propertyHolderType, @NotNull ContextMenuBuilder<H> contextMenuBuilder) {
-        return addTo.addEntry(this.buildContextMenuEntry(propertyHolderType, contextMenuBuilder, addTo));
+    public <H extends PropertyHolder> ContextMenu.ClickableContextMenuEntry<?> buildContextMenuEntryAndAddTo(@NotNull ContextMenu addTo, @NotNull ContextMenuBuilder<H> contextMenuBuilder) {
+        return addTo.addEntry(this.buildContextMenuEntry(contextMenuBuilder, addTo));
     }
 
     @Override
@@ -865,7 +834,7 @@ public class Property<T> {
     @FunctionalInterface
     public interface ContextMenuEntrySupplier<H extends PropertyHolder, T> {
         @NotNull
-        ContextMenu.ClickableContextMenuEntry<?> get(@NotNull Class<H> propertyHolderType, @NotNull Property<T> property, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu);
+        ContextMenu.ClickableContextMenuEntry<?> get(@NotNull Property<T> property, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu);
     }
 
 }

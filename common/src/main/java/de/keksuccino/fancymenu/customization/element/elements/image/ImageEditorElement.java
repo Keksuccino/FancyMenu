@@ -19,36 +19,36 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
 
         super.init();
 
-        this.element.textureSupplier.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.textureSupplier.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
-        this.element.imageTint.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.imageTint.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_repeat_texture");
 
-        this.element.repeat.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.repeat.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .addIsActiveSupplier((menu, entry) -> !this.element.nineSlice.tryGetNonNull())
                 .setStackable(false);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_nine_slice_settings");
 
-        this.element.nineSlice.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.nineSlice.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull())
                 .setStackable(false);
 
-        this.element.nineSliceBorderX.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.nineSliceBorderX.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(false)
                 .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull());
 
-        this.element.nineSliceBorderY.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.nineSliceBorderY.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(false)
                 .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull());
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 
-        this.element.restartAnimatedOnMenuLoad.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+        this.element.restartAnimatedOnMenuLoad.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_restart_animated");
