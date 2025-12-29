@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
@@ -62,7 +62,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     @NotNull
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
     @NotNull
-    public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
+    public RequirementContainer activeStateSupplier = new RequirementContainer();
     public ResourceSupplier<IAudio> hoverSound;
 
     public SliderElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -83,7 +83,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
      * Call this after setting a new container instance.
      */
     public void prepareLoadingRequirementContainer() {
-        this.loadingRequirementContainer.addValuePlaceholder("value", () -> (this.slider != null) ? this.slider.getValueDisplayText() : "");
+        this.requirementContainer.addValuePlaceholder("value", () -> (this.slider != null) ? this.slider.getValueDisplayText() : "");
     }
 
     /**

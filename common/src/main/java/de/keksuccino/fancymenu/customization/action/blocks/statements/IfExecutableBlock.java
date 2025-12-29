@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.action.blocks.statements;
 
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 public class IfExecutableBlock extends AbstractExecutableBlock {
 
     @NotNull
-    public LoadingRequirementContainer condition = new LoadingRequirementContainer().forceRequirementsMet(true);
+    public RequirementContainer condition = new RequirementContainer().forceRequirementsMet(true);
     @Nullable
     protected AbstractExecutableBlock child;
     private boolean collapsed = false;
@@ -21,7 +21,7 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
     public IfExecutableBlock() {
     }
 
-    public IfExecutableBlock(@NotNull LoadingRequirementContainer condition) {
+    public IfExecutableBlock(@NotNull RequirementContainer condition) {
         this.condition = Objects.requireNonNull(condition);
     }
 
@@ -98,7 +98,7 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
         b.identifier = identifier;
         for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
             if (m.getKey().equals("[if_executable_block_body:" + identifier + "]")) {
-                LoadingRequirementContainer lrc = LoadingRequirementContainer.deserializeWithIdentifier(m.getValue(), serialized);
+                RequirementContainer lrc = RequirementContainer.deserializeWithIdentifier(m.getValue(), serialized);
                 if (lrc != null) {
                     b.condition = lrc;
                 }

@@ -8,8 +8,8 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.loadingrequirement.ui.ManageRequirementsScreen;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -399,18 +399,18 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 			this.rightClickMenu.addClickableEntry("loading_requirements", Component.translatable("fancymenu.requirements.elements.loading_requirements"), (menu, entry) ->
 					{
 						if (!entry.getStackMeta().isPartOfStack()) {
-							ManageRequirementsScreen s = new ManageRequirementsScreen(this.element.loadingRequirementContainer.copy(false), (call) -> {
+							ManageRequirementsScreen s = new ManageRequirementsScreen(this.element.requirementContainer.copy(false), (call) -> {
 								if (call != null) {
 									this.editor.history.saveSnapshot();
-									this.element.loadingRequirementContainer = call;
+									this.element.requirementContainer = call;
 								}
 								Minecraft.getInstance().setScreen(this.editor);
 							});
 							Minecraft.getInstance().setScreen(s);
 						} else if (entry.getStackMeta().isFirstInStack()) {
 							List<E> selectedElements = this.getFilteredSelectedElementList(element -> element.settings.isLoadingRequirementsEnabled());
-							List<LoadingRequirementContainer> containers = ObjectUtils.getOfAll(LoadingRequirementContainer.class, selectedElements, consumes -> consumes.element.loadingRequirementContainer);
-							LoadingRequirementContainer containerToUseInManager = new LoadingRequirementContainer();
+							List<RequirementContainer> containers = ObjectUtils.getOfAll(RequirementContainer.class, selectedElements, consumes -> consumes.element.requirementContainer);
+							RequirementContainer containerToUseInManager = new RequirementContainer();
 							boolean allEqual = ListUtils.allInListEqual(containers);
 							if (allEqual) {
 								containerToUseInManager = containers.get(0).copy(true);
@@ -419,7 +419,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 								if (call != null) {
 									this.editor.history.saveSnapshot();
 									for (AbstractEditorElement<?, ?> e : selectedElements) {
-										e.element.loadingRequirementContainer = call.copy(true);
+										e.element.requirementContainer = call.copy(true);
 									}
 								}
 								Minecraft.getInstance().setScreen(this.editor);

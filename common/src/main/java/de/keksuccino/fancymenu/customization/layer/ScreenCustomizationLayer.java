@@ -9,6 +9,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.widget.RenderedGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
@@ -27,7 +28,6 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
@@ -73,7 +73,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	public boolean backgroundDrawable;
 	public boolean forceDisableCustomMenuTitle = false;
 	public float backgroundOpacity = 1.0F;
-	public Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
+	public Map<RequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
 	@NotNull
 	public List<WidgetMeta> cachedScreenWidgetMetas = new ArrayList<>();
 	/** The first {@link TabNavigationBar} of the target {@link Screen}, if it has one. This is NULL if the {@link Screen} has no {@link TabNavigationBar}. **/
@@ -216,7 +216,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		for (Layout layout : rawLayouts) {
 
-			LoadingRequirementContainer layoutWideRequirementContainer = layout.layoutWideLoadingRequirementContainer;
+			RequirementContainer layoutWideRequirementContainer = layout.layoutWideRequirementContainer;
 			this.cachedLayoutWideLoadingRequirements.put(layoutWideRequirementContainer, layoutWideRequirementContainer.requirementsMet());
 			if (!layoutWideRequirementContainer.requirementsMet()) {
 				continue;
@@ -394,7 +394,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		//Re-init screen if layout-wide loading requirements changed
-		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
+		for (Map.Entry<RequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
 			if (m.getKey().requirementsMet() != m.getValue()) {
 				ScreenCustomization.reInitCurrentScreen();
 				break;

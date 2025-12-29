@@ -17,10 +17,10 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExec
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.loadingrequirement.ui.ManageRequirementsScreen;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
+import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
@@ -680,7 +680,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     protected void onAddIf(@Nullable ExecutableEntry selectionReference) {
         final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
-        ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
+        ManageRequirementsScreen s = new ManageRequirementsScreen(new RequirementContainer(), container -> {
             if (container != null) {
                 ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 IfExecutableBlock block = new IfExecutableBlock(container);
@@ -693,7 +693,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     protected void onAddWhile(@Nullable ExecutableEntry selectionReference) {
         final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
-        ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
+        ManageRequirementsScreen s = new ManageRequirementsScreen(new RequirementContainer(), container -> {
             if (container != null) {
                 ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 WhileExecutableBlock block = new WhileExecutableBlock(container);
@@ -733,7 +733,7 @@ public class ActionScriptEditorScreen extends Screen {
             return;
         }
         final Executable targetExecutable = targetEntry.executable;
-        ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
+        ManageRequirementsScreen s = new ManageRequirementsScreen(new RequirementContainer(), container -> {
             if (container != null) {
                 ExecutableEntry resolvedEntry = this.findEntryForExecutable(targetExecutable);
                 if ((resolvedEntry == null) || !(resolvedEntry.executable instanceof AbstractExecutableBlock resolvedBlock)) {
@@ -2940,11 +2940,11 @@ public class ActionScriptEditorScreen extends Screen {
                 this.updateValueComponent();
             } else if (this.executable instanceof IfExecutableBlock b) {
                 String requirements = "";
-                for (LoadingRequirementGroup g : b.condition.getGroups()) {
+                for (RequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
                 }
-                for (LoadingRequirementInstance i : b.condition.getInstances()) {
+                for (RequirementInstance i : b.condition.getInstances()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
@@ -2956,11 +2956,11 @@ public class ActionScriptEditorScreen extends Screen {
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof ElseIfExecutableBlock b) {
                 String requirements = "";
-                for (LoadingRequirementGroup g : b.condition.getGroups()) {
+                for (RequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
                 }
-                for (LoadingRequirementInstance i : b.condition.getInstances()) {
+                for (RequirementInstance i : b.condition.getInstances()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
@@ -2971,11 +2971,11 @@ public class ActionScriptEditorScreen extends Screen {
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof WhileExecutableBlock b) {
                 String requirements = "";
-                for (LoadingRequirementGroup g : b.condition.getGroups()) {
+                for (RequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
                 }
-                for (LoadingRequirementInstance i : b.condition.getInstances()) {
+                for (RequirementInstance i : b.condition.getInstances()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }

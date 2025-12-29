@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.element;
 
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -101,12 +101,12 @@ public interface ElementStacker<E extends AbstractElement> {
     @SuppressWarnings("all")
     public default E stackElementsInternal(AbstractElement stack, AbstractElement... elements) {
         try {
-            List<LoadingRequirementContainer> containers = new ArrayList<>();
+            List<RequirementContainer> containers = new ArrayList<>();
             for (AbstractElement e : elements) {
                 this.stackElementsSingleInternal(e, stack);
-                containers.add(e.loadingRequirementContainer);
+                containers.add(e.requirementContainer);
             }
-            stack.loadingRequirementContainer = LoadingRequirementContainer.stackContainers(containers.toArray(new LoadingRequirementContainer[0]));
+            stack.requirementContainer = RequirementContainer.stackContainers(containers.toArray(new RequirementContainer[0]));
             return (E) stack;
         } catch (Exception ex) {
             ex.printStackTrace();

@@ -23,7 +23,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.LoadingRequirements;
+import de.keksuccino.fancymenu.customization.requirement.requirements.Requirements;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.Placeholders;
@@ -89,7 +89,7 @@ public class ScreenCustomization {
 
 		Actions.registerAll();
 
-		LoadingRequirements.registerAll();
+		Requirements.registerAll();
 
 		Placeholders.registerAll();
 

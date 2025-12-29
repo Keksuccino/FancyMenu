@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeseri
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlayRegistry;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.SerializationUtils;
@@ -28,7 +29,6 @@ import de.keksuccino.fancymenu.customization.element.elements.image.ImageElement
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElement;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElement;
 import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
@@ -70,7 +70,7 @@ public class Layout extends LayoutBase {
     public boolean randomOnlyFirstTime = false;
     public List<String> universalLayoutMenuWhitelist = new ArrayList<>();
     public List<String> universalLayoutMenuBlacklist = new ArrayList<>();
-    public LoadingRequirementContainer layoutWideLoadingRequirementContainer = new LoadingRequirementContainer();
+    public RequirementContainer layoutWideRequirementContainer = new RequirementContainer();
     public List<SerializedElement> serializedElements = new ArrayList<>();
     public List<SerializedElement> serializedVanillaButtonElements = new ArrayList<>();
     public List<SerializedElement> serializedDeepElements = new ArrayList<>();
@@ -221,7 +221,7 @@ public class Layout extends LayoutBase {
         }
         set.putContainer(executableBlocks);
 
-        this.layoutWideLoadingRequirementContainer.serializeToExistingPropertyContainer(meta);
+        this.layoutWideRequirementContainer.serializeToExistingPropertyContainer(meta);
 
         this.serializedElements.forEach(set::putContainer);
         if (!this.isUniversalLayout()) {
@@ -282,7 +282,7 @@ public class Layout extends LayoutBase {
 
                 layout.customMenuTitle = meta.getValue("custom_menu_title");
 
-                layout.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(meta);
+                layout.layoutWideRequirementContainer = RequirementContainer.deserializeToSingleContainer(meta);
 
                 String renderBehindVanilla = meta.getValue("render_custom_elements_behind_vanilla");
                 if (renderBehindVanilla == null) {
@@ -587,8 +587,8 @@ public class Layout extends LayoutBase {
     }
 
     public boolean layoutWideLoadingRequirementsMet() {
-        if (this.layoutWideLoadingRequirementContainer != null) {
-            return this.layoutWideLoadingRequirementContainer.requirementsMet();
+        if (this.layoutWideRequirementContainer != null) {
+            return this.layoutWideRequirementContainer.requirementsMet();
         }
         return true;
     }
@@ -939,7 +939,7 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
-                    element.loadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(sec);
+                    element.requirementContainer = RequirementContainer.deserializeToSingleContainer(sec);
                     addElement = true;
                 }
 

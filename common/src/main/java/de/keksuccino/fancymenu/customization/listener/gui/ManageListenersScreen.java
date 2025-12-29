@@ -12,8 +12,8 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecu
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
 import de.keksuccino.fancymenu.customization.listener.ListenerInstance;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -399,11 +399,11 @@ public class ManageListenersScreen extends CellScreen {
     @NotNull
     protected String buildRequirementsString(@NotNull IfExecutableBlock block) {
         String requirements = "";
-        for (LoadingRequirementGroup g : block.condition.getGroups()) {
+        for (RequirementGroup g : block.condition.getGroups()) {
             if (!requirements.isEmpty()) requirements += ", ";
             requirements += g.identifier;
         }
-        for (LoadingRequirementInstance i : block.condition.getInstances()) {
+        for (RequirementInstance i : block.condition.getInstances()) {
             if (!requirements.isEmpty()) requirements += ", ";
             requirements += i.requirement.getDisplayName();
         }
@@ -413,11 +413,11 @@ public class ManageListenersScreen extends CellScreen {
     @NotNull
     protected String buildRequirementsString(@NotNull ElseIfExecutableBlock block) {
         String requirements = "";
-        for (LoadingRequirementGroup g : block.condition.getGroups()) {
+        for (RequirementGroup g : block.condition.getGroups()) {
             if (!requirements.isEmpty()) requirements += ", ";
             requirements += g.identifier;
         }
-        for (LoadingRequirementInstance i : block.condition.getInstances()) {
+        for (RequirementInstance i : block.condition.getInstances()) {
             if (!requirements.isEmpty()) requirements += ", ";
             requirements += i.requirement.getDisplayName();
         }
@@ -427,11 +427,11 @@ public class ManageListenersScreen extends CellScreen {
     @NotNull
     protected String buildRequirementsString(@NotNull WhileExecutableBlock block) {
         String requirements = "";
-        for (LoadingRequirementGroup g : block.condition.getGroups()) {
+        for (RequirementGroup g : block.condition.getGroups()) {
             if (!requirements.isEmpty()) requirements += ", ";
             requirements += g.identifier;
         }
-        for (LoadingRequirementInstance i : block.condition.getInstances()) {
+        for (RequirementInstance i : block.condition.getInstances()) {
             if (!requirements.isEmpty()) requirements += ", ";
             requirements += i.requirement.getDisplayName();
         }

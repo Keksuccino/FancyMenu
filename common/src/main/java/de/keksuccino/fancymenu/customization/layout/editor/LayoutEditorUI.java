@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidg
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
-import de.keksuccino.fancymenu.customization.loadingrequirement.ui.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
@@ -716,9 +716,9 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_close_audio");
 
 		menu.addClickableEntry("layout_wide_requirements", Component.translatable("fancymenu.requirements.layouts.loading_requirements"), (menu1, entry) -> {
-					Minecraft.getInstance().setScreen(new ManageRequirementsScreen(editor.layout.layoutWideLoadingRequirementContainer.copy(false), (call) -> {
+					Minecraft.getInstance().setScreen(new ManageRequirementsScreen(editor.layout.layoutWideRequirementContainer.copy(false), (call) -> {
 						if (call != null) {
-							editor.layout.layoutWideLoadingRequirementContainer = call;
+							editor.layout.layoutWideRequirementContainer = call;
 						}
 						Minecraft.getInstance().setScreen(editor);
 					}));

@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.SerializationUtils;
@@ -126,7 +126,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * This value is -1F by default and is not always set to an actual scale, so check this before using it!
 	 **/
 	public float customGuiScale = -1F;
-	public LoadingRequirementContainer loadingRequirementContainer = new LoadingRequirementContainer();
+	public RequirementContainer requirementContainer = new RequirementContainer();
 	@Nullable
 	public String customElementLayerName = null;
 	/**
@@ -1064,7 +1064,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public boolean loadingRequirementsMet() {
 		if (isEditor()) return true;
-		return this.loadingRequirementContainer.requirementsMet();
+		return this.requirementContainer.requirementsMet();
 	}
 
 	public boolean shouldHideOncePerSessionElement() {

@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
@@ -60,7 +60,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
     @NotNull
-    public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
+    public RequirementContainer activeStateSupplier = new RequirementContainer();
     public boolean isTemplate = false;
     public boolean templateApplyWidth = false;
     public boolean templateApplyHeight = false;

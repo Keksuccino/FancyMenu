@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.SerializationUtils;
@@ -229,13 +229,13 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             String loadingRequirementContainerIdentifier = serialized.getValue("element_loading_requirement_container_identifier");
             if (loadingRequirementContainerIdentifier != null) {
-                LoadingRequirementContainer c = LoadingRequirementContainer.deserializeWithIdentifier(loadingRequirementContainerIdentifier, serialized);
+                RequirementContainer c = RequirementContainer.deserializeWithIdentifier(loadingRequirementContainerIdentifier, serialized);
                 if (c != null) {
-                    element.loadingRequirementContainer = c;
+                    element.requirementContainer = c;
                 }
             } else {
                 //Legacy support for when only one container per element existed
-                element.loadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(serialized);
+                element.requirementContainer = RequirementContainer.deserializeToSingleContainer(serialized);
             }
 
             element.enableParallax = SerializationUtils.deserializeBoolean(element.enableParallax, serialized.getValue("enable_parallax"));
@@ -402,8 +402,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("stay_on_screen", "" + element.stayOnScreen);
 
-            sec.putProperty("element_loading_requirement_container_identifier", element.loadingRequirementContainer.identifier);
-            element.loadingRequirementContainer.serializeToExistingPropertyContainer(sec);
+            sec.putProperty("element_loading_requirement_container_identifier", element.requirementContainer.identifier);
+            element.requirementContainer.serializeToExistingPropertyContainer(sec);
 
             sec.putProperty("enable_parallax", "" + element.enableParallax);
             sec.putProperty("parallax_intensity_x", "" + element.parallaxIntensityXString);

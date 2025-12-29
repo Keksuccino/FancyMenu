@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeseri
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -94,7 +94,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         String activeStateRequirementContainerIdentifier = serialized.getValue("widget_active_state_requirement_container_identifier");
         if (activeStateRequirementContainerIdentifier != null) {
-            LoadingRequirementContainer c = LoadingRequirementContainer.deserializeWithIdentifier(activeStateRequirementContainerIdentifier, serialized);
+            RequirementContainer c = RequirementContainer.deserializeWithIdentifier(activeStateRequirementContainerIdentifier, serialized);
             if (c != null) {
                 element.activeStateSupplier = c;
             }

@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -51,7 +51,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
     @NotNull
-    public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
+    public RequirementContainer activeStateSupplier = new RequirementContainer();
 
     public CheckboxElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -70,7 +70,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
      * Call this after setting a new container instance.
      */
     public void prepareLoadingRequirementContainer() {
-        this.loadingRequirementContainer.addValuePlaceholder("value", () -> "" + this.getCheckboxStateForPlaceholders());
+        this.requirementContainer.addValuePlaceholder("value", () -> "" + this.getCheckboxStateForPlaceholders());
     }
 
     @Override
