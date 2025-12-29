@@ -40,14 +40,6 @@ public class CheckboxElementBuilder extends ElementBuilder<CheckboxElement, Chec
                 element.actionExecutor = g;
             }
         }
-        
-        String activeStateRequirementContainerIdentifier = serialized.getValue("widget_active_state_requirement_container_identifier");
-        if (activeStateRequirementContainerIdentifier != null) {
-            RequirementContainer c = RequirementContainer.deserializeWithIdentifier(activeStateRequirementContainerIdentifier, serialized);
-            if (c != null) {
-                element.activeStateSupplier = c;
-            }
-        }
 
         element.prepareExecutableBlock();
         
@@ -67,9 +59,6 @@ public class CheckboxElementBuilder extends ElementBuilder<CheckboxElement, Chec
         
         serializeTo.putProperty("checkbox_element_executable_block_identifier", element.actionExecutor.identifier);
         element.actionExecutor.serializeToExistingPropertyContainer(serializeTo);
-        
-        serializeTo.putProperty("widget_active_state_requirement_container_identifier", element.activeStateSupplier.identifier);
-        element.activeStateSupplier.serializeToExistingPropertyContainer(serializeTo);
         
         return serializeTo;
         

@@ -2394,5 +2394,6 @@
   "fancymenu.elements.splash.bounce": "Bouncing: %s",
   "fancymenu.elements.splash.refresh": "Refresh On Screen Load: %s",
   "fancymenu.elements.splash.shadow": "Shadow: %s",
-  "fancymenu.elements.ticker.async": "Async: %s"
+  "fancymenu.elements.ticker.async": "Async: %s",
+  "fancymenu.requirements.multiselect.warning.override": "§x§lOverride Requirements?\n\nThe selected entries have different requirements!\nAll of their requirements will get §xoverridden§r!\n\nContinue?"
 }

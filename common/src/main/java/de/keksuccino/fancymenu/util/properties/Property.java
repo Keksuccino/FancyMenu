@@ -1,6 +1,11 @@
 package de.keksuccino.fancymenu.util.properties;
 
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.FileType;
@@ -10,6 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -18,11 +24,13 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings({"unchecked", "unused"})
@@ -351,6 +359,117 @@ public class Property<T> {
     @NotNull
     public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return drawableColorProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
+    }
+
+    @NotNull
+    public static Property<RequirementContainer> requirementContainerProperty(@NotNull String key, @Nullable RequirementContainer defaultValue, @Nullable RequirementContainer currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<RequirementContainer> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase) {
+            @Override
+            public Property<RequirementContainer> deserialize(@NotNull PropertyContainer properties) {
+                try {
+                    String identifier = properties.getValue(this.getKey());
+                    if (identifier != null) {
+                        RequirementContainer container = RequirementContainer.deserializeWithIdentifier(identifier, properties);
+                        this.set((container != null) ? container : this.defaultValue);
+                    } else {
+                        var containers = RequirementContainer.deserializeAll(properties);
+                        if (containers.size() == 1) {
+                            this.set(containers.getFirst());
+                        } else {
+                            this.set(this.defaultValue);
+                        }
+                    }
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to deserialize property: " + this.getKey(), ex);
+                }
+                return this;
+            }
+
+            @Override
+            public Property<RequirementContainer> serialize(@NotNull PropertyContainer properties) {
+                try {
+                    RequirementContainer container = this.currentValue;
+                    if (container == null) {
+                        properties.putProperty(this.getKey(), null);
+                        return this;
+                    }
+                    properties.putProperty(this.getKey(), container.identifier);
+                    container.serializeToExistingPropertyContainer(properties);
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to serialize property: " + this.getKey(), ex);
+                }
+                return this;
+            }
+        };
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> new ContextMenu.ClickableContextMenuEntry<>("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), (contextMenu, entry) -> {
+            if (!entry.getStackMeta().isPartOfStack()) {
+                Property<RequirementContainer> resolved = (Property<RequirementContainer>) builder.self().getProperty(key);
+                RequirementContainer container = null;
+                if (resolved != null) {
+                    container = resolved.get();
+                    if (container == null) {
+                        container = resolved.getDefault();
+                    }
+                }
+                if (container == null) {
+                    container = new RequirementContainer();
+                }
+                ManageRequirementsScreen s = new ManageRequirementsScreen(container.copy(false), (call) -> {
+                    if (call != null) {
+                        builder.saveSnapshot();
+                        if (resolved != null) {
+                            resolved.set(call);
+                        }
+                    }
+                    Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                });
+                Minecraft.getInstance().setScreen(s);
+            } else if (entry.getStackMeta().isFirstInStack()) {
+                List<RequirementContainer> containers = ObjectUtils.getOfAll(RequirementContainer.class,
+                        builder.getFilteredStackableObjectsList(consumes -> type.isAssignableFrom(consumes.getClass())),
+                        consumes -> {
+                            Property<RequirementContainer> resolved = (Property<RequirementContainer>) consumes.getProperty(key);
+                            if (resolved == null) return null;
+                            RequirementContainer value = resolved.get();
+                            return (value != null) ? value : resolved.getDefault();
+                        });
+                RequirementContainer containerToUseInManager = new RequirementContainer();
+                boolean allEqual = ListUtils.allInListEqual(containers);
+                if (allEqual && !containers.isEmpty() && containers.getFirst() != null) {
+                    containerToUseInManager = containers.getFirst().copy(true);
+                }
+                ManageRequirementsScreen s = new ManageRequirementsScreen(containerToUseInManager, (call) -> {
+                    if (call != null) {
+                        builder.saveSnapshot();
+                        for (PropertyHolder holder : builder.getFilteredStackableObjectsList(consumes -> type.isAssignableFrom(consumes.getClass()))) {
+                            Property<RequirementContainer> resolved = (Property<RequirementContainer>) holder.getProperty(key);
+                            if (resolved != null) {
+                                resolved.set(call.copy(true));
+                            }
+                        }
+                    }
+                    Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                });
+                if (allEqual) {
+                    Minecraft.getInstance().setScreen(s);
+                } else {
+                    Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
+                        if (call) {
+                            Minecraft.getInstance().setScreen(s);
+                        } else {
+                            Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                        }
+                    }, LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.multiselect.warning.override")));
+                }
+            }
+        }).setStackable(true);
+        p.serializationCodec = consumes -> (consumes == null) ? null : consumes.identifier;
+        return p;
+    }
+
+    @NotNull
+    public static Property<RequirementContainer> requirementContainerProperty(@NotNull String key, @Nullable RequirementContainer defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return requirementContainerProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
     protected Property(@NotNull String key, @Nullable T defaultValue, @Nullable T currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {

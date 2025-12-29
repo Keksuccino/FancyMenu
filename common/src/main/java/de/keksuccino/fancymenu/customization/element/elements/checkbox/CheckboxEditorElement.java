@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.element.elements.checkbox;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
-import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -36,18 +35,8 @@ public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorE
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
 
-        this.rightClickMenu.addClickableEntry("widget_active_state_controller", Component.translatable("fancymenu.elements.button.active_state_controller"), (menu, entry) -> {
-                    ManageRequirementsScreen s = new ManageRequirementsScreen(this.element.activeStateSupplier.copy(false), (call) -> {
-                        if (call != null) {
-                            this.editor.history.saveSnapshot();
-                            this.element.activeStateSupplier = call;
-                        }
-                        Minecraft.getInstance().setScreen(this.editor);
-                    });
-                    Minecraft.getInstance().setScreen(s);
-                })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
-                .setStackable(false);
+        this.element.activeStateSupplier.buildContextMenuEntryAndAddTo(this.rightClickMenu, CheckboxEditorElement.class, this)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")));
 
         this.rightClickMenu.addSeparatorEntry("checkbox_separator_variable");
 

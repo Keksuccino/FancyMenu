@@ -47,11 +47,10 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     public final Property<ResourceSupplier<IAudio>> hoverSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "hoversound", null, "fancymenu.elements.button.hoversound", true, true, true, null));
     public final Property<ResourceSupplier<IAudio>> clickSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "clicksound", null, "fancymenu.elements.button.clicksound", true, true, true, null));
     public final Property<Boolean> navigatable = putProperty(Property.booleanProperty("navigatable", true, "fancymenu.elements.widgets.generic.navigatable"));
+    public final Property<RequirementContainer> activeStateSupplier = putProperty(Property.requirementContainerProperty("widget_active_state_requirement_container_identifier", new RequirementContainer(), "fancymenu.elements.button.active_state_controller"));
 
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
-    @NotNull
-    public RequirementContainer activeStateSupplier = new RequirementContainer();
 
     public CheckboxElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -175,7 +174,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
 
     protected void updateWidgetActiveState() {
         if (this.checkbox == null) return;
-        this.checkbox.active = this.activeStateSupplier.requirementsMet();
+        this.checkbox.active = this.activeStateSupplier.tryGetNonNull().requirementsMet();
     }
 
     protected void updateWidgetNavigatable() {

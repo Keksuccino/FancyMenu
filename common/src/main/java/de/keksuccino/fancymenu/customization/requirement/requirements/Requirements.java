@@ -1,11 +1,6 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements;
 
 import de.keksuccino.fancymenu.customization.requirement.RequirementRegistry;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.*;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.realtime.*;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.*;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.window.*;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.*;
 import de.keksuccino.fancymenu.customization.requirement.requirements.gui.*;
 import de.keksuccino.fancymenu.customization.requirement.requirements.realtime.*;
 import de.keksuccino.fancymenu.customization.requirement.requirements.system.*;
@@ -15,7 +10,6 @@ import de.keksuccino.fancymenu.customization.requirement.requirements.world.game
 import de.keksuccino.fancymenu.customization.requirement.requirements.world.gamemode.IsCreativeRequirement;
 import de.keksuccino.fancymenu.customization.requirement.requirements.world.gamemode.IsSpectatorRequirement;
 import de.keksuccino.fancymenu.customization.requirement.requirements.world.gamemode.IsSurvivalRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.player.*;
 import de.keksuccino.fancymenu.customization.requirement.requirements.world.player.*;
 
 public class Requirements {
