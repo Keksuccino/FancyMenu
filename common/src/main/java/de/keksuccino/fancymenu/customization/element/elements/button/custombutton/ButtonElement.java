@@ -41,6 +41,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Nullable
     private AbstractWidget widget;
     private final RangeSlider templateDummySlider = new RangeSlider(0, 0, 0, 0, Component.empty(), 0.0D, 1.0D, 0.5D);
+
     public ResourceSupplier<IAudio> clickSound;
     public ResourceSupplier<IAudio> hoverSound;
     @Nullable
@@ -88,18 +89,14 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
-    public void tick() {
+    public void afterConstruction() {
+
+        resetTemplateCache();
 
         if (this.getWidget() == null) return;
-
         //This is mainly to make Vanilla buttons not flicker for the first frame when hidden
         this.updateWidget();
 
-    }
-
-    @Override
-    public void afterConstruction() {
-        resetTemplateCache();
     }
 
     @Override

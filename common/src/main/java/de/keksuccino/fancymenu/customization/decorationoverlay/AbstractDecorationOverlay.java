@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.decorationoverlay;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -128,6 +129,7 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
     protected static CollisionBox getAsCollisionBox(@NotNull Object o) {
         if (o instanceof AbstractElement e) {
             if (!e.shouldRender()) return null;
+            if ((e instanceof HideableElement h) && h.isHidden()) return null;
             if (!e.shouldBeAffectedByDecorationOverlays.tryGetNonNull()) return null;
             return new CollisionBox(e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight());
         }
@@ -140,12 +142,6 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
 
     protected static void visitCollisionBoxes(@NotNull Screen screen, @NotNull List<AbstractElement> elements, @NotNull Consumer<CollisionBox> consumer) {
         if (isEditor()) return;
-//        screen.children().forEach(listener -> {
-//            var c = getAsCollisionBox(listener);
-//            if (c != null) {
-//                consumer.accept(c);
-//            }
-//        });
         elements.forEach(element -> {
             var c = getAsCollisionBox(element);
             if (c != null) {
