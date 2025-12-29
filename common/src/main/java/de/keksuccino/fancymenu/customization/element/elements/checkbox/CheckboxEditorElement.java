@@ -47,6 +47,9 @@ public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorE
         this.element.hoverSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
+        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+
         this.element.clickSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
