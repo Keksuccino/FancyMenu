@@ -7,14 +7,17 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
+import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -196,6 +199,17 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             }
         }
 
+    }
+
+    @Override
+    public void playDownSound(SoundManager handler) {
+        if (this instanceof CustomizableWidget w) {
+            IAudio sound = w.getCustomClickSoundFancyMenu();
+            if (sound != null) {
+                sound.stop();
+                sound.play();
+            }
+        }
     }
 
     public void setHeight(int height) {

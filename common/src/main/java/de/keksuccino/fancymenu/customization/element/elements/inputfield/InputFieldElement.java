@@ -7,8 +7,12 @@ import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +28,9 @@ public class InputFieldElement extends AbstractElement {
     public ExtendedEditBox editBox;
     public String lastValue = "";
     public boolean navigatable = true;
+    public final Property<ResourceSupplier<IAudio>> hoverSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "hoversound", null, "fancymenu.elements.button.hoversound", true, true, true, null));
+    public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
+    public final Property<ResourceSupplier<IAudio>> clickSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "clicksound", null, "fancymenu.elements.button.clicksound", true, true, true, null));
 
     public InputFieldElement(ElementBuilder<InputFieldElement, InputFieldEditorElement> builder) {
         super(builder);
@@ -54,6 +61,7 @@ public class InputFieldElement extends AbstractElement {
             this.editBox.setNavigatable(this.navigatable);
 
             this.updateWidgetBounds();
+            this.updateWidgetSounds();
 
             this.editBox.render(graphics, mouseX, mouseY, partial);
 
@@ -91,6 +99,17 @@ public class InputFieldElement extends AbstractElement {
         this.editBox.setY(this.getAbsoluteY());
         this.editBox.setWidth(this.getAbsoluteWidth());
         ((IMixinAbstractWidget)this.editBox).setHeightFancyMenu(this.getAbsoluteHeight());
+    }
+
+    public void updateWidgetSounds() {
+        if (this.editBox instanceof CustomizableWidget w) {
+            ResourceSupplier<IAudio> hover = this.hoverSound.get();
+            ResourceSupplier<IAudio> unhover = this.unhoverAudio.get();
+            ResourceSupplier<IAudio> click = this.clickSound.get();
+            w.setHoverSoundFancyMenu((hover != null) ? hover.get() : null);
+            w.setUnhoverSoundFancyMenu((unhover != null) ? unhover.get() : null);
+            w.setCustomClickSoundFancyMenu((click != null) ? click.get() : null);
+        }
     }
 
     @Override

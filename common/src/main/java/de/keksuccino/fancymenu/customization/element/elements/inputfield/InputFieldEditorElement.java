@@ -23,8 +23,8 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_variable",
                         consumes -> (consumes instanceof InputFieldEditorElement),
-                        consumes -> ((InputFieldElement)consumes.element).linkedVariable,
-                        (element, varName) -> ((InputFieldElement)element.element).linkedVariable = varName,
+                        consumes -> consumes.element.linkedVariable,
+                        (element, varName) -> element.element.linkedVariable = varName,
                         null, false, false, Component.translatable("fancymenu.elements.input_field.editor.set_variable"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_variable.desc")))
@@ -35,8 +35,8 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_type",
                         ListUtils.of(InputFieldElement.InputFieldType.TEXT, InputFieldElement.InputFieldType.URL, InputFieldElement.InputFieldType.INTEGER_ONLY, InputFieldElement.InputFieldType.DECIMAL_ONLY),
                         consumes -> (consumes instanceof InputFieldEditorElement),
-                        consumes -> ((InputFieldElement)consumes.element).type,
-                        (element, type) -> ((InputFieldElement)element.element).type = type,
+                        consumes -> consumes.element.type,
+                        (element, type) -> element.element.type = type,
                         (menu, entry, switcherValue) -> {
                             if (switcherValue == InputFieldElement.InputFieldType.TEXT) {
                                 return Component.translatable("fancymenu.elements.input_field.type.text");
@@ -54,11 +54,22 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_length",
                         consumes -> (consumes instanceof InputFieldEditorElement),
-                        consumes -> ((InputFieldElement)consumes.element).maxTextLength,
-                        (element, length) -> ((InputFieldElement)element.element).maxTextLength = length,
+                        consumes -> consumes.element.maxTextLength,
+                        (element, length) -> element.element.maxTextLength = length,
                         Component.translatable("fancymenu.elements.input_field.editor.set_max_length"),
                         true, 10000, null, null)
                 .setStackable(true);
+
+        this.rightClickMenu.addSeparatorEntry("separator_before_audios");
+
+        this.element.hoverSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+
+        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+
+        this.element.clickSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
 
