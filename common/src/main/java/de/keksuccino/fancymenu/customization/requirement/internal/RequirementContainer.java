@@ -188,6 +188,11 @@ public class RequirementContainer implements ValuePlaceholderHolder {
         }
     }
 
+    public RequirementContainer addValuePlaceholderToContainer(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
+        this.addValuePlaceholder(placeholder, replaceWithSupplier);
+        return this;
+    }
+
     @NotNull
     @Override
     public Map<String, Supplier<String>> getValuePlaceholders() {

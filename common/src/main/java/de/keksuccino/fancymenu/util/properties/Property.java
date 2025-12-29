@@ -1,5 +1,9 @@
 package de.keksuccino.fancymenu.util.properties;
 
+import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
@@ -470,6 +474,127 @@ public class Property<T> {
     @NotNull
     public static Property<RequirementContainer> requirementContainerProperty(@NotNull String key, @Nullable RequirementContainer defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return requirementContainerProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
+    }
+
+    @NotNull
+    public static Property<GenericExecutableBlock> executableBlockProperty(@NotNull String key, @Nullable GenericExecutableBlock defaultValue, @Nullable GenericExecutableBlock currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<GenericExecutableBlock> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase) {
+            @Override
+            public Property<GenericExecutableBlock> deserialize(@NotNull PropertyContainer properties) {
+                try {
+                    String identifier = properties.getValue(this.getKey());
+                    if (identifier != null) {
+                        AbstractExecutableBlock block = ExecutableBlockDeserializer.deserializeWithIdentifier(properties, identifier);
+                        if (block instanceof GenericExecutableBlock g) {
+                            this.set(g);
+                        } else {
+                            this.set(this.defaultValue);
+                        }
+                    } else {
+                        List<GenericExecutableBlock> blocks = ObjectUtils.getOfAll(GenericExecutableBlock.class, ExecutableBlockDeserializer.deserializeAll(properties), consumes -> {
+                            if (consumes instanceof GenericExecutableBlock g) {
+                                return g;
+                            }
+                            return null;
+                        });
+                        blocks.removeIf(Objects::isNull);
+                        if (blocks.size() == 1) {
+                            this.set(blocks.getFirst());
+                        } else {
+                            this.set(this.defaultValue);
+                        }
+                    }
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to deserialize property: " + this.getKey(), ex);
+                }
+                return this;
+            }
+
+            @Override
+            public Property<GenericExecutableBlock> serialize(@NotNull PropertyContainer properties) {
+                try {
+                    GenericExecutableBlock block = this.currentValue;
+                    if (block == null) {
+                        properties.putProperty(this.getKey(), null);
+                        return this;
+                    }
+                    properties.putProperty(this.getKey(), block.getIdentifier());
+                    block.serializeToExistingPropertyContainer(properties);
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to serialize property: " + this.getKey(), ex);
+                }
+                return this;
+            }
+        };
+        p.contextMenuEntrySupplier = (type, property, builder, menu) -> new ContextMenu.ClickableContextMenuEntry<>("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), (contextMenu, entry) -> {
+            if (!entry.getStackMeta().isPartOfStack()) {
+                Property<GenericExecutableBlock> resolved = (Property<GenericExecutableBlock>) builder.self().getProperty(key);
+                GenericExecutableBlock block = null;
+                if (resolved != null) {
+                    block = resolved.get();
+                    if (block == null) {
+                        block = resolved.getDefault();
+                    }
+                }
+                if (block == null) {
+                    block = new GenericExecutableBlock();
+                }
+                ActionScriptEditorScreen s = new ActionScriptEditorScreen(block, (call) -> {
+                    if (call != null) {
+                        builder.saveSnapshot();
+                        if (resolved != null) {
+                            resolved.set(call);
+                        }
+                    }
+                    Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                });
+                Minecraft.getInstance().setScreen(s);
+            } else if (entry.getStackMeta().isFirstInStack()) {
+                List<GenericExecutableBlock> blocks = ObjectUtils.getOfAll(GenericExecutableBlock.class,
+                        builder.getFilteredStackableObjectsList(consumes -> type.isAssignableFrom(consumes.getClass())),
+                        consumes -> {
+                            Property<GenericExecutableBlock> resolved = (Property<GenericExecutableBlock>) consumes.getProperty(key);
+                            if (resolved == null) return null;
+                            GenericExecutableBlock value = resolved.get();
+                            return (value != null) ? value : resolved.getDefault();
+                        });
+                GenericExecutableBlock blockToUseInManager = new GenericExecutableBlock();
+                boolean allEqual = ListUtils.allInListEqual(blocks);
+                if (allEqual && !blocks.isEmpty() && blocks.getFirst() != null) {
+                    blockToUseInManager = blocks.getFirst().copy(true);
+                }
+                ActionScriptEditorScreen s = new ActionScriptEditorScreen(blockToUseInManager, (call) -> {
+                    if (call != null) {
+                        builder.saveSnapshot();
+                        for (PropertyHolder holder : builder.getFilteredStackableObjectsList(consumes -> type.isAssignableFrom(consumes.getClass()))) {
+                            Property<GenericExecutableBlock> resolved = (Property<GenericExecutableBlock>) holder.getProperty(key);
+                            if (resolved != null) {
+                                resolved.set(call.copy(true));
+                            }
+                        }
+                    }
+                    Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                });
+                if (allEqual) {
+                    Minecraft.getInstance().setScreen(s);
+                } else {
+                    Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
+                        if (call) {
+                            Minecraft.getInstance().setScreen(s);
+                        } else {
+                            Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                        }
+                    }, LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.multiselect.warning.override")));
+                }
+            }
+        }).setStackable(true);
+        p.serializationCodec = consumes -> (consumes == null) ? null : consumes.getIdentifier();
+        return p;
+    }
+
+    @NotNull
+    public static Property<GenericExecutableBlock> executableBlockProperty(@NotNull String key, @Nullable GenericExecutableBlock defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return executableBlockProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
     protected Property(@NotNull String key, @Nullable T defaultValue, @Nullable T currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {

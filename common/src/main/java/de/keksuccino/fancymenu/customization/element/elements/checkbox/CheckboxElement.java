@@ -43,33 +43,19 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     public final Property<ResourceSupplier<ITexture>> backgroundTextureHover = putProperty(Property.resourceSupplierProperty(ITexture.class, "background_texture_hover", null, "fancymenu.elements.checkbox.background_texture_hover", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> backgroundTextureInactive = putProperty(Property.resourceSupplierProperty(ITexture.class, "background_texture_inactive", null, "fancymenu.elements.checkbox.background_texture_inactive", true, true, true, null));
     public final Property<Boolean> variableMode = putProperty(Property.booleanProperty("variable_mode", false, "fancymenu.elements.checkbox.variable_mode"));
-    public final Property<String> linkedVariable = putProperty(Property.stringProperty("linked_variable", null, false, false, "fancymenu.elements.checkbox.editor.set_variable").setUserInputTextValidator(TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR));
+    public final Property<String> linkedVariable = putProperty(Property.stringProperty("linked_variable", null, false, false, "fancymenu.elements.checkbox.editor.set_variable")
+            .setUserInputTextValidator(TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR));
     public final Property<ResourceSupplier<IAudio>> hoverSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "hoversound", null, "fancymenu.elements.button.hoversound", true, true, true, null));
     public final Property<ResourceSupplier<IAudio>> clickSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "clicksound", null, "fancymenu.elements.button.clicksound", true, true, true, null));
     public final Property<Boolean> navigatable = putProperty(Property.booleanProperty("navigatable", true, "fancymenu.elements.widgets.generic.navigatable"));
-    public final Property<RequirementContainer> activeStateSupplier = putProperty(Property.requirementContainerProperty("widget_active_state_requirement_container_identifier", new RequirementContainer(), "fancymenu.elements.button.active_state_controller"));
-
-    @NotNull
-    public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
+    public final Property<RequirementContainer> activeStateSupplier = putProperty(Property.requirementContainerProperty("widget_active_state_requirement_container_identifier", new RequirementContainer(), "fancymenu.elements.button.active_state_controller"))
+            .setValueSetProcessor(consumes -> consumes.addValuePlaceholderToContainer("value", () -> "" + this.getCheckboxStateForPlaceholders()));
+    public final Property<GenericExecutableBlock> actionExecutor = putProperty(Property.executableBlockProperty("checkbox_element_executable_block_identifier", new GenericExecutableBlock(), "fancymenu.actions.screens.manage_screen.manage"))
+            .setValueSetProcessor(consumes -> (GenericExecutableBlock) consumes.addValuePlaceholderToBlock("value", () -> "" + this.getCheckboxStateForPlaceholders()));
 
     public CheckboxElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
-        this.prepareExecutableBlock();
         this.allowDepthTestManipulation = true;
-    }
-
-    /**
-     * Call this after setting a new block instance.
-     */
-    public void prepareExecutableBlock() {
-        this.actionExecutor.addValuePlaceholder("value", () -> "" + this.getCheckboxStateForPlaceholders());
-    }
-
-    /**
-     * Call this after setting a new container instance.
-     */
-    public void prepareLoadingRequirementContainer() {
-        this.requirementContainer.addValuePlaceholder("value", () -> "" + this.getCheckboxStateForPlaceholders());
     }
 
     @Override
@@ -85,7 +71,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
             } else {
                 CheckboxStatesHandler.setForCheckboxElement(this, state);
             }
-            this.actionExecutor.execute();
+            this.getExecutableBlock().execute();
         });
         this.syncCheckboxStateOnLoad();
     }
@@ -284,7 +270,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     @Override
     @NotNull
     public GenericExecutableBlock getExecutableBlock() {
-        return this.actionExecutor;
+        return this.actionExecutor.tryGetNonNull();
     }
 
 }

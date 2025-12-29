@@ -2395,5 +2395,6 @@
   "fancymenu.elements.splash.refresh": "Refresh On Screen Load: %s",
   "fancymenu.elements.splash.shadow": "Shadow: %s",
   "fancymenu.elements.ticker.async": "Async: %s",
-  "fancymenu.requirements.multiselect.warning.override": "§x§lOverride Requirements?\n\nThe selected entries have different requirements!\nAll of their requirements will get §xoverridden§r!\n\nContinue?"
+  "fancymenu.requirements.multiselect.warning.override": "§x§lOverride Requirements?\n\nThe selected entries have different requirements!\nAll of their requirements will get §xoverridden§r!\n\nContinue?",
+  "fancymenu.actions.multiselect.warning.override": "§x§lOverride Action Scripts?\n\nThe selected entries have different action scripts!\nAll of their action scripts will get §xoverridden§r!\n\nContinue?"
 }

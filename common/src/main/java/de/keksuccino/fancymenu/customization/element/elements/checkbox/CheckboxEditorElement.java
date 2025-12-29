@@ -2,11 +2,9 @@ package de.keksuccino.fancymenu.customization.element.elements.checkbox;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,22 +16,12 @@ public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorE
 
     @Override
     public void init() {
-        
+
         super.init();
-        
-        this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.actions.screens.manage_screen.manage"), (menu, entry) -> {
-                    ActionScriptEditorScreen s = new ActionScriptEditorScreen(this.element.getExecutableBlock(), (call) -> {
-                        if (call != null) {
-                            this.editor.history.saveSnapshot();
-                            this.element.actionExecutor = call;
-                        }
-                        Minecraft.getInstance().setScreen(this.editor);
-                    });
-                    Minecraft.getInstance().setScreen(s);
-                })
+
+        this.element.actionExecutor.buildContextMenuEntryAndAddTo(this.rightClickMenu, CheckboxEditorElement.class, this)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.manage_actions.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("script"))
-                .setStackable(false);
+                .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
         this.element.activeStateSupplier.buildContextMenuEntryAndAddTo(this.rightClickMenu, CheckboxEditorElement.class, this)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")));
@@ -73,11 +61,11 @@ public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorE
 
         this.element.navigatable.buildContextMenuEntryAndAddTo(this.rightClickMenu, this.selfClass(), this)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
-        
+
     }
 
     protected void addTextureSettings() {
-        
+
         ContextMenu texturesMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("checkbox_textures", Component.translatable("fancymenu.elements.checkbox.textures"), texturesMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"))
@@ -100,8 +88,7 @@ public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorE
         this.element.checkmarkTexture.buildContextMenuEntryAndAddTo(texturesMenu, this.selfClass(), this)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.checkmark_texture.desc")));
-        
-    }
 
+    }
 
 }
