@@ -378,7 +378,20 @@ public interface ContextMenuBuilder<O> {
                         chooserScreen.setResourceSourceCallback(source -> {
                             if (source != null) {
                                 this.saveSnapshot();
-                                this.applyStackAppliers(entry, source);
+                                int applied = 0;
+                                ContextMenu.ContextMenuEntry<?> current = entry;
+                                while (current != null) {
+                                    ContextMenu.StackApplier applier = current.getStackApplier();
+                                    if (applier != null) {
+                                        applier.apply(current, source);
+                                        applied++;
+                                    }
+                                    current = current.getStackMeta().getNextInStack();
+                                }
+                                if (applied <= 1) {
+                                    StackContext<O> applyStack = this.stack(entry, selectedElementsFilter);
+                                    applyStack.apply(e -> targetFieldSetter.accept(e, resourceSupplierBuilder.get(source)));
+                                }
                             }
                             Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
                         });
@@ -399,8 +412,20 @@ public interface ContextMenuBuilder<O> {
                             return;
                         }
                         this.saveSnapshot();
-                        this.applyStackAppliers(entry, null);
-            }).setStackable(true)
+                        int applied = 0;
+                        ContextMenu.ContextMenuEntry<?> current = entry;
+                        while (current != null) {
+                            ContextMenu.StackApplier applier = current.getStackApplier();
+                            if (applier != null) {
+                                applier.apply(current, null);
+                                applied++;
+                            }
+                            current = current.getStackMeta().getNextInStack();
+                        }
+                        if (applied <= 1) {
+                            stack.apply(e -> targetFieldSetter.accept(e, defaultValue));
+                        }
+                    }).setStackable(true)
                     .setStackApplier((stackEntry, value) -> {
                         targetFieldSetter.accept(this.self(), defaultValue);
                     });
