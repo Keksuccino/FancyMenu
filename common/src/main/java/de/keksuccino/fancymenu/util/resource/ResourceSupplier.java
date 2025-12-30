@@ -104,7 +104,7 @@ public class ResourceSupplier<R extends Resource> {
         if ((this.current != null) && this.current.isClosed()) {
             this.current = null;
         }
-        String getterSource = PlaceholderParser.replacePlaceholders(this.source, false);
+        String getterSource = PlaceholderParser.replacePlaceholders(this.source);
         if (!getterSource.equals(this.lastGetterSource)) {
             if ((this.onUpdateCurrent != null) && (this.current != null)) {
                 this.onUpdateCurrent.accept(this.current);
@@ -165,7 +165,7 @@ public class ResourceSupplier<R extends Resource> {
     @NotNull
     public ResourceSourceType getSourceType() {
         if (this.empty) return ResourceSourceType.LOCAL;
-        return ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(this.source, false));
+        return ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(this.source));
     }
 
     /**

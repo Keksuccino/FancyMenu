@@ -46,7 +46,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
     @NotNull
     public ITexture get() {
         String playerNameCapeUrlCached = this.playerNameCapeUrl;
-        String getterPlayerName = PlaceholderParser.replacePlaceholders(this.source, false);
+        String getterPlayerName = PlaceholderParser.replacePlaceholders(this.source);
         if (this.sourceIsPlayerName) {
             if (!getterPlayerName.equals(this.lastGetterPlayerName)) {
                 this.startedFindingPlayerNameCapeUrl = false;
@@ -71,7 +71,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
         if ((this.current != null) && this.current.isClosed()) {
             this.current = null;
         }
-        String getterSource = PlaceholderParser.replacePlaceholders(this.source, false);
+        String getterSource = PlaceholderParser.replacePlaceholders(this.source);
         if (this.sourceIsPlayerName && (playerNameCapeUrlCached == null)) {
             return DEFAULT_CAPE;
         }

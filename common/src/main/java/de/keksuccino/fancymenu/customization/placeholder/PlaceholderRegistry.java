@@ -1,6 +1,5 @@
-
-//Copyright (c) 2022-2023 Keksuccino.
-//This code is licensed under DSMSLv2.
+//Copyright (c) 2022-2025 Keksuccino.
+//This code is licensed under DSMSLv3.
 //For more information about the license, see this: https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md
 
 package de.keksuccino.fancymenu.customization.placeholder;

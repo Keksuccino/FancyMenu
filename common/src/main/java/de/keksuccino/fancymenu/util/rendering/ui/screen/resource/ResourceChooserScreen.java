@@ -209,7 +209,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.resources.chooser_screen.choose_location"), var1 -> {
                 ResourceLocation startLocation = null;
                 if ((this.resourceSource != null) && !this.resourceSource.trim().isEmpty()) {
-                    String source = PlaceholderParser.replacePlaceholders(this.resourceSource, false);
+                    String source = PlaceholderParser.replacePlaceholders(this.resourceSource);
                     startLocation = ResourceLocation.tryParse(source);
                 }
                 ResourcePickerScreen picker = new ResourcePickerScreen(startLocation, this.allowedFileTypes, location -> {
@@ -370,7 +370,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
             this.resourceSourceType = ResourceSourceType.LOCATION;
         } else {
             resourceSource = resourceSource.trim();
-            this.resourceSourceType = ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(resourceSource, false));
+            this.resourceSourceType = ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(resourceSource));
             //Remove the prefix for easier handling inside the chooser screen (source type is saved as variable)
             this.resourceSource = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
         }

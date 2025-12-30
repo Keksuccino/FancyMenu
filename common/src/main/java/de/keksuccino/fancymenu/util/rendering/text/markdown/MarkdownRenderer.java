@@ -340,7 +340,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         } else {
             this.text = text;
             StringBuilder builder = new StringBuilder();
-            for (PlaceholderParser.ParsedPlaceholder p : PlaceholderParser.findPlaceholders(this.text, new HashMap<>(), false)) {
+            for (PlaceholderParser.ParsedPlaceholder p : PlaceholderParser.findPlaceholders(this.text, new HashMap<>())) {
                 builder.append(p.placeholderString);
             }
             this.textPlaceholders = builder.toString();
