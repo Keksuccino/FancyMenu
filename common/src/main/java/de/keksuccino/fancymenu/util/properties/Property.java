@@ -37,6 +37,45 @@ import java.util.List;
 import java.util.Objects;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
 
+/**
+ * A typed, serializable property identified by a unique {@link #getKey() key}.
+ * <p>
+ * A {@link Property} stores a {@link #getDefault() default value} and a mutable {@link #get() current value}.
+ * It is typically owned by a {@link PropertyHolder} and persisted via a {@link PropertyContainer}.
+ * The class also integrates with {@link ContextMenuBuilder} to build rich, stack-aware UI entries.
+ * </p>
+ *
+ * <h3>Typical usage</h3>
+ * <pre>{@code
+ * Property<String> title = Property.stringProperty(
+ *     "title",
+ *     "Hello",
+ *     false,     // multiLine
+ *     true,      // placeholders
+ *     "fancymenu.menu.entry.title"
+ * );
+ *
+ * holder.putProperty(title);
+ * title.set("New Title");
+ *
+ * PropertyContainer container = new PropertyContainer("my_type");
+ * title.serialize(container);
+ * }</pre>
+ *
+ * <h3>Context menu integration and stacking</h3>
+ * Each property can provide a {@link ContextMenuEntrySupplier} that builds a
+ * {@link ContextMenu.ClickableContextMenuEntry}. The static factory methods in this class already wire
+ * entries using {@link ContextMenuBuilder}'s stack-aware helpers, which means multi-selection in UIs
+ * works automatically (all selected objects are updated when the user changes the value).
+ * <p>
+ * If you provide a custom {@link #setContextMenuEntrySupplier(ContextMenuEntrySupplier) supplier}, prefer
+ * using the stack-aware builder helpers (for example
+ * {@link ContextMenuBuilder#buildGenericToggleContextMenuEntry}) so the entry behaves correctly in
+ * stacked/multi-select context menus.
+ * </p>
+ *
+ * @param <T> the property value type
+ */
 @SuppressWarnings({"unchecked", "unused"})
 public class Property<T> {
 
@@ -67,6 +106,34 @@ public class Property<T> {
     protected ConsumingSupplier<T, T> valueGetProcessor = null;
     protected boolean disabled = false;
 
+    /**
+     * Creates a string {@link Property} with an explicit default and current value.
+     * <p>
+     * The property serializes/deserializes as a raw string and uses a generic text input entry in
+     * context menus. The entry is stack-aware, so editing a multi-selection updates all selected
+     * objects that contain the property.
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<String> label = Property.stringProperty(
+     *     "label",
+     *     "Button",
+     *     "Button",
+     *     false, // multiLine
+     *     true,  // placeholders
+     *     "fancymenu.menu.entry.label"
+     * );
+     * }</pre>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value (can be {@code null})
+     * @param multiLine whether the input dialog supports line breaks
+     * @param placeholders whether placeholder tokens are allowed in input
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured string property
+     */
     @NotNull
     public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<String> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -86,11 +153,39 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #stringProperty(String, String, String, boolean, boolean, String)
+     */
     @NotNull
     public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return stringProperty(key, defaultValue, defaultValue, multiLine, placeholders, contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Creates an integer {@link Property} with an explicit default and current value.
+     * <p>
+     * The property serializes/deserializes using {@link Integer#valueOf(String)} and uses a numeric
+     * input entry in context menus (stack-aware).
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<Integer> width = Property.integerProperty(
+     *     "width",
+     *     100,
+     *     100,
+     *     "fancymenu.menu.entry.width"
+     * );
+     * }</pre>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured integer property
+     */
     @NotNull
     public static Property<Integer> integerProperty(@NotNull String key, int defaultValue, int currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Integer> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -113,11 +208,39 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #integerProperty(String, int, int, String)
+     */
     @NotNull
     public static Property<Integer> integerProperty(@NotNull String key, int defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return integerProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Creates a double {@link Property} with an explicit default and current value.
+     * <p>
+     * The property serializes/deserializes using {@link Double#valueOf(String)} and uses a numeric
+     * input entry in context menus (stack-aware).
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<Double> opacity = Property.doubleProperty(
+     *     "opacity",
+     *     1.0,
+     *     0.8,
+     *     "fancymenu.menu.entry.opacity"
+     * );
+     * }</pre>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured double property
+     */
     @NotNull
     public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, double currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Double> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -140,11 +263,39 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #doubleProperty(String, double, double, String)
+     */
     @NotNull
     public static Property<Double> doubleProperty(@NotNull String key, double defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return doubleProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Creates a long {@link Property} with an explicit default and current value.
+     * <p>
+     * The property serializes/deserializes using {@link Long#valueOf(String)} and uses a numeric
+     * input entry in context menus (stack-aware).
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<Long> seed = Property.longProperty(
+     *     "seed",
+     *     0L,
+     *     123456L,
+     *     "fancymenu.menu.entry.seed"
+     * );
+     * }</pre>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured long property
+     */
     @NotNull
     public static Property<Long> longProperty(@NotNull String key, long defaultValue, long currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Long> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -167,11 +318,39 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #longProperty(String, long, long, String)
+     */
     @NotNull
     public static Property<Long> longProperty(@NotNull String key, long defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return longProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Creates a float {@link Property} with an explicit default and current value.
+     * <p>
+     * The property serializes/deserializes using {@link Float#valueOf(String)} and uses a numeric
+     * input entry in context menus (stack-aware).
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<Float> scale = Property.floatProperty(
+     *     "scale",
+     *     1.0f,
+     *     1.0f,
+     *     "fancymenu.menu.entry.scale"
+     * );
+     * }</pre>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured float property
+     */
     @NotNull
     public static Property<Float> floatProperty(@NotNull String key, float defaultValue, float currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Float> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -194,11 +373,39 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #floatProperty(String, float, float, String)
+     */
     @NotNull
     public static Property<Float> floatProperty(@NotNull String key, float defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return floatProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Creates a boolean {@link Property} with an explicit default and current value.
+     * <p>
+     * The property serializes/deserializes using {@link Boolean#valueOf(String)} and uses a toggle
+     * entry in context menus (stack-aware).
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<Boolean> enabled = Property.booleanProperty(
+     *     "enabled",
+     *     true,
+     *     true,
+     *     "fancymenu.menu.entry.enabled"
+     * );
+     * }</pre>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured boolean property
+     */
     @NotNull
     public static Property<Boolean> booleanProperty(@NotNull String key, boolean defaultValue, boolean currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<Boolean> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -220,11 +427,52 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #booleanProperty(String, boolean, boolean, String)
+     */
     @NotNull
     public static Property<Boolean> booleanProperty(@NotNull String key, boolean defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return booleanProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Creates a {@link ResourceSource} property with an explicit default and current value.
+     * <p>
+     * This property stores a serialized {@link ResourceSource} string (via
+     * {@link ResourceSource#getSerializationSource()}) and uses a generic resource chooser entry in
+     * context menus. The chooser entry is stack-aware and applies changes to all selected objects
+     * that contain the property.
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<ResourceSource> background = Property.resourceSourceProperty(
+     *     "background",
+     *     ResourceSource.of("local:my_pack/background.png"),
+     *     "fancymenu.menu.entry.background",
+     *     true,  // allowLocal
+     *     true,  // allowWeb
+     *     true,  // allowLocation
+     *     null,  // fileFilter
+     *     null,  // fileTypes
+     *     FileMediaType.IMAGE
+     * );
+     * }</pre>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @param allowLocal allow local resource selection in the chooser
+     * @param allowWeb allow web resource selection in the chooser
+     * @param allowLocation allow resource location selection in the chooser
+     * @param fileFilter optional file filter for local selection
+     * @param fileTypes optional file type group for filtering/labeling
+     * @param fileMediaType media type used to interpret the selected resource
+     * @return a configured resource source property
+     */
     @NotNull
     public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @Nullable ResourceSource currentValue, @NotNull String contextMenuEntryLocalizationKeyBase, boolean allowLocal, boolean allowWeb, boolean allowLocation, @Nullable FileFilter fileFilter, @Nullable FileTypeGroup<FileType<Resource>> fileTypes, @NotNull FileMediaType fileMediaType) {
         Property<ResourceSource> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -263,11 +511,52 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #resourceSourceProperty(String, ResourceSource, ResourceSource, String, boolean, boolean, boolean, FileFilter, FileTypeGroup, FileMediaType)
+     */
     @NotNull
     public static Property<ResourceSource> resourceSourceProperty(@NotNull String key, @Nullable ResourceSource defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase, boolean allowLocal, boolean allowWeb, boolean allowLocation, @Nullable FileFilter fileFilter, @Nullable FileTypeGroup<FileType<Resource>> fileTypes, @NotNull FileMediaType fileMediaType) {
         return resourceSourceProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase, allowLocal, allowWeb, allowLocation, fileFilter, fileTypes, fileMediaType);
     }
 
+    /**
+     * Creates a {@link ResourceSupplier} property with an explicit default and current value.
+     * <p>
+     * The {@code resourceType} controls which resource chooser entry is created:
+     * image, audio, video, or text. The value serializes to a source string via
+     * {@link ResourceSupplier#getSourceWithPrefix()}. The chooser entry is stack-aware and applies
+     * changes to all selected objects that contain the property.
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<ResourceSupplier<ITexture>> icon = Property.resourceSupplierProperty(
+     *     ITexture.class,
+     *     "icon",
+     *     ResourceSupplier.image("local:my_pack/icon.png"),
+     *     ResourceSupplier.image("local:my_pack/icon.png"),
+     *     "fancymenu.menu.entry.icon",
+     *     true,
+     *     true,
+     *     true,
+     *     null
+     * );
+     * }</pre>
+     *
+     * @param resourceType the resource type; selects the correct chooser UI
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @param allowLocal allow local resource selection in the chooser
+     * @param allowWeb allow web resource selection in the chooser
+     * @param allowLocation allow resource location selection in the chooser
+     * @param fileFilter optional file filter for local selection
+     * @param <R> resource value type
+     * @return a configured resource supplier property
+     */
     @NotNull
     public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue, @Nullable ResourceSupplier<R> currentValue, @NotNull String contextMenuEntryLocalizationKeyBase, boolean allowLocal, boolean allowWeb, boolean allowLocation, @Nullable FileFilter fileFilter) {
         Property<ResourceSupplier<R>> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -352,11 +641,41 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #resourceSupplierProperty(Class, String, ResourceSupplier, ResourceSupplier, String, boolean, boolean, boolean, FileFilter)
+     */
     @NotNull
     public static <R extends Resource> Property<ResourceSupplier<R>> resourceSupplierProperty(@NotNull Class<R> resourceType, @NotNull String key, @Nullable ResourceSupplier<R> defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase, boolean allowLocal, boolean allowWeb, boolean allowLocation, @Nullable FileFilter fileFilter) {
         return resourceSupplierProperty(resourceType, key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase, allowLocal, allowWeb, allowLocation, fileFilter);
     }
 
+    /**
+     * Creates a {@link DrawableColor} property with an explicit default and current value.
+     * <p>
+     * Values serialize to hex strings, and the context menu entry uses a text input with optional
+     * placeholder support. Invalid colors are ignored. The entry is stack-aware for multi-selection.
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<DrawableColor> color = Property.drawableColorProperty(
+     *     "color",
+     *     DrawableColor.of("#ffffff"),
+     *     DrawableColor.of("#ff8800"),
+     *     false, // placeholders
+     *     "fancymenu.menu.entry.color"
+     * );
+     * }</pre>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param placeholders whether placeholder tokens are allowed in input
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured drawable color property
+     */
     @NotNull
     public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue, @Nullable DrawableColor currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<DrawableColor> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -386,11 +705,40 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #drawableColorProperty(String, DrawableColor, DrawableColor, boolean, String)
+     */
     @NotNull
     public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return drawableColorProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Creates a {@link RequirementContainer} property with custom serialization and a specialized
+     * editor UI entry.
+     * <p>
+     * The context menu entry opens {@link ManageRequirementsScreen}. When used in stacked context
+     * menus, it can optionally prompt the user before overwriting differing values and then applies
+     * the edited container to all selected objects.
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<RequirementContainer> requirements = Property.requirementContainerProperty(
+     *     "requirements",
+     *     new RequirementContainer(),
+     *     "fancymenu.menu.entry.requirements"
+     * );
+     * }</pre>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured requirement container property
+     */
     @NotNull
     public static Property<RequirementContainer> requirementContainerProperty(@NotNull String key, @Nullable RequirementContainer defaultValue, @Nullable RequirementContainer currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<RequirementContainer> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase) {
@@ -497,11 +845,40 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #requirementContainerProperty(String, RequirementContainer, RequirementContainer, String)
+     */
     @NotNull
     public static Property<RequirementContainer> requirementContainerProperty(@NotNull String key, @Nullable RequirementContainer defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return requirementContainerProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Creates a {@link GenericExecutableBlock} property with custom serialization and a specialized
+     * editor UI entry.
+     * <p>
+     * The context menu entry opens {@link ActionScriptEditorScreen}. When used in stacked context
+     * menus, it can optionally prompt the user before overwriting differing values and then applies
+     * the edited block to all selected objects.
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<GenericExecutableBlock> onClick = Property.executableBlockProperty(
+     *     "action",
+     *     new GenericExecutableBlock(),
+     *     "fancymenu.menu.entry.action"
+     * );
+     * }</pre>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured executable block property
+     */
     @NotNull
     public static Property<GenericExecutableBlock> executableBlockProperty(@NotNull String key, @Nullable GenericExecutableBlock defaultValue, @Nullable GenericExecutableBlock currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         Property<GenericExecutableBlock> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase) {
@@ -618,11 +995,28 @@ public class Property<T> {
         return p;
     }
 
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #executableBlockProperty(String, GenericExecutableBlock, GenericExecutableBlock, String)
+     */
     @NotNull
     public static Property<GenericExecutableBlock> executableBlockProperty(@NotNull String key, @Nullable GenericExecutableBlock defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return executableBlockProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Creates a property with explicit default and current values.
+     * <p>
+     * Use the static factory methods for common property types; they configure codecs and context
+     * menu entries automatically.
+     * </p>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     */
     protected Property(@NotNull String key, @Nullable T defaultValue, @Nullable T currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         this.key = Objects.requireNonNull(key);
         this.setDefault(defaultValue);
@@ -630,33 +1024,63 @@ public class Property<T> {
         this.contextMenuEntryLocalizationKeyBase = Objects.requireNonNull(contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Creates a property where the initial current value is the default value.
+     *
+     * @see #Property(String, Object, Object, String)
+     */
     protected Property(@NotNull String key, @Nullable T defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         this(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
+    /**
+     * Returns the unique key used for lookup and serialization.
+     */
     public @NotNull String getKey() {
         return key;
     }
 
+    /**
+     * Returns the default value. This may be {@code null}.
+     */
     public @Nullable T getDefault() {
         return defaultValue;
     }
 
+    /**
+     * Sets the default value. This does not modify the current value.
+     *
+     * @param value new default value (nullable)
+     * @return this property for chaining
+     */
     public Property<T> setDefault(@Nullable T value) {
         this.defaultValue = value;
         return this;
     }
 
+    /**
+     * Returns {@code true} if the current value equals the default value (including both {@code null}).
+     */
     public boolean isDefault() {
         return Objects.equals(this.defaultValue, this.currentValue);
     }
 
+    /**
+     * Returns the current value (after {@link #getValueGetProcessor() get-processing}, if configured).
+     * This may return {@code null}.
+     */
     public @Nullable T get() {
         return this.processGet(this.currentValue);
     }
 
     /**
-     * First tries to return the current value if it is not null, else will try to return the default value, and will throw an error if both are null.
+     * Returns the current value if non-null; otherwise returns the default value.
+     * <p>
+     * If both values are {@code null}, this method throws a {@link NullPointerException}.
+     * </p>
+     *
+     * @return a non-null value
+     * @throws NullPointerException if both current and default values are {@code null}
      */
     public T tryGetNonNull() {
         var current = this.processGet(this.currentValue);
@@ -665,7 +1089,11 @@ public class Property<T> {
     }
 
     /**
-     * First tries to return the current value if it is not null, then tries to return the default value. If both are null, it will return {@code elseValue}.
+     * Returns the current value if non-null; otherwise returns the default value.
+     * If both values are {@code null}, returns {@code elseValue}.
+     *
+     * @param elseValue fallback value to use if both current and default are {@code null}
+     * @return a non-null value
      */
     public T tryGetNonNullElse(@NotNull T elseValue) {
         var current = this.processGet(this.currentValue);
@@ -673,12 +1101,25 @@ public class Property<T> {
         return Objects.requireNonNullElse(this.processGet(this.defaultValue), elseValue);
     }
 
+    /**
+     * Applies the {@link #getValueGetProcessor() get-processor} if present.
+     * Intended for subclasses that want to customize getter behavior further.
+     */
     protected T processGet(@Nullable T get) {
         if (get == null) return null;
         if (this.valueGetProcessor != null) return this.valueGetProcessor.get(get);
         return get;
     }
 
+    /**
+     * Sets the current value, applying the {@link #getValueSetProcessor() set-processor} if present.
+     * <p>
+     * This processor is not applied to the default value.
+     * </p>
+     *
+     * @param value new current value (nullable)
+     * @return this property for chaining
+     */
     public Property<T> set(@Nullable T value) {
         if (value != null) {
             if (this.valueSetProcessor != null) value = this.valueSetProcessor.get(value);
@@ -687,6 +1128,23 @@ public class Property<T> {
         return this;
     }
 
+    /**
+     * Sets the current value from an {@link Object} without compile-time type safety.
+     * <p>
+     * This method is useful when you already know the runtime type (for example, in generic or
+     * reflective code paths) and still want to run the set-processor.
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Object raw = "value";
+     * property.forceSet(raw); // assumes the property type is String
+     * }</pre>
+     *
+     * @param value new current value (nullable)
+     * @return this property for chaining
+     * @throws ClassCastException if the value cannot be cast to {@code T}
+     */
     public Property<T> forceSet(@Nullable Object value) {
         if (value != null) {
             if (this.valueSetProcessor != null) value = this.valueSetProcessor.get((T) value);
@@ -696,72 +1154,134 @@ public class Property<T> {
     }
 
     /**
-     * If this property is set to disabled, which means you should not update its value, wire it in UIs or make any other changes to it.
+     * Returns whether this property is disabled.
+     * <p>
+     * A disabled property should not be edited and its context menu entries are hidden by default.
+     * </p>
      */
     public boolean isDisabled() {
         return disabled;
     }
 
     /**
-     * Disabling the property causes {@link ContextMenuEntry}s of the property to be invisible in {@link ContextMenu}s, so users can't edit its value anymore.
+     * Enables or disables this property. Disabled properties are hidden in context menus.
+     *
+     * @param disabled {@code true} to disable editing and hide menu entries
+     * @return this property for chaining
      */
     public Property<T> setDisabled(boolean disabled) {
         this.disabled = disabled;
         return this;
     }
 
+    /**
+     * Returns the optional input validator used by built-in text/numeric context menu entries.
+     */
     public @Nullable ConsumingSupplier<String, Boolean> getUserInputTextValidator() {
         return userInputTextValidator;
     }
 
+    /**
+     * Sets the input validator used by built-in text/numeric context menu entries.
+     *
+     * @param userInputTextValidator validator that returns {@code true} for valid input
+     * @return this property for chaining
+     */
     public Property<T> setUserInputTextValidator(@Nullable ConsumingSupplier<String, Boolean> userInputTextValidator) {
         this.userInputTextValidator = userInputTextValidator;
         return this;
     }
 
+    /**
+     * Returns the optional set-processor that runs when the current value is set.
+     */
     public @Nullable ConsumingSupplier<T, T> getValueSetProcessor() {
         return valueSetProcessor;
     }
 
     /**
-     * When the value of this property gets set, it goes through this processor if one is set. This makes it possible to, well, process the value before it actually gets set.<br>
-     * Does NOT get applied to default values set via {@link Property#setDefault(Object)}!
+     * Sets the processor that runs when the current value is set.
+     * <p>
+     * This is useful for normalization (clamping values, trimming text, etc.). The processor does
+     * <strong>not</strong> apply to the default value.
+     * </p>
+     *
+     * @param valueSetProcessor processor that receives and returns the value to store
+     * @return this property for chaining
      */
     public Property<T> setValueSetProcessor(@Nullable ConsumingSupplier<T, T> valueSetProcessor) {
         this.valueSetProcessor = valueSetProcessor;
         return this;
     }
 
+    /**
+     * Returns the optional get-processor that runs when the current value is read.
+     */
     public @Nullable ConsumingSupplier<T, T> getValueGetProcessor() {
         return valueGetProcessor;
     }
 
     /**
-     * When the value of this property is returned by the getters, it goes through this processor if one is set. This makes it possible to, well, process the value before it actually gets returned.
+     * Sets the processor that runs when the current value is read.
+     * <p>
+     * This is useful for lazy conversion or computed return values while still keeping the stored
+     * value untouched.
+     * </p>
+     *
+     * @param valueGetProcessor processor that receives the stored value and returns the value to expose
+     * @return this property for chaining
      */
     public Property<T> setValueGetProcessor(@Nullable ConsumingSupplier<T, T> valueGetProcessor) {
         this.valueGetProcessor = valueGetProcessor;
         return this;
     }
 
+    /**
+     * Returns the codec used to deserialize string data into the property type.
+     */
     public @Nullable ConsumingSupplier<String, T> getDeserializationCodec() {
         return deserializationCodec;
     }
 
+    /**
+     * Sets the codec used to deserialize string data into the property type.
+     *
+     * @param deserializationCodec codec that converts a serialized string into a value
+     * @return this property for chaining
+     */
     public Property<T> setDeserializationCodec(@NotNull ConsumingSupplier<String, T> deserializationCodec) {
         this.deserializationCodec = deserializationCodec;
         return this;
     }
 
+    /**
+     * Returns the codec used to serialize the property value into a string.
+     */
     public @Nullable ConsumingSupplier<T, String> getSerializationCodec() {
         return serializationCodec;
     }
 
+    /**
+     * Sets the codec used to serialize the property value into a string.
+     *
+     * @param serializationCodec codec that converts a value into a string
+     * @return this property for chaining
+     */
     public Property<T> setSerializationCodec(@NotNull ConsumingSupplier<T, String> serializationCodec) {
         this.serializationCodec = serializationCodec;
         return this;
     }
 
+    /**
+     * Deserializes this property from a {@link PropertyContainer}.
+     * <p>
+     * If the container does not contain the property key, the default value is used.
+     * Any exceptions are logged and the property remains unchanged.
+     * </p>
+     *
+     * @param properties container to read from
+     * @return this property for chaining
+     */
     public Property<T> deserialize(@NotNull PropertyContainer properties) {
         if (this.deserializationCodec == null) {
             LOGGER.error("[FANCYMENU] Failed to deserialize property: " + this.getKey(), new NullPointerException("No deserialization codec found for: " + this.getKey()));
@@ -776,6 +1296,16 @@ public class Property<T> {
         return this;
     }
 
+    /**
+     * Serializes this property into a {@link PropertyContainer}.
+     * <p>
+     * The current value is serialized; if it is {@code null} the property is removed from the
+     * container. Any exceptions are logged.
+     * </p>
+     *
+     * @param properties container to write to
+     * @return this property for chaining
+     */
     public Property<T> serialize(@NotNull PropertyContainer properties) {
         if (this.serializationCodec == null) {
             LOGGER.error("[FANCYMENU] Failed to serialize property: " + this.getKey(), new NullPointerException("No serialization codec found for: " + this.getKey()));
@@ -789,20 +1319,51 @@ public class Property<T> {
         return this;
     }
 
+    /**
+     * Returns the translation key base used for context menu entry labels.
+     */
     public @NotNull String getContextMenuEntryLocalizationKeyBase() {
         return contextMenuEntryLocalizationKeyBase;
     }
 
+    /**
+     * Sets the translation key base used for context menu entry labels.
+     *
+     * @param contextMenuEntryLocalizationKeyBase translation key base (non-null)
+     * @return this property for chaining
+     */
     public Property<T> setContextMenuEntryLocalizationKeyBase(@NotNull String contextMenuEntryLocalizationKeyBase) {
         this.contextMenuEntryLocalizationKeyBase = contextMenuEntryLocalizationKeyBase;
         return this;
     }
 
+    /**
+     * Sets the {@link ContextMenuEntrySupplier} used to build the context menu entry for this property.
+     * <p>
+     * For stack-aware behavior, use {@link ContextMenuBuilder} helper methods inside the supplier
+     * implementation.
+     * </p>
+     *
+     * @param contextMenuEntrySupplier supplier used to build a menu entry
+     * @return this property for chaining
+     */
     public Property<T> setContextMenuEntrySupplier(@NotNull ContextMenuEntrySupplier<? extends PropertyHolder, T> contextMenuEntrySupplier) {
         this.contextMenuEntrySupplier = contextMenuEntrySupplier;
         return this;
     }
 
+    /**
+     * Builds this property's context menu entry using the configured {@link ContextMenuEntrySupplier}.
+     * <p>
+     * The returned entry is automatically hidden when {@link #isDisabled()} is {@code true}.
+     * </p>
+     *
+     * @param contextMenuBuilder builder supplying menu utilities and stack context
+     * @param parentContextMenu parent menu that owns the entry
+     * @param <H> the property holder type used by the builder
+     * @return the built clickable entry
+     * @throws NullPointerException if no supplier is configured
+     */
     @SuppressWarnings("unchecked")
     public <H extends PropertyHolder> ContextMenu.ClickableContextMenuEntry<?> buildContextMenuEntry(@NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu) {
         Objects.requireNonNull(this.contextMenuEntrySupplier, "ContextMenuEntrySupplier is null! Can't build entry!");
@@ -812,10 +1373,27 @@ public class Property<T> {
         return entry;
     }
 
+    /**
+     * Builds this property's context menu entry and adds it to the given menu.
+     *
+     * @param addTo menu to add the entry to
+     * @param contextMenuBuilder builder supplying menu utilities and stack context
+     * @param <H> the property holder type used by the builder
+     * @return the created entry (already added to the menu)
+     */
     public <H extends PropertyHolder> ContextMenu.ClickableContextMenuEntry<?> buildContextMenuEntryAndAddTo(@NotNull ContextMenu addTo, @NotNull ContextMenuBuilder<H> contextMenuBuilder) {
         return addTo.addEntry(this.buildContextMenuEntry(contextMenuBuilder, addTo));
     }
 
+    /**
+     * Serializes the current value to a string using the configured codec.
+     * <p>
+     * This method mirrors {@link #serialize(PropertyContainer)} behavior but returns the serialized
+     * string instead of writing to a container.
+     * </p>
+     *
+     * @return serialized string or {@code null} if the current value is {@code null} or serialization fails
+     */
     @Override
     @Nullable
     public String toString() {
@@ -831,8 +1409,40 @@ public class Property<T> {
         return null;
     }
 
+    /**
+     * Functional interface for building a context menu entry for a property.
+     * <p>
+     * Implementations can access the {@link ContextMenuBuilder} to construct stack-aware entries and
+     * use {@link ContextMenuBuilder#getFilteredStackableObjectsList} for multi-select operations.
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * property.setContextMenuEntrySupplier((prop, builder, menu) ->
+     *     builder.buildGenericToggleContextMenuEntry(
+     *         menu,
+     *         "menu_entry_" + prop.getKey(),
+     *         holder -> holder.getProperty(prop.getKey()) != null,
+     *         holder -> ((Property<Boolean>) holder.getProperty(prop.getKey())).get(),
+     *         (holder, value) -> ((Property<Boolean>) holder.getProperty(prop.getKey())).set(value),
+     *         prop.getContextMenuEntryLocalizationKeyBase()
+     *     )
+     * );
+     * }</pre>
+     *
+     * @param <H> the property holder type used by the menu builder
+     * @param <T> the property value type
+     */
     @FunctionalInterface
     public interface ContextMenuEntrySupplier<H extends PropertyHolder, T> {
+        /**
+         * Builds a clickable context menu entry for the given property.
+         *
+         * @param property the property being edited
+         * @param contextMenuBuilder builder supplying menu utilities and stack context
+         * @param parentContextMenu parent menu that owns the entry
+         * @return a clickable entry (never {@code null})
+         */
         @NotNull
         ContextMenu.ClickableContextMenuEntry<?> get(@NotNull Property<T> property, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu);
     }

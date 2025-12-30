@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.variables.Variable;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import net.minecraft.client.resources.language.I18n;
@@ -32,6 +33,7 @@ public class PlaceholderParser {
     private static final HashSet<String> TOO_LONG_TO_PARSE = new HashSet<>();
     private static final HashMap<String, Boolean> CONTAINS_PLACEHOLDERS = new HashMap<>();
     private static final HashMap<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
+    private static final Map<Long, ConsumingSupplier<String, String>> PARSING_PROCESSORS = new LinkedHashMap<>();
 
     private static final int MAX_TEXT_LENGTH = 17000;
     private static final String PLACEHOLDER_PREFIX = "{\"placeholder\":\"";
@@ -49,16 +51,64 @@ public class PlaceholderParser {
     private static final char SPACE_CHAR = ' ';
     private static final char TAB_CHAR = '\t';
     private static final char CARRIAGE_RETURN_CHAR = '\r';
-    private static final char COLON_CHAR = ':';
-    private static final char COMMA_CHAR = ',';
     private static final char PERCENT_CHAR = '%';
     private static final char LOWERCASE_N_CHAR = 'n';
-    private static final String BACKSLASH = "\\";
     private static final String COMMA = ",";
     private static final String COMMA_WRAPPED_IN_APOSTROPHES = "\",\"";
     private static final String COLON_WRAPPED_IN_APOSTROPHES = "\":\"";
     private static final String PERCENT_NEWLINE_CODE = "%n%";
     private static final String TOO_LONG_TO_PARSE_LOCALIZATION = "fancymenu.placeholders.error.text_too_long";
+
+    private static long processorId = 0;
+
+    static {
+
+        // Text editor multi-line placeholder compression
+        // Can be done for multi-line strings too, because the method only replaces codes instead of actual spaces or newlines
+        addParsingProcessor(TextEditorScreen::compileSingleLineString);
+
+        // Minecraft Formatting Codes
+        addParsingProcessor(in -> {
+            return TextFormattingUtils.replaceFormattingCodes(in, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH);
+        });
+
+        // Replace generic reference of FancyMenu's variables ($$variable_name instead of using the "Get Variable" placeholder)
+        addParsingProcessor(in -> {
+            String replaced = in;
+            int index = 0;
+            for (char c : in.toCharArray()) {
+                if (c == DOLLAR_CHAR) {
+                    String sub = StringUtils.substring(in, index);
+                    if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX)) {
+                        for (Variable variable : VariableHandler.getVariables()) {
+                            if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName())) {
+                                replaced = StringUtils.replace(replaced, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName(), variable.getValue());
+                                break;
+                            }
+                        }
+                    }
+                }
+                index++;
+            }
+            return replaced;
+        });
+
+//        addParsingProcessor(in -> {
+//            // Can be done for multi-line strings too, because the method only replaces codes instead of actual spaces or newlines
+//            return TextEditorScreen.compileSingleLineString(in);
+//        });
+
+    }
+
+    public static long addParsingProcessor(@NotNull ConsumingSupplier<String, String> processor) {
+        processorId++;
+        PARSING_PROCESSORS.put(processorId, Objects.requireNonNull(processor));
+        return processorId;
+    }
+
+    public static void removeParsingProcessor(long id) {
+        PARSING_PROCESSORS.remove(id);
+    }
 
     public static boolean isCachingPlaceholders() {
         return FancyMenu.getOptions().placeholderCachingDurationMs.getValue() > 0;
@@ -136,9 +186,6 @@ public class PlaceholderParser {
 
         if (in == null) return EMPTY_STRING;
 
-        // Can be done for multi-line strings too, because the method only replaces codes instead of actual spaces or newlines
-        in = TextEditorScreen.compileSingleLineString(in);
-
         if (in.length() <= 2) return in;
 
         Boolean containsPlaceholders = CONTAINS_PLACEHOLDERS.get(in);
@@ -179,10 +226,6 @@ public class PlaceholderParser {
             if (hashNew == hash) break;
             hash = hashNew;
         }
-
-        if (replaceFormattingCodes) in = TextFormattingUtils.replaceFormattingCodes(in, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH);
-
-        in = replaceVariableReferences(in);
 
         if (isCachingPlaceholders()) {
             PLACEHOLDER_CACHE.put(original, Pair.of(in, System.currentTimeMillis()));
@@ -330,27 +373,6 @@ public class PlaceholderParser {
 
     private static boolean isWhitespace(char c) {
         return c == SPACE_CHAR || c == TAB_CHAR || c == NEWLINE_CHAR || c == CARRIAGE_RETURN_CHAR;
-    }
-
-    @NotNull
-    public static String replaceVariableReferences(@NotNull String in) {
-        String replaced = in;
-        int index = 0;
-        for (char c : in.toCharArray()) {
-            if (c == DOLLAR_CHAR) {
-                String sub = StringUtils.substring(in, index);
-                if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX)) {
-                    for (Variable variable : VariableHandler.getVariables()) {
-                        if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName())) {
-                            replaced = StringUtils.replace(replaced, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName(), variable.getValue());
-                            break;
-                        }
-                    }
-                }
-            }
-            index++;
-        }
-        return replaced;
     }
 
     private static void logError(@NotNull String error, @Nullable Exception ex) {
