@@ -100,6 +100,9 @@ public class PlaceholderParser {
 
     }
 
+    /**
+     * @return The unique ID of the processor.
+     */
     public static long addParsingProcessor(@NotNull ConsumingSupplier<String, String> processor) {
         processorId++;
         PARSING_PROCESSORS.put(processorId, Objects.requireNonNull(processor));
