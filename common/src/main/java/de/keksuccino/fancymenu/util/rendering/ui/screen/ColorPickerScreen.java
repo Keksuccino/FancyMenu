@@ -178,7 +178,7 @@ public class ColorPickerScreen extends Screen {
 
     private void updateLayout() {
         int padding = 24;
-        int top = 28;
+        int top = 40;
         int bottom = 56;
         int availableWidth = this.width - (padding * 2);
         int availableHeight = this.height - top - bottom;
@@ -263,22 +263,23 @@ public class ColorPickerScreen extends Screen {
         int y = this.infoY;
         int labelHeight = this.font.lineHeight;
 
-        UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.preview"), x, y);
-        y += labelHeight + 4;
+        int previewLabelY = y;
+        int previewRectY = previewLabelY + labelHeight + 4;
+        UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.preview"), x, previewLabelY);
 
-        this.renderCheckerboard(graphics, x, y, PREVIEW_SIZE, PREVIEW_SIZE, 6);
-        graphics.fill(x, y, x + PREVIEW_SIZE, y + PREVIEW_SIZE, this.getCurrentColorInt());
-        UIBase.renderBorder(graphics, x, y, x + PREVIEW_SIZE, y + PREVIEW_SIZE, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
+        this.renderCheckerboard(graphics, x, previewRectY, PREVIEW_SIZE, PREVIEW_SIZE, 6);
+        graphics.fill(x, previewRectY, x + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, this.getCurrentColorInt());
+        UIBase.renderBorder(graphics, x, previewRectY, x + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
 
         if (this.presetColor != null) {
             int presetX = x + PREVIEW_SIZE + 12;
-            UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.original"), presetX, y);
-            this.renderCheckerboard(graphics, presetX, y + labelHeight + 4, PREVIEW_SIZE, PREVIEW_SIZE, 6);
-            graphics.fill(presetX, y + labelHeight + 4, presetX + PREVIEW_SIZE, y + labelHeight + 4 + PREVIEW_SIZE, this.presetColor.getColorInt());
-            UIBase.renderBorder(graphics, presetX, y + labelHeight + 4, presetX + PREVIEW_SIZE, y + labelHeight + 4 + PREVIEW_SIZE, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
+            UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.original"), presetX, previewLabelY);
+            this.renderCheckerboard(graphics, presetX, previewRectY, PREVIEW_SIZE, PREVIEW_SIZE, 6);
+            graphics.fill(presetX, previewRectY, presetX + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, this.presetColor.getColorInt());
+            UIBase.renderBorder(graphics, presetX, previewRectY, presetX + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
         }
 
-        y += PREVIEW_SIZE + 12;
+        y = previewRectY + PREVIEW_SIZE + 12;
 
         UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.hex"), x, y);
         y += labelHeight + 2;
