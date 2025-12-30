@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -9,11 +10,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 
 import java.awt.Color;
 import java.util.function.Consumer;
@@ -305,16 +308,10 @@ public class ColorPickerScreen extends Screen {
     }
 
     private void renderColorArea(@NotNull GuiGraphics graphics) {
-        int max = Math.max(1, this.pickerSize - 1);
-        for (int y = 0; y < this.pickerSize; y++) {
-            float v = 1.0F - ((float) y / (float) max);
-            for (int x = 0; x < this.pickerSize; x++) {
-                float s = (float) x / (float) max;
-                int rgb = Color.HSBtoRGB(this.hue, s, v);
-                int color = 0xFF000000 | (rgb & 0xFFFFFF);
-                graphics.fill(this.pickerX + x, this.pickerY + y, this.pickerX + x + 1, this.pickerY + y + 1, color);
-            }
-        }
+        int hueRgb = Color.HSBtoRGB(this.hue, 1.0F, 1.0F);
+        int hueColor = 0xFF000000 | (hueRgb & 0xFFFFFF);
+        this.fillGradientHorizontal(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0xFFFFFFFF, hueColor);
+        graphics.fillGradient(this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0x00000000, 0xFF000000);
         UIBase.renderBorder(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 1, UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
     }
 
@@ -333,30 +330,37 @@ public class ColorPickerScreen extends Screen {
     }
 
     private void renderHueSlider(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
-        int max = Math.max(1, this.hueWidth - 1);
-        for (int x = 0; x < this.hueWidth; x++) {
-            float h = (float) x / (float) max;
-            int rgb = Color.HSBtoRGB(h, 1.0F, 1.0F);
-            int color = 0xFF000000 | (rgb & 0xFFFFFF);
-            graphics.fill(this.hueX + x, this.hueY, this.hueX + x + 1, this.hueY + this.hueHeight, color);
+        int segments = 6;
+        for (int i = 0; i < segments; i++) {
+            float startHue = (float) i / (float) segments;
+            float endHue = (float) (i + 1) / (float) segments;
+            int startX = this.hueX + (i * this.hueWidth) / segments;
+            int endX = (i == segments - 1) ? (this.hueX + this.hueWidth) : (this.hueX + ((i + 1) * this.hueWidth) / segments);
+            if (endX <= startX) {
+                continue;
+            }
+            int startRgb = Color.HSBtoRGB(startHue, 1.0F, 1.0F);
+            int endRgb = Color.HSBtoRGB(endHue, 1.0F, 1.0F);
+            int startColor = 0xFF000000 | (startRgb & 0xFFFFFF);
+            int endColor = 0xFF000000 | (endRgb & 0xFFFFFF);
+            this.fillGradientHorizontal(graphics, startX, this.hueY, endX, this.hueY + this.hueHeight, startColor, endColor);
         }
         UIBase.renderBorder(graphics, this.hueX, this.hueY, this.hueX + this.hueWidth, this.hueY + this.hueHeight, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
 
+        int max = Math.max(1, this.hueWidth - 1);
         int markerX = this.hueX + Math.round(this.hue * max);
         graphics.fill(markerX - 1, this.hueY - 2, markerX + 1, this.hueY + this.hueHeight + 2, theme.generic_text_base_color.getColorInt());
     }
 
     private void renderAlphaSlider(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
         this.renderCheckerboard(graphics, this.alphaX, this.alphaY, this.alphaWidth, this.alphaHeight, 4);
-        int max = Math.max(1, this.alphaWidth - 1);
         int rgb = this.getCurrentColorInt() & 0xFFFFFF;
-        for (int x = 0; x < this.alphaWidth; x++) {
-            float a = (float) x / (float) max;
-            int alphaColor = (Math.round(a * 255.0F) << 24) | rgb;
-            graphics.fill(this.alphaX + x, this.alphaY, this.alphaX + x + 1, this.alphaY + this.alphaHeight, alphaColor);
-        }
+        int leftColor = rgb;
+        int rightColor = 0xFF000000 | rgb;
+        this.fillGradientHorizontal(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, leftColor, rightColor);
         UIBase.renderBorder(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
 
+        int max = Math.max(1, this.alphaWidth - 1);
         int markerX = this.alphaX + Math.round(this.alpha * max);
         graphics.fill(markerX - 1, this.alphaY - 2, markerX + 1, this.alphaY + this.alphaHeight + 2, theme.generic_text_base_color.getColorInt());
     }
@@ -415,6 +419,15 @@ public class ColorPickerScreen extends Screen {
 
     private static float clamp(float value) {
         return Math.max(0.0F, Math.min(1.0F, value));
+    }
+
+    private void fillGradientHorizontal(@NotNull GuiGraphics graphics, int x1, int y1, int x2, int y2, int colorLeft, int colorRight) {
+        Matrix4f matrix = graphics.pose().last().pose();
+        VertexConsumer consumer = graphics.bufferSource().getBuffer(RenderType.gui());
+        consumer.addVertex(matrix, (float) x1, (float) y1, 0.0F).setColor(colorLeft);
+        consumer.addVertex(matrix, (float) x1, (float) y2, 0.0F).setColor(colorLeft);
+        consumer.addVertex(matrix, (float) x2, (float) y2, 0.0F).setColor(colorRight);
+        consumer.addVertex(matrix, (float) x2, (float) y1, 0.0F).setColor(colorRight);
     }
 
 }
