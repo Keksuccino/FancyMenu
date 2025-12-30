@@ -353,50 +353,37 @@ public interface ContextMenuBuilder<O> {
         ContextMenu subMenu = new ContextMenu();
 
         subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.resources.choose"),
-                (menu, entry) -> {
-                    StackContext<O> stack = this.stack(entry, selectedElementsFilter);
-                    if (!stack.isPrimary() || stack.isEmpty()) {
-                        return;
-                    }
-                    List<O> selectedElements = stack.getElements();
-                        String preSelectedSource = null;
-                        List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> {
-                            ResourceSupplier<R> supplier = targetFieldGetter.get(consumes);
-                            if (supplier != null) return supplier.getSourceWithPrefix();
-                            return null;
-                        });
-                        if (!allPaths.isEmpty() && ListUtils.allInListEqual(allPaths)) {
-                            preSelectedSource = allPaths.get(0);
-                        }
-                        ResourceChooserScreen<R,F> chooserScreen = resourceChooserScreenBuilder.get();
-                        chooserScreen.setFileFilter(fileFilter);
-                        chooserScreen.setAllowedFileTypes(fileTypes);
-                        chooserScreen.setSource(preSelectedSource, false);
-                        chooserScreen.setLocationSourceAllowed(allowLocation);
-                        chooserScreen.setLocalSourceAllowed(allowLocal);
-                        chooserScreen.setWebSourceAllowed(allowWeb);
-                        chooserScreen.setResourceSourceCallback(source -> {
-                            if (source != null) {
-                                this.saveSnapshot();
-                                int applied = 0;
-                                ContextMenu.ContextMenuEntry<?> current = entry;
-                                while (current != null) {
-                                    ContextMenu.StackApplier applier = current.getStackApplier();
-                                    if (applier != null) {
-                                        applier.apply(current, source);
-                                        applied++;
-                                    }
-                                    current = current.getStackMeta().getNextInStack();
-                                }
-                                if (applied <= 1) {
-                                    StackContext<O> applyStack = this.stack(entry, selectedElementsFilter);
-                                    applyStack.apply(e -> targetFieldSetter.accept(e, resourceSupplierBuilder.get(source)));
-                                }
+                        (menu, entry) -> {
+                            StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                            if (!stack.isPrimary() || stack.isEmpty()) {
+                                return;
                             }
-                            Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
-                        });
-                        Minecraft.getInstance().setScreen(chooserScreen);
-                }).setStackable(true)
+                            List<O> selectedElements = stack.getElements();
+                            String preSelectedSource = null;
+                            List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> {
+                                ResourceSupplier<R> supplier = targetFieldGetter.get(consumes);
+                                if (supplier != null) return supplier.getSourceWithPrefix();
+                                return null;
+                            });
+                            if (!allPaths.isEmpty() && ListUtils.allInListEqual(allPaths)) {
+                                preSelectedSource = allPaths.get(0);
+                            }
+                            ResourceChooserScreen<R,F> chooserScreen = resourceChooserScreenBuilder.get();
+                            chooserScreen.setFileFilter(fileFilter);
+                            chooserScreen.setAllowedFileTypes(fileTypes);
+                            chooserScreen.setSource(preSelectedSource, false);
+                            chooserScreen.setLocationSourceAllowed(allowLocation);
+                            chooserScreen.setLocalSourceAllowed(allowLocal);
+                            chooserScreen.setWebSourceAllowed(allowWeb);
+                            chooserScreen.setResourceSourceCallback(source -> {
+                                if (source != null) {
+                                    this.saveSnapshot();
+                                    this.applyStackAppliers(entry, source);
+                                }
+                                Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
+                            });
+                            Minecraft.getInstance().setScreen(chooserScreen);
+                        }).setStackable(true)
                 .setStackApplier((stackEntry, value) -> {
                     if (!(value instanceof String source)) {
                         return;
@@ -406,26 +393,14 @@ public interface ContextMenuBuilder<O> {
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.ui.resources.reset"),
-                    (menu, entry) -> {
-                        StackContext<O> stack = this.stack(entry, selectedElementsFilter);
-                        if (!stack.isPrimary() || stack.isEmpty()) {
-                            return;
-                        }
-                        this.saveSnapshot();
-                        int applied = 0;
-                        ContextMenu.ContextMenuEntry<?> current = entry;
-                        while (current != null) {
-                            ContextMenu.StackApplier applier = current.getStackApplier();
-                            if (applier != null) {
-                                applier.apply(current, null);
-                                applied++;
-                            }
-                            current = current.getStackMeta().getNextInStack();
-                        }
-                        if (applied <= 1) {
-                            stack.apply(e -> targetFieldSetter.accept(e, defaultValue));
-                        }
-                    }).setStackable(true)
+                            (menu, entry) -> {
+                                StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                                if (!stack.isPrimary() || stack.isEmpty()) {
+                                    return;
+                                }
+                                this.saveSnapshot();
+                                this.applyStackAppliers(entry, null);
+                            }).setStackable(true)
                     .setStackApplier((stackEntry, value) -> {
                         targetFieldSetter.accept(this.self(), defaultValue);
                     });
@@ -472,60 +447,60 @@ public interface ContextMenuBuilder<O> {
     default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ContextMenu subMenu = new ContextMenu();
         ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) ->
-        {
-            StackContext<O> stack = this.stack(entry, selectedElementsFilter);
-            if (!stack.isPrimary() || stack.isEmpty()) {
-                return;
-            }
-            List<O> selectedElements = stack.getElements();
-            String defaultText = null;
-            List<String> targetValuesOfSelected = new ArrayList<>();
-            for (O e : selectedElements) {
-                targetValuesOfSelected.add(targetFieldGetter.get(e));
-            }
-            if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
-                defaultText = targetFieldGetter.get(this.self());
-            }
-            Screen inputScreen;
-                if (!multiLineInput && !allowPlaceholders) {
-                    TextInputScreen s = TextInputScreen.build(label, inputCharacterFilter, call -> {
-                        if (call != null) {
-                            this.saveSnapshot();
-                            this.applyStackAppliers(entry, call);
-                        }
-                        menu.closeMenu();
-                        Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
-                    });
-                    if (textValidator != null) {
-                        s.setTextValidator(consumes -> {
-                            if (textValidatorUserFeedback != null) consumes.setTextValidatorUserFeedback(textValidatorUserFeedback.get(consumes.getText()));
-                            return textValidator.get(consumes.getText());
-                        });
+                {
+                    StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                    if (!stack.isPrimary() || stack.isEmpty()) {
+                        return;
                     }
-                    s.setText(defaultText);
-                    inputScreen = s;
-                } else {
-                    TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
-                        if (call != null) {
-                            this.saveSnapshot();
-                            this.applyStackAppliers(entry, call);
-                        }
-                        menu.closeMenu();
-                        Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
-                    });
-                    if (textValidator != null) {
-                        s.setTextValidator(consumes -> {
-                            if (textValidatorUserFeedback != null) consumes.setTextValidatorUserFeedback(textValidatorUserFeedback.get(consumes.getText()));
-                            return textValidator.get(consumes.getText());
-                        });
+                    List<O> selectedElements = stack.getElements();
+                    String defaultText = null;
+                    List<String> targetValuesOfSelected = new ArrayList<>();
+                    for (O e : selectedElements) {
+                        targetValuesOfSelected.add(targetFieldGetter.get(e));
                     }
-                    s.setText(defaultText);
-                    s.setMultilineMode(multiLineInput);
-                    s.setPlaceholdersAllowed(allowPlaceholders);
-                    inputScreen = s;
-                }
-            Minecraft.getInstance().setScreen(inputScreen);
-        }).setStackable(true)
+                    if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
+                        defaultText = targetFieldGetter.get(this.self());
+                    }
+                    Screen inputScreen;
+                    if (!multiLineInput && !allowPlaceholders) {
+                        TextInputScreen s = TextInputScreen.build(label, inputCharacterFilter, call -> {
+                            if (call != null) {
+                                this.saveSnapshot();
+                                this.applyStackAppliers(entry, call);
+                            }
+                            menu.closeMenu();
+                            Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
+                        });
+                        if (textValidator != null) {
+                            s.setTextValidator(consumes -> {
+                                if (textValidatorUserFeedback != null) consumes.setTextValidatorUserFeedback(textValidatorUserFeedback.get(consumes.getText()));
+                                return textValidator.get(consumes.getText());
+                            });
+                        }
+                        s.setText(defaultText);
+                        inputScreen = s;
+                    } else {
+                        TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
+                            if (call != null) {
+                                this.saveSnapshot();
+                                this.applyStackAppliers(entry, call);
+                            }
+                            menu.closeMenu();
+                            Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
+                        });
+                        if (textValidator != null) {
+                            s.setTextValidator(consumes -> {
+                                if (textValidatorUserFeedback != null) consumes.setTextValidatorUserFeedback(textValidatorUserFeedback.get(consumes.getText()));
+                                return textValidator.get(consumes.getText());
+                            });
+                        }
+                        s.setText(defaultText);
+                        s.setMultilineMode(multiLineInput);
+                        s.setPlaceholdersAllowed(allowPlaceholders);
+                        inputScreen = s;
+                    }
+                    Minecraft.getInstance().setScreen(inputScreen);
+                }).setStackable(true)
                 .setStackApplier((stackEntry, value) -> {
                     if (!(value instanceof String call)) {
                         return;
@@ -535,13 +510,13 @@ public interface ContextMenuBuilder<O> {
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"), (menu, entry) -> {
-                StackContext<O> stack = this.stack(entry, selectedElementsFilter);
-                if (!stack.isPrimary() || stack.isEmpty()) {
-                    return;
-                }
-                this.saveSnapshot();
-                this.applyStackAppliers(entry, null);
-            }).setStackable(true)
+                        StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                        if (!stack.isPrimary() || stack.isEmpty()) {
+                            return;
+                        }
+                        this.saveSnapshot();
+                        this.applyStackAppliers(entry, null);
+                    }).setStackable(true)
                     .setStackApplier((stackEntry, value) -> {
                         targetFieldSetter.accept(this.self(), defaultValue);
                     });
