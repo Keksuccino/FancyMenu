@@ -16,10 +16,14 @@ import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -29,10 +33,12 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -656,19 +662,20 @@ public class Property<T> {
     }
 
     /**
-     * Creates a {@link DrawableColor} property with an explicit default and current value.
+     * Creates a hex color {@link String} property with an explicit default and current value.
      * <p>
-     * Values serialize to hex strings, and the context menu entry uses a text input with optional
-     * placeholder support. Invalid colors are ignored. The entry is stack-aware for multi-selection.
+     * Values serialize as raw strings, and the context menu entry provides both string input and a
+     * color picker. No validation is applied so placeholders can remain unresolved.
+     * The entry is stack-aware for multi-selection.
      * </p>
      *
      * <h3>Example</h3>
      * <pre>{@code
-     * Property<DrawableColor> color = Property.drawableColorProperty(
+     * Property<String> color = Property.hexColorProperty(
      *     "color",
-     *     DrawableColor.of("#ffffff"),
-     *     DrawableColor.of("#ff8800"),
-     *     false, // placeholders
+     *     "#ffffff",
+     *     "#ff8800",
+     *     true, // placeholders
      *     "fancymenu.menu.entry.color"
      * );
      * }</pre>
@@ -678,45 +685,174 @@ public class Property<T> {
      * @param currentValue the initial current value
      * @param placeholders whether placeholder tokens are allowed in input
      * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
-     * @return a configured drawable color property
+     * @return a configured hex color string property
      */
     @NotNull
-    public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue, @Nullable DrawableColor currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        Property<DrawableColor> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
-        p.deserializationCodec = DrawableColor::of;
-        p.serializationCodec = consumes -> {
-            if (consumes == null) return null;
-            return consumes.getHex();
+    public static Property<String> hexColorProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<String> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        p.deserializationCodec = consumes -> consumes;
+        p.serializationCodec = consumes -> consumes;
+        p.contextMenuEntrySupplier = (property, builder, menu) -> {
+            ContextMenu subMenu = new ContextMenu();
+
+            subMenu.addClickableEntry("input_as_string", Component.translatable("fancymenu.context_menu.entries.color.input_as_string"),
+                            (contextMenu, entry) -> {
+                                ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(entry, consumes -> consumes.getProperty(key) != null);
+                                if (!stack.isPrimary() || stack.isEmpty()) {
+                                    return;
+                                }
+                                List<? extends PropertyHolder> selectedObjects = stack.getObjects();
+                                String defaultText = null;
+                                List<String> targetValuesOfSelected = new ArrayList<>();
+                                for (PropertyHolder holder : selectedObjects) {
+                                    Property<String> resolved = (Property<String>) holder.getProperty(key);
+                                    String value = (resolved != null) ? resolved.get() : property.getDefault();
+                                    targetValuesOfSelected.add(value);
+                                }
+                                if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
+                                    Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                                    defaultText = (resolved != null) ? resolved.get() : property.getDefault();
+                                }
+                                if (!placeholders) {
+                                    TextInputScreen s = TextInputScreen.build(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null, call -> {
+                                        if (call != null) {
+                                            builder.saveSnapshot();
+                                            builder.applyStackAppliers(entry, call);
+                                        }
+                                        contextMenu.closeMenu();
+                                        Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                                    });
+                                    s.setText(defaultText);
+                                    Minecraft.getInstance().setScreen(s);
+                                } else {
+                                    TextEditorScreen s = new TextEditorScreen(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null, call -> {
+                                        if (call != null) {
+                                            builder.saveSnapshot();
+                                            builder.applyStackAppliers(entry, call);
+                                        }
+                                        contextMenu.closeMenu();
+                                        Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                                    });
+                                    s.setText(defaultText);
+                                    s.setMultilineMode(false);
+                                    s.setPlaceholdersAllowed(true);
+                                    Minecraft.getInstance().setScreen(s);
+                                }
+                            })
+                    .setStackable(true)
+                    .setStackApplier((stackEntry, value) -> {
+                        if (!(value instanceof String call)) {
+                            return;
+                        }
+                        Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                        if (resolved != null) resolved.set(call);
+                    });
+
+            subMenu.addClickableEntry("input_via_color_picker", Component.translatable("fancymenu.context_menu.entries.color.input_via_color_picker"),
+                            (contextMenu, entry) -> {
+                                ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(entry, consumes -> consumes.getProperty(key) != null);
+                                if (!stack.isPrimary() || stack.isEmpty()) {
+                                    return;
+                                }
+                                List<? extends PropertyHolder> selectedObjects = stack.getObjects();
+                                String presetRaw = null;
+                                List<String> targetValuesOfSelected = new ArrayList<>();
+                                for (PropertyHolder holder : selectedObjects) {
+                                    Property<String> resolved = (Property<String>) holder.getProperty(key);
+                                    String value = (resolved != null) ? resolved.get() : property.getDefault();
+                                    targetValuesOfSelected.add(value);
+                                }
+                                if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
+                                    Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                                    presetRaw = (resolved != null) ? resolved.get() : property.getDefault();
+                                } else {
+                                    presetRaw = property.getDefault();
+                                }
+                                DrawableColor preset = null;
+                                if (presetRaw != null) {
+                                    DrawableColor parsed = DrawableColor.of(presetRaw);
+                                    if (parsed != DrawableColor.EMPTY) {
+                                        preset = parsed;
+                                    }
+                                }
+                                ColorPickerScreen picker = new ColorPickerScreen(preset, call -> {
+                                    if (call != null) {
+                                        builder.saveSnapshot();
+                                        builder.applyStackAppliers(entry, call);
+                                    }
+                                    contextMenu.closeMenu();
+                                    Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                                });
+                                Minecraft.getInstance().setScreen(picker);
+                            })
+                    .setStackable(true)
+                    .setStackApplier((stackEntry, value) -> {
+                        if (!(value instanceof String call)) {
+                            return;
+                        }
+                        Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                        if (resolved != null) resolved.set(call);
+                    });
+
+            subMenu.addSeparatorEntry("separator_before_reset");
+
+            subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"),
+                            (contextMenu, entry) -> {
+                                ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(entry, consumes -> consumes.getProperty(key) != null);
+                                if (!stack.isPrimary() || stack.isEmpty()) {
+                                    return;
+                                }
+                                builder.saveSnapshot();
+                                builder.applyStackAppliers(entry, null);
+                            })
+                    .setStackable(true)
+                    .setStackApplier((stackEntry, value) -> {
+                        Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                        if (resolved != null) resolved.set(property.getDefault());
+                    });
+
+            subMenu.addSeparatorEntry("separator_before_current_value_display")
+                    .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1);
+            subMenu.addClickableEntry("current_value_display", Component.empty(), (contextMenu, entry) -> {})
+                    .setLabelSupplier((contextMenu, entry) -> {
+                        List<? extends PropertyHolder> selectedObjects = builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects();
+                        if (selectedObjects.size() == 1) {
+                            Component valueComponent;
+                            Property<String> resolved = (Property<String>) selectedObjects.get(0).getProperty(key);
+                            String val = (resolved != null) ? resolved.get() : property.getDefault();
+                            if (val == null) {
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                            } else {
+                                if (Minecraft.getInstance().font.width(val) > 150) {
+                                    val = new StringBuilder(val).reverse().toString();
+                                    val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+                                    val = new StringBuilder(val).reverse().toString();
+                                    val = ".." + val;
+                                }
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                            }
+                            return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+                        }
+                        return Component.empty();
+                    })
+                    .setClickSoundEnabled(false)
+                    .setChangeBackgroundColorOnHover(false)
+                    .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
+                    .setIcon(ContextMenu.IconFactory.getIcon("info"));
+
+            return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu).setStackable(true);
         };
-        p.contextMenuEntrySupplier = (property, builder, menu) -> builder.buildGenericStringInputContextMenuEntry(menu, "menu_entry_" + key,
-                consumes -> consumes.getProperty(key) != null,
-                consumes -> {
-                    Property<DrawableColor> resolved = (Property<DrawableColor>) consumes.getProperty(key);
-                    DrawableColor value = (resolved != null) ? resolved.get() : property.getDefault();
-                    return (value != null) ? value.getHex() : null;
-                },
-                (b, s) -> {
-                    if (s == null) return;
-                    DrawableColor parsed = DrawableColor.of(s);
-                    if (parsed != DrawableColor.EMPTY) {
-                        Property<DrawableColor> resolved = (Property<DrawableColor>) b.getProperty(key);
-                        if (resolved != null) resolved.set(parsed);
-                    }
-                },
-                null, false, placeholders, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true,
-                (property.getDefault() != null) ? property.getDefault().getHex() : null,
-                (!placeholders) ? TextValidators.HEX_COLOR_TEXT_VALIDATOR : null, null);
         return p;
     }
 
     /**
      * Convenience overload that uses {@code defaultValue} as the initial current value.
      *
-     * @see #drawableColorProperty(String, DrawableColor, DrawableColor, boolean, String)
+     * @see #hexColorProperty(String, String, String, boolean, String)
      */
     @NotNull
-    public static Property<DrawableColor> drawableColorProperty(@NotNull String key, @Nullable DrawableColor defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        return drawableColorProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
+    public static Property<String> hexColorProperty(@NotNull String key, @Nullable String defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return hexColorProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
     }
 
     /**

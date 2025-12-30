@@ -678,7 +678,7 @@ public class Layout extends LayoutBase {
                     if (e != null) {
                         e.stayOnScreen = false;
                         String c = sec.getValue("color");
-                        if (c != null) e.color = DrawableColor.of(c);
+                        if (c != null) e.color.set(DrawableColor.of(c).getHex());
                         elements.add(Elements.SHAPE.serializeElementInternal(e));
                         elementOrder.add(e.getInstanceIdentifier());
                     }
