@@ -36,13 +36,90 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+/**
+ * Builder and helper contract for creating {@link ContextMenu} entries and wiring up stacked (multi-select) behavior.
+ * <p>
+ * A "stack" is created when multiple context menus are combined via
+ * {@link ContextMenu#stackContextMenus(ContextMenu...)}. Every entry that is marked stackable
+ * becomes a linked chain (see {@link ContextMenu.ContextMenuStackMeta#getNextInStack()}).
+ * The first entry in that chain is the one rendered in the stacked menu; subsequent entries
+ * are accessible through the stack meta and are used to apply changes to all selected objects.
+ * <p>
+ * This builder abstracts that pattern and provides:
+ * <ul>
+ *     <li>stack-safe click handling for multi-select</li>
+ *     <li>stack-wide value application via {@link #applyStackAppliers(ContextMenu.ContextMenuEntry, Object)}</li>
+ *     <li>stack-wide value inspection via {@link #resolveStackValue(ContextMenu.ContextMenuEntry)}</li>
+ *     <li>common UI flows (resource chooser, text input, cycle/toggle entries, etc.)</li>
+ * </ul>
+ *
+ * <p><b>Minimal example (boolean toggle with stacking)</b>
+ * <pre>{@code
+ * ContextMenuBuilder<MyObject> builder = ...;
+ * ContextMenu menu = new ContextMenu();
+ *
+ * builder.addGenericToggleContextMenuEntryTo(
+ *     menu,
+ *     "affects_overlay",
+ *     obj -> obj instanceof MyObject,
+ *     MyObject::isAffectedByDecorations,
+ *     MyObject::setAffectedByDecorations,
+ *     "fancymenu.context.affects_overlay"
+ * );
+ * }</pre>
+ *
+ * <p><b>Minimal example (resource chooser with stacking)</b>
+ * <pre>{@code
+ * builder.addImageResourceChooserContextMenuEntryTo(
+ *     menu,
+ *     "background_texture",
+ *     obj -> obj instanceof MyObject,
+ *     ResourceSupplier.image("textures/gui/default.png"),
+ *     MyObject::getBackgroundTexture,
+ *     MyObject::setBackgroundTexture,
+ *     Component.translatable("fancymenu.context.background_texture"),
+ *     true,
+ *     null,
+ *     true, true, false
+ * );
+ * }</pre>
+ *
+ * <p>Notes:
+ * <ul>
+ *     <li>All "build..." methods return an entry; all "add..." methods add the entry to the menu.</li>
+ *     <li>All stack-aware entries should call {@link ContextMenu.ContextMenuEntry#setStackable(boolean)}.</li>
+ *     <li>Stacked operations should use {@link #applyStackAppliers(ContextMenu.ContextMenuEntry, Object)}
+ *     rather than directly mutating {@link #self()}.</li>
+ * </ul>
+ */
 @SuppressWarnings("unused")
 public interface ContextMenuBuilder<O> {
 
+    /**
+     * Internal runtime flag used by {@link #runStackedClickActions(ContextMenu.ClickableContextMenuEntry)}
+     * to prevent re-entrant click handling while iterating a stack.
+     */
     String STACK_ACTION_IN_PROGRESS_KEY = "stack_action_in_progress";
+    /**
+     * Internal runtime flag that temporarily forces {@link StackContext#isPrimary()} to return true
+     * for all entries in the stack while a stacked click action is running.
+     */
     String STACK_FORCE_APPLY_KEY = "stack_force_apply";
+    /**
+     * Internal runtime flag for callers that want to record snapshot creation during stacked actions.
+     */
     String STACK_SNAPSHOT_TAKEN_KEY = "stack_snapshot_taken";
 
+    /**
+     * Creates a standalone builder wrapper by providing the required callbacks.
+     * <p>
+     * This is useful in UI code that does not already implement {@link ContextMenuBuilder} directly.
+     *
+     * @param callbackScreenSupplier screen to return to after input/resource screens close
+     * @param stackableObjectsListSupplier provides the full list of stackable objects, optionally filtered
+     * @param selfSupplier supplies the "self" object for this menu instance
+     * @param saveSnapshotTask optional snapshot hook for history/undo
+     */
     static <O> ContextMenuBuilder<O> createStandalone(@NotNull Supplier<Screen> callbackScreenSupplier, @NotNull ConsumingSupplier<ConsumingSupplier<O, Boolean>, List<O>> stackableObjectsListSupplier, @NotNull Supplier<O> selfSupplier, @Nullable Runnable saveSnapshotTask) {
         return new ContextMenuBuilder<>() {
             @Override
@@ -68,32 +145,60 @@ public interface ContextMenuBuilder<O> {
 
     /**
      * Returns the {@link Screen} {@link ContextMenu}s should come back to after doing things in other {@link Screen}s, like text input screens or similar.
+     *
+     * @return the screen that should be restored after a modal UI (text editor, resource chooser) closes.
      */
     @Nullable
     Screen getContextMenuCallbackScreen();
 
     /**
      * Used to get the self-instance object for building {@link ContextMenu}s.
+     *
+     * @return the object that this builder is currently editing (the "primary" selection).
+     * <p>
+     * In a stacked menu, this is still the local object's instance; use stack helpers to touch all selections.
      */
     @NotNull
     O self();
 
     /**
-     * Saves a snapshot to the history, if one is available. Mostly called right before changes are made.
+     * Saves a snapshot to the history/undo stack if supported.
+     * <p>
+     * Call this right before applying a value across a stack to ensure a single undo step.
      */
     void saveSnapshot();
 
     /**
-     * Filters the pool of all available stackable objects for {@link ContextMenu}s.<br>
-     * Should return the full pool if {@code filter} is null.
+     * Returns the list of stackable objects for multi-selection.
+     *
+     * @param filter optional filter (may be null) to include only a subset
+     * @return list of stackable objects, never null
      */
     @NotNull
     List<O> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<O, Boolean> filter);
 
+    /**
+     * Creates a {@link StackContext} for the given entry and filter.
+     * <p>
+     * This is the standard way to access the current selection and to perform stacked actions safely.
+     *
+     * @param entry the entry that initiated the action
+     * @param filter optional filter for the selectable objects
+     */
     default StackContext<O> stack(@NotNull ContextMenu.ContextMenuEntry<?> entry, @Nullable ConsumingSupplier<O, Boolean> filter) {
         return new StackContext<>(entry, this.getFilteredStackableObjectsList(filter));
     }
 
+    /**
+     * Runs click actions for every entry in a stack, but only once per logical group.
+     * <p>
+     * The entry must be the first entry in the stack; otherwise this returns false.
+     * Grouping is controlled by {@link ContextMenu.ContextMenuEntry#getStackGroupKey()}.
+     * If no group key is set, the entry instance is used as its own key.
+     *
+     * @param entry the entry being clicked
+     * @return true if the stack was handled here, false if the caller should run its own click action
+     */
     default boolean runStackedClickActions(@NotNull ContextMenu.ClickableContextMenuEntry<?> entry) {
         ContextMenu.ContextMenuStackMeta stackMeta = entry.getStackMeta();
         if (!stackMeta.isPartOfStack() || !stackMeta.isFirstInStack()) {
@@ -124,6 +229,15 @@ public interface ContextMenuBuilder<O> {
         return true;
     }
 
+    /**
+     * Applies a value to all entries in a stack by invoking their {@link ContextMenu.StackApplier}.
+     * <p>
+     * Each stacked entry may have its own applier. This method is the canonical way to apply
+     * values from menu actions (toggles, cycles, input, resource chooser, etc.).
+     *
+     * @param entry the first (visible) entry in the stack
+     * @param value the value to apply (type is defined by the entry's applier)
+     */
     default void applyStackAppliers(@NotNull ContextMenu.ContextMenuEntry<?> entry, @Nullable Object value) {
         ContextMenu.ContextMenuEntry<?> current = entry;
         while (current != null) {
@@ -135,6 +249,16 @@ public interface ContextMenuBuilder<O> {
         }
     }
 
+    /**
+     * Resolves the current value of a stack by querying each entry's {@link ContextMenu.StackValueSupplier}.
+     * <p>
+     * This is used to detect "mixed" state. When not all values are equal, the returned
+     * {@link StackValue} is marked as mixed.
+     *
+     * @param entry the first (visible) entry in the stack
+     * @param <V>   the value type
+     * @return a {@link StackValue} describing the stack state
+     */
     default <V> StackValue<V> resolveStackValue(@NotNull ContextMenu.ContextMenuEntry<?> entry) {
         List<V> values = new ArrayList<>();
         ContextMenu.ContextMenuEntry<?> current = entry;
@@ -161,20 +285,34 @@ public interface ContextMenuBuilder<O> {
         return new StackValue<>(false, mixed, first);
     }
 
+    /**
+     * Convenience wrapper around a selection and its stack metadata.
+     * <p>
+     * Instances are created via {@link #stack(ContextMenu.ContextMenuEntry, ConsumingSupplier)}.
+     */
     final class StackContext<O> {
 
         private final ContextMenu.ContextMenuEntry<?> entry;
-        private final List<O> elements;
+        private final List<O> objects;
 
-        private StackContext(@NotNull ContextMenu.ContextMenuEntry<?> entry, @NotNull List<O> elements) {
+        private StackContext(@NotNull ContextMenu.ContextMenuEntry<?> entry, @NotNull List<O> objects) {
             this.entry = entry;
-            this.elements = elements;
+            this.objects = objects;
         }
 
+        /**
+         * @return true if the entry is part of a stacked menu.
+         */
         public boolean isStacked() {
             return this.entry.getStackMeta().isPartOfStack();
         }
 
+        /**
+         * Whether this entry should perform the primary action.
+         * <p>
+         * Only the first entry in a stack should perform actions, unless a stack action is
+         * already in progress and {@link #STACK_FORCE_APPLY_KEY} is set to force all entries.
+         */
         public boolean isPrimary() {
             if (Boolean.TRUE.equals(this.entry.getStackMeta().getProperties().getBooleanProperty(STACK_FORCE_APPLY_KEY))) {
                 return true;
@@ -182,38 +320,59 @@ public interface ContextMenuBuilder<O> {
             return !this.isStacked() || this.entry.getStackMeta().isFirstInStack();
         }
 
+        /**
+         * @return true if the selection is empty.
+         */
         public boolean isEmpty() {
-            return this.elements.isEmpty();
+            return this.objects.isEmpty();
         }
 
+        /**
+         * @return the currently selected objects (filtered).
+         */
         @NotNull
-        public List<O> getElements() {
-            return this.elements;
+        public List<O> getObjects() {
+            return this.objects;
         }
 
+        /**
+         * @return stack meta of the entry that created this context.
+         */
         @NotNull
         public ContextMenu.ContextMenuStackMeta getStackMeta() {
             return this.entry.getStackMeta();
         }
 
+        /**
+         * Applies an action to all selected objects, but only if this context is primary.
+         * <p>
+         * This mirrors {@link #applyStackAppliers(ContextMenu.ContextMenuEntry, Object)}, but runs
+         * on actual selected objects rather than entry appliers.
+         */
         public void apply(@NotNull Consumer<O> action) {
-            if (!this.isPrimary() || this.elements.isEmpty()) {
+            if (!this.isPrimary() || this.objects.isEmpty()) {
                 return;
             }
-            for (O element : this.elements) {
-                action.accept(element);
+            for (O object : this.objects) {
+                action.accept(object);
             }
         }
 
+        /**
+         * Resolves a stack value directly from selected objects using a getter.
+         * <p>
+         * This is useful for mixed-state detection when you do not want to rely on
+         * {@link ContextMenu.StackValueSupplier} on entries.
+         */
         @NotNull
         public <V> StackValue<V> resolveValue(@NotNull ConsumingSupplier<O, V> getter) {
-            if (this.elements.isEmpty()) {
+            if (this.objects.isEmpty()) {
                 return StackValue.empty();
             }
-            V first = getter.get(this.elements.get(0));
+            V first = getter.get(this.objects.get(0));
             boolean mixed = false;
-            for (int i = 1; i < this.elements.size(); i++) {
-                V current = getter.get(this.elements.get(i));
+            for (int i = 1; i < this.objects.size(); i++) {
+                V current = getter.get(this.objects.get(i));
                 if (!Objects.equals(first, current)) {
                     mixed = true;
                     break;
@@ -224,6 +383,16 @@ public interface ContextMenuBuilder<O> {
 
     }
 
+    /**
+     * Result type returned by stack value resolution.
+     * <p>
+     * A stack can be:
+     * <ul>
+     *     <li>empty: no objects selected</li>
+     *     <li>mixed: values differ across selection</li>
+     *     <li>common: all values equal</li>
+     * </ul>
+     */
     final class StackValue<V> {
 
         private final boolean empty;
@@ -237,23 +406,38 @@ public interface ContextMenuBuilder<O> {
             this.value = value;
         }
 
+        /**
+         * @return a marker value indicating an empty stack.
+         */
         @NotNull
         public static <V> StackValue<V> empty() {
             return new StackValue<>(true, false, null);
         }
 
+        /**
+         * @return true if the stack is empty.
+         */
         public boolean isEmpty() {
             return this.empty;
         }
 
+        /**
+         * @return true if the stack has differing values.
+         */
         public boolean isMixed() {
             return this.mixed;
         }
 
+        /**
+         * @return true if the stack has a common value (not empty and not mixed).
+         */
         public boolean hasCommonValue() {
             return !this.empty && !this.mixed;
         }
 
+        /**
+         * @return the common value, or null if empty/mixed.
+         */
         @Nullable
         public V getValue() {
             return this.value;
@@ -261,106 +445,181 @@ public interface ContextMenuBuilder<O> {
 
     }
 
+    /**
+     * Builds a resource chooser entry for image resources.
+     * <p>
+     * The entry opens a {@link ResourceChooserScreen} and applies the selected resource
+     * to the current selection using stack appliers.
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildImageResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildImageResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<ITexture>> getter = (ConsumingSupplier<O, ResourceSupplier<ITexture>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<ITexture>> setter = (BiConsumer<O, ResourceSupplier<ITexture>>) targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter, () -> ResourceChooserScreen.image(null, file -> {}), ResourceSupplier::image, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserScreen.image(null, file -> {}), ResourceSupplier::image, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return addTo.addEntry(buildImageResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    /**
+     * Adds an image resource chooser entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildImageResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
+    /**
+     * Builds an image resource chooser entry for a specific object type.
+     * @see #buildImageResourceChooserContextMenuEntry(ContextMenu, String, ConsumingSupplier, ResourceSupplier, ConsumingSupplier, BiConsumer, Component, boolean, FileFilter, boolean, boolean, boolean)
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildImageResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return buildImageResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
+    default ContextMenu.ClickableContextMenuEntry<?> buildImageResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return buildImageResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return addTo.addEntry(buildImageResourceChooserContextMenuEntry(addTo, entryIdentifier, elementType, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    /**
+     * Adds an image resource chooser entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildImageResourceChooserContextMenuEntry(addTo, entryIdentifier, objectType, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
+    /**
+     * Builds a resource chooser entry for audio resources.
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildAudioResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildAudioResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<IAudio>> getter = (ConsumingSupplier<O, ResourceSupplier<IAudio>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<IAudio>> setter = (BiConsumer<O, ResourceSupplier<IAudio>>) targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter, () -> ResourceChooserScreen.audio(null, file -> {}), ResourceSupplier::audio, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.AUDIO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserScreen.audio(null, file -> {}), ResourceSupplier::audio, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.AUDIO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addAudioResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return addTo.addEntry(buildAudioResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    /**
+     * Adds an audio resource chooser entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addAudioResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildAudioResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
+    /**
+     * Builds an audio resource chooser entry for a specific object type.
+     * @see #buildAudioResourceChooserContextMenuEntry(ContextMenu, String, ConsumingSupplier, ResourceSupplier, ConsumingSupplier, BiConsumer, Component, boolean, FileFilter, boolean, boolean, boolean)
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildAudioResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return buildAudioResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
+    default ContextMenu.ClickableContextMenuEntry<?> buildAudioResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return buildAudioResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addAudioResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return addTo.addEntry(buildAudioResourceChooserContextMenuEntry(addTo, entryIdentifier, elementType, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    /**
+     * Adds an audio resource chooser entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addAudioResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildAudioResourceChooserContextMenuEntry(addTo, entryIdentifier, objectType, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
+    /**
+     * Builds a resource chooser entry for video resources.
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildVideoResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildVideoResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<IVideo>> getter = (ConsumingSupplier<O, ResourceSupplier<IVideo>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<IVideo>> setter = (BiConsumer<O, ResourceSupplier<IVideo>>) targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter, () -> ResourceChooserScreen.video(null, file -> {}), ResourceSupplier::video, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.VIDEO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserScreen.video(null, file -> {}), ResourceSupplier::video, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.VIDEO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addVideoResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return addTo.addEntry(buildVideoResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    /**
+     * Adds a video resource chooser entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addVideoResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildVideoResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
+    /**
+     * Builds a video resource chooser entry for a specific object type.
+     * @see #buildVideoResourceChooserContextMenuEntry(ContextMenu, String, ConsumingSupplier, ResourceSupplier, ConsumingSupplier, BiConsumer, Component, boolean, FileFilter, boolean, boolean, boolean)
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildVideoResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return buildVideoResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
+    default ContextMenu.ClickableContextMenuEntry<?> buildVideoResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return buildVideoResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addVideoResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return addTo.addEntry(buildVideoResourceChooserContextMenuEntry(addTo, entryIdentifier, elementType, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    /**
+     * Adds a video resource chooser entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addVideoResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildVideoResourceChooserContextMenuEntry(addTo, entryIdentifier, objectType, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> buildTextResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter, () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+    /**
+     * Builds a resource chooser entry for text resources.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildTextResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addTextResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return addTo.addEntry(buildTextResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    /**
+     * Adds a text resource chooser entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addTextResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildTextResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> buildTextResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return buildTextResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
+    /**
+     * Builds a text resource chooser entry for a specific object type.
+     * @see #buildTextResourceChooserContextMenuEntry(ContextMenu, String, ConsumingSupplier, ResourceSupplier, ConsumingSupplier, BiConsumer, Component, boolean, FileFilter, boolean, boolean, boolean)
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildTextResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return buildTextResourceChooserContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addTextResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return addTo.addEntry(buildTextResourceChooserContextMenuEntry(addTo, entryIdentifier, elementType, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
+    /**
+     * Adds a text resource chooser entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addTextResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildTextResourceChooserContextMenuEntry(addTo, entryIdentifier, objectType, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
+    /**
+     * Builds a generic resource chooser entry for a specific object type.
+     * @see #buildGenericResourceChooserContextMenuEntry(ContextMenu, String, ConsumingSupplier, Supplier, ConsumingSupplier, ResourceSupplier, ConsumingSupplier, BiConsumer, Component, boolean, FileTypeGroup, FileFilter, boolean, boolean, boolean)
+     */
     @SuppressWarnings("all")
-    default <R extends Resource, F extends FileType<R>, E extends O> ContextMenu.ClickableContextMenuEntry<?> buildGenericResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default <R extends Resource, F extends FileType<R>, E extends O> ContextMenu.ClickableContextMenuEntry<?> buildGenericResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<R>> getter = (ConsumingSupplier<O, ResourceSupplier<R>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<R>> setter = (BiConsumer<O, ResourceSupplier<R>>) targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, getter, setter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> objectType.isAssignableFrom(consumes.getClass()), resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, getter, setter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
-    default <R extends Resource, F extends FileType<R>, E extends O> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return addTo.addEntry(buildGenericResourceChooserContextMenuEntry(addTo, entryIdentifier, elementType, resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb));
+    /**
+     * Adds a generic resource chooser entry for a specific object type.
+     */
+    default <R extends Resource, F extends FileType<R>, E extends O> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildGenericResourceChooserContextMenuEntry(addTo, entryIdentifier, objectType, resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
-    default <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> buildGenericResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    /**
+     * Builds a generic resource chooser entry for any resource type.
+     * <p>
+     * The entry spawns a {@link ResourceChooserScreen}, applies the selected resource to the
+     * stack via {@link #applyStackAppliers(ContextMenu.ContextMenuEntry, Object)}, and optionally
+     * adds a "reset to default" action.
+     *
+     * @param selectedObjectsFilter optional filter for selection
+     * @param resourceChooserScreenBuilder builder for the chooser UI
+     * @param resourceSupplierBuilder creates a {@link ResourceSupplier} from a source string
+     * @param targetFieldGetter getter for the field on a single object
+     * @param targetFieldSetter setter for the field on a single object
+     */
+    default <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> buildGenericResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
 
         ContextMenu subMenu = new ContextMenu();
 
         subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.resources.choose"),
                         (menu, entry) -> {
-                            StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                            StackContext<O> stack = this.stack(entry, selectedObjectsFilter);
                             if (!stack.isPrimary() || stack.isEmpty()) {
                                 return;
                             }
-                            List<O> selectedElements = stack.getElements();
+                            List<O> selectedObjects = stack.getObjects();
                             String preSelectedSource = null;
-                            List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> {
+                            List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedObjects, consumes -> {
                                 ResourceSupplier<R> supplier = targetFieldGetter.get(consumes);
                                 if (supplier != null) return supplier.getSourceWithPrefix();
                                 return null;
@@ -394,7 +653,7 @@ public interface ContextMenuBuilder<O> {
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.ui.resources.reset"),
                             (menu, entry) -> {
-                                StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                                StackContext<O> stack = this.stack(entry, selectedObjectsFilter);
                                 if (!stack.isPrimary() || stack.isEmpty()) {
                                     return;
                                 }
@@ -407,13 +666,13 @@ public interface ContextMenuBuilder<O> {
         }
 
         subMenu.addSeparatorEntry("separator_before_current_value_display")
-                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedElementsFilter).getElements().size() == 1);
+                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1);
         subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
                 .setLabelSupplier((menu, entry) -> {
-                    List<O> selectedElements = this.stack(entry, selectedElementsFilter).getElements();
-                    if (selectedElements.size() == 1) {
+                    List<O> selectedObjects = this.stack(entry, selectedObjectsFilter).getObjects();
+                    if (selectedObjects.size() == 1) {
                         Component valueComponent;
-                        ResourceSupplier<R> supplier = targetFieldGetter.get(selectedElements.get(0));
+                        ResourceSupplier<R> supplier = targetFieldGetter.get(selectedObjects.get(0));
                         String val = (supplier != null) ? supplier.getSourceWithoutPrefix() : null;
                         if (val == null) {
                             valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
@@ -433,29 +692,42 @@ public interface ContextMenuBuilder<O> {
                 })
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)
-                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedElementsFilter).getElements().size() == 1)
+                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1)
                 .setIcon(ContextMenu.IconFactory.getIcon("info"));
 
         return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu).setStackable(true);
 
     }
 
-    default <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return addTo.addEntry(buildGenericResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb));
+    /**
+     * Adds a generic resource chooser entry to the given menu.
+     */
+    default <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+        return addTo.addEntry(buildGenericResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    /**
+     * Builds a text input entry that opens {@link TextInputScreen} or {@link TextEditorScreen}.
+     * <p>
+     * This entry is stack-aware: it uses {@link #applyStackAppliers(ContextMenu.ContextMenuEntry, Object)}
+     * to apply the resulting text to all selected objects.
+     *
+     * @param inputCharacterFilter optional per-character filter
+     * @param multiLineInput true to use multiline text editor
+     * @param allowPlaceholders true to allow placeholder tokens
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ContextMenu subMenu = new ContextMenu();
         ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) ->
                 {
-                    StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                    StackContext<O> stack = this.stack(entry, selectedObjectsFilter);
                     if (!stack.isPrimary() || stack.isEmpty()) {
                         return;
                     }
-                    List<O> selectedElements = stack.getElements();
+                    List<O> selectedObjects = stack.getObjects();
                     String defaultText = null;
                     List<String> targetValuesOfSelected = new ArrayList<>();
-                    for (O e : selectedElements) {
+                    for (O e : selectedObjects) {
                         targetValuesOfSelected.add(targetFieldGetter.get(e));
                     }
                     if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
@@ -510,7 +782,7 @@ public interface ContextMenuBuilder<O> {
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"), (menu, entry) -> {
-                        StackContext<O> stack = this.stack(entry, selectedElementsFilter);
+                        StackContext<O> stack = this.stack(entry, selectedObjectsFilter);
                         if (!stack.isPrimary() || stack.isEmpty()) {
                             return;
                         }
@@ -523,13 +795,13 @@ public interface ContextMenuBuilder<O> {
         }
 
         subMenu.addSeparatorEntry("separator_before_current_value_display")
-                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedElementsFilter).getElements().size() == 1);
+                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1);
         subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
                 .setLabelSupplier((menu, entry) -> {
-                    List<O> selectedElements = this.stack(entry, selectedElementsFilter).getElements();
-                    if (selectedElements.size() == 1) {
+                    List<O> selectedObjects = this.stack(entry, selectedObjectsFilter).getObjects();
+                    if (selectedObjects.size() == 1) {
                         Component valueComponent;
-                        String val = targetFieldGetter.get(selectedElements.get(0));
+                        String val = targetFieldGetter.get(selectedObjects.get(0));
                         if (val == null) {
                             valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
                         } else {
@@ -548,50 +820,81 @@ public interface ContextMenuBuilder<O> {
                 })
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)
-                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedElementsFilter).getElements().size() == 1)
+                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1)
                 .setIcon(ContextMenu.IconFactory.getIcon("info"));
 
         return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu).setStackable(true);
 
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildInputContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds a text input entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
+    /**
+     * Builds a text input entry for a specific object type.
+     * @see #buildInputContextMenuEntry(ContextMenu, String, ConsumingSupplier, ConsumingSupplier, BiConsumer, CharacterFilter, boolean, boolean, Component, boolean, String, ConsumingSupplier, ConsumingSupplier)
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, String> getter = (ConsumingSupplier<O, String>) targetFieldGetter;
         BiConsumer<O, String> setter = (BiConsumer<O, String>) targetFieldSetter;
-        return buildInputContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
+        return buildInputContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildInputContextMenuEntry(addTo, entryIdentifier, elementType, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds a text input entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericStringInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
+    /**
+     * Builds a generic string input entry.
+     * <p>
+     * This is a convenience alias for {@link #buildInputContextMenuEntry}.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericStringInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildGenericStringInputContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds a generic string input entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildGenericStringInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
+    /**
+     * Builds a string input entry for a specific object type.
+     * @see #buildGenericStringInputContextMenuEntry(ContextMenu, String, ConsumingSupplier, ConsumingSupplier, BiConsumer, CharacterFilter, boolean, boolean, Component, boolean, String, ConsumingSupplier, ConsumingSupplier)
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildStringInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildStringInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, String> getter = (ConsumingSupplier<O, String>) targetFieldGetter;
         BiConsumer<O, String> setter = (BiConsumer<O, String>) targetFieldSetter;
-        return buildGenericStringInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
+        return buildGenericStringInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildStringInputContextMenuEntry(addTo, entryIdentifier, elementType, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds a string input entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildStringInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericIntegerInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, Integer> targetFieldGetter, @NotNull BiConsumer<O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    /**
+     * Builds an integer input entry.
+     * <p>
+     * This is a convenience wrapper around {@link #buildInputContextMenuEntry} that
+     * converts between text and integer values.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericIntegerInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Integer> targetFieldGetter, @NotNull BiConsumer<O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultIntegerValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isInteger(consumes);
-        return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter,
+        return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter,
                 consumes -> {
                     Integer i = targetFieldGetter.get(consumes);
                     if (i == null) i = 0;
@@ -604,24 +907,36 @@ public interface ContextMenuBuilder<O> {
                 (textValidator != null) ? textValidator : defaultIntegerValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, Integer> targetFieldGetter, @NotNull BiConsumer<O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildGenericIntegerInputContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds an integer input entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Integer> targetFieldGetter, @NotNull BiConsumer<O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildGenericIntegerInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
+    /**
+     * Builds an integer input entry for a specific object type.
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildIntegerInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Integer> targetFieldGetter, @NotNull BiConsumer <O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildIntegerInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, Integer> targetFieldGetter, @NotNull BiConsumer <O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, Integer> getter = (ConsumingSupplier<O, Integer>) targetFieldGetter;
         BiConsumer<O, Integer> setter = (BiConsumer<O, Integer>) targetFieldSetter;
-        return buildGenericIntegerInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
+        return buildGenericIntegerInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Integer> targetFieldGetter, @NotNull BiConsumer <O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildIntegerInputContextMenuEntry(addTo, entryIdentifier, elementType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds an integer input entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, Integer> targetFieldGetter, @NotNull BiConsumer <O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildIntegerInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericLongInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, Long> targetFieldGetter, @NotNull BiConsumer<O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    /**
+     * Builds a long input entry.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericLongInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Long> targetFieldGetter, @NotNull BiConsumer<O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultLongValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isLong(consumes);
-        return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter,
+        return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter,
                 consumes -> {
                     Long l = targetFieldGetter.get(consumes);
                     if (l == null) l = 0L;
@@ -634,24 +949,36 @@ public interface ContextMenuBuilder<O> {
                 (textValidator != null) ? textValidator : defaultLongValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, Long> targetFieldGetter, @NotNull BiConsumer<O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildGenericLongInputContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds a long input entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Long> targetFieldGetter, @NotNull BiConsumer<O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildGenericLongInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
+    /**
+     * Builds a long input entry for a specific object type.
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildLongInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Long> targetFieldGetter, @NotNull BiConsumer <O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildLongInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, Long> targetFieldGetter, @NotNull BiConsumer <O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, Long> getter = (ConsumingSupplier<O, Long>) targetFieldGetter;
         BiConsumer<O, Long> setter = (BiConsumer<O, Long>) targetFieldSetter;
-        return buildGenericLongInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
+        return buildGenericLongInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Long> targetFieldGetter, @NotNull BiConsumer <O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildLongInputContextMenuEntry(addTo, entryIdentifier, elementType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds a long input entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, Long> targetFieldGetter, @NotNull BiConsumer <O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildLongInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericDoubleInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, Double> targetFieldGetter, @NotNull BiConsumer<O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    /**
+     * Builds a double input entry.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericDoubleInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Double> targetFieldGetter, @NotNull BiConsumer<O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultDoubleValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isDouble(consumes);
-        return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter,
+        return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter,
                 consumes -> {
                     Double d = targetFieldGetter.get(consumes);
                     if (d == null) d = 0D;
@@ -664,24 +991,36 @@ public interface ContextMenuBuilder<O> {
                 (textValidator != null) ? textValidator : defaultDoubleValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, Double> targetFieldGetter, @NotNull BiConsumer<O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildGenericDoubleInputContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds a double input entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Double> targetFieldGetter, @NotNull BiConsumer<O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildGenericDoubleInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
+    /**
+     * Builds a double input entry for a specific object type.
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildDoubleInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Double> targetFieldGetter, @NotNull BiConsumer <O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildDoubleInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, Double> targetFieldGetter, @NotNull BiConsumer <O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, Double> getter = (ConsumingSupplier<O, Double>) targetFieldGetter;
         BiConsumer<O, Double> setter = (BiConsumer<O, Double>) targetFieldSetter;
-        return buildGenericDoubleInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
+        return buildGenericDoubleInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Double> targetFieldGetter, @NotNull BiConsumer <O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildDoubleInputContextMenuEntry(addTo, entryIdentifier, elementType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds a double input entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, Double> targetFieldGetter, @NotNull BiConsumer <O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildDoubleInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericFloatInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, Float> targetFieldGetter, @NotNull BiConsumer<O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    /**
+     * Builds a float input entry.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericFloatInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Float> targetFieldGetter, @NotNull BiConsumer<O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultFloatValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isFloat(consumes);
-        return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedElementsFilter,
+        return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter,
                 consumes -> {
                     Float f = targetFieldGetter.get(consumes);
                     if (f == null) f = 0F;
@@ -694,22 +1033,50 @@ public interface ContextMenuBuilder<O> {
                 (textValidator != null) ? textValidator : defaultFloatValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, Float> targetFieldGetter, @NotNull BiConsumer<O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildGenericFloatInputContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds a float input entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Float> targetFieldGetter, @NotNull BiConsumer<O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildGenericFloatInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
+    /**
+     * Builds a float input entry for a specific object type.
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildFloatInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Float> targetFieldGetter, @NotNull BiConsumer <O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildFloatInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, Float> targetFieldGetter, @NotNull BiConsumer <O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, Float> getter = (ConsumingSupplier<O, Float>) targetFieldGetter;
         BiConsumer<O, Float> setter = (BiConsumer<O, Float>) targetFieldSetter;
-        return buildGenericFloatInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
+        return buildGenericFloatInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Float> targetFieldGetter, @NotNull BiConsumer <O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
-        return addTo.addEntry(buildFloatInputContextMenuEntry(addTo, entryIdentifier, elementType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    /**
+     * Adds a float input entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, Float> targetFieldGetter, @NotNull BiConsumer <O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addTo.addEntry(buildFloatInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
-    default <V> ContextMenu.ClickableContextMenuEntry<?> buildGenericCycleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
+    /**
+     * Builds a click-to-cycle entry that is aware of stacked menus.
+     * <p>
+     * The current value is resolved using {@link #resolveStackValue(ContextMenu.ContextMenuEntry)}.
+     * If the stack is mixed, the cycle starts from its default (first) value.
+     *
+     * <p><b>Example</b>
+     * <pre>{@code
+     * builder.addGenericCycleContextMenuEntryTo(
+     *     menu,
+     *     "h_align",
+     *     ListUtils.of(Alignment.LEFT, Alignment.CENTER, Alignment.RIGHT),
+     *     obj -> obj instanceof MyObject,
+     *     MyObject::getHorizontalAlignment,
+     *     MyObject::setHorizontalAlignment,
+     *     (m, e, v) -> Component.translatable("fancymenu.align." + v.name().toLowerCase())
+     * );
+     * }</pre>
+     */
+    default <V> ContextMenu.ClickableContextMenuEntry<?> buildGenericCycleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
         ContextMenu.ClickableContextMenuEntry<?> entry = new ContextMenu.ClickableContextMenuEntry<>(entryIdentifier, parentMenu, Component.literal(""), (menu, entryRef) -> {
             if (entryRef.getStackMeta().isPartOfStack() && !entryRef.getStackMeta().isFirstInStack()) {
                 return;
@@ -745,26 +1112,38 @@ public interface ContextMenuBuilder<O> {
         return entry;
     }
 
-    default <V> ContextMenu.ClickableContextMenuEntry<?> addGenericCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
-        return addTo.addEntry(buildGenericCycleContextMenuEntry(addTo, entryIdentifier, switcherValues, selectedElementsFilter, targetFieldGetter, targetFieldSetter, labelSupplier));
+    /**
+     * Adds a generic cycle entry to the given menu.
+     */
+    default <V> ContextMenu.ClickableContextMenuEntry<?> addGenericCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
+        return addTo.addEntry(buildGenericCycleContextMenuEntry(addTo, entryIdentifier, switcherValues, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, labelSupplier));
     }
 
+    /**
+     * Builds a cycle entry for a specific object type.
+     */
     @SuppressWarnings("all")
-    default <V, E extends O> ContextMenu.ClickableContextMenuEntry<?> buildCycleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, List<V> switcherValues, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, V> targetFieldGetter, @NotNull BiConsumer <O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
+    default <V, E extends O> ContextMenu.ClickableContextMenuEntry<?> buildCycleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, List<V> switcherValues, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, V> targetFieldGetter, @NotNull BiConsumer <O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
         ConsumingSupplier<O, V> getter = (ConsumingSupplier<O, V>) targetFieldGetter;
         BiConsumer<O, V> setter = (BiConsumer<O, V>) targetFieldSetter;
-        return buildGenericCycleContextMenuEntry(parentMenu, entryIdentifier, switcherValues, consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, labelSupplier);
+        return buildGenericCycleContextMenuEntry(parentMenu, entryIdentifier, switcherValues, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, labelSupplier);
     }
 
-    default <V, E extends O> ContextMenu.ClickableContextMenuEntry<?> addCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, V> targetFieldGetter, @NotNull BiConsumer <O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
-        return addTo.addEntry(buildCycleContextMenuEntry(addTo, entryIdentifier, switcherValues, elementType, targetFieldGetter, targetFieldSetter, labelSupplier));
+    /**
+     * Adds a cycle entry for a specific object type.
+     */
+    default <V, E extends O> ContextMenu.ClickableContextMenuEntry<?> addCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, V> targetFieldGetter, @NotNull BiConsumer <O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
+        return addTo.addEntry(buildCycleContextMenuEntry(addTo, entryIdentifier, switcherValues, objectType, targetFieldGetter, targetFieldSetter, labelSupplier));
     }
 
+    /**
+     * Builds a boolean toggle entry (false/true cycle) with standard FancyMenu labels.
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericToggleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericToggleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
         ConsumingSupplier<O, Boolean> getter = (ConsumingSupplier<O, Boolean>) targetFieldGetter;
         BiConsumer<O, Boolean> setter = (BiConsumer<O, Boolean>) targetFieldSetter;
-        return buildGenericCycleContextMenuEntry(parentMenu, entryIdentifier, ListUtils.of(false, true), selectedElementsFilter, getter, setter, (menu, entry, switcherValue) -> {
+        return buildGenericCycleContextMenuEntry(parentMenu, entryIdentifier, ListUtils.of(false, true), selectedObjectsFilter, getter, setter, (menu, entry, switcherValue) -> {
             if (switcherValue && entry.isActive()) {
                 MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
                 return Component.translatable(labelLocalizationKeyBase, enabled);
@@ -774,19 +1153,33 @@ public interface ContextMenuBuilder<O> {
         });
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericToggleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-        return addTo.addEntry(buildGenericToggleContextMenuEntry(addTo, entryIdentifier, selectedElementsFilter, targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase));
+    /**
+     * Adds a toggle entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericToggleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
+        return addTo.addEntry(buildGenericToggleContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase));
     }
 
+    /**
+     * Builds a toggle entry for a specific object type.
+     */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildToggleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-        return buildGenericToggleContextMenuEntry(parentMenu, entryIdentifier, consumes -> elementType.isAssignableFrom(consumes.getClass()), targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase);
+    default ContextMenu.ClickableContextMenuEntry<?> buildToggleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
+        return buildGenericToggleContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase);
     }
 
-    default ContextMenu.ClickableContextMenuEntry<?> addToggleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> elementType, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-        return addTo.addEntry(buildToggleContextMenuEntry(addTo, entryIdentifier, elementType, targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase));
+    /**
+     * Adds a toggle entry for a specific object type.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addToggleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<O> objectType, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
+        return addTo.addEntry(buildToggleContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase));
     }
 
+    /**
+     * Label supplier for cycle/toggle entries.
+     * <p>
+     * The current cycle value is provided so the label can reflect it.
+     */
     @FunctionalInterface
     interface CycleContextMenuEntryLabelSupplier<V> {
         Component get(ContextMenu menu, ContextMenu.ClickableContextMenuEntry<?> entry, V switcherValue);

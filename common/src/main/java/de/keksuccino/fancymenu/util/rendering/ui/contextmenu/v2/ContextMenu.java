@@ -66,6 +66,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
         if (!this.isOpen()) return;
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
@@ -323,6 +324,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 s.subContextMenu.render(graphics, mouseX, mouseY, partial);
             }
         }
+
     }
 
     @NotNull
@@ -1054,7 +1056,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     /**
-     * Will stack all stackable settings and all stackable ACTIVE {@link ContextMenuEntry}s of the given {@link ContextMenu}s and returns them as a new (stacked) instance.
+     * Stacks the given context menus into a single menu.
+     * <p>
+     * Only entries that are {@link ContextMenuEntry#isStackable()} and {@link ContextMenuEntry#isActive()}
+     * in every menu are included. Stacked entries are linked via
+     * {@link ContextMenuStackMeta#getNextInStack()}, with the first entry being the visible one.
+     *
+     * <p><b>Example (multi-select)</b>
+     * <pre>{@code
+     * ContextMenu stacked = ContextMenu.stackContextMenus(menu1, menu2, menu3);
+     * stacked.openMenuAt(mouseX, mouseY);
+     * }</pre>
      */
     @NotNull
     public static ContextMenu stackContextMenus(@NotNull List<ContextMenu> menusToStack) {
@@ -1062,7 +1074,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     /**
-     * Will stack all stackable settings and all stackable ACTIVE {@link ContextMenuEntry}s of the given {@link ContextMenu}s and returns them as a new (stacked) instance.
+     * Stacks the given context menus into a single menu.
+     * <p>
+     * This copies stackable entries from each menu, links them through {@link ContextMenuStackMeta},
+     * and shares a single {@link RuntimePropertyContainer} across the stack.
+     *
+     * <p>Sub-menus are stacked recursively.
      */
     @NotNull
     public static ContextMenu stackContextMenus(@NotNull ContextMenu... menusToStack) {
@@ -1162,6 +1179,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected EntryTask tickAction;
         protected EntryTask hoverAction;
         protected boolean hovered = false;
+        /**
+         * Stack metadata for this entry.
+         * <p>
+         * This metadata is populated when menus are stacked via {@link ContextMenu#stackContextMenus(ContextMenu...)}.
+         */
         protected ContextMenuStackMeta stackMeta = new ContextMenuStackMeta();
         protected List<BooleanSupplier> activeStateSuppliers = new ArrayList<>();
         protected List<BooleanSupplier> visibleStateSuppliers = new ArrayList<>();
@@ -1170,10 +1192,22 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected Font font = Minecraft.getInstance().font;
         protected boolean addSpaceForIcon = false;
         protected boolean changeBackgroundColorOnHover = true;
+        /**
+         * Optional applier used by stack-aware builders to apply values across the stack.
+         * See {@link ContextMenuBuilder#applyStackAppliers(ContextMenuEntry, Object)}.
+         */
         @Nullable
         protected StackApplier stackApplier;
+        /**
+         * Optional value supplier used to read the current value for mixed-state detection.
+         * See {@link ContextMenuBuilder#resolveStackValue(ContextMenuEntry)}.
+         */
         @Nullable
         protected StackValueSupplier stackValueSupplier;
+        /**
+         * Optional group key used by {@link ContextMenuBuilder#runStackedClickActions(ContextMenu.ClickableContextMenuEntry)}
+         * to avoid duplicate actions when multiple entries represent the same logical action.
+         */
         @Nullable
         protected Object stackGroupKey;
 
@@ -1294,47 +1328,94 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (this.tooltipSupplier != null) ? this.tooltipSupplier.get(this.parent, this) : null;
         }
 
+        /**
+         * Marks this entry as stackable, allowing it to be included in stacked menus.
+         */
         public T setStackable(boolean stackable) {
             this.getStackMeta().setStackable(stackable);
             return (T) this;
         }
 
+        /**
+         * @return true if this entry may be stacked with the same entry across menus.
+         */
         public boolean isStackable() {
             return this.getStackMeta().isStackable();
         }
 
+        /**
+         * Returns the stack metadata for this entry.
+         * <p>
+         * Use {@link ContextMenuStackMeta#getNextInStack()} to walk the stack.
+         */
         @NotNull
         public ContextMenuStackMeta getStackMeta() {
             return this.stackMeta;
         }
 
+        /**
+         * @return the stack applier assigned to this entry, or null if none.
+         */
         @Nullable
         public StackApplier getStackApplier() {
             return this.stackApplier;
         }
 
+        /**
+         * Sets the stack applier for this entry.
+         * <p>
+         * The applier should only mutate the entry's {@link ContextMenuBuilder#self()} instance,
+         * because it will be invoked once per stack entry.
+         *
+         * <p><b>Example</b>
+         * <pre>{@code
+         * entry.setStackApplier((stackEntry, value) -> {
+         *     if (value instanceof Boolean b) {
+         *         builder.self().setEnabled(b);
+         *     }
+         * });
+         * }</pre>
+         */
         @NotNull
         public T setStackApplier(@Nullable StackApplier stackApplier) {
             this.stackApplier = stackApplier;
             return (T) this;
         }
 
+        /**
+         * @return the stack value supplier for this entry, or null if none.
+         */
         @Nullable
         public StackValueSupplier getStackValueSupplier() {
             return this.stackValueSupplier;
         }
 
+        /**
+         * Sets the stack value supplier for this entry.
+         * <p>
+         * This supplier is used by {@link ContextMenuBuilder#resolveStackValue(ContextMenuEntry)}
+         * to detect mixed values.
+         */
         @NotNull
         public T setStackValueSupplier(@Nullable StackValueSupplier stackValueSupplier) {
             this.stackValueSupplier = stackValueSupplier;
             return (T) this;
         }
 
+        /**
+         * @return the optional stack group key for this entry.
+         */
         @Nullable
         public Object getStackGroupKey() {
             return this.stackGroupKey;
         }
 
+        /**
+         * Sets the optional stack group key for this entry.
+         * <p>
+         * Entries with the same group key are treated as a single logical action in
+         * {@link ContextMenuBuilder#runStackedClickActions(ContextMenu.ClickableContextMenuEntry)}.
+         */
         @NotNull
         public T setStackGroupKey(@Nullable Object stackGroupKey) {
             this.stackGroupKey = stackGroupKey;
@@ -1916,6 +1997,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     }
 
+    /**
+     * Metadata for a stacked entry chain.
+     * <p>
+     * Each entry in a stacked menu has a {@link ContextMenuStackMeta} instance. All entries in
+     * the same stack share the same {@link #properties} object for coordination.
+     */
     public static class ContextMenuStackMeta {
 
         protected RuntimePropertyContainer properties = new RuntimePropertyContainer();
@@ -1926,33 +2013,52 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected ContextMenuEntry<?> nextInStack;
 
         /**
-         * This is a shared instance. Every entry in the stack has access to the same {@link RuntimePropertyContainer} instance.
+         * This is a shared instance. Every entry in the stack has access to the same
+         * {@link RuntimePropertyContainer} instance.
          */
         @NotNull
         public RuntimePropertyContainer getProperties() {
             return this.properties;
         }
 
+        /**
+         * @return true if this entry is part of a stack.
+         */
         public boolean isPartOfStack() {
             return this.partOfStack;
         }
 
+        /**
+         * @return true if this is the first entry in the stack (the one rendered in the menu).
+         */
         public boolean isFirstInStack() {
             return this.firstInStack;
         }
 
+        /**
+         * @return true if this is the last entry in the stack.
+         */
         public boolean isLastInStack() {
             return this.lastInStack;
         }
 
+        /**
+         * @return true if this entry is marked as stackable.
+         */
         public boolean isStackable() {
             return this.stackable;
         }
 
+        /**
+         * Sets whether this entry can be stacked.
+         */
         public void setStackable(boolean stackable) {
             this.stackable = stackable;
         }
 
+        /**
+         * @return the next entry in the stack chain, or null if this is the last.
+         */
         @Nullable
         public ContextMenuEntry<?> getNextInStack() {
             return this.nextInStack;
@@ -1970,11 +2076,33 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         T get(ContextMenu menu, ContextMenuEntry<?> entry);
     }
 
+    /**
+     * Stack applier used to apply a new value on a stack entry.
+     * <p>
+     * The entry argument is the specific stack entry being applied.
+     *
+     * <p><b>Example</b>
+     * <pre>{@code
+     * entry.setStackApplier((stackEntry, value) -> {
+     *     if (value instanceof Integer i) {
+     *         builder.self().setPadding(i);
+     *     }
+     * });
+     * }</pre>
+     */
     @FunctionalInterface
     public interface StackApplier {
         void apply(ContextMenuEntry<?> entry, @Nullable Object value);
     }
 
+    /**
+     * Supplies the current value for a stack entry, used to detect mixed state.
+     *
+     * <p><b>Example</b>
+     * <pre>{@code
+     * entry.setStackValueSupplier(stackEntry -> builder.self().getPadding());
+     * }</pre>
+     */
     @FunctionalInterface
     public interface StackValueSupplier {
         @Nullable
@@ -1983,7 +2111,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     @FunctionalInterface
     public interface BooleanSupplier extends Supplier<Boolean> {
-
         default boolean getBoolean(ContextMenu menu, ContextMenuEntry<?> entry) {
             Boolean b = this.get(menu, entry);
             if (b != null) {
@@ -1991,7 +2118,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             }
             return false;
         }
-
     }
 
     public static class IconFactory {
@@ -2000,4 +2126,5 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/icons/" + iconName + ".png");
         }
     }
+
 }
