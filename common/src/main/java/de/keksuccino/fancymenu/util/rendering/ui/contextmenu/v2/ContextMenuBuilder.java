@@ -64,9 +64,13 @@ import java.util.function.Supplier;
  *     obj -> obj instanceof MyObject,
  *     MyObject::isAffectedByDecorations,
  *     MyObject::setAffectedByDecorations,
- *     "fancymenu.context.affects_overlay"
+ *     "fancymenu.context.affects_overlay.display_name"
  * );
  * }</pre>
+ *
+ * <p>For boolean/toggle entries, the localization value for the key base must include a
+ * {@code %s} placeholder (for example {@code "Affects Overlay: %s"}). The mod replaces
+ * {@code %s} dynamically with the current state text (Enabled/Disabled).
  *
  * <p><b>Minimal example (resource chooser with stacking)</b>
  * <pre>{@code
@@ -1072,9 +1076,17 @@ public interface ContextMenuBuilder<O> {
      *     obj -> obj instanceof MyObject,
      *     MyObject::getHorizontalAlignment,
      *     MyObject::setHorizontalAlignment,
-     *     (m, e, v) -> Component.translatable("fancymenu.align." + v.name().toLowerCase())
+     *     (m, e, v) -> Component.translatable(
+     *         "fancymenu.align.display_name",
+     *         Component.translatable("fancymenu.align." + v.name().toLowerCase())
+     *     )
      * );
      * }</pre>
+     *
+     * <p><b>Localization format</b>
+     * If you use a localization key base for cycle entries, the localization value should include
+     * a {@code %s} placeholder (for example {@code "Display Name: %s"}). The label supplier should
+     * pass the current cycle value's display name as the argument so {@code %s} gets replaced.
      */
     default <V> ContextMenu.ClickableContextMenuEntry<?> buildGenericCycleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
         ContextMenu.ClickableContextMenuEntry<?> entry = new ContextMenu.ClickableContextMenuEntry<>(entryIdentifier, parentMenu, Component.literal(""), (menu, entryRef) -> {
@@ -1114,6 +1126,11 @@ public interface ContextMenuBuilder<O> {
 
     /**
      * Adds a generic cycle entry to the given menu.
+     * <p>
+     * If you use a localization key base for cycle entries, the localization value should include
+     * a {@code %s} placeholder (for example {@code "Display Name: %s"}). The label supplier should
+     * pass the current cycle value's display name as the argument so {@code %s} gets replaced.
+     * </p>
      */
     default <V> ContextMenu.ClickableContextMenuEntry<?> addGenericCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, V> targetFieldGetter, @NotNull BiConsumer<O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
         return addTo.addEntry(buildGenericCycleContextMenuEntry(addTo, entryIdentifier, switcherValues, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, labelSupplier));
@@ -1121,6 +1138,11 @@ public interface ContextMenuBuilder<O> {
 
     /**
      * Builds a cycle entry for a specific object type.
+     * <p>
+     * If you use a localization key base for cycle entries, the localization value should include
+     * a {@code %s} placeholder (for example {@code "Display Name: %s"}). The label supplier should
+     * pass the current cycle value's display name as the argument so {@code %s} gets replaced.
+     * </p>
      */
     @SuppressWarnings("all")
     default <V, E extends O> ContextMenu.ClickableContextMenuEntry<?> buildCycleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, List<V> switcherValues, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, V> targetFieldGetter, @NotNull BiConsumer <O, V> targetFieldSetter, @NotNull ContextMenuBuilder.CycleContextMenuEntryLabelSupplier<V> labelSupplier) {
@@ -1138,6 +1160,11 @@ public interface ContextMenuBuilder<O> {
 
     /**
      * Builds a boolean toggle entry (false/true cycle) with standard FancyMenu labels.
+     * <p>
+     * The localization value for {@code labelLocalizationKeyBase} must include a {@code %s}
+     * placeholder (for example {@code "Display Name: %s"}). The mod replaces {@code %s}
+     * dynamically with the current state text (Enabled/Disabled).
+     * </p>
      */
     @SuppressWarnings("all")
     default ContextMenu.ClickableContextMenuEntry<?> buildGenericToggleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
@@ -1162,6 +1189,11 @@ public interface ContextMenuBuilder<O> {
 
     /**
      * Builds a toggle entry for a specific object type.
+     * <p>
+     * The localization value for {@code labelLocalizationKeyBase} must include a {@code %s}
+     * placeholder (for example {@code "Display Name: %s"}). The mod replaces {@code %s}
+     * dynamically with the current state text (Enabled/Disabled).
+     * </p>
      */
     @SuppressWarnings("all")
     default ContextMenu.ClickableContextMenuEntry<?> buildToggleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
@@ -1179,6 +1211,10 @@ public interface ContextMenuBuilder<O> {
      * Label supplier for cycle/toggle entries.
      * <p>
      * The current cycle value is provided so the label can reflect it.
+     * <p>
+     * When using localization keys for cycle labels, prefer a value that includes a {@code %s}
+     * placeholder (for example {@code "Display Name: %s"}), and pass the current cycle value's
+     * display name as the argument to {@link Component#translatable(String, Object...)}.
      */
     @FunctionalInterface
     interface CycleContextMenuEntryLabelSupplier<V> {

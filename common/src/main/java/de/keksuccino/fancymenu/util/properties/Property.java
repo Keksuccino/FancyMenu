@@ -35,7 +35,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
 
 /**
  * A typed, serializable property identified by a unique {@link #getKey() key}.
@@ -396,9 +395,14 @@ public class Property<T> {
      *     "enabled",
      *     true,
      *     true,
-     *     "fancymenu.menu.entry.enabled"
+     *     "fancymenu.menu.entry.display_name"
      * );
      * }</pre>
+     *
+     * <h3>Localization format</h3>
+     * The localization value for {@code contextMenuEntryLocalizationKeyBase} must include a
+     * {@code %s} placeholder (for example {@code "Display Name: %s"}). The mod replaces
+     * {@code %s} dynamically with the current state text (Enabled/Disabled).
      *
      * @param key the unique key used for lookup and serialization
      * @param defaultValue the value used when no current value is present
