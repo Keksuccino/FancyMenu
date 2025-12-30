@@ -1182,6 +1182,11 @@ public interface ContextMenuBuilder<O> {
 
     /**
      * Adds a toggle entry to the given menu.
+     * <p>
+     * The localization value for {@code labelLocalizationKeyBase} must include a {@code %s}
+     * placeholder (for example {@code "Display Name: %s"}). The mod replaces {@code %s}
+     * dynamically with the current state text (Enabled/Disabled).
+     * </p>
      */
     default ContextMenu.ClickableContextMenuEntry<?> addGenericToggleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
         return addTo.addEntry(buildGenericToggleContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, labelLocalizationKeyBase));
