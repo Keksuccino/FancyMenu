@@ -119,17 +119,22 @@ public class ColorPickerScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int button, int p_96553_, int p_96554_) {
-        if (button == InputConstants.KEY_ENTER) {
-            this.callback.accept(this.getCurrentHex());
-            return true;
-        }
-        return super.keyPressed(button, p_96553_, p_96554_);
+    public boolean shouldCloseOnEsc() {
+        return false;
     }
 
     @Override
     public void onClose() {
         this.callback.accept(null);
+    }
+
+    @Override
+    public boolean keyPressed(int button, int scanCode, int modifiers) {
+        if (button == InputConstants.KEY_ENTER) {
+            this.callback.accept(this.getCurrentHex());
+            return true;
+        }
+        return super.keyPressed(button, scanCode, modifiers);
     }
 
     @Override
