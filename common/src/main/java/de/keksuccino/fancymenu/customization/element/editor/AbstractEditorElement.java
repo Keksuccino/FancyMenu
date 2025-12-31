@@ -558,7 +558,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 			ContextMenu fadingMenu = new ContextMenu();
 			this.rightClickMenu.addSubMenuEntry("fading_in_out", Component.translatable("fancymenu.element.fading"), fadingMenu)
 					.setStackable(true)
-                    .setIcon(ContextMenu.IconFactory.getIcon("opacity"));
+                    .setIcon(ContextMenu.IconFactory.getIcon("fading"));
 
 			this.addGenericCycleContextMenuEntryTo(fadingMenu, "fade_in",
 					List.of(AbstractElement.Fading.NO_FADING, AbstractElement.Fading.FIRST_TIME, AbstractElement.Fading.EVERY_TIME),
