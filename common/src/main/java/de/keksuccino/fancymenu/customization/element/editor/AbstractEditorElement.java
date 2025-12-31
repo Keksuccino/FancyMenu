@@ -193,7 +193,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 			}
 		};
 		this.rightClickMenu.addSubMenuEntry("pick_element", Component.translatable("fancymenu.element.general.pick_element"), pickElementMenu)
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")));
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("pick"));
 
 		this.rightClickMenu.addSeparatorEntry("separator_1");
 
@@ -213,7 +214,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 						consumes -> consumes.element.customElementLayerName,
 						(abstractEditorElement, s) -> abstractEditorElement.element.customElementLayerName = s,
 						null, false, false, Component.translatable("fancymenu.elements.in_editor_display_name"), true, null, null, null)
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.in_editor_display_name.desc")));
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.in_editor_display_name.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
 		if (this.settings.isInEditorColorSupported()) {
 
@@ -228,7 +230,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
 		this.rightClickMenu.addSeparatorEntry("separator_after_set_in_editor_stuff");
 
-        this.element.shouldBeAffectedByDecorationOverlays.buildContextMenuEntryAndAddTo(this.rightClickMenu, this);
+        this.element.shouldBeAffectedByDecorationOverlays.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(ContextMenu.IconFactory.getIcon("decoration_overlay"));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_should_be_affected_by_decoration_overlays");
 
@@ -448,6 +451,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 						(element1, aBoolean) -> element1.element.loadOncePerSession = aBoolean,
 						"fancymenu.elements.element.load_once_per_session")
 				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.element.load_once_per_session.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("once_per_session"))
 				.setStackable(true);
 
 		this.rightClickMenu.addSeparatorEntry("separator_5");
@@ -553,7 +557,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
 			ContextMenu fadingMenu = new ContextMenu();
 			this.rightClickMenu.addSubMenuEntry("fading_in_out", Component.translatable("fancymenu.element.fading"), fadingMenu)
-					.setStackable(true);
+					.setStackable(true)
+                    .setIcon(ContextMenu.IconFactory.getIcon("opacity"));
 
 			this.addGenericCycleContextMenuEntryTo(fadingMenu, "fade_in",
 					List.of(AbstractElement.Fading.NO_FADING, AbstractElement.Fading.FIRST_TIME, AbstractElement.Fading.EVERY_TIME),
@@ -641,7 +646,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 							null, false, true, Component.translatable("fancymenu.element.base_opacity"),
 							true, "1.0", null, null)
 					.setStackable(true)
-					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.base_opacity.desc")));
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.base_opacity.desc")))
+                    .setIcon(ContextMenu.IconFactory.getIcon("opacity"));
 
 		}
 
@@ -788,27 +794,31 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 							consumes -> consumes.element.enableParallax,
 							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.enableParallax = aBoolean,
 							"fancymenu.elements.parallax")
-					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.desc")));
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.desc")))
+                    .setIcon(ContextMenu.IconFactory.getIcon("parallax"));
 
 			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_x", this.selfClass(),
 							consumes -> consumes.element.parallaxIntensityXString,
 							(element1, s) -> element1.element.parallaxIntensityXString = s,
 							null, false, true, Component.translatable("fancymenu.elements.parallax.intensity_x"),
 							true, "0.5", null, null)
-					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_x.desc")));
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_x.desc")))
+                    .setIcon(ContextMenu.IconFactory.getIcon("parallax_intensity_x"));
 
 			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_y", this.selfClass(),
 							consumes -> consumes.element.parallaxIntensityYString,
 							(element1, s) -> element1.element.parallaxIntensityYString = s,
 							null, false, true, Component.translatable("fancymenu.elements.parallax.intensity_y"),
 							true, "0.5", null, null)
-					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_y.desc")));
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_y.desc")))
+                    .setIcon(ContextMenu.IconFactory.getIcon("parallax_intensity_y"));
 
 			this.addToggleContextMenuEntryTo(this.rightClickMenu, "invert_parallax", this.selfClass(),
 							consumes -> consumes.element.invertParallax,
 							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.invertParallax = aBoolean,
 							"fancymenu.elements.parallax.invert")
-					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.invert.desc")));
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.invert.desc")))
+                    .setIcon(ContextMenu.IconFactory.getIcon("invert_parallax"));
 
 		}
 

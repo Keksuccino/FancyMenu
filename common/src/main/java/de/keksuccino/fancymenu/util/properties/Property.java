@@ -14,7 +14,6 @@ import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
-import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -41,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * A typed, serializable property identified by a unique {@link #getKey() key}.
@@ -109,6 +109,7 @@ public class Property<T> {
     protected ConsumingSupplier<T, T> valueSetProcessor = null;
     @Nullable
     protected ConsumingSupplier<T, T> valueGetProcessor = null;
+    protected final List<ValueSetListener<T>> valueSetListeners = new ArrayList<>();
     protected boolean disabled = false;
 
     /**
@@ -746,7 +747,8 @@ public class Property<T> {
                         }
                         Property<String> resolved = (Property<String>) builder.self().getProperty(key);
                         if (resolved != null) resolved.set(call);
-                    });
+                    })
+                    .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
             subMenu.addClickableEntry("input_via_color_picker", Component.translatable("fancymenu.context_menu.entries.color.input_via_color_picker"),
                             (contextMenu, entry) -> {
@@ -792,7 +794,8 @@ public class Property<T> {
                         }
                         Property<String> resolved = (Property<String>) builder.self().getProperty(key);
                         if (resolved != null) resolved.set(call);
-                    });
+                    })
+                    .setIcon(ContextMenu.IconFactory.getIcon("pipette"));
 
             subMenu.addSeparatorEntry("separator_before_reset");
 
@@ -809,7 +812,8 @@ public class Property<T> {
                     .setStackApplier((stackEntry, value) -> {
                         Property<String> resolved = (Property<String>) builder.self().getProperty(key);
                         if (resolved != null) resolved.set(property.getDefault());
-                    });
+                    })
+                    .setIcon(ContextMenu.IconFactory.getIcon("undo"));
 
             subMenu.addSeparatorEntry("separator_before_current_value_display")
                     .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1);
@@ -1264,6 +1268,8 @@ public class Property<T> {
         if (value != null) {
             if (this.valueSetProcessor != null) value = this.valueSetProcessor.get(value);
         }
+        @Nullable T finalValue = value;
+        this.valueSetListeners.forEach(listener -> listener.onSet(this.currentValue, finalValue));
         this.currentValue = value;
         return this;
     }
@@ -1289,6 +1295,8 @@ public class Property<T> {
         if (value != null) {
             if (this.valueSetProcessor != null) value = this.valueSetProcessor.get((T) value);
         }
+        @Nullable T finalValue = (T) value;
+        this.valueSetListeners.forEach(listener -> listener.onSet(this.currentValue, finalValue));
         this.currentValue = (T) value;
         return this;
     }
@@ -1373,6 +1381,11 @@ public class Property<T> {
      */
     public Property<T> setValueGetProcessor(@Nullable ConsumingSupplier<T, T> valueGetProcessor) {
         this.valueGetProcessor = valueGetProcessor;
+        return this;
+    }
+
+    public Property<T> addValueSetListener(@NotNull ValueSetListener<T> listener) {
+        this.valueSetListeners.add(listener);
         return this;
     }
 
@@ -1585,6 +1598,11 @@ public class Property<T> {
          */
         @NotNull
         ContextMenu.ClickableContextMenuEntry<?> get(@NotNull Property<T> property, @NotNull ContextMenuBuilder<H> contextMenuBuilder, @NotNull ContextMenu parentContextMenu);
+    }
+
+    @FunctionalInterface
+    public interface ValueSetListener<T> {
+        void onSet(@Nullable T oldValue, @Nullable T newValue);
     }
 
 }

@@ -372,7 +372,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @NotNull
     public SeparatorContextMenuEntry addSeparatorEntry(@NotNull String identifier) {
         SeparatorContextMenuEntry e = new SeparatorContextMenuEntry(identifier, this);
-        return this.addEntry(e);
+        return this.addEntry(e).setStackable(true);
     }
 
     @NotNull
