@@ -5,6 +5,7 @@ import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinSplashRenderer;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -16,8 +17,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.SplashRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
@@ -25,8 +24,6 @@ import java.util.List;
 import java.util.Objects;
 
 public class SplashTextElement extends AbstractElement {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     public SourceMode sourceMode = SourceMode.DIRECT_TEXT;
     public String source = "Splash Text";
@@ -36,9 +33,11 @@ public class SplashTextElement extends AbstractElement {
     public boolean shadow = true;
     public boolean bounce = true;
     public float rotation = 20.0F;
-    public DrawableColor baseColor = DrawableColor.of(new Color(255, 255, 0));
     public boolean refreshOnMenuReload = false;
     public Font font = Minecraft.getInstance().font;
+
+    public final Property.ColorProperty baseColor = putProperty(Property.hexColorProperty("base_color", DrawableColor.of(new Color(255, 255, 0)).getHex(), true, "fancymenu.elements.splash.basecolor"));
+
     protected float baseScale = 1.8F;
     protected String renderText = null;
     protected String lastSource = null;
@@ -151,13 +150,14 @@ public class SplashTextElement extends AbstractElement {
         graphics.pose().mulPose(Axis.ZP.rotationDegrees(this.rotation));
         graphics.pose().scale(splashBaseScale, splashBaseScale, splashBaseScale);
 
-        int alpha = this.baseColor.getColor().getAlpha();
+        DrawableColor c = this.baseColor.getDrawable();
+        int alpha = c.getColor().getAlpha();
         int i = Mth.ceil(this.opacity * 255.0F);
         if (i < alpha) {
             alpha = i;
         }
 
-        graphics.drawString(font, renderTextComponent, -(font.width(renderTextComponent) / 2), 0, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha), this.shadow);
+        graphics.drawString(font, renderTextComponent, -(font.width(renderTextComponent) / 2), 0, RenderingUtils.replaceAlphaInColor(c.getColorInt(), alpha), this.shadow);
 
         graphics.pose().popPose();
         graphics.pose().popPose();

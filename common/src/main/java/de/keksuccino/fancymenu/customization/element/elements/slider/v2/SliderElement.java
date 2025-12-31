@@ -65,6 +65,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     @NotNull
     public RequirementContainer activeStateSupplier = new RequirementContainer();
     public ResourceSupplier<IAudio> hoverSound;
+
     public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
 
     public SliderElement(@NotNull ElementBuilder<?, ?> builder) {

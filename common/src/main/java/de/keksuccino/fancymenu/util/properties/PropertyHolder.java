@@ -21,7 +21,7 @@ public interface PropertyHolder {
         return this.getPropertyMap().get(key);
     }
 
-    default <T> Property<T> putProperty(@NotNull Property<T> property) {
+    default <P extends Property<?>> P putProperty(@NotNull P property) {
         this.getPropertyMap().put(property.getKey(), property);
         return property;
     }

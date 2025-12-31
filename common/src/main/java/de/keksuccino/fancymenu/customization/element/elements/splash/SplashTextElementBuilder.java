@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.gui.screens.Screen;
@@ -76,11 +75,6 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
             element.refreshOnMenuReload = true;
         }
 
-        String baseColor = serialized.getValue("base_color");
-        if (baseColor != null) {
-            element.baseColor = DrawableColor.of(baseColor);
-        }
-
         String shadow = serialized.getValue("shadow");
         if ((shadow != null)) {
             if (shadow.equalsIgnoreCase("false")) {
@@ -106,15 +100,14 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
     protected SerializedElement serializeElement(@NotNull SplashTextElement element, @NotNull SerializedElement serializeTo) {
 
         if ((element.sourceMode == SplashTextElement.SourceMode.TEXT_FILE) && (element.textFileSupplier != null)) {
-            serializeTo.putProperty("source", "" + element.textFileSupplier.getSourceWithPrefix());
+            serializeTo.putProperty("source", element.textFileSupplier.getSourceWithPrefix());
         } else {
-            serializeTo.putProperty("source", "" + element.source);
+            serializeTo.putProperty("source", element.source);
         }
         serializeTo.putProperty("source_mode", element.sourceMode.name);
         serializeTo.putProperty("scale", "" + element.scale);
         serializeTo.putProperty("shadow", "" + element.shadow);
         serializeTo.putProperty("rotation", "" + element.rotation);
-        serializeTo.putProperty("base_color", element.baseColor.getHex());
         serializeTo.putProperty("refresh", "" + element.refreshOnMenuReload);
         serializeTo.putProperty("bouncing", "" + element.bounce);
 

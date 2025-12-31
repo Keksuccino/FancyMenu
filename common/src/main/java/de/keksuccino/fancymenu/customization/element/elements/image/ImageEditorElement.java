@@ -20,36 +20,30 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
         super.init();
 
         this.element.textureSupplier.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setStackable(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         this.element.imageTint.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setStackable(true);
+                .setIcon(ContextMenu.IconFactory.getIcon("color_palette"));
 
         this.rightClickMenu.addSeparatorEntry("separator_before_repeat_texture");
 
         this.element.repeat.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .addIsActiveSupplier((menu, entry) -> !this.element.nineSlice.tryGetNonNull())
-                .setStackable(false);
+                .addIsActiveSupplier((menu, entry) -> !this.element.nineSlice.tryGetNonNull());
 
         this.rightClickMenu.addSeparatorEntry("separator_before_nine_slice_settings");
 
         this.element.nineSlice.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull())
-                .setStackable(false);
+                .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull());
 
         this.element.nineSliceBorderX.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setStackable(false)
                 .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull());
 
         this.element.nineSliceBorderY.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setStackable(false)
                 .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull());
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 
-        this.element.restartAnimatedOnMenuLoad.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setStackable(true);
+        this.element.restartAnimatedOnMenuLoad.buildContextMenuEntryAndAddTo(this.rightClickMenu, this);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_restart_animated");
 
@@ -59,8 +53,7 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
                     for (AbstractEditorElement<?, ?> e : selectedElements) {
                         ((ImageElement)e.element).restoreAspectRatio();
                     }
-                }).setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
+                }).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
 
     }
 

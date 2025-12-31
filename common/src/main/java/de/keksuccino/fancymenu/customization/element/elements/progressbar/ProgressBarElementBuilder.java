@@ -38,22 +38,12 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
 
         element.useProgressForElementAnchor = deserializeBoolean(element.useProgressForElementAnchor, serialized.getValue("progress_for_element_anchor"));
 
-        String barHex = serialized.getValue("bar_color");
-        if ((barHex != null) && !barHex.replace(" ", "").equals("")) {
-            element.barColor = DrawableColor.of(barHex);
-        }
-
         element.barTextureSupplier = deserializeImageResourceSupplier(serialized.getValue("bar_texture"));
         element.barNineSlice = deserializeBoolean(element.barNineSlice, serialized.getValue("bar_nine_slice"));
         element.barNineSliceBorderTop = deserializeNumber(Integer.class, element.barNineSliceBorderTop, serialized.getValue("bar_nine_slice_border_top"));
         element.barNineSliceBorderRight = deserializeNumber(Integer.class, element.barNineSliceBorderRight, serialized.getValue("bar_nine_slice_border_right"));
         element.barNineSliceBorderBottom = deserializeNumber(Integer.class, element.barNineSliceBorderBottom, serialized.getValue("bar_nine_slice_border_bottom"));
         element.barNineSliceBorderLeft = deserializeNumber(Integer.class, element.barNineSliceBorderLeft, serialized.getValue("bar_nine_slice_border_left"));
-
-        String backgroundHex = serialized.getValue("background_color");
-        if ((backgroundHex != null) && !backgroundHex.replace(" ", "").equals("")) {
-            element.backgroundColor = DrawableColor.of(backgroundHex);
-        }
 
         element.backgroundTextureSupplier = deserializeImageResourceSupplier(serialized.getValue("background_texture"));
         element.backgroundNineSlice = deserializeBoolean(element.backgroundNineSlice, serialized.getValue("background_nine_slice"));
@@ -83,7 +73,6 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
     @Override
     protected SerializedElement serializeElement(@NotNull ProgressBarElement element, @NotNull SerializedElement serializeTo) {
 
-        serializeTo.putProperty("bar_color", element.barColor.getHex());
         if (element.barTextureSupplier != null) {
             serializeTo.putProperty("bar_texture", element.barTextureSupplier.getSourceWithPrefix());
         }
@@ -92,7 +81,6 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
         serializeTo.putProperty("bar_nine_slice_border_right", "" + element.barNineSliceBorderRight);
         serializeTo.putProperty("bar_nine_slice_border_bottom", "" + element.barNineSliceBorderBottom);
         serializeTo.putProperty("bar_nine_slice_border_left", "" + element.barNineSliceBorderLeft);
-        serializeTo.putProperty("background_color", element.backgroundColor.getHex());
         if (element.backgroundTextureSupplier != null) {
             serializeTo.putProperty("background_texture", element.backgroundTextureSupplier.getSourceWithPrefix());
         }

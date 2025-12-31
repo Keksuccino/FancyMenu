@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -33,7 +34,6 @@ public class ProgressBarElement extends AbstractElement {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public BarDirection direction = BarDirection.RIGHT;
-    public DrawableColor barColor = DrawableColor.of(new Color(82, 149, 255));
     @Nullable
     public ResourceSupplier<ITexture> barTextureSupplier;
     public boolean barNineSlice = false;
@@ -41,7 +41,6 @@ public class ProgressBarElement extends AbstractElement {
     public int barNineSliceBorderRight = 5;
     public int barNineSliceBorderBottom = 5;
     public int barNineSliceBorderLeft = 5;
-    public DrawableColor backgroundColor = DrawableColor.of(new Color(171, 200, 247));
     @Nullable
     public ResourceSupplier<ITexture> backgroundTextureSupplier;
     public boolean backgroundNineSlice = false;
@@ -53,6 +52,9 @@ public class ProgressBarElement extends AbstractElement {
     public String progressSource = null;
     public ProgressValueMode progressValueMode = ProgressValueMode.PERCENTAGE;
     public boolean smoothFillingAnimation = true;
+
+    public final Property.ColorProperty barColor = putProperty(Property.hexColorProperty("bar_color", DrawableColor.of(new Color(82, 149, 255)).getHex(), true, "fancymenu.elements.progress_bar.bar_color"));
+    public final Property.ColorProperty backgroundColor = putProperty(Property.hexColorProperty("background_color", DrawableColor.of(new Color(171, 200, 247)).getHex(), true, "fancymenu.elements.progress_bar.background_color"));
 
     protected int lastRenderedProgressX = 0;
     protected int lastRenderedProgressY = 0;
@@ -165,12 +167,13 @@ public class ProgressBarElement extends AbstractElement {
             }
         }
         // Otherwise, render a solid colored bar.
-        else if (barColor != null) {
-            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(barColor.getColorInt()) / 255.0F));
+        else {
+            DrawableColor c = this.barColor.getDrawable();
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(c.getColorInt()) / 255.0F));
             if (opacity <= colorAlpha) {
                 colorAlpha = opacity;
             }
-            graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, barColor.getColorIntWithAlpha(colorAlpha));
+            graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, c.getColorIntWithAlpha(colorAlpha));
         }
 
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -199,12 +202,13 @@ public class ProgressBarElement extends AbstractElement {
                     graphics.blit(location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight());
                 }
             });
-        } else if (backgroundColor != null) {
-            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(backgroundColor.getColorInt()) / 255.0F));
+        } else {
+            DrawableColor c = this.backgroundColor.getDrawable();
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(c.getColorInt()) / 255.0F));
             if (opacity <= colorAlpha) {
                 colorAlpha = opacity;
             }
-            graphics.fill(getAbsoluteX(), getAbsoluteY(), getAbsoluteX() + getAbsoluteWidth(), getAbsoluteY() + getAbsoluteHeight(), backgroundColor.getColorIntWithAlpha(colorAlpha));
+            graphics.fill(getAbsoluteX(), getAbsoluteY(), getAbsoluteX() + getAbsoluteWidth(), getAbsoluteY() + getAbsoluteHeight(), c.getColorIntWithAlpha(colorAlpha));
         }
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }

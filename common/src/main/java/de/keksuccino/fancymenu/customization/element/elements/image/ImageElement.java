@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.element.elements.image;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -28,10 +27,8 @@ public class ImageElement extends AbstractElement {
     public final Property<Integer> nineSliceBorderX = putProperty(Property.integerProperty("nine_slice_texture_border_x", 5, "fancymenu.elements.image.nine_slice.border_x"));
     public final Property<Integer> nineSliceBorderY = putProperty(Property.integerProperty("nine_slice_texture_border_y", 5, "fancymenu.elements.image.nine_slice.border_y"));
     public final Property<Boolean> restartAnimatedOnMenuLoad = putProperty(Property.booleanProperty("restart_animated_on_menu_load", false, "fancymenu.elements.image.restart_animated_on_menu_load"));
-    public final Property<String> imageTint = putProperty(Property.stringProperty("image_tint", "#FFFFFF", false, true, "fancymenu.elements.image.tint"));
+    public final Property.ColorProperty imageTint = putProperty(Property.hexColorProperty("image_tint", "#FFFFFF", true, "fancymenu.elements.image.tint"));
 
-    @Nullable
-    protected String lastImageTint;
     @Nullable
     protected DrawableColor currentImageTint;
 
@@ -60,20 +57,7 @@ public class ImageElement extends AbstractElement {
     }
 
     protected void tickImageTint() {
-
-        String rawTint = this.imageTint.tryGetNonNullElse("#FFFFFF");
-        String tint = PlaceholderParser.replacePlaceholders(rawTint);
-        if (!tint.equals(this.lastImageTint)) {
-            this.currentImageTint = DrawableColor.of(tint);
-            if (this.currentImageTint == DrawableColor.EMPTY) {
-                this.currentImageTint = DrawableColor.of("#FFFFFF");
-                LOGGER.error("[FANCYMENU] Failed to parse tint color for ImageElement! Defaulting to WHITE as tint because parsing failed for: " + tint + " (RAW: " + rawTint + ")", new IllegalStateException("Failed to parse image tint color"));
-            }
-        }
-        this.lastImageTint = tint;
-
-        if (this.currentImageTint == null) this.currentImageTint = DrawableColor.of("#FFFFFF");
-
+        this.currentImageTint = this.imageTint.getDrawable();
     }
 
     @Override

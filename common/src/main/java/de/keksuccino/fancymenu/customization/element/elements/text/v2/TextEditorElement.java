@@ -44,7 +44,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         Component.translatable("fancymenu.elements.text.v2.source.choose"),
                         false, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"))
-                .setIsVisibleSupplier((menu, entry) -> this.element.sourceMode == TextElement.SourceMode.RESOURCE)
+                .addIsVisibleSupplier((menu, entry) -> this.element.sourceMode == TextElement.SourceMode.RESOURCE)
                 .setStackable(false);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_text_content",
@@ -54,7 +54,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         null, true, true, Component.translatable("fancymenu.elements.text.v2.source.input"),
                         false, null, null, null)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"))
-                .setIsVisibleSupplier((menu, entry) -> this.element.sourceMode == TextElement.SourceMode.DIRECT)
+                .addIsVisibleSupplier((menu, entry) -> this.element.sourceMode == TextElement.SourceMode.DIRECT)
                 .setStackable(false);
 
         this.rightClickMenu.addSeparatorEntry("text_separator_1");
@@ -68,8 +68,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_case_mode",
                 ListUtils.of(MarkdownRenderer.TextCase.NORMAL, MarkdownRenderer.TextCase.ALL_UPPER, MarkdownRenderer.TextCase.ALL_LOWER),
                 consumes -> (consumes instanceof TextEditorElement),
-                consumes -> ((TextElement)consumes.element).markdownRenderer.getTextCase(),
-                (element1, caseMode) -> ((TextElement)element1.element).markdownRenderer.setTextCase(caseMode),
+                consumes -> (consumes.element).markdownRenderer.getTextCase(),
+                (element1, caseMode) -> (element1.element).markdownRenderer.setTextCase(caseMode),
                 (menu, entry, switcherValue) -> {
                     if (switcherValue == MarkdownRenderer.TextCase.NORMAL) {
                         return Component.translatable("fancymenu.elements.text.case_mode.normal");
@@ -82,10 +82,10 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
         this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
                         consumes -> (consumes instanceof TextEditorElement),
-                        consumes -> ((TextElement)consumes.element).markdownRenderer.getTextBaseScale(),
+                        consumes -> (consumes.element).markdownRenderer.getTextBaseScale(),
                         (element1, aFloat) -> {
-                            ((TextElement)element1.element).markdownRenderer.setTextBaseScale(Math.max(0.2F, aFloat));
-                            ((TextElement)element1.element).updateContent();
+                            (element1.element).markdownRenderer.setTextBaseScale(Math.max(0.2F, aFloat));
+                            (element1.element).updateContent();
                         },
                         Component.translatable("fancymenu.elements.text.scale"),
                         true, 1.0F, null, null)
@@ -101,16 +101,16 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_base_color",
                         consumes -> (consumes instanceof TextEditorElement),
-                        consumes -> ((TextElement)consumes.element).markdownRenderer.getTextBaseColor().getHex(),
-                        (element, colorHex) -> ((TextElement)element.element).markdownRenderer.setTextBaseColor(DrawableColor.of(colorHex)), null, false, false, Component.translatable("fancymenu.elements.text.base_color"),
+                        consumes -> (consumes.element).markdownRenderer.getTextBaseColor().getHex(),
+                        (element, colorHex) -> (element.element).markdownRenderer.setTextBaseColor(DrawableColor.of(colorHex)), null, false, false, Component.translatable("fancymenu.elements.text.base_color"),
                         true, DrawableColor.WHITE.getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.base_color.desc")));
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_border",
                         consumes -> (consumes instanceof TextEditorElement),
-                        consumes -> (int)((TextElement)consumes.element).markdownRenderer.getBorder(),
-                        (element, border) -> ((TextElement)element.element).markdownRenderer.setBorder(Math.max(0, border)),
+                        consumes -> (int)(consumes.element).markdownRenderer.getBorder(),
+                        (element, border) -> (element.element).markdownRenderer.setBorder(Math.max(0, border)),
                         Component.translatable("fancymenu.elements.text.text_border"),
                         true, 2, null, null)
                 .setStackable(true)
@@ -118,9 +118,9 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_line_spacing",
                         consumes -> (consumes instanceof TextEditorElement),
-                        consumes -> (int)((TextElement)consumes.element).markdownRenderer.getLineSpacing(),
+                        consumes -> (int)(consumes.element).markdownRenderer.getLineSpacing(),
                         (element, border) -> {
-                            ((TextElement)element.element).markdownRenderer.setLineSpacing(Math.max(0, border));
+                            (element.element).markdownRenderer.setLineSpacing(Math.max(0, border));
                         },
                         Component.translatable("fancymenu.elements.text.line_spacing"),
                         true, 2, null, null)
@@ -370,21 +370,9 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.scroll_grabber_color.desc")));
 
-        this.addGenericStringInputContextMenuEntryTo(grabberColorMenu, "normal_grabber_color",
-                        consumes -> (consumes instanceof TextEditorElement),
-                        consumes -> ((TextElement)consumes.element).scrollGrabberColorHexNormal,
-                        (element, colorHex) -> ((TextElement)element.element).scrollGrabberColorHexNormal = colorHex,
-                        null, false, false, Component.translatable("fancymenu.elements.text.scroll_grabber_color.normal"),
-                        true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+        this.element.scrollGrabberColorHexNormal.buildContextMenuEntryAndAddTo(grabberColorMenu, this);
 
-        this.addGenericStringInputContextMenuEntryTo(grabberColorMenu, "hover_grabber_color",
-                        consumes -> (consumes instanceof TextEditorElement),
-                        consumes -> ((TextElement)consumes.element).scrollGrabberColorHexHover,
-                        (element, colorHex) -> ((TextElement)element.element).scrollGrabberColorHexHover = colorHex,
-                        null, false, false, Component.translatable("fancymenu.elements.text.scroll_grabber_color.hover"),
-                        true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+        this.element.scrollGrabberColorHexHover.buildContextMenuEntryAndAddTo(grabberColorMenu, this);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_hover_grabber_color");
 

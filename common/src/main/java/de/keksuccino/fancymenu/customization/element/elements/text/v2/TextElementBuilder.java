@@ -92,9 +92,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             element.markdownRenderer.setLineSpacing(Integer.parseInt(lineSpacingString));
         }
 
-        element.scrollGrabberColorHexNormal = serialized.getValue("grabber_color_normal");
-        element.scrollGrabberColorHexHover = serialized.getValue("grabber_color_hover");
-
         element.verticalScrollGrabberTextureNormal = deserializeImageResourceSupplier(serialized.getValue("grabber_texture_normal"));
         element.verticalScrollGrabberTextureHover = deserializeImageResourceSupplier(serialized.getValue("grabber_texture_hover"));
         element.horizontalScrollGrabberTextureNormal = deserializeImageResourceSupplier(serialized.getValue("horizontal_grabber_texture_normal"));
@@ -251,12 +248,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         serializeTo.putProperty("base_color", element.markdownRenderer.getTextBaseColor().getHex());
         serializeTo.putProperty("text_border", "" + (int)element.markdownRenderer.getBorder());
         serializeTo.putProperty("line_spacing", "" + (int)element.markdownRenderer.getLineSpacing());
-        if (element.scrollGrabberColorHexNormal != null) {
-            serializeTo.putProperty("grabber_color_normal", element.scrollGrabberColorHexNormal);
-        }
-        if (element.scrollGrabberColorHexHover != null) {
-            serializeTo.putProperty("grabber_color_hover", element.scrollGrabberColorHexHover);
-        }
         if (element.verticalScrollGrabberTextureNormal != null) {
             serializeTo.putProperty("grabber_texture_normal", element.verticalScrollGrabberTextureNormal.getSourceWithPrefix());
         }

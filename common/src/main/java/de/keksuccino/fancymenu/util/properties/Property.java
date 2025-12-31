@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlo
 import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
@@ -20,7 +21,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.resource.Resource;
@@ -40,7 +40,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /**
  * A typed, serializable property identified by a unique {@link #getKey() key}.
@@ -689,8 +688,8 @@ public class Property<T> {
      * @return a configured hex color string property
      */
     @NotNull
-    public static Property<String> hexColorProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        Property<String> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+    public static ColorProperty hexColorProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        ColorProperty p = new ColorProperty(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = consumes -> consumes;
         p.serializationCodec = consumes -> consumes;
         p.contextMenuEntrySupplier = (property, builder, menu) -> {
@@ -708,12 +707,12 @@ public class Property<T> {
                                     String defaultText = null;
                                     List<String> targetValuesOfSelected = new ArrayList<>();
                                     for (PropertyHolder holder : selectedObjects) {
-                                        Property<String> resolved = (Property<String>) holder.getProperty(key);
+                                        ColorProperty resolved = (ColorProperty) holder.getProperty(key);
                                         String value = (resolved != null) ? resolved.get() : property.getDefault();
                                         targetValuesOfSelected.add(value);
                                     }
                                     if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
-                                        Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                                        ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
                                         defaultText = (resolved != null) ? resolved.get() : property.getDefault();
                                     }
                                     TextEditorScreen s = new TextEditorScreen(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null, call -> {
@@ -734,7 +733,7 @@ public class Property<T> {
                             if (!(value instanceof String call)) {
                                 return;
                             }
-                            Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                            ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
                             if (resolved != null) resolved.set(call);
                         })
                         .setIcon(ContextMenu.IconFactory.getIcon("text"));
@@ -751,12 +750,12 @@ public class Property<T> {
                                 String presetRaw = null;
                                 List<String> targetValuesOfSelected = new ArrayList<>();
                                 for (PropertyHolder holder : selectedObjects) {
-                                    Property<String> resolved = (Property<String>) holder.getProperty(key);
+                                    ColorProperty resolved = (ColorProperty) holder.getProperty(key);
                                     String value = (resolved != null) ? resolved.get() : property.getDefault();
                                     targetValuesOfSelected.add(value);
                                 }
                                 if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
-                                    Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                                    ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
                                     presetRaw = (resolved != null) ? resolved.get() : property.getDefault();
                                 } else {
                                     presetRaw = property.getDefault();
@@ -783,7 +782,7 @@ public class Property<T> {
                         if (!(value instanceof String call)) {
                             return;
                         }
-                        Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                        ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
                         if (resolved != null) resolved.set(call);
                     })
                     .setIcon(ContextMenu.IconFactory.getIcon("pipette"));
@@ -801,7 +800,7 @@ public class Property<T> {
                             })
                     .setStackable(true)
                     .setStackApplier((stackEntry, value) -> {
-                        Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                        ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
                         if (resolved != null) resolved.set(property.getDefault());
                     })
                     .setIcon(ContextMenu.IconFactory.getIcon("undo"));
@@ -813,7 +812,7 @@ public class Property<T> {
                         List<? extends PropertyHolder> selectedObjects = builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects();
                         if (selectedObjects.size() == 1) {
                             Component valueComponent;
-                            Property<String> resolved = (Property<String>) selectedObjects.get(0).getProperty(key);
+                            ColorProperty resolved = (ColorProperty) selectedObjects.get(0).getProperty(key);
                             String val = (resolved != null) ? resolved.get() : property.getDefault();
                             if (val == null) {
                                 valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
@@ -835,7 +834,9 @@ public class Property<T> {
                     .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
                     .setIcon(ContextMenu.IconFactory.getIcon("info"));
 
-            return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu).setStackable(true);
+            return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
+                    .setIcon(ContextMenu.IconFactory.getIcon("color_palette"))
+                    .setStackable(true);
         };
         return p;
     }
@@ -846,7 +847,7 @@ public class Property<T> {
      * @see #hexColorProperty(String, String, String, boolean, String)
      */
     @NotNull
-    public static Property<String> hexColorProperty(@NotNull String key, @Nullable String defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+    public static ColorProperty hexColorProperty(@NotNull String key, @Nullable String defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return hexColorProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
     }
 
@@ -1594,6 +1595,47 @@ public class Property<T> {
     @FunctionalInterface
     public interface ValueSetListener<T> {
         void onSet(@Nullable T oldValue, @Nullable T newValue);
+    }
+
+    public static class ColorProperty extends Property<String> {
+
+        @Nullable
+        private DrawableColor cachedDrawable = null;
+        @Nullable
+        private String lastParsedHex = null;
+        private boolean colorJustUpdated = true;
+
+        protected ColorProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        protected ColorProperty(@NotNull String key, @Nullable String defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        @NotNull
+        String getHex() {
+            String c = PlaceholderParser.replacePlaceholders(this.tryGetNonNullElse("#FFFFFF"));
+            if (!Objects.equals(c, this.lastParsedHex) || (this.cachedDrawable == null)) {
+                this.lastParsedHex = c;
+                this.cachedDrawable = DrawableColor.of(c);
+                this.colorJustUpdated = true;
+            }
+            return c;
+        }
+
+        @NotNull
+        public DrawableColor getDrawable() {
+            this.getHex();
+            return Objects.requireNonNullElse(this.cachedDrawable, DrawableColor.WHITE);
+        }
+
+        public boolean didColorUpdateSinceLastCheck() {
+            boolean b = this.colorJustUpdated;
+            this.colorJustUpdated = false;
+            return b;
+        }
+
     }
 
 }

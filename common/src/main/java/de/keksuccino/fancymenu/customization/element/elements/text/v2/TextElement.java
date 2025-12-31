@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
@@ -35,20 +36,23 @@ public class TextElement extends AbstractElement {
     protected String source; //direct text, file path, link
     protected volatile String text;
     protected String lastText;
+
     @Nullable
     public ResourceSupplier<IText> textResourceSupplier;
     public ResourceSupplier<ITexture> verticalScrollGrabberTextureNormal;
     public ResourceSupplier<ITexture> verticalScrollGrabberTextureHover;
     public ResourceSupplier<ITexture> horizontalScrollGrabberTextureNormal;
     public ResourceSupplier<ITexture> horizontalScrollGrabberTextureHover;
-    public String scrollGrabberColorHexNormal;
-    public String scrollGrabberColorHexHover;
     public boolean enableScrolling = true;
     public boolean interactable = true;
     @NotNull
     public volatile MarkdownRenderer markdownRenderer = new MarkdownRenderer();
     @NotNull
     public volatile ScrollArea scrollArea;
+
+    public final Property.ColorProperty scrollGrabberColorHexNormal = putProperty(Property.hexColorProperty("grabber_color_normal", null, true, "fancymenu.elements.text.scroll_grabber_color.normal"));
+    public final Property.ColorProperty scrollGrabberColorHexHover = putProperty(Property.hexColorProperty("grabber_color_hover", null, true, "fancymenu.elements.text.scroll_grabber_color.hover"));
+
     protected List<String> lastLines;
     protected IText lastIText;
     protected boolean lastTickShouldRender = false;
@@ -207,13 +211,13 @@ public class TextElement extends AbstractElement {
         this.scrollArea.horizontalScrollBar.active = (this.scrollArea.getTotalEntryWidth() > this.scrollArea.getInnerWidth()) && this.enableScrolling;
 
         //Update scroll grabber colors
-        if (this.scrollGrabberColorHexNormal != null) {
-            DrawableColor c = DrawableColor.of(this.scrollGrabberColorHexNormal);
+        if (this.scrollGrabberColorHexNormal.get() != null) {
+            DrawableColor c = this.scrollGrabberColorHexNormal.getDrawable();
             this.scrollArea.verticalScrollBar.idleBarColor = () -> c;
             this.scrollArea.horizontalScrollBar.idleBarColor = () -> c;
         }
-        if (this.scrollGrabberColorHexHover != null) {
-            DrawableColor c = DrawableColor.of(this.scrollGrabberColorHexHover);
+        if (this.scrollGrabberColorHexHover.get() != null) {
+            DrawableColor c = this.scrollGrabberColorHexHover.getDrawable();
             this.scrollArea.verticalScrollBar.hoverBarColor = () -> c;
             this.scrollArea.horizontalScrollBar.hoverBarColor = () -> c;
         }
