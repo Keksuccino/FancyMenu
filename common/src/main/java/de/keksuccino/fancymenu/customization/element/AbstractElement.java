@@ -162,8 +162,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public float lastParallaxIntensityX = -10000.0F;
 	public float lastParallaxIntensityY = -10000.0F;
 	public boolean loadOncePerSession = false;
-	@NotNull
-	public DrawableColor inEditorColor = DrawableColor.of(Color.ORANGE);
 	public boolean layerHiddenInEditor = false;
 	private String instanceIdentifier;
 	@Nullable
@@ -196,8 +194,9 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public String advancedHorizontalTiltDegrees;
 	protected String lastAdvancedHorizontalTiltDegrees;
 	protected boolean allowDepthTestManipulation = false;
-    @NotNull
+
     public final Property<Boolean> shouldBeAffectedByDecorationOverlays = putProperty(Property.booleanProperty("should_be_affected_by_decoration_overlays", false, "fancymenu.elements.abstract.should_be_affected_by_decoration_overlays"));
+    public final Property<String> inEditorColor = putProperty(Property.hexColorProperty("in_editor_color", DrawableColor.of(Color.ORANGE).getHex(), false, "fancymenu.elements.in_editor_color"));
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {

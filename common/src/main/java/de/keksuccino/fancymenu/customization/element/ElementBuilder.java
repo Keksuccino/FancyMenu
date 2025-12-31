@@ -267,11 +267,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             element.loadOncePerSession = SerializationUtils.deserializeBoolean(element.loadOncePerSession, serialized.getValue("load_once_per_session"));
 
-            String inEditorColor = serialized.getValue("in_editor_color");
-            if (inEditorColor != null) {
-                element.inEditorColor = DrawableColor.of(inEditorColor);
-            }
-
             element.layerHiddenInEditor = deserializeBoolean(element.layerHiddenInEditor, serialized.getValue("layer_hidden_in_editor"));
 
             element.rotationDegrees = deserializeNumber(Float.class, element.rotationDegrees, serialized.getValue("rotation_degrees"));
@@ -414,8 +409,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("animated_offset_y", "" + element.animatedOffsetY);
 
             sec.putProperty("load_once_per_session", "" + element.loadOncePerSession);
-
-            sec.putProperty("in_editor_color", element.inEditorColor.getHex());
 
             sec.putProperty("layer_hidden_in_editor", "" + element.layerHiddenInEditor);
 
