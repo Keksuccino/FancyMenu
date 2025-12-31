@@ -219,7 +219,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         if (this.settings.isInEditorColorSupported()) {
 
             this.element.inEditorColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.in_editor_color.desc")));
+                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.in_editor_color.desc")))
+                    .setIcon(ContextMenu.IconFactory.getIcon("color_palette"));
 
         }
 
