@@ -696,36 +696,26 @@ public class Property<T> {
         p.contextMenuEntrySupplier = (property, builder, menu) -> {
             ContextMenu subMenu = new ContextMenu();
 
-            subMenu.addClickableEntry("input_as_string", Component.translatable("fancymenu.context_menu.entries.color.input_as_string"),
-                            (contextMenu, entry) -> {
-                                ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(entry, consumes -> consumes.getProperty(key) != null);
-                                if (!stack.isPrimary() || stack.isEmpty()) {
-                                    return;
-                                }
-                                List<? extends PropertyHolder> selectedObjects = stack.getObjects();
-                                String defaultText = null;
-                                List<String> targetValuesOfSelected = new ArrayList<>();
-                                for (PropertyHolder holder : selectedObjects) {
-                                    Property<String> resolved = (Property<String>) holder.getProperty(key);
-                                    String value = (resolved != null) ? resolved.get() : property.getDefault();
-                                    targetValuesOfSelected.add(value);
-                                }
-                                if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
-                                    Property<String> resolved = (Property<String>) builder.self().getProperty(key);
-                                    defaultText = (resolved != null) ? resolved.get() : property.getDefault();
-                                }
-                                if (!placeholders) {
-                                    TextInputScreen s = TextInputScreen.build(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null, call -> {
-                                        if (call != null) {
-                                            builder.saveSnapshot();
-                                            builder.applyStackAppliers(entry, call);
-                                        }
-                                        contextMenu.closeMenu();
-                                        Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
-                                    });
-                                    s.setText(defaultText);
-                                    Minecraft.getInstance().setScreen(s);
-                                } else {
+            if (placeholders) {
+
+                subMenu.addClickableEntry("input_as_string", Component.translatable("fancymenu.context_menu.entries.color.input_as_string"),
+                                (contextMenu, entry) -> {
+                                    ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(entry, consumes -> consumes.getProperty(key) != null);
+                                    if (!stack.isPrimary() || stack.isEmpty()) {
+                                        return;
+                                    }
+                                    List<? extends PropertyHolder> selectedObjects = stack.getObjects();
+                                    String defaultText = null;
+                                    List<String> targetValuesOfSelected = new ArrayList<>();
+                                    for (PropertyHolder holder : selectedObjects) {
+                                        Property<String> resolved = (Property<String>) holder.getProperty(key);
+                                        String value = (resolved != null) ? resolved.get() : property.getDefault();
+                                        targetValuesOfSelected.add(value);
+                                    }
+                                    if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
+                                        Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                                        defaultText = (resolved != null) ? resolved.get() : property.getDefault();
+                                    }
                                     TextEditorScreen s = new TextEditorScreen(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null, call -> {
                                         if (call != null) {
                                             builder.saveSnapshot();
@@ -738,17 +728,18 @@ public class Property<T> {
                                     s.setMultilineMode(false);
                                     s.setPlaceholdersAllowed(true);
                                     Minecraft.getInstance().setScreen(s);
-                                }
-                            })
-                    .setStackable(true)
-                    .setStackApplier((stackEntry, value) -> {
-                        if (!(value instanceof String call)) {
-                            return;
-                        }
-                        Property<String> resolved = (Property<String>) builder.self().getProperty(key);
-                        if (resolved != null) resolved.set(call);
-                    })
-                    .setIcon(ContextMenu.IconFactory.getIcon("text"));
+                                })
+                        .setStackable(true)
+                        .setStackApplier((stackEntry, value) -> {
+                            if (!(value instanceof String call)) {
+                                return;
+                            }
+                            Property<String> resolved = (Property<String>) builder.self().getProperty(key);
+                            if (resolved != null) resolved.set(call);
+                        })
+                        .setIcon(ContextMenu.IconFactory.getIcon("text"));
+
+            }
 
             subMenu.addClickableEntry("input_via_color_picker", Component.translatable("fancymenu.context_menu.entries.color.input_via_color_picker"),
                             (contextMenu, entry) -> {

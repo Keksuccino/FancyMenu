@@ -782,7 +782,8 @@ public interface ContextMenuBuilder<O> {
                         return;
                     }
                     targetFieldSetter.accept(this.self(), call);
-                });
+                })
+                .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"), (menu, entry) -> {
@@ -795,7 +796,8 @@ public interface ContextMenuBuilder<O> {
                     }).setStackable(true)
                     .setStackApplier((stackEntry, value) -> {
                         targetFieldSetter.accept(this.self(), defaultValue);
-                    });
+                    })
+                    .setIcon(ContextMenu.IconFactory.getIcon("undo"));
         }
 
         subMenu.addSeparatorEntry("separator_before_current_value_display")
