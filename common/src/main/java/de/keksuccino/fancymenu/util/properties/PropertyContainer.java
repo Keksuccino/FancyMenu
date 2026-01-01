@@ -31,6 +31,7 @@ public class PropertyContainer {
      * Properties with NULLED values will NOT get ADDED to the property map and EXISTING entries with the given name will be REMOVED.
      */
     public void putProperty(@NotNull String name, @Nullable Object value) {
+        if (value instanceof Property<?>) throw new RuntimeException("You can't serialize a Property<T> instance like this! Use Property.serialize() instead! Failed to serialize: " + name);
         if (this.invulnerableProperties && (this.entries.containsKey(name))) throw new RuntimeException("PropertyContainer already contains a property with this name: " + name);
         if (value == null) {
             this.removeProperty(name);
