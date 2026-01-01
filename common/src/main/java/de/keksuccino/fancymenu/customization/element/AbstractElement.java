@@ -17,7 +17,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
@@ -53,8 +53,9 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(@NotNull GuiGraphics g, int i1, int i2, float f){}};
 	public static final int STAY_ON_SCREEN_EDGE_ZONE_SIZE = 2;
 
-	public final ElementBuilder<?,?> builder;
     private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
+
+	public final ElementBuilder<?,?> builder;
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
 	protected String anchorPointElementIdentifier = null;
 	protected AbstractElement cachedElementAnchorPointParent = null;
@@ -276,8 +277,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.cachedMouseX = mouseX;
 		this.cachedMouseY = mouseY;
 
-		this.lastParallaxIntensityX = SerializationUtils.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityXString));
-		this.lastParallaxIntensityY = SerializationUtils.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityYString));
+		this.lastParallaxIntensityX = SerializationHelper.INSTANCE.INSTANCE.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityXString));
+		this.lastParallaxIntensityY = SerializationHelper.INSTANCE.INSTANCE.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityYString));
 
 		this.tickBaseOpacity();
 

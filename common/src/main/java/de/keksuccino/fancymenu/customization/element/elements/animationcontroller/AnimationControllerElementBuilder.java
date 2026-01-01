@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -91,19 +91,19 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
             }
         }
 
-        element.loop = SerializationUtils.deserializeBoolean(element.loop, serialized.getValue("loop"));
+        element.loop = SerializationHelper.INSTANCE.deserializeBoolean(element.loop, serialized.getValue("loop"));
 
-        element.offsetMode = SerializationUtils.deserializeBoolean(element.offsetMode, serialized.getValue("offset_mode"));
+        element.offsetMode = SerializationHelper.INSTANCE.deserializeBoolean(element.offsetMode, serialized.getValue("offset_mode"));
 
-        element.ignoreSize = SerializationUtils.deserializeBoolean(element.ignoreSize, serialized.getValue("ignore_size"));
+        element.ignoreSize = SerializationHelper.INSTANCE.deserializeBoolean(element.ignoreSize, serialized.getValue("ignore_size"));
 
-        element.ignorePosition = SerializationUtils.deserializeBoolean(element.ignorePosition, serialized.getValue("ignore_position"));
+        element.ignorePosition = SerializationHelper.INSTANCE.deserializeBoolean(element.ignorePosition, serialized.getValue("ignore_position"));
 
-        element.randomTimingOffsetMode = SerializationUtils.deserializeBoolean(element.randomTimingOffsetMode, serialized.getValue("random_timing_offset_mode"));
+        element.randomTimingOffsetMode = SerializationHelper.INSTANCE.deserializeBoolean(element.randomTimingOffsetMode, serialized.getValue("random_timing_offset_mode"));
 
-        element.randomTimingOffsetMinMs = SerializationUtils.deserializeNumber(Integer.class, element.randomTimingOffsetMinMs, serialized.getValue("random_timing_offset_min_ms"));
+        element.randomTimingOffsetMinMs = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, element.randomTimingOffsetMinMs, serialized.getValue("random_timing_offset_min_ms"));
 
-        element.randomTimingOffsetMaxMs = SerializationUtils.deserializeNumber(Integer.class, element.randomTimingOffsetMaxMs, serialized.getValue("random_timing_offset_max_ms"));
+        element.randomTimingOffsetMaxMs = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, element.randomTimingOffsetMaxMs, serialized.getValue("random_timing_offset_max_ms"));
 
         return element;
 

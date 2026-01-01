@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
@@ -56,7 +56,7 @@ public class IsEntityNearbyRequirement extends Requirement {
             if ((level != null) && (player != null)) {
                 if ((value == null) || value.trim().isEmpty() || !value.contains(":")) return false;
                 String[] valsRaw = value.split(":", 2);
-                int radius = SerializationUtils.deserializeNumber(Integer.class, 1, valsRaw[0]);
+                int radius = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 1, valsRaw[0]);
                 String entityKey = valsRaw[1];
                 for (Entity entity : getEntitiesAroundPlayer(player, level, radius)) {
                     ResourceLocation loc = Services.PLATFORM.getEntityKey(entity.getType());

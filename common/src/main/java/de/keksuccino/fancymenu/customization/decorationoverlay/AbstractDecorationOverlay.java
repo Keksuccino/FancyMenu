@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
-import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import net.minecraft.client.Minecraft;
@@ -26,13 +25,14 @@ import java.util.function.Consumer;
 
 public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOverlay<?>> implements Renderable, ContainerEventHandler, NarratableEntry, PropertyHolder, ContextMenuBuilder<O> {
 
+    private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
+
     @NotNull
     private String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
     @ApiStatus.Internal
-    public boolean showOverlay = false;
+    public final Property<Boolean> showOverlay = putProperty(Property.booleanProperty("show_decoration_overlay", false, "fancymenu.decoration_overlay.show_overlay"));
     private final List<GuiEventListener> children = new ArrayList<>();
     private final List<Renderable> renderables = new ArrayList<>();
-    private final Map<String, Property<?>> properties = new LinkedHashMap<>();
 
     @NotNull
     public String getInstanceIdentifier() {
@@ -45,7 +45,7 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
 
     @Override
     public @NotNull Map<String, Property<?>> getPropertyMap() {
-        return this.properties;
+        return this.propertyMap;
     }
 
     protected abstract void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor);
@@ -56,13 +56,7 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
 
         ContextMenu menu = new ContextMenu();
 
-        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "show_overlay",
-                () -> this.showOverlay,
-                aBoolean -> {
-                    editor.history.saveSnapshot();
-                    this.showOverlay = aBoolean;
-                },
-                "fancymenu.decoration_overlay.show_overlay");
+        this.showOverlay.buildContextMenuEntryAndAddTo(menu, this);
 
         menu.addSeparatorEntry("separator_after_show_overlay_toggle");
 

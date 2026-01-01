@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.firefly
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.FireflyOverlay;
@@ -18,16 +17,12 @@ import java.util.Objects;
 
 public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyDecorationOverlay> {
 
-    @NotNull
-    public String fireflyGroupDensity = "1.0";
-    public String fireflyGroupAmount = "1.0";
-    @NotNull
-    public String fireflyGroupSize = "1.0";
-    @NotNull
-    public String fireflyScale = "1.0";
-    public boolean fireflyFollowMouse = true;
-    public boolean fireflyLanding = true;
-
+    public final Property.StringProperty fireflyGroupDensity = putProperty(Property.stringProperty("firefly_group_density", "1.0", false, true, "fancymenu.decoration_overlays.fireflies.intensity"));
+    public final Property.StringProperty fireflyGroupAmount = putProperty(Property.stringProperty("firefly_group_amount", "1.0", false, true, "fancymenu.decoration_overlays.fireflies.group_amount"));
+    public final Property.StringProperty fireflyGroupSize = putProperty(Property.stringProperty("firefly_group_size", "1.0", false, true, "fancymenu.decoration_overlays.fireflies.group_size"));
+    public final Property.StringProperty fireflyScale = putProperty(Property.stringProperty("firefly_scale", "1.0", false, true, "fancymenu.decoration_overlays.fireflies.scale"));
+    public final Property<Boolean> fireflyFollowMouse = putProperty(Property.booleanProperty("firefly_follow_mouse", true, "fancymenu.decoration_overlays.fireflies.follow_mouse"));
+    public final Property<Boolean> fireflyLanding = putProperty(Property.booleanProperty("firefly_landing", true, "fancymenu.decoration_overlays.fireflies.landing"));
     public final Property.ColorProperty fireflyColorHex = putProperty(Property.hexColorProperty("firefly_color_hex", "#FFE08A", true, "fancymenu.decoration_overlays.fireflies.color"));
 
     protected final FireflyOverlay overlay = new FireflyOverlay(0, 0);
@@ -40,51 +35,25 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyD
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        this.addToggleContextMenuEntryTo(menu, "firefly_follow_mouse", FireflyDecorationOverlay.class,
-                        o -> o.fireflyFollowMouse,
-                        (o, aBoolean) -> o.fireflyFollowMouse = aBoolean,
-                        "fancymenu.decoration_overlays.fireflies.follow_mouse")
+        this.fireflyFollowMouse.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.follow_mouse.desc")));
 
-        this.addToggleContextMenuEntryTo(menu, "firefly_landing", FireflyDecorationOverlay.class,
-                        o -> o.fireflyLanding,
-                        (o, aBoolean) -> o.fireflyLanding = aBoolean,
-                        "fancymenu.decoration_overlays.fireflies.landing")
+        this.fireflyLanding.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.landing.desc")));
 
         this.fireflyColorHex.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.color.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "firefly_group_amount", FireflyDecorationOverlay.class,
-                        o -> o.fireflyGroupAmount,
-                        (o, s) -> o.fireflyGroupAmount = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.fireflies.group_amount"),
-                        true, "1.0", null, null)
+        this.fireflyGroupAmount.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.group_amount.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "firefly_group_density", FireflyDecorationOverlay.class,
-                        o -> o.fireflyGroupDensity,
-                        (o, s) -> o.fireflyGroupDensity = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.fireflies.intensity"),
-                        true, "1.0", null, null)
+        this.fireflyGroupDensity.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.intensity.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "firefly_group_size", FireflyDecorationOverlay.class,
-                        o -> o.fireflyGroupSize,
-                        (o, s) -> o.fireflyGroupSize = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.fireflies.group_size"),
-                        true, "1.0", null, null)
+        this.fireflyGroupSize.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.group_size.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "firefly_scale", FireflyDecorationOverlay.class,
-                        o -> o.fireflyScale,
-                        (o, s) -> o.fireflyScale = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.fireflies.scale"),
-                        true, "1.0", null, null)
+        this.fireflyScale.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.scale.desc")));
 
     }
@@ -92,8 +61,8 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyD
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.overlay.setFollowMouseEnabled(this.fireflyFollowMouse);
-        this.overlay.setLandingEnabled(this.fireflyLanding);
+        this.overlay.setFollowMouseEnabled(this.fireflyFollowMouse.tryGetNonNullElse(true));
+        this.overlay.setLandingEnabled(this.fireflyLanding.tryGetNonNullElse(true));
 
         String colorString = this.fireflyColorHex.getHex();
         if (!Objects.equals(colorString, this.lastFireflyColorString)) {
@@ -101,7 +70,8 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyD
             this.overlay.setColor(this.fireflyColorHex.getDrawable().getColorInt());
         }
 
-        String densityString = PlaceholderParser.replacePlaceholders(this.fireflyGroupDensity);
+        String densityString = this.fireflyGroupDensity.getString();
+        if (densityString == null) densityString = "1.0";
         if (!Objects.equals(densityString, this.lastFireflyGroupDensityString)) {
             this.lastFireflyGroupDensityString = densityString;
             float densityValue;
@@ -113,7 +83,8 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyD
             this.overlay.setGroupDensity(densityValue);
         }
 
-        String amountString = PlaceholderParser.replacePlaceholders(this.fireflyGroupAmount);
+        String amountString = this.fireflyGroupAmount.getString();
+        if (amountString == null) amountString = "1.0";
         if (!Objects.equals(amountString, this.lastFireflyGroupAmountString)) {
             this.lastFireflyGroupAmountString = amountString;
             float amountValue;
@@ -125,7 +96,8 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyD
             this.overlay.setGroupAmount(amountValue);
         }
 
-        String groupSizeString = PlaceholderParser.replacePlaceholders(this.fireflyGroupSize);
+        String groupSizeString = this.fireflyGroupSize.getString();
+        if (groupSizeString == null) groupSizeString = "1.0";
         if (!Objects.equals(groupSizeString, this.lastFireflyGroupSizeString)) {
             this.lastFireflyGroupSizeString = groupSizeString;
             float sizeValue;
@@ -137,7 +109,8 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyD
             this.overlay.setGroupSize(sizeValue);
         }
 
-        String scaleString = PlaceholderParser.replacePlaceholders(this.fireflyScale);
+        String scaleString = this.fireflyScale.getString();
+        if (scaleString == null) scaleString = "1.0";
         if (!Objects.equals(scaleString, this.lastFireflyScaleString)) {
             this.lastFireflyScaleString = scaleString;
             float scaleValue;

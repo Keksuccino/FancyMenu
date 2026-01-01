@@ -7,14 +7,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.SerializationUtils;
-import de.keksuccino.fancymenu.util.file.ResourceFile;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
-import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
-import de.keksuccino.fancymenu.util.resource.resources.text.IText;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -31,7 +24,7 @@ import java.util.Objects;
  * Needs to get registered to the {@link ElementRegistry}.
  */
 @SuppressWarnings("all")
-public abstract class ElementBuilder<E extends AbstractElement, L extends AbstractEditorElement> {
+public abstract class ElementBuilder<E extends AbstractElement, L extends AbstractEditorElement> implements SerializationHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -238,8 +231,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.requirementContainer = RequirementContainer.deserializeToSingleContainer(serialized);
             }
 
-            element.enableParallax = SerializationUtils.deserializeBoolean(element.enableParallax, serialized.getValue("enable_parallax"));
-            element.invertParallax = SerializationUtils.deserializeBoolean(element.invertParallax, serialized.getValue("invert_parallax"));
+            element.enableParallax = deserializeBoolean(element.enableParallax, serialized.getValue("enable_parallax"));
+            element.invertParallax = deserializeBoolean(element.invertParallax, serialized.getValue("invert_parallax"));
 
             String parallaxIntensityX = serialized.getValue("parallax_intensity_x");
             String parallaxIntensityY = serialized.getValue("parallax_intensity_y");
@@ -262,10 +255,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.parallaxIntensityXString = parallaxIntensityX;
             element.parallaxIntensityYString = parallaxIntensityY;
 
-            element.animatedOffsetX = SerializationUtils.deserializeNumber(Integer.class, element.animatedOffsetX, serialized.getValue("animated_offset_x"));
-            element.animatedOffsetY = SerializationUtils.deserializeNumber(Integer.class, element.animatedOffsetY, serialized.getValue("animated_offset_y"));
+            element.animatedOffsetX = deserializeNumber(Integer.class, element.animatedOffsetX, serialized.getValue("animated_offset_x"));
+            element.animatedOffsetY = deserializeNumber(Integer.class, element.animatedOffsetY, serialized.getValue("animated_offset_y"));
 
-            element.loadOncePerSession = SerializationUtils.deserializeBoolean(element.loadOncePerSession, serialized.getValue("load_once_per_session"));
+            element.loadOncePerSession = deserializeBoolean(element.loadOncePerSession, serialized.getValue("load_once_per_session"));
 
             element.layerHiddenInEditor = deserializeBoolean(element.layerHiddenInEditor, serialized.getValue("layer_hidden_in_editor"));
 
@@ -294,40 +287,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
         return null;
 
-    }
-
-    @Nullable
-    public static ResourceSupplier<ITexture> deserializeImageResourceSupplier(@Nullable String resourceSource) {
-        return SerializationUtils.deserializeImageResourceSupplier(resourceSource);
-    }
-
-    @Nullable
-    public static ResourceSupplier<IAudio> deserializeAudioResourceSupplier(@Nullable String resourceSource) {
-        return SerializationUtils.deserializeAudioResourceSupplier(resourceSource);
-    }
-
-    @Nullable
-    public static ResourceSupplier<IVideo> deserializeVideoResourceSupplier(@Nullable String resourceSource) {
-        return SerializationUtils.deserializeVideoResourceSupplier(resourceSource);
-    }
-
-    @Nullable
-    public static ResourceSupplier<IText> deserializeTextResourceSupplier(@Nullable String resourceSource) {
-        return SerializationUtils.deserializeTextResourceSupplier(resourceSource);
-    }
-
-    @Nullable
-    public static ResourceFile deserializeResourceFile(@Nullable String gameDirectoryFilePath) {
-        return SerializationUtils.deserializeResourceFile(gameDirectoryFilePath);
-    }
-
-    @NotNull
-    protected <T extends Number> T deserializeNumber(@NotNull Class<T> type, @NotNull T fallbackValue, @Nullable String serialized) {
-        return SerializationUtils.deserializeNumber(type, fallbackValue, serialized);
-    }
-
-    protected boolean deserializeBoolean(boolean fallbackValue, @Nullable String serialized) {
-        return SerializationUtils.deserializeBoolean(fallbackValue, serialized);
     }
 
     /**

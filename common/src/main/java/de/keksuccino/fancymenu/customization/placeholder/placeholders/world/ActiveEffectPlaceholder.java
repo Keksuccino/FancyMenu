@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholder
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -31,7 +31,7 @@ public class ActiveEffectPlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         LocalPlayer player = Minecraft.getInstance().player;
         ClientLevel level = Minecraft.getInstance().level;
-        int index = SerializationUtils.deserializeNumber(Integer.class, 0, dps.values.get("effect_index"));
+        int index = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 0, dps.values.get("effect_index"));
         if ((player != null) && (level != null)) {
             List<MobEffectInstance> effects = Ordering.natural().reverse().sortedCopy(player.getActiveEffects());
             if (effects.size() >= (index + 1)) {

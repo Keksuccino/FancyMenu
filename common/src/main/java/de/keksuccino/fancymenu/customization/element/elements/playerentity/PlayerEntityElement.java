@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.CapeResourceSupplier;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.entity.FancyEntityRendererUtils;
@@ -459,7 +459,7 @@ public class PlayerEntityElement extends AbstractElement {
                 if (serialized.contains(SERIALIZATION_SEPARATOR)) {
                     var array = serialized.split(SERIALIZATION_SEPARATOR);
                     String key = array[0];
-                    boolean enchant = SerializationUtils.deserializeBoolean(false, array[1]);
+                    boolean enchant = SerializationHelper.INSTANCE.deserializeBoolean(false, array[1]);
                     return new Wearable(key, enchant);
                 }
             } catch (Exception ex) {

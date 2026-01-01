@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -97,7 +97,7 @@ public class ExternalTextureSlideshowRenderer {
 						this.height = Integer.parseInt(sh);
 					}
 
-					this.randomize = SerializationUtils.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
+					this.randomize = SerializationHelper.INSTANCE.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
 
 				}
 			}

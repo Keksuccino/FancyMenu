@@ -24,7 +24,7 @@ public class LayoutBase {
     @NotNull
     public final List<MenuBackground> menuBackgrounds = new ArrayList<>();
     @NotNull
-    public final List<Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay>> decorationOverlays = new ArrayList<>();
+    public final List<Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>>> decorationOverlays = new ArrayList<>();
     public boolean preserveBackgroundAspectRatio = false;
     public ResourceSupplier<IAudio> openAudio;
     public ResourceSupplier<IAudio> closeAudio;
@@ -114,7 +114,7 @@ public class LayoutBase {
                     stacked.closeScreenExecutableBlocks.addAll(layout.closeScreenExecutableBlocks);
                 }
                 layout.decorationOverlays.forEach(pair -> {
-                    if (pair.getValue().showOverlay) stacked.decorationOverlays.add(pair);
+                    if (pair.getValue().showOverlay.tryGetNonNullElse(false)) stacked.decorationOverlays.add(pair);
                 });
 
             }

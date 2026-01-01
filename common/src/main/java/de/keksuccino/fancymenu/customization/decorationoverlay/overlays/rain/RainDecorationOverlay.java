@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.rain;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.RainOverlay;
@@ -18,16 +17,12 @@ import java.util.Objects;
 
 public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorationOverlay> {
 
-    @NotNull
-    public String rainIntensity = "1.0";
-    @NotNull
-    public String rainScale = "1.0";
-    @NotNull
-    public String rainThunderBrightness = "1.0";
-    public boolean rainPuddles = true;
-    public boolean rainDrips = true;
-    public boolean rainThunder = false;
-
+    public final Property.StringProperty rainIntensity = putProperty(Property.stringProperty("rain_intensity", "1.0", false, true, "fancymenu.decoration_overlays.rain.intensity"));
+    public final Property.StringProperty rainScale = putProperty(Property.stringProperty("rain_scale", "1.0", false, true, "fancymenu.decoration_overlays.rain.scale"));
+    public final Property.StringProperty rainThunderBrightness = putProperty(Property.stringProperty("rain_thunder_brightness", "1.0", false, true, "fancymenu.decoration_overlays.rain.thunder_brightness"));
+    public final Property<Boolean> rainPuddles = putProperty(Property.booleanProperty("rain_puddles", true, "fancymenu.decoration_overlays.rain.puddles"));
+    public final Property<Boolean> rainDrips = putProperty(Property.booleanProperty("rain_drips", true, "fancymenu.decoration_overlays.rain.drips"));
+    public final Property<Boolean> rainThunder = putProperty(Property.booleanProperty("rain_thunder", false, "fancymenu.decoration_overlays.rain.thunder"));
     public final Property.ColorProperty rainColorHex = putProperty(Property.hexColorProperty("rain_color_hex", "#CFE7FF", true, "fancymenu.decoration_overlays.rain.color"));
 
     protected final RainOverlay overlay = new RainOverlay(0, 0);
@@ -39,49 +34,25 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        this.addToggleContextMenuEntryTo(menu, "rain_puddles", RainDecorationOverlay.class,
-                        o -> o.rainPuddles,
-                        (o, aBoolean) -> o.rainPuddles = aBoolean,
-                        "fancymenu.decoration_overlays.rain.puddles")
+        this.rainPuddles.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.puddles.desc")));
 
-        this.addToggleContextMenuEntryTo(menu, "rain_drips", RainDecorationOverlay.class,
-                        o -> o.rainDrips,
-                        (o, aBoolean) -> o.rainDrips = aBoolean,
-                        "fancymenu.decoration_overlays.rain.drips")
+        this.rainDrips.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.drips.desc")));
 
-        this.addToggleContextMenuEntryTo(menu, "rain_thunder", RainDecorationOverlay.class,
-                        o -> o.rainThunder,
-                        (o, aBoolean) -> o.rainThunder = aBoolean,
-                        "fancymenu.decoration_overlays.rain.thunder")
+        this.rainThunder.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.thunder.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "rain_thunder_brightness", RainDecorationOverlay.class,
-                        o -> o.rainThunderBrightness,
-                        (o, s) -> o.rainThunderBrightness = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.rain.thunder_brightness"),
-                        true, "1.0", null, null)
+        this.rainThunderBrightness.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.thunder_brightness.desc")));
 
         this.rainColorHex.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.color.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "rain_intensity", RainDecorationOverlay.class,
-                        o -> o.rainIntensity,
-                        (o, s) -> o.rainIntensity = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.rain.intensity"),
-                        true, "1.0", null, null)
+        this.rainIntensity.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.intensity.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "rain_scale", RainDecorationOverlay.class,
-                        o -> o.rainScale,
-                        (o, s) -> o.rainScale = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.rain.scale"),
-                        true, "1.0", null, null)
+        this.rainScale.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.scale.desc")));
 
     }
@@ -90,9 +61,9 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         // Update puddles
-        this.overlay.setPuddlesEnabled(this.rainPuddles);
-        this.overlay.setDripsEnabled(this.rainDrips);
-        this.overlay.setThunderEnabled(this.rainThunder);
+        this.overlay.setPuddlesEnabled(this.rainPuddles.tryGetNonNullElse(true));
+        this.overlay.setDripsEnabled(this.rainDrips.tryGetNonNullElse(true));
+        this.overlay.setThunderEnabled(this.rainThunder.tryGetNonNullElse(false));
 
         // Update rain color
         String colorString = this.rainColorHex.getHex();
@@ -102,7 +73,8 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
         }
 
         // Update rain intensity
-        String intensityString = PlaceholderParser.replacePlaceholders(this.rainIntensity);
+        String intensityString = this.rainIntensity.getString();
+        if (intensityString == null) intensityString = "1.0";
         if (!Objects.equals(intensityString, this.lastRainIntensityString)) {
             this.lastRainIntensityString = intensityString;
             float lastRainIntensity;
@@ -114,7 +86,8 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
             this.overlay.setIntensity(lastRainIntensity);
         }
 
-        String scaleString = PlaceholderParser.replacePlaceholders(this.rainScale);
+        String scaleString = this.rainScale.getString();
+        if (scaleString == null) scaleString = "1.0";
         if (!Objects.equals(scaleString, this.lastRainScaleString)) {
             this.lastRainScaleString = scaleString;
             float scaleValue;
@@ -126,7 +99,8 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
             this.overlay.setScale(scaleValue);
         }
 
-        String thunderBrightnessString = PlaceholderParser.replacePlaceholders(this.rainThunderBrightness);
+        String thunderBrightnessString = this.rainThunderBrightness.getString();
+        if (thunderBrightnessString == null) thunderBrightnessString = "1.0";
         if (!Objects.equals(thunderBrightnessString, this.lastRainThunderBrightnessString)) {
             this.lastRainThunderBrightnessString = thunderBrightnessString;
             float lastThunderBrightness;

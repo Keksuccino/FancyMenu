@@ -1,22 +1,17 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.ConsumingSupplier;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
-import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
-public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorationOverlay<?>> extends SerializationUtils {
+public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorationOverlay<?>> implements SerializationHelper {
 
     protected static final CharacterFilter IDENTIFIER_VALIDATOR = CharacterFilter.buildResourceNameFilter();
 
@@ -24,7 +19,6 @@ public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorat
 
     private static final String OVERLAY_TYPE_KEY = "overlay_type";
     private static final String INSTANCE_IDENTIFIER_KEY = "instance_identifier";
-    private static final String SHOW_OVERLAY_KEY = "show_decoration_overlay";
 
     @NotNull
     protected final String identifier;
@@ -59,7 +53,6 @@ public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorat
                 var instance = this.buildDefaultInstance();
 
                 instance.setInstanceIdentifier(Objects.requireNonNullElse(serialized.getValue(INSTANCE_IDENTIFIER_KEY), ScreenCustomization.generateUniqueIdentifier()));
-                instance.showOverlay = deserializeBoolean(instance.showOverlay, serialized.getValue(SHOW_OVERLAY_KEY));
 
                 instance.getPropertyMap().values().forEach(property -> {
                     property.deserialize(serialized);
@@ -87,7 +80,6 @@ public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorat
 
         serializeTo.putProperty(OVERLAY_TYPE_KEY, this.getIdentifier());
         serializeTo.putProperty(INSTANCE_IDENTIFIER_KEY, instanceToSerialize.getInstanceIdentifier());
-        serializeTo.putProperty(SHOW_OVERLAY_KEY, instanceToSerialize.showOverlay);
 
         instanceToSerialize.getPropertyMap().values().forEach(property -> {
             property.serialize(serializeTo);

@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.leaves;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.LeavesOverlay;
@@ -13,22 +12,16 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.Objects;
 
 public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDecorationOverlay> {
 
-    @NotNull
-    public String leavesDensity = "1.0";
-    @NotNull
-    public String leavesWindIntensity = "1.0";
-    public boolean leavesWindBlows = true;
-    @NotNull
-    public String leavesFallSpeed = "1.0";
-    @NotNull
-    public String leavesScale = "1.0";
-
+    public final Property.StringProperty leavesDensity = putProperty(Property.stringProperty("leaves_density", "1.0", false, true, "fancymenu.decoration_overlays.leaves.density"));
+    public final Property.StringProperty leavesWindIntensity = putProperty(Property.stringProperty("leaves_wind_intensity", "1.0", false, true, "fancymenu.decoration_overlays.leaves.wind"));
+    public final Property<Boolean> leavesWindBlows = putProperty(Property.booleanProperty("leaves_wind_blows", true, "fancymenu.decoration_overlays.leaves.wind_blows"));
+    public final Property.StringProperty leavesFallSpeed = putProperty(Property.stringProperty("leaves_fall_speed", "1.0", false, true, "fancymenu.decoration_overlays.leaves.fall_speed"));
+    public final Property.StringProperty leavesScale = putProperty(Property.stringProperty("leaves_scale", "1.0", false, true, "fancymenu.decoration_overlays.leaves.scale"));
     public final Property.ColorProperty leavesColorStartHex = putProperty(Property.hexColorProperty("leaves_color_start_hex", "#7BA84F", true, "fancymenu.decoration_overlays.leaves.color_start"));
     public final Property.ColorProperty leavesColorEndHex = putProperty(Property.hexColorProperty("leaves_color_end_hex", "#D58A3B", true, "fancymenu.decoration_overlays.leaves.color_end"));
 
@@ -49,42 +42,19 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
         this.leavesColorEndHex.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.color_end.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "leaves_density", LeavesDecorationOverlay.class,
-                        o -> o.leavesDensity,
-                        (o, s) -> o.leavesDensity = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.leaves.density"),
-                        true, "1.0", null, null)
+        this.leavesDensity.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.density.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "leaves_wind_intensity", LeavesDecorationOverlay.class,
-                        o -> o.leavesWindIntensity,
-                        (o, s) -> o.leavesWindIntensity = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.leaves.wind"),
-                        true, "1.0", null, null)
+        this.leavesWindIntensity.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.wind.desc")));
 
-        this.addToggleContextMenuEntryTo(menu, "leaves_wind_blows", LeavesDecorationOverlay.class,
-                        o -> o.leavesWindBlows,
-                        (o, aBoolean) -> o.leavesWindBlows = aBoolean,
-                        "fancymenu.decoration_overlays.leaves.wind_blows")
+        this.leavesWindBlows.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.wind_blows.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "leaves_fall_speed", LeavesDecorationOverlay.class,
-                        o -> o.leavesFallSpeed,
-                        (o, s) -> o.leavesFallSpeed = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.leaves.fall_speed"),
-                        true, "1.0", null, null)
+        this.leavesFallSpeed.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.fall_speed.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "leaves_scale", LeavesDecorationOverlay.class,
-                        o -> o.leavesScale,
-                        (o, s) -> o.leavesScale = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.leaves.scale"),
-                        true, "1.0", null, null)
+        this.leavesScale.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.scale.desc")));
 
     }
@@ -100,7 +70,8 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
             this.overlay.setColorRange(this.leavesColorStartHex.getDrawable().getColorInt(), this.leavesColorEndHex.getDrawable().getColorInt());
         }
 
-        String densityString = PlaceholderParser.replacePlaceholders(this.leavesDensity);
+        String densityString = this.leavesDensity.getString();
+        if (densityString == null) densityString = "1.0";
         if (!Objects.equals(densityString, this.lastLeavesDensityString)) {
             this.lastLeavesDensityString = densityString;
             float densityValue;
@@ -112,7 +83,8 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
             this.overlay.setIntensity(densityValue);
         }
 
-        String windString = PlaceholderParser.replacePlaceholders(this.leavesWindIntensity);
+        String windString = this.leavesWindIntensity.getString();
+        if (windString == null) windString = "1.0";
         if (!Objects.equals(windString, this.lastLeavesWindIntensityString)) {
             this.lastLeavesWindIntensityString = windString;
             float windValue;
@@ -124,9 +96,10 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
             this.overlay.setWindStrength(windValue);
         }
 
-        this.overlay.setWindBlowsEnabled(this.leavesWindBlows);
+        this.overlay.setWindBlowsEnabled(this.leavesWindBlows.tryGetNonNullElse(true));
 
-        String fallSpeedString = PlaceholderParser.replacePlaceholders(this.leavesFallSpeed);
+        String fallSpeedString = this.leavesFallSpeed.getString();
+        if (fallSpeedString == null) fallSpeedString = "1.0";
         if (!Objects.equals(fallSpeedString, this.lastLeavesFallSpeedString)) {
             this.lastLeavesFallSpeedString = fallSpeedString;
             float fallSpeedValue;
@@ -138,7 +111,8 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
             this.overlay.setFallSpeedMultiplier(fallSpeedValue);
         }
 
-        String scaleString = PlaceholderParser.replacePlaceholders(this.leavesScale);
+        String scaleString = this.leavesScale.getString();
+        if (scaleString == null) scaleString = "1.0";
         if (!Objects.equals(scaleString, this.lastLeavesScaleString)) {
             this.lastLeavesScaleString = scaleString;
             float scaleValue;

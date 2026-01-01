@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.background;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -13,7 +14,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @SuppressWarnings("all")
-public abstract class MenuBackgroundBuilder<T extends MenuBackground> {
+public abstract class MenuBackgroundBuilder<T extends MenuBackground> implements SerializationHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
 

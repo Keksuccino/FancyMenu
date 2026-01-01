@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.world.pla
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -38,7 +38,7 @@ public class IsInventorySlotFilledRequirement extends Requirement {
         try {
             ClientLevel level = Minecraft.getInstance().level;
             LocalPlayer player = Minecraft.getInstance().player;
-            int slot = SerializationUtils.deserializeNumber(Integer.class, 0, value);
+            int slot = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 0, value);
             if ((level != null) && (player != null)) {
                 ItemStack stack = player.getInventory().getItem(slot);
                 return ((stack != null) && (stack != ItemStack.EMPTY));

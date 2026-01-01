@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
@@ -41,7 +41,7 @@ public class IsKeyPressedRequirement extends Requirement {
     public boolean isRequirementMet(@Nullable String value) {
 
         if (value != null) {
-            int keycode = SerializationUtils.deserializeNumber(Integer.class, -1, value);
+            int keycode = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, -1, value);
             com.mojang.blaze3d.platform.InputConstants.Key key = getKey(keycode);
             return (key.getValue() != -1) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), key.getValue());
         }
@@ -111,7 +111,7 @@ public class IsKeyPressedRequirement extends Requirement {
         protected IsKeyPressedValueConfigScreen(String value, @NotNull Consumer<String> callback) {
             super(Component.translatable("fancymenu.requirements.is_key_pressed.screen.title"), callback);
             if (value == null) value = "";
-            this.keyCode = SerializationUtils.deserializeNumber(Integer.class, -1, value);
+            this.keyCode = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, -1, value);
             if (this.keyCode == -1) this.keyCode = InputConstants.KEY_G;
         }
 

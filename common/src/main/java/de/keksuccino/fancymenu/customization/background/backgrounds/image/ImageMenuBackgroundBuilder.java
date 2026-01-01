@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -41,21 +41,21 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
         ImageMenuBackground b = new ImageMenuBackground(this);
 
-        b.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(serializedMenuBackground.getValue("image_path"));
+        b.textureSupplier = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(serializedMenuBackground.getValue("image_path"));
 
         String slide = serializedMenuBackground.getValue("slide");
         if ((slide != null) && slide.equals("true")) {
             b.slideLeftRight = true;
         }
 
-        b.fallbackTextureSupplier = SerializationUtils.deserializeImageResourceSupplier(serializedMenuBackground.getValue("fallback_path"));
+        b.fallbackTextureSupplier = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(serializedMenuBackground.getValue("fallback_path"));
         if (b.fallbackTextureSupplier == null) {
-            b.fallbackTextureSupplier = SerializationUtils.deserializeImageResourceSupplier(serializedMenuBackground.getValue("web_image_fallback_path"));
+            b.fallbackTextureSupplier = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(serializedMenuBackground.getValue("web_image_fallback_path"));
         }
 
-        b.repeat = SerializationUtils.deserializeBoolean(b.repeat, serializedMenuBackground.getValue("repeat_texture"));
+        b.repeat = SerializationHelper.INSTANCE.deserializeBoolean(b.repeat, serializedMenuBackground.getValue("repeat_texture"));
 
-        b.parallaxEnabled = SerializationUtils.deserializeBoolean(b.parallaxEnabled, serializedMenuBackground.getValue("parallax"));
+        b.parallaxEnabled = SerializationHelper.INSTANCE.deserializeBoolean(b.parallaxEnabled, serializedMenuBackground.getValue("parallax"));
         String parallaxIntensityX = serializedMenuBackground.getValue("parallax_intensity_x");
         String parallaxIntensityY = serializedMenuBackground.getValue("parallax_intensity_y");
 
@@ -74,9 +74,9 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
         b.parallaxIntensityXString = parallaxIntensityX;
         b.parallaxIntensityYString = parallaxIntensityY;
-        b.invertParallax = SerializationUtils.deserializeBoolean(b.invertParallax, serializedMenuBackground.getValue("invert_parallax"));
+        b.invertParallax = SerializationHelper.INSTANCE.deserializeBoolean(b.invertParallax, serializedMenuBackground.getValue("invert_parallax"));
 
-        b.restartAnimatedOnMenuLoad = SerializationUtils.deserializeBoolean(false, serializedMenuBackground.getValue("restart_animated_on_menu_load"));
+        b.restartAnimatedOnMenuLoad = SerializationHelper.INSTANCE.deserializeBoolean(false, serializedMenuBackground.getValue("restart_animated_on_menu_load"));
 
         return b;
 

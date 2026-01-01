@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,8 +28,8 @@ public class ReplaceTextPlaceholder extends Placeholder {
         String text = dps.values.get("text");
         String search = dps.values.get("search");
         String replacement = dps.values.get("replacement");
-        boolean useRegex = SerializationUtils.deserializeBoolean(false, dps.values.get("use_regex"));
-        boolean replaceAll = SerializationUtils.deserializeBoolean(true, dps.values.get("replace_all"));
+        boolean useRegex = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("use_regex"));
+        boolean replaceAll = SerializationHelper.INSTANCE.deserializeBoolean(true, dps.values.get("replace_all"));
         
         if ((text == null) || (search == null)) {
             return "";

@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholder
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,7 +27,7 @@ public class LastWorldOrServerPlaceholder extends Placeholder {
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String type = dps.values.get("type");
-        boolean fullPath = SerializationUtils.deserializeBoolean(true, dps.values.get("full_world_path"));
+        boolean fullPath = SerializationHelper.INSTANCE.deserializeBoolean(true, dps.values.get("full_world_path"));
         if (type != null) {
             if (type.equals("both")) {
                 String lastWorld = LastWorldHandler.getLastWorld();

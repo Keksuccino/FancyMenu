@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholder
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGui;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -30,8 +30,8 @@ public class CurrentTitlePlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         LocalPlayer player = Minecraft.getInstance().player;
         ClientLevel level = Minecraft.getInstance().level;
-        boolean isSubtitle = SerializationUtils.deserializeBoolean(false, dps.values.get("is_subtitle"));
-        boolean asJson = SerializationUtils.deserializeBoolean(false, dps.values.get("as_json"));
+        boolean isSubtitle = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("is_subtitle"));
+        boolean asJson = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("as_json"));
         if ((player != null) && (level != null)) {
             Component component = isSubtitle ? ((IMixinGui)Minecraft.getInstance().gui).get_subtitle_FancyMenu() : ((IMixinGui)Minecraft.getInstance().gui).get_title_FancyMenu();
             if (component != null) {

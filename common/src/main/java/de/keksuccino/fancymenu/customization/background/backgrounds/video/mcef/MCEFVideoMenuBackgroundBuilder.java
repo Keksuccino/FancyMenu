@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.video.mcef;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -44,12 +44,12 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
 
         String source = serialized.getValue("source");
         background.rawVideoUrlSource = (source != null) ? ResourceSource.of(source) : null;
-        background.loop = SerializationUtils.deserializeBoolean(background.loop, serialized.getValue("loop"));
-        background.volume = SerializationUtils.deserializeNumber(Float.class, background.volume, serialized.getValue("volume"));
+        background.loop = SerializationHelper.INSTANCE.deserializeBoolean(background.loop, serialized.getValue("loop"));
+        background.volume = SerializationHelper.INSTANCE.deserializeNumber(Float.class, background.volume, serialized.getValue("volume"));
         String soundSource = serialized.getValue("sound_source");
         if (soundSource != null) background.soundSource = Objects.requireNonNullElse(getSoundSourceByName(soundSource), SoundSource.MASTER);
 
-        background.parallaxEnabled = SerializationUtils.deserializeBoolean(background.parallaxEnabled, serialized.getValue("parallax"));
+        background.parallaxEnabled = SerializationHelper.INSTANCE.deserializeBoolean(background.parallaxEnabled, serialized.getValue("parallax"));
         String parallaxIntensityX = serialized.getValue("parallax_intensity_x");
         String parallaxIntensityY = serialized.getValue("parallax_intensity_y");
 
@@ -68,7 +68,7 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
 
         background.parallaxIntensityXString = parallaxIntensityX;
         background.parallaxIntensityYString = parallaxIntensityY;
-        background.invertParallax = SerializationUtils.deserializeBoolean(background.invertParallax, serialized.getValue("invert_parallax"));
+        background.invertParallax = SerializationHelper.INSTANCE.deserializeBoolean(background.invertParallax, serialized.getValue("invert_parallax"));
 
         return background;
 

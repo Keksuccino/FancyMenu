@@ -2,26 +2,23 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.firewor
 
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.FireworksOverlay;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.Objects;
 
 public class FireworksDecorationOverlay extends AbstractDecorationOverlay<FireworksDecorationOverlay> {
 
-    @NotNull
-    public String fireworksScale = "1.0";
-    @NotNull
-    public String fireworksExplosionSize = "1.0";
-    @NotNull
-    public String fireworksAmount = "1.0";
-    public boolean fireworksShowRockets = true;
+    public final Property.StringProperty fireworksScale = putProperty(Property.stringProperty("fireworks_scale", "1.0", false, true, "fancymenu.decoration_overlays.fireworks.scale"));
+    public final Property.StringProperty fireworksExplosionSize = putProperty(Property.stringProperty("fireworks_explosion_size", "1.0", false, true, "fancymenu.decoration_overlays.fireworks.explosion_size"));
+    public final Property.StringProperty fireworksAmount = putProperty(Property.stringProperty("fireworks_amount", "1.0", false, true, "fancymenu.decoration_overlays.fireworks.amount"));
+    public final Property<Boolean> fireworksShowRockets = putProperty(Property.booleanProperty("fireworks_show_rockets", true, "fancymenu.decoration_overlays.fireworks.show_rockets"));
+
     protected final FireworksOverlay overlay = new FireworksOverlay(0, 0);
     protected String lastScaleString = null;
     protected String lastExplosionSizeString = null;
@@ -30,34 +27,16 @@ public class FireworksDecorationOverlay extends AbstractDecorationOverlay<Firewo
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        this.addToggleContextMenuEntryTo(menu, "fireworks_show_rockets", FireworksDecorationOverlay.class,
-                        o -> o.fireworksShowRockets,
-                        (o, aBoolean) -> o.fireworksShowRockets = aBoolean,
-                        "fancymenu.decoration_overlays.fireworks.show_rockets")
+        this.fireworksShowRockets.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireworks.show_rockets.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "fireworks_scale", FireworksDecorationOverlay.class,
-                        o -> o.fireworksScale,
-                        (o, s) -> o.fireworksScale = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.fireworks.scale"),
-                        true, "1.0", null, null)
+        this.fireworksScale.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireworks.scale.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "fireworks_explosion_size", FireworksDecorationOverlay.class,
-                        o -> o.fireworksExplosionSize,
-                        (o, s) -> o.fireworksExplosionSize = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.fireworks.explosion_size"),
-                        true, "1.0", null, null)
+        this.fireworksExplosionSize.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireworks.explosion_size.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "fireworks_amount", FireworksDecorationOverlay.class,
-                        o -> o.fireworksAmount,
-                        (o, s) -> o.fireworksAmount = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.fireworks.amount"),
-                        true, "1.0", null, null)
+        this.fireworksAmount.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireworks.amount.desc")));
 
     }
@@ -65,9 +44,10 @@ public class FireworksDecorationOverlay extends AbstractDecorationOverlay<Firewo
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.overlay.setRocketTrailEnabled(this.fireworksShowRockets);
+        this.overlay.setRocketTrailEnabled(this.fireworksShowRockets.tryGetNonNullElse(true));
 
-        String scaleString = PlaceholderParser.replacePlaceholders(this.fireworksScale);
+        String scaleString = this.fireworksScale.getString();
+        if (scaleString == null) scaleString = "1.0";
         if (!Objects.equals(scaleString, this.lastScaleString)) {
             this.lastScaleString = scaleString;
             float scaleValue;
@@ -79,7 +59,8 @@ public class FireworksDecorationOverlay extends AbstractDecorationOverlay<Firewo
             this.overlay.setScale(scaleValue);
         }
 
-        String explosionSizeString = PlaceholderParser.replacePlaceholders(this.fireworksExplosionSize);
+        String explosionSizeString = this.fireworksExplosionSize.getString();
+        if (explosionSizeString == null) explosionSizeString = "1.0";
         if (!Objects.equals(explosionSizeString, this.lastExplosionSizeString)) {
             this.lastExplosionSizeString = explosionSizeString;
             float sizeValue;
@@ -91,7 +72,8 @@ public class FireworksDecorationOverlay extends AbstractDecorationOverlay<Firewo
             this.overlay.setExplosionScale(sizeValue);
         }
 
-        String amountString = PlaceholderParser.replacePlaceholders(this.fireworksAmount);
+        String amountString = this.fireworksAmount.getString();
+        if (amountString == null) amountString = "1.0";
         if (!Objects.equals(amountString, this.lastAmountString)) {
             this.lastAmountString = amountString;
             float amountValue;
