@@ -96,5 +96,6 @@
 - Fixed (at least tried to fix) a crash related to "Player Entity" elements sometimes failing to get constructed (#1323)
 - Fixed menu bar in the Creative Mode Inventory screen sometimes not clickable because the creative mode tabs consume the click (#1046)
 - Fixed placeholders not working in playername of Player Entity element anymore in MC 1.21.1+ (#1466)
+- Fixed missing localization in "Entity Pose" settings of the "Player Entity" element (#1470)
 
 %changelog:end%
