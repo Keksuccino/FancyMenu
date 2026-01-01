@@ -10,7 +10,6 @@ import java.util.Objects;
 
 public class FireflyDecorationOverlayBuilder extends AbstractDecorationOverlayBuilder<FireflyDecorationOverlay> {
 
-    private static final String FIREFLY_COLOR_KEY = "firefly_color_hex";
     private static final String FIREFLY_INTENSITY_KEY = "firefly_intensity";
     private static final String FIREFLY_GROUP_DENSITY_KEY = "firefly_group_density";
     private static final String FIREFLY_GROUP_AMOUNT_KEY = "firefly_group_amount";
@@ -31,7 +30,6 @@ public class FireflyDecorationOverlayBuilder extends AbstractDecorationOverlayBu
     @Override
     protected void deserialize(@NotNull FireflyDecorationOverlay instanceToWrite, @NotNull PropertyContainer deserializeFrom) {
 
-        instanceToWrite.fireflyColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(FIREFLY_COLOR_KEY), instanceToWrite.fireflyColorHex);
         String legacyIntensity = deserializeFrom.getValue(FIREFLY_INTENSITY_KEY);
         String groupDensity = deserializeFrom.getValue(FIREFLY_GROUP_DENSITY_KEY);
         String groupAmount = deserializeFrom.getValue(FIREFLY_GROUP_AMOUNT_KEY);
@@ -47,7 +45,6 @@ public class FireflyDecorationOverlayBuilder extends AbstractDecorationOverlayBu
     @Override
     protected void serialize(@NotNull FireflyDecorationOverlay instanceToSerialize, @NotNull PropertyContainer serializeTo) {
 
-        serializeTo.putProperty(FIREFLY_COLOR_KEY, instanceToSerialize.fireflyColorHex);
         serializeTo.putProperty(FIREFLY_GROUP_DENSITY_KEY, instanceToSerialize.fireflyGroupDensity);
         serializeTo.putProperty(FIREFLY_GROUP_AMOUNT_KEY, instanceToSerialize.fireflyGroupAmount);
         serializeTo.putProperty(FIREFLY_GROUP_SIZE_KEY, instanceToSerialize.fireflyGroupSize);

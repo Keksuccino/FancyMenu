@@ -10,7 +10,6 @@ import java.util.Objects;
 
 public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuilder<RainDecorationOverlay> {
 
-    private static final String RAIN_COLOR_KEY = "rain_color_hex";
     private static final String RAIN_INTENSITY_KEY = "rain_intensity";
     private static final String RAIN_SCALE_KEY = "rain_scale";
     private static final String RAIN_PUDDLES_KEY = "rain_puddles";
@@ -30,7 +29,6 @@ public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
     @Override
     protected void deserialize(@NotNull RainDecorationOverlay instanceToWrite, @NotNull PropertyContainer deserializeFrom) {
 
-        instanceToWrite.rainColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(RAIN_COLOR_KEY), instanceToWrite.rainColorHex);
         instanceToWrite.rainIntensity = Objects.requireNonNullElse(deserializeFrom.getValue(RAIN_INTENSITY_KEY), instanceToWrite.rainIntensity);
         instanceToWrite.rainScale = Objects.requireNonNullElse(deserializeFrom.getValue(RAIN_SCALE_KEY), instanceToWrite.rainScale);
         instanceToWrite.rainThunderBrightness = Objects.requireNonNullElse(deserializeFrom.getValue(RAIN_THUNDER_BRIGHTNESS_KEY), instanceToWrite.rainThunderBrightness);
@@ -43,7 +41,6 @@ public class RainDecorationOverlayBuilder extends AbstractDecorationOverlayBuild
     @Override
     protected void serialize(@NotNull RainDecorationOverlay instanceToSerialize, @NotNull PropertyContainer serializeTo) {
 
-        serializeTo.putProperty(RAIN_COLOR_KEY, instanceToSerialize.rainColorHex);
         serializeTo.putProperty(RAIN_INTENSITY_KEY, instanceToSerialize.rainIntensity);
         serializeTo.putProperty(RAIN_SCALE_KEY, instanceToSerialize.rainScale);
         serializeTo.putProperty(RAIN_THUNDER_BRIGHTNESS_KEY, instanceToSerialize.rainThunderBrightness);

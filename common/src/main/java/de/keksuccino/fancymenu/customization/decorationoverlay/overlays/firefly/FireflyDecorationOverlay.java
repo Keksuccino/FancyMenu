@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.FireflyOverlay;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -13,14 +13,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.Objects;
 
 public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyDecorationOverlay> {
 
-    @NotNull
-    public String fireflyColorHex = "#FFE08A";
     @NotNull
     public String fireflyGroupDensity = "1.0";
     public String fireflyGroupAmount = "1.0";
@@ -30,6 +27,9 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyD
     public String fireflyScale = "1.0";
     public boolean fireflyFollowMouse = true;
     public boolean fireflyLanding = true;
+
+    public final Property.ColorProperty fireflyColorHex = putProperty(Property.hexColorProperty("firefly_color_hex", "#FFE08A", true, "fancymenu.decoration_overlays.fireflies.color"));
+
     protected final FireflyOverlay overlay = new FireflyOverlay(0, 0);
     protected String lastFireflyColorString = null;
     protected String lastFireflyGroupDensityString = null;
@@ -52,12 +52,7 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyD
                         "fancymenu.decoration_overlays.fireflies.landing")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.landing.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "firefly_color", FireflyDecorationOverlay.class,
-                        o -> o.fireflyColorHex,
-                        (o, s) -> o.fireflyColorHex = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.fireflies.color"),
-                        true, "#FFE08A", null, null)
+        this.fireflyColorHex.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.color.desc")));
 
         this.addInputContextMenuEntryTo(menu, "firefly_group_amount", FireflyDecorationOverlay.class,
@@ -100,10 +95,10 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyD
         this.overlay.setFollowMouseEnabled(this.fireflyFollowMouse);
         this.overlay.setLandingEnabled(this.fireflyLanding);
 
-        String colorString = PlaceholderParser.replacePlaceholders(this.fireflyColorHex);
+        String colorString = this.fireflyColorHex.getHex();
         if (!Objects.equals(colorString, this.lastFireflyColorString)) {
             this.lastFireflyColorString = colorString;
-            this.overlay.setColor(DrawableColor.of(colorString).getColorInt());
+            this.overlay.setColor(this.fireflyColorHex.getDrawable().getColorInt());
         }
 
         String densityString = PlaceholderParser.replacePlaceholders(this.fireflyGroupDensity);

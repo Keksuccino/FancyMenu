@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.RainOverlay;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -13,14 +13,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.Objects;
 
 public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorationOverlay> {
 
-    @NotNull
-    public String rainColorHex = "#CFE7FF";
     @NotNull
     public String rainIntensity = "1.0";
     @NotNull
@@ -30,6 +27,9 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
     public boolean rainPuddles = true;
     public boolean rainDrips = true;
     public boolean rainThunder = false;
+
+    public final Property.ColorProperty rainColorHex = putProperty(Property.hexColorProperty("rain_color_hex", "#CFE7FF", true, "fancymenu.decoration_overlays.rain.color"));
+
     protected final RainOverlay overlay = new RainOverlay(0, 0);
     protected String lastRainColorString = null;
     protected String lastRainIntensityString = null;
@@ -65,12 +65,7 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
                         true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.thunder_brightness.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "rain_color", RainDecorationOverlay.class,
-                        o -> o.rainColorHex,
-                        (o, s) -> o.rainColorHex = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.rain.color"),
-                        true, "#CFE7FF", null, null)
+        this.rainColorHex.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.color.desc")));
 
         this.addInputContextMenuEntryTo(menu, "rain_intensity", RainDecorationOverlay.class,
@@ -100,10 +95,10 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
         this.overlay.setThunderEnabled(this.rainThunder);
 
         // Update rain color
-        String colorString = PlaceholderParser.replacePlaceholders(this.rainColorHex);
+        String colorString = this.rainColorHex.getHex();
         if (!Objects.equals(colorString, this.lastRainColorString)) {
             this.lastRainColorString = colorString;
-            this.overlay.setColor(DrawableColor.of(colorString).getColorInt());
+            this.overlay.setColor(this.rainColorHex.getDrawable().getColorInt());
         }
 
         // Update rain intensity

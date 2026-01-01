@@ -4,14 +4,13 @@ import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecoratio
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.StringLightsOverlay;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.EnumMap;
 import java.util.Objects;
 
@@ -19,22 +18,6 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
 
     private static final String DEFAULT_COLOR_HEX = "#FFD27A";
 
-    @NotNull
-    public String stringLightsLeftCenterToTopCenterColorHex = "#FFD27A";
-    @NotNull
-    public String stringLightsRightCenterToTopCenterColorHex = "#FFD27A";
-    @NotNull
-    public String stringLightsBottomLeftToTopCenterColorHex = "#FFD27A";
-    @NotNull
-    public String stringLightsBottomRightToTopCenterColorHex = "#FFD27A";
-    @NotNull
-    public String stringLightsTopLeftToTopRightColorHex = "#FFD27A";
-    @NotNull
-    public String stringLightsBottomLeftToBottomRightColorHex = "#FFD27A";
-    @NotNull
-    public String stringLightsLooseLeftTopColorHex = "#FFD27A";
-    @NotNull
-    public String stringLightsLooseRightTopColorHex = "#FFD27A";
     @NotNull
     public String stringLightsScale = "1.0";
     @NotNull
@@ -57,6 +40,16 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
     public boolean stringLightsBottomLeftToBottomRightChristmasMode = false;
     public boolean stringLightsLooseLeftTopChristmasMode = false;
     public boolean stringLightsLooseRightTopChristmasMode = false;
+
+    public final Property.ColorProperty stringLightsLeftCenterToTopCenterColorHex = putProperty(Property.hexColorProperty("string_lights_left_center_to_top_center_color_hex", DEFAULT_COLOR_HEX, true, "fancymenu.decoration_overlays.string_lights.string.color"));
+    public final Property.ColorProperty stringLightsRightCenterToTopCenterColorHex = putProperty(Property.hexColorProperty("string_lights_right_center_to_top_center_color_hex", DEFAULT_COLOR_HEX, true, "fancymenu.decoration_overlays.string_lights.string.color"));
+    public final Property.ColorProperty stringLightsBottomLeftToTopCenterColorHex = putProperty(Property.hexColorProperty("string_lights_bottom_left_to_top_center_color_hex", DEFAULT_COLOR_HEX, true, "fancymenu.decoration_overlays.string_lights.string.color"));
+    public final Property.ColorProperty stringLightsBottomRightToTopCenterColorHex = putProperty(Property.hexColorProperty("string_lights_bottom_right_to_top_center_color_hex", DEFAULT_COLOR_HEX, true, "fancymenu.decoration_overlays.string_lights.string.color"));
+    public final Property.ColorProperty stringLightsTopLeftToTopRightColorHex = putProperty(Property.hexColorProperty("string_lights_top_left_to_top_right_color_hex", DEFAULT_COLOR_HEX, true, "fancymenu.decoration_overlays.string_lights.string.color"));
+    public final Property.ColorProperty stringLightsBottomLeftToBottomRightColorHex = putProperty(Property.hexColorProperty("string_lights_bottom_left_to_bottom_right_color_hex", DEFAULT_COLOR_HEX, true, "fancymenu.decoration_overlays.string_lights.string.color"));
+    public final Property.ColorProperty stringLightsLooseLeftTopColorHex = putProperty(Property.hexColorProperty("string_lights_loose_left_top_color_hex", DEFAULT_COLOR_HEX, true, "fancymenu.decoration_overlays.string_lights.string.color"));
+    public final Property.ColorProperty stringLightsLooseRightTopColorHex = putProperty(Property.hexColorProperty("string_lights_loose_right_top_color_hex", DEFAULT_COLOR_HEX, true, "fancymenu.decoration_overlays.string_lights.string.color"));
+
     protected final StringLightsOverlay overlay = new StringLightsOverlay(0, 0);
     protected final EnumMap<StringLightsOverlay.StringLightsPosition, String> lastPositionColorStrings = new EnumMap<>(StringLightsOverlay.StringLightsPosition.class);
     protected String lastScaleString = null;
@@ -102,8 +95,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                 (o, aBoolean) -> o.stringLightsLeftCenterToTopCenter = aBoolean,
                 o -> o.stringLightsLeftCenterToTopCenterChristmasMode,
                 (o, aBoolean) -> o.stringLightsLeftCenterToTopCenterChristmasMode = aBoolean,
-                o -> o.stringLightsLeftCenterToTopCenterColorHex,
-                (o, s) -> o.stringLightsLeftCenterToTopCenterColorHex = s,
+                this.stringLightsLeftCenterToTopCenterColorHex,
                 "fancymenu.decoration_overlays.string_lights.position.left_center_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.left_center_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.color.left_center_to_top_center.desc");
@@ -115,8 +107,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                 (o, aBoolean) -> o.stringLightsRightCenterToTopCenter = aBoolean,
                 o -> o.stringLightsRightCenterToTopCenterChristmasMode,
                 (o, aBoolean) -> o.stringLightsRightCenterToTopCenterChristmasMode = aBoolean,
-                o -> o.stringLightsRightCenterToTopCenterColorHex,
-                (o, s) -> o.stringLightsRightCenterToTopCenterColorHex = s,
+                this.stringLightsRightCenterToTopCenterColorHex,
                 "fancymenu.decoration_overlays.string_lights.position.right_center_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.right_center_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.color.right_center_to_top_center.desc");
@@ -128,8 +119,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                 (o, aBoolean) -> o.stringLightsBottomLeftToTopCenter = aBoolean,
                 o -> o.stringLightsBottomLeftToTopCenterChristmasMode,
                 (o, aBoolean) -> o.stringLightsBottomLeftToTopCenterChristmasMode = aBoolean,
-                o -> o.stringLightsBottomLeftToTopCenterColorHex,
-                (o, s) -> o.stringLightsBottomLeftToTopCenterColorHex = s,
+                this.stringLightsBottomLeftToTopCenterColorHex,
                 "fancymenu.decoration_overlays.string_lights.position.bottom_left_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_left_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.color.bottom_left_to_top_center.desc");
@@ -141,8 +131,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                 (o, aBoolean) -> o.stringLightsBottomRightToTopCenter = aBoolean,
                 o -> o.stringLightsBottomRightToTopCenterChristmasMode,
                 (o, aBoolean) -> o.stringLightsBottomRightToTopCenterChristmasMode = aBoolean,
-                o -> o.stringLightsBottomRightToTopCenterColorHex,
-                (o, s) -> o.stringLightsBottomRightToTopCenterColorHex = s,
+                this.stringLightsBottomRightToTopCenterColorHex,
                 "fancymenu.decoration_overlays.string_lights.position.bottom_right_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_right_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.color.bottom_right_to_top_center.desc");
@@ -154,8 +143,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                 (o, aBoolean) -> o.stringLightsTopLeftToTopRight = aBoolean,
                 o -> o.stringLightsTopLeftToTopRightChristmasMode,
                 (o, aBoolean) -> o.stringLightsTopLeftToTopRightChristmasMode = aBoolean,
-                o -> o.stringLightsTopLeftToTopRightColorHex,
-                (o, s) -> o.stringLightsTopLeftToTopRightColorHex = s,
+                this.stringLightsTopLeftToTopRightColorHex,
                 "fancymenu.decoration_overlays.string_lights.position.top_left_to_top_right.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.top_left_to_top_right.desc",
                 "fancymenu.decoration_overlays.string_lights.color.top_left_to_top_right.desc");
@@ -167,8 +155,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                 (o, aBoolean) -> o.stringLightsBottomLeftToBottomRight = aBoolean,
                 o -> o.stringLightsBottomLeftToBottomRightChristmasMode,
                 (o, aBoolean) -> o.stringLightsBottomLeftToBottomRightChristmasMode = aBoolean,
-                o -> o.stringLightsBottomLeftToBottomRightColorHex,
-                (o, s) -> o.stringLightsBottomLeftToBottomRightColorHex = s,
+                this.stringLightsBottomLeftToBottomRightColorHex,
                 "fancymenu.decoration_overlays.string_lights.position.bottom_left_to_bottom_right.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_left_to_bottom_right.desc",
                 "fancymenu.decoration_overlays.string_lights.color.bottom_left_to_bottom_right.desc");
@@ -180,8 +167,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                 (o, aBoolean) -> o.stringLightsLooseLeftTop = aBoolean,
                 o -> o.stringLightsLooseLeftTopChristmasMode,
                 (o, aBoolean) -> o.stringLightsLooseLeftTopChristmasMode = aBoolean,
-                o -> o.stringLightsLooseLeftTopColorHex,
-                (o, s) -> o.stringLightsLooseLeftTopColorHex = s,
+                this.stringLightsLooseLeftTopColorHex,
                 "fancymenu.decoration_overlays.string_lights.position.loose_left_top.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.loose_left_top.desc",
                 "fancymenu.decoration_overlays.string_lights.color.loose_left_top.desc");
@@ -193,8 +179,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                 (o, aBoolean) -> o.stringLightsLooseRightTop = aBoolean,
                 o -> o.stringLightsLooseRightTopChristmasMode,
                 (o, aBoolean) -> o.stringLightsLooseRightTopChristmasMode = aBoolean,
-                o -> o.stringLightsLooseRightTopColorHex,
-                (o, s) -> o.stringLightsLooseRightTopColorHex = s,
+                this.stringLightsLooseRightTopColorHex,
                 "fancymenu.decoration_overlays.string_lights.position.loose_right_top.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.loose_right_top.desc",
                 "fancymenu.decoration_overlays.string_lights.color.loose_right_top.desc");
@@ -204,14 +189,14 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        updatePositionColor(StringLightsOverlay.StringLightsPosition.LEFT_CENTER_TO_TOP_CENTER, this.stringLightsLeftCenterToTopCenterColorHex, DEFAULT_COLOR_HEX);
-        updatePositionColor(StringLightsOverlay.StringLightsPosition.RIGHT_CENTER_TO_TOP_CENTER, this.stringLightsRightCenterToTopCenterColorHex, DEFAULT_COLOR_HEX);
-        updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_TOP_CENTER, this.stringLightsBottomLeftToTopCenterColorHex, DEFAULT_COLOR_HEX);
-        updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_RIGHT_TO_TOP_CENTER, this.stringLightsBottomRightToTopCenterColorHex, DEFAULT_COLOR_HEX);
-        updatePositionColor(StringLightsOverlay.StringLightsPosition.TOP_LEFT_TO_TOP_RIGHT, this.stringLightsTopLeftToTopRightColorHex, DEFAULT_COLOR_HEX);
-        updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_BOTTOM_RIGHT, this.stringLightsBottomLeftToBottomRightColorHex, DEFAULT_COLOR_HEX);
-        updatePositionColor(StringLightsOverlay.StringLightsPosition.LOOSE_LEFT_TOP, this.stringLightsLooseLeftTopColorHex, DEFAULT_COLOR_HEX);
-        updatePositionColor(StringLightsOverlay.StringLightsPosition.LOOSE_RIGHT_TOP, this.stringLightsLooseRightTopColorHex, DEFAULT_COLOR_HEX);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.LEFT_CENTER_TO_TOP_CENTER, this.stringLightsLeftCenterToTopCenterColorHex);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.RIGHT_CENTER_TO_TOP_CENTER, this.stringLightsRightCenterToTopCenterColorHex);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_TOP_CENTER, this.stringLightsBottomLeftToTopCenterColorHex);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_RIGHT_TO_TOP_CENTER, this.stringLightsBottomRightToTopCenterColorHex);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.TOP_LEFT_TO_TOP_RIGHT, this.stringLightsTopLeftToTopRightColorHex);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.BOTTOM_LEFT_TO_BOTTOM_RIGHT, this.stringLightsBottomLeftToBottomRightColorHex);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.LOOSE_LEFT_TOP, this.stringLightsLooseLeftTopColorHex);
+        updatePositionColor(StringLightsOverlay.StringLightsPosition.LOOSE_RIGHT_TOP, this.stringLightsLooseRightTopColorHex);
 
         String scaleString = PlaceholderParser.replacePlaceholders(this.stringLightsScale);
         if (!Objects.equals(scaleString, this.lastScaleString)) {
@@ -272,15 +257,12 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
 
     }
 
-    private void updatePositionColor(@NotNull StringLightsOverlay.StringLightsPosition position, @NotNull String colorHex, @NotNull String defaultColorHex) {
-        String resolvedColor = PlaceholderParser.replacePlaceholders(colorHex);
-        if (resolvedColor == null || resolvedColor.isBlank()) {
-            resolvedColor = defaultColorHex;
-        }
+    private void updatePositionColor(@NotNull StringLightsOverlay.StringLightsPosition position, @NotNull Property.ColorProperty colorProperty) {
+        String resolvedColor = colorProperty.getHex();
         String lastColor = this.lastPositionColorStrings.get(position);
         if (!Objects.equals(resolvedColor, lastColor)) {
             this.lastPositionColorStrings.put(position, resolvedColor);
-            this.overlay.setPositionColor(position, DrawableColor.of(resolvedColor).getColorInt());
+            this.overlay.setPositionColor(position, colorProperty.getDrawable().getColorInt());
         }
     }
 
@@ -289,8 +271,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                                        @NotNull java.util.function.BiConsumer<StringLightsDecorationOverlay, Boolean> showSetter,
                                        @NotNull de.keksuccino.fancymenu.util.ConsumingSupplier<StringLightsDecorationOverlay, Boolean> christmasGetter,
                                        @NotNull java.util.function.BiConsumer<StringLightsDecorationOverlay, Boolean> christmasSetter,
-                                       @NotNull de.keksuccino.fancymenu.util.ConsumingSupplier<StringLightsDecorationOverlay, String> colorGetter,
-                                       @NotNull java.util.function.BiConsumer<StringLightsDecorationOverlay, String> colorSetter,
+                                       @NotNull Property.ColorProperty colorProperty,
                                        @NotNull String showTooltipKey, @NotNull String christmasTooltipKey, @NotNull String colorTooltipKey) {
         ContextMenu subMenu = new ContextMenu();
         addTo.addSubMenuEntry(entryIdentifier + "_menu", label, subMenu).setStackable(true);
@@ -307,12 +288,7 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                         "fancymenu.decoration_overlays.string_lights.string.christmas_mode")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(christmasTooltipKey)));
 
-        this.addInputContextMenuEntryTo(subMenu, entryIdentifier + "_color", StringLightsDecorationOverlay.class,
-                        colorGetter,
-                        colorSetter,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.string_lights.string.color"),
-                        true, "#FFD27A", null, null)
+        colorProperty.buildContextMenuEntryAndAddTo(subMenu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(colorTooltipKey)));
     }
 

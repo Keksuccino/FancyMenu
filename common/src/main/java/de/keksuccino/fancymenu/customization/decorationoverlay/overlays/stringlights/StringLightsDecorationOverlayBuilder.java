@@ -10,16 +10,6 @@ import java.util.Objects;
 
 public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOverlayBuilder<StringLightsDecorationOverlay> {
 
-    private static final String LIGHTS_COLOR_KEY = "string_lights_color_hex";
-    private static final String DEFAULT_COLOR_HEX = "#FFD27A";
-    private static final String LIGHTS_LEFT_CENTER_TO_TOP_CENTER_COLOR_KEY = "string_lights_left_center_to_top_center_color_hex";
-    private static final String LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_COLOR_KEY = "string_lights_right_center_to_top_center_color_hex";
-    private static final String LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_COLOR_KEY = "string_lights_bottom_left_to_top_center_color_hex";
-    private static final String LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_COLOR_KEY = "string_lights_bottom_right_to_top_center_color_hex";
-    private static final String LIGHTS_TOP_LEFT_TO_TOP_RIGHT_COLOR_KEY = "string_lights_top_left_to_top_right_color_hex";
-    private static final String LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_COLOR_KEY = "string_lights_bottom_left_to_bottom_right_color_hex";
-    private static final String LIGHTS_LOOSE_LEFT_TOP_COLOR_KEY = "string_lights_loose_left_top_color_hex";
-    private static final String LIGHTS_LOOSE_RIGHT_TOP_COLOR_KEY = "string_lights_loose_right_top_color_hex";
     private static final String LIGHTS_SCALE_KEY = "string_lights_scale";
     private static final String LIGHTS_WIND_STRENGTH_KEY = "string_lights_wind_strength";
     private static final String LIGHTS_FLICKER_SPEED_KEY = "string_lights_flicker_speed";
@@ -53,15 +43,6 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
     @Override
     protected void deserialize(@NotNull StringLightsDecorationOverlay instanceToWrite, @NotNull PropertyContainer deserializeFrom) {
 
-        String legacyColor = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_COLOR_KEY), DEFAULT_COLOR_HEX);
-        instanceToWrite.stringLightsLeftCenterToTopCenterColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_LEFT_CENTER_TO_TOP_CENTER_COLOR_KEY), legacyColor);
-        instanceToWrite.stringLightsRightCenterToTopCenterColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_COLOR_KEY), legacyColor);
-        instanceToWrite.stringLightsBottomLeftToTopCenterColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_COLOR_KEY), legacyColor);
-        instanceToWrite.stringLightsBottomRightToTopCenterColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_COLOR_KEY), legacyColor);
-        instanceToWrite.stringLightsTopLeftToTopRightColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_TOP_LEFT_TO_TOP_RIGHT_COLOR_KEY), legacyColor);
-        instanceToWrite.stringLightsBottomLeftToBottomRightColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_COLOR_KEY), legacyColor);
-        instanceToWrite.stringLightsLooseLeftTopColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_LOOSE_LEFT_TOP_COLOR_KEY), legacyColor);
-        instanceToWrite.stringLightsLooseRightTopColorHex = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_LOOSE_RIGHT_TOP_COLOR_KEY), legacyColor);
         instanceToWrite.stringLightsScale = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_SCALE_KEY), instanceToWrite.stringLightsScale);
         instanceToWrite.stringLightsWindStrength = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_WIND_STRENGTH_KEY), instanceToWrite.stringLightsWindStrength);
         instanceToWrite.stringLightsFlickerSpeed = Objects.requireNonNullElse(deserializeFrom.getValue(LIGHTS_FLICKER_SPEED_KEY), instanceToWrite.stringLightsFlickerSpeed);
@@ -88,14 +69,6 @@ public class StringLightsDecorationOverlayBuilder extends AbstractDecorationOver
     @Override
     protected void serialize(@NotNull StringLightsDecorationOverlay instanceToSerialize, @NotNull PropertyContainer serializeTo) {
 
-        serializeTo.putProperty(LIGHTS_LEFT_CENTER_TO_TOP_CENTER_COLOR_KEY, instanceToSerialize.stringLightsLeftCenterToTopCenterColorHex);
-        serializeTo.putProperty(LIGHTS_RIGHT_CENTER_TO_TOP_CENTER_COLOR_KEY, instanceToSerialize.stringLightsRightCenterToTopCenterColorHex);
-        serializeTo.putProperty(LIGHTS_BOTTOM_LEFT_TO_TOP_CENTER_COLOR_KEY, instanceToSerialize.stringLightsBottomLeftToTopCenterColorHex);
-        serializeTo.putProperty(LIGHTS_BOTTOM_RIGHT_TO_TOP_CENTER_COLOR_KEY, instanceToSerialize.stringLightsBottomRightToTopCenterColorHex);
-        serializeTo.putProperty(LIGHTS_TOP_LEFT_TO_TOP_RIGHT_COLOR_KEY, instanceToSerialize.stringLightsTopLeftToTopRightColorHex);
-        serializeTo.putProperty(LIGHTS_BOTTOM_LEFT_TO_BOTTOM_RIGHT_COLOR_KEY, instanceToSerialize.stringLightsBottomLeftToBottomRightColorHex);
-        serializeTo.putProperty(LIGHTS_LOOSE_LEFT_TOP_COLOR_KEY, instanceToSerialize.stringLightsLooseLeftTopColorHex);
-        serializeTo.putProperty(LIGHTS_LOOSE_RIGHT_TOP_COLOR_KEY, instanceToSerialize.stringLightsLooseRightTopColorHex);
         serializeTo.putProperty(LIGHTS_SCALE_KEY, instanceToSerialize.stringLightsScale);
         serializeTo.putProperty(LIGHTS_WIND_STRENGTH_KEY, instanceToSerialize.stringLightsWindStrength);
         serializeTo.putProperty(LIGHTS_FLICKER_SPEED_KEY, instanceToSerialize.stringLightsFlickerSpeed);

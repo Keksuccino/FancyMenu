@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.LeavesOverlay;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -20,10 +20,6 @@ import java.util.Objects;
 public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDecorationOverlay> {
 
     @NotNull
-    public String leavesColorStartHex = "#7BA84F";
-    @NotNull
-    public String leavesColorEndHex = "#D58A3B";
-    @NotNull
     public String leavesDensity = "1.0";
     @NotNull
     public String leavesWindIntensity = "1.0";
@@ -32,6 +28,10 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
     public String leavesFallSpeed = "1.0";
     @NotNull
     public String leavesScale = "1.0";
+
+    public final Property.ColorProperty leavesColorStartHex = putProperty(Property.hexColorProperty("leaves_color_start_hex", "#7BA84F", true, "fancymenu.decoration_overlays.leaves.color_start"));
+    public final Property.ColorProperty leavesColorEndHex = putProperty(Property.hexColorProperty("leaves_color_end_hex", "#D58A3B", true, "fancymenu.decoration_overlays.leaves.color_end"));
+
     protected final LeavesOverlay overlay = new LeavesOverlay(0, 0);
     protected String lastLeavesColorStartString = null;
     protected String lastLeavesColorEndString = null;
@@ -43,20 +43,10 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        this.addInputContextMenuEntryTo(menu, "leaves_color_start", LeavesDecorationOverlay.class,
-                        o -> o.leavesColorStartHex,
-                        (o, s) -> o.leavesColorStartHex = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.leaves.color_start"),
-                        true, "#7BA84F", null, null)
+        this.leavesColorStartHex.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.color_start.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "leaves_color_end", LeavesDecorationOverlay.class,
-                        o -> o.leavesColorEndHex,
-                        (o, s) -> o.leavesColorEndHex = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.leaves.color_end"),
-                        true, "#D58A3B", null, null)
+        this.leavesColorEndHex.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.color_end.desc")));
 
         this.addInputContextMenuEntryTo(menu, "leaves_density", LeavesDecorationOverlay.class,
@@ -102,12 +92,12 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        String startColorString = PlaceholderParser.replacePlaceholders(this.leavesColorStartHex);
-        String endColorString = PlaceholderParser.replacePlaceholders(this.leavesColorEndHex);
+        String startColorString = this.leavesColorStartHex.getHex();
+        String endColorString = this.leavesColorEndHex.getHex();
         if (!Objects.equals(startColorString, this.lastLeavesColorStartString) || !Objects.equals(endColorString, this.lastLeavesColorEndString)) {
             this.lastLeavesColorStartString = startColorString;
             this.lastLeavesColorEndString = endColorString;
-            this.overlay.setColorRange(DrawableColor.of(startColorString).getColorInt(), DrawableColor.of(endColorString).getColorInt());
+            this.overlay.setColorRange(this.leavesColorStartHex.getDrawable().getColorInt(), this.leavesColorEndHex.getDrawable().getColorInt());
         }
 
         String densityString = PlaceholderParser.replacePlaceholders(this.leavesDensity);

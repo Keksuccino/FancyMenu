@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.SnowfallOverlay;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -13,14 +13,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.Objects;
 
 public class SnowDecorationOverlay extends AbstractDecorationOverlay<SnowDecorationOverlay> {
 
-    @NotNull
-    public String snowColorHex = "#FFFFFF";
     @NotNull
     public String snowIntensity = "1.0";
     @NotNull
@@ -28,6 +25,9 @@ public class SnowDecorationOverlay extends AbstractDecorationOverlay<SnowDecorat
     @NotNull
     public String snowSpeed = "1.0";
     public boolean snowAccumulation = true;
+
+    public final Property.ColorProperty snowColorHex = putProperty(Property.hexColorProperty("snow_color_hex", "#FFFFFF", true, "fancymenu.decoration_overlays.snow.color"));
+
     protected final SnowfallOverlay overlay = new SnowfallOverlay(0, 0);
     protected String lastSnowColorString = null;
     protected String lastSnowIntensityString = null;
@@ -43,12 +43,7 @@ public class SnowDecorationOverlay extends AbstractDecorationOverlay<SnowDecorat
                         "fancymenu.decoration_overlays.snow.accumulate_snow")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.accumulate_snow.desc")));
 
-        this.addInputContextMenuEntryTo(menu, "snow_color", SnowDecorationOverlay.class,
-                        o -> o.snowColorHex,
-                        (o, s) -> o.snowColorHex = s,
-                        null, false, true,
-                        Component.translatable("fancymenu.decoration_overlays.snow.color"),
-                        true, "#FFFFFF", null, null)
+        this.snowColorHex.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.color.desc")));
 
         this.addInputContextMenuEntryTo(menu, "snow_intensity", SnowDecorationOverlay.class,
@@ -84,10 +79,10 @@ public class SnowDecorationOverlay extends AbstractDecorationOverlay<SnowDecorat
         this.overlay.setAccumulationEnabled(this.snowAccumulation);
 
         // Update snow color
-        String colorString = PlaceholderParser.replacePlaceholders(this.snowColorHex);
+        String colorString = this.snowColorHex.getHex();
         if (!Objects.equals(colorString, this.lastSnowColorString)) {
             this.lastSnowColorString = colorString;
-            this.overlay.setColor(DrawableColor.of(colorString).getColorInt());
+            this.overlay.setColor(this.snowColorHex.getDrawable().getColorInt());
         }
 
         // Update snow intensity
