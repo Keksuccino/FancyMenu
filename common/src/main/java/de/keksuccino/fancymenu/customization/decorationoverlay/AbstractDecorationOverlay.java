@@ -4,6 +4,12 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.properties.PropertyHolder;
+import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
@@ -15,13 +21,10 @@ import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 
-public abstract class AbstractDecorationOverlay implements Renderable, ContainerEventHandler, NarratableEntry {
+public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOverlay<?>> implements Renderable, ContainerEventHandler, NarratableEntry, PropertyHolder, ContextMenuBuilder<O> {
 
     @NotNull
     private String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
@@ -29,6 +32,7 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
     public boolean showOverlay = false;
     private final List<GuiEventListener> children = new ArrayList<>();
     private final List<Renderable> renderables = new ArrayList<>();
+    private final Map<String, Property<?>> properties = new LinkedHashMap<>();
 
     @NotNull
     public String getInstanceIdentifier() {
@@ -37,6 +41,35 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
 
     public void setInstanceIdentifier(@NotNull String instanceIdentifier) {
         this.instanceIdentifier = instanceIdentifier;
+    }
+
+    @Override
+    public @NotNull Map<String, Property<?>> getPropertyMap() {
+        return this.properties;
+    }
+
+    protected abstract void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor);
+
+    @ApiStatus.Internal
+    @NotNull
+    public ContextMenu _initConfigMenu(@NotNull LayoutEditorScreen editor) {
+
+        ContextMenu menu = new ContextMenu();
+
+        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "show_overlay",
+                () -> this.showOverlay,
+                aBoolean -> {
+                    editor.history.saveSnapshot();
+                    this.showOverlay = aBoolean;
+                },
+                "fancymenu.decoration_overlay.show_overlay");
+
+        menu.addSeparatorEntry("separator_after_show_overlay_toggle");
+
+        this.initConfigMenu(menu, editor);
+
+        return menu;
+
     }
 
     @Override
@@ -104,6 +137,27 @@ public abstract class AbstractDecorationOverlay implements Renderable, Container
     @Override
     public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
         // do nothing
+    }
+
+    @Override
+    public @NotNull O self() {
+        return (O) this;
+    }
+
+    @Override
+    public @Nullable Screen getContextMenuCallbackScreen() {
+        return LayoutEditorScreen.getCurrentInstance();
+    }
+
+    @Override
+    public void saveSnapshot() {
+        var e = LayoutEditorScreen.getCurrentInstance();
+        if (e != null) e.history.saveSnapshot();
+    }
+
+    @Override
+    public @NotNull List<O> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<O, Boolean> filter) {
+        return List.of((O)this);
     }
 
     @Nullable

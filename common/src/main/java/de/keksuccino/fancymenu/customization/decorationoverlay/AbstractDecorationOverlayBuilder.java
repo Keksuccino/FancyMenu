@@ -2,19 +2,21 @@ package de.keksuccino.fancymenu.customization.decorationoverlay;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
-public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorationOverlay> extends SerializationUtils {
+public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorationOverlay<?>> extends SerializationUtils {
 
     protected static final CharacterFilter IDENTIFIER_VALIDATOR = CharacterFilter.buildResourceNameFilter();
 
@@ -59,6 +61,10 @@ public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorat
                 instance.setInstanceIdentifier(Objects.requireNonNullElse(serialized.getValue(INSTANCE_IDENTIFIER_KEY), ScreenCustomization.generateUniqueIdentifier()));
                 instance.showOverlay = deserializeBoolean(instance.showOverlay, serialized.getValue(SHOW_OVERLAY_KEY));
 
+                instance.getPropertyMap().values().forEach(property -> {
+                    property.deserialize(serialized);
+                });
+
                 this.deserialize(instance, serialized);
 
                 instances.add(instance);
@@ -74,7 +80,7 @@ public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorat
 
     @ApiStatus.Internal
     @NotNull
-    public PropertyContainer _serialize(@NotNull AbstractDecorationOverlay instanceToSerialize) {
+    public PropertyContainer _serialize(@NotNull AbstractDecorationOverlay<?> instanceToSerialize) {
 
         PropertyContainer serializeTo = new PropertyContainer(OVERLAY_PROPERTY_CONTAINER_TYPE);
         serializeTo.setInvulnerableProperties(true);
@@ -83,33 +89,13 @@ public abstract class AbstractDecorationOverlayBuilder<O extends AbstractDecorat
         serializeTo.putProperty(INSTANCE_IDENTIFIER_KEY, instanceToSerialize.getInstanceIdentifier());
         serializeTo.putProperty(SHOW_OVERLAY_KEY, instanceToSerialize.showOverlay);
 
+        instanceToSerialize.getPropertyMap().values().forEach(property -> {
+            property.serialize(serializeTo);
+        });
+
         this.serialize((O) instanceToSerialize, serializeTo);
 
         return serializeTo;
-
-    }
-
-    protected abstract void buildConfigurationMenu(@NotNull O instance, @NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor);
-
-    @ApiStatus.Internal
-    @NotNull
-    public ContextMenu _buildConfigurationMenu(@NotNull AbstractDecorationOverlay instance, @NotNull LayoutEditorScreen editor) {
-
-        ContextMenu menu = new ContextMenu();
-
-        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "show_overlay",
-                () -> instance.showOverlay,
-                aBoolean -> {
-                    editor.history.saveSnapshot();
-                    instance.showOverlay = aBoolean;
-                },
-                "fancymenu.decoration_overlay.show_overlay");
-
-        menu.addSeparatorEntry("separator_after_show_overlay_toggle");
-
-        this.buildConfigurationMenu((O) instance, menu, editor);
-
-        return menu;
 
     }
 

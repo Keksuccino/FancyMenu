@@ -140,18 +140,18 @@ public class Property<T> {
      * @return a configured string property
      */
     @NotNull
-    public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
-        Property<String> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+    public static StringProperty stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        StringProperty p = new StringProperty(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = consumes -> consumes;
         p.contextMenuEntrySupplier = (property, builder, menu) -> builder.buildGenericStringInputContextMenuEntry(menu, "menu_entry_" + key,
                 consumes -> consumes.getProperty(key) != null,
                 consumes -> {
-                    Property<String> resolved = (Property<String>) consumes.getProperty(key);
+                    StringProperty resolved = (StringProperty) consumes.getProperty(key);
                     if (resolved != null) return resolved.get();
                     return defaultValue;
                 },
                 (b, s) -> {
-                    Property<String> resolved = (Property<String>) b.getProperty(key);
+                    StringProperty resolved = (StringProperty) b.getProperty(key);
                     if (resolved != null) resolved.set(s);
                 },
                 null, multiLine, placeholders, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, property.getDefault(), property.userInputTextValidator, null);
@@ -164,7 +164,7 @@ public class Property<T> {
      * @see #stringProperty(String, String, String, boolean, boolean, String)
      */
     @NotNull
-    public static Property<String> stringProperty(@NotNull String key, @Nullable String defaultValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+    public static StringProperty stringProperty(@NotNull String key, @Nullable String defaultValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return stringProperty(key, defaultValue, defaultValue, multiLine, placeholders, contextMenuEntryLocalizationKeyBase);
     }
 
@@ -671,7 +671,7 @@ public class Property<T> {
      *
      * <h3>Example</h3>
      * <pre>{@code
-     * Property<String> color = Property.hexColorProperty(
+     * ColorProperty color = Property.hexColorProperty(
      *     "color",
      *     "#ffffff",
      *     "#ff8800",
@@ -1603,7 +1603,6 @@ public class Property<T> {
         private DrawableColor cachedDrawable = null;
         @Nullable
         private String lastParsedHex = null;
-        private boolean colorJustUpdated = true;
 
         protected ColorProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
             super(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -1614,12 +1613,11 @@ public class Property<T> {
         }
 
         @NotNull
-        String getHex() {
+        public String getHex() {
             String c = PlaceholderParser.replacePlaceholders(this.tryGetNonNullElse("#FFFFFF"));
             if (!Objects.equals(c, this.lastParsedHex) || (this.cachedDrawable == null)) {
                 this.lastParsedHex = c;
                 this.cachedDrawable = DrawableColor.of(c);
-                this.colorJustUpdated = true;
             }
             return c;
         }
@@ -1630,10 +1628,30 @@ public class Property<T> {
             return Objects.requireNonNullElse(this.cachedDrawable, DrawableColor.WHITE);
         }
 
-        public boolean didColorUpdateSinceLastCheck() {
-            boolean b = this.colorJustUpdated;
-            this.colorJustUpdated = false;
-            return b;
+    }
+
+    public static class StringProperty extends Property<String> {
+
+        @Nullable
+        private String lastParsed = null;
+
+        protected StringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        protected StringProperty(@NotNull String key, @Nullable String defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        @Nullable
+        public String getString() {
+            var s = this.get();
+            if (s == null) return null;
+            String parsed = PlaceholderParser.replacePlaceholders(s);
+            if (!Objects.equals(parsed, this.lastParsed)) {
+                this.lastParsed = parsed;
+            }
+            return parsed;
         }
 
     }
