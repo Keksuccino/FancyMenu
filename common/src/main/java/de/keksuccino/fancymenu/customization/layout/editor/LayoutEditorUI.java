@@ -779,7 +779,7 @@ public class LayoutEditorUI {
 
         // Normal layouts always have one instance of each overlay type, so doing this is fine
         editor.layout.decorationOverlays.forEach(pair -> {
-            var entry = menu.addSubMenuEntry("overlay_" + pair.getKey().getIdentifier(), pair.getKey().getDisplayName(), pair.getKey()._buildConfigurationMenu(pair.getValue(), editor));
+            var entry = menu.addSubMenuEntry("overlay_" + pair.getKey().getIdentifier(), pair.getKey().getDisplayName(), pair.getValue()._initConfigMenu(editor));
             var desc = pair.getKey().getDescription();
             if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> Tooltip.of(desc));
         });
