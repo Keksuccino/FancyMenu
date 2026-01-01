@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.ConfettiOverlay;
-import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -46,69 +45,58 @@ public class ConfettiDecorationOverlay extends AbstractDecorationOverlay<Confett
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "confetti_color_mix_mode",
-                        () -> this.confettiColorMixMode,
-                        aBoolean -> {
-                            editor.history.saveSnapshot();
-                            this.confettiColorMixMode = aBoolean;
-                        },
+        this.addToggleContextMenuEntryTo(menu, "confetti_color_mix_mode", ConfettiDecorationOverlay.class,
+                        o -> o.confettiColorMixMode,
+                        (o, aBoolean) -> o.confettiColorMixMode = aBoolean,
                         "fancymenu.decoration_overlays.confetti.color_mix")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.color_mix.desc")));
 
         this.confettiColorHex.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.color.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "confetti_scale", Component.translatable("fancymenu.decoration_overlays.confetti.scale"),
-                        () -> this.confettiScale,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.confettiScale = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "confetti_scale", ConfettiDecorationOverlay.class,
+                        o -> o.confettiScale,
+                        (o, s) -> o.confettiScale = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.confetti.scale"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.scale.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "confetti_fall_speed", Component.translatable("fancymenu.decoration_overlays.confetti.fall_speed"),
-                        () -> this.confettiFallSpeed,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.confettiFallSpeed = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "confetti_fall_speed", ConfettiDecorationOverlay.class,
+                        o -> o.confettiFallSpeed,
+                        (o, s) -> o.confettiFallSpeed = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.confetti.fall_speed"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.fall_speed.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "confetti_density", Component.translatable("fancymenu.decoration_overlays.confetti.density"),
-                        () -> this.confettiBurstDensity,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.confettiBurstDensity = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "confetti_density", ConfettiDecorationOverlay.class,
+                        o -> o.confettiBurstDensity,
+                        (o, s) -> o.confettiBurstDensity = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.confetti.density"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.density.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "confetti_amount", Component.translatable("fancymenu.decoration_overlays.confetti.amount"),
-                        () -> this.confettiBurstAmount,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.confettiBurstAmount = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "confetti_amount", ConfettiDecorationOverlay.class,
+                        o -> o.confettiBurstAmount,
+                        (o, s) -> o.confettiBurstAmount = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.confetti.amount"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.amount.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "confetti_particle_cap", Component.translatable("fancymenu.decoration_overlays.confetti.particle_cap"),
-                        () -> this.confettiParticleCap,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.confettiParticleCap = s;
-                        }, true,
-                        ConfettiDecorationOverlay.DEFAULT_SETTLED_CAP, null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "confetti_particle_cap", ConfettiDecorationOverlay.class,
+                        o -> o.confettiParticleCap,
+                        (o, s) -> o.confettiParticleCap = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.confetti.particle_cap"),
+                        true, ConfettiDecorationOverlay.DEFAULT_SETTLED_CAP, null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.particle_cap.desc")));
 
-        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "confetti_mouse_click_mode",
-                        () -> this.confettiMouseClickMode,
-                        aBoolean -> {
-                            editor.history.saveSnapshot();
-                            this.confettiMouseClickMode = aBoolean;
-                        },
+        this.addToggleContextMenuEntryTo(menu, "confetti_mouse_click_mode", ConfettiDecorationOverlay.class,
+                        o -> o.confettiMouseClickMode,
+                        (o, aBoolean) -> o.confettiMouseClickMode = aBoolean,
                         "fancymenu.decoration_overlays.confetti.mouse_click_mode")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.mouse_click_mode.desc")));
 

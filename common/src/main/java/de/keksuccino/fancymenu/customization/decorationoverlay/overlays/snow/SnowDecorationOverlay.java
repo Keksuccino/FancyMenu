@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.overlay.SnowfallOverlay;
-import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -38,49 +37,42 @@ public class SnowDecorationOverlay extends AbstractDecorationOverlay<SnowDecorat
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "accumulate_snow",
-                        () -> this.snowAccumulation,
-                        aBoolean -> {
-                            editor.history.saveSnapshot();
-                            this.snowAccumulation = aBoolean;
-                        },
+        this.addToggleContextMenuEntryTo(menu, "accumulate_snow", SnowDecorationOverlay.class,
+                        o -> o.snowAccumulation,
+                        (o, aBoolean) -> o.snowAccumulation = aBoolean,
                         "fancymenu.decoration_overlays.snow.accumulate_snow")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.accumulate_snow.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "snow_color", Component.translatable("fancymenu.decoration_overlays.snow.color"),
-                        () -> this.snowColorHex,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.snowColorHex = s;
-                        }, true,
-                        "#FFFFFF", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "snow_color", SnowDecorationOverlay.class,
+                        o -> o.snowColorHex,
+                        (o, s) -> o.snowColorHex = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.snow.color"),
+                        true, "#FFFFFF", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.color.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "snow_intensity", Component.translatable("fancymenu.decoration_overlays.snow.intensity"),
-                        () -> this.snowIntensity,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.snowIntensity = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "snow_intensity", SnowDecorationOverlay.class,
+                        o -> o.snowIntensity,
+                        (o, s) -> o.snowIntensity = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.snow.intensity"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.intensity.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "snow_scale", Component.translatable("fancymenu.decoration_overlays.snow.scale"),
-                        () -> this.snowScale,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.snowScale = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "snow_scale", SnowDecorationOverlay.class,
+                        o -> o.snowScale,
+                        (o, s) -> o.snowScale = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.snow.scale"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.scale.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "snow_speed", Component.translatable("fancymenu.decoration_overlays.snow.speed"),
-                        () -> this.snowSpeed,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.snowSpeed = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "snow_speed", SnowDecorationOverlay.class,
+                        o -> o.snowSpeed,
+                        (o, s) -> o.snowSpeed = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.snow.speed"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.speed.desc")));
 
     }

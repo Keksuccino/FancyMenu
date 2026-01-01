@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.overlay.LeavesOverlay;
-import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -44,67 +43,58 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "leaves_color_start", Component.translatable("fancymenu.decoration_overlays.leaves.color_start"),
-                        () -> this.leavesColorStartHex,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.leavesColorStartHex = s;
-                        }, true,
-                        "#7BA84F", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "leaves_color_start", LeavesDecorationOverlay.class,
+                        o -> o.leavesColorStartHex,
+                        (o, s) -> o.leavesColorStartHex = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.leaves.color_start"),
+                        true, "#7BA84F", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.color_start.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "leaves_color_end", Component.translatable("fancymenu.decoration_overlays.leaves.color_end"),
-                        () -> this.leavesColorEndHex,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.leavesColorEndHex = s;
-                        }, true,
-                        "#D58A3B", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "leaves_color_end", LeavesDecorationOverlay.class,
+                        o -> o.leavesColorEndHex,
+                        (o, s) -> o.leavesColorEndHex = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.leaves.color_end"),
+                        true, "#D58A3B", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.color_end.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "leaves_density", Component.translatable("fancymenu.decoration_overlays.leaves.density"),
-                        () -> this.leavesDensity,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.leavesDensity = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "leaves_density", LeavesDecorationOverlay.class,
+                        o -> o.leavesDensity,
+                        (o, s) -> o.leavesDensity = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.leaves.density"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.density.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "leaves_wind_intensity", Component.translatable("fancymenu.decoration_overlays.leaves.wind"),
-                        () -> this.leavesWindIntensity,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.leavesWindIntensity = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "leaves_wind_intensity", LeavesDecorationOverlay.class,
+                        o -> o.leavesWindIntensity,
+                        (o, s) -> o.leavesWindIntensity = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.leaves.wind"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.wind.desc")));
 
-        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "leaves_wind_blows",
-                        () -> this.leavesWindBlows,
-                        aBoolean -> {
-                            editor.history.saveSnapshot();
-                            this.leavesWindBlows = aBoolean;
-                        },
+        this.addToggleContextMenuEntryTo(menu, "leaves_wind_blows", LeavesDecorationOverlay.class,
+                        o -> o.leavesWindBlows,
+                        (o, aBoolean) -> o.leavesWindBlows = aBoolean,
                         "fancymenu.decoration_overlays.leaves.wind_blows")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.wind_blows.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "leaves_fall_speed", Component.translatable("fancymenu.decoration_overlays.leaves.fall_speed"),
-                        () -> this.leavesFallSpeed,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.leavesFallSpeed = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "leaves_fall_speed", LeavesDecorationOverlay.class,
+                        o -> o.leavesFallSpeed,
+                        (o, s) -> o.leavesFallSpeed = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.leaves.fall_speed"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.fall_speed.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "leaves_scale", Component.translatable("fancymenu.decoration_overlays.leaves.scale"),
-                        () -> this.leavesScale,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.leavesScale = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "leaves_scale", LeavesDecorationOverlay.class,
+                        o -> o.leavesScale,
+                        (o, s) -> o.leavesScale = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.leaves.scale"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.scale.desc")));
 
     }

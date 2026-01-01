@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.overlay.RainOverlay;
-import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -40,67 +39,54 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "rain_puddles",
-                        () -> this.rainPuddles,
-                        aBoolean -> {
-                            editor.history.saveSnapshot();
-                            this.rainPuddles = aBoolean;
-                        },
+        this.addToggleContextMenuEntryTo(menu, "rain_puddles", RainDecorationOverlay.class,
+                        o -> o.rainPuddles,
+                        (o, aBoolean) -> o.rainPuddles = aBoolean,
                         "fancymenu.decoration_overlays.rain.puddles")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.puddles.desc")));
 
-        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "rain_drips",
-                        () -> this.rainDrips,
-                        aBoolean -> {
-                            editor.history.saveSnapshot();
-                            this.rainDrips = aBoolean;
-                        },
+        this.addToggleContextMenuEntryTo(menu, "rain_drips", RainDecorationOverlay.class,
+                        o -> o.rainDrips,
+                        (o, aBoolean) -> o.rainDrips = aBoolean,
                         "fancymenu.decoration_overlays.rain.drips")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.drips.desc")));
 
-        ContextMenuUtils.addToggleContextMenuEntryTo(menu, "rain_thunder",
-                        () -> this.rainThunder,
-                        aBoolean -> {
-                            editor.history.saveSnapshot();
-                            this.rainThunder = aBoolean;
-                        },
+        this.addToggleContextMenuEntryTo(menu, "rain_thunder", RainDecorationOverlay.class,
+                        o -> o.rainThunder,
+                        (o, aBoolean) -> o.rainThunder = aBoolean,
                         "fancymenu.decoration_overlays.rain.thunder")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.thunder.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "rain_thunder_brightness", Component.translatable("fancymenu.decoration_overlays.rain.thunder_brightness"),
-                        () -> this.rainThunderBrightness,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.rainThunderBrightness = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "rain_thunder_brightness", RainDecorationOverlay.class,
+                        o -> o.rainThunderBrightness,
+                        (o, s) -> o.rainThunderBrightness = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.rain.thunder_brightness"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.thunder_brightness.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "rain_color", Component.translatable("fancymenu.decoration_overlays.rain.color"),
-                        () -> this.rainColorHex,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.rainColorHex = s;
-                        }, true,
-                        "#CFE7FF", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "rain_color", RainDecorationOverlay.class,
+                        o -> o.rainColorHex,
+                        (o, s) -> o.rainColorHex = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.rain.color"),
+                        true, "#CFE7FF", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.color.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "rain_intensity", Component.translatable("fancymenu.decoration_overlays.rain.intensity"),
-                        () -> this.rainIntensity,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.rainIntensity = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "rain_intensity", RainDecorationOverlay.class,
+                        o -> o.rainIntensity,
+                        (o, s) -> o.rainIntensity = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.rain.intensity"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.intensity.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "rain_scale", Component.translatable("fancymenu.decoration_overlays.rain.scale"),
-                        () -> this.rainScale,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.rainScale = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "rain_scale", RainDecorationOverlay.class,
+                        o -> o.rainScale,
+                        (o, s) -> o.rainScale = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.rain.scale"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.scale.desc")));
 
     }

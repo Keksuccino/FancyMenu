@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.overlay.StringLightsOverlay;
-import de.keksuccino.fancymenu.util.rendering.ui.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -67,31 +66,28 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "string_lights_scale", Component.translatable("fancymenu.decoration_overlays.string_lights.scale"),
-                        () -> this.stringLightsScale,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.stringLightsScale = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "string_lights_scale", StringLightsDecorationOverlay.class,
+                        o -> o.stringLightsScale,
+                        (o, s) -> o.stringLightsScale = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.string_lights.scale"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.scale.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "string_lights_wind_strength", Component.translatable("fancymenu.decoration_overlays.string_lights.wind_strength"),
-                        () -> this.stringLightsWindStrength,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.stringLightsWindStrength = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "string_lights_wind_strength", StringLightsDecorationOverlay.class,
+                        o -> o.stringLightsWindStrength,
+                        (o, s) -> o.stringLightsWindStrength = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.string_lights.wind_strength"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.wind_strength.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(menu, "string_lights_flicker_speed", Component.translatable("fancymenu.decoration_overlays.string_lights.flicker_speed"),
-                        () -> this.stringLightsFlickerSpeed,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            this.stringLightsFlickerSpeed = s;
-                        }, true,
-                        "1.0", null, false, true, null, null)
+        this.addInputContextMenuEntryTo(menu, "string_lights_flicker_speed", StringLightsDecorationOverlay.class,
+                        o -> o.stringLightsFlickerSpeed,
+                        (o, s) -> o.stringLightsFlickerSpeed = s,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.string_lights.flicker_speed"),
+                        true, "1.0", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.flicker_speed.desc")));
 
         menu.addSeparatorEntry("separator_before_string_light_strings");
@@ -99,106 +95,106 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
         ContextMenu stringsMenu = new ContextMenu();
         menu.addSubMenuEntry("string_lights_strings", Component.translatable("fancymenu.decoration_overlays.string_lights.strings"), stringsMenu).setStackable(true);
 
-        addStringLightSubMenu(stringsMenu, editor,
+        addStringLightSubMenu(stringsMenu,
                 "string_lights_left_center_to_top_center",
                 Component.translatable("fancymenu.decoration_overlays.string_lights.position.left_center_to_top_center.label"),
-                () -> this.stringLightsLeftCenterToTopCenter,
-                aBoolean -> this.stringLightsLeftCenterToTopCenter = aBoolean,
-                () -> this.stringLightsLeftCenterToTopCenterChristmasMode,
-                aBoolean -> this.stringLightsLeftCenterToTopCenterChristmasMode = aBoolean,
-                () -> this.stringLightsLeftCenterToTopCenterColorHex,
-                s -> this.stringLightsLeftCenterToTopCenterColorHex = s,
+                o -> o.stringLightsLeftCenterToTopCenter,
+                (o, aBoolean) -> o.stringLightsLeftCenterToTopCenter = aBoolean,
+                o -> o.stringLightsLeftCenterToTopCenterChristmasMode,
+                (o, aBoolean) -> o.stringLightsLeftCenterToTopCenterChristmasMode = aBoolean,
+                o -> o.stringLightsLeftCenterToTopCenterColorHex,
+                (o, s) -> o.stringLightsLeftCenterToTopCenterColorHex = s,
                 "fancymenu.decoration_overlays.string_lights.position.left_center_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.left_center_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.color.left_center_to_top_center.desc");
 
-        addStringLightSubMenu(stringsMenu, editor,
+        addStringLightSubMenu(stringsMenu,
                 "string_lights_right_center_to_top_center",
                 Component.translatable("fancymenu.decoration_overlays.string_lights.position.right_center_to_top_center.label"),
-                () -> this.stringLightsRightCenterToTopCenter,
-                aBoolean -> this.stringLightsRightCenterToTopCenter = aBoolean,
-                () -> this.stringLightsRightCenterToTopCenterChristmasMode,
-                aBoolean -> this.stringLightsRightCenterToTopCenterChristmasMode = aBoolean,
-                () -> this.stringLightsRightCenterToTopCenterColorHex,
-                s -> this.stringLightsRightCenterToTopCenterColorHex = s,
+                o -> o.stringLightsRightCenterToTopCenter,
+                (o, aBoolean) -> o.stringLightsRightCenterToTopCenter = aBoolean,
+                o -> o.stringLightsRightCenterToTopCenterChristmasMode,
+                (o, aBoolean) -> o.stringLightsRightCenterToTopCenterChristmasMode = aBoolean,
+                o -> o.stringLightsRightCenterToTopCenterColorHex,
+                (o, s) -> o.stringLightsRightCenterToTopCenterColorHex = s,
                 "fancymenu.decoration_overlays.string_lights.position.right_center_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.right_center_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.color.right_center_to_top_center.desc");
 
-        addStringLightSubMenu(stringsMenu, editor,
+        addStringLightSubMenu(stringsMenu,
                 "string_lights_bottom_left_to_top_center",
                 Component.translatable("fancymenu.decoration_overlays.string_lights.position.bottom_left_to_top_center.label"),
-                () -> this.stringLightsBottomLeftToTopCenter,
-                aBoolean -> this.stringLightsBottomLeftToTopCenter = aBoolean,
-                () -> this.stringLightsBottomLeftToTopCenterChristmasMode,
-                aBoolean -> this.stringLightsBottomLeftToTopCenterChristmasMode = aBoolean,
-                () -> this.stringLightsBottomLeftToTopCenterColorHex,
-                s -> this.stringLightsBottomLeftToTopCenterColorHex = s,
+                o -> o.stringLightsBottomLeftToTopCenter,
+                (o, aBoolean) -> o.stringLightsBottomLeftToTopCenter = aBoolean,
+                o -> o.stringLightsBottomLeftToTopCenterChristmasMode,
+                (o, aBoolean) -> o.stringLightsBottomLeftToTopCenterChristmasMode = aBoolean,
+                o -> o.stringLightsBottomLeftToTopCenterColorHex,
+                (o, s) -> o.stringLightsBottomLeftToTopCenterColorHex = s,
                 "fancymenu.decoration_overlays.string_lights.position.bottom_left_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_left_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.color.bottom_left_to_top_center.desc");
 
-        addStringLightSubMenu(stringsMenu, editor,
+        addStringLightSubMenu(stringsMenu,
                 "string_lights_bottom_right_to_top_center",
                 Component.translatable("fancymenu.decoration_overlays.string_lights.position.bottom_right_to_top_center.label"),
-                () -> this.stringLightsBottomRightToTopCenter,
-                aBoolean -> this.stringLightsBottomRightToTopCenter = aBoolean,
-                () -> this.stringLightsBottomRightToTopCenterChristmasMode,
-                aBoolean -> this.stringLightsBottomRightToTopCenterChristmasMode = aBoolean,
-                () -> this.stringLightsBottomRightToTopCenterColorHex,
-                s -> this.stringLightsBottomRightToTopCenterColorHex = s,
+                o -> o.stringLightsBottomRightToTopCenter,
+                (o, aBoolean) -> o.stringLightsBottomRightToTopCenter = aBoolean,
+                o -> o.stringLightsBottomRightToTopCenterChristmasMode,
+                (o, aBoolean) -> o.stringLightsBottomRightToTopCenterChristmasMode = aBoolean,
+                o -> o.stringLightsBottomRightToTopCenterColorHex,
+                (o, s) -> o.stringLightsBottomRightToTopCenterColorHex = s,
                 "fancymenu.decoration_overlays.string_lights.position.bottom_right_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_right_to_top_center.desc",
                 "fancymenu.decoration_overlays.string_lights.color.bottom_right_to_top_center.desc");
 
-        addStringLightSubMenu(stringsMenu, editor,
+        addStringLightSubMenu(stringsMenu,
                 "string_lights_top_left_to_top_right",
                 Component.translatable("fancymenu.decoration_overlays.string_lights.position.top_left_to_top_right.label"),
-                () -> this.stringLightsTopLeftToTopRight,
-                aBoolean -> this.stringLightsTopLeftToTopRight = aBoolean,
-                () -> this.stringLightsTopLeftToTopRightChristmasMode,
-                aBoolean -> this.stringLightsTopLeftToTopRightChristmasMode = aBoolean,
-                () -> this.stringLightsTopLeftToTopRightColorHex,
-                s -> this.stringLightsTopLeftToTopRightColorHex = s,
+                o -> o.stringLightsTopLeftToTopRight,
+                (o, aBoolean) -> o.stringLightsTopLeftToTopRight = aBoolean,
+                o -> o.stringLightsTopLeftToTopRightChristmasMode,
+                (o, aBoolean) -> o.stringLightsTopLeftToTopRightChristmasMode = aBoolean,
+                o -> o.stringLightsTopLeftToTopRightColorHex,
+                (o, s) -> o.stringLightsTopLeftToTopRightColorHex = s,
                 "fancymenu.decoration_overlays.string_lights.position.top_left_to_top_right.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.top_left_to_top_right.desc",
                 "fancymenu.decoration_overlays.string_lights.color.top_left_to_top_right.desc");
 
-        addStringLightSubMenu(stringsMenu, editor,
+        addStringLightSubMenu(stringsMenu,
                 "string_lights_bottom_left_to_bottom_right",
                 Component.translatable("fancymenu.decoration_overlays.string_lights.position.bottom_left_to_bottom_right.label"),
-                () -> this.stringLightsBottomLeftToBottomRight,
-                aBoolean -> this.stringLightsBottomLeftToBottomRight = aBoolean,
-                () -> this.stringLightsBottomLeftToBottomRightChristmasMode,
-                aBoolean -> this.stringLightsBottomLeftToBottomRightChristmasMode = aBoolean,
-                () -> this.stringLightsBottomLeftToBottomRightColorHex,
-                s -> this.stringLightsBottomLeftToBottomRightColorHex = s,
+                o -> o.stringLightsBottomLeftToBottomRight,
+                (o, aBoolean) -> o.stringLightsBottomLeftToBottomRight = aBoolean,
+                o -> o.stringLightsBottomLeftToBottomRightChristmasMode,
+                (o, aBoolean) -> o.stringLightsBottomLeftToBottomRightChristmasMode = aBoolean,
+                o -> o.stringLightsBottomLeftToBottomRightColorHex,
+                (o, s) -> o.stringLightsBottomLeftToBottomRightColorHex = s,
                 "fancymenu.decoration_overlays.string_lights.position.bottom_left_to_bottom_right.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.bottom_left_to_bottom_right.desc",
                 "fancymenu.decoration_overlays.string_lights.color.bottom_left_to_bottom_right.desc");
 
-        addStringLightSubMenu(stringsMenu, editor,
+        addStringLightSubMenu(stringsMenu,
                 "string_lights_loose_left_top",
                 Component.translatable("fancymenu.decoration_overlays.string_lights.position.loose_left_top.label"),
-                () -> this.stringLightsLooseLeftTop,
-                aBoolean -> this.stringLightsLooseLeftTop = aBoolean,
-                () -> this.stringLightsLooseLeftTopChristmasMode,
-                aBoolean -> this.stringLightsLooseLeftTopChristmasMode = aBoolean,
-                () -> this.stringLightsLooseLeftTopColorHex,
-                s -> this.stringLightsLooseLeftTopColorHex = s,
+                o -> o.stringLightsLooseLeftTop,
+                (o, aBoolean) -> o.stringLightsLooseLeftTop = aBoolean,
+                o -> o.stringLightsLooseLeftTopChristmasMode,
+                (o, aBoolean) -> o.stringLightsLooseLeftTopChristmasMode = aBoolean,
+                o -> o.stringLightsLooseLeftTopColorHex,
+                (o, s) -> o.stringLightsLooseLeftTopColorHex = s,
                 "fancymenu.decoration_overlays.string_lights.position.loose_left_top.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.loose_left_top.desc",
                 "fancymenu.decoration_overlays.string_lights.color.loose_left_top.desc");
 
-        addStringLightSubMenu(stringsMenu, editor,
+        addStringLightSubMenu(stringsMenu,
                 "string_lights_loose_right_top",
                 Component.translatable("fancymenu.decoration_overlays.string_lights.position.loose_right_top.label"),
-                () -> this.stringLightsLooseRightTop,
-                aBoolean -> this.stringLightsLooseRightTop = aBoolean,
-                () -> this.stringLightsLooseRightTopChristmasMode,
-                aBoolean -> this.stringLightsLooseRightTopChristmasMode = aBoolean,
-                () -> this.stringLightsLooseRightTopColorHex,
-                s -> this.stringLightsLooseRightTopColorHex = s,
+                o -> o.stringLightsLooseRightTop,
+                (o, aBoolean) -> o.stringLightsLooseRightTop = aBoolean,
+                o -> o.stringLightsLooseRightTopChristmasMode,
+                (o, aBoolean) -> o.stringLightsLooseRightTopChristmasMode = aBoolean,
+                o -> o.stringLightsLooseRightTopColorHex,
+                (o, s) -> o.stringLightsLooseRightTopColorHex = s,
                 "fancymenu.decoration_overlays.string_lights.position.loose_right_top.desc",
                 "fancymenu.decoration_overlays.string_lights.christmas_mode.loose_right_top.desc",
                 "fancymenu.decoration_overlays.string_lights.color.loose_right_top.desc");
@@ -288,39 +284,36 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
         }
     }
 
-    private void addStringLightSubMenu(@NotNull ContextMenu addTo, @NotNull LayoutEditorScreen editor, @NotNull String entryIdentifier, @NotNull Component label,
-                                       @NotNull java.util.function.Supplier<Boolean> showGetter, @NotNull java.util.function.Consumer<Boolean> showSetter,
-                                       @NotNull java.util.function.Supplier<Boolean> christmasGetter, @NotNull java.util.function.Consumer<Boolean> christmasSetter,
-                                       @NotNull java.util.function.Supplier<String> colorGetter, @NotNull java.util.function.Consumer<String> colorSetter,
+    private void addStringLightSubMenu(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label,
+                                       @NotNull de.keksuccino.fancymenu.util.ConsumingSupplier<StringLightsDecorationOverlay, Boolean> showGetter,
+                                       @NotNull java.util.function.BiConsumer<StringLightsDecorationOverlay, Boolean> showSetter,
+                                       @NotNull de.keksuccino.fancymenu.util.ConsumingSupplier<StringLightsDecorationOverlay, Boolean> christmasGetter,
+                                       @NotNull java.util.function.BiConsumer<StringLightsDecorationOverlay, Boolean> christmasSetter,
+                                       @NotNull de.keksuccino.fancymenu.util.ConsumingSupplier<StringLightsDecorationOverlay, String> colorGetter,
+                                       @NotNull java.util.function.BiConsumer<StringLightsDecorationOverlay, String> colorSetter,
                                        @NotNull String showTooltipKey, @NotNull String christmasTooltipKey, @NotNull String colorTooltipKey) {
         ContextMenu subMenu = new ContextMenu();
         addTo.addSubMenuEntry(entryIdentifier + "_menu", label, subMenu).setStackable(true);
 
-        ContextMenuUtils.addToggleContextMenuEntryTo(subMenu, entryIdentifier + "_show",
+        this.addToggleContextMenuEntryTo(subMenu, entryIdentifier + "_show", StringLightsDecorationOverlay.class,
                         showGetter,
-                        aBoolean -> {
-                            editor.history.saveSnapshot();
-                            showSetter.accept(aBoolean);
-                        },
+                        showSetter,
                         "fancymenu.decoration_overlays.string_lights.string.show")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(showTooltipKey)));
 
-        ContextMenuUtils.addToggleContextMenuEntryTo(subMenu, entryIdentifier + "_christmas_mode",
+        this.addToggleContextMenuEntryTo(subMenu, entryIdentifier + "_christmas_mode", StringLightsDecorationOverlay.class,
                         christmasGetter,
-                        aBoolean -> {
-                            editor.history.saveSnapshot();
-                            christmasSetter.accept(aBoolean);
-                        },
+                        christmasSetter,
                         "fancymenu.decoration_overlays.string_lights.string.christmas_mode")
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(christmasTooltipKey)));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(subMenu, entryIdentifier + "_color", Component.translatable("fancymenu.decoration_overlays.string_lights.string.color"),
+        this.addInputContextMenuEntryTo(subMenu, entryIdentifier + "_color", StringLightsDecorationOverlay.class,
                         colorGetter,
-                        s -> {
-                            editor.history.saveSnapshot();
-                            colorSetter.accept(s);
-                        }, true,
-                        "#FFD27A", null, false, true, null, null)
+                        colorSetter,
+                        null, false, true,
+                        Component.translatable("fancymenu.decoration_overlays.string_lights.string.color"),
+                        true, "#FFD27A", null, null)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(colorTooltipKey)));
     }
+
 }
