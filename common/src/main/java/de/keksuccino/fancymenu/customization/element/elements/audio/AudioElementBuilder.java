@@ -128,7 +128,7 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
         AudioElement i = new AudioElement(this);
         i.baseWidth = 100;
         i.baseHeight = 100;
-        i.inEditorColor = DrawableColor.of(new Color(92, 166, 239));
+        i.inEditorColor.setDefault(DrawableColor.of(new Color(92, 166, 239)).getHex()).set(DrawableColor.of(new Color(92, 166, 239)).getHex());
         return i;
     }
 

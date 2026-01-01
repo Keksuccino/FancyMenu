@@ -37,7 +37,7 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
         AnimationControllerElement element = new AnimationControllerElement(this);
         element.baseWidth = 100;
         element.baseHeight = 100;
-        element.inEditorColor = DrawableColor.of(new Color(0, 255, 0, 100));
+        element.inEditorColor.setDefault(DrawableColor.of(new Color(0, 255, 0, 100)).getHex()).set(DrawableColor.of(new Color(0, 255, 0, 100)).getHex());
         return element;
     }
 

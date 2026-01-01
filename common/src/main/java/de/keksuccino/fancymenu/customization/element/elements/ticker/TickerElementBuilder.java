@@ -81,7 +81,7 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
         TickerElement i = new TickerElement(this);
         i.baseWidth = 70;
         i.baseHeight = 70;
-        i.inEditorColor = DrawableColor.of(Color.ORANGE);
+        i.inEditorColor.setDefault(DrawableColor.of(Color.ORANGE).getHex()).set(DrawableColor.of(Color.ORANGE).getHex());
         return i;
     }
 

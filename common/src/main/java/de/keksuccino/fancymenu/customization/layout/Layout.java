@@ -723,7 +723,7 @@ public class Layout extends LayoutBase {
                         }
                         String baseColor = sec.getValue("basecolor");
                         if (baseColor != null) {
-                            e.baseColor = DrawableColor.of(baseColor);
+                            e.baseColor.set(DrawableColor.of(baseColor).getHex());
                         }
                         e.stayOnScreen = false;
                         elements.add(Elements.SPLASH_TEXT.serializeElementInternal(e));
