@@ -148,9 +148,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.rightClickMenu = LayoutEditorUI.buildRightClickContextMenu(this);
 		this.addWidget(this.rightClickMenu);
 
-		if (this.menuBar != null) {
-			this.menuBar.closeAllContextMenus();
-		}
+//		if (this.menuBar != null) {
+//			this.menuBar.closeAllContextMenus();
+//		}
 		this.menuBar = LayoutEditorUI.buildMenuBar(this, (this.menuBar == null) || this.menuBar.isExpanded());
 		this.addWidget(this.menuBar);
 
@@ -1311,12 +1311,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//CTRL + Z
 		if (key.equals("z") && hasControlDown()) {
 			this.history.stepBack();
+            this.resize(Minecraft.getInstance(), this.width, this.height);
 			return true;
 		}
 
 		//CTRL + Y
 		if (key.equals("y") && hasControlDown()) {
 			this.history.stepForward();
+            this.resize(Minecraft.getInstance(), this.width, this.height);
 			return true;
 		}
 
