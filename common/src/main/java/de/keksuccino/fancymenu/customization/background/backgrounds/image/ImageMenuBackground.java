@@ -9,10 +9,12 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -72,7 +74,32 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
+        this.textureSupplier.buildContextMenuEntryAndAddTo(menu, this);
+        this.fallbackTextureSupplier.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> Tooltip.of(Component.translatable("fancymenu.backgrounds.image.type.web.fallback.desc")));
 
+        menu.addSeparatorEntry("separator_after_image_sources");
+
+        this.restartAnimatedOnMenuLoad.buildContextMenuEntryAndAddTo(menu, this);
+
+        menu.addSeparatorEntry("separator_after_restart_animated");
+
+        this.repeat.buildContextMenuEntryAndAddTo(menu, this)
+                .addIsActiveSupplier((m, entry) -> !this.slideLeftRight.tryGetNonNull());
+
+        this.slideLeftRight.buildContextMenuEntryAndAddTo(menu, this)
+                .addIsActiveSupplier((m, entry) -> !this.repeat.tryGetNonNull() && !this.parallaxEnabled.tryGetNonNull());
+
+        menu.addSeparatorEntry("separator_before_parallax");
+
+        this.parallaxEnabled.buildContextMenuEntryAndAddTo(menu, this)
+                .addIsActiveSupplier((m, entry) -> !this.slideLeftRight.tryGetNonNull());
+        this.parallaxIntensityXString.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> Tooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")));
+        this.parallaxIntensityYString.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> Tooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")));
+        this.invertParallax.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> Tooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")));
 
     }
 
