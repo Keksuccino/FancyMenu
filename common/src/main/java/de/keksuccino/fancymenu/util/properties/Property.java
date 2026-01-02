@@ -121,7 +121,7 @@ public class Property<T> {
      *
      * <h3>Example</h3>
      * <pre>{@code
-     * Property<String> label = Property.stringProperty(
+     * StringProperty label = Property.stringProperty(
      *     "label",
      *     "Button",
      *     "Button",
@@ -129,6 +129,8 @@ public class Property<T> {
      *     true,  // placeholders
      *     "fancymenu.menu.entry.label"
      * );
+     *
+     * String s = label.getString(); // ready-to-use with placeholders replaced already
      * }</pre>
      *
      * @param key the unique key used for lookup and serialization
@@ -678,6 +680,9 @@ public class Property<T> {
      *     true, // placeholders
      *     "fancymenu.menu.entry.color"
      * );
+     *
+     * String hex = color.getHex(); // ready-to-use with placeholders replaced already
+     * DrawableColor drawable = color.getDrawable(); // ready-to-use with placeholders replaced already
      * }</pre>
      *
      * @param key the unique key used for lookup and serialization
