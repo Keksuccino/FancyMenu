@@ -42,7 +42,6 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     public float volume = 1.0F;
     @NotNull
     public SoundSource soundSource = SoundSource.MASTER;
-
     public boolean parallaxEnabled = false;
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
     @NotNull
@@ -60,7 +59,6 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     protected MCEFVideoManager videoManager = null;
     protected MCEFVideoPlayer videoPlayer = null;
     protected String playerId = null;
-
     protected String lastFinalUrl = null;
     protected int lastAbsoluteWidth = -10000;
     protected int lastAbsoluteHeight = -10000;
@@ -74,12 +72,14 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     protected boolean pausedBySystem = false;
     protected final AtomicReference<Float> cachedDuration = new AtomicReference<>(0F);
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
-    protected volatile ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
+    // The field is currently unused, but the scheduler is used, so don't delete this
+    protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized && (this.lastRenderTickTime != -1) && ((this.lastRenderTickTime + 11000) < System.currentTimeMillis())) {
             this.resetBackground();
         }
     }, 0, 100, TimeUnit.MILLISECONDS);
-    protected volatile ScheduledFuture<?> asyncTicker = EXECUTOR.scheduleAtFixedRate(() -> {
+    // The field is currently unused, but the scheduler is used, so don't delete this
+    protected final ScheduledFuture<?> asyncTicker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized) {
             this.cachedDuration.set(this._getDuration());
             this.cachedPlayTime.set(this._getPlayTime());
