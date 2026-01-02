@@ -125,18 +125,18 @@ public class Layout extends LayoutBase {
         meta.putProperty("layout_index", "" + this.layoutIndex);
 
         if (!this.universalLayoutMenuWhitelist.isEmpty()) {
-            String wl = "";
+            StringBuilder wl = new StringBuilder();
             for (String s : this.universalLayoutMenuWhitelist) {
-                wl += s + ";";
+                wl.append(s).append(";");
             }
-            meta.putProperty("universal_layout_whitelist", wl);
+            meta.putProperty("universal_layout_whitelist", wl.toString());
         }
         if (!this.universalLayoutMenuBlacklist.isEmpty()) {
-            String bl = "";
+            StringBuilder bl = new StringBuilder();
             for (String s : this.universalLayoutMenuBlacklist) {
-                bl += s + ";";
+                bl.append(s).append(";");
             }
-            meta.putProperty("universal_layout_blacklist", bl);
+            meta.putProperty("universal_layout_blacklist", bl.toString());
         }
 
         if (this.customMenuTitle != null) {
@@ -297,14 +297,14 @@ public class Layout extends LayoutBase {
                     String blacklistRaw = meta.getValue("universal_layout_blacklist");
                     if ((whitelistRaw != null) && whitelistRaw.contains(";")) {
                         for (String s : whitelistRaw.split(";")) {
-                            if (s.length() > 0) {
+                            if (!s.isEmpty()) {
                                 layout.universalLayoutMenuWhitelist.add(ScreenIdentifierHandler.getBestIdentifier(s));
                             }
                         }
                     }
                     if ((blacklistRaw != null) && blacklistRaw.contains(";")) {
                         for (String s : blacklistRaw.split(";")) {
-                            if (s.length() > 0) {
+                            if (!s.isEmpty()) {
                                 layout.universalLayoutMenuBlacklist.add(ScreenIdentifierHandler.getBestIdentifier(s));
                             }
                         }
@@ -764,7 +764,8 @@ public class Layout extends LayoutBase {
                             MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("slideshow");
                             if (builder != null) {
                                 SlideshowMenuBackground b = new SlideshowMenuBackground((MenuBackgroundBuilder<SlideshowMenuBackground>)builder);
-                                b.slideshowName = name;
+                                b.showBackground.set(true);
+                                b.slideshowName.set(name);
                                 return b;
                             }
                         }
@@ -777,6 +778,7 @@ public class Layout extends LayoutBase {
                             MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("panorama");
                             if (builder != null) {
                                 PanoramaMenuBackground b = (PanoramaMenuBackground) builder.buildDefaultInstance();
+                                b.showBackground.set(true);
                                 b.panoramaName.set(name);
                                 return b;
                             }
@@ -790,8 +792,9 @@ public class Layout extends LayoutBase {
                         MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("image");
                         if (builder != null) {
                             ImageMenuBackground b = new ImageMenuBackground((MenuBackgroundBuilder<ImageMenuBackground>)builder);
-                            b.textureSupplier = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(value);
-                            b.slideLeftRight = (pano != null) && pano.equalsIgnoreCase("true");
+                            b.showBackground.set(true);
+                            b.textureSupplier.set(SerializationHelper.INSTANCE.deserializeImageResourceSupplier(value));
+                            b.slideLeftRight.set((pano != null) && pano.equalsIgnoreCase("true"));
                             return b;
                         }
                     }

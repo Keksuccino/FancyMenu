@@ -3,19 +3,26 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.slideshow;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
+import java.util.List;
 
-public class SlideshowMenuBackground extends MenuBackground {
+public class SlideshowMenuBackground extends MenuBackground<SlideshowMenuBackground> {
 
     private static final ResourceLocation MISSING = ITexture.MISSING_TEXTURE_LOCATION;
 
-    public String slideshowName;
+    public final Property.StringProperty slideshowName = putProperty(Property.stringProperty("slideshow_name", null, false, false, "fancymenu.backgrounds.slideshow.name"));
 
     protected String lastSlideshowName;
     protected ExternalTextureSlideshowRenderer slideshow;
@@ -25,13 +32,36 @@ public class SlideshowMenuBackground extends MenuBackground {
     }
 
     @Override
+    protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
+
+        List<String> slideshowNames = SlideshowHandler.getSlideshowNames();
+        slideshowNames.addFirst("fancymenu.backgrounds.slideshow.name.none");
+
+        this.addCycleContextMenuEntryTo(menu, "slideshow_name", slideshowNames, SlideshowMenuBackground.class, background -> {
+            var name = background.slideshowName.get();
+            return (name == null) ? "fancymenu.backgrounds.slideshow.name.none" : name;
+        }, (background, name) -> background.slideshowName.set(name), (menu1, entry, switcherValue) -> {
+            Component name;
+            if (switcherValue.equals("fancymenu.backgrounds.slideshow.name.none")) {
+                name = Component.translatable("fancymenu.backgrounds.slideshow.name.none").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+            } else {
+                name = Component.literal(switcherValue).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
+            }
+            return Component.translatable("fancymenu.backgrounds.slideshow.name", name);
+        });
+
+    }
+
+    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        if (this.slideshowName != null) {
-            if ((this.lastSlideshowName == null) || !this.lastSlideshowName.equals(this.slideshowName)) {
-                this.slideshow = SlideshowHandler.getSlideshow(this.slideshowName);
+        String slideshowName = this.slideshowName.getString();
+
+        if (slideshowName != null) {
+            if ((this.lastSlideshowName == null) || !this.lastSlideshowName.equals(slideshowName)) {
+                this.slideshow = SlideshowHandler.getSlideshow(slideshowName);
             }
-            this.lastSlideshowName = this.slideshowName;
+            this.lastSlideshowName = slideshowName;
         } else {
             this.slideshow = null;
         }

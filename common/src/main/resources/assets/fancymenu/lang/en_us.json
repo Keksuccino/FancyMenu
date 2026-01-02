@@ -2410,5 +2410,7 @@
   "fancymenu.backgrounds.general.backgrounds": "Menu Backgrounds",
   "fancymenu.backgrounds.general.show_background": "Show Background: %s",
   "fancymenu.backgrounds.panorama.name": "Panorama Name: %s",
-  "fancymenu.backgrounds.panorama.name.none": "NONE"
+  "fancymenu.backgrounds.panorama.name.none": "NONE",
+  "fancymenu.backgrounds.slideshow.name": "Slideshow Name: %s",
+  "fancymenu.backgrounds.slideshow.name.none": "NONE"
 }
