@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.layout;
 
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
-import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
@@ -22,7 +21,7 @@ import java.util.Map;
 public class LayoutBase {
 
     @NotNull
-    public final List<MenuBackground> menuBackgrounds = new ArrayList<>();
+    public final List<MenuBackground<?>> menuBackgrounds = new ArrayList<>();
     @NotNull
     public final List<Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>>> decorationOverlays = new ArrayList<>();
     public boolean preserveBackgroundAspectRatio = false;
@@ -53,9 +52,9 @@ public class LayoutBase {
         if (layouts != null) {
             for (LayoutBase layout : layouts) {
 
-                if (!layout.menuBackgrounds.isEmpty()) {
-                    stacked.menuBackgrounds.addAll(layout.menuBackgrounds);
-                }
+                layout.menuBackgrounds.forEach(background -> {
+                    if (background.showBackground.tryGetNonNullElse(false)) stacked.menuBackgrounds.add(background);
+                });
                 if (layout.preserveBackgroundAspectRatio) {
                     stacked.preserveBackgroundAspectRatio = true;
                 }
@@ -128,14 +127,6 @@ public class LayoutBase {
             e.putProperty(m.getKey(), m.getValue());
         }
         return e;
-    }
-
-    public static SerializedMenuBackground convertSectionToBackground(PropertyContainer section) {
-        SerializedMenuBackground b = new SerializedMenuBackground();
-        for (Map.Entry<String, String> m : section.getProperties().entrySet()) {
-            b.putProperty(m.getKey(), m.getValue());
-        }
-        return b;
     }
 
 }

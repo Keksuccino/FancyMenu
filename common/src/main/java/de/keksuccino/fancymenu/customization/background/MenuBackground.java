@@ -6,7 +6,12 @@ import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -18,21 +23,71 @@ import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import de.keksuccino.fancymenu.customization.layout.Layout;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-public abstract class MenuBackground implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public abstract class MenuBackground<B extends MenuBackground<?>> implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget, ContextMenuBuilder<B>, PropertyHolder {
 
     public final MenuBackgroundBuilder<?> builder;
+    private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
     @NotNull
     protected String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
+    @Nullable
+    protected RuntimePropertyContainer cachedMemory;
+
     /** This gets set by the {@link ScreenCustomizationLayer} when screens fade in or out and should only get used as getter. **/
     public float opacity = 1.0F;
     /** This gets set by the {@link ScreenCustomizationLayer} and should only be used as getter. **/
     public boolean keepBackgroundAspectRatio = false;
-    @Nullable
-    protected RuntimePropertyContainer cachedMemory;
+
+    public final Property<Boolean> showBackground = putProperty(Property.booleanProperty("show_background", false, "fancymenu.backgrounds.general.show_background"));
 
     public MenuBackground(MenuBackgroundBuilder<?> builder) {
         this.builder = builder;
+    }
+
+    @Override
+    public @NotNull Map<String, Property<?>> getPropertyMap() {
+        return this.propertyMap;
+    }
+
+    @Override
+    public @NotNull B self() {
+        return (B)this;
+    }
+
+    @Override
+    public @Nullable Screen getContextMenuCallbackScreen() {
+        return LayoutEditorScreen.getCurrentInstance();
+    }
+
+    @Override
+    public @NotNull List<B> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<B, Boolean> filter) {
+        return List.of((B)this);
+    }
+
+    @Override
+    public void saveSnapshot() {
+        var e = LayoutEditorScreen.getCurrentInstance();
+        if (e != null) e.history.saveSnapshot();
+    }
+
+    protected abstract void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor);
+
+    @NotNull
+    public ContextMenu _initConfigMenu(@NotNull LayoutEditorScreen editor) {
+
+        var menu = new ContextMenu();
+
+        this.showBackground.buildContextMenuEntryAndAddTo(menu, this);
+
+        menu.addSeparatorEntry("separator_after_show_background_toggle");
+
+        this.initConfigMenu(menu, editor);
+
+        return menu;
+
     }
 
     @Override
@@ -125,7 +180,7 @@ public abstract class MenuBackground implements Renderable, GuiEventListener, Na
     @Nullable
     public MenuBackground copy() {
         try {
-            return this.builder.deserializeBackgroundInternal(this.builder.serializedBackgroundInternal(this));
+            return this.builder._deserializeBackground(this.builder._serializeBackground(this));
         } catch (Exception ex) {
             ex.printStackTrace();
         }

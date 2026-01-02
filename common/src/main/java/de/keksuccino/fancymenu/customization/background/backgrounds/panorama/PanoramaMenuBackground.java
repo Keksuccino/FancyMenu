@@ -3,21 +3,26 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.panorama;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import java.util.List;
 
-public class PanoramaMenuBackground extends MenuBackground {
+public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackground> {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final ResourceLocation MISSING = TextureManager.INTENTIONAL_MISSING_TEXTURE;
 
-    public String panoramaName;
+    public final Property.StringProperty panoramaName = putProperty(Property.stringProperty("panorama_name", null, false, false, "fancymenu.backgrounds.panorama.name"));
+
     protected String lastPanoramaName;
     protected LocalTexturePanoramaRenderer panorama;
 
@@ -26,15 +31,38 @@ public class PanoramaMenuBackground extends MenuBackground {
     }
 
     @Override
+    protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
+
+        List<String> panoNames = PanoramaHandler.getPanoramaNames();
+        panoNames.addFirst("fancymenu.backgrounds.panorama.name.none");
+
+        this.addCycleContextMenuEntryTo(menu, "panorama_name", panoNames, PanoramaMenuBackground.class, background -> {
+            var name = background.panoramaName.get();
+            return (name == null) ? "fancymenu.backgrounds.panorama.name.none" : name;
+        }, (background, name) -> background.panoramaName.set(name), (menu1, entry, switcherValue) -> {
+            Component name;
+            if (switcherValue.equals("fancymenu.backgrounds.panorama.name.none")) {
+                name = Component.translatable("fancymenu.backgrounds.panorama.name.none").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+            } else {
+                name = Component.literal(switcherValue).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
+            }
+            return Component.translatable("fancymenu.backgrounds.panorama.name", name);
+        });
+
+    }
+
+    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        if (this.panoramaName != null) {
-            if ((this.lastPanoramaName == null) || !this.lastPanoramaName.equals(this.panoramaName)) {
-                this.panorama = PanoramaHandler.getPanorama(this.panoramaName);
-            }
-            this.lastPanoramaName = this.panoramaName;
-        } else {
+        String panoName = this.panoramaName.getString();
+
+        if (panoName == null) {
             this.panorama = null;
+        } else {
+            if ((this.lastPanoramaName == null) || !this.lastPanoramaName.equals(panoName)) {
+                this.panorama = PanoramaHandler.getPanorama(panoName);
+            }
+            this.lastPanoramaName = panoName;
         }
 
         if (this.panorama != null) {

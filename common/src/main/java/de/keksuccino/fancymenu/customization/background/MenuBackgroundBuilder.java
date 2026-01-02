@@ -3,30 +3,35 @@ package de.keksuccino.fancymenu.customization.background;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.SerializationHelper;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.Objects;
-import java.util.function.Consumer;
 
-@SuppressWarnings("all")
-public abstract class MenuBackgroundBuilder<T extends MenuBackground> implements SerializationHelper {
+@SuppressWarnings("unchecked")
+public abstract class MenuBackgroundBuilder<T extends MenuBackground<?>> implements SerializationHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    @NotNull
     private final String identifier;
 
-    public MenuBackgroundBuilder(String uniqueIdentifier) {
-        this.identifier = uniqueIdentifier;
+    public MenuBackgroundBuilder(@NotNull String uniqueBackgroundIdentifier) {
+        this.identifier = Objects.requireNonNull(uniqueBackgroundIdentifier);
     }
 
     public boolean isDeprecated() {
         return false;
     }
+
+    @NotNull
+    public abstract T buildDefaultInstance();
 
     /**
      * This lets you control if it should be possible to add a new instance of this background type to a layout.<br>
@@ -37,45 +42,39 @@ public abstract class MenuBackgroundBuilder<T extends MenuBackground> implements
     }
 
     /**
-     * Will build a new instance of the background type or edit an existing one.<br>
-     * This is used in the {@link LayoutEditorScreen} when adding the background type to a layout and when editing an existing instance of the background type, so it's possible to open a screen here that has configuration options to construct/edit the {@link MenuBackground} instance.<br>
-     * Once you're done constructing/editing the background, return the new/edited background instance by using the {@code backgroundConsumer} parameter.
+     * Deserializes a background<br><br>
+     *
+     * If you only use {@link Property} instances for serializable data in your {@link MenuBackground},
+     * you can leave this method empty, because {@link Property} instances get serialized and deserialized automatically.
      */
-    public abstract void buildNewOrEditInstance(@Nullable Screen currentScreen, @Nullable T backgroundToEdit, @NotNull Consumer<T> backgroundConsumer);
+    public abstract void deserializeBackground(@NotNull PropertyContainer serializedBackground, @NotNull T deserializeTo);
 
     /**
      * Only for internal use! Don't touch this if you don't know what you're doing!
      */
-    public void buildNewOrEditInstanceInternal(@Nullable Screen currentScreen, @Nullable MenuBackground backgroundToEdit, Consumer<MenuBackground> backgroundConsumer) {
-        try {
-            this.buildNewOrEditInstance(currentScreen, (T) backgroundToEdit, (Consumer<T>) backgroundConsumer);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    /**
-     * Deserializes a {@link SerializedMenuBackground}.
-     */
-    public abstract T deserializeBackground(SerializedMenuBackground serializedMenuBackground);
-
-    /**
-     * Only for internal use! Don't touch this if you don't know what you're doing!
-     */
+    @ApiStatus.Internal
     @Nullable
-    public T deserializeBackgroundInternal(SerializedMenuBackground serializedMenuBackground) {
+    public T _deserializeBackground(PropertyContainer serializedBackground) {
 
         try {
 
-            T background = this.deserializeBackground(serializedMenuBackground);
+            T background = this.buildDefaultInstance();
 
-            background.instanceIdentifier = Objects.requireNonNullElse(serializedMenuBackground.getValue("instance_identifier"), ScreenCustomization.generateUniqueIdentifier());
+            background.instanceIdentifier = Objects.requireNonNullElse(serializedBackground.getValue("instance_identifier"), ScreenCustomization.generateUniqueIdentifier());
+
+            background.getPropertyMap().values().forEach(property -> property.deserialize(serializedBackground));
+
+            this.deserializeBackground(Objects.requireNonNull(serializedBackground), background);
+
+            // Legacy background support
+            if (serializedBackground.getValue("show_background") == null) {
+                background.showBackground.set(true);
+            }
 
             return background;
 
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to deserialize menu background: " + this.getIdentifier());
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to deserialize menu background: " + this.getIdentifier(), ex);
         }
 
         return null;
@@ -83,29 +82,36 @@ public abstract class MenuBackgroundBuilder<T extends MenuBackground> implements
     }
 
     /**
-     * Will serialize a {@link MenuBackground} instance to a {@link SerializedMenuBackground}.<br>
-     * You can use every property key except of {@code background_type}, which is reserved for the identifier of the background.
+     * Will serialize a {@link MenuBackground} instance to the given {@link PropertyContainer}.<br>
+     * You can use every property key except {@code background_type} and {@code instance_identifier}.<br><br>
+     *
+     * If you only use {@link Property} instances for serializable data in your {@link MenuBackground},
+     * you can leave this method empty, because {@link Property} instances get serialized and deserialized automatically.
      */
-    public abstract SerializedMenuBackground serializedBackground(T background);
+    public abstract void serializeBackground(@NotNull T background, @NotNull PropertyContainer serializeTo);
 
     /**
      * Only for internal use! Don't touch this if you don't know what you're doing!
      */
+    @ApiStatus.Internal
     @Nullable
-    public SerializedMenuBackground serializedBackgroundInternal(MenuBackground background) {
+    public PropertyContainer _serializeBackground(MenuBackground<?> background) {
 
         try {
 
-            SerializedMenuBackground b = this.serializedBackground((T) background);
+            PropertyContainer serialized = new PropertyContainer("menu_background");
 
-            b.putProperty("instance_identifier", background.getInstanceIdentifier());
-            b.putProperty("background_type", this.getIdentifier());
+            serialized.putProperty("instance_identifier", background.getInstanceIdentifier());
+            serialized.putProperty("background_type", this.getIdentifier());
 
-            return b;
+            background.getPropertyMap().values().forEach(property -> property.serialize(serialized));
+
+            this.serializeBackground((T) background, serialized);
+
+            return serialized;
 
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to serialize menu background: " + this.getIdentifier());
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to serialize menu background: " + this.getIdentifier(), ex);
         }
 
         return null;
@@ -128,9 +134,8 @@ public abstract class MenuBackgroundBuilder<T extends MenuBackground> implements
 
     /**
      * The description of the background type. Used in the {@link LayoutEditorScreen}.
-     * @return
      */
     @Nullable
-    public abstract Component[] getDescription();
+    public abstract Component getDescription();
 
 }

@@ -13,7 +13,6 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
-import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.panorama.PanoramaMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.SlideshowMenuBackground;
@@ -50,7 +49,7 @@ import java.io.File;
 import java.util.*;
 import java.util.function.Supplier;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused","unchecked"})
 public class Layout extends LayoutBase {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -159,13 +158,11 @@ public class Layout extends LayoutBase {
             set.putContainer(ps);
         }
 
-        //Normal layouts always have at max 1 background in the list, so we just get the first one from the list
-        if (!this.menuBackgrounds.isEmpty()) {
-            SerializedMenuBackground serializedMenuBackground = this.menuBackgrounds.getFirst().builder.serializedBackgroundInternal(this.menuBackgrounds.getFirst());
-            if (serializedMenuBackground != null) {
-                set.putContainer(serializedMenuBackground);
-            }
-        }
+        // Menu Backgrounds
+        this.menuBackgrounds.forEach(background -> {
+            PropertyContainer serialized = background.builder._serializeBackground(background);
+            if (serialized != null) set.putContainer(serialized);
+        });
 
         // Decoration Overlays
         this.decorationOverlays.forEach(pair -> {
@@ -380,7 +377,6 @@ public class Layout extends LayoutBase {
                         if (actionId == null) actionId = s.getValue("instance_identifier");
                         if ((actionId != null) && actionId.equals(identifier)) {
                             combined.add(s);
-                            continue;
                         }
                     }
                     for (SerializedElement e : legacyElements) {
@@ -388,7 +384,6 @@ public class Layout extends LayoutBase {
                         if (actionId == null) actionId = e.getValue("instance_identifier");
                         if ((actionId != null) && actionId.equals(identifier)) {
                             combined.add(e);
-                            continue;
                         }
                     }
                 }
@@ -399,24 +394,37 @@ public class Layout extends LayoutBase {
                 layout.serializedElements.addAll(combined);
             }
 
-            //Handle menu backgrounds
-            List<PropertyContainer> menuBackgroundSections = serialized.getContainersOfType("menu_background");
-            if (!menuBackgroundSections.isEmpty()) {
-                PropertyContainer menuBack = menuBackgroundSections.getFirst();
-                String backgroundIdentifier = menuBack.getValue("background_type");
-                if (backgroundIdentifier != null) {
-                    MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder(backgroundIdentifier);
-                    if (builder != null) {
-                        MenuBackground back = builder.deserializeBackgroundInternal(convertSectionToBackground(menuBack));
-                        if ((back != null) && layout.menuBackgrounds.isEmpty()) layout.menuBackgrounds.add(back);
+            // Menu Backgrounds
+            layout.menuBackgrounds.clear();
+            List<MenuBackground<?>> deserializedBackgrounds = new ArrayList<>();
+            if (layout.legacyLayout) {
+                MenuBackground<?> legacyBackground = convertLegacyMenuBackground(serialized);
+                if (legacyBackground != null) deserializedBackgrounds.add(legacyBackground);
+            } else {
+                List<PropertyContainer> serializedMenuBackgrounds = serialized.getContainersOfType("menu_background");
+                serializedMenuBackgrounds.forEach(container -> {
+                    String backgroundIdentifier = container.getValue("background_type");
+                    if (backgroundIdentifier != null) {
+                        MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder(backgroundIdentifier);
+                        if (builder != null) {
+                            MenuBackground<?> background = builder._deserializeBackground(container);
+                            if (background != null) deserializedBackgrounds.add(background);
+                        }
+                    }
+                });
+            }
+            // The menuBackgrounds list of Layouts always holds exactly one instance of each background type for normal (non-stacked) layouts, so we can safely do the following
+            MenuBackgroundRegistry.getBuilders().forEach(builder -> {
+                MenuBackground<?> back = null;
+                for (MenuBackground<?> background : deserializedBackgrounds) {
+                    if (background.builder == builder) {
+                        back = background;
+                        break;
                     }
                 }
-            }
-            //Convert legacy backgrounds
-            if (layout.legacyLayout) {
-                MenuBackground legacyBackground = convertLegacyMenuBackground(serialized);
-                if ((legacyBackground != null) && layout.menuBackgrounds.isEmpty()) layout.menuBackgrounds.add(legacyBackground);
-            }
+                if (back == null) back = builder.buildDefaultInstance();
+                layout.menuBackgrounds.add(back);
+            });
 
             // Decoration Overlays
             DecorationOverlayRegistry.getAll().forEach(builder -> {
@@ -768,8 +776,8 @@ public class Layout extends LayoutBase {
                         if (PanoramaHandler.panoramaExists(name)) {
                             MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("panorama");
                             if (builder != null) {
-                                PanoramaMenuBackground b = new PanoramaMenuBackground((MenuBackgroundBuilder<PanoramaMenuBackground>)builder);
-                                b.panoramaName = name;
+                                PanoramaMenuBackground b = (PanoramaMenuBackground) builder.buildDefaultInstance();
+                                b.panoramaName.set(name);
                                 return b;
                             }
                         }

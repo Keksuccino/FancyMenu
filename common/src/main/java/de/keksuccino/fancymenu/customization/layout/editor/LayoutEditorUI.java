@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
@@ -506,23 +507,16 @@ public class LayoutEditorUI {
 
         menu.addSeparatorEntry("separator_after_universal_layout_menu");
 
-        menu.addClickableEntry("menu_background_settings", Component.translatable("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), (menu1, entry) -> {
-                    ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(editor.layout.menuBackgrounds.isEmpty() ? null : editor.layout.menuBackgrounds.getFirst(), true, (call) -> {
-                        if (call != null) {
-                            editor.history.saveSnapshot();
-                            MenuBackground b = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
-                            editor.layout.menuBackgrounds.forEach(MenuBackground::onDisableOrRemove);
-                            editor.layout.menuBackgrounds.clear();
-                            if (b != null) {
-                                editor.layout.menuBackgrounds.add(b);
-                                b.onOpenScreen();
-                            }
-                        }
-                        Minecraft.getInstance().setScreen(editor);
-                    });
-                    Minecraft.getInstance().setScreen(s);
-                }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("image"));
+        ContextMenu backgroundsMenu = new ContextMenu();
+        menu.addSubMenuEntry("menu_backgrounds", Component.translatable("fancymenu.backgrounds.general.backgrounds"), backgroundsMenu);
+        // The backgrounds list always holds exactly one instance of each background type
+        editor.layout.menuBackgrounds.forEach(background -> {
+            var entry = backgroundsMenu.addSubMenuEntry("menu_background_" + background.builder.getIdentifier(), background.builder.getDisplayName(), background._initConfigMenu(editor));
+            var desc = background.builder.getDescription();
+            if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> Tooltip.of(desc));
+        });
+
+        menu.addSeparatorEntry("separator_after_menu_backgrounds");
 
         menu.addValueCycleEntry("keep_background_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect", editor.layout.preserveBackgroundAspectRatio).addCycleListener(cycle -> {
             editor.history.saveSnapshot();

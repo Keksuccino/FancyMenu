@@ -3,11 +3,12 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -15,9 +16,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
-public class ImageMenuBackground extends MenuBackground {
-
-    private static final DrawableColor BACKGROUND_COLOR = DrawableColor.BLACK;
+public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
 
     public ResourceSupplier<ITexture> textureSupplier;
     public ResourceSupplier<ITexture> fallbackTextureSupplier;
@@ -67,6 +66,11 @@ public class ImageMenuBackground extends MenuBackground {
                 }
             }
         }
+
+    }
+
+    @Override
+    protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
     }
 

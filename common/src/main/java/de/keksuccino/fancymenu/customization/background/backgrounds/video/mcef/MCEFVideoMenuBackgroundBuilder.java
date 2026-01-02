@@ -75,7 +75,7 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
     }
 
     @Override
-    public SerializedMenuBackground serializedBackground(MCEFVideoMenuBackground background) {
+    public SerializedMenuBackground serializeBackground(MCEFVideoMenuBackground background) {
 
         SerializedMenuBackground serialized = new SerializedMenuBackground();
 

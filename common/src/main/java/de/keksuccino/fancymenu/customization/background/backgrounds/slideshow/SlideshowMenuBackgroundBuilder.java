@@ -49,7 +49,7 @@ public class SlideshowMenuBackgroundBuilder extends MenuBackgroundBuilder<Slides
     }
 
     @Override
-    public SerializedMenuBackground serializedBackground(SlideshowMenuBackground background) {
+    public SerializedMenuBackground serializeBackground(SlideshowMenuBackground background) {
 
         SerializedMenuBackground serialized = new SerializedMenuBackground();
 

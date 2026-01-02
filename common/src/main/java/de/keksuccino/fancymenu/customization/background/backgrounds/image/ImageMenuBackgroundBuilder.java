@@ -83,7 +83,7 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
     }
 
     @Override
-    public SerializedMenuBackground serializedBackground(ImageMenuBackground background) {
+    public SerializedMenuBackground serializeBackground(ImageMenuBackground background) {
 
         SerializedMenuBackground serialized = new SerializedMenuBackground();
 

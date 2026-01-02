@@ -309,9 +309,9 @@
   "fancymenu.actions.write_file.edit.target_path": "Target File Path",
   "fancymenu.actions.write_file.edit.target_path.desc": "The path to the file to write to.\nStarts at the root of the Minecraft instance directory.\nUse '.minecraft/' prefix to access the default .minecraft directory.",
   "fancymenu.actions.write_file.edit_value": "Configure Write File Action",
-  "fancymenu.backgrounds.color": "Color [FancyMenu]",
-  "fancymenu.backgrounds.color.desc": "A simple color background.\n\nThis type is PART OF THE BASE MOD, unlike the other similar type you might see in the types list.",
-  "fancymenu.backgrounds.color.hex": "HEX Color",
+  "fancymenu.backgrounds.color": "Color",
+  "fancymenu.backgrounds.color.desc": "A simple color background.",
+  "fancymenu.backgrounds.color.hex": "Color [HEX]",
   "fancymenu.backgrounds.image": "Image",
   "fancymenu.backgrounds.image.configure": "Configure Image Background",
   "fancymenu.backgrounds.image.configure.choose_image.local": "Choose Image",
@@ -2406,5 +2406,9 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Used to display Beta build warnings and other things.",
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft Logo",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms Notification Icons",
-  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text"
+  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text",
+  "fancymenu.backgrounds.general.backgrounds": "Menu Backgrounds",
+  "fancymenu.backgrounds.general.show_background": "Show Background: %s",
+  "fancymenu.backgrounds.panorama.name": "Panorama Name: %s",
+  "fancymenu.backgrounds.panorama.name.none": "NONE"
 }

@@ -16,6 +16,14 @@ public class UIColorTheme {
 
     public DrawableColor menu_bar_bottom_line_color = DrawableColor.of(new Color(93, 97, 100));
 
+    public DrawableColor pip_window_border_color = DrawableColor.of(new Color(43, 43, 43));
+    public DrawableColor pip_window_title_bar_color = DrawableColor.of(new Color(58, 58, 58));
+    public DrawableColor pip_window_body_color = DrawableColor.of(new Color(30, 30, 30));
+    public DrawableColor pip_window_button_color_normal = DrawableColor.of(new Color(74, 74, 74));
+    public DrawableColor pip_window_button_color_hover = DrawableColor.of(new Color(92, 92, 92));
+    public DrawableColor pip_window_title_text_color = DrawableColor.of(new Color(230, 230, 230));
+    public DrawableColor pip_window_button_text_color = DrawableColor.of(new Color(230, 230, 230));
+
     public DrawableColor layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(3, 148, 252));
     public DrawableColor layout_editor_grid_color_normal = DrawableColor.of(new Color(186, 121, 241, 100));
     public DrawableColor layout_editor_grid_color_center = DrawableColor.of(new Color(91, 94, 255, 100));
