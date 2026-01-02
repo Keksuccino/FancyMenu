@@ -17,11 +17,12 @@ public class MenuBackgrounds {
 
     public static void registerAll() {
 
-        MenuBackgroundRegistry.register(IMAGE);
-        MenuBackgroundRegistry.register(VIDEO_MCEF);
-        MenuBackgroundRegistry.register(SLIDESHOW);
-        MenuBackgroundRegistry.register(PANORAMA);
+        // Registering COLOR first is important to be able to use it as fallback for other background types or just to have a filler for backgrounds with transparent parts
         MenuBackgroundRegistry.register(COLOR);
+        MenuBackgroundRegistry.register(PANORAMA);
+        MenuBackgroundRegistry.register(IMAGE);
+        MenuBackgroundRegistry.register(SLIDESHOW);
+        MenuBackgroundRegistry.register(VIDEO_MCEF);
 
     }
 

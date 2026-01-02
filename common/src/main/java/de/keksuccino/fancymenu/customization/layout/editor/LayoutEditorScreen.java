@@ -336,21 +336,25 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 
-		this.layout.menuBackgrounds.forEach(menuBackground -> {
+		this.layout.menuBackgrounds.forEach(background -> {
 
-			RenderSystem.enableBlend();
+			if (background.showBackground.tryGetNonNull()) {
 
-			menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
-			menuBackground.opacity = 1.0F;
-			menuBackground.render(graphics, mouseX, mouseY, partial);
+                RenderSystem.enableBlend();
 
-			//Restore render defaults
-			RenderSystem.colorMask(true, true, true, true);
-			RenderSystem.depthMask(true);
-			RenderSystem.enableCull();
-			RenderSystem.enableDepthTest();
-			RenderSystem.enableBlend();
-			graphics.flush();
+                background.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
+                background.opacity = 1.0F;
+                background._render(graphics, mouseX, mouseY, partial);
+
+                //Restore render defaults
+                RenderSystem.colorMask(true, true, true, true);
+                RenderSystem.depthMask(true);
+                RenderSystem.enableCull();
+                RenderSystem.enableDepthTest();
+                RenderSystem.enableBlend();
+                graphics.flush();
+
+            }
 
 		});
 

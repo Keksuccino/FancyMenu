@@ -4,9 +4,6 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
-import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
-import de.keksuccino.fancymenu.customization.background.MenuBackground;
-import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
@@ -507,42 +504,9 @@ public class LayoutEditorUI {
 
         menu.addSeparatorEntry("separator_after_universal_layout_menu");
 
-        ContextMenu backgroundsMenu = new ContextMenu();
-        menu.addSubMenuEntry("menu_backgrounds", Component.translatable("fancymenu.backgrounds.general.backgrounds"), backgroundsMenu);
-        // The backgrounds list always holds exactly one instance of each background type
-        editor.layout.menuBackgrounds.forEach(background -> {
-            var entry = backgroundsMenu.addSubMenuEntry("menu_background_" + background.builder.getIdentifier(), background.builder.getDisplayName(), background._initConfigMenu(editor));
-            var desc = background.builder.getDescription();
-            if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> Tooltip.of(desc));
-        });
+        buildMenuBackgroundsMenuAndAddTo(menu, editor);
 
         menu.addSeparatorEntry("separator_after_menu_backgrounds");
-
-        menu.addValueCycleEntry("keep_background_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect", editor.layout.preserveBackgroundAspectRatio).addCycleListener(cycle -> {
-            editor.history.saveSnapshot();
-            editor.layout.preserveBackgroundAspectRatio = cycle.getAsBoolean();
-        })).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
-
-        menu.addValueCycleEntry("show_overlay_on_custom_background", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.show_overlay_on_custom_background", editor.layout.showScreenBackgroundOverlayOnCustomBackground).addCycleListener(cycle -> {
-            editor.history.saveSnapshot();
-            editor.layout.showScreenBackgroundOverlayOnCustomBackground = cycle.getAsBoolean();
-        })).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.show_overlay_on_custom_background.desc")));
-
-        menu.addValueCycleEntry("apply_vanilla_background_blur", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.blur_background", editor.layout.applyVanillaBackgroundBlur).addCycleListener(cycle -> {
-            editor.history.saveSnapshot();
-            editor.layout.applyVanillaBackgroundBlur = cycle.getAsBoolean();
-        })).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.blur_background.desc")));
-
-        menu.addClickableEntry("copy_background_identifier", Component.translatable("fancymenu.editor.background_options.copy_background_identifier"), (menu1, entry) -> {
-                    if (!editor.layout.menuBackgrounds.isEmpty()) {
-                        Minecraft.getInstance().keyboardHandler.setClipboard(editor.layout.menuBackgrounds.get(0).getInstanceIdentifier());
-                    } else {
-                        Minecraft.getInstance().keyboardHandler.setClipboard("");
-                    }
-                }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background_options.copy_background_identifier.desc")))
-                .addIsActiveSupplier((menu1, entry) -> !editor.layout.menuBackgrounds.isEmpty());
-
-        menu.addSeparatorEntry("separator_after_keep_background_aspect");
 
         menu.addSubMenuEntry("decoration_overlays", Component.translatable("fancymenu.editor.decoration_overlays"), buildDecorationOverlaysMenu(editor))
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.editor.decoration_overlays.desc")));
@@ -767,6 +731,36 @@ public class LayoutEditorUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("add"));
 
         return menu;
+
+    }
+
+    public static void buildMenuBackgroundsMenuAndAddTo(@NotNull ContextMenu addTo, @NotNull LayoutEditorScreen editor) {
+
+        ContextMenu backgroundsMenu = new ContextMenu();
+        addTo.addSubMenuEntry("menu_backgrounds", Component.translatable("fancymenu.backgrounds.general.backgrounds"), backgroundsMenu);
+        // The backgrounds list always holds exactly one instance of each background type
+        editor.layout.menuBackgrounds.forEach(background -> {
+            var entry = backgroundsMenu.addSubMenuEntry("menu_background_" + background.builder.getIdentifier(), background.builder.getDisplayName(), background._initConfigMenu(editor));
+            var desc = background.builder.getDescription();
+            if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> Tooltip.of(desc));
+        });
+
+        backgroundsMenu.addSeparatorEntry("separator_after_background_types");
+
+        backgroundsMenu.addValueCycleEntry("keep_background_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect", editor.layout.preserveBackgroundAspectRatio).addCycleListener(cycle -> {
+            editor.history.saveSnapshot();
+            editor.layout.preserveBackgroundAspectRatio = cycle.getAsBoolean();
+        })).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
+
+        backgroundsMenu.addValueCycleEntry("show_overlay_on_custom_background", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.show_overlay_on_custom_background", editor.layout.showScreenBackgroundOverlayOnCustomBackground).addCycleListener(cycle -> {
+            editor.history.saveSnapshot();
+            editor.layout.showScreenBackgroundOverlayOnCustomBackground = cycle.getAsBoolean();
+        })).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.show_overlay_on_custom_background.desc")));
+
+        backgroundsMenu.addValueCycleEntry("apply_vanilla_background_blur", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.blur_background", editor.layout.applyVanillaBackgroundBlur).addCycleListener(cycle -> {
+            editor.history.saveSnapshot();
+            editor.layout.applyVanillaBackgroundBlur = cycle.getAsBoolean();
+        })).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.blur_background.desc")));
 
     }
 

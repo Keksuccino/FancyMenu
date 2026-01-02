@@ -7,11 +7,13 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -20,6 +22,8 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import de.keksuccino.fancymenu.customization.layout.Layout;
@@ -84,6 +88,13 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Ren
 
         menu.addSeparatorEntry("separator_after_show_background_toggle");
 
+        menu.addClickableEntry("copy_background_identifier", Component.translatable("fancymenu.editor.background_options.copy_background_identifier"), (menu1, entry) -> {
+                    Minecraft.getInstance().keyboardHandler.setClipboard(this.getInstanceIdentifier());
+                }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background_options.copy_background_identifier.desc")))
+                .addIsActiveSupplier((menu1, entry) -> !editor.layout.menuBackgrounds.isEmpty());
+
+        menu.addSeparatorEntry("separator_after_copy_identifier");
+
         this.initConfigMenu(menu, editor);
 
         return menu;
@@ -92,6 +103,15 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Ren
 
     @Override
     public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
+
+    @ApiStatus.Internal
+    public void _render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (!this.showBackground.tryGetNonNull()) return;
+
+        this.render(graphics, mouseX, mouseY, partial);
+
+    }
 
     /** Gets called every {@link Screen} tick, after {@link Screen#tick()} got called. **/
     public void tick() {

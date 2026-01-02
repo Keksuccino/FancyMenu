@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.Objects;
 
 public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuBackground> {
 
@@ -19,6 +20,16 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
     @Override
     public void deserializeBackground(@NotNull PropertyContainer serializedBackground, @NotNull ImageMenuBackground deserializeTo) {
+
+        // Legacy support for old single-value parallax intensity
+        String parallaxIntensityX = serializedBackground.getValue("parallax_intensity_x");
+        String parallaxIntensityY = serializedBackground.getValue("parallax_intensity_y");
+        if ((parallaxIntensityX == null) || (parallaxIntensityY == null)) {
+            String legacyParallaxIntensity = Objects.requireNonNullElse(serializedBackground.getValue("parallax_intensity"), "0.02");
+            deserializeTo.parallaxIntensityXString.set(legacyParallaxIntensity);
+            deserializeTo.parallaxIntensityYString.set(legacyParallaxIntensity);
+        }
+
     }
 
     @Override

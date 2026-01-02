@@ -547,22 +547,26 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		if (!this.shouldCustomize(screen)) return;
 
-		this.layoutBase.menuBackgrounds.forEach(menuBackground -> {
+		this.layoutBase.menuBackgrounds.forEach(background -> {
 
-			RenderSystem.enableBlend();
+			if (background.showBackground.tryGetNonNull()) {
 
-			menuBackground.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
-			menuBackground.opacity = this.backgroundOpacity;
-			menuBackground.render(graphics, mouseX, mouseY, partial);
-			menuBackground.opacity = 1.0F;
+                RenderSystem.enableBlend();
 
-			//Restore render defaults
-			RenderSystem.colorMask(true, true, true, true);
-			RenderSystem.depthMask(true);
-			RenderSystem.enableCull();
-			RenderSystem.enableDepthTest();
-			RenderSystem.enableBlend();
-			graphics.flush();
+                background.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
+                background.opacity = this.backgroundOpacity;
+                background._render(graphics, mouseX, mouseY, partial);
+                background.opacity = 1.0F;
+
+                //Restore render defaults
+                RenderSystem.colorMask(true, true, true, true);
+                RenderSystem.depthMask(true);
+                RenderSystem.enableCull();
+                RenderSystem.enableDepthTest();
+                RenderSystem.enableBlend();
+                graphics.flush();
+
+            }
 
 		});
 

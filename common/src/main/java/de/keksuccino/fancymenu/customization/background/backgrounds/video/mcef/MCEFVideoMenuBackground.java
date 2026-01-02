@@ -5,16 +5,28 @@ import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.SerializationHelper;
+import de.keksuccino.fancymenu.util.file.type.FileType;
+import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
+import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.Resource;
+import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,6 +34,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,30 +43,26 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMenuBackground {
+public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackground> implements IVideoMenuBackground {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static final DrawableColor MISSING_MCEF_COLOR = DrawableColor.of(Color.RED);
 
-    @Nullable
-    public ResourceSource rawVideoUrlSource = null;
-    public boolean loop = false;
+    @SuppressWarnings("unchecked")
+    public final Property<ResourceSource> rawVideoUrlSource = putProperty(Property.resourceSourceProperty("source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null, (FileTypeGroup<FileType<Resource>>)(FileTypeGroup<?>)FileTypeGroups.VIDEO_TYPES, FileMediaType.VIDEO));
+    public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
     /** Value between 0.0 and 1.0 **/
-    public float volume = 1.0F;
-    @NotNull
-    public SoundSource soundSource = SoundSource.MASTER;
-    public boolean parallaxEnabled = false;
+    public final Property<Float> volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_mcef.volume"))
+            .setValueSetProcessor(value -> Math.max(0.0F, Math.min(1.0F, value)));
+    public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_mcef.sound_channel"));
+    public final Property<Boolean> parallaxEnabled = putProperty(Property.booleanProperty("parallax", false, "fancymenu.backgrounds.image.configure.parallax"));
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    @NotNull
-    public String parallaxIntensityXString = "0.02";
+    public final Property.StringProperty parallaxIntensityXString = putProperty(Property.stringProperty("parallax_intensity_x", "0.02", false, true, "fancymenu.backgrounds.image.configure.parallax_intensity_x"));
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    @NotNull
-    public String parallaxIntensityYString = "0.02";
-    public float lastParallaxIntensityX = -10000.0F;
-    public float lastParallaxIntensityY = -10000.0F;
+    public final Property.StringProperty parallaxIntensityYString = putProperty(Property.stringProperty("parallax_intensity_y", "0.02", false, true, "fancymenu.backgrounds.image.configure.parallax_intensity_y"));
     /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
-    public boolean invertParallax = false;
+    public final Property<Boolean> invertParallax = putProperty(Property.booleanProperty("invert_parallax", false, "fancymenu.backgrounds.image.configure.invert_parallax"));
 
     protected volatile boolean initialized = false;
     @Nullable
@@ -70,6 +80,8 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     protected Boolean lastPausedState = null;
     protected volatile long lastRenderTickTime = -1L;
     protected boolean pausedBySystem = false;
+    protected float lastParallaxIntensityX = -10000.0F;
+    protected float lastParallaxIntensityY = -10000.0F;
     protected final AtomicReference<Float> cachedDuration = new AtomicReference<>(0F);
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
     // The field is currently unused, but the scheduler is used, so don't delete this
@@ -92,10 +104,49 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     }
 
     @Override
+    protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
+
+        this.rawVideoUrlSource.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> {
+                    if (this.rawVideoUrlSource.get() == null) {
+                        return Tooltip.of(Component.translatable("fancymenu.backgrounds.video_mcef.configure.no_video"));
+                    }
+                    return null;
+                });
+
+        menu.addSeparatorEntry("separator_after_video_source");
+
+        this.loop.buildContextMenuEntryAndAddTo(menu, this);
+        this.volume.buildContextMenuEntryAndAddTo(menu, this);
+
+        List<SoundSource> soundSources = Arrays.asList(SoundSource.values());
+        this.addCycleContextMenuEntryTo(menu, "sound_source", soundSources, MCEFVideoMenuBackground.class, MCEFVideoMenuBackground::getSoundSourceOrDefault, (background, source) -> {
+            if (source != null) {
+                background.soundSource.set(source.getName());
+            }
+        }, (menu1, entry, switcherValue) -> {
+            Component name = Component.translatable("soundCategory." + switcherValue.getName())
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
+            return Component.translatable("fancymenu.elements.video_mcef.sound_channel", name);
+        });
+
+        menu.addSeparatorEntry("separator_before_parallax");
+
+        this.parallaxEnabled.buildContextMenuEntryAndAddTo(menu, this);
+        this.parallaxIntensityXString.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> Tooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")));
+        this.parallaxIntensityYString.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> Tooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")));
+        this.invertParallax.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> Tooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")));
+
+    }
+
+    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.lastParallaxIntensityX = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityXString));
-        this.lastParallaxIntensityY = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityYString));
+        this.lastParallaxIntensityX = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.02F, this.parallaxIntensityXString.getString());
+        this.lastParallaxIntensityY = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.02F, this.parallaxIntensityYString.getString());
 
         if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
             graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), MISSING_MCEF_COLOR.getColorInt());
@@ -113,7 +164,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         int w = getScreenWidth();
         int h = getScreenHeight();
 
-        if (parallaxEnabled) {
+        if (this.parallaxEnabled.tryGetNonNull()) {
             // Reduce the expansion amount for parallax
             w = (int)(getScreenWidth() * (1.0F + lastParallaxIntensityX));
             h = (int)(getScreenHeight() * (1.0F + lastParallaxIntensityY));
@@ -145,14 +196,15 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
 
         this.updateVolume();
         if ((this.lastCachedActualVolume == -11000F) || (this.cachedActualVolume != this.lastCachedActualVolume)) {
-            this.setVolume(this.volume, true);
+            this.setVolume(this.volume.tryGetNonNull(), true);
         }
         this.lastCachedActualVolume = this.cachedActualVolume;
 
-        if ((this.lastLoop == null) || !Objects.equals(this.loop, this.lastLoop)) {
-            this.videoPlayer.setLooping(this.loop);
+        boolean loop = this.loop.tryGetNonNull();
+        if ((this.lastLoop == null) || !Objects.equals(loop, this.lastLoop)) {
+            this.videoPlayer.setLooping(loop);
         }
-        this.lastLoop = this.loop;
+        this.lastLoop = loop;
 
         // Update size and position of player if needed
         if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y) || (this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {
@@ -167,8 +219,9 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         boolean pausedState = this._isPaused();
 
         String finalVideoUrl = null;
-        if (this.rawVideoUrlSource != null) {
-            finalVideoUrl = PlaceholderParser.replacePlaceholders(this.rawVideoUrlSource.getSourceWithoutPrefix());
+        ResourceSource rawSource = this.rawVideoUrlSource.get();
+        if (rawSource != null) {
+            finalVideoUrl = PlaceholderParser.replacePlaceholders(rawSource.getSourceWithoutPrefix());
         }
         // Check if the video URL has changed since last time
         boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
@@ -216,7 +269,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
 
     protected float[] calculateParallaxOffset(int mouseX, int mouseY) {
 
-        if (!parallaxEnabled) {
+        if (!this.parallaxEnabled.tryGetNonNull()) {
             return new float[]{0, 0};
         }
 
@@ -225,7 +278,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         float mouseYPercent = (2.0f * mouseY / getScreenHeight()) - 1.0f;
 
         // Apply inversion if enabled
-        float directionMultiplier = invertParallax ? 1.0f : -1.0f;
+        float directionMultiplier = this.invertParallax.tryGetNonNull() ? 1.0f : -1.0f;
 
         // Calculate offset based on screen dimensions and center-adjusted mouse position
         float xOffset = directionMultiplier * lastParallaxIntensityX * mouseXPercent * getScreenWidth() * 0.5f;
@@ -276,12 +329,12 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
      */
     protected void setVolume(float volume, boolean updatePlayer) {
         volume = Math.max(0.0F, Math.min(1.0F, volume));
-        this.volume = volume;
         if ((this.videoPlayer != null)) {
-            float actualVolume = this.volume;
+            float actualVolume = volume;
             float masterVolume = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER);
-            float soundSourceVolume = Minecraft.getInstance().options.getSoundSourceVolume(this.soundSource);
-            if (this.soundSource != SoundSource.MASTER) {
+            SoundSource resolvedSoundSource = this.getSoundSourceOrDefault();
+            float soundSourceVolume = Minecraft.getInstance().options.getSoundSourceVolume(resolvedSoundSource);
+            if (resolvedSoundSource != SoundSource.MASTER) {
                 soundSourceVolume *= masterVolume;
             }
             actualVolume *= soundSourceVolume;
@@ -294,7 +347,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     }
 
     protected void updateVolume() {
-        this.setVolume(this.volume, false);
+        this.setVolume(this.volume.tryGetNonNull(), false);
     }
 
     /**
@@ -374,6 +427,24 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         if (!MCEFVideoManager.initialized) return false;
         this.videoManager = MCEFVideoManager.getInstance();
         return (this.videoManager != null);
+    }
+
+    @NotNull
+    protected SoundSource getSoundSourceOrDefault() {
+        String name = this.soundSource.get();
+        if (name != null) {
+            SoundSource source = getSoundSourceByName(name);
+            if (source != null) return source;
+        }
+        return SoundSource.MASTER;
+    }
+
+    @Nullable
+    protected static SoundSource getSoundSourceByName(@NotNull String name) {
+        for (SoundSource source : SoundSource.values()) {
+            if (source.getName().equals(name)) return source;
+        }
+        return null;
     }
 
 }
