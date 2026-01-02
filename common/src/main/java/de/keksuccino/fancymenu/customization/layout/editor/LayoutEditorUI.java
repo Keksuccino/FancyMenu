@@ -509,7 +509,8 @@ public class LayoutEditorUI {
         menu.addSeparatorEntry("separator_after_menu_backgrounds");
 
         menu.addSubMenuEntry("decoration_overlays", Component.translatable("fancymenu.editor.decoration_overlays"), buildDecorationOverlaysMenu(editor))
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.editor.decoration_overlays.desc")));
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.editor.decoration_overlays.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("decoration_overlay"));
 
         menu.addSeparatorEntry("separator_after_decoration_overlays");
 
@@ -737,7 +738,8 @@ public class LayoutEditorUI {
     public static void buildMenuBackgroundsMenuAndAddTo(@NotNull ContextMenu addTo, @NotNull LayoutEditorScreen editor) {
 
         ContextMenu backgroundsMenu = new ContextMenu();
-        addTo.addSubMenuEntry("menu_backgrounds", Component.translatable("fancymenu.backgrounds.general.backgrounds"), backgroundsMenu);
+        addTo.addSubMenuEntry("menu_backgrounds", Component.translatable("fancymenu.backgrounds.general.backgrounds"), backgroundsMenu)
+                .setIcon(ContextMenu.IconFactory.getIcon("image"));
         // The backgrounds list always holds exactly one instance of each background type
         editor.layout.menuBackgrounds.forEach(background -> {
             var entry = backgroundsMenu.addSubMenuEntry("menu_background_" + background.builder.getIdentifier(), background.builder.getDisplayName(), background._initConfigMenu(editor));
