@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.Blaze3D;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseMoveEvent;
@@ -14,7 +13,6 @@ import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
-import org.apache.logging.log4j.LogManager;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,13 +28,8 @@ public class MixinMouseHandler {
     @Shadow private double ypos;
     @Shadow private double accumulatedDX;
     @Shadow private double accumulatedDY;
-    @Shadow private int fakeRightMouse;
     @Shadow private int activeButton;
 
-    @Shadow
-    private int clickDepth;
-    @Shadow
-    private double mousePressedTime;
     @Unique private final Minecraft mc_FancyMenu = Minecraft.getInstance();
 
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
@@ -135,12 +128,10 @@ public class MixinMouseHandler {
         double deltaY = this.accumulatedDY * guiHeight / screenHeight;
 
         if ("mouseMoved event handler".equals(errorDesc)) {
-            LogManager.getLogger().info("################### MOUSE MOVED");
             EventHandler.INSTANCE.postEvent(new ScreenMouseMoveEvent(this.mc_FancyMenu.screen, mouseX, mouseY, deltaX, deltaY));
             if (MCEFUtil.isMCEFLoaded()) BrowserHandler.mouseMoved(mouseX, mouseY);
             PiPWindowHandler.mouseMoved(mouseX, mouseY);
         } else if ("mouseDragged event handler".equals(errorDesc)) {
-            LogManager.getLogger().info("################### MOUSE DRAGGED");
             if (PiPWindowHandler.mouseDragged(mouseX, mouseY, this.activeButton, deltaX, deltaY)) return;
         }
 

@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -110,16 +111,21 @@ public class CustomizationOverlay {
 			ModValidator.renderInvalidError(e.getGraphics());
 		}
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName()) && (overlayMenuBar != null) && (debugOverlay != null) && isOverlayVisible(e.getScreen())) {
-			if (FancyMenu.getOptions().showDebugOverlay.getValue()) {
+
+            PiPWindowHandler.renderAll(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+
+            if (FancyMenu.getOptions().showDebugOverlay.getValue()) {
 				debugOverlay.allowRender = true;
 				debugOverlay.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 				debugOverlay.allowRender = false;
 			}
+
 			if (FancyMenu.getOptions().showCustomizationOverlay.getValue()) {
 				overlayMenuBar.allowRender = true;
 				overlayMenuBar.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 				overlayMenuBar.allowRender = false;
 			}
+
 		}
 	}
 

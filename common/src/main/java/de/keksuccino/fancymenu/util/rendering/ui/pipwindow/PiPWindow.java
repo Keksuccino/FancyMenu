@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import net.minecraft.client.Minecraft;
@@ -12,8 +13,11 @@ import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
+import net.minecraft.util.FormattedCharSequence;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -222,7 +226,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
 
         int iconSize = Math.min(this.titleBarHeight - this.buttonPadding * 2, this.titleBarHeight);
-        int textStartX = titleBarX + this.buttonPadding;
+        int textStartX = titleBarX + this.buttonPadding + 2;
         if (this.icon != null && iconSize > 0) {
             int iconX = titleBarX + this.buttonPadding;
             int iconY = titleBarY + (this.titleBarHeight - iconSize) / 2;
@@ -235,11 +239,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             titleRightLimit = closeX - this.buttonPadding;
         }
         int maxTitleWidth = Math.max(0, titleRightLimit - textStartX);
-        String titleText = this.title.getString();
-        String clippedTitle = font.plainSubstrByWidth(titleText, maxTitleWidth);
-        if (!clippedTitle.isEmpty()) {
-            graphics.drawString(font, clippedTitle, textStartX, titleCenterY, theme.pip_window_title_text_color.getColorInt(), false);
-        }
+        var split = font.split(this.title, maxTitleWidth);
+        FormattedCharSequence titleText = !split.isEmpty() ? split.get(0) : Component.empty().getVisualOrderText();
+        graphics.drawString(font, titleText, textStartX, titleCenterY, theme.pip_window_title_text_color.getColorInt(), false);
 
         if (titleBarHeight > 0) {
             int bottom = titleBarY + titleBarHeight;
@@ -256,7 +258,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             int iconSize = Math.max(1, Math.min(this.buttonSize - 4, DEFAULT_ICON_TEXTURE_SIZE));
             int iconX = x + (this.buttonSize - iconSize) / 2;
             int iconY = y + (this.buttonSize - iconSize) / 2;
+            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
             graphics.blit(icon, iconX, iconY, 0, 0, iconSize, iconSize, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
+            RenderingUtils.resetShaderColor(graphics);
         } else {
             int textX = x + (this.buttonSize - this.minecraft.font.width(label)) / 2;
             int textY = y + (this.buttonSize - this.minecraft.font.lineHeight) / 2;

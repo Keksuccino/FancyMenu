@@ -5,7 +5,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.events.screen.AfterScreenRenderingEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
@@ -20,7 +19,6 @@ public class MixinFabricGameRenderer {
         RenderingUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
         original.call(instance, graphics, mouseX, mouseY, partial);
         EventHandler.INSTANCE.postEvent(new AfterScreenRenderingEvent(instance, graphics, mouseX, mouseY, partial));
-        PiPWindowHandler.renderAll(graphics, mouseX, mouseY, partial);
         RenderingUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
     }
 
