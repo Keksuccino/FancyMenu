@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRender
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
@@ -22,6 +23,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
+import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import org.apache.logging.log4j.LogManager;
@@ -42,11 +44,18 @@ import java.util.List;
 public abstract class MixinScreen implements CustomizableScreen {
 
 	@Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
+    @Unique private static final ResourceLocation DIRT_TEXTURE_FANCYMENU = ResourceLocation.withDefaultNamespace("textures/block/dirt.png");
 
 	@Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
 	@Unique private boolean nextFocusPath_called_FancyMenu = false;
 
 	@Shadow @Final private List<GuiEventListener> children;
+
+    @Shadow
+    public int width;
+
+    @Shadow
+    public int height;
 
     @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
     private void wrap_render_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
@@ -86,6 +95,20 @@ public abstract class MixinScreen implements CustomizableScreen {
             panorama.render(graphics, 0, 0, partial);
             panorama.opacity = previousOpacity;
             info.cancel();
+        }
+    }
+
+    @WrapOperation(method = "renderPanorama", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;IIFF)V"))
+    private void wrap_panorama_rendering_in_renderPanorama_FancyMenu(PanoramaRenderer instance, GuiGraphics graphics, int width, int height, float fade, float partialTick, Operation<Void> original) {
+        if (PiPWindowHandler.isScreenRenderActive()) {
+            // This forces a normal background texture for PiP window screens
+            graphics.setColor(0.5F, 0.5F, 0.5F, 1.0F);
+            RenderSystem.enableBlend();
+            Screen.renderMenuBackgroundTexture(graphics, DIRT_TEXTURE_FANCYMENU, 0, 0, 0.0F, 0.0F, this.width, this.height);
+            RenderSystem.disableBlend();
+            RenderingUtils.resetShaderColor(graphics);
+        } else {
+            original.call(instance, graphics, width, height, fade, partialTick);
         }
     }
 
