@@ -15,6 +15,10 @@ public class PiPWindowHandler {
     @Nullable
     private static PiPWindow activePointerWindow;
     private static int activePointerButton = -1;
+    private static boolean windowClickedThisTick = false;
+    @Nullable
+    private static PiPWindow lastClickedWindowThisTick;
+    private static boolean isRendering = false;
 
     public static void openWindow(@Nonnull PiPWindow window) {
         if (WINDOWS.contains(window)) {
@@ -80,12 +84,19 @@ public class PiPWindowHandler {
     }
 
     public static void renderAll(@Nonnull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        for (PiPWindow window : new ArrayList<>(WINDOWS)) {
-            window.render(graphics, mouseX, mouseY, partial);
+        isRendering = true;
+        try {
+            for (PiPWindow window : new ArrayList<>(WINDOWS)) {
+                window.render(graphics, mouseX, mouseY, partial);
+            }
+        } finally {
+            isRendering = false;
         }
     }
 
     public static void tickAll() {
+        windowClickedThisTick = false;
+        lastClickedWindowThisTick = null;
         for (PiPWindow window : new ArrayList<>(WINDOWS)) {
             window.tick();
         }
@@ -107,6 +118,8 @@ public class PiPWindowHandler {
             if (!window.isMouseOver(mouseX, mouseY)) {
                 continue;
             }
+            windowClickedThisTick = true;
+            lastClickedWindowThisTick = window;
             if (window.isInputLocked()) {
                 bringToFront(window);
                 focusedWindow = window;
@@ -132,6 +145,19 @@ public class PiPWindowHandler {
         activePointerWindow = null;
         activePointerButton = -1;
         return false;
+    }
+
+    public static boolean wasWindowClickedThisTick() {
+        return windowClickedThisTick;
+    }
+
+    @Nullable
+    public static PiPWindow getLastClickedWindowThisTick() {
+        return lastClickedWindowThisTick;
+    }
+
+    public static boolean isRendering() {
+        return isRendering;
     }
 
     public static boolean mouseReleased(double mouseX, double mouseY, int button) {

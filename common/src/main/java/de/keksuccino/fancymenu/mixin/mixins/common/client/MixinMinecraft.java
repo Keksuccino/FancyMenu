@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
@@ -186,6 +187,14 @@ public class MixinMinecraft {
 
 	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
 	private void before_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
+
+        // This routes setScreen() calls inside PipWindows through the actual window instead of normal MC
+        PiPWindow pip = PiPWindowHandler.getLastClickedWindowThisTick();
+        if (pip != null) {
+            pip.setScreen(screen);
+            info.cancel();
+            return;
+        }
 
 		// This is just for giving FM the correct screen identifiers for all possible scenarios
 		if ((screen == null) && (this.level == null)) {

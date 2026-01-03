@@ -86,6 +86,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private int lastBodyWidth = -1;
     private int lastBodyHeight = -1;
+    private boolean screenRendering = false;
 
     public PiPWindow(@Nonnull Component title, int x, int y, int width, int height) {
         this(title, x, y, width, height, null);
@@ -161,7 +162,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         graphics.enableScissor(bodyX, bodyY, bodyX + bodyWidth, bodyY + bodyHeight);
         graphics.pose().pushPose();
         graphics.pose().translate(bodyX, bodyY, 0);
-        this.screen.renderWithTooltip(graphics, localMouseX, localMouseY, partial);
+        this.screenRendering = true;
+        try {
+            this.screen.renderWithTooltip(graphics, localMouseX, localMouseY, partial);
+        } finally {
+            this.screenRendering = false;
+        }
         graphics.pose().popPose();
         graphics.disableScissor();
     }
@@ -273,6 +279,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     public boolean isVisible() {
         return this.visible;
+    }
+
+    public boolean isScreenRendering() {
+        return this.screenRendering;
     }
 
     public void setResizable(boolean resizable) {
