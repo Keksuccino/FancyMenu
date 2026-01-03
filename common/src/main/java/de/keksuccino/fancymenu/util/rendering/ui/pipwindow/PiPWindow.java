@@ -84,8 +84,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     @Nullable
     private Runnable closeCallback;
 
-    private int lastBodyWidth = -1;
-    private int lastBodyHeight = -1;
+    private int lastScreenWidth = -1;
+    private int lastScreenHeight = -1;
     private boolean screenRendering = false;
 
     public PiPWindow(@Nonnull Component title, int x, int y, int width, int height) {
@@ -148,6 +148,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return;
         }
 
+        resizeScreenIfNeeded();
+
         int bodyWidth = getBodyWidth();
         int bodyHeight = getBodyHeight();
         if (bodyWidth <= 0 || bodyHeight <= 0) {
@@ -156,8 +158,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
         int bodyX = getBodyX();
         int bodyY = getBodyY();
-        int localMouseX = (int) Math.floor(mouseX - bodyX);
-        int localMouseY = (int) Math.floor(mouseY - bodyY);
+        double renderScale = getScreenRenderScaleFactor();
+        double inputScale = renderScale <= 0.0 ? 1.0 : 1.0 / renderScale;
+        int localMouseX = (int) Math.floor((mouseX - bodyX) * inputScale);
+        int localMouseY = (int) Math.floor((mouseY - bodyY) * inputScale);
         if (!PiPWindowHandler.isWindowFocused(this)) {
             localMouseX = -100000;
             localMouseY = -100000;
@@ -166,7 +170,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         graphics.enableScissor(bodyX, bodyY, bodyX + bodyWidth, bodyY + bodyHeight);
         graphics.pose().pushPose();
         graphics.pose().translate(bodyX, bodyY, 0);
-        PiPWindowHandler.beginScreenRender(this);
+        if (renderScale != 1.0) {
+            graphics.pose().scale((float) renderScale, (float) renderScale, 1.0F);
+        }
+        PiPWindowHandler.beginScreenRender(this, renderScale);
         this.screenRendering = true;
         try {
             this.screen.renderWithTooltip(graphics, localMouseX, localMouseY, partial);
@@ -251,9 +258,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
         this.screen = screen;
         if (this.screen != null) {
-            this.screen.init(this.minecraft, getBodyWidth(), getBodyHeight());
-            this.lastBodyWidth = getBodyWidth();
-            this.lastBodyHeight = getBodyHeight();
+            int screenWidth = getScreenWidth();
+            int screenHeight = getScreenHeight();
+            this.screen.init(this.minecraft, screenWidth, screenHeight);
+            this.lastScreenWidth = screenWidth;
+            this.lastScreenHeight = screenHeight;
         }
     }
 
@@ -599,7 +608,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
 
         if (this.screen != null) {
-            return this.screen.mouseDragged(toScreenMouseX(mouseX), toScreenMouseY(mouseY), button, dragX, dragY);
+            double inputScale = getScreenInputScaleFactor();
+            return this.screen.mouseDragged(toScreenMouseX(mouseX), toScreenMouseY(mouseY), button, dragX * inputScale, dragY * inputScale);
         }
 
         return false;
@@ -819,11 +829,77 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private double toScreenMouseX(double mouseX) {
-        return mouseX - getBodyX();
+        return (mouseX - getBodyX()) * getScreenInputScaleFactor();
     }
 
     private double toScreenMouseY(double mouseY) {
-        return mouseY - getBodyY();
+        return (mouseY - getBodyY()) * getScreenInputScaleFactor();
+    }
+
+    private int getScreenWidth() {
+        return getScaledScreenSize(getBodyWidth());
+    }
+
+    private int getScreenHeight() {
+        return getScaledScreenSize(getBodyHeight());
+    }
+
+    private int getScaledScreenSize(int bodySize) {
+        double mainScale = getMainGuiScale();
+        double embeddedScale = getEmbeddedGuiScale();
+        int framebufferSize = Math.max(1, (int) Math.round(bodySize * mainScale));
+        int scaledSize = (int) ((double) framebufferSize / embeddedScale);
+        if ((double) framebufferSize / embeddedScale > (double) scaledSize) {
+            scaledSize++;
+        }
+        return Math.max(1, scaledSize);
+    }
+
+    private double getScreenRenderScaleFactor() {
+        double mainScale = getMainGuiScale();
+        if (mainScale <= 0.0) {
+            return 1.0;
+        }
+        return getEmbeddedGuiScale() / mainScale;
+    }
+
+    private double getScreenInputScaleFactor() {
+        double renderScale = getScreenRenderScaleFactor();
+        if (renderScale <= 0.0) {
+            return 1.0;
+        }
+        return 1.0 / renderScale;
+    }
+
+    private double getEmbeddedGuiScale() {
+        int bodyWidth = getBodyWidth();
+        int bodyHeight = getBodyHeight();
+        int framebufferWidth = Math.max(1, (int) Math.round(bodyWidth * getMainGuiScale()));
+        int framebufferHeight = Math.max(1, (int) Math.round(bodyHeight * getMainGuiScale()));
+        int guiScaleSetting = this.minecraft.options.guiScale().get();
+        int scale = calculateGuiScale(guiScaleSetting, this.minecraft.isEnforceUnicode(), framebufferWidth, framebufferHeight);
+        return Math.max(1, scale);
+    }
+
+    private double getMainGuiScale() {
+        return this.minecraft.getWindow().getGuiScale();
+    }
+
+    private int calculateGuiScale(int guiScaleSetting, boolean forceUnicode, int framebufferWidth, int framebufferHeight) {
+        int scale = 1;
+        while (scale != guiScaleSetting
+                && scale < framebufferWidth
+                && scale < framebufferHeight
+                && framebufferWidth / (scale + 1) >= 320
+                && framebufferHeight / (scale + 1) >= 240) {
+            scale++;
+        }
+
+        if (forceUnicode && scale % 2 != 0) {
+            scale++;
+        }
+
+        return scale;
     }
 
     private boolean isPointInArea(double mouseX, double mouseY, int areaX, int areaY, int areaWidth, int areaHeight) {
@@ -838,12 +914,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (this.screen == null) {
             return;
         }
-        int bodyWidth = getBodyWidth();
-        int bodyHeight = getBodyHeight();
-        if (bodyWidth != this.lastBodyWidth || bodyHeight != this.lastBodyHeight) {
-            this.lastBodyWidth = bodyWidth;
-            this.lastBodyHeight = bodyHeight;
-            this.screen.resize(this.minecraft, bodyWidth, bodyHeight);
+        int screenWidth = getScreenWidth();
+        int screenHeight = getScreenHeight();
+        if (screenWidth != this.lastScreenWidth || screenHeight != this.lastScreenHeight) {
+            this.lastScreenWidth = screenWidth;
+            this.lastScreenHeight = screenHeight;
+            this.screen.resize(this.minecraft, screenWidth, screenHeight);
         }
     }
 }

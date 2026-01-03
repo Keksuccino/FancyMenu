@@ -29,8 +29,15 @@ public class MixinGuiGraphics {
         }
         int offsetX = PiPWindowHandler.getActiveScreenRenderOffsetX();
         int offsetY = PiPWindowHandler.getActiveScreenRenderOffsetY();
-        args.set(0, ((int) args.get(0)) + offsetX);
-        args.set(1, ((int) args.get(1)) + offsetY);
+        double scale = PiPWindowHandler.getActiveScreenRenderScaleFactor();
+        int minX = (int) Math.floor(((int) args.get(0)) * scale + offsetX);
+        int minY = (int) Math.floor(((int) args.get(1)) * scale + offsetY);
+        int width = (int) Math.ceil(((int) args.get(2)) * scale);
+        int height = (int) Math.ceil(((int) args.get(3)) * scale);
+        args.set(0, minX);
+        args.set(1, minY);
+        args.set(2, width);
+        args.set(3, height);
     }
 
     @ModifyArgs(method = "containsPointInScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics$ScissorStack;containsPoint(II)Z"))
@@ -40,8 +47,9 @@ public class MixinGuiGraphics {
         }
         int offsetX = PiPWindowHandler.getActiveScreenRenderOffsetX();
         int offsetY = PiPWindowHandler.getActiveScreenRenderOffsetY();
-        args.set(0, ((int) args.get(0)) + offsetX);
-        args.set(1, ((int) args.get(1)) + offsetY);
+        double scale = PiPWindowHandler.getActiveScreenRenderScaleFactor();
+        args.set(0, (int) Math.round(((int) args.get(0)) * scale + offsetX));
+        args.set(1, (int) Math.round(((int) args.get(1)) * scale + offsetY));
     }
 
 }

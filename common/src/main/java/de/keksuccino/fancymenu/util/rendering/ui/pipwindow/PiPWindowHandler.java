@@ -21,6 +21,7 @@ public class PiPWindowHandler {
     private static boolean isRendering = false;
     @Nullable
     private static PiPWindow activeScreenRenderWindow;
+    private static double activeScreenRenderScaleFactor = 1.0;
 
     public static void openWindow(@Nonnull PiPWindow window) {
         if (WINDOWS.contains(window)) {
@@ -167,13 +168,15 @@ public class PiPWindowHandler {
         return isRendering;
     }
 
-    public static void beginScreenRender(@Nonnull PiPWindow window) {
+    public static void beginScreenRender(@Nonnull PiPWindow window, double scaleFactor) {
         activeScreenRenderWindow = window;
+        activeScreenRenderScaleFactor = scaleFactor;
     }
 
     public static void endScreenRender(@Nonnull PiPWindow window) {
         if (activeScreenRenderWindow == window) {
             activeScreenRenderWindow = null;
+            activeScreenRenderScaleFactor = 1.0;
         }
     }
 
@@ -183,6 +186,10 @@ public class PiPWindowHandler {
 
     public static int getActiveScreenRenderOffsetY() {
         return activeScreenRenderWindow != null ? activeScreenRenderWindow.getBodyY() : 0;
+    }
+
+    public static double getActiveScreenRenderScaleFactor() {
+        return activeScreenRenderWindow != null ? activeScreenRenderScaleFactor : 1.0;
     }
 
     public static boolean isScreenRenderActive() {
