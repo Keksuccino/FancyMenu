@@ -79,6 +79,12 @@ public class PiPWindowHandler {
         return !WINDOWS.isEmpty();
     }
 
+    public static void refreshAllScreens() {
+        for (PiPWindow window : new ArrayList<>(WINDOWS)) {
+            window.refreshScreen();
+        }
+    }
+
     public static void bringToFront(@Nonnull PiPWindow window) {
         if (WINDOWS.remove(window)) {
             WINDOWS.add(window);

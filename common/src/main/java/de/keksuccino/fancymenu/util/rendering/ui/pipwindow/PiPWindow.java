@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -29,6 +30,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     public static final int DEFAULT_MIN_WIDTH = 120;
     public static final int DEFAULT_MIN_HEIGHT = 80;
     public static final int DEFAULT_RESIZE_MARGIN = 4;
+    private static final int DEFAULT_ICON_TEXTURE_SIZE = 8;
+    private static final ResourceLocation DEFAULT_CLOSE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_close.png");
+    private static final ResourceLocation DEFAULT_MAXIMIZE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_maximize.png");
+    private static final ResourceLocation DEFAULT_NORMALIZE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_restore.png");
 
     private final Minecraft minecraft = Minecraft.getInstance();
     private final List<GuiEventListener> children = new ArrayList<>();
@@ -51,6 +56,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private int resizeMargin = DEFAULT_RESIZE_MARGIN;
     private int buttonSize = DEFAULT_BUTTON_SIZE;
     private int buttonPadding = DEFAULT_BUTTON_PADDING;
+    @Nullable
+    private ResourceLocation closeButtonIcon = DEFAULT_CLOSE_BUTTON_ICON;
+    @Nullable
+    private ResourceLocation maximizeButtonIcon = DEFAULT_MAXIMIZE_BUTTON_ICON;
+    @Nullable
+    private ResourceLocation normalizeButtonIcon = DEFAULT_NORMALIZE_BUTTON_ICON;
 
     private boolean visible = true;
     private boolean resizable = true;
@@ -116,6 +127,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         renderWindowBackground(graphics);
         renderBodyScreen(graphics, mouseX, mouseY, partial);
         renderWindowForeground(graphics, mouseX, mouseY);
+        updateResizeCursor(mouseX, mouseY);
 
         RenderingUtils.setDepthTestLocked(false);
         RenderSystem.enableDepthTest();
@@ -202,11 +214,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         int maximizeX = getMaximizeButtonX();
 
         if (this.maximizable) {
-            renderButton(graphics, theme, maximizeX, buttonY, mouseX, mouseY, getMaximizeButtonLabel());
+            renderButton(graphics, theme, maximizeX, buttonY, mouseX, mouseY, getActiveMaximizeButtonIcon(), getMaximizeButtonLabel());
         }
 
         if (this.closable) {
-            renderButton(graphics, theme, closeX, buttonY, mouseX, mouseY, "X");
+            renderButton(graphics, theme, closeX, buttonY, mouseX, mouseY, this.closeButtonIcon, "X");
         }
 
         int iconSize = Math.min(this.titleBarHeight - this.buttonPadding * 2, this.titleBarHeight);
@@ -235,14 +247,21 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    private void renderButton(@Nonnull GuiGraphics graphics, @Nonnull UIColorTheme theme, int x, int y, int mouseX, int mouseY, @Nonnull String label) {
+    private void renderButton(@Nonnull GuiGraphics graphics, @Nonnull UIColorTheme theme, int x, int y, int mouseX, int mouseY, @Nullable ResourceLocation icon, @Nonnull String label) {
         int color = isPointInArea(mouseX, mouseY, x, y, this.buttonSize, this.buttonSize)
                 ? theme.pip_window_button_color_hover.getColorInt()
                 : theme.pip_window_button_color_normal.getColorInt();
         graphics.fill(x, y, x + this.buttonSize, y + this.buttonSize, color);
-        int textX = x + (this.buttonSize - this.minecraft.font.width(label)) / 2;
-        int textY = y + (this.buttonSize - this.minecraft.font.lineHeight) / 2;
-        graphics.drawString(this.minecraft.font, label, textX, textY, theme.pip_window_button_text_color.getColorInt(), false);
+        if (icon != null) {
+            int iconSize = Math.max(1, Math.min(this.buttonSize - 4, DEFAULT_ICON_TEXTURE_SIZE));
+            int iconX = x + (this.buttonSize - iconSize) / 2;
+            int iconY = y + (this.buttonSize - iconSize) / 2;
+            graphics.blit(icon, iconX, iconY, 0, 0, iconSize, iconSize, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
+        } else {
+            int textX = x + (this.buttonSize - this.minecraft.font.width(label)) / 2;
+            int textY = y + (this.buttonSize - this.minecraft.font.lineHeight) / 2;
+            graphics.drawString(this.minecraft.font, label, textX, textY, theme.pip_window_button_text_color.getColorInt(), false);
+        }
     }
 
     public void tick() {
@@ -290,6 +309,33 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.icon;
     }
 
+    public void setCloseButtonIcon(@Nullable ResourceLocation icon) {
+        this.closeButtonIcon = icon;
+    }
+
+    @Nullable
+    public ResourceLocation getCloseButtonIcon() {
+        return this.closeButtonIcon;
+    }
+
+    public void setMaximizeButtonIcon(@Nullable ResourceLocation icon) {
+        this.maximizeButtonIcon = icon;
+    }
+
+    @Nullable
+    public ResourceLocation getMaximizeButtonIcon() {
+        return this.maximizeButtonIcon;
+    }
+
+    public void setNormalizeButtonIcon(@Nullable ResourceLocation icon) {
+        this.normalizeButtonIcon = icon;
+    }
+
+    @Nullable
+    public ResourceLocation getNormalizeButtonIcon() {
+        return this.normalizeButtonIcon;
+    }
+
     public void setVisible(boolean visible) {
         this.visible = visible;
     }
@@ -332,6 +378,17 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     public boolean isClosable() {
         return this.closable;
+    }
+
+    public void refreshScreen() {
+        if (this.screen == null) {
+            return;
+        }
+        int screenWidth = getScreenWidth();
+        int screenHeight = getScreenHeight();
+        this.lastScreenWidth = screenWidth;
+        this.lastScreenHeight = screenHeight;
+        this.screen.resize(this.minecraft, screenWidth, screenHeight);
     }
 
     public void setCloseCallback(@Nullable Runnable closeCallback) {
@@ -727,8 +784,33 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return closeX - this.buttonPadding - this.buttonSize;
     }
 
+    @Nullable
+    private ResourceLocation getActiveMaximizeButtonIcon() {
+        return this.maximized ? this.normalizeButtonIcon : this.maximizeButtonIcon;
+    }
+
     private String getMaximizeButtonLabel() {
         return this.maximized ? "[]" : "[ ]";
+    }
+
+    private void updateResizeCursor(int mouseX, int mouseY) {
+        if (!this.visible) {
+            return;
+        }
+        PiPWindowResizeHandle handle = this.activeResizeHandle != PiPWindowResizeHandle.NONE
+                ? this.activeResizeHandle
+                : getResizeHandleAt(mouseX, mouseY);
+        if (handle == PiPWindowResizeHandle.NONE) {
+            return;
+        }
+        switch (handle) {
+            case LEFT, RIGHT -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_HORIZONTAL);
+            case TOP, BOTTOM -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_VERTICAL);
+            case TOP_LEFT, BOTTOM_RIGHT -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_NWSE);
+            case TOP_RIGHT, BOTTOM_LEFT -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_NESW);
+            default -> {
+            }
+        }
     }
 
     private PiPWindowResizeHandle getResizeHandleAt(double mouseX, double mouseY) {

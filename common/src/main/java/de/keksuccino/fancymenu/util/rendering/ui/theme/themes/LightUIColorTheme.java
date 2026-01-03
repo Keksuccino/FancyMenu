@@ -12,10 +12,27 @@ public class LightUIColorTheme extends UIColorTheme {
 
         menu_bar_bottom_line_color = DrawableColor.of(new Color(119, 119, 119));
 
+        pip_window_border_color = DrawableColor.of(new Color(119, 119, 119));
+        pip_window_title_bar_color = DrawableColor.of(new Color(196, 196, 196));
+        pip_window_body_color = DrawableColor.of(new Color(210, 210, 210));
+        pip_window_button_color_normal = DrawableColor.of(new Color(180, 180, 180));
+        pip_window_button_color_hover = DrawableColor.of(new Color(160, 160, 160));
+        pip_window_title_text_color = DrawableColor.of(new Color(45, 45, 45));
+        pip_window_button_text_color = DrawableColor.of(new Color(45, 45, 45));
+
         layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(3, 148, 252));
+        layout_editor_grid_color_normal = DrawableColor.of(new Color(120, 120, 120, 60));
+        layout_editor_grid_color_center = DrawableColor.of(new Color(90, 120, 200, 110));
         layout_editor_element_border_color_normal = DrawableColor.of(new Color(3, 148, 252));
         layout_editor_element_border_color_selected = DrawableColor.of(new Color(3, 219, 252));
+        layout_editor_element_border_rotation_controls_color = DrawableColor.of(new Color(158, 43, 255));
+        layout_editor_element_border_vertical_tilting_controls_color = DrawableColor.of(new Color(255, 181, 43));
+        layout_editor_element_border_horizontal_tilting_controls_color = DrawableColor.of(new Color(145, 255, 43));
         layout_editor_element_dragging_not_allowed_color = DrawableColor.of(new Color(232, 54, 9, 200));
+        layout_editor_element_border_display_line_background_color = DrawableColor.of(new Color(255, 255, 255, 180));
+        layout_editor_element_border_display_line_text_color = DrawableColor.of(new Color(45, 45, 45));
+        layout_editor_anchor_point_overlay_color_base = DrawableColor.of(new Color(37, 180, 121));
+        layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(17, 79, 52));
         layout_editor_close_icon_color = DrawableColor.of(new Color(147, 40, 19));
         scroll_grabber_color_normal = DrawableColor.of(new Color(89, 91, 93, 100));
         scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));
@@ -54,6 +71,8 @@ public class LightUIColorTheme extends UIColorTheme {
         actions_minimap_background_color = DrawableColor.of(new Color(236, 236, 236, 200));
         actions_minimap_border_color = DrawableColor.of(new Color(172, 172, 172, 220));
         actions_minimap_viewport_color = DrawableColor.of(new Color(80, 80, 80, 60));
+        actions_minimap_viewport_border_color = DrawableColor.of(new Color(90, 90, 90, 120));
+        actions_minimap_tooltip_border_color = DrawableColor.of(new Color(104, 149, 215, 220));
         text_editor_sidebar_color = DrawableColor.of(new Color(164, 164, 164));
         text_editor_line_number_text_color_normal = DrawableColor.of(new Color(105, 105, 105));
         text_editor_line_number_text_color_selected = DrawableColor.of(new Color(70, 70, 70));
