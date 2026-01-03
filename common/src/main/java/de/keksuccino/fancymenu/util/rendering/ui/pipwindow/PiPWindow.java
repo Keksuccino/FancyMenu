@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -101,16 +102,23 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     @Override
     public void render(@Nonnull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
         if (!this.visible) {
             return;
         }
 
         RenderSystem.enableBlend();
-        RenderSystem.enableDepthTest();
+
+        RenderSystem.disableDepthTest();
+        RenderingUtils.setDepthTestLocked(true);
 
         renderWindowBackground(graphics);
         renderBodyScreen(graphics, mouseX, mouseY, partial);
         renderWindowForeground(graphics, mouseX, mouseY);
+
+        RenderingUtils.setDepthTestLocked(false);
+        RenderSystem.enableDepthTest();
+
     }
 
     private void renderWindowBackground(@Nonnull GuiGraphics graphics) {
