@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -8,6 +9,8 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositione
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
@@ -17,6 +20,28 @@ public class MixinGuiGraphics {
     @Inject(method = "renderTooltipInternal", at = @At("HEAD"), cancellable = true)
     private void head_renderTooltipInternal_FancyMenu(Font $$0, List<ClientTooltipComponent> $$1, int $$2, int $$3, ClientTooltipPositioner $$4, CallbackInfo info) {
         if (RenderingUtils.isTooltipRenderingBlocked()) info.cancel();
+    }
+
+    @ModifyArgs(method = "enableScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/navigation/ScreenRectangle;<init>(IIII)V"))
+    private void modify_enableScissor_FancyMenu(Args args) {
+        if (!PiPWindowHandler.isScreenRenderActive()) {
+            return;
+        }
+        int offsetX = PiPWindowHandler.getActiveScreenRenderOffsetX();
+        int offsetY = PiPWindowHandler.getActiveScreenRenderOffsetY();
+        args.set(0, ((int) args.get(0)) + offsetX);
+        args.set(1, ((int) args.get(1)) + offsetY);
+    }
+
+    @ModifyArgs(method = "containsPointInScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics$ScissorStack;containsPoint(II)Z"))
+    private void modify_containsPointInScissor_FancyMenu(Args args) {
+        if (!PiPWindowHandler.isScreenRenderActive()) {
+            return;
+        }
+        int offsetX = PiPWindowHandler.getActiveScreenRenderOffsetX();
+        int offsetY = PiPWindowHandler.getActiveScreenRenderOffsetY();
+        args.set(0, ((int) args.get(0)) + offsetX);
+        args.set(1, ((int) args.get(1)) + offsetY);
     }
 
 }

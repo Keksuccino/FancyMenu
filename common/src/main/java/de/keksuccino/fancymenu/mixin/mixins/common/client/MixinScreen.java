@@ -12,14 +12,18 @@ import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -49,6 +53,18 @@ public abstract class MixinScreen implements CustomizableScreen {
         EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(instance, graphics, mouseX, mouseY, partial));
         original.call(instance, graphics, mouseX, mouseY, partial);
         EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(instance, graphics, mouseX, mouseY, partial));
+    }
+
+    @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;renderTooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;Lnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;II)V"))
+    private void wrap_renderTooltip_in_renderWithTooltip_FancyMenu(GuiGraphics instance, Font font, List<FormattedCharSequence> tooltipLines, ClientTooltipPositioner tooltipPositioner, int mouseX, int mouseY, Operation<Void> original) {
+        if (PiPWindowHandler.isAnyWindowOpen()) {
+            // Makes tooltips render later when PipWindows are open
+            RenderingUtils.postPostRenderTask((graphics, mouseX1, mouseY1, partial) -> {
+                instance.renderTooltip(font, tooltipLines, tooltipPositioner, mouseX, mouseY);
+            });
+            return;
+        }
+        original.call(instance, font, tooltipLines, tooltipPositioner, mouseX, mouseY);
     }
 
     @Inject(method = "renderWithTooltip", at = @At("RETURN"))

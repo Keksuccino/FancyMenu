@@ -158,15 +158,21 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         int bodyY = getBodyY();
         int localMouseX = (int) Math.floor(mouseX - bodyX);
         int localMouseY = (int) Math.floor(mouseY - bodyY);
+        if (!PiPWindowHandler.isWindowFocused(this)) {
+            localMouseX = -100000;
+            localMouseY = -100000;
+        }
 
         graphics.enableScissor(bodyX, bodyY, bodyX + bodyWidth, bodyY + bodyHeight);
         graphics.pose().pushPose();
         graphics.pose().translate(bodyX, bodyY, 0);
+        PiPWindowHandler.beginScreenRender(this);
         this.screenRendering = true;
         try {
             this.screen.renderWithTooltip(graphics, localMouseX, localMouseY, partial);
         } finally {
             this.screenRendering = false;
+            PiPWindowHandler.endScreenRender(this);
         }
         graphics.pose().popPose();
         graphics.disableScissor();
@@ -504,6 +510,14 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return handleMouseClicked(mouseX, mouseY, button, true);
+    }
+
+    public boolean mouseClickedWithoutScreen(double mouseX, double mouseY, int button) {
+        return handleMouseClicked(mouseX, mouseY, button, false);
+    }
+
+    private boolean handleMouseClicked(double mouseX, double mouseY, int button, boolean allowScreenInput) {
         if (!this.visible || isInputLocked()) {
             return false;
         }
@@ -532,7 +546,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return true;
         }
 
-        if (this.screen != null && isPointInBody(mouseX, mouseY)) {
+        if (allowScreenInput && this.screen != null && isPointInBody(mouseX, mouseY)) {
             return this.screen.mouseClicked(toScreenMouseX(mouseX), toScreenMouseY(mouseY), button);
         }
 
@@ -617,7 +631,13 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             child.mouseMoved(mouseX, mouseY);
         }
         if (this.screen != null && !isInputLocked()) {
-            this.screen.mouseMoved(toScreenMouseX(mouseX), toScreenMouseY(mouseY));
+            double screenMouseX = toScreenMouseX(mouseX);
+            double screenMouseY = toScreenMouseY(mouseY);
+            if (!PiPWindowHandler.isWindowFocused(this)) {
+                screenMouseX = -100000;
+                screenMouseY = -100000;
+            }
+            this.screen.mouseMoved(screenMouseX, screenMouseY);
         }
     }
 

@@ -19,6 +19,8 @@ public class PiPWindowHandler {
     @Nullable
     private static PiPWindow lastClickedWindowThisTick;
     private static boolean isRendering = false;
+    @Nullable
+    private static PiPWindow activeScreenRenderWindow;
 
     public static void openWindow(@Nonnull PiPWindow window) {
         if (WINDOWS.contains(window)) {
@@ -127,7 +129,12 @@ public class PiPWindowHandler {
                 activePointerButton = button;
                 return true;
             }
-            window.mouseClicked(mouseX, mouseY, button);
+            boolean allowScreenInput = window == focusedWindow;
+            if (allowScreenInput) {
+                window.mouseClicked(mouseX, mouseY, button);
+            } else {
+                window.mouseClickedWithoutScreen(mouseX, mouseY, button);
+            }
             if (WINDOWS.contains(window)) {
                 bringToFront(window);
                 focusedWindow = window;
@@ -158,6 +165,28 @@ public class PiPWindowHandler {
 
     public static boolean isRendering() {
         return isRendering;
+    }
+
+    public static void beginScreenRender(@Nonnull PiPWindow window) {
+        activeScreenRenderWindow = window;
+    }
+
+    public static void endScreenRender(@Nonnull PiPWindow window) {
+        if (activeScreenRenderWindow == window) {
+            activeScreenRenderWindow = null;
+        }
+    }
+
+    public static int getActiveScreenRenderOffsetX() {
+        return activeScreenRenderWindow != null ? activeScreenRenderWindow.getBodyX() : 0;
+    }
+
+    public static int getActiveScreenRenderOffsetY() {
+        return activeScreenRenderWindow != null ? activeScreenRenderWindow.getBodyY() : 0;
+    }
+
+    public static boolean isScreenRenderActive() {
+        return activeScreenRenderWindow != null;
     }
 
     public static boolean mouseReleased(double mouseX, double mouseY, int button) {
@@ -231,5 +260,9 @@ public class PiPWindowHandler {
             }
         }
         return null;
+    }
+
+    public static boolean isWindowFocused(@Nonnull PiPWindow window) {
+        return focusedWindow == window;
     }
 }

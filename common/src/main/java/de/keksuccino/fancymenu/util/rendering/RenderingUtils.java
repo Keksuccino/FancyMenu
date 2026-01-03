@@ -13,6 +13,7 @@ import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -29,11 +30,49 @@ public class RenderingUtils {
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
 
-    private static final List<DeferredScreenRenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
+    private static final List<RenderingTask> PRE_RENDER_CONTEXTS = new ArrayList<>();
+    private static final List<RenderingTask> POST_RENDER_CONTEXTS = new ArrayList<>();
+    private static final List<RenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
     private static boolean lockDepthTest = false;
     private static boolean blurBlocked = false;
     private static boolean tooltipRenderingBlocked = false;
     private static int overrideBackgroundBlurRadius = -1000;
+
+    public static void postPreRenderTask(@NotNull RenderingTask context) {
+        PRE_RENDER_CONTEXTS.add(Objects.requireNonNull(context));
+    }
+
+    public static void postPostRenderTask(@NotNull RenderingTask context) {
+        POST_RENDER_CONTEXTS.add(Objects.requireNonNull(context));
+    }
+
+    @ApiStatus.Internal
+    public static void executeAllPreRenderTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        List<RenderingTask> copy = new ArrayList<>(PRE_RENDER_CONTEXTS);
+        PRE_RENDER_CONTEXTS.clear();
+        for (RenderingTask context : copy) {
+            try {
+                context.render(graphics, mouseX, mouseY, partial);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to execute pre-screen-render task!", ex);
+            }
+        }
+        graphics.flush();
+    }
+
+    @ApiStatus.Internal
+    public static void executeAllPostRenderTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        List<RenderingTask> copy = new ArrayList<>(POST_RENDER_CONTEXTS);
+        POST_RENDER_CONTEXTS.clear();
+        for (RenderingTask context : copy) {
+            try {
+                context.render(graphics, mouseX, mouseY, partial);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to execute post-screen-render task!", ex);
+            }
+        }
+        graphics.flush();
+    }
 
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
@@ -88,17 +127,17 @@ public class RenderingUtils {
         return tooltipRenderingBlocked;
     }
 
-    public static void addDeferredScreenRenderingTask(@NotNull DeferredScreenRenderingTask task) {
+    public static void addDeferredScreenRenderingTask(@NotNull RenderingUtils.RenderingTask task) {
         DEFERRED_SCREEN_RENDERING_TASKS.add(task);
     }
 
     @NotNull
-    public static List<DeferredScreenRenderingTask> getDeferredScreenRenderingTasks() {
+    public static List<RenderingTask> getDeferredScreenRenderingTasks() {
         return new ArrayList<>(DEFERRED_SCREEN_RENDERING_TASKS);
     }
 
     public static void executeAndClearDeferredScreenRenderingTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        List<DeferredScreenRenderingTask> tasks = getDeferredScreenRenderingTasks();
+        List<RenderingTask> tasks = getDeferredScreenRenderingTasks();
         DEFERRED_SCREEN_RENDERING_TASKS.clear();
         tasks.forEach(task -> task.render(graphics, mouseX, mouseY, partial));
     }
@@ -458,7 +497,7 @@ public class RenderingUtils {
     }
 
     @FunctionalInterface
-    public interface DeferredScreenRenderingTask {
+    public interface RenderingTask {
         void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
     }
 
