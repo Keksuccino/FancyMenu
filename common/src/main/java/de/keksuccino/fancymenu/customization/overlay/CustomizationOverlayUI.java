@@ -421,25 +421,25 @@ public class CustomizationOverlayUI {
         debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay_category_screen_basic", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.basic_screen_category", FancyMenu.getOptions().debugOverlayShowBasicScreenCategory.getValue())
                 .addCycleListener(cycleEnabledDisabled -> {
                     FancyMenu.getOptions().debugOverlayShowBasicScreenCategory.setValue(cycleEnabledDisabled.getAsBoolean());
-                    CustomizationOverlay.rebuildDebugOverlay();
+                    CustomizationOverlay.refreshDebugOverlay();
                 }));
 
         debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay_category_screen_advanced", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.advanced_screen_category", FancyMenu.getOptions().debugOverlayShowAdvancedScreenCategory.getValue())
                 .addCycleListener(cycleEnabledDisabled -> {
                     FancyMenu.getOptions().debugOverlayShowAdvancedScreenCategory.setValue(cycleEnabledDisabled.getAsBoolean());
-                    CustomizationOverlay.rebuildDebugOverlay();
+                    CustomizationOverlay.refreshDebugOverlay();
                 }));
 
         debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay_category_resources", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.resources_category", FancyMenu.getOptions().debugOverlayShowResourcesCategory.getValue())
                 .addCycleListener(cycleEnabledDisabled -> {
                     FancyMenu.getOptions().debugOverlayShowResourcesCategory.setValue(cycleEnabledDisabled.getAsBoolean());
-                    CustomizationOverlay.rebuildDebugOverlay();
+                    CustomizationOverlay.refreshDebugOverlay();
                 }));
 
         debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay_category_system", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.system_category", FancyMenu.getOptions().debugOverlayShowSystemCategory.getValue())
                 .addCycleListener(cycleEnabledDisabled -> {
                     FancyMenu.getOptions().debugOverlayShowSystemCategory.setValue(cycleEnabledDisabled.getAsBoolean());
-                    CustomizationOverlay.rebuildDebugOverlay();
+                    CustomizationOverlay.refreshDebugOverlay();
                 }));
 
         customizationMenu.addClickableEntry("reload_fancymenu", Component.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu"), (menu, entry) -> {

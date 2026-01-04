@@ -6,7 +6,6 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +15,7 @@ import java.util.function.Predicate;
 public class ScreenOverlayHandler {
 
     public static final ScreenOverlayHandler INSTANCE = new ScreenOverlayHandler();
+    private static final Renderable PLACEHOLDER_OVERLAY = (graphics, mouseX, mouseY, partial) -> {};
 
     private final Map<Long, Renderable> overlays = new LinkedHashMap<>();
     private long id = 0;
@@ -43,12 +43,18 @@ public class ScreenOverlayHandler {
         if (id <= idToReplace) {
             id = (idToReplace + 1);
         }
-        Renderable old = this.overlays.get(idToReplace);
         this.overlays.put(idToReplace, body);
     }
 
-    public void removeOverlay(long id) {
-        this.overlays.remove(id);
+    public void removeOverlay(long id, boolean preserveIndex) {
+        if (!this.overlays.containsKey(id)) {
+            return;
+        }
+        if (preserveIndex) {
+            this.overlays.put(id, PLACEHOLDER_OVERLAY);
+        } else {
+            this.overlays.remove(id);
+        }
     }
 
     public void clearOverlays() {
@@ -57,27 +63,24 @@ public class ScreenOverlayHandler {
 
     @NotNull
     public List<Renderable> getOverlays() {
-        return new ArrayList<>(overlays.values());
-    }
-
-    @NotNull
-    public List<Renderable> getOverlays(@NotNull Predicate<Renderable> filter) {
         List<Renderable> filtered = new ArrayList<>();
-        for (Renderable body : overlays.values()) {
-            if (filter.test(body)) {
-                filtered.add(body);
+        for (Renderable overlay : overlays.values()) {
+            if (!isPlaceholder(overlay)) {
+                filtered.add(overlay);
             }
         }
         return filtered;
     }
 
-    public void reorderOverlays(@NotNull Comparator<Map.Entry<Long, Renderable>> comparator) {
-        List<Map.Entry<Long, Renderable>> entries = new ArrayList<>(overlays.entrySet());
-        entries.sort(comparator);
-        overlays.clear();
-        for (Map.Entry<Long, Renderable> entry : entries) {
-            overlays.put(entry.getKey(), entry.getValue());
+    @NotNull
+    public List<Renderable> getOverlays(@NotNull Predicate<Renderable> filter) {
+        List<Renderable> filtered = new ArrayList<>();
+        for (Renderable overlay : overlays.values()) {
+            if (!isPlaceholder(overlay) && filter.test(overlay)) {
+                filtered.add(overlay);
+            }
         }
+        return filtered;
     }
 
     public void renderAll(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -145,6 +148,10 @@ public class ScreenOverlayHandler {
                 handler.accept(listener);
             }
         }
+    }
+
+    private boolean isPlaceholder(@NotNull Renderable overlay) {
+        return overlay == PLACEHOLDER_OVERLAY;
     }
 
     @FunctionalInterface
