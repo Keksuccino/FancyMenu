@@ -39,7 +39,11 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
     }
 
     @Override
-    public void onClose() {
+    public final void onClose() {
+    }
+
+    @Override
+    public final void removed() {
     }
 
 }

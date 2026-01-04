@@ -69,6 +69,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private boolean movable = true;
     private boolean maximizable = true;
     private boolean closable = true;
+    private boolean closeScreenWithWindow = true;
 
     private boolean maximized = false;
     private int restoreX;
@@ -278,8 +279,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (this.screen != null) {
             if (this.screen instanceof PipableScreen ps) {
                 ps.setWindow(null);
+                ps.onScreenClosed();
             }
-            this.screen.removed();
+            this.screen.removed(); // legacy support for non-PiP screens
         }
         this.screen = screen;
         if (this.screen != null) {
@@ -385,6 +387,14 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     public boolean isClosable() {
         return this.closable;
+    }
+
+    public boolean shouldCloseScreenWithWindow() {
+        return closeScreenWithWindow;
+    }
+
+    public void setCloseScreenWithWindow(boolean closeScreenWithWindow) {
+        this.closeScreenWithWindow = closeScreenWithWindow;
     }
 
     public void refreshScreen() {

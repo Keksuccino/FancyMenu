@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import net.minecraft.client.gui.GuiGraphics;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +23,7 @@ public class PiPWindowHandler {
     private static PiPWindow activeScreenRenderWindow;
     private static double activeScreenRenderScaleFactor = 1.0;
 
-    public static void openWindow(@Nonnull PiPWindow window) {
+    public static void openWindow(@NotNull PiPWindow window) {
         if (WINDOWS.contains(window)) {
             bringToFront(window);
             return;
@@ -33,12 +33,15 @@ public class PiPWindowHandler {
         bringToFront(window);
     }
 
-    public static void openChildWindow(@Nonnull PiPWindow parent, @Nonnull PiPWindow child) {
+    public static void openChildWindow(@NotNull PiPWindow parent, @NotNull PiPWindow child) {
         parent.registerChildWindow(child);
         openWindow(child);
     }
 
-    public static void closeWindow(@Nonnull PiPWindow window) {
+    public static void closeWindow(@NotNull PiPWindow window) {
+        if (window.shouldCloseScreenWithWindow()) {
+            window.setScreen(null);
+        }
         if (!WINDOWS.remove(window)) {
             return;
         }
@@ -85,14 +88,14 @@ public class PiPWindowHandler {
         }
     }
 
-    public static void bringToFront(@Nonnull PiPWindow window) {
+    public static void bringToFront(@NotNull PiPWindow window) {
         if (WINDOWS.remove(window)) {
             WINDOWS.add(window);
         }
         focusedWindow = window;
     }
 
-    public static void renderAll(@Nonnull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public static void renderAll(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         isRendering = true;
         try {
             for (PiPWindow window : new ArrayList<>(WINDOWS)) {
@@ -174,12 +177,12 @@ public class PiPWindowHandler {
         return isRendering;
     }
 
-    public static void beginScreenRender(@Nonnull PiPWindow window, double scaleFactor) {
+    public static void beginScreenRender(@NotNull PiPWindow window, double scaleFactor) {
         activeScreenRenderWindow = window;
         activeScreenRenderScaleFactor = scaleFactor;
     }
 
-    public static void endScreenRender(@Nonnull PiPWindow window) {
+    public static void endScreenRender(@NotNull PiPWindow window) {
         if (activeScreenRenderWindow == window) {
             activeScreenRenderWindow = null;
             activeScreenRenderScaleFactor = 1.0;
@@ -275,7 +278,7 @@ public class PiPWindowHandler {
         return null;
     }
 
-    public static boolean isWindowFocused(@Nonnull PiPWindow window) {
+    public static boolean isWindowFocused(@NotNull PiPWindow window) {
         return focusedWindow == window;
     }
 }

@@ -39,7 +39,11 @@ public abstract class PiPScreen extends Screen implements PipableScreen {
     }
 
     @Override
-    public void onClose() {
+    public final void onClose() {
+    }
+
+    @Override
+    public final void removed() {
     }
 
 }

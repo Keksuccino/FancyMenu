@@ -21,4 +21,9 @@ public interface PipableScreen {
     @ApiStatus.Internal
     void setWindow(@Nullable PiPWindow window);
 
+    /**
+     * Gets called when the screen gets closed in any way, which means when it gets replaced by a new screen or when the screen's parent window gets closed.
+     */
+    void onScreenClosed();
+
 }
