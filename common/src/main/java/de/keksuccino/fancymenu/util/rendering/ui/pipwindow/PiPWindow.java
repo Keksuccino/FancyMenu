@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import net.minecraft.client.Minecraft;
@@ -13,11 +12,9 @@ import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import net.minecraft.util.FormattedCharSequence;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -279,10 +276,16 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return;
         }
         if (this.screen != null) {
+            if (this.screen instanceof PipableScreen ps) {
+                ps.setWindow(null);
+            }
             this.screen.removed();
         }
         this.screen = screen;
         if (this.screen != null) {
+            if (this.screen instanceof PipableScreen ps) {
+                ps.setWindow(this);
+            }
             int screenWidth = getScreenWidth();
             int screenHeight = getScreenHeight();
             this.screen.init(this.minecraft, screenWidth, screenHeight);
