@@ -797,7 +797,7 @@ public class Property<T> {
                                 int centerX = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.width / 2) : 100;
                                 int centerY = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.height / 2) : 100;
                                 contextMenu.closeMenu();
-                                PiPWindowHandler.openWindow(new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"), centerX - 200, centerY - 100, 400, 200, picker));
+                                PiPWindowHandler.INSTANCE.openWindow(new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"), centerX - 200, centerY - 100, 400, 200, picker));
                                 //PiPWindowHandler.openWindow(new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"), 100, 100, 400, 200, picker));
                             })
                     .setStackable(true)

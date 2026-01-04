@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
@@ -19,10 +20,15 @@ public abstract class PiPScreen extends Screen implements PipableScreen {
     }
 
     public void closeWindow() {
-        if (this.window == null) throw new NullPointerException("The window can't be NULL when closing it.");
-        this.window.markClosingFromScreen();
-        this.window.setScreen(null);
-        this.window.close();
+        PiPWindow resolvedWindow = resolveWindow();
+        if (resolvedWindow == null) {
+            onScreenClosed();
+            Minecraft.getInstance().setScreen(null);
+            return;
+        }
+        resolvedWindow.markClosingFromScreen();
+        resolvedWindow.setScreen(null);
+        resolvedWindow.close();
     }
 
     public @Nullable PiPWindow getWindow() {
@@ -32,6 +38,19 @@ public abstract class PiPScreen extends Screen implements PipableScreen {
     @ApiStatus.Internal
     public void setWindow(@Nullable PiPWindow window) {
         this.window = window;
+    }
+
+    @Nullable
+    private PiPWindow resolveWindow() {
+        if (this.window != null) {
+            return this.window;
+        }
+        for (PiPWindow openWindow : PiPWindowHandler.INSTANCE.getOpenWindows()) {
+            if (openWindow.getScreen() == this) {
+                return openWindow;
+            }
+        }
+        return null;
     }
 
     @Override

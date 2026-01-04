@@ -66,7 +66,7 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;renderTooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;Lnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;II)V"))
     private void wrap_renderTooltip_in_renderWithTooltip_FancyMenu(GuiGraphics instance, Font font, List<FormattedCharSequence> tooltipLines, ClientTooltipPositioner tooltipPositioner, int mouseX, int mouseY, Operation<Void> original) {
-        if (PiPWindowHandler.isAnyWindowOpen()) {
+        if (PiPWindowHandler.INSTANCE.isAnyWindowOpen()) {
             // Makes tooltips render later when PipWindows are open
             RenderingUtils.postPostRenderTask((graphics, mouseX1, mouseY1, partial) -> {
                 instance.renderTooltip(font, tooltipLines, tooltipPositioner, mouseX, mouseY);
@@ -100,7 +100,7 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @WrapOperation(method = "renderPanorama", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;IIFF)V"))
     private void wrap_panorama_rendering_in_renderPanorama_FancyMenu(PanoramaRenderer instance, GuiGraphics graphics, int width, int height, float fade, float partialTick, Operation<Void> original) {
-        if (PiPWindowHandler.isScreenRenderActive()) {
+        if (PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
             // This forces a normal background texture for PiP window screens
             graphics.setColor(0.5F, 0.5F, 0.5F, 1.0F);
             RenderSystem.enableBlend();

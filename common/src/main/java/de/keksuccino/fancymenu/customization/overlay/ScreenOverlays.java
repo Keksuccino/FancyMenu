@@ -9,9 +9,9 @@ public class ScreenOverlays {
 
         ScreenOverlayHandler.INSTANCE.addOverlay(PiPWindowHandler.INSTANCE);
 
-        CustomizationOverlay.refreshDebugOverlay(null, true); // This calls the addOverlay method to register the debug overlay
+        CustomizationOverlay.refreshMenuBar(); // This calls the addOverlay method to register the menu bar
 
-        CustomizationOverlay.refreshMenuBar(null, true); // This calls the addOverlay method to register the menu bar
+        CustomizationOverlay.refreshDebugOverlay(); // This calls the addOverlay method to register the debug overlay
 
     }
 

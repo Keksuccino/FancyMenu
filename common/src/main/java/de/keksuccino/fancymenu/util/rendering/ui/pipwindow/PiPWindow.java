@@ -178,7 +178,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         double inputScale = renderScale <= 0.0 ? 1.0 : 1.0 / renderScale;
         int localMouseX = (int) Math.floor((mouseX - bodyX) * inputScale);
         int localMouseY = (int) Math.floor((mouseY - bodyY) * inputScale);
-        if (!PiPWindowHandler.isWindowFocused(this)) {
+        if (!PiPWindowHandler.INSTANCE.isWindowFocused(this)) {
             localMouseX = -100000;
             localMouseY = -100000;
         }
@@ -189,7 +189,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (renderScale != 1.0) {
             graphics.pose().scale((float) renderScale, (float) renderScale, 1.0F);
         }
-        PiPWindowHandler.beginScreenRender(this, renderScale);
+        PiPWindowHandler.INSTANCE.beginScreenRender(this, renderScale);
         this.screenRendering = true;
         try {
             RenderingUtils.setMenuBlurringBlocked(true);
@@ -197,7 +197,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             RenderingUtils.setMenuBlurringBlocked(false);
         } finally {
             this.screenRendering = false;
-            PiPWindowHandler.endScreenRender(this);
+            PiPWindowHandler.INSTANCE.endScreenRender(this);
         }
         graphics.pose().popPose();
         graphics.disableScissor();
@@ -756,7 +756,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (this.screen != null && !isInputLocked()) {
             double screenMouseX = toScreenMouseX(mouseX);
             double screenMouseY = toScreenMouseY(mouseY);
-            if (!PiPWindowHandler.isWindowFocused(this)) {
+            if (!PiPWindowHandler.INSTANCE.isWindowFocused(this)) {
                 screenMouseX = -100000;
                 screenMouseY = -100000;
             }

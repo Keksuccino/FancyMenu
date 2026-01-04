@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -43,38 +42,32 @@ public class CustomizationOverlay {
 		EventHandler.INSTANCE.registerListenersOf(new CustomizationOverlay());
 	}
 
-    private static boolean shouldAddOverlay(@Nullable Screen target, boolean showOverlay) {
-        boolean visible = (target != null) ? isOverlayVisible(target) : true;
-        boolean blacklisted = (target != null) ? !ScreenCustomization.isScreenBlacklisted(target.getClass().getName()) : false;
-        return (showOverlay && visible && !blacklisted);
-    }
-
-	public static void refreshMenuBar(@Nullable Screen target, boolean forceAddOverlay) {
-        if (!forceAddOverlay && (menuBarId != -1) && !shouldAddOverlay(target, FancyMenu.getOptions().showCustomizationOverlay.getValue())) {
-            ScreenOverlayHandler.INSTANCE.removeOverlay(menuBarId, true);
-            overlayMenuBar = null;
-            return;
-        }
+	public static void refreshMenuBar() {
 		overlayMenuBar = CustomizationOverlayUI.buildMenuBar((overlayMenuBar == null) || overlayMenuBar.isExpanded());
         if (menuBarId != -1) {
-            ScreenOverlayHandler.INSTANCE.replaceOverlay(menuBarId, overlayMenuBar);
+            ScreenOverlayHandler.INSTANCE.addOverlayWithId(menuBarId, overlayMenuBar);
         } else {
             menuBarId = ScreenOverlayHandler.INSTANCE.addOverlay(overlayMenuBar);
+//            ScreenOverlayHandler.INSTANCE.addVisibilityController(menuBarId, screen -> {
+//                if (!isOverlayVisible(screen)) return false;
+//                if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
+//                return true;
+//            });
         }
 	}
 
-	public static void refreshDebugOverlay(@Nullable Screen target, boolean forceAddOverlay) {
+	public static void refreshDebugOverlay() {
         if (debugOverlay != null) debugOverlay.resetOverlay();
-        if (!forceAddOverlay && (debugOverlayId != -1) && !shouldAddOverlay(target, FancyMenu.getOptions().showDebugOverlay.getValue())) {
-            ScreenOverlayHandler.INSTANCE.removeOverlay(debugOverlayId, true);
-            debugOverlay = null;
-            return;
-        }
 		debugOverlay = CustomizationOverlayUI.buildDebugOverlay(overlayMenuBar);
         if (debugOverlayId != -1) {
-            ScreenOverlayHandler.INSTANCE.replaceOverlay(debugOverlayId, debugOverlay);
+            ScreenOverlayHandler.INSTANCE.addOverlayWithId(debugOverlayId, debugOverlay);
         } else {
             debugOverlayId = ScreenOverlayHandler.INSTANCE.addOverlay(debugOverlay);
+//            ScreenOverlayHandler.INSTANCE.addVisibilityController(debugOverlayId, screen -> {
+//                if (!isOverlayVisible(screen)) return false;
+//                if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
+//                return true;
+//            });
         }
 	}
 
@@ -115,43 +108,14 @@ public class CustomizationOverlay {
 
 	@EventListener(priority = -1000)
 	public void onInitScreenPost(InitOrResizeScreenCompletedEvent e) {
-		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName()) && isOverlayVisible(e.getScreen())) {
-			refreshMenuBar();
-            refreshDebugOverlay();
-			if ((overlayMenuBar != null) && (debugOverlay != null)) {
-				if (FancyMenu.getOptions().showCustomizationOverlay.getValue()) {
-					e.getWidgets().add(0, overlayMenuBar);
-					if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(overlayMenuBar);
-				}
-				if (FancyMenu.getOptions().showDebugOverlay.getValue()) {
-					e.getWidgets().add(1, debugOverlay);
-					if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(debugOverlay);
-				}
-			} else {
-				LOGGER.error("[FANCYMENU] Failed to rebuild overlay!", new NullPointerException("Debug or Customization overlay was NULL!"));
-			}
-		}
+        refreshMenuBar();
+        refreshDebugOverlay();
 	}
 
 	@EventListener
 	public void onRenderPost(AfterScreenRenderingEvent e) {
 		if (!IS_VALID_FANCYMENU_BUILD) {
 			ModValidator.renderInvalidError(e.getGraphics());
-		}
-		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName()) && (overlayMenuBar != null) && (debugOverlay != null) && isOverlayVisible(e.getScreen())) {
-
-            if (FancyMenu.getOptions().showDebugOverlay.getValue()) {
-				debugOverlay.allowRender = true;
-				debugOverlay.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
-				debugOverlay.allowRender = false;
-			}
-
-			if (FancyMenu.getOptions().showCustomizationOverlay.getValue()) {
-				overlayMenuBar.allowRender = true;
-				overlayMenuBar.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
-				overlayMenuBar.allowRender = false;
-			}
-
 		}
 	}
 

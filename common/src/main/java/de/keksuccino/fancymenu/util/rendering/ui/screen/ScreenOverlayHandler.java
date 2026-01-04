@@ -1,8 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ public class ScreenOverlayHandler {
     private static final Renderable PLACEHOLDER_OVERLAY = (graphics, mouseX, mouseY, partial) -> {};
 
     private final Map<Long, Renderable> overlays = new LinkedHashMap<>();
+    private final Map<Long, OverlayVisibilityController> visibilityControllers = new LinkedHashMap<>();
     private long id = 0;
 
     private ScreenOverlayHandler() {
@@ -27,6 +30,12 @@ public class ScreenOverlayHandler {
         id++;
         this.overlays.put(id, overlay);
         return id;
+    }
+
+    public long addOverlay(@NotNull Renderable overlay, @NotNull OverlayVisibilityController controller) {
+        long overlayId = addOverlay(overlay);
+        addVisibilityController(overlayId, controller);
+        return overlayId;
     }
 
     public long addOverlayFirst(@NotNull Renderable overlay) {
@@ -39,26 +48,43 @@ public class ScreenOverlayHandler {
         return id;
     }
 
-    public void replaceOverlay(long idToReplace, @NotNull Renderable body) {
-        if (id <= idToReplace) {
-            id = (idToReplace + 1);
-        }
-        this.overlays.put(idToReplace, body);
+    public long addOverlayFirst(@NotNull Renderable overlay, @NotNull OverlayVisibilityController controller) {
+        long overlayId = addOverlayFirst(overlay);
+        addVisibilityController(overlayId, controller);
+        return overlayId;
     }
 
-    public void removeOverlay(long id, boolean preserveIndex) {
-        if (!this.overlays.containsKey(id)) {
+    public void addOverlayWithId(long overlayId, @NotNull Renderable body) {
+        if (id <= overlayId) {
+            id = (overlayId + 10);
+        }
+        this.overlays.put(overlayId, body);
+    }
+
+    public void removeOverlay(long overlayId, boolean preserveIndex, boolean removeController) {
+        if (!this.overlays.containsKey(overlayId)) {
             return;
         }
+        if (removeController) {
+            this.visibilityControllers.remove(overlayId);
+        }
         if (preserveIndex) {
-            this.overlays.put(id, PLACEHOLDER_OVERLAY);
+            this.overlays.put(overlayId, PLACEHOLDER_OVERLAY);
         } else {
-            this.overlays.remove(id);
+            this.overlays.remove(overlayId);
         }
     }
 
     public void clearOverlays() {
         this.overlays.clear();
+    }
+
+    public void addVisibilityController(long overlayId, @NotNull OverlayVisibilityController controller) {
+        this.visibilityControllers.put(overlayId, controller);
+    }
+
+    public void removeVisibilityController(long overlayId) {
+        this.visibilityControllers.remove(overlayId);
     }
 
     @NotNull
@@ -84,7 +110,13 @@ public class ScreenOverlayHandler {
     }
 
     public void renderAll(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        overlays.values().forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partial));
+        for (Map.Entry<Long, Renderable> entry : overlays.entrySet()) {
+            Renderable renderable = entry.getValue();
+            if (!isOverlayVisible(entry.getKey(), renderable)) {
+                continue;
+            }
+            renderable.render(graphics, mouseX, mouseY, partial);
+        }
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -120,9 +152,13 @@ public class ScreenOverlayHandler {
     }
 
     public void tick() {
-        List<Renderable> ordered = new ArrayList<>(overlays.values());
+        List<Map.Entry<Long, Renderable>> ordered = new ArrayList<>(overlays.entrySet());
         for (int i = ordered.size() - 1; i >= 0; i--) {
-            Renderable overlay = ordered.get(i);
+            Map.Entry<Long, Renderable> entry = ordered.get(i);
+            Renderable overlay = entry.getValue();
+            if (!isOverlayVisible(entry.getKey(), overlay)) {
+                continue;
+            }
             if (overlay instanceof Tickable tickable) {
                 tickable.tick();
             }
@@ -130,9 +166,13 @@ public class ScreenOverlayHandler {
     }
 
     private boolean dispatchBooleanEvent(@NotNull OverlayEvent handler) {
-        List<Renderable> ordered = new ArrayList<>(overlays.values());
+        List<Map.Entry<Long, Renderable>> ordered = new ArrayList<>(overlays.entrySet());
         for (int i = ordered.size() - 1; i >= 0; i--) {
-            Renderable overlay = ordered.get(i);
+            Map.Entry<Long, Renderable> entry = ordered.get(i);
+            Renderable overlay = entry.getValue();
+            if (!isOverlayVisible(entry.getKey(), overlay)) {
+                continue;
+            }
             if (overlay instanceof GuiEventListener listener && handler.handle(listener)) {
                 return true;
             }
@@ -141,17 +181,41 @@ public class ScreenOverlayHandler {
     }
 
     private void dispatchVoidEvent(@NotNull Consumer<GuiEventListener> handler) {
-        List<Renderable> ordered = new ArrayList<>(overlays.values());
+        List<Map.Entry<Long, Renderable>> ordered = new ArrayList<>(overlays.entrySet());
         for (int i = ordered.size() - 1; i >= 0; i--) {
-            Renderable overlay = ordered.get(i);
+            Map.Entry<Long, Renderable> entry = ordered.get(i);
+            Renderable overlay = entry.getValue();
+            if (!isOverlayVisible(entry.getKey(), overlay)) {
+                continue;
+            }
             if (overlay instanceof GuiEventListener listener) {
                 handler.accept(listener);
             }
         }
     }
 
+    private boolean isOverlayVisible(long overlayId, @NotNull Renderable overlay) {
+        if (isPlaceholder(overlay)) {
+            return false;
+        }
+        Screen screen = Minecraft.getInstance().screen;
+        if (screen == null) {
+            return true;
+        }
+        OverlayVisibilityController controller = visibilityControllers.get(overlayId);
+        if (controller == null) {
+            return true;
+        }
+        return controller.isVisible(screen);
+    }
+
     private boolean isPlaceholder(@NotNull Renderable overlay) {
         return overlay == PLACEHOLDER_OVERLAY;
+    }
+
+    @FunctionalInterface
+    public interface OverlayVisibilityController {
+        boolean isVisible(@NotNull Screen screen);
     }
 
     @FunctionalInterface

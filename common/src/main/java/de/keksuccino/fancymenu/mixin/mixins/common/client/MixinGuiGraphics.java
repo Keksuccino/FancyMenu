@@ -24,12 +24,12 @@ public class MixinGuiGraphics {
 
     @ModifyArgs(method = "enableScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/navigation/ScreenRectangle;<init>(IIII)V"))
     private void modify_enableScissor_FancyMenu(Args args) {
-        if (!PiPWindowHandler.isScreenRenderActive()) {
+        if (!PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
             return;
         }
-        int offsetX = PiPWindowHandler.getActiveScreenRenderOffsetX();
-        int offsetY = PiPWindowHandler.getActiveScreenRenderOffsetY();
-        double scale = PiPWindowHandler.getActiveScreenRenderScaleFactor();
+        int offsetX = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetX();
+        int offsetY = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetY();
+        double scale = PiPWindowHandler.INSTANCE.getActiveScreenRenderScaleFactor();
         int minX = (int) Math.floor(((int) args.get(0)) * scale + offsetX);
         int minY = (int) Math.floor(((int) args.get(1)) * scale + offsetY);
         int width = (int) Math.ceil(((int) args.get(2)) * scale);
@@ -42,12 +42,12 @@ public class MixinGuiGraphics {
 
     @ModifyArgs(method = "containsPointInScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics$ScissorStack;containsPoint(II)Z"))
     private void modify_containsPointInScissor_FancyMenu(Args args) {
-        if (!PiPWindowHandler.isScreenRenderActive()) {
+        if (!PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
             return;
         }
-        int offsetX = PiPWindowHandler.getActiveScreenRenderOffsetX();
-        int offsetY = PiPWindowHandler.getActiveScreenRenderOffsetY();
-        double scale = PiPWindowHandler.getActiveScreenRenderScaleFactor();
+        int offsetX = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetX();
+        int offsetY = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetY();
+        double scale = PiPWindowHandler.INSTANCE.getActiveScreenRenderScaleFactor();
         args.set(0, (int) Math.round(((int) args.get(0)) * scale + offsetX));
         args.set(1, (int) Math.round(((int) args.get(1)) * scale + offsetY));
     }
