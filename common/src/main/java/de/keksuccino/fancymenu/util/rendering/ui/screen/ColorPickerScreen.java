@@ -97,6 +97,11 @@ public class ColorPickerScreen extends PiPScreen {
     }
 
     @Override
+    public void onScreenClosed() {
+
+    }
+
+    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         UIColorTheme theme = UIBase.getUIColorTheme();
