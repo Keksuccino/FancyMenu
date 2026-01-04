@@ -46,12 +46,12 @@ public class CustomizationOverlay {
         } else {
             menuBarId = ScreenOverlayHandler.INSTANCE.addOverlay(overlayMenuBar);
         }
-        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(menuBarId, screen -> {
-            if (!isOverlayVisible(screen)) return false;
-            if (!FancyMenu.getOptions().showCustomizationOverlay.getValue()) return false;
-            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
-            return true;
-        });
+//        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(menuBarId, screen -> {
+//            if (!isOverlayVisible(screen)) return false;
+//            if (!FancyMenu.getOptions().showCustomizationOverlay.getValue()) return false;
+//            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
+//            return true;
+//        });
 	}
 
 	public static void refreshDebugOverlay() {
@@ -62,12 +62,12 @@ public class CustomizationOverlay {
         } else {
             debugOverlayId = ScreenOverlayHandler.INSTANCE.addOverlay(debugOverlay);
         }
-        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(debugOverlayId, screen -> {
-            if (!isOverlayVisible(screen)) return false;
-            if (!FancyMenu.getOptions().showDebugOverlay.getValue()) return false;
-            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
-            return true;
-        });
+//        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(debugOverlayId, screen -> {
+//            if (!isOverlayVisible(screen)) return false;
+//            if (!FancyMenu.getOptions().showDebugOverlay.getValue()) return false;
+//            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
+//            return true;
+//        });
 	}
 
 	@Nullable
