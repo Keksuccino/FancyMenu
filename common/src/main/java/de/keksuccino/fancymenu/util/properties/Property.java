@@ -19,6 +19,8 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
@@ -772,15 +774,31 @@ public class Property<T> {
                                         preset = parsed;
                                     }
                                 }
-                                ColorPickerScreen picker = new ColorPickerScreen(preset, call -> {
-                                    if (call != null) {
-                                        builder.saveSnapshot();
-                                        builder.applyStackAppliers(entry, call);
-                                    }
-                                    contextMenu.closeMenu();
-                                    Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
-                                });
-                                Minecraft.getInstance().setScreen(picker);
+                                var snap = builder.createSnapshot();
+                                ColorPickerScreen picker = new ColorPickerScreen(preset,
+                                        drawable -> { // onColorUpdate
+                                            if (drawable != null) {
+                                                builder.applyStackAppliers(entry, drawable);
+                                            }
+                                        },
+                                        drawable -> { // onDone
+                                            if (snap != null) {
+                                                builder.saveSnapshot(snap);
+                                            }
+                                            if (drawable != null) {
+                                                builder.applyStackAppliers(entry, drawable);
+                                            }
+                                        },
+                                        drawable -> { // onCancel
+                                            if (drawable != null) {
+                                                builder.applyStackAppliers(entry, drawable);
+                                            }
+                                        });
+                                int centerX = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.width / 2) : 100;
+                                int centerY = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.height / 2) : 100;
+                                contextMenu.closeMenu();
+                                PiPWindowHandler.openWindow(new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"), centerX - 200, centerY - 100, 400, 200, picker));
+                                //PiPWindowHandler.openWindow(new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"), 100, 100, 400, 200, picker));
                             })
                     .setStackable(true)
                     .setStackApplier((stackEntry, value) -> {

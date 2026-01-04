@@ -1736,6 +1736,17 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     }
 
     @Override
+    public void saveSnapshot(@NotNull Object snapshot) {
+        Objects.requireNonNull(snapshot);
+        this.editor.history.saveSnapshot((LayoutEditorHistory.Snapshot) snapshot);
+    }
+
+    @Override
+    public @Nullable Object createSnapshot() {
+        return this.editor.history.createSnapshot();
+    }
+
+    @Override
     public @Nullable Screen getContextMenuCallbackScreen() {
         return this.editor;
     }

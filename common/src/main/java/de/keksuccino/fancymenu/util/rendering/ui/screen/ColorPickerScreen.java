@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.keksuccino.fancymenu.util.input.InputConstants;
-import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -13,13 +12,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import java.awt.Color;
-import java.util.Objects;
+import java.util.function.Consumer;
 
 public class ColorPickerScreen extends PiPScreen {
 
@@ -31,12 +28,14 @@ public class ColorPickerScreen extends PiPScreen {
     private static final int PANEL_PADDING = 10;
     private static final int PREVIEW_SIZE = 70;
 
-    @NotNull
-    private final Property.ColorProperty colorProperty;
     @Nullable
     private final DrawableColor presetColor;
-    @Nullable
-    private final String originalColorValue;
+    @NotNull
+    private final Consumer<DrawableColor> onColorUpdate;
+    @NotNull
+    private final Consumer<DrawableColor> onDone;
+    @NotNull
+    private final Consumer<DrawableColor> onCancel;
 
     private float hue = 0.0F;
     private float saturation = 0.0F;
@@ -68,28 +67,26 @@ public class ColorPickerScreen extends PiPScreen {
     private int infoWidth;
     private int infoHeight;
 
-    public ColorPickerScreen(@NotNull Property.ColorProperty colorProperty) {
+    public ColorPickerScreen(@Nullable DrawableColor presetColor, @NotNull Consumer<DrawableColor> onColorUpdate, @NotNull Consumer<DrawableColor> onDone, @NotNull Consumer<DrawableColor> onCancel) {
         super(Component.translatable("fancymenu.ui.color_picker.title"));
-        this.colorProperty = Objects.requireNonNull(colorProperty, "colorProperty");
-        this.originalColorValue = colorProperty.get();
-        DrawableColor preset = colorProperty.getDrawable();
-        if (preset == DrawableColor.EMPTY) {
-            preset = null;
-        }
-        this.presetColor = preset;
-        this.applyPresetColor(preset);
+        this.onColorUpdate = onColorUpdate;
+        this.onDone = onDone;
+        this.onCancel = onCancel;
+        this.presetColor = presetColor;
+        this.applyPresetColor(this.presetColor);
     }
 
     @Override
     protected void init() {
         this.cancelButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
-            this.colorProperty.set(this.originalColorValue);
+            this.onCancel.accept(this.presetColor);
             this.closeWindow();
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.doneButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
+            this.onDone.accept(DrawableColor.of(this.getCurrentHex()));
             this.closeWindow();
         });
         this.addWidget(this.doneButton);
@@ -97,8 +94,8 @@ public class ColorPickerScreen extends PiPScreen {
     }
 
     @Override
-    public void onScreenClosed() {
-
+    public void onWindowClosedExternally() {
+        this.onCancel.accept(this.presetColor);
     }
 
     @Override
@@ -109,10 +106,6 @@ public class ColorPickerScreen extends PiPScreen {
         graphics.fill(0, 0, this.width, this.height, theme.screen_background_color.getColorInt());
 
         this.updateLayout();
-
-        MutableComponent title = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        int titleWidth = this.font.width(title);
-        graphics.drawString(this.font, title, (this.width / 2) - (titleWidth / 2), 12, theme.generic_text_base_color.getColorInt(), false);
 
         this.renderLeftPanel(graphics, theme);
         this.renderInfoPanel(graphics, theme);
@@ -189,7 +182,7 @@ public class ColorPickerScreen extends PiPScreen {
 
     private void updateLayout() {
         int padding = 24;
-        int top = 40;
+        int top = 24;
         int bottom = 56;
         int availableWidth = this.width - (padding * 2);
         int availableHeight = this.height - top - bottom;
@@ -388,19 +381,19 @@ public class ColorPickerScreen extends PiPScreen {
         int max = Math.max(1, this.pickerSize - 1);
         this.saturation = clamp((float) ((mouseX - this.pickerX) / (double) max));
         this.value = clamp(1.0F - (float) ((mouseY - this.pickerY) / (double) max));
-        this.applyCurrentColorToProperty();
+        this.notifyOnColorUpdate();
     }
 
     private void updateHueFromMouse(double mouseX) {
         int max = Math.max(1, this.hueWidth - 1);
         this.hue = clamp((float) ((mouseX - this.hueX) / (double) max));
-        this.applyCurrentColorToProperty();
+        this.notifyOnColorUpdate();
     }
 
     private void updateAlphaFromMouse(double mouseX) {
         int max = Math.max(1, this.alphaWidth - 1);
         this.alpha = clamp((float) ((mouseX - this.alphaX) / (double) max));
-        this.applyCurrentColorToProperty();
+        this.notifyOnColorUpdate();
     }
 
     private void applyPresetColor(@Nullable DrawableColor preset) {
@@ -428,8 +421,8 @@ public class ColorPickerScreen extends PiPScreen {
         return DrawableColor.of(r, g, b, a).getHex();
     }
 
-    private void applyCurrentColorToProperty() {
-        this.colorProperty.set(this.getCurrentHex());
+    private void notifyOnColorUpdate() {
+        this.onColorUpdate.accept(DrawableColor.of(this.getCurrentHex()));
     }
 
     private static float clamp(float value) {

@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -30,6 +31,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class MenuBackground<B extends MenuBackground<?>> implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget, ContextMenuBuilder<B>, PropertyHolder {
 
@@ -75,6 +77,20 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Ren
     public void saveSnapshot() {
         var e = LayoutEditorScreen.getCurrentInstance();
         if (e != null) e.history.saveSnapshot();
+    }
+
+    @Override
+    public void saveSnapshot(@NotNull Object snapshot) {
+        Objects.requireNonNull(snapshot);
+        var e = LayoutEditorScreen.getCurrentInstance();
+        if (e != null) e.history.saveSnapshot((LayoutEditorHistory.Snapshot) snapshot);
+    }
+
+    @Override
+    public @Nullable Object createSnapshot() {
+        var e = LayoutEditorScreen.getCurrentInstance();
+        if (e != null) return e.history.createSnapshot();
+        return null;
     }
 
     protected abstract void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor);

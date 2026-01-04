@@ -20,6 +20,7 @@ public abstract class PiPScreen extends Screen implements PipableScreen {
 
     public void closeWindow() {
         if (this.window == null) throw new NullPointerException("The window can't be NULL when closing it.");
+        this.window.markClosingFromScreen();
         this.window.setScreen(null);
         this.window.close();
     }
@@ -31,6 +32,14 @@ public abstract class PiPScreen extends Screen implements PipableScreen {
     @ApiStatus.Internal
     public void setWindow(@Nullable PiPWindow window) {
         this.window = window;
+    }
+
+    @Override
+    public void onScreenClosed() {
+    }
+
+    @Override
+    public void onWindowClosedExternally() {
     }
 
     @Override

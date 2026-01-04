@@ -39,6 +39,13 @@ public class PiPWindowHandler {
     }
 
     public static void closeWindow(@NotNull PiPWindow window) {
+        boolean closedByScreen = window.consumeClosingFromScreen();
+        if (!closedByScreen) {
+            var screen = window.getScreen();
+            if (screen instanceof PipableScreen pipableScreen) {
+                pipableScreen.onWindowClosedExternally();
+            }
+        }
         if (window.shouldCloseScreenWithWindow()) {
             window.setScreen(null);
         }
@@ -61,13 +68,8 @@ public class PiPWindowHandler {
 
     public static void closeAllWindows() {
         List<PiPWindow> copy = new ArrayList<>(WINDOWS);
-        WINDOWS.clear();
         for (PiPWindow window : copy) {
-            window.handleClosed();
-            PiPWindow parent = window.getParentWindow();
-            if (parent != null) {
-                parent.unregisterChildWindow(window);
-            }
+            closeWindow(window);
         }
         focusedWindow = null;
         activePointerWindow = null;

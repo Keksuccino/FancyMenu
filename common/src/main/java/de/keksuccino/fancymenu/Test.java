@@ -28,10 +28,8 @@ public class Test {
     public void onInitScreenPost(InitOrResizeScreenCompletedEvent e) {
 
         e.addRenderableWidget(new ExtendedButton(20, 20, 100, 20, "Open PiP Window", button -> {
-            ColorPickerScreen s = new ColorPickerScreen(null, s1 -> {
-               LOGGER.info("######################### COLOR: " + s1);
-            });
-            PiPWindowHandler.openWindow(new PiPWindow(Component.literal("Some Window"), 100, 100, 500, 500, s));
+            ColorPickerScreen s = new ColorPickerScreen(null, drawableColor -> {}, drawableColor -> {}, drawableColor -> {});
+            PiPWindowHandler.openWindow(new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"), 100, 100, 500, 500, s));
         }));
 
         e.addRenderableWidget(new ExtendedButton(20, 45, 100, 20, "Open PiP Window 2", button -> {

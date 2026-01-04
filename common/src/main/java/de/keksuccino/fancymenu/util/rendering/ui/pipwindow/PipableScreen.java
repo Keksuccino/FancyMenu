@@ -26,4 +26,9 @@ public interface PipableScreen {
      */
     void onScreenClosed();
 
+    /**
+     * Gets called when the parent {@link PiPWindow} gets closed by anything but the screen itself.
+     */
+    void onWindowClosedExternally();
+
 }

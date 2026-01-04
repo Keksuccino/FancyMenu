@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.decorationoverlay;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.properties.Property;
@@ -147,6 +148,20 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
     public void saveSnapshot() {
         var e = LayoutEditorScreen.getCurrentInstance();
         if (e != null) e.history.saveSnapshot();
+    }
+
+    @Override
+    public void saveSnapshot(@NotNull Object snapshot) {
+        Objects.requireNonNull(snapshot);
+        var e = LayoutEditorScreen.getCurrentInstance();
+        if (e != null) e.history.saveSnapshot((LayoutEditorHistory.Snapshot) snapshot);
+    }
+
+    @Override
+    public @Nullable Object createSnapshot() {
+        var e = LayoutEditorScreen.getCurrentInstance();
+        if (e != null) return e.history.createSnapshot();
+        return null;
     }
 
     @Override

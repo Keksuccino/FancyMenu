@@ -97,6 +97,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     @Nullable
     private Runnable closeCallback;
+    private boolean closingFromScreen = false;
 
     private int lastScreenWidth = -1;
     private int lastScreenHeight = -1;
@@ -445,7 +446,18 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
+    void markClosingFromScreen() {
+        this.closingFromScreen = true;
+    }
+
+    boolean consumeClosingFromScreen() {
+        boolean value = this.closingFromScreen;
+        this.closingFromScreen = false;
+        return value;
+    }
+
     public void handleClosed() {
+        this.closingFromScreen = false;
         if (this.screen != null) {
             this.screen.removed();
         }

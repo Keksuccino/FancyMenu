@@ -20,6 +20,7 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
 
     public void closeWindow() {
         if (this.window == null) throw new NullPointerException("The window can't be NULL when closing it.");
+        this.window.markClosingFromScreen();
         this.window.setScreen(null);
         this.window.close();
     }
@@ -36,6 +37,14 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
     @Override
     public final boolean shouldCloseOnEsc() {
         return false;
+    }
+
+    @Override
+    public void onScreenClosed() {
+    }
+
+    @Override
+    public void onWindowClosedExternally() {
     }
 
     @Override

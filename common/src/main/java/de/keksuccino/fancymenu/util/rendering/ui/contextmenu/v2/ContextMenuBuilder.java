@@ -122,9 +122,9 @@ public interface ContextMenuBuilder<O> {
      * @param callbackScreenSupplier screen to return to after input/resource screens close
      * @param stackableObjectsListSupplier provides the full list of stackable objects, optionally filtered
      * @param selfSupplier supplies the "self" object for this menu instance
-     * @param saveSnapshotTask optional snapshot hook for history/undo
+     * @param saveSnapshotVoidTask optional snapshot hook for history/undo
      */
-    static <O> ContextMenuBuilder<O> createStandalone(@NotNull Supplier<Screen> callbackScreenSupplier, @NotNull ConsumingSupplier<ConsumingSupplier<O, Boolean>, List<O>> stackableObjectsListSupplier, @NotNull Supplier<O> selfSupplier, @Nullable Runnable saveSnapshotTask) {
+    static <O> ContextMenuBuilder<O> createStandalone(@NotNull Supplier<Screen> callbackScreenSupplier, @NotNull ConsumingSupplier<ConsumingSupplier<O, Boolean>, List<O>> stackableObjectsListSupplier, @NotNull Supplier<O> selfSupplier, @Nullable Runnable saveSnapshotVoidTask, @Nullable Consumer<Object> saveSnapshotObjectTask, @Nullable Supplier<Object> createSnapshotSupplier) {
         return new ContextMenuBuilder<>() {
             @Override
             public @Nullable Screen getContextMenuCallbackScreen() {
@@ -136,8 +136,18 @@ public interface ContextMenuBuilder<O> {
             }
             @Override
             public void saveSnapshot() {
-                if (saveSnapshotTask == null) return;
-                saveSnapshotTask.run();
+                if (saveSnapshotVoidTask == null) return;
+                saveSnapshotVoidTask.run();
+            }
+            @Override
+            public void saveSnapshot(@NotNull Object snapshot) {
+                if (saveSnapshotObjectTask == null) return;
+                saveSnapshotObjectTask.accept(snapshot);
+            }
+            @Override
+            public @Nullable Object createSnapshot() {
+                if (createSnapshotSupplier == null) return null;
+                return createSnapshotSupplier.get();
             }
             @Override
             public @NotNull List<O> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<O, Boolean> filter) {
@@ -171,6 +181,11 @@ public interface ContextMenuBuilder<O> {
      * Call this right before applying a value across a stack to ensure a single undo step.
      */
     void saveSnapshot();
+
+    void saveSnapshot(@NotNull Object snapshot);
+
+    @Nullable
+    Object createSnapshot();
 
     /**
      * Returns the list of stackable objects for multi-selection.
