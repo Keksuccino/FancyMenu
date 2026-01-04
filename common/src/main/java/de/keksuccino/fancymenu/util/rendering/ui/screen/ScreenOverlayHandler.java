@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
@@ -10,14 +9,14 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class ScreenOverlayHandler extends AbstractContainerEventHandler {
+public class ScreenOverlayHandler {
 
     public static final ScreenOverlayHandler INSTANCE = new ScreenOverlayHandler();
 
     private final Map<Long, Renderable> overlays = new LinkedHashMap<>();
-    private final List<GuiEventListener> children = new ArrayList<>();
     private long id = 0;
 
     private ScreenOverlayHandler() {
@@ -26,14 +25,12 @@ public class ScreenOverlayHandler extends AbstractContainerEventHandler {
     public long addOverlay(@NotNull Renderable overlay) {
         id++;
         this.overlays.put(id, overlay);
-        if ((overlay instanceof GuiEventListener l) && !this.children.contains(l)) this.children.add(l);
         return id;
     }
 
     public long addOverlayFirst(@NotNull Renderable overlay) {
         id++;
         LinkedHashMap<Long, Renderable> reordered = new LinkedHashMap<>();
-        if ((overlay instanceof GuiEventListener l) && !this.children.contains(l)) this.children.add(l);
         reordered.put(id, overlay);
         reordered.putAll(this.overlays);
         this.overlays.clear();
@@ -46,19 +43,15 @@ public class ScreenOverlayHandler extends AbstractContainerEventHandler {
             id = (idToReplace + 1);
         }
         Renderable old = this.overlays.get(idToReplace);
-        if (old instanceof GuiEventListener l) this.children.removeIf(listener -> (l == listener)); // remove all possible occurrences of the overlay
         this.overlays.put(idToReplace, body);
     }
 
     public void removeOverlay(long id) {
-        Renderable toRemove = this.overlays.get(id);
-        if (toRemove instanceof GuiEventListener l) this.children.removeIf(listener -> (l == listener)); // remove all possible occurrences of the overlay
         this.overlays.remove(id);
     }
 
     public void clearOverlays() {
         this.overlays.clear();
-        this.children.clear();
     }
 
     @NotNull
@@ -90,9 +83,58 @@ public class ScreenOverlayHandler extends AbstractContainerEventHandler {
         overlays.values().forEach(Renderable -> Renderable.render(graphics, mouseX, mouseY, partial));
     }
 
-    @Override
-    public @NotNull List<? extends GuiEventListener> children() {
-        return this.children;
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return dispatchBooleanEvent(listener -> listener.mouseClicked(mouseX, mouseY, button));
+    }
+
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        return dispatchBooleanEvent(listener -> listener.mouseDragged(mouseX, mouseY, button, deltaX, deltaY));
+    }
+
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return dispatchBooleanEvent(listener -> listener.mouseReleased(mouseX, mouseY, button));
+    }
+
+    public void mouseMoved(double mouseX, double mouseY) {
+        dispatchVoidEvent(listener -> listener.mouseMoved(mouseX, mouseY));
+    }
+
+    public boolean keyPressed(int button, int scanCode, int modifiers) {
+        return dispatchBooleanEvent(listener -> listener.keyPressed(button, scanCode, modifiers));
+    }
+
+    public boolean keyReleased(int button, int scanCode, int modifiers) {
+        return dispatchBooleanEvent(listener -> listener.keyReleased(button, scanCode, modifiers));
+    }
+
+    public boolean charTyped(char codePoint, int modifiers) {
+        return dispatchBooleanEvent(listener -> listener.charTyped(codePoint, modifiers));
+    }
+
+    private boolean dispatchBooleanEvent(@NotNull OverlayEvent handler) {
+        List<Renderable> ordered = new ArrayList<>(overlays.values());
+        for (int i = ordered.size() - 1; i >= 0; i--) {
+            Renderable overlay = ordered.get(i);
+            if (overlay instanceof GuiEventListener listener && handler.handle(listener)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void dispatchVoidEvent(@NotNull Consumer<GuiEventListener> handler) {
+        List<Renderable> ordered = new ArrayList<>(overlays.values());
+        for (int i = ordered.size() - 1; i >= 0; i--) {
+            Renderable overlay = ordered.get(i);
+            if (overlay instanceof GuiEventListener listener) {
+                handler.accept(listener);
+            }
+        }
+    }
+
+    @FunctionalInterface
+    private interface OverlayEvent {
+        boolean handle(@NotNull GuiEventListener listener);
     }
 
 }
