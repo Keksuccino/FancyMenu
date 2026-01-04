@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -79,20 +80,24 @@ public class ScreenOverlayHandler {
         }
     }
 
-    public void renderAllOverlays(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        overlays.values().forEach(Renderable -> Renderable.render(graphics, mouseX, mouseY, partial));
+    public void renderAll(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        overlays.values().forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partial));
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         return dispatchBooleanEvent(listener -> listener.mouseClicked(mouseX, mouseY, button));
     }
 
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return dispatchBooleanEvent(listener -> listener.mouseReleased(mouseX, mouseY, button));
+    }
+
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         return dispatchBooleanEvent(listener -> listener.mouseDragged(mouseX, mouseY, button, deltaX, deltaY));
     }
 
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        return dispatchBooleanEvent(listener -> listener.mouseReleased(mouseX, mouseY, button));
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
+        return dispatchBooleanEvent(listener -> listener.mouseScrolled(mouseX, mouseY, deltaX, deltaY));
     }
 
     public void mouseMoved(double mouseX, double mouseY) {
@@ -109,6 +114,16 @@ public class ScreenOverlayHandler {
 
     public boolean charTyped(char codePoint, int modifiers) {
         return dispatchBooleanEvent(listener -> listener.charTyped(codePoint, modifiers));
+    }
+
+    public void tick() {
+        List<Renderable> ordered = new ArrayList<>(overlays.values());
+        for (int i = ordered.size() - 1; i >= 0; i--) {
+            Renderable overlay = ordered.get(i);
+            if (overlay instanceof Tickable tickable) {
+                tickable.tick();
+            }
+        }
     }
 
     private boolean dispatchBooleanEvent(@NotNull OverlayEvent handler) {

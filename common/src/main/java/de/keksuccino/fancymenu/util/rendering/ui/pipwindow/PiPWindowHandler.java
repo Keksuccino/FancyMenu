@@ -1,44 +1,52 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
+import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class PiPWindowHandler {
+public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable {
 
-    private static final List<PiPWindow> WINDOWS = new ArrayList<>();
-    @Nullable
-    private static PiPWindow focusedWindow;
-    @Nullable
-    private static PiPWindow activePointerWindow;
-    private static int activePointerButton = -1;
-    private static boolean windowClickedThisTick = false;
-    @Nullable
-    private static PiPWindow lastClickedWindowThisTick;
-    private static boolean isRendering = false;
-    @Nullable
-    private static PiPWindow activeScreenRenderWindow;
-    private static double activeScreenRenderScaleFactor = 1.0;
+    public static final PiPWindowHandler INSTANCE = new PiPWindowHandler();
 
-    public static void openWindow(@NotNull PiPWindow window) {
-        if (WINDOWS.contains(window)) {
+    private final List<PiPWindow> windows = new ArrayList<>();
+    @Nullable
+    private PiPWindow focusedWindow;
+    @Nullable
+    private PiPWindow activePointerWindow;
+    private int activePointerButton = -1;
+    private boolean windowClickedThisTick = false;
+    @Nullable
+    private PiPWindow lastClickedWindowThisTick;
+    private boolean isRendering = false;
+    @Nullable
+    private PiPWindow activeScreenRenderWindow;
+    private double activeScreenRenderScaleFactor = 1.0;
+
+    private PiPWindowHandler() {
+    }
+
+    public void openWindow(@NotNull PiPWindow window) {
+        if (windows.contains(window)) {
             bringToFront(window);
             return;
         }
-        WINDOWS.add(window);
+        windows.add(window);
         window.addCloseCallback(() -> closeWindow(window));
         bringToFront(window);
     }
 
-    public static void openChildWindow(@NotNull PiPWindow parent, @NotNull PiPWindow child) {
+    public void openChildWindow(@NotNull PiPWindow parent, @NotNull PiPWindow child) {
         parent.registerChildWindow(child);
         openWindow(child);
     }
 
-    public static void closeWindow(@NotNull PiPWindow window) {
+    public void closeWindow(@NotNull PiPWindow window) {
         boolean closedByScreen = window.consumeClosingFromScreen();
         if (!closedByScreen) {
             var screen = window.getScreen();
@@ -49,7 +57,7 @@ public class PiPWindowHandler {
         if (window.shouldCloseScreenWithWindow()) {
             window.setScreen(null);
         }
-        if (!WINDOWS.remove(window)) {
+        if (!windows.remove(window)) {
             return;
         }
         window.handleClosed();
@@ -66,8 +74,8 @@ public class PiPWindowHandler {
         }
     }
 
-    public static void closeAllWindows() {
-        List<PiPWindow> copy = new ArrayList<>(WINDOWS);
+    public void closeAllWindows() {
+        List<PiPWindow> copy = new ArrayList<>(windows);
         for (PiPWindow window : copy) {
             closeWindow(window);
         }
@@ -76,31 +84,32 @@ public class PiPWindowHandler {
         activePointerButton = -1;
     }
 
-    public static List<PiPWindow> getOpenWindows() {
-        return Collections.unmodifiableList(WINDOWS);
+    public List<PiPWindow> getOpenWindows() {
+        return Collections.unmodifiableList(windows);
     }
 
-    public static boolean isAnyWindowOpen() {
-        return !WINDOWS.isEmpty();
+    public boolean isAnyWindowOpen() {
+        return !windows.isEmpty();
     }
 
-    public static void refreshAllScreens() {
-        for (PiPWindow window : new ArrayList<>(WINDOWS)) {
+    public void refreshAllScreens() {
+        for (PiPWindow window : new ArrayList<>(windows)) {
             window.refreshScreen();
         }
     }
 
-    public static void bringToFront(@NotNull PiPWindow window) {
-        if (WINDOWS.remove(window)) {
-            WINDOWS.add(window);
+    public void bringToFront(@NotNull PiPWindow window) {
+        if (windows.remove(window)) {
+            windows.add(window);
         }
         focusedWindow = window;
     }
 
-    public static void renderAll(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         isRendering = true;
         try {
-            for (PiPWindow window : new ArrayList<>(WINDOWS)) {
+            for (PiPWindow window : new ArrayList<>(windows)) {
                 window.render(graphics, mouseX, mouseY, partial);
             }
         } finally {
@@ -108,22 +117,66 @@ public class PiPWindowHandler {
         }
     }
 
-    public static void tickAll() {
+    public boolean wasWindowClickedThisTick() {
+        return windowClickedThisTick;
+    }
+
+    @Nullable
+    public PiPWindow getLastClickedWindowThisTick() {
+        return lastClickedWindowThisTick;
+    }
+
+    public boolean isRendering() {
+        return isRendering;
+    }
+
+    public void beginScreenRender(@NotNull PiPWindow window, double scaleFactor) {
+        activeScreenRenderWindow = window;
+        activeScreenRenderScaleFactor = scaleFactor;
+    }
+
+    public void endScreenRender(@NotNull PiPWindow window) {
+        if (activeScreenRenderWindow == window) {
+            activeScreenRenderWindow = null;
+            activeScreenRenderScaleFactor = 1.0;
+        }
+    }
+
+    public int getActiveScreenRenderOffsetX() {
+        return activeScreenRenderWindow != null ? activeScreenRenderWindow.getBodyX() : 0;
+    }
+
+    public int getActiveScreenRenderOffsetY() {
+        return activeScreenRenderWindow != null ? activeScreenRenderWindow.getBodyY() : 0;
+    }
+
+    public double getActiveScreenRenderScaleFactor() {
+        return activeScreenRenderWindow != null ? activeScreenRenderScaleFactor : 1.0;
+    }
+
+    public boolean isScreenRenderActive() {
+        return activeScreenRenderWindow != null;
+    }
+
+    @Override
+    public void tick() {
         windowClickedThisTick = false;
         lastClickedWindowThisTick = null;
-        for (PiPWindow window : new ArrayList<>(WINDOWS)) {
+        for (PiPWindow window : new ArrayList<>(windows)) {
             window.tick();
         }
     }
 
-    public static void mouseMoved(double mouseX, double mouseY) {
-        for (PiPWindow window : new ArrayList<>(WINDOWS)) {
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        for (PiPWindow window : new ArrayList<>(windows)) {
             window.mouseMoved(mouseX, mouseY);
         }
     }
 
-    public static boolean mouseClicked(double mouseX, double mouseY, int button) {
-        List<PiPWindow> snapshot = new ArrayList<>(WINDOWS);
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        List<PiPWindow> snapshot = new ArrayList<>(windows);
         for (int i = snapshot.size() - 1; i >= 0; i--) {
             PiPWindow window = snapshot.get(i);
             if (!window.isVisible()) {
@@ -147,7 +200,7 @@ public class PiPWindowHandler {
             } else {
                 window.mouseClickedWithoutScreen(mouseX, mouseY, button);
             }
-            if (WINDOWS.contains(window)) {
+            if (windows.contains(window)) {
                 bringToFront(window);
                 focusedWindow = window;
                 activePointerWindow = window;
@@ -166,48 +219,8 @@ public class PiPWindowHandler {
         return false;
     }
 
-    public static boolean wasWindowClickedThisTick() {
-        return windowClickedThisTick;
-    }
-
-    @Nullable
-    public static PiPWindow getLastClickedWindowThisTick() {
-        return lastClickedWindowThisTick;
-    }
-
-    public static boolean isRendering() {
-        return isRendering;
-    }
-
-    public static void beginScreenRender(@NotNull PiPWindow window, double scaleFactor) {
-        activeScreenRenderWindow = window;
-        activeScreenRenderScaleFactor = scaleFactor;
-    }
-
-    public static void endScreenRender(@NotNull PiPWindow window) {
-        if (activeScreenRenderWindow == window) {
-            activeScreenRenderWindow = null;
-            activeScreenRenderScaleFactor = 1.0;
-        }
-    }
-
-    public static int getActiveScreenRenderOffsetX() {
-        return activeScreenRenderWindow != null ? activeScreenRenderWindow.getBodyX() : 0;
-    }
-
-    public static int getActiveScreenRenderOffsetY() {
-        return activeScreenRenderWindow != null ? activeScreenRenderWindow.getBodyY() : 0;
-    }
-
-    public static double getActiveScreenRenderScaleFactor() {
-        return activeScreenRenderWindow != null ? activeScreenRenderScaleFactor : 1.0;
-    }
-
-    public static boolean isScreenRenderActive() {
-        return activeScreenRenderWindow != null;
-    }
-
-    public static boolean mouseReleased(double mouseX, double mouseY, int button) {
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (activePointerWindow != null) {
             boolean handled = activePointerWindow.mouseReleased(mouseX, mouseY, button);
             if (button == activePointerButton) {
@@ -219,15 +232,17 @@ public class PiPWindowHandler {
         return false;
     }
 
-    public static boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (activePointerWindow != null) {
             return activePointerWindow.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
         return false;
     }
 
-    public static boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
-        List<PiPWindow> snapshot = new ArrayList<>(WINDOWS);
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        List<PiPWindow> snapshot = new ArrayList<>(windows);
         for (int i = snapshot.size() - 1; i >= 0; i--) {
             PiPWindow window = snapshot.get(i);
             if (!window.isVisible() || !window.isMouseOver(mouseX, mouseY)) {
@@ -241,7 +256,8 @@ public class PiPWindowHandler {
         return false;
     }
 
-    public static boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         PiPWindow window = getFocusedWindow();
         if (window != null) {
             return window.keyPressed(keyCode, scanCode, modifiers);
@@ -249,7 +265,8 @@ public class PiPWindowHandler {
         return false;
     }
 
-    public static boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         PiPWindow window = getFocusedWindow();
         if (window != null) {
             return window.keyReleased(keyCode, scanCode, modifiers);
@@ -257,7 +274,8 @@ public class PiPWindowHandler {
         return false;
     }
 
-    public static boolean charTyped(char codePoint, int modifiers) {
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
         PiPWindow window = getFocusedWindow();
         if (window != null) {
             return window.charTyped(codePoint, modifiers);
@@ -265,13 +283,22 @@ public class PiPWindowHandler {
         return false;
     }
 
+    @Override
+    public void setFocused(boolean focused) {
+    }
+
+    @Override
+    public boolean isFocused() {
+        return false;
+    }
+
     @Nullable
-    private static PiPWindow getFocusedWindow() {
+    private PiPWindow getFocusedWindow() {
         if (focusedWindow != null && focusedWindow.isVisible() && !focusedWindow.isInputLocked()) {
             return focusedWindow;
         }
-        for (int i = WINDOWS.size() - 1; i >= 0; i--) {
-            PiPWindow window = WINDOWS.get(i);
+        for (int i = windows.size() - 1; i >= 0; i--) {
+            PiPWindow window = windows.get(i);
             if (window.isVisible() && !window.isInputLocked()) {
                 focusedWindow = window;
                 return window;
@@ -280,7 +307,8 @@ public class PiPWindowHandler {
         return null;
     }
 
-    public static boolean isWindowFocused(@NotNull PiPWindow window) {
+    public boolean isWindowFocused(@NotNull PiPWindow window) {
         return focusedWindow == window;
     }
+
 }

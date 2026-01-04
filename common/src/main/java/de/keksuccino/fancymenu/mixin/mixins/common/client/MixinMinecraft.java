@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
@@ -59,12 +60,12 @@ import net.minecraft.client.Minecraft;
 public class MixinMinecraft {
 
 	@Unique private static final String DUMMY_RESOURCE_RELOAD_LISTENER_RETURN_VALUE_FANCYMENU = "PREPARE RETURN VALUE";
+    @Unique private static final String UNKNOWN_SERVER_IP_FANCYMENU = "ERROR";
 	@Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
 	@Unique private static boolean reloadListenerRegisteredFancyMenu = false;
 	@Unique private boolean lateClientInitDoneFancyMenu = false;
 	@Unique private Screen lastScreen_FancyMenu = null;
-	@Unique private static final String UNKNOWN_SERVER_IP_FANCYMENU = "ERROR";
 	@Unique private boolean hasActiveServerConnection_FancyMenu;
 	@Unique private boolean pendingServerJoinEvent_FancyMenu;
 	@Unique @Nullable private String lastServerIp_FancyMenu;
@@ -110,7 +111,7 @@ public class MixinMinecraft {
 	@Inject(method = "tick", at = @At("HEAD"))
 	private void head_tick_FancyMenu(CallbackInfo info) {
 
-        PiPWindowHandler.tickAll();
+        ScreenOverlayHandler.INSTANCE.tick();
 
 		if (this.pendingServerJoinEvent_FancyMenu && this.player != null) {
 			this.fireServerJoined_FancyMenu();
@@ -189,7 +190,7 @@ public class MixinMinecraft {
 	private void before_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
 
         // This routes setScreen() calls inside PipWindows through the actual window instead of normal MC
-        PiPWindow pip = PiPWindowHandler.getLastClickedWindowThisTick();
+        PiPWindow pip = PiPWindowHandler.INSTANCE.getLastClickedWindowThisTick();
         if (pip != null) {
             pip.setScreen(screen);
             info.cancel();

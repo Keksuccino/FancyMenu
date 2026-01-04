@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.input.ClicksPerSecondTracker;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import org.lwjgl.glfw.GLFW;
@@ -42,7 +42,7 @@ public class MixinMouseHandler {
             double f = (bl ? Math.signum(yOffset) : yOffset) * d;
             double g = this.xpos * (double) mc.getWindow().getGuiScaledWidth() / (double) mc.getWindow().getScreenWidth();
             double h = this.ypos * (double) mc.getWindow().getGuiScaledHeight() / (double) mc.getWindow().getScreenHeight();
-            if (PiPWindowHandler.mouseScrolled(g, h, e, f)) info.cancel();
+            if (ScreenOverlayHandler.INSTANCE.mouseScrolled(g, h, e, f)) info.cancel();
         }
     }
 
@@ -80,9 +80,9 @@ public class MixinMouseHandler {
 
         boolean cancel = false;
         if (clicked) {
-            if (PiPWindowHandler.mouseClicked(mouseX, mouseY, button)) cancel = true;
+            if (ScreenOverlayHandler.INSTANCE.mouseClicked(mouseX, mouseY, button)) cancel = true;
         } else {
-            if (PiPWindowHandler.mouseReleased(mouseX, mouseY, button)) cancel = true;
+            if (ScreenOverlayHandler.INSTANCE.mouseReleased(mouseX, mouseY, button)) cancel = true;
         }
         if (cancel) {
             info.cancel();
@@ -130,9 +130,9 @@ public class MixinMouseHandler {
         if ("mouseMoved event handler".equals(errorDesc)) {
             EventHandler.INSTANCE.postEvent(new ScreenMouseMoveEvent(this.mc_FancyMenu.screen, mouseX, mouseY, deltaX, deltaY));
             if (MCEFUtil.isMCEFLoaded()) BrowserHandler.mouseMoved(mouseX, mouseY);
-            PiPWindowHandler.mouseMoved(mouseX, mouseY);
+            ScreenOverlayHandler.INSTANCE.mouseMoved(mouseX, mouseY);
         } else if ("mouseDragged event handler".equals(errorDesc)) {
-            if (PiPWindowHandler.mouseDragged(mouseX, mouseY, this.activeButton, deltaX, deltaY)) return;
+            if (ScreenOverlayHandler.INSTANCE.mouseDragged(mouseX, mouseY, this.activeButton, deltaX, deltaY)) return;
         }
 
         original.call(action, errorDesc, screenName);
