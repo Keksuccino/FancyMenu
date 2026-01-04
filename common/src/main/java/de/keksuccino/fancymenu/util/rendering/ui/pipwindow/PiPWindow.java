@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+@SuppressWarnings("unused")
 public class PiPWindow extends AbstractContainerEventHandler implements Renderable {
 
     public static final int DEFAULT_TITLE_BAR_HEIGHT = 18;
@@ -272,9 +273,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    public void setScreen(@Nullable Screen screen) {
+    public PiPWindow setScreen(@Nullable Screen screen) {
         if (this.screen == screen) {
-            return;
+            return this;
         }
         if (this.screen != null) {
             if (this.screen instanceof PipableScreen ps) {
@@ -294,6 +295,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             this.lastScreenWidth = screenWidth;
             this.lastScreenHeight = screenHeight;
         }
+        return this;
     }
 
     @Nullable
@@ -301,16 +303,18 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.screen;
     }
 
-    public void setTitle(@Nonnull Component title) {
+    public PiPWindow setTitle(@Nonnull Component title) {
         this.title = Objects.requireNonNull(title, "title");
+        return this;
     }
 
     public Component getTitle() {
         return this.title;
     }
 
-    public void setIcon(@Nullable ResourceLocation icon) {
+    public PiPWindow setIcon(@Nullable ResourceLocation icon) {
         this.icon = icon;
+        return this;
     }
 
     @Nullable
@@ -318,8 +322,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.icon;
     }
 
-    public void setCloseButtonIcon(@Nullable ResourceLocation icon) {
+    public PiPWindow setCloseButtonIcon(@Nullable ResourceLocation icon) {
         this.closeButtonIcon = icon;
+        return this;
     }
 
     @Nullable
@@ -327,8 +332,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.closeButtonIcon;
     }
 
-    public void setMaximizeButtonIcon(@Nullable ResourceLocation icon) {
+    public PiPWindow setMaximizeButtonIcon(@Nullable ResourceLocation icon) {
         this.maximizeButtonIcon = icon;
+        return this;
     }
 
     @Nullable
@@ -336,8 +342,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.maximizeButtonIcon;
     }
 
-    public void setNormalizeButtonIcon(@Nullable ResourceLocation icon) {
+    public PiPWindow setNormalizeButtonIcon(@Nullable ResourceLocation icon) {
         this.normalizeButtonIcon = icon;
+        return this;
     }
 
     @Nullable
@@ -345,8 +352,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.normalizeButtonIcon;
     }
 
-    public void setVisible(boolean visible) {
+    public PiPWindow setVisible(boolean visible) {
         this.visible = visible;
+        return this;
     }
 
     public boolean isVisible() {
@@ -357,32 +365,36 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.screenRendering;
     }
 
-    public void setResizable(boolean resizable) {
+    public PiPWindow setResizable(boolean resizable) {
         this.resizable = resizable;
+        return this;
     }
 
     public boolean isResizable() {
         return this.resizable;
     }
 
-    public void setMovable(boolean movable) {
+    public PiPWindow setMovable(boolean movable) {
         this.movable = movable;
+        return this;
     }
 
     public boolean isMovable() {
         return this.movable;
     }
 
-    public void setMaximizable(boolean maximizable) {
+    public PiPWindow setMaximizable(boolean maximizable) {
         this.maximizable = maximizable;
+        return this;
     }
 
     public boolean isMaximizable() {
         return this.maximizable;
     }
 
-    public void setClosable(boolean closable) {
+    public PiPWindow setClosable(boolean closable) {
         this.closable = closable;
+        return this;
     }
 
     public boolean isClosable() {
@@ -393,8 +405,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return closeScreenWithWindow;
     }
 
-    public void setCloseScreenWithWindow(boolean closeScreenWithWindow) {
+    public PiPWindow setCloseScreenWithWindow(boolean closeScreenWithWindow) {
         this.closeScreenWithWindow = closeScreenWithWindow;
+        return this;
     }
 
     public void refreshScreen() {
@@ -408,8 +421,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         this.screen.resize(this.minecraft, screenWidth, screenHeight);
     }
 
-    public void setCloseCallback(@Nullable Runnable closeCallback) {
+    public PiPWindow setCloseCallback(@Nullable Runnable closeCallback) {
         this.closeCallback = closeCallback;
+        return this;
     }
 
     public void addCloseCallback(@Nonnull Runnable closeCallback) {
@@ -444,23 +458,26 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    public void setPosition(int x, int y) {
+    public PiPWindow setPosition(int x, int y) {
         this.x = x;
         this.y = y;
+        return this;
     }
 
-    public void setSize(int width, int height) {
+    public PiPWindow setSize(int width, int height) {
         this.width = Math.max(width, getMinimumWidth());
         this.height = Math.max(height, getMinimumHeight());
         resizeScreenIfNeeded();
+        return this;
     }
 
-    public void setBounds(int x, int y, int width, int height) {
+    public PiPWindow setBounds(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
         this.width = Math.max(width, getMinimumWidth());
         this.height = Math.max(height, getMinimumHeight());
         resizeScreenIfNeeded();
+        return this;
     }
 
     public int getX() {
@@ -506,32 +523,38 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return Math.max(min, layoutMin);
     }
 
-    public void setMinSize(int minWidth, int minHeight) {
+    public PiPWindow setMinSize(int minWidth, int minHeight) {
         this.minWidth = Math.max(1, minWidth);
         this.minHeight = Math.max(1, minHeight);
         setSize(this.width, this.height);
+        return this;
     }
 
-    public void setTitleBarHeight(int titleBarHeight) {
+    public PiPWindow setTitleBarHeight(int titleBarHeight) {
         this.titleBarHeight = Math.max(0, titleBarHeight);
         setSize(this.width, this.height);
+        return this;
     }
 
-    public void setBorderThickness(int borderThickness) {
+    public PiPWindow setBorderThickness(int borderThickness) {
         this.borderThickness = Math.max(0, borderThickness);
         setSize(this.width, this.height);
+        return this;
     }
 
-    public void setResizeMargin(int resizeMargin) {
+    public PiPWindow setResizeMargin(int resizeMargin) {
         this.resizeMargin = Math.max(0, resizeMargin);
+        return this;
     }
 
-    public void setButtonSize(int buttonSize) {
+    public PiPWindow setButtonSize(int buttonSize) {
         this.buttonSize = Math.max(1, buttonSize);
+        return this;
     }
 
-    public void setButtonPadding(int buttonPadding) {
+    public PiPWindow setButtonPadding(int buttonPadding) {
         this.buttonPadding = Math.max(0, buttonPadding);
+        return this;
     }
 
     public boolean isMaximized() {
@@ -542,9 +565,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         setMaximized(!this.maximized);
     }
 
-    public void setMaximized(boolean maximized) {
+    public PiPWindow setMaximized(boolean maximized) {
         if (this.maximized == maximized) {
-            return;
+            return this;
         }
         if (maximized) {
             this.restoreX = this.x;
@@ -558,10 +581,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             setBounds(this.restoreX, this.restoreY, this.restoreWidth, this.restoreHeight);
         }
         this.maximized = maximized;
+        return this;
     }
 
-    public void setInputLocked(boolean inputLocked) {
+    public PiPWindow setInputLocked(boolean inputLocked) {
         this.inputLocked = inputLocked;
+        return this;
     }
 
     public boolean isInputLocked() {
