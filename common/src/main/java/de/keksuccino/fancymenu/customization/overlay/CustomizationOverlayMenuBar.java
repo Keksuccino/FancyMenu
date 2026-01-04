@@ -6,11 +6,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class CustomizationOverlayMenuBar extends MenuBar {
 
-    public boolean allowRender = false;
-
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        if (!this.allowRender) return;
         super.render(graphics, mouseX, mouseY, partial);
     }
 

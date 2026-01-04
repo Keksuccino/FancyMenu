@@ -7,6 +7,8 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,7 +36,7 @@ public class ScreenOverlayHandler {
 
     public long addOverlay(@NotNull Renderable overlay, @NotNull OverlayVisibilityController controller) {
         long overlayId = addOverlay(overlay);
-        addVisibilityController(overlayId, controller);
+        setVisibilityControllerFor(overlayId, controller);
         return overlayId;
     }
 
@@ -50,7 +52,7 @@ public class ScreenOverlayHandler {
 
     public long addOverlayFirst(@NotNull Renderable overlay, @NotNull OverlayVisibilityController controller) {
         long overlayId = addOverlayFirst(overlay);
-        addVisibilityController(overlayId, controller);
+        setVisibilityControllerFor(overlayId, controller);
         return overlayId;
     }
 
@@ -79,12 +81,12 @@ public class ScreenOverlayHandler {
         this.overlays.clear();
     }
 
-    public void addVisibilityController(long overlayId, @NotNull OverlayVisibilityController controller) {
+    public void setVisibilityControllerFor(long overlayId, @Nullable OverlayVisibilityController controller) {
+        if (controller == null) {
+            this.visibilityControllers.remove(overlayId);
+            return;
+        }
         this.visibilityControllers.put(overlayId, controller);
-    }
-
-    public void removeVisibilityController(long overlayId) {
-        this.visibilityControllers.remove(overlayId);
     }
 
     @NotNull
