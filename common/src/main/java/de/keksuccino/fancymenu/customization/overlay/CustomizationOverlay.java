@@ -12,6 +12,8 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
@@ -20,6 +22,7 @@ import java.util.Objects;
 
 public class CustomizationOverlay {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final boolean IS_VALID_FANCYMENU_BUILD = ModValidator.isFancyMenuMetadataValid();
 	private static final Map<String, ConsumingSupplier<Screen, Boolean>> OVERLAY_VISIBILITY_CONTROLLERS = new HashMap<>();
 
@@ -46,12 +49,11 @@ public class CustomizationOverlay {
         } else {
             menuBarId = ScreenOverlayHandler.INSTANCE.addOverlay(overlayMenuBar);
         }
-//        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(menuBarId, screen -> {
-//            if (!isOverlayVisible(screen)) return false;
-//            if (!FancyMenu.getOptions().showCustomizationOverlay.getValue()) return false;
-//            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
-//            return true;
-//        });
+        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(menuBarId, screen -> {
+            if (!isOverlayVisible(screen)) return false;
+            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
+            return true;
+        });
         return menuBarId;
 	}
 
@@ -63,12 +65,12 @@ public class CustomizationOverlay {
         } else {
             debugOverlayId = ScreenOverlayHandler.INSTANCE.addOverlay(debugOverlay);
         }
-//        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(debugOverlayId, screen -> {
-//            if (!isOverlayVisible(screen)) return false;
-//            if (!FancyMenu.getOptions().showDebugOverlay.getValue()) return false;
-//            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
-//            return true;
-//        });
+        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(debugOverlayId, screen -> {
+            if (!isOverlayVisible(screen)) return false;
+            if (!FancyMenu.getOptions().showDebugOverlay.getValue()) return false;
+            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
+            return true;
+        });
         return debugOverlayId;
 	}
 

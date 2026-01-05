@@ -131,7 +131,6 @@ public class ScreenOverlayHandler {
         for (Map.Entry<Long, Renderable> entry : overlays.entrySet()) {
             Renderable renderable = entry.getValue();
             if (!isOverlayVisible(entry.getKey(), renderable)) {
-                System.out.println("################## SKIPPING INVISIBLE OVERLAY !!!!");
                 continue;
             }
             renderable.render(graphics, mouseX, mouseY, partial);
