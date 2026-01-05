@@ -12,7 +12,6 @@ import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowR
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.PerformanceUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -27,13 +26,13 @@ import java.util.List;
 public class DebugOverlayBuilder {
 
     @NotNull
-    public static DebugOverlay buildDebugOverlay(@NotNull MenuBar menuBar) {
+    public static DebugOverlay buildDebugOverlay() {
 
         DebugOverlay overlay = new DebugOverlay();
 
         overlay.setLineTextShadow(false);
 
-        int menuBarHeight = (int)((float)menuBar.getHeight() * UIBase.calculateFixedScale(menuBar.getBaseScale()));
+        int menuBarHeight = (int)((float)MenuBar.HEIGHT * MenuBar.getRenderScale());
         overlay.setTopYOffsetSupplier(() -> menuBarHeight + 10);
         overlay.setBottomYOffsetSupplier(() -> -10);
 

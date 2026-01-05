@@ -17,8 +17,8 @@ public class ScreenOverlays {
     public static final long PLACEHOLDER_10 = ScreenOverlayHandler.INSTANCE.addPlaceholder();
 
     public static final long PIP_WINDOW_HANDLER = ScreenOverlayHandler.INSTANCE.addOverlay(PiPWindowHandler.INSTANCE);
-    public static final long CUSTOMIZATION_MENU_BAR = CustomizationOverlay.refreshMenuBar();
     public static final long CUSTOMIZATION_DEBUG_OVERLAY = CustomizationOverlay.refreshDebugOverlay();
+    public static final long CUSTOMIZATION_MENU_BAR = CustomizationOverlay.refreshMenuBar();
 
     public static void registerDefaults() {
         // empty dummy just for having something to call on init (yes, it's useless, but it makes me feel better, okay?)

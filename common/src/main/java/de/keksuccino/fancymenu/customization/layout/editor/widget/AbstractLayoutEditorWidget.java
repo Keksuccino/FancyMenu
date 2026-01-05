@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -314,7 +315,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     protected float getMinTranslatedY() {
-        return this.editor.menuBar.getHeight() + this.getScreenEdgeBorderThickness();
+        return MenuBar.HEIGHT + this.getScreenEdgeBorderThickness();
     }
 
     protected float getMaxTranslatedY() {
@@ -461,13 +462,13 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         return widgets;
     }
 
-    public void editorElementOrderChanged(@NotNull AbstractEditorElement element, boolean movedUp) {
+    public void editorElementOrderChanged(@NotNull AbstractEditorElement<?,?> element, boolean movedUp) {
     }
 
-    public void editorElementAdded(@NotNull AbstractEditorElement element) {
+    public void editorElementAdded(@NotNull AbstractEditorElement<?,?> element) {
     }
 
-    public void editorElementRemovedOrHidden(@NotNull AbstractEditorElement element) {
+    public void editorElementRemovedOrHidden(@NotNull AbstractEditorElement<?,?> element) {
     }
 
     public void tick() {

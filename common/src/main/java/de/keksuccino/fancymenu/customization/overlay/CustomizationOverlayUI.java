@@ -82,8 +82,8 @@ public class CustomizationOverlayUI {
     private static CustomizationOverlayMenuBar grandfatheredMenuBar = null;
 
     @NotNull
-    public static DebugOverlay buildDebugOverlay(@NotNull MenuBar menuBar) {
-        return DebugOverlayBuilder.buildDebugOverlay(menuBar);
+    public static DebugOverlay buildDebugOverlay() {
+        return DebugOverlayBuilder.buildDebugOverlay();
     }
 
     @Nullable

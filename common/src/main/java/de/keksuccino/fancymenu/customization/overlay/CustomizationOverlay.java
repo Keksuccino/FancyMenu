@@ -12,17 +12,15 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@SuppressWarnings("unused")
 public class CustomizationOverlay {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final boolean IS_VALID_FANCYMENU_BUILD = ModValidator.isFancyMenuMetadataValid();
 	private static final Map<String, ConsumingSupplier<Screen, Boolean>> OVERLAY_VISIBILITY_CONTROLLERS = new HashMap<>();
 
@@ -59,7 +57,7 @@ public class CustomizationOverlay {
 
 	public static long refreshDebugOverlay() {
         if (debugOverlay != null) debugOverlay.resetOverlay();
-		debugOverlay = CustomizationOverlayUI.buildDebugOverlay(overlayMenuBar);
+		debugOverlay = CustomizationOverlayUI.buildDebugOverlay();
         if (debugOverlayId != -1) {
             ScreenOverlayHandler.INSTANCE.addOverlayWithId(debugOverlayId, debugOverlay);
         } else {
