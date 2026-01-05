@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.overlay;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 
+@SuppressWarnings("unused")
 public class ScreenOverlays {
 
     public static final long PLACEHOLDER_1 = ScreenOverlayHandler.INSTANCE.addPlaceholder();

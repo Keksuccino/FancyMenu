@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -574,7 +575,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private int getMaximumHeight() {
-        return this.minecraft.getWindow().getGuiScaledHeight();
+        int screenHeight = this.minecraft.getWindow().getGuiScaledHeight();
+        return Math.max(0, screenHeight - getMenuBarHeight());
+    }
+
+    private int getMenuBarHeight() {
+        return (int) ((float) MenuBar.HEIGHT * MenuBar.getRenderScale());
     }
 
     public PiPWindow setMinSize(int minWidth, int minHeight) {
@@ -628,9 +634,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             this.restoreY = this.y;
             this.restoreWidth = this.width;
             this.restoreHeight = this.height;
-            int maxWidth = this.minecraft.getWindow().getGuiScaledWidth();
-            int maxHeight = this.minecraft.getWindow().getGuiScaledHeight();
-            setScaledBounds(0, 0, maxWidth, maxHeight);
+            int maxWidth = getMaximumWidth();
+            int maxHeight = getMaximumHeight();
+            setScaledBounds(0, getMenuBarHeight(), maxWidth, maxHeight);
         } else {
             setBounds(this.restoreX, this.restoreY, this.restoreWidth, this.restoreHeight);
         }
@@ -1209,9 +1215,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (maxWidth <= 0 || maxHeight <= 0) {
             return;
         }
+        int menuBarHeight = getMenuBarHeight();
         if (this.maximized) {
-            if (this.x != 0 || this.y != 0 || getWidth() != maxWidth || getHeight() != maxHeight) {
-                setScaledBounds(0, 0, maxWidth, maxHeight);
+            if (this.x != 0 || this.y != menuBarHeight || getWidth() != maxWidth || getHeight() != maxHeight) {
+                setScaledBounds(0, menuBarHeight, maxWidth, maxHeight);
             }
             return;
         }
@@ -1245,7 +1252,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             this.x = maxX;
         }
 
-        int minY = -this.borderThickness;
+        int minY = getMenuBarHeight() - this.borderThickness;
         int maxY = screenHeight - this.borderThickness - this.titleBarHeight;
         if (maxY < minY) {
             this.y = minY;
