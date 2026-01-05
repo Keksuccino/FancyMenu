@@ -825,6 +825,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this.openMenuAtMouse(null);
     }
 
+    /**
+     * Closes this menu, clears hover state, and closes any open sub-menus attached to it.
+     */
     public ContextMenu closeMenu() {
         this.closeSubMenus();
         this.unhoverAllEntries();
@@ -832,6 +835,23 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this;
     }
 
+    /**
+     * Closes this menu and every parent menu in the chain up to the root.
+     * This also closes any open sub-menus on each menu in the chain.
+     */
+    public ContextMenu closeMenuChain() {
+        ContextMenu current = this;
+        while (current != null) {
+            current.closeMenu();
+            SubMenuContextMenuEntry parent = current.parentEntry;
+            current = (parent != null) ? parent.parent : null;
+        }
+        return this;
+    }
+
+    /**
+     * Closes all sub-menus that belong to this menu without closing the menu itself.
+     */
     public ContextMenu closeSubMenus() {
         for (ContextMenuEntry<?> e : this.entries) {
             if (e instanceof SubMenuContextMenuEntry s) {

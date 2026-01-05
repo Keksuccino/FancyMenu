@@ -727,12 +727,13 @@ public class Property<T> {
                                             builder.saveSnapshot();
                                             builder.applyStackAppliers(entry, call);
                                         }
-                                        contextMenu.closeMenu();
+                                        contextMenu.closeMenuChain();
                                         Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
                                     });
                                     s.setText(defaultText);
                                     s.setMultilineMode(false);
                                     s.setPlaceholdersAllowed(true);
+                                    contextMenu.closeMenuChain();
                                     Minecraft.getInstance().setScreen(s);
                                 })
                         .setStackable(true)
@@ -799,7 +800,7 @@ public class Property<T> {
                                         });
                                 int centerX = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.width / 2) : 100;
                                 int centerY = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.height / 2) : 100;
-                                contextMenu.closeMenu();
+                                contextMenu.closeMenuChain();
                                 PiPWindowHandler.INSTANCE.openWindowWithDefaultSizeAndPosition(new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title")).setScreen(picker), null);
                             })
                     .setStackable(true)
