@@ -39,7 +39,7 @@ public class CustomizationOverlay {
 		EventHandler.INSTANCE.registerListenersOf(new CustomizationOverlay());
 	}
 
-	public static void refreshMenuBar() {
+	public static long refreshMenuBar() {
 		overlayMenuBar = CustomizationOverlayUI.buildMenuBar((overlayMenuBar == null) || overlayMenuBar.isExpanded());
         if (menuBarId != -1) {
             ScreenOverlayHandler.INSTANCE.addOverlayWithId(menuBarId, overlayMenuBar);
@@ -52,9 +52,10 @@ public class CustomizationOverlay {
 //            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
 //            return true;
 //        });
+        return menuBarId;
 	}
 
-	public static void refreshDebugOverlay() {
+	public static long refreshDebugOverlay() {
         if (debugOverlay != null) debugOverlay.resetOverlay();
 		debugOverlay = CustomizationOverlayUI.buildDebugOverlay(overlayMenuBar);
         if (debugOverlayId != -1) {
@@ -68,6 +69,7 @@ public class CustomizationOverlay {
 //            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
 //            return true;
 //        });
+        return debugOverlayId;
 	}
 
 	@Nullable

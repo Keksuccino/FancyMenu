@@ -34,6 +34,12 @@ public class ScreenOverlayHandler {
         return id;
     }
 
+    public long addPlaceholder() {
+        id++;
+        this.overlays.put(id, PLACEHOLDER_OVERLAY);
+        return id;
+    }
+
     public long addOverlay(@NotNull Renderable overlay, @NotNull OverlayVisibilityController controller) {
         long overlayId = addOverlay(overlay);
         setVisibilityControllerFor(overlayId, controller);
@@ -44,6 +50,16 @@ public class ScreenOverlayHandler {
         id++;
         LinkedHashMap<Long, Renderable> reordered = new LinkedHashMap<>();
         reordered.put(id, overlay);
+        reordered.putAll(this.overlays);
+        this.overlays.clear();
+        this.overlays.putAll(reordered);
+        return id;
+    }
+
+    public long addPlaceholderFirst() {
+        id++;
+        LinkedHashMap<Long, Renderable> reordered = new LinkedHashMap<>();
+        reordered.put(id, PLACEHOLDER_OVERLAY);
         reordered.putAll(this.overlays);
         this.overlays.clear();
         this.overlays.putAll(reordered);
