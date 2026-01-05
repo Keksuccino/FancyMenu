@@ -25,7 +25,6 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
@@ -54,7 +53,7 @@ import java.util.function.Consumer;
 public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
     private static final PngTexture CLOSE_EDITOR_TEXTURE = PngTexture.location(ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/menubar/icons/close.png"));
-    
+
     @Nullable
     private MenuBar grandfatheredMenuBar = null;
     @NotNull
@@ -63,6 +62,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
     public LayoutEditorUI(@NotNull LayoutEditorScreen editor) {
         this.editor = Objects.requireNonNull(editor);
+        this.addContextMenuScreenOpenProcessor(this.editor::beforeOpenChildScreen);
     }
 
     @NotNull
@@ -94,7 +94,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         LayoutHandler.openLayoutEditor(Layout.buildForScreen(Objects.requireNonNull(editor.layoutTargetScreen)), editor.layoutTargetScreen);
                     }
                 } else {
-                    Minecraft.getInstance().setScreen(editor);
+                    this.openContextMenuScreen(editor);
                 }
             });
         }).setIcon(ContextMenu.IconFactory.getIcon("add"));
@@ -134,7 +134,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 if (call) {
                     editor.closeEditor();
                 } else {
-                    Minecraft.getInstance().setScreen(editor);
+                    this.openContextMenuScreen(editor);
                 }
             });
         }).setIcon(ContextMenu.IconFactory.getIcon("close"));
@@ -372,7 +372,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         if (call) {
                             editor.closeEditor();
                         } else {
-                            Minecraft.getInstance().setScreen(editor);
+                            this.openContextMenuScreen(editor);
                         }
                     });
                 }).setIconTexture(CLOSE_EDITOR_TEXTURE)
@@ -392,7 +392,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             callback.accept(true);
             return;
         }
-        editor.openChildScreen(ConfirmationScreen.warning(callback, LocalizationUtils.splitLocalizedLines("fancymenu.editor.warning.unsaved")));
+        this.openContextMenuScreen(ConfirmationScreen.warning(callback, LocalizationUtils.splitLocalizedLines("fancymenu.editor.warning.unsaved")));
     }
 
     @NotNull
@@ -438,34 +438,34 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.layout.universalLayoutMenuBlacklist.add(call);
                         }
                     }
-                    Minecraft.getInstance().setScreen(editor);
+                    this.openContextMenuScreen(editor);
                 });
-                editor.openChildScreen(s);
+                this.openContextMenuScreen(s);
             }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")));
 
             universalLayoutMenu.addClickableEntry("remove_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), (menu1, entry) -> {
-                editor.openChildScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuBlacklist, s1 -> {
+                this.openContextMenuScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuBlacklist, s1 -> {
                     if (s1 != null) {
-                        editor.openChildScreen(ConfirmationScreen.ofStrings((call2) -> {
+                        this.openContextMenuScreen(ConfirmationScreen.ofStrings((call2) -> {
                             if (call2) {
                                 editor.history.saveSnapshot();
                                 editor.layout.universalLayoutMenuBlacklist.remove(s1);
                             }
-                            Minecraft.getInstance().setScreen(editor);
+                            this.openContextMenuScreen(editor);
                         }, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm")));
                     } else {
-                        Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(editor);
                     }
                 }));
             });
 
             universalLayoutMenu.addClickableEntry("clear_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), (menu1, entry) -> {
-                editor.openChildScreen(ConfirmationScreen.ofStrings((call2) -> {
+                this.openContextMenuScreen(ConfirmationScreen.ofStrings((call2) -> {
                     if (call2) {
                         editor.history.saveSnapshot();
                         editor.layout.universalLayoutMenuBlacklist.clear();
                     }
-                    Minecraft.getInstance().setScreen(editor);
+                    this.openContextMenuScreen(editor);
                 }, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm")));
             });
 
@@ -479,34 +479,34 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.layout.universalLayoutMenuWhitelist.add(call);
                         }
                     }
-                    Minecraft.getInstance().setScreen(editor);
+                    this.openContextMenuScreen(editor);
                 });
-                editor.openChildScreen(s);
+                this.openContextMenuScreen(s);
             }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")));
 
             universalLayoutMenu.addClickableEntry("remove_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), (menu1, entry) -> {
-                editor.openChildScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuWhitelist, s1 -> {
+                this.openContextMenuScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuWhitelist, s1 -> {
                     if (s1 != null) {
-                        editor.openChildScreen(ConfirmationScreen.ofStrings((call2) -> {
+                        this.openContextMenuScreen(ConfirmationScreen.ofStrings((call2) -> {
                             if (call2) {
                                 editor.history.saveSnapshot();
                                 editor.layout.universalLayoutMenuWhitelist.remove(s1);
                             }
-                            Minecraft.getInstance().setScreen(editor);
+                            this.openContextMenuScreen(editor);
                         }, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm")));
                     } else {
-                        Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(editor);
                     }
                 }));
             });
 
             universalLayoutMenu.addClickableEntry("clear_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), (menu1, entry) -> {
-                editor.openChildScreen(ConfirmationScreen.ofStrings((call2) -> {
+                this.openContextMenuScreen(ConfirmationScreen.ofStrings((call2) -> {
                     if (call2) {
                         editor.history.saveSnapshot();
                         editor.layout.universalLayoutMenuWhitelist.clear();
                     }
-                    Minecraft.getInstance().setScreen(editor);
+                    this.openContextMenuScreen(editor);
                 }, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm")));
             });
 
@@ -556,11 +556,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.history.saveSnapshot();
                             editor.layout.layoutIndex = Integer.parseInt(s1);
                         }
-                        Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(editor);
                     });
                     s.setTextValidator(consumes -> TextValidators.INTEGER_TEXT_VALIDATOR.get(consumes.getText()));
                     s.setText("" + editor.layout.layoutIndex);
-                    editor.openChildScreen(s);
+                    this.openContextMenuScreen(s);
                 }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.layout.index.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("stack"));
 
@@ -573,7 +573,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 .setIcon(ContextMenu.IconFactory.getIcon("random"));
 
         menu.addClickableEntry("random_mode_group", Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), (menu1, entry) -> {
-                    editor.openChildScreen(TextInputScreen.build(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerFilter(), call -> {
+                    this.openContextMenuScreen(TextInputScreen.build(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerFilter(), call -> {
                         if (call != null) {
                             if (!MathUtils.isInteger(call)) {
                                 call = "1";
@@ -581,7 +581,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.history.saveSnapshot();
                             editor.layout.randomGroup = call;
                         }
-                        Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(editor);
                     }).setText(editor.layout.randomGroup));
                 }).addIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.desc")))
@@ -607,11 +607,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         cycleAutoScaling.addCycleListener(cycle -> {
             if (cycle.getAsBoolean()) {
                 menu.closeMenu();
-                editor.openChildScreen(new AutoScalingScreen(editor, call -> {
+                this.openContextMenuScreen(new AutoScalingScreen(editor, call -> {
                     if (!call) {
                         cycleAutoScaling.setCurrentValue(CommonCycles.CycleEnabledDisabled.DISABLED, false);
                     }
-                    Minecraft.getInstance().setScreen(editor);
+                    this.openContextMenuScreen(editor);
                 }));
             } else {
                 editor.history.saveSnapshot();
@@ -689,11 +689,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         menu.addSeparatorEntry("separator_after_close_audio");
 
         menu.addClickableEntry("layout_wide_requirements", Component.translatable("fancymenu.requirements.layouts.loading_requirements"), (menu1, entry) -> {
-                    editor.openChildScreen(new ManageRequirementsScreen(editor.layout.layoutWideRequirementContainer.copy(false), (call) -> {
+                    this.openContextMenuScreen(new ManageRequirementsScreen(editor.layout.layoutWideRequirementContainer.copy(false), (call) -> {
                         if (call != null) {
                             editor.layout.layoutWideRequirementContainer = call;
                         }
-                        Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(editor);
                     }));
                 }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.layouts.loading_requirements.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("check_list"));
@@ -707,9 +707,9 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.layout.openScreenExecutableBlocks.clear();
                             editor.layout.openScreenExecutableBlocks.add(call);
                         }
-                        Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(editor);
                     });
-                    editor.openChildScreen(s);
+                    this.openContextMenuScreen(s);
                 }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout.editor.edit_open_screen_action_script.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
@@ -721,9 +721,9 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.layout.closeScreenExecutableBlocks.clear();
                             editor.layout.closeScreenExecutableBlocks.add(call);
                         }
-                        Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(editor);
                     });
-                    editor.openChildScreen(s);
+                    this.openContextMenuScreen(s);
                 }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout.editor.edit_close_screen_action_script.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
@@ -957,11 +957,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         if (call) {
                             editor.saveWidgetSettings();
                             editor.buddyWidget.cleanup();
-                            editor.openChildScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
-                                Minecraft.getInstance().setScreen(editor);
+                            this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
+                                this.openContextMenuScreen(editor);
                             }));
                         } else {
-                            Minecraft.getInstance().setScreen(editor);
+                            this.openContextMenuScreen(editor);
                         }
                     });
                 });
@@ -973,11 +973,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 displayUnsavedWarning(call -> {
                     if (call) {
                         editor.saveWidgetSettings();
-                        editor.openChildScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
-                            Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
+                            this.openContextMenuScreen(editor);
                         }));
                     } else {
-                        Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(editor);
                     }
                 });
             });
@@ -1006,11 +1006,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     displayUnsavedWarning(call -> {
                         if (call) {
                             editor.saveWidgetSettings();
-                            editor.openChildScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
-                                Minecraft.getInstance().setScreen(editor);
+                            this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
+                                this.openContextMenuScreen(editor);
                             }));
                         } else {
-                            Minecraft.getInstance().setScreen(editor);
+                            this.openContextMenuScreen(editor);
                         }
                     });
                 });
@@ -1022,11 +1022,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 displayUnsavedWarning(call -> {
                     if (call) {
                         editor.saveWidgetSettings();
-                        editor.openChildScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
-                            Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
+                            this.openContextMenuScreen(editor);
                         }));
                     } else {
-                        Minecraft.getInstance().setScreen(editor);
+                        this.openContextMenuScreen(editor);
                     }
                 });
             });
@@ -1055,7 +1055,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     editor.saveWidgetSettings();
                     MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : editor.layoutTargetScreen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 } else {
-                    Minecraft.getInstance().setScreen(editor);
+                    this.openContextMenuScreen(editor);
                 }
             });
         }).setIcon(ContextMenu.IconFactory.getIcon("edit"));
