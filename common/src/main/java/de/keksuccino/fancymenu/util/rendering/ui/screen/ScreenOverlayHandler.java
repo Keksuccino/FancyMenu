@@ -105,6 +105,12 @@ public class ScreenOverlayHandler {
         this.visibilityControllers.put(overlayId, controller);
     }
 
+    @Nullable
+    public Renderable getOverlay(long overlayId) {
+        Renderable overlay = this.overlays.get(overlayId);
+        return (overlay == null || isPlaceholder(overlay)) ? null : overlay;
+    }
+
     @NotNull
     public List<Renderable> getOverlays() {
         List<Renderable> filtered = new ArrayList<>();

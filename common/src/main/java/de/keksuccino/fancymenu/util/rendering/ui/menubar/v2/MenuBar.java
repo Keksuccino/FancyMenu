@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.PressState;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -46,10 +47,13 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
     protected final List<MenuBarEntry> leftEntries = new ArrayList<>();
     protected final List<MenuBarEntry> rightEntries = new ArrayList<>();
+    protected final List<MenuBarClickListener> clickListeners = new ArrayList<>();
     protected boolean hovered = false;
     protected boolean expanded = true;
     protected ClickableMenuBarEntry collapseOrExpandEntry;
     protected ResourceSupplier<ITexture> collapseExpandTextureSupplier = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/collapse_expand.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
+    protected boolean clickActive = false;
+    protected int clickActiveButton = -1;
 
     public MenuBar() {
         this.collapseOrExpandEntry = this.addClickableEntry(Side.RIGHT, "collapse_or_expand", Component.empty(), (bar, entry) -> {
@@ -411,6 +415,21 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         return false;
     }
 
+    public MenuBar addClickListener(@NotNull MenuBarClickListener listener) {
+        this.clickListeners.add(listener);
+        return this;
+    }
+
+    public MenuBar removeClickListener(@NotNull MenuBarClickListener listener) {
+        this.clickListeners.remove(listener);
+        return this;
+    }
+
+    public MenuBar clearClickListeners() {
+        this.clickListeners.clear();
+        return this;
+    }
+
     public MenuBar closeAllContextMenus() {
         for (MenuBarEntry e : this.getEntries()) {
             if (e instanceof ContextMenuBarEntry c) {
@@ -468,6 +487,9 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             if (this.collapseOrExpandEntry.mouseClicked(scaledMouseX, scaledMouseY, button)) entryClick = true;
         }
         if (this.isUserNavigatingInMenuBar() || entryClick) {
+            fireClickListeners(button, PressState.PRESSED);
+            this.clickActive = true;
+            this.clickActiveButton = button;
             Screen current = Minecraft.getInstance().screen;
             if (current != null) {
                 current.clearFocus();
@@ -475,6 +497,16 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.clickActive && this.clickActiveButton == button) {
+            fireClickListeners(button, PressState.RELEASED);
+            this.clickActive = false;
+            this.clickActiveButton = -1;
+        }
+        return GuiEventListener.super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
@@ -520,6 +552,20 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     @Override
     public void setNavigatable(boolean navigatable) {
         throw new RuntimeException("ContextMenus are not navigatable!");
+    }
+
+    private void fireClickListeners(int button, @NotNull PressState state) {
+        if (this.clickListeners.isEmpty()) {
+            return;
+        }
+        for (MenuBarClickListener listener : new ArrayList<>(this.clickListeners)) {
+            listener.onClick(button, state);
+        }
+    }
+
+    @FunctionalInterface
+    public interface MenuBarClickListener {
+        void onClick(int button, @NotNull PressState state);
     }
 
     public static float getBaseScale() {

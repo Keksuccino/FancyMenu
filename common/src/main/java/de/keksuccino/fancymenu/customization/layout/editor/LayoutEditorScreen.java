@@ -21,6 +21,7 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.BuddyWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
+import de.keksuccino.fancymenu.customization.overlay.ScreenOverlays;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
@@ -39,11 +40,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -75,7 +78,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public List<AbstractEditorElement<?, ?>> normalEditorElements = new ArrayList<>();
 	public List<VanillaWidgetEditorElement> vanillaWidgetEditorElements = new ArrayList<>();
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
-	public MenuBar menuBar;
 	public AnchorPointOverlay anchorPointOverlay = new AnchorPointOverlay(this);
 	public ContextMenu rightClickMenu;
 	public ContextMenu activeElementContextMenu = null;
@@ -148,14 +150,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.rightClickMenu = LayoutEditorUI.buildRightClickContextMenu(this);
 		this.addWidget(this.rightClickMenu);
 
-//		if (this.menuBar != null) {
-//			this.menuBar.closeAllContextMenus();
-//		}
-		this.menuBar = LayoutEditorUI.buildMenuBar(this, (this.menuBar == null) || this.menuBar.isExpanded());
-		this.addWidget(this.menuBar);
+        this.refreshMenuBar();
 
 		for (AbstractLayoutEditorWidget w : Lists.reverse(new ArrayList<>(this.layoutEditorWidgets))) {
-			this.addWidget(w);
+			this.addWidget(Objects.requireNonNull(w));
 		}
 
 		this.isMouseSelection = false;
@@ -165,31 +163,31 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.serializeElementInstancesToLayoutInstance();
 
+        Window window = Minecraft.getInstance().getWindow();
+
 		//Handle forced GUI scale
 		if (this.layout.forcedScale != 0) {
 			float newscale = this.layout.forcedScale;
 			if (newscale <= 0) {
 				newscale = 1;
 			}
-			Window m = Minecraft.getInstance().getWindow();
-			m.setGuiScale(newscale);
-			this.width = m.getGuiScaledWidth();
-			this.height = m.getGuiScaledHeight();
+			window.setGuiScale(newscale);
+			this.width = window.getGuiScaledWidth();
+			this.height = window.getGuiScaledHeight();
 		}
 
 		//Handle auto-scaling
 		if ((this.layout.autoScalingWidth != 0) && (this.layout.autoScalingHeight != 0)) {
-			Window m = Minecraft.getInstance().getWindow();
-			double guiWidth = this.width * m.getGuiScale();
-			double guiHeight = this.height * m.getGuiScale();
+			double guiWidth = this.width * window.getGuiScale();
+			double guiHeight = this.height * window.getGuiScale();
 			double percentX = (guiWidth / (double)this.layout.autoScalingWidth) * 100.0D;
 			double percentY = (guiHeight / (double)this.layout.autoScalingHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * m.getGuiScale();
-			double newScaleY = (percentY / 100.0D) * m.getGuiScale();
+			double newScaleX = (percentX / 100.0D) * window.getGuiScale();
+			double newScaleY = (percentY / 100.0D) * window.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
-			m.setGuiScale(newScale);
-			this.width = m.getGuiScaledWidth();
-			this.height = m.getGuiScaledHeight();
+			window.setGuiScale(newScale);
+			this.width = window.getGuiScaledWidth();
+			this.height = window.getGuiScaledHeight();
 		}
 
 		this.getAllElements().forEach(element -> {
@@ -224,6 +222,22 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.justOpened = false;
 
 	}
+
+    public void refreshMenuBar() {
+        MenuBar oldMenuBar = this.getCurrentMenuBar();
+        MenuBar menuBar = LayoutEditorUI.buildMenuBar(this, (oldMenuBar == null) || oldMenuBar.isExpanded());
+        menuBar.addClickListener((button, state) -> {
+           if (this.rightClickMenu != null) this.rightClickMenu.closeMenu();
+           if (this.activeElementContextMenu != null) this.activeElementContextMenu.closeMenu();
+        });
+        ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR, menuBar);
+    }
+
+    @Nullable
+    public MenuBar getCurrentMenuBar() {
+        Renderable menuBarRaw = ScreenOverlayHandler.INSTANCE.getOverlay(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR);
+        return (menuBarRaw instanceof MenuBar b) ? b : null;
+    }
 
 	@Override
 	public boolean shouldCloseOnEsc() {
@@ -274,8 +288,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
 			this.buddyWidget.render(graphics, mouseX, mouseY, partial);
 		}
-
-		this.menuBar.render(graphics, mouseX, mouseY, partial);
 
 		this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
 
@@ -742,7 +754,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				}
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to move element one layer up in the editor!", ex);
 		}
 		return movedAbove;
 	}
@@ -773,7 +785,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				}
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			LOGGER.error("[FANCYMENU] Failed to move element one layer down in the editor!", ex);
 		}
 		return movedBehind;
 	}
@@ -917,7 +929,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						LayoutHandler.reloadLayouts();
 					}
 				} catch (Exception ex) {
-					ex.printStackTrace();
+					LOGGER.error("[FANCYMENU] Error while saving layout in editor!", ex);
 					Minecraft.getInstance().setScreen(NotificationScreen.error((call2) -> {
 						Minecraft.getInstance().setScreen(this);
 					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
@@ -1063,7 +1075,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.leftMouseDownPosX = (int) mouseX;
 		this.leftMouseDownPosY = (int) mouseY;
 
-		boolean menuBarContextOpen = (this.menuBar != null) && this.menuBar.isEntryContextMenuOpen();
+        MenuBar menuBar = getCurrentMenuBar();
+		boolean menuBarContextOpen = (menuBar != null) && menuBar.isEntryContextMenuOpen();
 
 		if (super.mouseClicked(mouseX, mouseY, button)) {
 			this.closeRightClickMenu();
@@ -1166,11 +1179,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			topHoverElement.setSelected(false);
 		}
 
-		boolean elementRecentlyMovedByDragging = false;
-
 		//Handle mouse released for all elements
 		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
-			if (e.recentlyMovedByDragging) elementRecentlyMovedByDragging = true;
 			e.mouseReleased(mouseX, mouseY, button);
 			e.recentlyLeftClickSelected = false;
 		}
@@ -1330,8 +1340,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (key.equals("g") && hasControlDown()) {
 			try {
 				FancyMenu.getOptions().showLayoutEditorGrid.setValue(!FancyMenu.getOptions().showLayoutEditorGrid.getValue());
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				LOGGER.error("[FANCYMENU] Failed to toggle layout editor grid!", ex);
 			}
 			return true;
 		}
@@ -1363,6 +1373,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	}
 
+    @SuppressWarnings("deprecation")
 	public void closeEditor() {
 		this.saveWidgetSettings();
 		this.buddyWidget.cleanup();
