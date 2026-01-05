@@ -111,7 +111,7 @@ public class LayoutEditorUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("settings"))
                 .setHoverAction((menu, entry, isPost) -> {
                     if (!isPost) {
-                        int menuBarHeight = (int)((float)menuBar.getHeight() * UIBase.calculateFixedScale(menuBar.getScale()));
+                        int menuBarHeight = (int)((float)menuBar.getHeight() * UIBase.calculateFixedScale(menuBar.getBaseScale()));
                         editor.rightClickMenuOpenPosX = 20;
                         editor.rightClickMenuOpenPosY = menuBarHeight + 20;
                     }
