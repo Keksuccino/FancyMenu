@@ -32,6 +32,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     public static final int DEFAULT_MIN_WIDTH = 120;
     public static final int DEFAULT_MIN_HEIGHT = 80;
     public static final int DEFAULT_RESIZE_MARGIN = 4;
+    private static final long TITLE_BAR_DOUBLE_CLICK_TIME_MS = 500;
     private static final int DEFAULT_ICON_TEXTURE_SIZE = 8;
     private static final ResourceLocation DEFAULT_CLOSE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_close.png");
     private static final ResourceLocation DEFAULT_MAXIMIZE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_maximize.png");
@@ -71,6 +72,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private boolean maximizable = true;
     private boolean closable = true;
     private boolean closeScreenWithWindow = true;
+    private boolean sizeScaledToGuiScale = true;
 
     private boolean maximized = false;
     private int restoreX;
@@ -94,6 +96,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private int resizeStartY;
     private int resizeStartWidth;
     private int resizeStartHeight;
+    private long lastTitleBarClickTime = 0;
 
     @Nullable
     private Runnable closeCallback;
@@ -107,12 +110,29 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         this(title, x, y, width, height, null);
     }
 
+    public PiPWindow(@Nonnull Component title, int width, int height) {
+        this(title, 0, 0, width, height, null);
+    }
+
+    public PiPWindow(@Nonnull Component title) {
+        this(title, 0, 0, 200, 200, null);
+    }
+
+    public PiPWindow(@Nullable Screen screen) {
+        this(Component.literal("Window"), 0, 0, 200, 200, screen);
+    }
+
+    public PiPWindow() {
+        this(Component.literal("Window"));
+    }
+
     public PiPWindow(@Nonnull Component title, int x, int y, int width, int height, @Nullable Screen screen) {
         this.title = Objects.requireNonNull(title, "title");
         this.x = x;
         this.y = y;
-        this.width = Math.max(width, getMinimumWidth());
-        this.height = Math.max(height, getMinimumHeight());
+        this.width = Math.max(width, getRawMinimumWidth());
+        this.height = Math.max(height, getRawMinimumHeight());
+        clampWindowToScreenSize();
         setScreen(screen);
     }
 
@@ -139,8 +159,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private void renderWindowBackground(@Nonnull GuiGraphics graphics) {
-        int right = this.x + this.width;
-        int bottom = this.y + this.height;
+        int right = this.x + getWidth();
+        int bottom = this.y + getHeight();
         UIColorTheme theme = getTheme();
         graphics.fill(this.x, this.y, right, bottom, theme.pip_window_border_color.getColorInt());
 
@@ -208,7 +228,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
         int titleBarY = this.y + this.borderThickness;
         int titleBarX = this.x + this.borderThickness;
-        int titleBarRight = this.x + this.width - this.borderThickness;
+        int titleBarRight = this.x + getWidth() - this.borderThickness;
         int titleBarHeight = Math.max(0, this.titleBarHeight);
         int titleCenterY = titleBarY + (titleBarHeight - font.lineHeight) / 2;
 
@@ -269,6 +289,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     public void tick() {
+        clampWindowToScreenSize();
         if (this.screen != null) {
             this.screen.tick();
         }
@@ -364,6 +385,17 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     public boolean isScreenRendering() {
         return this.screenRendering;
+    }
+
+    public boolean isSizeScaledToGuiScale() {
+        return this.sizeScaledToGuiScale;
+    }
+
+    public PiPWindow setSizeScaledToGuiScale(boolean sizeScaledToGuiScale) {
+        this.sizeScaledToGuiScale = sizeScaledToGuiScale;
+        clampWindowToScreenSize();
+        resizeScreenIfNeeded();
+        return this;
     }
 
     public PiPWindow setResizable(boolean resizable) {
@@ -473,12 +505,14 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     public PiPWindow setPosition(int x, int y) {
         this.x = x;
         this.y = y;
+        clampTitleBarToScreen();
         return this;
     }
 
     public PiPWindow setSize(int width, int height) {
-        this.width = Math.max(width, getMinimumWidth());
-        this.height = Math.max(height, getMinimumHeight());
+        this.width = Math.max(width, getRawMinimumWidth());
+        this.height = Math.max(height, getRawMinimumHeight());
+        clampWindowToScreenSize();
         resizeScreenIfNeeded();
         return this;
     }
@@ -486,8 +520,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     public PiPWindow setBounds(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
-        this.width = Math.max(width, getMinimumWidth());
-        this.height = Math.max(height, getMinimumHeight());
+        this.width = Math.max(width, getRawMinimumWidth());
+        this.height = Math.max(height, getRawMinimumHeight());
+        clampWindowToScreenSize();
         resizeScreenIfNeeded();
         return this;
     }
@@ -501,11 +536,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     public int getWidth() {
-        return this.width;
+        return getScaledWidth();
     }
 
     public int getHeight() {
-        return this.height;
+        return getScaledHeight();
     }
 
     public int getBodyX() {
@@ -517,22 +552,29 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     public int getBodyWidth() {
-        return Math.max(0, this.width - this.borderThickness * 2);
+        return Math.max(0, getWidth() - this.borderThickness * 2);
     }
 
     public int getBodyHeight() {
-        int value = this.height - this.borderThickness * 2 - this.titleBarHeight;
+        int value = getHeight() - this.borderThickness * 2 - this.titleBarHeight;
         return Math.max(0, value);
     }
 
     public int getMinimumWidth() {
-        return Math.max(1, this.minWidth);
+        return Math.max(1, getScaledSize(getRawMinimumWidth()));
     }
 
     public int getMinimumHeight() {
-        int min = Math.max(1, this.minHeight);
-        int layoutMin = this.titleBarHeight + this.borderThickness * 2 + 1;
-        return Math.max(min, layoutMin);
+        int min = Math.max(1, getScaledSize(getRawMinimumHeight()));
+        return Math.max(min, getLayoutMinimumHeight());
+    }
+
+    private int getMaximumWidth() {
+        return this.minecraft.getWindow().getGuiScaledWidth();
+    }
+
+    private int getMaximumHeight() {
+        return this.minecraft.getWindow().getGuiScaledHeight();
     }
 
     public PiPWindow setMinSize(int minWidth, int minHeight) {
@@ -588,7 +630,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             this.restoreHeight = this.height;
             int maxWidth = this.minecraft.getWindow().getGuiScaledWidth();
             int maxHeight = this.minecraft.getWindow().getGuiScaledHeight();
-            setBounds(0, 0, maxWidth, maxHeight);
+            setScaledBounds(0, 0, maxWidth, maxHeight);
         } else {
             setBounds(this.restoreX, this.restoreY, this.restoreWidth, this.restoreHeight);
         }
@@ -653,6 +695,18 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                 toggleMaximized();
                 return true;
             }
+            boolean clickedTitleBar = isPointInTitleBar(mouseX, mouseY);
+            if (!clickedTitleBar) {
+                this.lastTitleBarClickTime = 0;
+            } else if (this.maximizable) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - this.lastTitleBarClickTime < TITLE_BAR_DOUBLE_CLICK_TIME_MS) {
+                    this.lastTitleBarClickTime = 0;
+                    toggleMaximized();
+                    return true;
+                }
+                this.lastTitleBarClickTime = currentTime;
+            }
             PiPWindowResizeHandle handle = getResizeHandleAt(mouseX, mouseY);
             if (handle != PiPWindowResizeHandle.NONE) {
                 beginResize(handle, mouseX, mouseY);
@@ -706,8 +760,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
         if (button == 0) {
             if (this.draggingTitleBar) {
-                this.x = (int) Math.round(mouseX - this.dragOffsetX);
-                this.y = (int) Math.round(mouseY - this.dragOffsetY);
+                setPosition((int) Math.round(mouseX - this.dragOffsetX), (int) Math.round(mouseY - this.dragOffsetY));
                 return true;
             }
             if (this.activeResizeHandle != PiPWindowResizeHandle.NONE) {
@@ -799,7 +852,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
-        return isPointInArea(mouseX, mouseY, this.x, this.y, this.width, this.height);
+        return isPointInArea(mouseX, mouseY, this.x, this.y, getWidth(), getHeight());
     }
 
     @Override
@@ -817,7 +870,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private boolean isPointInTitleBar(double mouseX, double mouseY) {
         int titleBarY = this.y + this.borderThickness;
-        return isPointInArea(mouseX, mouseY, this.x, titleBarY, this.width, this.titleBarHeight);
+        return isPointInArea(mouseX, mouseY, this.x, titleBarY, getWidth(), this.titleBarHeight);
     }
 
     private boolean isPointInBody(double mouseX, double mouseY) {
@@ -829,7 +882,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private int getCloseButtonX() {
-        int right = this.x + this.width - this.borderThickness;
+        int right = this.x + getWidth() - this.borderThickness;
         return right - this.buttonPadding - this.buttonSize;
     }
 
@@ -872,10 +925,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return PiPWindowResizeHandle.NONE;
         }
         int margin = Math.max(1, this.resizeMargin);
+        int scaledWidth = getWidth();
+        int scaledHeight = getHeight();
         boolean left = mouseX >= this.x && mouseX <= this.x + margin;
-        boolean right = mouseX >= this.x + this.width - margin && mouseX <= this.x + this.width;
+        boolean right = mouseX >= this.x + scaledWidth - margin && mouseX <= this.x + scaledWidth;
         boolean top = mouseY >= this.y && mouseY <= this.y + margin;
-        boolean bottom = mouseY >= this.y + this.height - margin && mouseY <= this.y + this.height;
+        boolean bottom = mouseY >= this.y + scaledHeight - margin && mouseY <= this.y + scaledHeight;
 
         if (left && top) {
             return PiPWindowResizeHandle.TOP_LEFT;
@@ -917,8 +972,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         this.resizeStartMouseY = mouseY;
         this.resizeStartX = this.x;
         this.resizeStartY = this.y;
-        this.resizeStartWidth = this.width;
-        this.resizeStartHeight = this.height;
+        this.resizeStartWidth = getWidth();
+        this.resizeStartHeight = getHeight();
         this.setDragging(true);
     }
 
@@ -963,7 +1018,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             }
         }
 
-        setBounds(newX, newY, newWidth, newHeight);
+        setScaledBounds(newX, newY, newWidth, newHeight);
     }
 
     private double toScreenMouseX(double mouseX) {
@@ -972,6 +1027,82 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private double toScreenMouseY(double mouseY) {
         return (mouseY - getBodyY()) * getScreenInputScaleFactor();
+    }
+
+    private int getScaledWidth() {
+        return getScaledSize(this.width);
+    }
+
+    private int getScaledHeight() {
+        int scaled = getScaledSize(this.height);
+        return Math.max(scaled, getLayoutMinimumHeight());
+    }
+
+    private int getScaledSize(int rawSize) {
+        if (!this.sizeScaledToGuiScale) {
+            return rawSize;
+        }
+        double scale = getMainGuiScale();
+        if (scale <= 1.0) {
+            return rawSize;
+        }
+        return Math.max(1, (int) Math.floor(rawSize / scale));
+    }
+
+    private int getRawSizeForScaled(int scaledSize) {
+        if (!this.sizeScaledToGuiScale) {
+            return scaledSize;
+        }
+        double scale = getMainGuiScale();
+        if (scale <= 1.0) {
+            return scaledSize;
+        }
+        return Math.max(1, (int) Math.round(scaledSize * scale));
+    }
+
+    private int getRawMinimumWidth() {
+        return Math.max(1, this.minWidth);
+    }
+
+    private int getRawMinimumHeight() {
+        int min = Math.max(1, this.minHeight);
+        int layoutMin = getLayoutMinimumHeight();
+        if (!this.sizeScaledToGuiScale) {
+            return Math.max(min, layoutMin);
+        }
+        double scale = getMainGuiScale();
+        if (scale <= 1.0) {
+            return Math.max(min, layoutMin);
+        }
+        int layoutScaled = Math.max(1, (int) Math.ceil(layoutMin * scale));
+        return Math.max(min, layoutScaled);
+    }
+
+    private int getLayoutMinimumHeight() {
+        int layoutMin = this.titleBarHeight + this.borderThickness * 2 + 1;
+        return Math.max(1, layoutMin);
+    }
+
+    private int clampScaledWidth(int width) {
+        int minWidth = getMinimumWidth();
+        int maxWidth = getMaximumWidth();
+        if (maxWidth <= 0) {
+            return Math.max(1, Math.max(width, minWidth));
+        }
+        int clampedMin = Math.min(minWidth, maxWidth);
+        int clamped = Math.min(Math.max(width, clampedMin), maxWidth);
+        return Math.max(1, clamped);
+    }
+
+    private int clampScaledHeight(int height) {
+        int minHeight = getMinimumHeight();
+        int maxHeight = getMaximumHeight();
+        if (maxHeight <= 0) {
+            return Math.max(1, Math.max(height, minHeight));
+        }
+        int clampedMin = Math.min(minHeight, maxHeight);
+        int clamped = Math.min(Math.max(height, clampedMin), maxHeight);
+        return Math.max(1, clamped);
     }
 
     private int getScreenWidth() {
@@ -1040,6 +1171,17 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return scale;
     }
 
+    private void setScaledBounds(int x, int y, int width, int height) {
+        this.x = x;
+        this.y = y;
+        int scaledWidth = clampScaledWidth(width);
+        int scaledHeight = clampScaledHeight(height);
+        this.width = getRawSizeForScaled(scaledWidth);
+        this.height = getRawSizeForScaled(scaledHeight);
+        clampTitleBarToScreen();
+        resizeScreenIfNeeded();
+    }
+
     private boolean isPointInArea(double mouseX, double mouseY, int areaX, int areaY, int areaWidth, int areaHeight) {
         return mouseX >= areaX && mouseX < areaX + areaWidth && mouseY >= areaY && mouseY < areaY + areaHeight;
     }
@@ -1058,6 +1200,59 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             this.lastScreenWidth = screenWidth;
             this.lastScreenHeight = screenHeight;
             this.screen.resize(this.minecraft, screenWidth, screenHeight);
+        }
+    }
+
+    private void clampWindowToScreenSize() {
+        int maxWidth = getMaximumWidth();
+        int maxHeight = getMaximumHeight();
+        if (maxWidth <= 0 || maxHeight <= 0) {
+            return;
+        }
+        if (this.maximized) {
+            if (this.x != 0 || this.y != 0 || getWidth() != maxWidth || getHeight() != maxHeight) {
+                setScaledBounds(0, 0, maxWidth, maxHeight);
+            }
+            return;
+        }
+        int scaledWidth = getWidth();
+        int scaledHeight = getHeight();
+        int clampedWidth = clampScaledWidth(scaledWidth);
+        int clampedHeight = clampScaledHeight(scaledHeight);
+        if (clampedWidth != scaledWidth || clampedHeight != scaledHeight) {
+            setScaledBounds(this.x, this.y, clampedWidth, clampedHeight);
+        } else {
+            clampTitleBarToScreen();
+        }
+    }
+
+    private void clampTitleBarToScreen() {
+        int screenWidth = this.minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = this.minecraft.getWindow().getGuiScaledHeight();
+        if (screenWidth <= 0 || screenHeight <= 0) {
+            return;
+        }
+
+        int scaledWidth = getWidth();
+        int minVisible = Math.max(1, (int) Math.ceil(scaledWidth * 0.2F));
+        minVisible = Math.min(minVisible, scaledWidth);
+        minVisible = Math.min(minVisible, screenWidth);
+        int minX = minVisible - scaledWidth;
+        int maxX = screenWidth - minVisible;
+        if (this.x < minX) {
+            this.x = minX;
+        } else if (this.x > maxX) {
+            this.x = maxX;
+        }
+
+        int minY = -this.borderThickness;
+        int maxY = screenHeight - this.borderThickness - this.titleBarHeight;
+        if (maxY < minY) {
+            this.y = minY;
+        } else if (this.y < minY) {
+            this.y = minY;
+        } else if (this.y > maxY) {
+            this.y = maxY;
         }
     }
 }

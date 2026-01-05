@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -13,6 +14,8 @@ import java.util.List;
 public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable {
 
     public static final PiPWindowHandler INSTANCE = new PiPWindowHandler();
+    private static final double DEFAULT_WINDOW_SIZE_SCALE_WIDTH = 0.4;
+    private static final double DEFAULT_WINDOW_SIZE_SCALE_HEIGHT = 0.5;
 
     private final List<PiPWindow> windows = new ArrayList<>();
     @Nullable
@@ -31,7 +34,10 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     private PiPWindowHandler() {
     }
 
-    public void openWindow(@NotNull PiPWindow window) {
+    public void openWindow(@NotNull PiPWindow window, @Nullable PiPWindow parentWindow) {
+        if (parentWindow != null) {
+            parentWindow.registerChildWindow(window);
+        }
         if (windows.contains(window)) {
             bringToFront(window);
             return;
@@ -41,9 +47,33 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         bringToFront(window);
     }
 
-    public void openChildWindow(@NotNull PiPWindow parent, @NotNull PiPWindow child) {
-        parent.registerChildWindow(child);
-        openWindow(child);
+    public void openWindowCentered(@NotNull PiPWindow window, @Nullable PiPWindow parentWindow) {
+        int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        int windowWidth = window.getWidth();
+        int windowHeight = window.getHeight();
+        int x = (screenWidth - windowWidth) / 2;
+        int y = (screenHeight - windowHeight) / 2;
+        window.setPosition(x, y);
+        openWindow(window, parentWindow);
+    }
+
+    public void openWindowWithDefaultSizeAndPosition(@NotNull PiPWindow window, @Nullable PiPWindow parentWindow) {
+        Minecraft minecraft = Minecraft.getInstance();
+        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+        int targetWidth = Math.max(1, (int) Math.round(screenWidth * DEFAULT_WINDOW_SIZE_SCALE_WIDTH));
+        int targetHeight = Math.max(1, (int) Math.round(screenHeight * DEFAULT_WINDOW_SIZE_SCALE_HEIGHT));
+        double guiScale = window.isSizeScaledToGuiScale() ? minecraft.getWindow().getGuiScale() : 1.0;
+        if (guiScale <= 1.0) {
+            guiScale = 1.0;
+        }
+        int rawWidth = guiScale > 1.0 ? (int) Math.ceil(targetWidth * guiScale) : targetWidth;
+        int rawHeight = guiScale > 1.0 ? (int) Math.ceil(targetHeight * guiScale) : targetHeight;
+        int x = (screenWidth - targetWidth) / 2;
+        int y = (screenHeight - targetHeight) / 2;
+        window.setBounds(x, y, rawWidth, rawHeight);
+        openWindow(window, parentWindow);
     }
 
     public void closeWindow(@NotNull PiPWindow window) {
