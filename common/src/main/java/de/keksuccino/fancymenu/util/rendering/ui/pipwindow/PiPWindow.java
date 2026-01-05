@@ -78,8 +78,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private boolean maximized = false;
     private int restoreX;
     private int restoreY;
-    private int restoreWidth;
-    private int restoreHeight;
+    private int restoreRawWidth;
+    private int restoreRawHeight;
 
     private boolean inputLocked = false;
     private boolean inputLockedByChildren = false;
@@ -160,23 +160,37 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private void renderWindowBackground(@Nonnull GuiGraphics graphics) {
-        int right = this.x + getWidth();
-        int bottom = this.y + getHeight();
+        float scale = getFrameRenderScale();
+        int frameX = getFrameX();
+        int frameY = getFrameY();
+        int frameWidth = getFrameWidth();
+        int frameHeight = getFrameHeight();
+        int right = frameX + frameWidth;
+        int bottom = frameY + frameHeight;
         UIColorTheme theme = getTheme();
-        graphics.fill(this.x, this.y, right, bottom, theme.pip_window_border_color.getColorInt());
+        graphics.pose().pushPose();
+        graphics.pose().scale(scale, scale, scale);
+        graphics.fill(frameX, frameY, right, bottom, theme.pip_window_border_color.getColorInt());
 
-        int innerLeft = this.x + this.borderThickness;
-        int innerTop = this.y + this.borderThickness;
+        int innerLeft = frameX + this.borderThickness;
+        int innerTop = frameY + this.borderThickness;
         int innerRight = right - this.borderThickness;
         int innerBottom = bottom - this.borderThickness;
         if (innerRight <= innerLeft || innerBottom <= innerTop) {
+            graphics.pose().popPose();
             return;
         }
 
         int titleBottom = innerTop + this.titleBarHeight;
         graphics.fill(innerLeft, innerTop, innerRight, Math.min(titleBottom, innerBottom), theme.pip_window_title_bar_color.getColorInt());
-        if (titleBottom < innerBottom) {
-            graphics.fill(innerLeft, titleBottom, innerRight, innerBottom, theme.pip_window_body_color.getColorInt());
+        graphics.pose().popPose();
+
+        int bodyX = getBodyX();
+        int bodyY = getBodyY();
+        int bodyWidth = getBodyWidth();
+        int bodyHeight = getBodyHeight();
+        if (bodyWidth > 0 && bodyHeight > 0) {
+            graphics.fill(bodyX, bodyY, bodyX + bodyWidth, bodyY + bodyHeight, theme.pip_window_body_color.getColorInt());
         }
     }
 
@@ -227,9 +241,13 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private void renderWindowForeground(@Nonnull GuiGraphics graphics, int mouseX, int mouseY) {
         Font font = this.minecraft.font;
 
-        int titleBarY = this.y + this.borderThickness;
-        int titleBarX = this.x + this.borderThickness;
-        int titleBarRight = this.x + getWidth() - this.borderThickness;
+        float scale = getFrameRenderScale();
+        int frameX = getFrameX();
+        int frameY = getFrameY();
+        int frameWidth = getFrameWidth();
+        int titleBarY = frameY + this.borderThickness;
+        int titleBarX = frameX + this.borderThickness;
+        int titleBarRight = frameX + frameWidth - this.borderThickness;
         int titleBarHeight = Math.max(0, this.titleBarHeight);
         int titleCenterY = titleBarY + (titleBarHeight - font.lineHeight) / 2;
 
@@ -237,13 +255,22 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         int closeX = getCloseButtonX();
         int buttonY = getButtonY();
         int maximizeX = getMaximizeButtonX();
+        int frameCloseX = getFrameCloseButtonX();
+        int frameButtonY = getFrameButtonY();
+        int frameMaximizeX = getFrameMaximizeButtonX();
 
+        int buttonSize = Math.max(1, toScreenSpace(this.buttonSize));
+        boolean maximizeHovered = this.maximizable && isPointInArea(mouseX, mouseY, maximizeX, buttonY, buttonSize, buttonSize);
+        boolean closeHovered = this.closable && isPointInArea(mouseX, mouseY, closeX, buttonY, buttonSize, buttonSize);
+
+        graphics.pose().pushPose();
+        graphics.pose().scale(scale, scale, scale);
         if (this.maximizable) {
-            renderButton(graphics, theme, maximizeX, buttonY, mouseX, mouseY, getActiveMaximizeButtonIcon(), getMaximizeButtonLabel());
+            renderButton(graphics, theme, frameMaximizeX, frameButtonY, maximizeHovered, getActiveMaximizeButtonIcon(), getMaximizeButtonLabel());
         }
 
         if (this.closable) {
-            renderButton(graphics, theme, closeX, buttonY, mouseX, mouseY, this.closeButtonIcon, "X");
+            renderButton(graphics, theme, frameCloseX, frameButtonY, closeHovered, this.closeButtonIcon, "X");
         }
 
         int iconSize = Math.min(this.titleBarHeight - this.buttonPadding * 2, this.titleBarHeight);
@@ -255,9 +282,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             textStartX = iconX + iconSize + this.buttonPadding;
         }
 
-        int titleRightLimit = maximizeX - this.buttonPadding;
+        int titleRightLimit = frameMaximizeX - this.buttonPadding;
         if (!this.maximizable) {
-            titleRightLimit = closeX - this.buttonPadding;
+            titleRightLimit = frameCloseX - this.buttonPadding;
         }
         int maxTitleWidth = Math.max(0, titleRightLimit - textStartX);
         var split = font.split(this.title, maxTitleWidth);
@@ -268,10 +295,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             int bottom = titleBarY + titleBarHeight;
             graphics.fill(titleBarX, bottom - 1, titleBarRight, bottom, theme.pip_window_border_color.getColorInt());
         }
+        graphics.pose().popPose();
     }
 
-    private void renderButton(@Nonnull GuiGraphics graphics, @Nonnull UIColorTheme theme, int x, int y, int mouseX, int mouseY, @Nullable ResourceLocation icon, @Nonnull String label) {
-        int color = isPointInArea(mouseX, mouseY, x, y, this.buttonSize, this.buttonSize)
+    private void renderButton(@Nonnull GuiGraphics graphics, @Nonnull UIColorTheme theme, int x, int y, boolean hovered, @Nullable ResourceLocation icon, @Nonnull String label) {
+        int color = hovered
                 ? theme.pip_window_button_color_hover.getColorInt()
                 : theme.pip_window_button_color_normal.getColorInt();
         graphics.fill(x, y, x + this.buttonSize, y + this.buttonSize, color);
@@ -545,19 +573,31 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     public int getBodyX() {
-        return this.x + this.borderThickness;
+        int frameX = getFrameX();
+        int innerLeft = frameX + this.borderThickness;
+        return toScreenSpace(innerLeft);
     }
 
     public int getBodyY() {
-        return this.y + this.borderThickness + this.titleBarHeight;
+        int frameY = getFrameY();
+        int innerTop = frameY + this.borderThickness + this.titleBarHeight;
+        return toScreenSpace(innerTop);
     }
 
     public int getBodyWidth() {
-        return Math.max(0, getWidth() - this.borderThickness * 2);
+        int frameX = getFrameX();
+        int frameWidth = getFrameWidth();
+        int innerLeft = frameX + this.borderThickness;
+        int innerRight = frameX + frameWidth - this.borderThickness;
+        return Math.max(0, toScreenSpace(innerRight) - toScreenSpace(innerLeft));
     }
 
     public int getBodyHeight() {
-        int value = getHeight() - this.borderThickness * 2 - this.titleBarHeight;
+        int frameY = getFrameY();
+        int frameHeight = getFrameHeight();
+        int innerTop = frameY + this.borderThickness + this.titleBarHeight;
+        int innerBottom = frameY + frameHeight - this.borderThickness;
+        int value = toScreenSpace(innerBottom) - toScreenSpace(innerTop);
         return Math.max(0, value);
     }
 
@@ -632,15 +672,16 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (maximized) {
             this.restoreX = this.x;
             this.restoreY = this.y;
-            this.restoreWidth = this.width;
-            this.restoreHeight = this.height;
+            this.restoreRawWidth = this.width;
+            this.restoreRawHeight = this.height;
+            this.maximized = true;
             int maxWidth = getMaximumWidth();
             int maxHeight = getMaximumHeight();
             setScaledBounds(0, getMenuBarHeight(), maxWidth, maxHeight);
         } else {
-            setBounds(this.restoreX, this.restoreY, this.restoreWidth, this.restoreHeight);
+            this.maximized = false;
+            setBounds(this.restoreX, this.restoreY, this.restoreRawWidth, this.restoreRawHeight);
         }
-        this.maximized = maximized;
         return this;
     }
 
@@ -693,11 +734,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
 
         if (button == 0) {
-            if (this.closable && isPointInArea(mouseX, mouseY, getCloseButtonX(), getButtonY(), this.buttonSize, this.buttonSize)) {
+            int buttonSize = Math.max(1, toScreenSpace(this.buttonSize));
+            if (this.closable && isPointInArea(mouseX, mouseY, getCloseButtonX(), getButtonY(), buttonSize, buttonSize)) {
                 close();
                 return true;
             }
-            if (this.maximizable && isPointInArea(mouseX, mouseY, getMaximizeButtonX(), getButtonY(), this.buttonSize, this.buttonSize)) {
+            if (this.maximizable && isPointInArea(mouseX, mouseY, getMaximizeButtonX(), getButtonY(), buttonSize, buttonSize)) {
                 toggleMaximized();
                 return true;
             }
@@ -875,8 +917,16 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private boolean isPointInTitleBar(double mouseX, double mouseY) {
-        int titleBarY = this.y + this.borderThickness;
-        return isPointInArea(mouseX, mouseY, this.x, titleBarY, getWidth(), this.titleBarHeight);
+        int frameX = getFrameX();
+        int frameY = getFrameY();
+        int frameWidth = getFrameWidth();
+        int titleBarY = frameY + this.borderThickness;
+        int titleBarBottom = titleBarY + this.titleBarHeight;
+        int screenX = toScreenSpace(frameX);
+        int screenY = toScreenSpace(titleBarY);
+        int screenRight = toScreenSpace(frameX + frameWidth);
+        int screenBottom = toScreenSpace(titleBarBottom);
+        return isPointInArea(mouseX, mouseY, screenX, screenY, Math.max(0, screenRight - screenX), Math.max(0, screenBottom - screenY));
     }
 
     private boolean isPointInBody(double mouseX, double mouseY) {
@@ -884,17 +934,15 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private int getButtonY() {
-        return this.y + this.borderThickness + Math.max(0, (this.titleBarHeight - this.buttonSize) / 2);
+        return toScreenSpace(getFrameButtonY());
     }
 
     private int getCloseButtonX() {
-        int right = this.x + getWidth() - this.borderThickness;
-        return right - this.buttonPadding - this.buttonSize;
+        return toScreenSpace(getFrameCloseButtonX());
     }
 
     private int getMaximizeButtonX() {
-        int closeX = getCloseButtonX();
-        return closeX - this.buttonPadding - this.buttonSize;
+        return toScreenSpace(getFrameMaximizeButtonX());
     }
 
     @Nullable
@@ -904,6 +952,23 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private String getMaximizeButtonLabel() {
         return this.maximized ? "[]" : "[ ]";
+    }
+
+    private int getFrameButtonY() {
+        int frameY = getFrameY();
+        int titleHeight = Math.max(0, this.titleBarHeight);
+        int buttonSize = Math.max(1, this.buttonSize);
+        return frameY + this.borderThickness + Math.max(0, (titleHeight - buttonSize) / 2);
+    }
+
+    private int getFrameCloseButtonX() {
+        int frameX = getFrameX();
+        int frameWidth = getFrameWidth();
+        return frameX + frameWidth - this.borderThickness - this.buttonPadding - this.buttonSize;
+    }
+
+    private int getFrameMaximizeButtonX() {
+        return getFrameCloseButtonX() - this.buttonPadding - this.buttonSize;
     }
 
     private void updateResizeCursor(int mouseX, int mouseY) {
@@ -930,13 +995,19 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (!this.resizable || this.maximized) {
             return PiPWindowResizeHandle.NONE;
         }
-        int margin = Math.max(1, this.resizeMargin);
-        int scaledWidth = getWidth();
-        int scaledHeight = getHeight();
-        boolean left = mouseX >= this.x && mouseX <= this.x + margin;
-        boolean right = mouseX >= this.x + scaledWidth - margin && mouseX <= this.x + scaledWidth;
-        boolean top = mouseY >= this.y && mouseY <= this.y + margin;
-        boolean bottom = mouseY >= this.y + scaledHeight - margin && mouseY <= this.y + scaledHeight;
+        int frameX = getFrameX();
+        int frameY = getFrameY();
+        int frameWidth = getFrameWidth();
+        int frameHeight = getFrameHeight();
+        int screenLeft = toScreenSpace(frameX);
+        int screenTop = toScreenSpace(frameY);
+        int screenRight = toScreenSpace(frameX + frameWidth);
+        int screenBottom = toScreenSpace(frameY + frameHeight);
+        int margin = Math.max(1, toScreenSpace(this.resizeMargin));
+        boolean left = mouseX >= screenLeft && mouseX <= screenLeft + margin;
+        boolean right = mouseX >= screenRight - margin && mouseX <= screenRight;
+        boolean top = mouseY >= screenTop && mouseY <= screenTop + margin;
+        boolean bottom = mouseY >= screenBottom - margin && mouseY <= screenBottom;
 
         if (left && top) {
             return PiPWindowResizeHandle.TOP_LEFT;
@@ -1044,6 +1115,42 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return Math.max(scaled, getLayoutMinimumHeight());
     }
 
+    private float getFrameRenderScale() {
+        return MenuBar.getRenderScale();
+    }
+
+    private int toFrameSpace(int value) {
+        float scale = getFrameRenderScale();
+        if (scale <= 0.0F || scale == 1.0F) {
+            return value;
+        }
+        return Math.round(value / scale);
+    }
+
+    private int toScreenSpace(int value) {
+        float scale = getFrameRenderScale();
+        if (scale <= 0.0F || scale == 1.0F) {
+            return value;
+        }
+        return Math.round(value * scale);
+    }
+
+    private int getFrameX() {
+        return toFrameSpace(this.x);
+    }
+
+    private int getFrameY() {
+        return toFrameSpace(this.y);
+    }
+
+    private int getFrameWidth() {
+        return Math.max(0, toFrameSpace(getWidth()));
+    }
+
+    private int getFrameHeight() {
+        return Math.max(0, toFrameSpace(getHeight()));
+    }
+
     private int getScaledSize(int rawSize) {
         if (!this.sizeScaledToGuiScale) {
             return rawSize;
@@ -1085,7 +1192,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private int getLayoutMinimumHeight() {
-        int layoutMin = this.titleBarHeight + this.borderThickness * 2 + 1;
+        int titleHeight = Math.max(0, toScreenSpace(this.titleBarHeight));
+        int border = Math.max(0, toScreenSpace(this.borderThickness));
+        int layoutMin = titleHeight + border * 2 + 1;
         return Math.max(1, layoutMin);
     }
 
@@ -1252,8 +1361,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             this.x = maxX;
         }
 
-        int minY = getMenuBarHeight() - this.borderThickness;
-        int maxY = screenHeight - this.borderThickness - this.titleBarHeight;
+        int border = Math.max(0, toScreenSpace(this.borderThickness));
+        int titleHeight = Math.max(0, toScreenSpace(this.titleBarHeight));
+        int minY = getMenuBarHeight() - border;
+        int maxY = screenHeight - border - titleHeight;
         if (maxY < minY) {
             this.y = minY;
         } else if (this.y < minY) {

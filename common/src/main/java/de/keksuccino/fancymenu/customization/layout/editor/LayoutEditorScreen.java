@@ -148,7 +148,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.closeRightClickMenu();
 		this.rightClickMenu = LayoutEditorUI.buildRightClickContextMenu(this);
-		this.addWidget(this.rightClickMenu);
+		ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.LAYOUT_EDITOR_RIGHT_CLICK_CONTEXT_MENU, this.rightClickMenu);
 
         this.refreshMenuBar();
 
@@ -269,6 +269,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//Clear active element context menu if not open
 		if ((this.activeElementContextMenu != null) && !this.activeElementContextMenu.isOpen()) {
 			this.activeElementContextMenu = null;
+            ScreenOverlayHandler.INSTANCE.removeOverlay(ScreenOverlays.LAYOUT_EDITOR_ELEMENT_CONTEXT_MENU, true, false);
 		}
 
 		this.renderBackground(graphics, mouseX, mouseY, partial);
@@ -288,8 +289,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
 			this.buddyWidget.render(graphics, mouseX, mouseY, partial);
 		}
-
-		this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
 
 		//Render active element context menu
 		if (this.activeElementContextMenu != null) {
@@ -955,6 +954,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	public void openRightClickMenuAtMouse(int mouseX, int mouseY) {
+        this.closeActiveElementMenu();
 		if (this.rightClickMenu != null) {
 			this.rightClickMenuOpenPosX = mouseX;
 			this.rightClickMenuOpenPosY = mouseY;
@@ -973,15 +973,16 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	public void openElementContextMenuAtMouseIfPossible() {
 		this.closeActiveElementMenu();
+        this.closeRightClickMenu();
 		List<AbstractEditorElement<?, ?>> selectedElements = this.getSelectedElements();
 		if (selectedElements.size() == 1) {
 			this.activeElementContextMenu = selectedElements.get(0).rightClickMenu;
-			((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
+            ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.LAYOUT_EDITOR_ELEMENT_CONTEXT_MENU, this.activeElementContextMenu);
 			this.activeElementContextMenu.openMenuAtMouse();
 		} else if (selectedElements.size() > 1) {
 			List<ContextMenu> menus = ObjectUtils.getOfAll(ContextMenu.class, selectedElements, consumes -> consumes.rightClickMenu);
 			this.activeElementContextMenu = ContextMenu.stackContextMenus(menus);
-			((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
+			ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.LAYOUT_EDITOR_ELEMENT_CONTEXT_MENU, this.activeElementContextMenu);
 			this.activeElementContextMenu.openMenuAtMouse();
 		}
 	}
@@ -990,7 +991,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (this.activeElementContextMenu != null) {
 			if (!forceClose && this.activeElementContextMenu.isUserNavigatingInMenu()) return;
 			this.activeElementContextMenu.closeMenu();
-			this.removeWidget(this.activeElementContextMenu);
+            ScreenOverlayHandler.INSTANCE.removeOverlay(ScreenOverlays.LAYOUT_EDITOR_ELEMENT_CONTEXT_MENU, true, false);
 		}
 		this.activeElementContextMenu = null;
 	}

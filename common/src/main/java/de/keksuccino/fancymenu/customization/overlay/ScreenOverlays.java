@@ -21,6 +21,8 @@ public class ScreenOverlays {
     public static final long CUSTOMIZATION_DEBUG_OVERLAY = ScreenOverlayHandler.INSTANCE.addPlaceholder();
     public static final long CUSTOMIZATION_MENU_BAR = ScreenOverlayHandler.INSTANCE.addPlaceholder();
     public static final long LAYOUT_EDITOR_MENU_BAR = ScreenOverlayHandler.INSTANCE.addPlaceholder();
+    public static final long LAYOUT_EDITOR_RIGHT_CLICK_CONTEXT_MENU = ScreenOverlayHandler.INSTANCE.addPlaceholder();
+    public static final long LAYOUT_EDITOR_ELEMENT_CONTEXT_MENU = ScreenOverlayHandler.INSTANCE.addPlaceholder();
 
     public static void registerDefaults() {
         // empty dummy just for having something to call on init (yes, it's useless, but it makes me feel better, okay?)
