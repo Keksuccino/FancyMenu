@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,9 +32,9 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
                     this.editor.history.saveSnapshot();
                     this.element.actionExecutor = call;
                 }
-                Minecraft.getInstance().setScreen(this.editor);
+                this.openContextMenuScreen(this.editor);
             });
-            Minecraft.getInstance().setScreen(s);
+            this.openContextMenuScreen(s);
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);

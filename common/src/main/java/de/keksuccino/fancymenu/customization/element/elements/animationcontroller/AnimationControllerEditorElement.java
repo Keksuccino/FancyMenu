@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
@@ -45,10 +44,10 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                                             this.element.keyframes = callback.keyframes();
                                             this.element.offsetMode = callback.isOffsetMode();
                                         }
-                                        Minecraft.getInstance().setScreen(this.editor);
+                                        this.openContextMenuScreen(this.editor);
                                     }
                             );
-                            Minecraft.getInstance().setScreen(managerScreen);
+                            this.openContextMenuScreen(managerScreen);
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_keyframes.desc")))
                 .setStackable(false);
@@ -101,12 +100,12 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                                             this.element.randomTimingOffsetMinMs = min;
                                             this.element.randomTimingOffsetMaxMs = max;
                                         }
-                                        Minecraft.getInstance().setScreen(this.editor);
+                                        this.openContextMenuScreen(this.editor);
                                     });
                             s.setFirstText("" + this.element.randomTimingOffsetMinMs);
                             s.setSecondText("" + this.element.randomTimingOffsetMaxMs);
                             s.setAllowPlaceholders(false);
-                            Minecraft.getInstance().setScreen(s);
+                            this.openContextMenuScreen(s);
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.range.desc")))
                 .setStackable(false);
@@ -122,10 +121,10 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                                             this.editor.history.saveSnapshot();
                                             this.element.targetElements = new ArrayList<>(callback);
                                         }
-                                        Minecraft.getInstance().setScreen(this.editor);
+                                        this.openContextMenuScreen(this.editor);
                                     }
                             );
-                            Minecraft.getInstance().setScreen(managerScreen);
+                            this.openContextMenuScreen(managerScreen);
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_targets.desc")))
                 .setStackable(false);

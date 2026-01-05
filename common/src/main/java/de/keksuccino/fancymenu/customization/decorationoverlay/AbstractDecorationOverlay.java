@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOverlay<?>> implements Renderable, ContainerEventHandler, NarratableEntry, PropertyHolder, ContextMenuBuilder<O> {
 
     private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
+    private final List<ContextMenuBuilder.ContextMenuScreenOpenProcessor> contextMenuScreenOpenProcessorList = new ArrayList<>();
 
     @NotNull
     private String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
@@ -47,6 +48,11 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
     @Override
     public @NotNull Map<String, Property<?>> getPropertyMap() {
         return this.propertyMap;
+    }
+
+    @Override
+    public @NotNull List<ContextMenuBuilder.ContextMenuScreenOpenProcessor> getContextMenuScreenOpenProcessorList() {
+        return this.contextMenuScreenOpenProcessorList;
     }
 
     protected abstract void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor);

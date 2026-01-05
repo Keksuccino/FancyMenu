@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
@@ -65,12 +64,12 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                                             ((TooltipElement)e.element).setSource(TooltipElement.SourceMode.DIRECT, call);
                                         }
                                     }
-                                    Minecraft.getInstance().setScreen(this.editor);
+                                    this.openContextMenuScreen(this.editor);
                                 });
                                 s.setText(defaultText);
                                 s.setMultilineMode(true);
                                 s.setPlaceholdersAllowed(true);
-                                Minecraft.getInstance().setScreen(s);
+                                this.openContextMenuScreen(s);
                             }
                         })
                 .setStackable(true)

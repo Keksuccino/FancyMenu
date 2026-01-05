@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundSource;
@@ -36,7 +35,7 @@ public class AudioEditorElement extends AbstractEditorElement<AudioEditorElement
                 "fancymenu.elements.audio.looping");
 
         this.rightClickMenu.addClickableEntry("manage_tracks", Component.translatable("fancymenu.elements.audio.manage_audios"),
-                        (menu, entry) -> Minecraft.getInstance().setScreen(new ManageAudiosScreen(this.element, this.element.audios, this.editor)))
+                        (menu, entry) -> this.openContextMenuScreen(new ManageAudiosScreen(this.element, this.element.audios, this.editor)))
                 .setStackable(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
@@ -51,19 +50,19 @@ public class AudioEditorElement extends AbstractEditorElement<AudioEditorElement
                 .setStackable(false);
 
         this.rightClickMenu.addClickableEntry("volume", Component.translatable("fancymenu.elements.audio.set_volume"), (menu, entry) -> {
-            Minecraft.getInstance().setScreen(new SetAudioVolumeScreen(this.element.volume, aFloat -> {
+            this.openContextMenuScreen(new SetAudioVolumeScreen(this.element.volume, aFloat -> {
                 if (aFloat != null) {
                     this.element.setVolume(aFloat);
                 }
-                Minecraft.getInstance().setScreen(this.editor);
+                this.openContextMenuScreen(this.editor);
             }));
         });
 
         this.rightClickMenu.addSeparatorEntry("separator_after_volume");
 
         this.rightClickMenu.addClickableEntry("disable_vanilla_music", Component.translatable("fancymenu.elements.audio.disable_vanilla_music"), (menu, entry) -> {
-                    Minecraft.getInstance().setScreen(NotificationScreen.notificationWithHeadline(
-                            aBoolean -> Minecraft.getInstance().setScreen(this.editor),
+                    this.openContextMenuScreen(NotificationScreen.notificationWithHeadline(
+                            aBoolean -> this.openContextMenuScreen(this.editor),
                             LocalizationUtils.splitLocalizedLines("fancymenu.elements.audio.disable_vanilla_music.desc")));
                 })
                 .setStackable(true);

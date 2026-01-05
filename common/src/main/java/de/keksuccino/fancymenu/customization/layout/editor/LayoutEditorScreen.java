@@ -39,6 +39,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
@@ -885,7 +886,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.layout.updateLastEditedTime();
 			this.serializeElementInstancesToLayoutInstance();
 			if (!this.layout.saveToFileIfPossible()) {
-				Minecraft.getInstance().setScreen(NotificationScreen.error((call) -> {
+				this.openChildScreen(NotificationScreen.error((call) -> {
 					Minecraft.getInstance().setScreen(this);
 				}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 			} else {
@@ -920,7 +921,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						if (old != null) old.delete(false);
 					}
 					if (!this.layout.saveToFileIfPossible()) {
-						Minecraft.getInstance().setScreen(NotificationScreen.error((call2) -> {
+                        this.openChildScreen(NotificationScreen.error((call2) -> {
 							Minecraft.getInstance().setScreen(this);
 						}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 					} else {
@@ -929,7 +930,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					}
 				} catch (Exception ex) {
 					LOGGER.error("[FANCYMENU] Error while saving layout in editor!", ex);
-					Minecraft.getInstance().setScreen(NotificationScreen.error((call2) -> {
+                    this.openChildScreen(NotificationScreen.error((call2) -> {
 						Minecraft.getInstance().setScreen(this);
 					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 				}
@@ -939,7 +940,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		FileTypeGroup<?> fileTypeGroup = FileTypeGroup.of(FileTypes.TXT_TEXT);
 		fileTypeGroup.setDisplayName(Component.translatable("fancymenu.file_types.groups.text"));
 		s.setFileTypes(fileTypeGroup);
-		Minecraft.getInstance().setScreen(s);
+        this.openChildScreen(s);
 	}
 
 	public void onUpdateSelectedElements() {
@@ -1374,8 +1375,22 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	}
 
+    public void openChildScreen(@NotNull Screen screen) {
+        this.beforeOpenChildScreen(screen);
+        Minecraft.getInstance().setScreen(screen);
+    }
+
+    public void beforeOpenChildScreen(@NotNull Screen screen) {
+        this.closeActiveElementMenu();
+        this.closeRightClickMenu();
+        PiPWindowHandler.INSTANCE.closeAllWindows();
+    }
+
     @SuppressWarnings("deprecation")
 	public void closeEditor() {
+        PiPWindowHandler.INSTANCE.closeAllWindows();
+        this.closeActiveElementMenu();
+        this.closeRightClickMenu();
 		this.saveWidgetSettings();
 		this.buddyWidget.cleanup();
 		this.getAllElements().forEach(element -> {

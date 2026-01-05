@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.konkrete.input.StringUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
@@ -120,9 +119,9 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                                     this.editor.history.saveSnapshot();
                                     (this.element).executableBlock = call;
                                 }
-                                Minecraft.getInstance().setScreen(this.editor);
+                                this.openContextMenuScreen(this.editor);
                             });
-                            Minecraft.getInstance().setScreen(s);
+                            this.openContextMenuScreen(s);
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
@@ -134,9 +133,9 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                             this.editor.history.saveSnapshot();
                             this.element.activeStateSupplier = call;
                         }
-                        Minecraft.getInstance().setScreen(this.editor);
+                        this.openContextMenuScreen(this.editor);
                     });
-                    Minecraft.getInstance().setScreen(s);
+                    this.openContextMenuScreen(s);
                 })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
                 .setStackable(false);

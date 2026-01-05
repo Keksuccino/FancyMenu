@@ -120,6 +120,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     public boolean movingCrumpleZonePassed = false;
 
     private final List<AbstractEditorElement<?, ?>> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
+    private final List<ContextMenuBuilder.ContextMenuScreenOpenProcessor> contextMenuScreenOpenProcessorList = new ArrayList<>();
 
     public AbstractEditorElement(@NotNull N element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
         this.settings = (settings != null) ? settings : new EditorElementSettings();
@@ -134,6 +135,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 return super.openMenuAt(x, y, entryPath);
             }
         };
+        this.addContextMenuScreenOpenProcessor(screen -> {
+            this.editor.beforeOpenChildScreen(screen);
+        });
         this.init();
     }
 
@@ -256,20 +260,20 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                                             e.setAnchorPoint(ElementAnchorPoints.ELEMENT, true);
                                                         }
                                                     }
-                                                    Minecraft.getInstance().setScreen(this.editor);
+                                                    this.openContextMenuScreen(this.editor);
                                                 } else {
-                                                    Minecraft.getInstance().setScreen(NotificationScreen.error(b -> {
-                                                        Minecraft.getInstance().setScreen(this.editor);
+                                                    this.openContextMenuScreen(NotificationScreen.error(b -> {
+                                                        this.openContextMenuScreen(this.editor);
                                                     }, LocalizationUtils.splitLocalizedLines("fancymenu.elements.anchor_points.element.setidentifier.identifiernotfound")));
                                                 }
                                             } else {
-                                                Minecraft.getInstance().setScreen(this.editor);
+                                                this.openContextMenuScreen(this.editor);
                                             }
                                         });
                                         if (!entry.getStackMeta().isPartOfStack()) {
                                             s.setText(this.element.getAnchorPointElementIdentifier());
                                         }
-                                        Minecraft.getInstance().setScreen(s);
+                                        this.openContextMenuScreen(s);
                                         menu.closeMenu();
                                     }
                                 })
@@ -403,9 +407,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                     this.editor.history.saveSnapshot();
                                     this.element.requirementContainer = call;
                                 }
-                                Minecraft.getInstance().setScreen(this.editor);
+                                this.openContextMenuScreen(this.editor);
                             });
-                            Minecraft.getInstance().setScreen(s);
+                            this.openContextMenuScreen(s);
                         } else if (entry.getStackMeta().isFirstInStack()) {
                             List<E> selectedElements = this.getFilteredSelectedElementList(element -> element.settings.isLoadingRequirementsEnabled());
                             List<RequirementContainer> containers = ObjectUtils.getOfAll(RequirementContainer.class, selectedElements, consumes -> consumes.element.requirementContainer);
@@ -421,16 +425,16 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                         e.element.requirementContainer = call.copy(true);
                                     }
                                 }
-                                Minecraft.getInstance().setScreen(this.editor);
+                                this.openContextMenuScreen(this.editor);
                             });
                             if (allEqual) {
-                                Minecraft.getInstance().setScreen(s);
+                                this.openContextMenuScreen(s);
                             } else {
-                                Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
+                                this.openContextMenuScreen(ConfirmationScreen.ofStrings((call) -> {
                                     if (call) {
-                                        Minecraft.getInstance().setScreen(s);
+                                        this.openContextMenuScreen(s);
                                     } else {
-                                        Minecraft.getInstance().setScreen(this.editor);
+                                        this.openContextMenuScreen(this.editor);
                                     }
                                 }, LocalizationUtils.splitLocalizedStringLines("fancymenu.elements.multiselect.loading_requirements.warning.override")));
                             }
@@ -1744,6 +1748,11 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     @Override
     public @Nullable Object createSnapshot() {
         return this.editor.history.createSnapshot();
+    }
+
+    @Override
+    public @NotNull List<ContextMenuBuilder.ContextMenuScreenOpenProcessor> getContextMenuScreenOpenProcessorList() {
+        return this.contextMenuScreenOpenProcessorList;
     }
 
     @Override

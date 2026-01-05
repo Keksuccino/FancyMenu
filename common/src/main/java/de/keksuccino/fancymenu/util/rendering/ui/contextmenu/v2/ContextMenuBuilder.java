@@ -115,6 +115,59 @@ public interface ContextMenuBuilder<O> {
     String STACK_SNAPSHOT_TAKEN_KEY = "stack_snapshot_taken";
 
     /**
+     * Processor invoked before a context menu entry opens a {@link Screen} via {@link Minecraft#setScreen(Screen)}.
+     */
+    @FunctionalInterface
+    interface ContextMenuScreenOpenProcessor {
+        void beforeOpen(@NotNull Screen screen);
+    }
+
+    /**
+     * Returns the mutable processor list backing this builder.
+     */
+    @NotNull
+    List<ContextMenuScreenOpenProcessor> getContextMenuScreenOpenProcessorList();
+
+    /**
+     * Adds a screen open processor that will run before any context menu entry opens a screen.
+     */
+    default void addContextMenuScreenOpenProcessor(@NotNull ContextMenuScreenOpenProcessor processor) {
+        Objects.requireNonNull(processor, "processor");
+        Objects.requireNonNull(this.getContextMenuScreenOpenProcessorList(), "contextMenuScreenOpenProcessorList").add(processor);
+    }
+
+    /**
+     * Removes a previously added screen open processor.
+     *
+     * @return true if a processor was removed
+     */
+    default boolean removeContextMenuScreenOpenProcessor(@NotNull ContextMenuScreenOpenProcessor processor) {
+        Objects.requireNonNull(processor, "processor");
+        return Objects.requireNonNull(this.getContextMenuScreenOpenProcessorList(), "contextMenuScreenOpenProcessorList").remove(processor);
+    }
+
+    /**
+     * Returns all registered screen open processors.
+     */
+    @NotNull
+    default List<ContextMenuScreenOpenProcessor> getContextMenuScreenOpenProcessors() {
+        List<ContextMenuScreenOpenProcessor> processors = Objects.requireNonNull(this.getContextMenuScreenOpenProcessorList(), "contextMenuScreenOpenProcessorList");
+        return processors.isEmpty() ? List.of() : List.copyOf(processors);
+    }
+
+    /**
+     * Opens a screen from a context menu entry, running any registered processors first.
+     */
+    default void openContextMenuScreen(@Nullable Screen screen) {
+        if (screen != null) {
+            for (ContextMenuScreenOpenProcessor processor : this.getContextMenuScreenOpenProcessors()) {
+                processor.beforeOpen(screen);
+            }
+        }
+        Minecraft.getInstance().setScreen(screen);
+    }
+
+    /**
      * Creates a standalone builder wrapper by providing the required callbacks.
      * <p>
      * This is useful in UI code that does not already implement {@link ContextMenuBuilder} directly.
@@ -126,6 +179,8 @@ public interface ContextMenuBuilder<O> {
      */
     static <O> ContextMenuBuilder<O> createStandalone(@NotNull Supplier<Screen> callbackScreenSupplier, @NotNull ConsumingSupplier<ConsumingSupplier<O, Boolean>, List<O>> stackableObjectsListSupplier, @NotNull Supplier<O> selfSupplier, @Nullable Runnable saveSnapshotVoidTask, @Nullable Consumer<Object> saveSnapshotObjectTask, @Nullable Supplier<Object> createSnapshotSupplier) {
         return new ContextMenuBuilder<>() {
+            private final List<ContextMenuScreenOpenProcessor> contextMenuScreenOpenProcessorList = new ArrayList<>();
+
             @Override
             public @Nullable Screen getContextMenuCallbackScreen() {
                 return callbackScreenSupplier.get();
@@ -153,6 +208,10 @@ public interface ContextMenuBuilder<O> {
             public @NotNull List<O> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<O, Boolean> filter) {
                 if (filter == null) filter = consumes -> true;
                 return stackableObjectsListSupplier.get(filter);
+            }
+            @Override
+            public @NotNull List<ContextMenuScreenOpenProcessor> getContextMenuScreenOpenProcessorList() {
+                return this.contextMenuScreenOpenProcessorList;
             }
         };
     }
@@ -658,9 +717,9 @@ public interface ContextMenuBuilder<O> {
                                     this.saveSnapshot();
                                     this.applyStackAppliers(entry, source);
                                 }
-                                Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
+                                this.openContextMenuScreen(this.getContextMenuCallbackScreen());
                             });
-                            Minecraft.getInstance().setScreen(chooserScreen);
+                            this.openContextMenuScreen(chooserScreen);
                         }).setStackable(true)
                 .setStackApplier((stackEntry, value) -> {
                     if (!(value instanceof String source)) {
@@ -760,7 +819,7 @@ public interface ContextMenuBuilder<O> {
                                 this.applyStackAppliers(entry, call);
                             }
                             menu.closeMenu();
-                            Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
+                            this.openContextMenuScreen(this.getContextMenuCallbackScreen());
                         });
                         if (textValidator != null) {
                             s.setTextValidator(consumes -> {
@@ -777,7 +836,7 @@ public interface ContextMenuBuilder<O> {
                                 this.applyStackAppliers(entry, call);
                             }
                             menu.closeMenu();
-                            Minecraft.getInstance().setScreen(this.getContextMenuCallbackScreen());
+                            this.openContextMenuScreen(this.getContextMenuCallbackScreen());
                         });
                         if (textValidator != null) {
                             s.setTextValidator(consumes -> {
@@ -790,7 +849,7 @@ public interface ContextMenuBuilder<O> {
                         s.setPlaceholdersAllowed(allowPlaceholders);
                         inputScreen = s;
                     }
-                    Minecraft.getInstance().setScreen(inputScreen);
+                    this.openContextMenuScreen(inputScreen);
                 }).setStackable(true)
                 .setStackApplier((stackEntry, value) -> {
                     if (!(value instanceof String call)) {

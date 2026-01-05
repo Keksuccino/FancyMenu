@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -207,8 +206,8 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
 
         this.rightClickMenu.addClickableEntry("entity_pose", Component.translatable("fancymenu.elements.player_entity.edit_pose"),
                 (menu, entry) -> {
-                    Minecraft.getInstance().setScreen(new PlayerEntityPoseScreen(this.element, this.editor, () -> {
-                        Minecraft.getInstance().setScreen(this.editor);
+                    this.openContextMenuScreen(new PlayerEntityPoseScreen(this.element, this.editor, () -> {
+                        this.openContextMenuScreen(this.editor);
                     }));
                 });
 
@@ -276,9 +275,9 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                             itemKeyTargetFieldSetter.accept(this, callback);
                         }
                         menu.closeMenu();
-                        Minecraft.getInstance().setScreen(this.editor);
+                        this.openContextMenuScreen(this.editor);
                     });
-                    Minecraft.getInstance().setScreen(inputScreen);
+                    this.openContextMenuScreen(inputScreen);
                 }
             }).setStackable(false);
 

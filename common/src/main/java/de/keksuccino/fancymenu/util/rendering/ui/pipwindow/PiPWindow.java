@@ -160,38 +160,23 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private void renderWindowBackground(@Nonnull GuiGraphics graphics) {
-        float scale = getFrameRenderScale();
-        int frameX = getFrameX();
-        int frameY = getFrameY();
-        int frameWidth = getFrameWidth();
-        int frameHeight = getFrameHeight();
+        int frameX = this.x;
+        int frameY = this.y;
+        int frameWidth = getWidth();
+        int frameHeight = getHeight();
         int right = frameX + frameWidth;
         int bottom = frameY + frameHeight;
-        UIColorTheme theme = getTheme();
-        graphics.pose().pushPose();
-        graphics.pose().scale(scale, scale, scale);
-        graphics.fill(frameX, frameY, right, bottom, theme.pip_window_border_color.getColorInt());
-
-        int innerLeft = frameX + this.borderThickness;
-        int innerTop = frameY + this.borderThickness;
-        int innerRight = right - this.borderThickness;
-        int innerBottom = bottom - this.borderThickness;
+        int border = getScaledBorderThickness();
+        int titleHeight = getScaledTitleBarHeight();
+        int innerLeft = frameX + border;
+        int innerTop = frameY + border + titleHeight;
+        int innerRight = right - border;
+        int innerBottom = bottom - border;
         if (innerRight <= innerLeft || innerBottom <= innerTop) {
-            graphics.pose().popPose();
             return;
         }
-
-        int titleBottom = innerTop + this.titleBarHeight;
-        graphics.fill(innerLeft, innerTop, innerRight, Math.min(titleBottom, innerBottom), theme.pip_window_title_bar_color.getColorInt());
-        graphics.pose().popPose();
-
-        int bodyX = getBodyX();
-        int bodyY = getBodyY();
-        int bodyWidth = getBodyWidth();
-        int bodyHeight = getBodyHeight();
-        if (bodyWidth > 0 && bodyHeight > 0) {
-            graphics.fill(bodyX, bodyY, bodyX + bodyWidth, bodyY + bodyHeight, theme.pip_window_body_color.getColorInt());
-        }
+        UIColorTheme theme = getTheme();
+        graphics.fill(innerLeft, innerTop, innerRight, innerBottom, theme.pip_window_body_color.getColorInt());
     }
 
     private void renderBodyScreen(@Nonnull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -239,82 +224,133 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private void renderWindowForeground(@Nonnull GuiGraphics graphics, int mouseX, int mouseY) {
+        renderWindowFrame(graphics);
+
         Font font = this.minecraft.font;
 
-        float scale = getFrameRenderScale();
-        int frameX = getFrameX();
-        int frameY = getFrameY();
-        int frameWidth = getFrameWidth();
-        int titleBarY = frameY + this.borderThickness;
-        int titleBarX = frameX + this.borderThickness;
-        int titleBarRight = frameX + frameWidth - this.borderThickness;
-        int titleBarHeight = Math.max(0, this.titleBarHeight);
-        int titleCenterY = titleBarY + (titleBarHeight - font.lineHeight) / 2;
+        float scale = getFrameScale();
+        int frameX = this.x;
+        int frameY = this.y;
+        int frameWidth = getWidth();
+        int border = getScaledBorderThickness();
+        int titleBarHeight = getScaledTitleBarHeight();
+        int titleBarY = frameY + border;
+        int titleBarX = frameX + border;
+        int titleBarRight = frameX + frameWidth - border;
+        int titleCenterY = titleBarY + Math.max(0, Math.round((titleBarHeight - font.lineHeight * scale) / 2.0F));
 
         UIColorTheme theme = getTheme();
         int closeX = getCloseButtonX();
         int buttonY = getButtonY();
         int maximizeX = getMaximizeButtonX();
-        int frameCloseX = getFrameCloseButtonX();
-        int frameButtonY = getFrameButtonY();
-        int frameMaximizeX = getFrameMaximizeButtonX();
-
-        int buttonSize = Math.max(1, toScreenSpace(this.buttonSize));
+        int buttonSize = getScaledButtonSize();
         boolean maximizeHovered = this.maximizable && isPointInArea(mouseX, mouseY, maximizeX, buttonY, buttonSize, buttonSize);
         boolean closeHovered = this.closable && isPointInArea(mouseX, mouseY, closeX, buttonY, buttonSize, buttonSize);
 
-        graphics.pose().pushPose();
-        graphics.pose().scale(scale, scale, scale);
         if (this.maximizable) {
-            renderButton(graphics, theme, frameMaximizeX, frameButtonY, maximizeHovered, getActiveMaximizeButtonIcon(), getMaximizeButtonLabel());
+            renderButton(graphics, theme, maximizeX, buttonY, buttonSize, maximizeHovered, getActiveMaximizeButtonIcon(), getMaximizeButtonLabel(), scale);
         }
 
         if (this.closable) {
-            renderButton(graphics, theme, frameCloseX, frameButtonY, closeHovered, this.closeButtonIcon, "X");
+            renderButton(graphics, theme, closeX, buttonY, buttonSize, closeHovered, this.closeButtonIcon, "X", scale);
         }
 
-        int iconSize = Math.min(this.titleBarHeight - this.buttonPadding * 2, this.titleBarHeight);
-        int textStartX = titleBarX + this.buttonPadding + 2;
+        int padding = getScaledButtonPadding();
+        int iconSize = Math.min(titleBarHeight - padding * 2, titleBarHeight);
+        int textStartX = titleBarX + padding + Math.max(1, Math.round(2.0F * scale));
         if (this.icon != null && iconSize > 0) {
-            int iconX = titleBarX + this.buttonPadding;
-            int iconY = titleBarY + (this.titleBarHeight - iconSize) / 2;
+            int iconX = titleBarX + padding;
+            int iconY = titleBarY + (titleBarHeight - iconSize) / 2;
             graphics.blit(this.icon, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
-            textStartX = iconX + iconSize + this.buttonPadding;
+            textStartX = iconX + iconSize + padding;
         }
 
-        int titleRightLimit = frameMaximizeX - this.buttonPadding;
+        int titleRightLimit = maximizeX - padding;
         if (!this.maximizable) {
-            titleRightLimit = frameCloseX - this.buttonPadding;
+            titleRightLimit = closeX - padding;
         }
         int maxTitleWidth = Math.max(0, titleRightLimit - textStartX);
-        var split = font.split(this.title, maxTitleWidth);
+        int maxTitleWidthForFont = scale <= 0.0F ? maxTitleWidth : Math.max(0, (int) Math.floor(maxTitleWidth / scale));
+        var split = font.split(this.title, maxTitleWidthForFont);
         FormattedCharSequence titleText = !split.isEmpty() ? split.get(0) : Component.empty().getVisualOrderText();
-        graphics.drawString(font, titleText, textStartX, titleCenterY, theme.pip_window_title_text_color.getColorInt(), false);
+        drawScaledString(graphics, font, titleText, textStartX, titleCenterY, theme.pip_window_title_text_color.getColorInt(), scale);
 
         if (titleBarHeight > 0) {
             int bottom = titleBarY + titleBarHeight;
-            graphics.fill(titleBarX, bottom - 1, titleBarRight, bottom, theme.pip_window_border_color.getColorInt());
+            int divider = Math.max(1, Math.round(scale));
+            graphics.fill(titleBarX, bottom - divider, titleBarRight, bottom, theme.pip_window_border_color.getColorInt());
         }
-        graphics.pose().popPose();
     }
 
-    private void renderButton(@Nonnull GuiGraphics graphics, @Nonnull UIColorTheme theme, int x, int y, boolean hovered, @Nullable ResourceLocation icon, @Nonnull String label) {
+    private void renderWindowFrame(@Nonnull GuiGraphics graphics) {
+        int frameX = this.x;
+        int frameY = this.y;
+        int frameWidth = getWidth();
+        int frameHeight = getHeight();
+        int right = frameX + frameWidth;
+        int bottom = frameY + frameHeight;
+        UIColorTheme theme = getTheme();
+        int border = getScaledBorderThickness();
+        if (border > 0) {
+            graphics.fill(frameX, frameY, right, frameY + border, theme.pip_window_border_color.getColorInt());
+            graphics.fill(frameX, bottom - border, right, bottom, theme.pip_window_border_color.getColorInt());
+            graphics.fill(frameX, frameY + border, frameX + border, bottom - border, theme.pip_window_border_color.getColorInt());
+            graphics.fill(right - border, frameY + border, right, bottom - border, theme.pip_window_border_color.getColorInt());
+        }
+
+        int innerLeft = frameX + border;
+        int innerTop = frameY + border;
+        int innerRight = right - border;
+        int innerBottom = bottom - border;
+        int titleHeight = getScaledTitleBarHeight();
+        if (innerRight > innerLeft && innerBottom > innerTop && titleHeight > 0) {
+            int titleBottom = innerTop + titleHeight;
+            graphics.fill(innerLeft, innerTop, innerRight, Math.min(titleBottom, innerBottom), theme.pip_window_title_bar_color.getColorInt());
+        }
+    }
+
+    private void renderButton(@Nonnull GuiGraphics graphics, @Nonnull UIColorTheme theme, int x, int y, int size, boolean hovered, @Nullable ResourceLocation icon, @Nonnull String label, float scale) {
         int color = hovered
                 ? theme.pip_window_button_color_hover.getColorInt()
                 : theme.pip_window_button_color_normal.getColorInt();
-        graphics.fill(x, y, x + this.buttonSize, y + this.buttonSize, color);
+        graphics.fill(x, y, x + size, y + size, color);
         if (icon != null) {
-            int iconSize = Math.max(1, Math.min(this.buttonSize - 4, DEFAULT_ICON_TEXTURE_SIZE));
-            int iconX = x + (this.buttonSize - iconSize) / 2;
-            int iconY = y + (this.buttonSize - iconSize) / 2;
+            int iconPadding = Math.max(0, Math.round(4.0F * scale));
+            int maxIconSize = Math.max(1, Math.round(DEFAULT_ICON_TEXTURE_SIZE * scale));
+            int iconSize = Math.max(1, Math.min(size - iconPadding, maxIconSize));
+            int iconX = x + (size - iconSize) / 2;
+            int iconY = y + (size - iconSize) / 2;
             UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
             graphics.blit(icon, iconX, iconY, 0, 0, iconSize, iconSize, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
             RenderingUtils.resetShaderColor(graphics);
         } else {
-            int textX = x + (this.buttonSize - this.minecraft.font.width(label)) / 2;
-            int textY = y + (this.buttonSize - this.minecraft.font.lineHeight) / 2;
-            graphics.drawString(this.minecraft.font, label, textX, textY, theme.pip_window_button_text_color.getColorInt(), false);
+            Font font = this.minecraft.font;
+            int textWidth = Math.max(1, Math.round(font.width(label) * scale));
+            int textHeight = Math.max(1, Math.round(font.lineHeight * scale));
+            int textX = x + (size - textWidth) / 2;
+            int textY = y + (size - textHeight) / 2;
+            drawScaledString(graphics, font, label, textX, textY, theme.pip_window_button_text_color.getColorInt(), scale);
         }
+    }
+
+    private void drawScaledString(@Nonnull GuiGraphics graphics, @Nonnull Font font, @Nonnull FormattedCharSequence text, int x, int y, int color, float scale) {
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 0);
+        if (scale != 1.0F) {
+            graphics.pose().scale(scale, scale, 1.0F);
+        }
+        graphics.drawString(font, text, 0, 0, color, false);
+        graphics.pose().popPose();
+    }
+
+    private void drawScaledString(@Nonnull GuiGraphics graphics, @Nonnull Font font, @Nonnull String text, int x, int y, int color, float scale) {
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 0);
+        if (scale != 1.0F) {
+            graphics.pose().scale(scale, scale, 1.0F);
+        }
+        graphics.drawString(font, text, 0, 0, color, false);
+        graphics.pose().popPose();
     }
 
     public void tick() {
@@ -573,32 +609,22 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     public int getBodyX() {
-        int frameX = getFrameX();
-        int innerLeft = frameX + this.borderThickness;
-        return toScreenSpace(innerLeft);
+        return this.x + getScaledBorderThickness();
     }
 
     public int getBodyY() {
-        int frameY = getFrameY();
-        int innerTop = frameY + this.borderThickness + this.titleBarHeight;
-        return toScreenSpace(innerTop);
+        return this.y + getScaledBorderThickness() + getScaledTitleBarHeight();
     }
 
     public int getBodyWidth() {
-        int frameX = getFrameX();
-        int frameWidth = getFrameWidth();
-        int innerLeft = frameX + this.borderThickness;
-        int innerRight = frameX + frameWidth - this.borderThickness;
-        return Math.max(0, toScreenSpace(innerRight) - toScreenSpace(innerLeft));
+        int border = getScaledBorderThickness();
+        return Math.max(0, getWidth() - border * 2);
     }
 
     public int getBodyHeight() {
-        int frameY = getFrameY();
-        int frameHeight = getFrameHeight();
-        int innerTop = frameY + this.borderThickness + this.titleBarHeight;
-        int innerBottom = frameY + frameHeight - this.borderThickness;
-        int value = toScreenSpace(innerBottom) - toScreenSpace(innerTop);
-        return Math.max(0, value);
+        int border = getScaledBorderThickness();
+        int titleHeight = getScaledTitleBarHeight();
+        return Math.max(0, getHeight() - border * 2 - titleHeight);
     }
 
     public int getMinimumWidth() {
@@ -734,7 +760,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
 
         if (button == 0) {
-            int buttonSize = Math.max(1, toScreenSpace(this.buttonSize));
+            int buttonSize = getScaledButtonSize();
             if (this.closable && isPointInArea(mouseX, mouseY, getCloseButtonX(), getButtonY(), buttonSize, buttonSize)) {
                 close();
                 return true;
@@ -917,15 +943,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private boolean isPointInTitleBar(double mouseX, double mouseY) {
-        int frameX = getFrameX();
-        int frameY = getFrameY();
-        int frameWidth = getFrameWidth();
-        int titleBarY = frameY + this.borderThickness;
-        int titleBarBottom = titleBarY + this.titleBarHeight;
-        int screenX = toScreenSpace(frameX);
-        int screenY = toScreenSpace(titleBarY);
-        int screenRight = toScreenSpace(frameX + frameWidth);
-        int screenBottom = toScreenSpace(titleBarBottom);
+        int border = getScaledBorderThickness();
+        int titleHeight = getScaledTitleBarHeight();
+        int screenX = this.x + border;
+        int screenY = this.y + border;
+        int screenRight = this.x + getWidth() - border;
+        int screenBottom = screenY + titleHeight;
         return isPointInArea(mouseX, mouseY, screenX, screenY, Math.max(0, screenRight - screenX), Math.max(0, screenBottom - screenY));
     }
 
@@ -934,15 +957,22 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private int getButtonY() {
-        return toScreenSpace(getFrameButtonY());
+        int titleHeight = getScaledTitleBarHeight();
+        int buttonSize = getScaledButtonSize();
+        return this.y + getScaledBorderThickness() + Math.max(0, (titleHeight - buttonSize) / 2);
     }
 
     private int getCloseButtonX() {
-        return toScreenSpace(getFrameCloseButtonX());
+        int border = getScaledBorderThickness();
+        int padding = getScaledButtonPadding();
+        int buttonSize = getScaledButtonSize();
+        return this.x + getWidth() - border - padding - buttonSize;
     }
 
     private int getMaximizeButtonX() {
-        return toScreenSpace(getFrameMaximizeButtonX());
+        int padding = getScaledButtonPadding();
+        int buttonSize = getScaledButtonSize();
+        return getCloseButtonX() - padding - buttonSize;
     }
 
     @Nullable
@@ -952,23 +982,6 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private String getMaximizeButtonLabel() {
         return this.maximized ? "[]" : "[ ]";
-    }
-
-    private int getFrameButtonY() {
-        int frameY = getFrameY();
-        int titleHeight = Math.max(0, this.titleBarHeight);
-        int buttonSize = Math.max(1, this.buttonSize);
-        return frameY + this.borderThickness + Math.max(0, (titleHeight - buttonSize) / 2);
-    }
-
-    private int getFrameCloseButtonX() {
-        int frameX = getFrameX();
-        int frameWidth = getFrameWidth();
-        return frameX + frameWidth - this.borderThickness - this.buttonPadding - this.buttonSize;
-    }
-
-    private int getFrameMaximizeButtonX() {
-        return getFrameCloseButtonX() - this.buttonPadding - this.buttonSize;
     }
 
     private void updateResizeCursor(int mouseX, int mouseY) {
@@ -995,15 +1008,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (!this.resizable || this.maximized) {
             return PiPWindowResizeHandle.NONE;
         }
-        int frameX = getFrameX();
-        int frameY = getFrameY();
-        int frameWidth = getFrameWidth();
-        int frameHeight = getFrameHeight();
-        int screenLeft = toScreenSpace(frameX);
-        int screenTop = toScreenSpace(frameY);
-        int screenRight = toScreenSpace(frameX + frameWidth);
-        int screenBottom = toScreenSpace(frameY + frameHeight);
-        int margin = Math.max(1, toScreenSpace(this.resizeMargin));
+        int screenLeft = this.x;
+        int screenTop = this.y;
+        int screenRight = this.x + getWidth();
+        int screenBottom = this.y + getHeight();
+        int margin = getScaledResizeMargin();
         boolean left = mouseX >= screenLeft && mouseX <= screenLeft + margin;
         boolean right = mouseX >= screenRight - margin && mouseX <= screenRight;
         boolean top = mouseY >= screenTop && mouseY <= screenTop + margin;
@@ -1119,36 +1128,37 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return MenuBar.getRenderScale();
     }
 
-    private int toFrameSpace(int value) {
-        float scale = getFrameRenderScale();
-        if (scale <= 0.0F || scale == 1.0F) {
-            return value;
+    private float getFrameScale() {
+        return getFrameRenderScale();
+    }
+
+    private int scaleFrameSize(int value) {
+        if (value <= 0) {
+            return 0;
         }
-        return Math.round(value / scale);
+        float scale = getFrameScale();
+        int scaled = Math.round(value * scale);
+        return Math.max(1, scaled);
     }
 
-    private int toScreenSpace(int value) {
-        float scale = getFrameRenderScale();
-        if (scale <= 0.0F || scale == 1.0F) {
-            return value;
-        }
-        return Math.round(value * scale);
+    private int getScaledBorderThickness() {
+        return scaleFrameSize(this.borderThickness);
     }
 
-    private int getFrameX() {
-        return toFrameSpace(this.x);
+    private int getScaledTitleBarHeight() {
+        return scaleFrameSize(this.titleBarHeight);
     }
 
-    private int getFrameY() {
-        return toFrameSpace(this.y);
+    private int getScaledButtonSize() {
+        return Math.max(1, scaleFrameSize(this.buttonSize));
     }
 
-    private int getFrameWidth() {
-        return Math.max(0, toFrameSpace(getWidth()));
+    private int getScaledButtonPadding() {
+        return scaleFrameSize(this.buttonPadding);
     }
 
-    private int getFrameHeight() {
-        return Math.max(0, toFrameSpace(getHeight()));
+    private int getScaledResizeMargin() {
+        return Math.max(1, scaleFrameSize(this.resizeMargin));
     }
 
     private int getScaledSize(int rawSize) {
@@ -1192,9 +1202,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private int getLayoutMinimumHeight() {
-        int titleHeight = Math.max(0, toScreenSpace(this.titleBarHeight));
-        int border = Math.max(0, toScreenSpace(this.borderThickness));
-        int layoutMin = titleHeight + border * 2 + 1;
+        int titleHeight = getScaledTitleBarHeight();
+        int border = getScaledBorderThickness();
+        int divider = Math.max(1, Math.round(getFrameScale()));
+        int layoutMin = titleHeight + border * 2 + divider;
         return Math.max(1, layoutMin);
     }
 
@@ -1361,8 +1372,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             this.x = maxX;
         }
 
-        int border = Math.max(0, toScreenSpace(this.borderThickness));
-        int titleHeight = Math.max(0, toScreenSpace(this.titleBarHeight));
+        int border = getScaledBorderThickness();
+        int titleHeight = getScaledTitleBarHeight();
         int minY = getMenuBarHeight() - border;
         int maxY = screenHeight - border - titleHeight;
         if (maxY < minY) {

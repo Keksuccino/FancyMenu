@@ -728,13 +728,13 @@ public class Property<T> {
                                             builder.applyStackAppliers(entry, call);
                                         }
                                         contextMenu.closeMenuChain();
-                                        Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                                        builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                                     });
                                     s.setText(defaultText);
                                     s.setMultilineMode(false);
                                     s.setPlaceholdersAllowed(true);
                                     contextMenu.closeMenuChain();
-                                    Minecraft.getInstance().setScreen(s);
+                                    builder.openContextMenuScreen(s);
                                 })
                         .setStackable(true)
                         .setStackApplier((stackEntry, value) -> {
@@ -967,9 +967,9 @@ public class Property<T> {
                             resolved.set(call);
                         }
                     }
-                    Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                    builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                 });
-                Minecraft.getInstance().setScreen(s);
+                builder.openContextMenuScreen(s);
             } else if (entry.getStackMeta().isFirstInStack()) {
                 List<RequirementContainer> containers = ObjectUtils.getOfAll(RequirementContainer.class,
                         builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null),
@@ -994,16 +994,16 @@ public class Property<T> {
                             }
                         }
                     }
-                    Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                    builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                 });
                 if (allEqual) {
-                    Minecraft.getInstance().setScreen(s);
+                    builder.openContextMenuScreen(s);
                 } else {
-                    Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
+                    builder.openContextMenuScreen(ConfirmationScreen.ofStrings((call) -> {
                         if (call) {
-                            Minecraft.getInstance().setScreen(s);
+                            builder.openContextMenuScreen(s);
                         } else {
-                            Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                            builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                         }
                     }, LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.multiselect.warning.override")));
                 }
@@ -1117,9 +1117,9 @@ public class Property<T> {
                             resolved.set(call);
                         }
                     }
-                    Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                    builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                 });
-                Minecraft.getInstance().setScreen(s);
+                builder.openContextMenuScreen(s);
             } else if (entry.getStackMeta().isFirstInStack()) {
                 List<GenericExecutableBlock> blocks = ObjectUtils.getOfAll(GenericExecutableBlock.class,
                         builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null),
@@ -1144,16 +1144,16 @@ public class Property<T> {
                             }
                         }
                     }
-                    Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                    builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                 });
                 if (allEqual) {
-                    Minecraft.getInstance().setScreen(s);
+                    builder.openContextMenuScreen(s);
                 } else {
-                    Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
+                    builder.openContextMenuScreen(ConfirmationScreen.ofStrings((call) -> {
                         if (call) {
-                            Minecraft.getInstance().setScreen(s);
+                            builder.openContextMenuScreen(s);
                         } else {
-                            Minecraft.getInstance().setScreen(builder.getContextMenuCallbackScreen());
+                            builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                         }
                     }, LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.multiselect.warning.override")));
                 }

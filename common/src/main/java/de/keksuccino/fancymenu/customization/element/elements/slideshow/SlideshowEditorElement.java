@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,9 +36,9 @@ public class SlideshowEditorElement extends AbstractEditorElement<SlideshowEdito
                         ((SlideshowElement)e.element).slideshowName = call;
                     }
                 }
-                Minecraft.getInstance().setScreen(this.editor);
+                this.openContextMenuScreen(this.editor);
             });
-            Minecraft.getInstance().setScreen(s);
+            this.openContextMenuScreen(s);
         }).setStackable(true);
 
         this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.slideshow.restore_aspect_ratio"), (menu, entry) -> {

@@ -28,6 +28,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import de.keksuccino.fancymenu.customization.layout.Layout;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Ren
 
     public final MenuBackgroundBuilder<?> builder;
     private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
+    private final List<ContextMenuBuilder.ContextMenuScreenOpenProcessor> contextMenuScreenOpenProcessorList = new ArrayList<>();
     @NotNull
     protected String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
     @Nullable
@@ -61,6 +63,11 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Ren
     @Override
     public @NotNull B self() {
         return (B)this;
+    }
+
+    @Override
+    public @NotNull List<ContextMenuBuilder.ContextMenuScreenOpenProcessor> getContextMenuScreenOpenProcessorList() {
+        return this.contextMenuScreenOpenProcessorList;
     }
 
     @Override

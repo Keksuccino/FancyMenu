@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -49,9 +48,9 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
                             itemKeyTargetFieldSetter.accept(this, callback);
                         }
                         menu.closeMenu();
-                        Minecraft.getInstance().setScreen(this.editor);
+                        this.openContextMenuScreen(this.editor);
                     });
-                    Minecraft.getInstance().setScreen(inputScreen);
+                    this.openContextMenuScreen(inputScreen);
                 }
             }).setStackable(false);
 

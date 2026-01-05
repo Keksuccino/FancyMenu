@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundSource;
@@ -27,12 +26,12 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
         super.init();
 
         this.rightClickMenu.addClickableEntry("set_source", Component.translatable("fancymenu.elements.video_mcef.set_source"), (menu, entry) -> {
-                    Minecraft.getInstance().setScreen(ResourceChooserScreen.video(null, source -> {
+                    this.openContextMenuScreen(ResourceChooserScreen.video(null, source -> {
                         if (source != null) {
                             this.editor.history.saveSnapshot();
                             this.element.rawVideoUrlSource = ResourceSource.of(source);
                         }
-                        Minecraft.getInstance().setScreen(this.editor);
+                        this.openContextMenuScreen(this.editor);
                     }).setSource((this.element.rawVideoUrlSource != null) ? this.element.rawVideoUrlSource.getSerializationSource() : null, false));
                 }).setIcon(ContextMenu.IconFactory.getIcon("image"))
                 .setStackable(false);
@@ -54,12 +53,12 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
         this.rightClickMenu.addSeparatorEntry("separator_after_toggle_loop");
 
         this.rightClickMenu.addClickableEntry("set_volume", Component.translatable("fancymenu.elements.video_mcef.volume"), (menu, entry) -> {
-            Minecraft.getInstance().setScreen(new SetVideoVolumeScreen(this.element.volume, vol -> {
+            this.openContextMenuScreen(new SetVideoVolumeScreen(this.element.volume, vol -> {
                 if (vol != null) {
                     this.editor.history.saveSnapshot();
                     this.element.volume = vol;
                 }
-                Minecraft.getInstance().setScreen(this.editor);
+                this.openContextMenuScreen(this.editor);
             }));
         }).setStackable(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
