@@ -737,7 +737,13 @@ public class Property<T> {
                                 })
                         .setStackable(true)
                         .setStackApplier((stackEntry, value) -> {
-                            if (!(value instanceof String call)) {
+                            String call = null;
+                            if (value instanceof String stringValue) {
+                                call = stringValue;
+                            } else if (value instanceof DrawableColor drawableValue) {
+                                call = drawableValue.getHex();
+                            }
+                            if (call == null) {
                                 return;
                             }
                             ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
@@ -774,7 +780,6 @@ public class Property<T> {
                                         preset = parsed;
                                     }
                                 }
-                                var snap = builder.createSnapshot();
                                 ColorPickerScreen picker = new ColorPickerScreen(preset,
                                         drawable -> { // onColorUpdate
                                             if (drawable != null) {
@@ -782,9 +787,7 @@ public class Property<T> {
                                             }
                                         },
                                         drawable -> { // onDone
-                                            if (snap != null) {
-                                                builder.saveSnapshot(snap);
-                                            }
+                                            builder.saveSnapshot();
                                             if (drawable != null) {
                                                 builder.applyStackAppliers(entry, drawable);
                                             }
@@ -798,11 +801,16 @@ public class Property<T> {
                                 int centerY = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.height / 2) : 100;
                                 contextMenu.closeMenu();
                                 PiPWindowHandler.INSTANCE.openWindow(new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"), centerX - 200, centerY - 100, 400, 200, picker));
-                                //PiPWindowHandler.openWindow(new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"), 100, 100, 400, 200, picker));
                             })
                     .setStackable(true)
                     .setStackApplier((stackEntry, value) -> {
-                        if (!(value instanceof String call)) {
+                        String call = null;
+                        if (value instanceof String stringValue) {
+                            call = stringValue;
+                        } else if (value instanceof DrawableColor drawableValue) {
+                            call = drawableValue.getHex();
+                        }
+                        if (call == null) {
                             return;
                         }
                         ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
