@@ -99,6 +99,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public boolean unsavedChanges = false;
 	protected final BuddyWidget buddyWidget = new BuddyWidget(0, 0);
 	public boolean justOpened = true;
+    protected final LayoutEditorUI layoutEditorUI = new LayoutEditorUI(this);
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -148,7 +149,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 
 		this.closeRightClickMenu();
-		this.rightClickMenu = LayoutEditorUI.buildRightClickContextMenu(this);
+		this.rightClickMenu = this.layoutEditorUI.buildRightClickContextMenu();
 		ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.LAYOUT_EDITOR_RIGHT_CLICK_CONTEXT_MENU, this.rightClickMenu);
 
         this.refreshMenuBar();
@@ -226,12 +227,15 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
     public void refreshMenuBar() {
         MenuBar oldMenuBar = this.getCurrentMenuBar();
-        MenuBar menuBar = LayoutEditorUI.buildMenuBar(this, (oldMenuBar == null) || oldMenuBar.isExpanded());
+        MenuBar menuBar = this.layoutEditorUI.buildMenuBar((oldMenuBar == null) || oldMenuBar.isExpanded());
         menuBar.addClickListener((button, state) -> {
            if (this.rightClickMenu != null) this.rightClickMenu.closeMenu();
            if (this.activeElementContextMenu != null) this.activeElementContextMenu.closeMenu();
         });
         ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR, menuBar);
+        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR, screen -> {
+            return (screen instanceof LayoutEditorScreen);
+        });
     }
 
     @Nullable
@@ -1381,6 +1385,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
     }
 
     public void beforeOpenChildScreen(@NotNull Screen screen) {
+        LOGGER.info("############################## BEFORE OPEN CHILD SCREEN: " + screen);
         this.closeActiveElementMenu();
         this.closeRightClickMenu();
         PiPWindowHandler.INSTANCE.closeAllWindows();

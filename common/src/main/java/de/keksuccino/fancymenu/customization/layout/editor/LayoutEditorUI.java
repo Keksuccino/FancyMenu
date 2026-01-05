@@ -275,12 +275,16 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                                 .addCycleListener(cycle -> FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.setValue(cycle.getAsBoolean())))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.change_anchor_on_element_hover.desc")));
 
-        ContextMenuUtils.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_hover_charging_time",
+        ContextMenuBuilder<LayoutEditorUI> editorSettingsMenuBuilder = this.buildEditorSettingsContextMenuBuilder();
+        ConsumingSupplier<LayoutEditorUI, Boolean> layoutEditorFilter = consumes -> true;
+
+        editorSettingsMenuBuilder.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_hover_charging_time",
+                        layoutEditorFilter,
+                        consumes -> FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.getValue(),
+                        (consumes, value) -> FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.setValue(value),
                         Component.translatable("fancymenu.editor.anchor_overlay.charging_time"),
-                        () -> FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.getValue(),
-                        aDouble -> FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.setValue(aDouble),
                         true, FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.getDefaultValue(),
-                        1.0D, 20.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.charging_time.slider_label", consumes))
+                        1.0D, 20.0D, value -> Component.translatable("fancymenu.editor.anchor_overlay.charging_time.slider_label", value))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.charging_time.desc")));
 
         windowMenu.addSeparatorEntry("separator_after_anchor_overlay_hover_charging_time");
@@ -291,38 +295,44 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                                 .addCycleListener(cycle -> FancyMenu.getOptions().invertAnchorOverlayColor.setValue(cycle.getAsBoolean())))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.invert_colors.desc")));
 
-        ContextMenuUtils.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_base_color",
+        editorSettingsMenuBuilder.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_base_color",
+                        layoutEditorFilter,
+                        consumes -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.getValue(),
+                        (consumes, value) -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.setValue(value),
+                        null, false, false,
                         Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_base"),
-                        () -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.getValue(),
-                        s -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.setValue(s),
                         true, FancyMenu.getOptions().anchorOverlayColorBaseOverride.getDefaultValue(),
-                        null, false, false, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null, null)
+                        TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
-        ContextMenuUtils.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_border_color",
+        editorSettingsMenuBuilder.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_border_color",
+                        layoutEditorFilter,
+                        consumes -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.getValue(),
+                        (consumes, value) -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.setValue(value),
+                        null, false, false,
                         Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_border"),
-                        () -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.getValue(),
-                        s -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.setValue(s),
                         true, FancyMenu.getOptions().anchorOverlayColorBorderOverride.getDefaultValue(),
-                        null, false, false, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null, null)
+                        TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
         windowMenu.addSeparatorEntry("separator_after_custom_anchor_overlay_border_color");
 
-        ContextMenuUtils.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_normal",
+        editorSettingsMenuBuilder.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_normal",
+                        layoutEditorFilter,
+                        consumes -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getValue()),
+                        (consumes, value) -> FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.setValue(value.floatValue()),
                         Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal"),
-                        () -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getValue()),
-                        aDouble -> FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.setValue(aDouble.floatValue()),
                         true, (double) FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getDefaultValue(),
-                        0.0D, 1.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal.slider_label", ((int)(consumes * 100.0D)) + "%"))
+                        0.0D, 1.0D, value -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal.slider_label", ((int)(value * 100.0D)) + "%"))
                 .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
-        ContextMenuUtils.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_busy",
+        editorSettingsMenuBuilder.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_busy",
+                        layoutEditorFilter,
+                        consumes -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getValue()),
+                        (consumes, value) -> FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.setValue(value.floatValue()),
                         Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy"),
-                        () -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getValue()),
-                        aDouble -> FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.setValue(aDouble.floatValue()),
                         true, (double) FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getDefaultValue(),
-                        0.0D, 1.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy.slider_label", ((int)(consumes * 100.0D)) + "%"))
+                        0.0D, 1.0D, value -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy.slider_label", ((int)(value * 100.0D)) + "%"))
                 .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
         windowMenu.addSeparatorEntry("separator_after_anchor_overlay_opacity");
@@ -387,6 +397,22 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
     }
 
+    @NotNull
+    private ContextMenuBuilder<LayoutEditorUI> buildEditorSettingsContextMenuBuilder() {
+        ContextMenuBuilder<LayoutEditorUI> builder = ContextMenuBuilder.createStandalone(
+                () -> this.editor,
+                filter -> List.of(this),
+                () -> this,
+                null,
+                null,
+                null
+        );
+        for (ContextMenuScreenOpenProcessor processor : this.getContextMenuScreenOpenProcessors()) {
+            builder.addContextMenuScreenOpenProcessor(processor);
+        }
+        return builder;
+    }
+
     protected void displayUnsavedWarning(@NotNull Consumer<Boolean> callback) {
         if (!editor.unsavedChanges) {
             callback.accept(true);
@@ -424,6 +450,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
     public ContextMenu buildRightClickContextMenu() {
 
         ContextMenu menu = new ContextMenu();
+        ConsumingSupplier<LayoutEditorUI, Boolean> layoutEditorFilter = consumes -> true;
 
         if (editor.layout.isUniversalLayout()) {
 
@@ -526,13 +553,13 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
         if ((editor.layoutTargetScreen != null) && !editor.layout.isUniversalLayout()) {
 
-            ContextMenuUtils.addInputContextMenuEntryTo(menu, "edit_menu_title", Component.translatable("fancymenu.helper.editor.edit_menu_title"),
-                            () -> editor.layout.customMenuTitle,
-                            s -> {
-                                editor.history.saveSnapshot();
-                                editor.layout.customMenuTitle = s;
-                            },
-                            true, null, null, false, true,
+            this.addInputContextMenuEntryTo(menu, "edit_menu_title",
+                            layoutEditorFilter,
+                            consumes -> editor.layout.customMenuTitle,
+                            (consumes, value) -> editor.layout.customMenuTitle = value,
+                            null, false, true,
+                            Component.translatable("fancymenu.helper.editor.edit_menu_title"),
+                            true, null,
                             consumes -> !consumes.isEmpty(),
                             consumes -> consumes.isEmpty() ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.reset.invalid_title")) : null)
                     .setTooltipSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen) ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")) : Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.custom_gui.desc")))
@@ -631,18 +658,18 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 })
                 .setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
-        ContextMenuUtils.addIntegerInputContextMenuEntryTo(menu, "forced_gui_scale", Component.translatable("fancymenu.editor.rightclick.scale"),
-                        () -> (int) editor.layout.forcedScale,
-                        integer -> {
-                            editor.history.saveSnapshot();
+        this.addGenericIntegerInputContextMenuEntryTo(menu, "forced_gui_scale",
+                        null,
+                        consumes -> (int) editor.layout.forcedScale,
+                        (consumes, integer) -> {
                             editor.layout.forcedScale = integer;
                             if (integer == 0) {
                                 editor.layout.autoScalingWidth = 0;
                                 editor.layout.autoScalingHeight = 0;
                             }
-                            menu.closeMenu();
                             editor.init();
                         },
+                        Component.translatable("fancymenu.editor.rightclick.scale"),
                         true, 0, consumes -> {
                             if (MathUtils.isInteger(consumes)) {
                                 return Integer.parseInt(consumes) >= 0;
@@ -662,25 +689,21 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
         menu.addSeparatorEntry("separator_after_forced_scale");
 
-        ContextMenuUtils.addAudioResourceChooserContextMenuEntryTo(menu, "open_audio",
+        this.addAudioResourceChooserContextMenuEntryTo(menu, "open_audio",
+                        layoutEditorFilter,
                         null,
-                        () -> editor.layout.openAudio,
-                        iAudioResourceSupplier -> {
-                            editor.history.saveSnapshot();
-                            editor.layout.openAudio = iAudioResourceSupplier;
-                        },
+                        consumes -> editor.layout.openAudio,
+                        (consumes, value) -> editor.layout.openAudio = value,
                         Component.translatable("fancymenu.editor.open_audio"),
                         true, null, true, true, true)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.open_audio.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
-        ContextMenuUtils.addAudioResourceChooserContextMenuEntryTo(menu, "close_audio",
+        this.addAudioResourceChooserContextMenuEntryTo(menu, "close_audio",
+                        layoutEditorFilter,
                         null,
-                        () -> editor.layout.closeAudio,
-                        iAudioResourceSupplier -> {
-                            editor.history.saveSnapshot();
-                            editor.layout.closeAudio = iAudioResourceSupplier;
-                        },
+                        consumes -> editor.layout.closeAudio,
+                        (consumes, value) -> editor.layout.closeAudio = value,
                         Component.translatable("fancymenu.editor.close_audio"),
                         true, null, true, true, true)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.close_audio.desc")))
@@ -796,25 +819,22 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
     public ContextMenu buildScrollListCustomizationsContextMenu() {
 
         ContextMenu menu = new ContextMenu();
+        ConsumingSupplier<LayoutEditorUI, Boolean> layoutEditorFilter = consumes -> true;
 
-        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(menu, "header_texture",
+        this.addImageResourceChooserContextMenuEntryTo(menu, "header_texture",
+                        layoutEditorFilter,
                         null,
-                        () -> editor.layout.scrollListHeaderTexture,
-                        iTextureResourceSupplier -> {
-                            editor.history.saveSnapshot();
-                            editor.layout.scrollListHeaderTexture = iTextureResourceSupplier;
-                        },
+                        consumes -> editor.layout.scrollListHeaderTexture,
+                        (consumes, value) -> editor.layout.scrollListHeaderTexture = value,
                         Component.translatable("fancymenu.customization.scroll_lists.header_texture"),
                         true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
-        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(menu, "footer_texture",
+        this.addImageResourceChooserContextMenuEntryTo(menu, "footer_texture",
+                        layoutEditorFilter,
                         null,
-                        () -> editor.layout.scrollListFooterTexture,
-                        iTextureResourceSupplier -> {
-                            editor.history.saveSnapshot();
-                            editor.layout.scrollListFooterTexture = iTextureResourceSupplier;
-                        },
+                        consumes -> editor.layout.scrollListFooterTexture,
+                        (consumes, value) -> editor.layout.scrollListFooterTexture = value,
                         Component.translatable("fancymenu.customization.scroll_lists.footer_texture"),
                         true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));

@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
@@ -782,6 +783,88 @@ public interface ContextMenuBuilder<O> {
      */
     default <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         return addTo.addEntry(buildGenericResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb));
+    }
+
+    /**
+     * Builds a range slider input entry that opens {@link RangeSliderScreen}.
+     * <p>
+     * This entry is stack-aware and applies the slider value to all selected objects.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildRangeSliderInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Double> targetFieldGetter, @NotNull BiConsumer<O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, double minSliderValue, double maxSliderValue, @NotNull ConsumingSupplier<Double, Component> sliderLabelSupplier) {
+        ContextMenu subMenu = new ContextMenu();
+        subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) -> {
+                    StackContext<O> stack = this.stack(entry, selectedObjectsFilter);
+                    if (!stack.isPrimary() || stack.isEmpty()) {
+                        return;
+                    }
+                    Double presetValue = targetFieldGetter.get(this.self());
+                    RangeSliderScreen sliderScreen = new RangeSliderScreen(label, minSliderValue, maxSliderValue, Objects.requireNonNullElse(presetValue, 0.0D), sliderLabelSupplier, value -> {
+                        if (value != null) {
+                            this.saveSnapshot();
+                            this.applyStackAppliers(entry, value);
+                        }
+                        menu.closeMenu();
+                        this.openContextMenuScreen(this.getContextMenuCallbackScreen());
+                    });
+                    this.openContextMenuScreen(sliderScreen);
+                }).setStackable(true)
+                .setStackApplier((stackEntry, value) -> {
+                    if (!(value instanceof Number number)) {
+                        return;
+                    }
+                    targetFieldSetter.accept(this.self(), number.doubleValue());
+                });
+
+        if (addResetOption) {
+            subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"), (menu, entry) -> {
+                        StackContext<O> stack = this.stack(entry, selectedObjectsFilter);
+                        if (!stack.isPrimary() || stack.isEmpty()) {
+                            return;
+                        }
+                        this.saveSnapshot();
+                        this.applyStackAppliers(entry, null);
+                    }).setStackable(true)
+                    .setStackApplier((stackEntry, value) -> targetFieldSetter.accept(this.self(), defaultValue))
+                    .setIcon(ContextMenu.IconFactory.getIcon("undo"));
+        }
+
+        subMenu.addSeparatorEntry("separator_before_current_value_display")
+                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1);
+        subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+                .setLabelSupplier((menu, entry) -> {
+                    List<O> selectedObjects = this.stack(entry, selectedObjectsFilter).getObjects();
+                    if (selectedObjects.size() == 1) {
+                        Component valueComponent;
+                        Double val = targetFieldGetter.get(selectedObjects.get(0));
+                        if (val == null) {
+                            valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                        } else {
+                            String valString = val.toString();
+                            if (Minecraft.getInstance().font.width(valString) > 150) {
+                                valString = new StringBuilder(valString).reverse().toString();
+                                valString = Minecraft.getInstance().font.plainSubstrByWidth(valString, 150);
+                                valString = new StringBuilder(valString).reverse().toString();
+                                valString = ".." + valString;
+                            }
+                            valueComponent = Component.literal(valString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                        }
+                        return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+                    }
+                    return Component.empty();
+                })
+                .setClickSoundEnabled(false)
+                .setChangeBackgroundColorOnHover(false)
+                .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1)
+                .setIcon(ContextMenu.IconFactory.getIcon("info"));
+
+        return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu).setStackable(true);
+    }
+
+    /**
+     * Adds a range slider input entry to the given menu.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addRangeSliderInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Double> targetFieldGetter, @NotNull BiConsumer<O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, double minSliderValue, double maxSliderValue, @NotNull ConsumingSupplier<Double, Component> sliderLabelSupplier) {
+        return addTo.addEntry(buildRangeSliderInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, minSliderValue, maxSliderValue, sliderLabelSupplier));
     }
 
     /**
