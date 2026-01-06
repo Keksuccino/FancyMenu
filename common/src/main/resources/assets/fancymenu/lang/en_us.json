@@ -354,6 +354,7 @@
   "fancymenu.common_components.ok": "OK",
   "fancymenu.common_components.reset": "Reset to Default",
   "fancymenu.common_components.set": "Set",
+  "fancymenu.common_components.accept": "Accept",
   "fancymenu.context_menu.entries.choose_or_set.current": "Current: %s",
   "fancymenu.context_menu.entries.color.input_as_string": "Set As Plain Text",
   "fancymenu.context_menu.entries.color.input_via_color_picker": "Set Via Color Picker",
