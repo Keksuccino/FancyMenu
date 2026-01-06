@@ -801,7 +801,12 @@ public class Property<T> {
                                 int centerX = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.width / 2) : 100;
                                 int centerY = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.height / 2) : 100;
                                 contextMenu.closeMenuChain();
-                                PiPWindowHandler.INSTANCE.openWindowWithDefaultSizeAndPosition(new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title")).setScreen(picker), null);
+                                PiPWindow window = new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"))
+                                        .setScreen(picker)
+                                        .setForceFancyMenuUiScale(true);
+                                window.setMinSize(375, 300);
+                                window.setSize(375, 300);
+                                PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
                             })
                     .setStackable(true)
                     .setStackApplier((stackEntry, value) -> {

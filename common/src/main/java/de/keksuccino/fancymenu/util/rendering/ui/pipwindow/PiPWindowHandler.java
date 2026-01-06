@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
+import de.keksuccino.fancymenu.util.rendering.ui.UISounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -221,6 +222,10 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         PiPWindow forcedWindow = getTopForceFocusWindow();
         if (forcedWindow != null) {
             focusedWindow = forcedWindow;
+            if (!forcedWindow.isMouseOver(mouseX, mouseY)) {
+                UISounds.playDefaultBeep();
+                return true;
+            }
             if (forcedWindow.isInputLocked()) {
                 activePointerWindow = forcedWindow;
                 activePointerButton = button;
@@ -451,6 +456,10 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             }
         }
         return false;
+    }
+
+    public boolean isForceFocusWindowOpen() {
+        return getTopForceFocusWindow() != null;
     }
 
     @Nullable

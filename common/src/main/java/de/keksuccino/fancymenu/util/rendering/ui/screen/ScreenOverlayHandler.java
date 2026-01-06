@@ -23,6 +23,7 @@ public class ScreenOverlayHandler {
 
     private final Map<Long, Renderable> overlays = new LinkedHashMap<>();
     private final Map<Long, OverlayVisibilityController> visibilityControllers = new LinkedHashMap<>();
+    private final Map<Long, OverlayInputConsumptionController> inputConsumptionControllers = new LinkedHashMap<>();
     private long id = 0;
 
     private ScreenOverlayHandler() {
@@ -38,12 +39,6 @@ public class ScreenOverlayHandler {
         id++;
         this.overlays.put(id, PLACEHOLDER_OVERLAY);
         return id;
-    }
-
-    public long addOverlay(@NotNull Renderable overlay, @NotNull OverlayVisibilityController controller) {
-        long overlayId = addOverlay(overlay);
-        setVisibilityControllerFor(overlayId, controller);
-        return overlayId;
     }
 
     public long addOverlayFirst(@NotNull Renderable overlay) {
@@ -66,12 +61,6 @@ public class ScreenOverlayHandler {
         return id;
     }
 
-    public long addOverlayFirst(@NotNull Renderable overlay, @NotNull OverlayVisibilityController controller) {
-        long overlayId = addOverlayFirst(overlay);
-        setVisibilityControllerFor(overlayId, controller);
-        return overlayId;
-    }
-
     public void addOverlayWithId(long overlayId, @NotNull Renderable body) {
         if (id <= overlayId) {
             id = (overlayId + 10);
@@ -85,6 +74,7 @@ public class ScreenOverlayHandler {
         }
         if (removeController) {
             this.visibilityControllers.remove(overlayId);
+            this.inputConsumptionControllers.remove(overlayId);
         }
         if (preserveIndex) {
             this.overlays.put(overlayId, PLACEHOLDER_OVERLAY);
@@ -103,6 +93,14 @@ public class ScreenOverlayHandler {
             return;
         }
         this.visibilityControllers.put(overlayId, controller);
+    }
+
+    public void setInputConsumptionControllerFor(long overlayId, @Nullable OverlayInputConsumptionController controller) {
+        if (controller == null) {
+            this.inputConsumptionControllers.remove(overlayId);
+            return;
+        }
+        this.inputConsumptionControllers.put(overlayId, controller);
     }
 
     @Nullable
@@ -197,6 +195,9 @@ public class ScreenOverlayHandler {
             if (!isOverlayVisible(entry.getKey(), overlay)) {
                 continue;
             }
+            if (!isOverlayInputEnabled(entry.getKey(), overlay)) {
+                continue;
+            }
             if (overlay instanceof GuiEventListener listener && handler.handle(listener)) {
                 return true;
             }
@@ -210,6 +211,9 @@ public class ScreenOverlayHandler {
             Map.Entry<Long, Renderable> entry = ordered.get(i);
             Renderable overlay = entry.getValue();
             if (!isOverlayVisible(entry.getKey(), overlay)) {
+                continue;
+            }
+            if (!isOverlayInputEnabled(entry.getKey(), overlay)) {
                 continue;
             }
             if (overlay instanceof GuiEventListener listener) {
@@ -233,6 +237,21 @@ public class ScreenOverlayHandler {
         return controller.isVisible(screen);
     }
 
+    private boolean isOverlayInputEnabled(long overlayId, @NotNull Renderable overlay) {
+        if (isPlaceholder(overlay)) {
+            return false;
+        }
+        Screen screen = Minecraft.getInstance().screen;
+        if (screen == null) {
+            return true;
+        }
+        OverlayInputConsumptionController controller = inputConsumptionControllers.get(overlayId);
+        if (controller == null) {
+            return true;
+        }
+        return controller.canConsumeInput(screen);
+    }
+
     private boolean isPlaceholder(@NotNull Renderable overlay) {
         return overlay == PLACEHOLDER_OVERLAY;
     }
@@ -240,6 +259,11 @@ public class ScreenOverlayHandler {
     @FunctionalInterface
     public interface OverlayVisibilityController {
         boolean isVisible(@NotNull Screen screen);
+    }
+
+    @FunctionalInterface
+    public interface OverlayInputConsumptionController {
+        boolean canConsumeInput(@NotNull Screen screen);
     }
 
     @FunctionalInterface

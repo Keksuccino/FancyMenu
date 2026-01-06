@@ -21,11 +21,13 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class PiPWindow extends AbstractContainerEventHandler implements Renderable {
 
+    private static final boolean DEBUG = true;
     public static final int DEFAULT_TITLE_BAR_HEIGHT = 18;
     public static final int DEFAULT_BORDER_THICKNESS = 1;
     public static final int DEFAULT_BUTTON_SIZE = 12;
@@ -77,6 +79,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private boolean screenAutoScalingEnabled = true;
     @Nullable
     private Double customBodyScale;
+    private boolean forceFancyMenuUiScaleEnabled = false;
+    private double forcedFancyMenuUiScale = 1.0;
     private boolean alwaysOnTop = false;
     private boolean forceFocusEnabled = false;
 
@@ -150,6 +154,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return;
         }
 
+        enforceMinimumSizeForBodyScale();
+
         RenderSystem.enableBlend();
 
         RenderSystem.disableDepthTest();
@@ -158,6 +164,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         renderWindowBackground(graphics);
         renderBodyScreen(graphics, mouseX, mouseY, partial);
         renderWindowForeground(graphics, mouseX, mouseY);
+        if (DEBUG) {
+            renderDebugOverlay(graphics);
+        }
         updateResizeCursor(mouseX, mouseY);
 
         RenderingUtils.setDepthTestLocked(false);
@@ -312,6 +321,48 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (innerRight > innerLeft && innerBottom > innerTop && titleHeight > 0) {
             int titleBottom = innerTop + titleHeight;
             graphics.fill(innerLeft, innerTop, innerRight, Math.min(titleBottom, innerBottom), theme.pip_window_title_bar_color.getColorInt());
+        }
+    }
+
+    private void renderDebugOverlay(@Nonnull GuiGraphics graphics) {
+        Font font = this.minecraft.font;
+        List<String> lines = new ArrayList<>();
+        double renderScale = getScreenRenderScaleFactor();
+        if (!Double.isFinite(renderScale) || renderScale <= 0.0) {
+            renderScale = 1.0;
+        }
+        lines.add("renderScale: " + String.format(Locale.ROOT, "%.3f", renderScale));
+        lines.add("size: raw " + this.width + "x" + this.height + " | scaled " + getWidth() + "x" + getHeight());
+        int rawMinWidth = getRawMinimumWidth();
+        int rawMinHeight = getRawMinimumHeight();
+        lines.add("min: raw " + rawMinWidth + "x" + rawMinHeight + " | scaled " + getMinimumWidth() + "x" + getMinimumHeight());
+        int maxWidth = getMaximumWidth();
+        int maxHeight = getMaximumHeight();
+        if (maxWidth > 0 && maxHeight > 0) {
+            int rawMaxWidth = getRawSizeForScaled(maxWidth);
+            int rawMaxHeight = getRawSizeForScaled(maxHeight);
+            lines.add("max: raw " + rawMaxWidth + "x" + rawMaxHeight + " | scaled " + maxWidth + "x" + maxHeight);
+        }
+        if (lines.isEmpty()) {
+            return;
+        }
+        int padding = 2;
+        int maxTextWidth = 0;
+        for (String line : lines) {
+            maxTextWidth = Math.max(maxTextWidth, font.width(line));
+        }
+        int boxWidth = maxTextWidth + padding * 2;
+        int boxHeight = lines.size() * font.lineHeight + padding * 2;
+        int x = getBodyX() + padding;
+        int y = getBodyY() + padding;
+        int backgroundColor = 0x88000000;
+        graphics.fill(x, y, x + boxWidth, y + boxHeight, backgroundColor);
+        int textColor = 0xFFFF0000;
+        int textX = x + padding;
+        int textY = y + padding;
+        for (String line : lines) {
+            graphics.drawString(font, line, textX, textY, textColor, false);
+            textY += font.lineHeight;
         }
     }
 
@@ -494,6 +545,22 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this;
     }
 
+    public boolean isForceFancyMenuUiScaleEnabled() {
+        return this.forceFancyMenuUiScaleEnabled;
+    }
+
+    public PiPWindow setForceFancyMenuUiScale(boolean forceFancyMenuUiScaleEnabled) {
+        if (this.forceFancyMenuUiScaleEnabled == forceFancyMenuUiScaleEnabled) {
+            return this;
+        }
+        this.forceFancyMenuUiScaleEnabled = forceFancyMenuUiScaleEnabled;
+        if (this.forceFancyMenuUiScaleEnabled) {
+            updateForcedFancyMenuUiScale();
+        }
+        resizeScreenIfNeeded();
+        return this;
+    }
+
     public boolean isAlwaysOnTop() {
         return this.alwaysOnTop;
     }
@@ -631,6 +698,16 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this;
     }
 
+    /**
+     * Sets the window size using raw (scale 1) values. If
+     * {@link #setSizeScaledToGuiScale(boolean)} is enabled, the raw size is converted to on-screen
+     * size using Minecraft's GUI scale. The window frame (title bar, border, buttons) is rendered
+     * using FancyMenu's UI scale, and the body screen can still render at a different scale
+     * (auto/custom/forced).
+     * <p>
+     * When choosing a size, consider both the Minecraft GUI scale (affects the window's on-screen
+     * size) and the body render scale (affects how large the content appears).
+     */
     public PiPWindow setSize(int width, int height) {
         this.width = Math.max(width, getRawMinimumWidth());
         this.height = Math.max(height, getRawMinimumHeight());
@@ -685,11 +762,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     public int getMinimumWidth() {
-        return Math.max(1, getScaledSize(getRawMinimumWidth()));
+        return Math.max(1, getScaledMinimumWidthForBodyScale());
     }
 
     public int getMinimumHeight() {
-        int min = Math.max(1, getScaledSize(getRawMinimumHeight()));
+        int min = Math.max(1, getScaledMinimumHeightForBodyScale());
         return Math.max(min, getLayoutMinimumHeight());
     }
 
@@ -706,6 +783,15 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return (int) ((float) MenuBar.HEIGHT * MenuBar.getRenderScale());
     }
 
+    /**
+     * Sets the minimum window size using raw (scale 1) values. The minimum is scaled by the
+     * current body render scale (auto/custom/forced) and enforced every render tick, so the
+     * effective on-screen minimum can change if scaling changes.
+     * <p>
+     * The window's on-screen size is still affected by Minecraft's GUI scale when
+     * {@link #setSizeScaledToGuiScale(boolean)} is enabled, while the minimum itself is based on
+     * the body render scale.
+     */
     public PiPWindow setMinSize(int minWidth, int minHeight) {
         this.minWidth = Math.max(1, minWidth);
         this.minHeight = Math.max(1, minHeight);
@@ -1250,21 +1336,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private int getRawMinimumWidth() {
-        return Math.max(1, this.minWidth);
+        return getRawSizeForScaled(getMinimumWidth());
     }
 
     private int getRawMinimumHeight() {
-        int min = Math.max(1, this.minHeight);
-        int layoutMin = getLayoutMinimumHeight();
-        if (!this.sizeScaledToGuiScale) {
-            return Math.max(min, layoutMin);
-        }
-        double scale = getMainGuiScale();
-        if (scale <= 1.0) {
-            return Math.max(min, layoutMin);
-        }
-        int layoutScaled = Math.max(1, (int) Math.ceil(layoutMin * scale));
-        return Math.max(min, layoutScaled);
+        return getRawSizeForScaled(getMinimumHeight());
     }
 
     private int getLayoutMinimumHeight() {
@@ -1273,6 +1349,35 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         int divider = Math.max(1, Math.round(getFrameScale()));
         int layoutMin = titleHeight + border * 2 + divider;
         return Math.max(1, layoutMin);
+    }
+
+    private int getScaledMinimumWidthForBodyScale() {
+        return scaleRawByBodyScale(getBaseMinimumWidth());
+    }
+
+    private int getScaledMinimumHeightForBodyScale() {
+        return scaleRawByBodyScale(getBaseMinimumHeight());
+    }
+
+    private int scaleRawByBodyScale(int rawValue) {
+        double renderScale = getScreenRenderScaleFactor();
+        if (!Double.isFinite(renderScale) || renderScale <= 0.0) {
+            renderScale = 1.0;
+        }
+        double scaled = rawValue * renderScale;
+        int result = (int) scaled;
+        if (scaled > (double) result) {
+            result++;
+        }
+        return Math.max(1, result);
+    }
+
+    private int getBaseMinimumWidth() {
+        return Math.max(1, this.minWidth);
+    }
+
+    private int getBaseMinimumHeight() {
+        return Math.max(1, this.minHeight);
     }
 
     private int clampScaledWidth(int width) {
@@ -1319,6 +1424,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private double getScreenRenderScaleFactor() {
+        if (this.forceFancyMenuUiScaleEnabled) {
+            updateForcedFancyMenuUiScale();
+            return this.forcedFancyMenuUiScale;
+        }
         Double customScale = this.customBodyScale;
         if (customScale != null && Double.isFinite(customScale) && customScale > 0.0) {
             return customScale;
@@ -1331,6 +1440,14 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return 1.0;
         }
         return getEmbeddedGuiScale() / mainScale;
+    }
+
+    private void updateForcedFancyMenuUiScale() {
+        double scale = UIBase.calculateFixedScale(UIBase.getUIScale());
+        if (!Double.isFinite(scale) || scale <= 0.0) {
+            scale = 1.0;
+        }
+        this.forcedFancyMenuUiScale = scale;
     }
 
     private double getScreenInputScaleFactor() {
@@ -1425,6 +1542,18 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             setScaledBounds(this.x, this.y, clampedWidth, clampedHeight);
         } else {
             clampTitleBarToScreen();
+        }
+    }
+
+    private void enforceMinimumSizeForBodyScale() {
+        int minWidth = getMinimumWidth();
+        int minHeight = getMinimumHeight();
+        int width = getWidth();
+        int height = getHeight();
+        if (width < minWidth || height < minHeight) {
+            int targetWidth = Math.max(width, minWidth);
+            int targetHeight = Math.max(height, minHeight);
+            setScaledBounds(this.x, this.y, targetWidth, targetHeight);
         }
     }
 
