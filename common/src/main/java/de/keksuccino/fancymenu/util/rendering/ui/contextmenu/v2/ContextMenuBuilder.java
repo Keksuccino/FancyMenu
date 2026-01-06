@@ -722,6 +722,7 @@ public interface ContextMenuBuilder<O> {
                             });
                             this.openContextMenuScreen(chooserScreen);
                         }).setStackable(true)
+                .setIcon(ContextMenu.IconFactory.getIcon("file"))
                 .setStackApplier((stackEntry, value) -> {
                     if (!(value instanceof String source)) {
                         return;
@@ -739,6 +740,7 @@ public interface ContextMenuBuilder<O> {
                                 this.saveSnapshot();
                                 this.applyStackAppliers(entry, null);
                             }).setStackable(true)
+                    .setIcon(ContextMenu.IconFactory.getIcon("undo"))
                     .setStackApplier((stackEntry, value) -> {
                         targetFieldSetter.accept(this.self(), defaultValue);
                     });
