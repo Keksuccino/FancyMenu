@@ -189,13 +189,13 @@ public class MixinMinecraft {
 	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
 	private void before_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
 
-        // This routes setScreen() calls inside PipWindows through the actual window instead of normal MC
-        PiPWindow pip = PiPWindowHandler.INSTANCE.getLastClickedWindowThisTick();
-        if (pip != null) {
-            pip.setScreen(screen);
-            info.cancel();
-            return;
-        }
+//        // This routes setScreen() calls inside PipWindows through the actual window instead of normal MC
+//        PiPWindow pip = PiPWindowHandler.INSTANCE.getLastClickedWindowThisTick();
+//        if (pip != null) {
+//            pip.setScreen(screen);
+//            info.cancel();
+//            return;
+//        }
 
 		// This is just for giving FM the correct screen identifiers for all possible scenarios
 		if ((screen == null) && (this.level == null)) {

@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
@@ -23,7 +22,6 @@ public abstract class PiPScreen extends Screen implements PipableScreen {
         PiPWindow resolvedWindow = resolveWindow();
         if (resolvedWindow == null) {
             onScreenClosed();
-            Minecraft.getInstance().setScreen(null);
             return;
         }
         resolvedWindow.markClosingFromScreen();
