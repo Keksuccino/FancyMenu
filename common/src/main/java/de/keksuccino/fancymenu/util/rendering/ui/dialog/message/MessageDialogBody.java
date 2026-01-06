@@ -130,6 +130,10 @@ public class MessageDialogBody extends PiPScreen {
             handleResult(true);
             return true;
         }
+        if (button == InputConstants.KEY_ESCAPE) {
+            handleResult(false);
+            return true;
+        }
         return super.keyPressed(button, scanCode, modifiers);
     }
 

@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
+@Deprecated
 public class ScrollArea extends UIBase {
 
     private static final Logger LOGGER = LogManager.getLogger();

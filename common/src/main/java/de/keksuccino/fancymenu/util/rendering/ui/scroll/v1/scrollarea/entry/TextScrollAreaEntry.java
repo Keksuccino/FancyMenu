@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
+@Deprecated
 public class TextScrollAreaEntry extends ScrollAreaEntry {
 
     private static final Logger LOGGER = LogManager.getLogger();

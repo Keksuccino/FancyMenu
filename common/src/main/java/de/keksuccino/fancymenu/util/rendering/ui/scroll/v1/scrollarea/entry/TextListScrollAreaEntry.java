@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.util.function.Consumer;
 
+@Deprecated
 public class TextListScrollAreaEntry extends ScrollAreaEntry {
 
     public Color listDotColor;

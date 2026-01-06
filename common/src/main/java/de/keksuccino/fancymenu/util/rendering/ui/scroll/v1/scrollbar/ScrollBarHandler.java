@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Deprecated
 public class ScrollBarHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();

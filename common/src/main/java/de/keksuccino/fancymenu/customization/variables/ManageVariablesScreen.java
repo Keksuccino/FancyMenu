@@ -5,7 +5,8 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -13,7 +14,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -108,13 +108,13 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
         ExtendedButton deleteVariableButton = new ExtendedButton(deleteButtonX, deleteButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
-                Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
+                MessageDialogs.openWithCallback(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         VariableHandler.removeVariable(e.variable.getName());
                         this.updateVariablesList();
+                        this.resize(Minecraft.getInstance(), this.width, this.height);
                     }
-                    Minecraft.getInstance().setScreen(this);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm")));
+                });
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addRenderableWidget(deleteVariableButton);

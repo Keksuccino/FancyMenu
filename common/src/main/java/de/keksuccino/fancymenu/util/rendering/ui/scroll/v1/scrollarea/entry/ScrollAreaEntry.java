@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 
 @SuppressWarnings("unused")
+@Deprecated
 public abstract class ScrollAreaEntry extends UIBase implements Renderable {
 
     public ScrollArea parent;

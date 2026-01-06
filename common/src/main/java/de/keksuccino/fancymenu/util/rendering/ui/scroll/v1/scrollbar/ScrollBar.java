@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Deprecated
 public class ScrollBar {
 
     private static final Logger LOGGER = LogManager.getLogger();

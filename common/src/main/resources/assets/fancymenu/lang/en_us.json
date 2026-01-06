@@ -1665,7 +1665,7 @@
   "fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name": "Input Variable Name",
   "fancymenu.overlay.menu_bar.variables.manage.clear_on_launch": "Clear Variable on Game Launch: %s",
   "fancymenu.overlay.menu_bar.variables.manage.delete_variable": "Delete Variable",
-  "fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm": "§xAre you sure?\n\nDo you really want to delete this variable?\nThis can't be undone!",
+  "fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm": "Are you sure? Do you really want to §xdelete§r this variable?\n§xThis can't be undone!",
   "fancymenu.overlay.menu_bar.variables.manage.no_variables": "No variables!",
   "fancymenu.overlay.menu_bar.variables.manage.set_value": "Set Value",
   "fancymenu.overlay.menu_bar.variables.manage.variables": "Variables",
