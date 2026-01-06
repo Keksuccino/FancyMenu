@@ -89,7 +89,7 @@ public class DialogBody extends PiPScreen {
 
         PiPWindow window = this.getWindow();
         if (window != null) {
-            window.setCustomBodyScale((double) UIBase.getUIScale());
+            window.setCustomBodyScale((double)UIBase.calculateFixedScale(UIBase.getUIScale()));
         }
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());

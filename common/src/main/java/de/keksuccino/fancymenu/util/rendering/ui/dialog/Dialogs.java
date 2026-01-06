@@ -78,7 +78,7 @@ public class Dialogs {
                 .setScreen(body)
                 .setBlockMinecraftScreenInputs(true)
                 .setScreenAutoScalingEnabled(false)
-                .setCustomBodyScale((double)UIBase.getUIScale());
+                .setForceFocusEnabled(true);
 
         PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
     }

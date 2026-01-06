@@ -77,6 +77,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private boolean screenAutoScalingEnabled = true;
     @Nullable
     private Double customBodyScale;
+    private boolean alwaysOnTop = false;
+    private boolean forceFocusEnabled = false;
 
     private boolean maximized = false;
     private int restoreX;
@@ -489,6 +491,32 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
         this.customBodyScale = customBodyScale;
         resizeScreenIfNeeded();
+        return this;
+    }
+
+    public boolean isAlwaysOnTop() {
+        return this.alwaysOnTop;
+    }
+
+    public PiPWindow setAlwaysOnTop(boolean alwaysOnTop) {
+        if (this.alwaysOnTop == alwaysOnTop) {
+            return this;
+        }
+        this.alwaysOnTop = alwaysOnTop;
+        PiPWindowHandler.INSTANCE.refreshWindowOrder(this);
+        return this;
+    }
+
+    public boolean isForceFocusEnabled() {
+        return this.forceFocusEnabled;
+    }
+
+    public PiPWindow setForceFocusEnabled(boolean forceFocusEnabled) {
+        if (this.forceFocusEnabled == forceFocusEnabled) {
+            return this;
+        }
+        this.forceFocusEnabled = forceFocusEnabled;
+        PiPWindowHandler.INSTANCE.refreshWindowOrder(this);
         return this;
     }
 

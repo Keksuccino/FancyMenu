@@ -95,8 +95,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     } else {
                         LayoutHandler.openLayoutEditor(Layout.buildForScreen(Objects.requireNonNull(editor.layoutTargetScreen)), editor.layoutTargetScreen);
                     }
-                } else {
-                    this.openContextMenuScreen(editor);
                 }
             });
         }).setIcon(ContextMenu.IconFactory.getIcon("add"));
@@ -135,8 +133,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             displayUnsavedWarning(call -> {
                 if (call) {
                     editor.closeEditor();
-                } else {
-                    this.openContextMenuScreen(editor);
                 }
             });
         }).setIcon(ContextMenu.IconFactory.getIcon("close"));
@@ -383,8 +379,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     displayUnsavedWarning(call -> {
                         if (call) {
                             editor.closeEditor();
-                        } else {
-                            this.openContextMenuScreen(editor);
                         }
                     });
                 }).setIconTexture(CLOSE_EDITOR_TEXTURE)
@@ -983,8 +977,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
                                 this.openContextMenuScreen(editor);
                             }));
-                        } else {
-                            this.openContextMenuScreen(editor);
                         }
                     });
                 });
@@ -999,8 +991,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
                             this.openContextMenuScreen(editor);
                         }));
-                    } else {
-                        this.openContextMenuScreen(editor);
                     }
                 });
             });
@@ -1032,8 +1022,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
                                 this.openContextMenuScreen(editor);
                             }));
-                        } else {
-                            this.openContextMenuScreen(editor);
                         }
                     });
                 });
@@ -1048,8 +1036,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
                             this.openContextMenuScreen(editor);
                         }));
-                    } else {
-                        this.openContextMenuScreen(editor);
                     }
                 });
             });
@@ -1077,8 +1063,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 if (call) {
                     editor.saveWidgetSettings();
                     MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : editor.layoutTargetScreen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                } else {
-                    this.openContextMenuScreen(editor);
                 }
             });
         }).setIcon(ContextMenu.IconFactory.getIcon("edit"));
