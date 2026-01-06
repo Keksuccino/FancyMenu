@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui.dialog;
+package de.keksuccino.fancymenu.util.rendering.ui.dialog.message;
 
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class DialogBody extends PiPScreen {
+public class MessageDialogBody extends PiPScreen {
 
     private static final int ICON_SIZE = 32;
     private static final int ICON_GAP = 12;
@@ -29,7 +29,7 @@ public class DialogBody extends PiPScreen {
     @NotNull
     private final Component message;
     @NotNull
-    private final DialogStyle style;
+    private final MessageDialogStyle style;
     @Nullable
     private final Consumer<Boolean> callback;
 
@@ -44,7 +44,7 @@ public class DialogBody extends PiPScreen {
     @Nullable
     private ExtendedButton okayButton;
 
-    public DialogBody(@NotNull Component message, @NotNull DialogStyle style, @Nullable Consumer<Boolean> callback) {
+    public MessageDialogBody(@NotNull Component message, @NotNull MessageDialogStyle style, @Nullable Consumer<Boolean> callback) {
         super(Component.empty());
         this.message = message;
         this.style = style;

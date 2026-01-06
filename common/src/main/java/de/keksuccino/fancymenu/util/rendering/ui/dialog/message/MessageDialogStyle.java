@@ -1,11 +1,11 @@
-package de.keksuccino.fancymenu.util.rendering.ui.dialog;
+package de.keksuccino.fancymenu.util.rendering.ui.dialog.message;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public enum DialogStyle {
+public enum MessageDialogStyle {
 
     GENERIC("generic", Component.translatable("fancymenu.ui.dialog.title.message"), null),
     INFO("info", Component.translatable("fancymenu.ui.dialog.title.info"), ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/dialog/icons/info.png")),
@@ -19,7 +19,7 @@ public enum DialogStyle {
     @Nullable
     private final ResourceLocation icon;
 
-    DialogStyle(@NotNull String name, @NotNull Component title, @Nullable ResourceLocation icon) {
+    MessageDialogStyle(@NotNull String name, @NotNull Component title, @Nullable ResourceLocation icon) {
         this.name = name;
         this.title = title;
         this.icon = icon;

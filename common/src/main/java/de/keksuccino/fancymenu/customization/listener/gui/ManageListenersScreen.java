@@ -18,6 +18,8 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -137,14 +139,13 @@ public class ManageListenersScreen extends CellScreen {
         this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.remove"), button -> {
             ListenerInstance sel = this.selectedInstance;
             if (sel != null) {
-                Minecraft.getInstance().setScreen(ConfirmationScreen.critical(call -> {
+                MessageDialogs.openWithCallback(Component.translatable("fancymenu.listeners.manage.delete_warning"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         this.tempInstances.remove(sel);
                         this.selectedInstance = null;
                         this.rebuild();
                     }
-                    Minecraft.getInstance().setScreen(this);
-                }, Component.translatable("fancymenu.listeners.manage.delete_warning")));
+                });
             }
         }).setIsActiveSupplier(consumes -> this.selectedInstance != null);
         
@@ -235,15 +236,11 @@ public class ManageListenersScreen extends CellScreen {
 
     @Override
     protected void onCancel() {
-        Minecraft.getInstance().setScreen(
-                ConfirmationScreen.critical(callback -> {
-                    if (callback) {
-                        this.callback.accept(false);
-                    } else {
-                        Minecraft.getInstance().setScreen(this);
-                    }
-                }, Component.translatable("fancymenu.listeners.manage.cancel_warning"))
-        );
+        MessageDialogs.openWithCallback(Component.translatable("fancymenu.listeners.manage.cancel_warning"), MessageDialogStyle.WARNING, call -> {
+            if (call) {
+                this.callback.accept(false);
+            }
+        });
     }
 
     @Override

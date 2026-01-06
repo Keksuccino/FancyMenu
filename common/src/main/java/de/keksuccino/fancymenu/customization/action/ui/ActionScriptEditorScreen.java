@@ -23,7 +23,8 @@ import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsSc
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
@@ -52,8 +53,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -71,9 +70,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public class ActionScriptEditorScreen extends Screen {
-
-    @SuppressWarnings("unused")
-    private static final Logger LOGGER = LogManager.getLogger();
 
     protected GenericExecutableBlock executableBlock;
     protected Consumer<GenericExecutableBlock> callback;
@@ -175,15 +171,11 @@ public class ActionScriptEditorScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
-            Minecraft.getInstance().setScreen(
-                    ConfirmationScreen.critical(callback -> {
-                        if (callback) {
-                            this.callback.accept(null);
-                        } else {
-                            Minecraft.getInstance().setScreen(this);
-                        }
-                    }, Component.translatable("fancymenu.actions.script_editor.cancel_warning"))
-            );
+            MessageDialogs.openWithCallback(Component.translatable("fancymenu.actions.script_editor.cancel_warning"), MessageDialogStyle.WARNING, call -> {
+                if (call) {
+                    this.callback.accept(null);
+                }
+            });
         });
         this.cancelButton.setNavigatable(false);
         this.addWidget(this.cancelButton);

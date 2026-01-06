@@ -27,8 +27,8 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.DialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
@@ -414,7 +414,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             callback.accept(true);
             return;
         }
-        Dialogs.openWithCallback(Component.translatable("fancymenu.editor.warning.unsaved"), DialogStyle.WARNING, callback);
+        MessageDialogs.openWithCallback(Component.translatable("fancymenu.editor.warning.unsaved"), MessageDialogStyle.WARNING, callback);
 //        this.openContextMenuScreen(ConfirmationScreen.warning(callback, LocalizationUtils.splitLocalizedLines("fancymenu.editor.warning.unsaved")));
     }
 
