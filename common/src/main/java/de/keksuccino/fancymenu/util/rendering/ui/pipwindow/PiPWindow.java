@@ -74,6 +74,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private boolean closable = true;
     private boolean closeScreenWithWindow = true;
     private boolean sizeScaledToGuiScale = true;
+    private boolean screenAutoScalingEnabled = true;
+    @Nullable
+    private Double customBodyScale;
 
     private boolean maximized = false;
     private int restoreX;
@@ -460,6 +463,31 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     public PiPWindow setSizeScaledToGuiScale(boolean sizeScaledToGuiScale) {
         this.sizeScaledToGuiScale = sizeScaledToGuiScale;
         clampWindowToScreenSize();
+        resizeScreenIfNeeded();
+        return this;
+    }
+
+    public boolean isScreenAutoScalingEnabled() {
+        return this.screenAutoScalingEnabled;
+    }
+
+    public PiPWindow setScreenAutoScalingEnabled(boolean screenAutoScalingEnabled) {
+        this.screenAutoScalingEnabled = screenAutoScalingEnabled;
+        resizeScreenIfNeeded();
+        return this;
+    }
+
+    public @Nullable Double getCustomBodyScale() {
+        return this.customBodyScale;
+    }
+
+    public PiPWindow setCustomBodyScale(@Nullable Double customBodyScale) {
+        if (customBodyScale != null) {
+            if (!Double.isFinite(customBodyScale) || customBodyScale <= 0.0) {
+                customBodyScale = null;
+            }
+        }
+        this.customBodyScale = customBodyScale;
         resizeScreenIfNeeded();
         return this;
     }
@@ -1250,17 +1278,26 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private int getScaledScreenSize(int bodySize) {
-        double mainScale = getMainGuiScale();
-        double embeddedScale = getEmbeddedGuiScale();
-        int framebufferSize = Math.max(1, (int) Math.round(bodySize * mainScale));
-        int scaledSize = (int) ((double) framebufferSize / embeddedScale);
-        if ((double) framebufferSize / embeddedScale > (double) scaledSize) {
-            scaledSize++;
+        double renderScale = getScreenRenderScaleFactor();
+        if (!Double.isFinite(renderScale) || renderScale <= 0.0) {
+            renderScale = 1.0;
         }
-        return Math.max(1, scaledSize);
+        double scaledSize = (double) bodySize / renderScale;
+        int result = (int) scaledSize;
+        if (scaledSize > (double) result) {
+            result++;
+        }
+        return Math.max(1, result);
     }
 
     private double getScreenRenderScaleFactor() {
+        Double customScale = this.customBodyScale;
+        if (customScale != null && Double.isFinite(customScale) && customScale > 0.0) {
+            return customScale;
+        }
+        if (!this.screenAutoScalingEnabled) {
+            return 1.0;
+        }
         double mainScale = getMainGuiScale();
         if (mainScale <= 0.0) {
             return 1.0;

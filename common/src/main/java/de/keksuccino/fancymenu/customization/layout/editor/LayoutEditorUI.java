@@ -27,9 +27,9 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.DialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
@@ -420,7 +420,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             callback.accept(true);
             return;
         }
-        PiPWindowHandler.INSTANCE.openWindowWithDefaultSizeAndPosition(new PiPWindow());
+        Dialogs.openWithCallback(Component.translatable("fancymenu.editor.warning.unsaved"), DialogStyle.WARNING, callback);
+//        this.openContextMenuScreen(ConfirmationScreen.warning(callback, LocalizationUtils.splitLocalizedLines("fancymenu.editor.warning.unsaved")));
     }
 
     @NotNull

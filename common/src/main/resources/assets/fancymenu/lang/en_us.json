@@ -615,7 +615,7 @@
   "fancymenu.editor.shortcuts.undo": "Ctrl + Z",
   "fancymenu.editor.text_editor.single_line_warning": "The target needs a single-line text, which means all lines will\nget merged into one line and all leading spaces of all lines\nexcept the very first line will get removed in the actual\noutput text for the target.",
   "fancymenu.editor.text_editor.single_line_warning.indicator": "SINGLE-LINE MODE ENABLED!",
-  "fancymenu.editor.warning.unsaved": "Are you sure?\n\nAll unsaved changes for the current layout will get lost!",
+  "fancymenu.editor.warning.unsaved": "Are you sure? All unsaved changes for the current layout will get lost!",
   "fancymenu.editor.widgets": "Editor Widgets",
   "fancymenu.editor.widgets.layers": "Layers",
   "fancymenu.editor.widgets.layers.vanilla_elements": "Vanilla Elements",
@@ -2413,5 +2413,9 @@
   "fancymenu.backgrounds.panorama.name": "Panorama Name: %s",
   "fancymenu.backgrounds.panorama.name.none": "NONE",
   "fancymenu.backgrounds.slideshow.name": "Slideshow Name: %s",
-  "fancymenu.backgrounds.slideshow.name.none": "NONE"
+  "fancymenu.backgrounds.slideshow.name.none": "NONE",
+  "fancymenu.ui.dialog.title.info": "Info",
+  "fancymenu.ui.dialog.title.warning": "Warning",
+  "fancymenu.ui.dialog.title.error": "Error",
+  "fancymenu.ui.dialog.title.message": "Message"
 }
