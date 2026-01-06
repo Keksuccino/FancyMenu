@@ -9,10 +9,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogSty
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
@@ -55,9 +55,10 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
         this.variableListScrollArea.setHeight(this.height - 85 - 25, true);
         this.variableListScrollArea.setX(20, true);
         this.variableListScrollArea.setY(50 + 15 + 25, true);
+        this.addRenderableWidget(this.variableListScrollArea);
 
         // Calculate button width
-        int buttonWidth = (this.width - 20) - ((this.variableListScrollArea.getXWithBorder() + (this.variableListScrollArea.getWidthWithBorder() + 20)));
+        int buttonWidth = (int)((this.width - 20) - (this.variableListScrollArea.getXWithBorder() + (this.variableListScrollArea.getWidthWithBorder() + 20)));
         if (buttonWidth < 150) buttonWidth = 150;
         if (buttonWidth > 220) buttonWidth = 220;
 
@@ -168,8 +169,6 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
 
         graphics.drawString(this.font, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.variableListScrollArea.render(graphics, mouseX, mouseY, partial);
-
         super.render(graphics, mouseX, mouseY, partial);
 
     }
@@ -224,7 +223,7 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
         public Variable variable;
 
         public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))), UIBase.getUIColorTheme().listing_dot_color_1, onClick);
             this.variable = variable;
         }
 
