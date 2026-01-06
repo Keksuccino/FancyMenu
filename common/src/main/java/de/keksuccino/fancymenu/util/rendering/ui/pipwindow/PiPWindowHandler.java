@@ -246,7 +246,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         focusedWindow = null;
         activePointerWindow = null;
         activePointerButton = -1;
-        return false;
+        return isAnyWindowBlockingMinecraftScreenInputs();
     }
 
     @Override
@@ -257,17 +257,22 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
                 activePointerWindow = null;
                 activePointerButton = -1;
             }
-            return handled;
+            if (handled) {
+                return true;
+            }
         }
-        return false;
+        return isAnyWindowBlockingMinecraftScreenInputs();
     }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (activePointerWindow != null) {
-            return activePointerWindow.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+            boolean handled = activePointerWindow.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+            if (handled) {
+                return true;
+            }
         }
-        return false;
+        return isAnyWindowBlockingMinecraftScreenInputs();
     }
 
     @Override
@@ -283,34 +288,40 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             }
             return window.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
         }
-        return false;
+        return isAnyWindowBlockingMinecraftScreenInputs();
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         PiPWindow window = getFocusedWindow();
         if (window != null) {
-            return window.keyPressed(keyCode, scanCode, modifiers);
+            if (window.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
         }
-        return false;
+        return isAnyWindowBlockingMinecraftScreenInputs();
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         PiPWindow window = getFocusedWindow();
         if (window != null) {
-            return window.keyReleased(keyCode, scanCode, modifiers);
+            if (window.keyReleased(keyCode, scanCode, modifiers)) {
+                return true;
+            }
         }
-        return false;
+        return isAnyWindowBlockingMinecraftScreenInputs();
     }
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
         PiPWindow window = getFocusedWindow();
         if (window != null) {
-            return window.charTyped(codePoint, modifiers);
+            if (window.charTyped(codePoint, modifiers)) {
+                return true;
+            }
         }
-        return false;
+        return isAnyWindowBlockingMinecraftScreenInputs();
     }
 
     @Override
@@ -339,6 +350,15 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     public boolean isWindowFocused(@NotNull PiPWindow window) {
         return focusedWindow == window;
+    }
+
+    public boolean isAnyWindowBlockingMinecraftScreenInputs() {
+        for (PiPWindow window : windows) {
+            if (window.isVisible() && window.isBlockingMinecraftScreenInputs()) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

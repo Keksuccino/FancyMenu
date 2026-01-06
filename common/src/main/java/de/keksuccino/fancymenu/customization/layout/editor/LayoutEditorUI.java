@@ -28,6 +28,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuild
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
@@ -418,7 +420,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             callback.accept(true);
             return;
         }
-        this.openContextMenuScreen(ConfirmationScreen.warning(callback, LocalizationUtils.splitLocalizedLines("fancymenu.editor.warning.unsaved")));
+        PiPWindowHandler.INSTANCE.openWindowWithDefaultSizeAndPosition(new PiPWindow());
     }
 
     @NotNull

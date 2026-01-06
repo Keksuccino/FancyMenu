@@ -83,6 +83,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private boolean inputLocked = false;
     private boolean inputLockedByChildren = false;
+    private boolean blockMinecraftScreenInputs = false;
 
     @Nullable
     private PiPWindow parentWindow;
@@ -716,8 +717,17 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this;
     }
 
+    public PiPWindow setBlockMinecraftScreenInputs(boolean blockMinecraftScreenInputs) {
+        this.blockMinecraftScreenInputs = blockMinecraftScreenInputs;
+        return this;
+    }
+
     public boolean isInputLocked() {
         return this.inputLocked || this.inputLockedByChildren;
+    }
+
+    public boolean isBlockingMinecraftScreenInputs() {
+        return this.blockMinecraftScreenInputs;
     }
 
     @Nullable
