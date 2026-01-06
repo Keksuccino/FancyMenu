@@ -1,9 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.input.InputConstants;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -65,7 +64,7 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
         }
 
         @Override
-        public void onClick(ScrollAreaEntry entry) {
+        public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             if (this.resourceUnfriendlyFileName) return;
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {

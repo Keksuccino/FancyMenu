@@ -6,10 +6,10 @@ import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -77,6 +77,8 @@ public class ChooseSlideshowScreen extends Screen {
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
+        this.addRenderableWidget(this.slideshowListScrollArea);
+
     }
 
     @Override
@@ -100,7 +102,6 @@ public class ChooseSlideshowScreen extends Screen {
         this.slideshowListScrollArea.setHeight(this.height - 85, true);
         this.slideshowListScrollArea.setX(20, true);
         this.slideshowListScrollArea.setY(50 + 15, true);
-        this.slideshowListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         Component previewLabel = Component.translatable("fancymenu.slideshow.choose.preview");
         int previewLabelWidth = this.font.width(previewLabel);
@@ -166,7 +167,7 @@ public class ChooseSlideshowScreen extends Screen {
         if (this.slideshowListScrollArea.getEntries().isEmpty()) {
             this.slideshowListScrollArea.addEntry(new TextScrollAreaEntry(this.slideshowListScrollArea, Component.translatable("fancymenu.slideshow.choose.no_slideshows"), (entry) -> {}));
         }
-        int totalWidth = this.slideshowListScrollArea.getTotalEntryWidth();
+        float totalWidth = this.slideshowListScrollArea.getTotalEntryWidth();
         for (ScrollAreaEntry e : this.slideshowListScrollArea.getEntries()) {
             e.setWidth(totalWidth);
         }
@@ -191,7 +192,7 @@ public class ChooseSlideshowScreen extends Screen {
         public String slideshow;
 
         public SlideshowScrollEntry(ScrollArea parent, @NotNull String slideshow, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1, onClick);
             this.slideshow = slideshow;
         }
 

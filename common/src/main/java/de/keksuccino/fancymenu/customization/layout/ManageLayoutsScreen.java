@@ -6,10 +6,10 @@ import de.keksuccino.fancymenu.util.cycle.ValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
@@ -115,6 +115,8 @@ public class ManageLayoutsScreen extends Screen {
         this.addWidget(this.toggleStatusButton);
         UIBase.applyDefaultWidgetSkinTo(this.toggleStatusButton);
 
+        this.addRenderableWidget(this.layoutListScrollArea);
+
     }
 
     @Override
@@ -138,11 +140,10 @@ public class ManageLayoutsScreen extends Screen {
         this.layoutListScrollArea.setHeight(this.height - 85, true);
         this.layoutListScrollArea.setX(20, true);
         this.layoutListScrollArea.setY(50 + 15, true);
-        this.layoutListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         this.sortingButton.setWidth(this.font.width(this.sortingButton.getMessage()) + 10);
-        this.sortingButton.setX(this.layoutListScrollArea.getXWithBorder() + this.layoutListScrollArea.getWidthWithBorder() - this.sortingButton.getWidth());
-        this.sortingButton.setY(this.layoutListScrollArea.getYWithBorder() - 5 - this.sortingButton.getHeight());
+        this.sortingButton.setX((int)(this.layoutListScrollArea.getXWithBorder() + this.layoutListScrollArea.getWidthWithBorder() - this.sortingButton.getWidth()));
+        this.sortingButton.setY((int)(this.layoutListScrollArea.getYWithBorder() - 5 - this.sortingButton.getHeight()));
         this.sortingButton.render(graphics, mouseX, mouseY, partial);
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
@@ -207,7 +208,7 @@ public class ManageLayoutsScreen extends Screen {
         public Layout layout;
 
         public LayoutScrollEntry(ScrollArea parent, @NotNull Layout layout, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(""), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Component.literal(""), UIBase.getUIColorTheme().listing_dot_color_1, onClick);
             this.layout = layout;
             this.updateName();
         }

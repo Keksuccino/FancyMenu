@@ -6,8 +6,8 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
@@ -99,15 +99,15 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
 
     protected void renderFileNameEditBox(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.fileNameEditBox.setWidth(this.getBelowFileScrollAreaElementWidth() - 2);
-        this.fileNameEditBox.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileNameEditBox.getWidth() - 1);
-        this.fileNameEditBox.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + 1);
+        this.fileNameEditBox.setX((int)(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileNameEditBox.getWidth() - 1));
+        this.fileNameEditBox.setY((int)(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + 1));
         this.fileNameEditBox.render(graphics, mouseX, mouseY, partial);
         graphics.drawString(this.font, FILE_NAME_PREFIX_TEXT, this.fileNameEditBox.getX() - 1 - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5, this.fileNameEditBox.getY() - 1 + (this.fileNameEditBox.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().element_label_color_normal.getColorInt(), false);
     }
 
     @Override
     protected int getBelowFileScrollAreaElementWidth() {
-        int w = this.fileListScrollArea.getWidthWithBorder() - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5;
+        int w = (int)(this.fileListScrollArea.getWidthWithBorder() - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5);
         return Math.min(super.getBelowFileScrollAreaElementWidth(), w);
     }
 
@@ -234,7 +234,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
         }
 
         @Override
-        public void onClick(ScrollAreaEntry entry) {
+        public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             if (this.resourceUnfriendlyFileName) return;
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {

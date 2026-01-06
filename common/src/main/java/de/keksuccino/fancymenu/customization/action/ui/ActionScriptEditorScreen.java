@@ -26,8 +26,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.SubMenuContextMenuEntry;
@@ -40,6 +40,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
@@ -73,7 +74,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     protected GenericExecutableBlock executableBlock;
     protected Consumer<GenericExecutableBlock> callback;
-    protected ScrollArea scriptEntriesScrollArea = new ScrollArea(0, 0, 0, 0).setAllowScrollWheelSupplier(() -> !this.isUserNavigatingInRightClickContextMenu());
+    protected ScrollArea scriptEntriesScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ContextMenu rightClickContextMenu;
     protected float rightClickContextMenuLastOpenX = Float.NaN;
     protected float rightClickContextMenuLastOpenY = Float.NaN;
@@ -180,6 +181,8 @@ public class ActionScriptEditorScreen extends Screen {
         this.cancelButton.setNavigatable(false);
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+
+        this.addWidget(this.scriptEntriesScrollArea);
 
         this.actionsMenuRightClickConsumedByEntry = false;
 
@@ -646,7 +649,7 @@ public class ActionScriptEditorScreen extends Screen {
             ExecutableEntry previouslySelected = this.getSelectedEntry();
             if (previouslySelected != null) {
                 previousExecutable = previouslySelected.executable;
-                previousEntryY = previouslySelected.getY();
+                previousEntryY = (int)previouslySelected.getY();
             }
         }
 
@@ -788,6 +791,9 @@ public class ActionScriptEditorScreen extends Screen {
 
         this.renderTickDragHoveredEntry = this.getDragHoveredEntry();
         this.renderTickDraggedEntry = this.getDraggedEntry();
+        boolean allowScrollWheel = !this.isUserNavigatingInRightClickContextMenu();
+        this.scriptEntriesScrollArea.verticalScrollBar.setScrollWheelAllowed(allowScrollWheel);
+        this.scriptEntriesScrollArea.horizontalScrollBar.setScrollWheelAllowed(allowScrollWheel);
 
         //Auto-scroll scroll area vertically if dragged and out-of-area
         if (this.renderTickDraggedEntry != null) {
@@ -817,9 +823,9 @@ public class ActionScriptEditorScreen extends Screen {
         this.scriptEntriesScrollArea.updateEntries(null);
         this.processPendingSelection();
 
-        this.minimapX = this.scriptEntriesScrollArea.getXWithBorder() + this.scriptEntriesScrollArea.getWidthWithBorder() + MINIMAP_GAP;
-        this.minimapY = this.scriptEntriesScrollArea.getInnerY() - 1;
-        this.minimapHeight = this.scriptEntriesScrollArea.getInnerHeight() + 2;
+        this.minimapX = (int)(this.scriptEntriesScrollArea.getXWithBorder() + this.scriptEntriesScrollArea.getWidthWithBorder() + MINIMAP_GAP);
+        this.minimapY = (int)(this.scriptEntriesScrollArea.getInnerY() - 1);
+        this.minimapHeight = (int)(this.scriptEntriesScrollArea.getInnerHeight() + 2);
 
         this.selectedEntry = this.getSelectedEntry();
         this.selectedStatementChainEntries = (this.selectedEntry != null) ? this.getStatementChainOf(this.selectedEntry) : Collections.emptyList();
@@ -831,7 +837,7 @@ public class ActionScriptEditorScreen extends Screen {
         this.rebuildMinimapSegments(mouseX, mouseY);
 
         int buttonsRightEdge = this.width - RIGHT_MARGIN;
-        int buttonY = Math.max(20, this.scriptEntriesScrollArea.getYWithBorder() - this.doneButton.getHeight() - ACTION_BUTTON_GAP);
+        int buttonY = Math.max(20, (int)(this.scriptEntriesScrollArea.getYWithBorder() - this.doneButton.getHeight() - ACTION_BUTTON_GAP));
         this.doneButton.setX(buttonsRightEdge - this.doneButton.getWidth());
         this.doneButton.setY(buttonY);
         this.cancelButton.setX(Math.max(LEFT_MARGIN, this.doneButton.getX() - ACTION_BUTTON_GAP - this.cancelButton.getWidth()));
@@ -842,25 +848,25 @@ public class ActionScriptEditorScreen extends Screen {
             // Hint overlay when no actions exist
             Component hint = Component.translatable("fancymenu.actions.script_editor.empty_hint");
             int hintWidth = this.font.width(hint);
-            int hintX = this.scriptEntriesScrollArea.getInnerX() + (this.scriptEntriesScrollArea.getInnerWidth() / 2) - (hintWidth / 2);
-            int hintY = this.scriptEntriesScrollArea.getInnerY() + (this.scriptEntriesScrollArea.getInnerHeight() / 2) - (this.font.lineHeight / 2);
+            int hintX = (int)(this.scriptEntriesScrollArea.getInnerX() + (this.scriptEntriesScrollArea.getInnerWidth() / 2) - (hintWidth / 2));
+            int hintY = (int)(this.scriptEntriesScrollArea.getInnerY() + (this.scriptEntriesScrollArea.getInnerHeight() / 2) - (this.font.lineHeight / 2));
             graphics.drawString(this.font, hint, hintX, hintY, theme.element_label_color_inactive.getColorInt(), false);
         }
         this.renderInlineEditors(graphics, mouseX, mouseY, partial);
         this.updateCursor(mouseX, mouseY);
 
         if (this.renderTickDragHoveredEntry != null) {
-            int dY = this.renderTickDragHoveredEntry.getY();
-            int dH = this.renderTickDragHoveredEntry.getHeight();
+            int dY = (int)this.renderTickDragHoveredEntry.getY();
+            int dH = (int)this.renderTickDragHoveredEntry.getHeight();
             if (this.renderTickDragHoveredEntry == BEFORE_FIRST) {
-                dY = this.scriptEntriesScrollArea.getInnerY();
+                dY = (int)this.scriptEntriesScrollArea.getInnerY();
                 dH = 1;
             }
             if (this.renderTickDragHoveredEntry == AFTER_LAST) {
-                dY = this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight() - 1;
+                dY = (int)(this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight() - 1);
                 dH = 1;
             }
-            graphics.fill(this.scriptEntriesScrollArea.getInnerX(), dY + dH - 1, this.scriptEntriesScrollArea.getInnerX() + this.scriptEntriesScrollArea.getInnerWidth(), dY + dH, theme.description_area_text_color.getColorInt());
+            graphics.fill((int)this.scriptEntriesScrollArea.getInnerX(), dY + dH - 1, (int)(this.scriptEntriesScrollArea.getInnerX() + this.scriptEntriesScrollArea.getInnerWidth()), dY + dH, theme.description_area_text_color.getColorInt());
         }
 
         this.renderChainMinimap(graphics);
@@ -978,8 +984,8 @@ public class ActionScriptEditorScreen extends Screen {
         if (this.minimapHoveredEntry == null) {
             return;
         }
-        int entryWidth = this.minimapHoveredEntry.getWidth();
-        int entryHeight = this.minimapHoveredEntry.getHeight();
+        int entryWidth = (int)this.minimapHoveredEntry.getWidth();
+        int entryHeight = (int)this.minimapHoveredEntry.getHeight();
         if ((entryWidth <= 0) || (entryHeight <= 0)) {
             return;
         }
@@ -1052,7 +1058,7 @@ public class ActionScriptEditorScreen extends Screen {
         if (this.minimapTotalEntriesHeight <= 0 || this.minimapContentHeight <= 0) {
             return;
         }
-        int visibleHeight = this.scriptEntriesScrollArea.getInnerHeight();
+        int visibleHeight = (int)this.scriptEntriesScrollArea.getInnerHeight();
         if (this.minimapTotalEntriesHeight <= visibleHeight) {
             return;
         }
@@ -1120,7 +1126,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         for (ExecutableEntry entry : execEntries) {
-            this.minimapTotalEntriesHeight += entry.getHeight();
+            this.minimapTotalEntriesHeight += (int)entry.getHeight();
         }
         if (this.minimapTotalEntriesHeight <= 0) {
             this.minimapTotalEntriesHeight = 1;
@@ -1128,7 +1134,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         int offset = 0;
         for (ExecutableEntry entry : execEntries) {
-            int entryHeight = entry.getHeight();
+            int entryHeight = (int)entry.getHeight();
             float startRatio = (float)offset / (float)this.minimapTotalEntriesHeight;
             float endRatio = (float)(offset + entryHeight) / (float)this.minimapTotalEntriesHeight;
             int top = this.minimapContentY + Math.round(startRatio * this.minimapContentHeight);
@@ -1507,7 +1513,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
         this.createUndoPoint();
         ScrollArea scrollArea = this.scriptEntriesScrollArea;
-        int desiredOffset = entry.getY() - scrollArea.getInnerY();
+        int desiredOffset = (int)(entry.getY() - scrollArea.getInnerY());
         Executable executable = entry.executable;
         entry.toggleCollapsed();
         this.updateActionInstanceScrollArea(true);
@@ -1527,25 +1533,25 @@ public class ActionScriptEditorScreen extends Screen {
                     target = ee;
                     break;
                 }
-                cumulativeHeight += ee.getHeight();
+                cumulativeHeight += (int)ee.getHeight();
             } else {
-                cumulativeHeight += scrollEntry.getHeight();
+                cumulativeHeight += (int)scrollEntry.getHeight();
             }
         }
         if (target == null) {
             return;
         }
 
-        int totalScrollHeight = scrollArea.getTotalScrollHeight();
+        int totalScrollHeight = (int)scrollArea.getTotalScrollHeight();
         if (totalScrollHeight <= 0) {
             scrollArea.verticalScrollBar.setScroll(0.0F);
             scrollArea.updateEntries(null);
             return;
         }
 
-        int innerY = scrollArea.getInnerY();
-        int maxOffset = Math.max(0, scrollArea.getInnerHeight() - target.getHeight());
-        int minOffset = -target.getHeight();
+        int innerY = (int)scrollArea.getInnerY();
+        int maxOffset = Math.max(0, (int)(scrollArea.getInnerHeight() - target.getHeight()));
+        int minOffset = -(int)target.getHeight();
         int clampedOffset = Mth.clamp(desiredOffset, minOffset, maxOffset);
         float targetScroll = (float)(cumulativeHeight - clampedOffset) / (float) totalScrollHeight;
         float clampedScroll = Mth.clamp(targetScroll, 0.0F, 1.0F);
@@ -1553,7 +1559,7 @@ public class ActionScriptEditorScreen extends Screen {
         scrollArea.updateEntries(null);
 
         for (int attempt = 0; attempt < 2; attempt++) {
-            int currentOffset = target.getY() - innerY;
+            int currentOffset = (int)target.getY() - innerY;
             int diff = currentOffset - clampedOffset;
             if (Math.abs(diff) <= 1) {
                 break;
@@ -1713,7 +1719,7 @@ public class ActionScriptEditorScreen extends Screen {
     @Nullable
     protected ExecutableEntry getScrollAreaHoveredEntry() {
         if (this.isUserNavigatingInRightClickContextMenu()) return null;
-        if (!this.scriptEntriesScrollArea.isMouseInsideArea()) {
+        if (!this.scriptEntriesScrollArea.isMouseOverInnerArea(MouseInput.getMouseX(), MouseInput.getMouseY())) {
             return null;
         }
         int mouseX = MouseInput.getMouseX();
@@ -1790,9 +1796,9 @@ public class ActionScriptEditorScreen extends Screen {
         List<ScrollAreaEntry> scrollEntries = this.scriptEntriesScrollArea.getEntries();
         int totalHeight = 0;
         for (ScrollAreaEntry e : scrollEntries) {
-            totalHeight += e.getHeight();
+            totalHeight += (int)e.getHeight();
         }
-        int visibleHeight = this.scriptEntriesScrollArea.getInnerHeight();
+        int visibleHeight = (int)this.scriptEntriesScrollArea.getInnerHeight();
         if (totalHeight <= visibleHeight) {
             return;
         }
@@ -1801,9 +1807,9 @@ public class ActionScriptEditorScreen extends Screen {
             if (e == entry) {
                 break;
             }
-            offset += e.getHeight();
+            offset += (int)e.getHeight();
         }
-        int entryCenter = offset + (entry.getHeight() / 2);
+        int entryCenter = offset + ((int)entry.getHeight() / 2);
         int target = Math.max(0, entryCenter - (visibleHeight / 2));
         int maxScroll = Math.max(1, totalHeight - visibleHeight);
         float scroll = Math.min(1.0F, (float)target / (float)maxScroll);
@@ -1928,7 +1934,7 @@ public class ActionScriptEditorScreen extends Screen {
     protected int getChainBarX(@NotNull ExecutableEntry entry) {
         ExecutableEntry anchor = this.getChainAnchor(entry);
         ExecutableEntry reference = (anchor != null) ? anchor : entry;
-        return reference.getX() + (ExecutableEntry.INDENT_X_OFFSET * reference.indentLevel) + CHAIN_BAR_OFFSET;
+        return (int)(reference.getX() + (ExecutableEntry.INDENT_X_OFFSET * reference.indentLevel) + CHAIN_BAR_OFFSET);
     }
 
     protected void addWhileChainEntries(@NotNull ExecutableEntry anchor, @NotNull List<ExecutableEntry> entries) {
@@ -2025,7 +2031,7 @@ public class ActionScriptEditorScreen extends Screen {
                     if ((e.getY() + e.getHeight()) > (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) {
                         continue;
                     }
-                    if ((ee != draggedEntry) && UIBase.isXYInArea(MouseInput.getMouseX(), MouseInput.getMouseY(), ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight()) && this.scriptEntriesScrollArea.isMouseInsideArea()) {
+                    if ((ee != draggedEntry) && UIBase.isXYInArea(MouseInput.getMouseX(), MouseInput.getMouseY(), ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight()) && this.scriptEntriesScrollArea.isMouseOverInnerArea(MouseInput.getMouseX(), MouseInput.getMouseY())) {
                         List<ExecutableEntry> statementChain = new ArrayList<>();
                         if (draggedEntry.executable instanceof AbstractExecutableBlock) {
                             statementChain = this.getStatementChainOf(draggedEntry);
@@ -2410,7 +2416,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     protected void handleContextMenuMove(@NotNull ExecutableEntry entry, boolean moveUp) {
         this.scriptEntriesScrollArea.updateEntries(null);
-        int previousEntryY = entry.getY();
+        int previousEntryY = (int)entry.getY();
         Executable executable = entry.executable;
         if (moveUp) {
             this.moveUp(entry);
@@ -2446,7 +2452,7 @@ public class ActionScriptEditorScreen extends Screen {
         if (previousEntryY == Integer.MIN_VALUE) {
             return;
         }
-        int newEntryY = entry.getY();
+        int newEntryY = (int)entry.getY();
         int delta = newEntryY - previousEntryY;
         if (delta == 0) {
             return;
@@ -2889,34 +2895,36 @@ public class ActionScriptEditorScreen extends Screen {
             this.cachedThemeIdentifier = themeIdentifier;
             this.rebuildComponents();
 
-            Color idle = theme.actions_entry_background_color_action.getColor();
-            Color hover = theme.actions_entry_background_color_action_hover.getColor();
+            DrawableColor idle = theme.actions_entry_background_color_action;
+            DrawableColor hover = theme.actions_entry_background_color_action_hover;
 
             if (this.executable instanceof IfExecutableBlock) {
-                idle = theme.actions_entry_background_color_if.getColor();
-                hover = theme.actions_entry_background_color_if_hover.getColor();
+                idle = theme.actions_entry_background_color_if;
+                hover = theme.actions_entry_background_color_if_hover;
             } else if (this.executable instanceof ElseIfExecutableBlock) {
-                idle = theme.actions_entry_background_color_else_if.getColor();
-                hover = theme.actions_entry_background_color_else_if_hover.getColor();
+                idle = theme.actions_entry_background_color_else_if;
+                hover = theme.actions_entry_background_color_else_if_hover;
             } else if (this.executable instanceof ElseExecutableBlock) {
-                idle = theme.actions_entry_background_color_else.getColor();
-                hover = theme.actions_entry_background_color_else_hover.getColor();
+                idle = theme.actions_entry_background_color_else;
+                hover = theme.actions_entry_background_color_else_hover;
             } else if (this.executable instanceof WhileExecutableBlock) {
-                idle = theme.actions_entry_background_color_while.getColor();
-                hover = theme.actions_entry_background_color_while_hover.getColor();
+                idle = theme.actions_entry_background_color_while;
+                hover = theme.actions_entry_background_color_while_hover;
             } else if (this.executable instanceof DelayExecutableBlock) {
-                idle = theme.actions_entry_background_color_delay.getColor();
-                hover = theme.actions_entry_background_color_delay_hover.getColor();
+                idle = theme.actions_entry_background_color_delay;
+                hover = theme.actions_entry_background_color_delay_hover;
             } else if (this.executable instanceof FolderExecutableBlock) {
-                idle = theme.actions_entry_background_color_folder.getColor();
-                hover = theme.actions_entry_background_color_folder_hover.getColor();
+                idle = theme.actions_entry_background_color_folder;
+                hover = theme.actions_entry_background_color_folder_hover;
             } else if (this.executable instanceof AbstractExecutableBlock) {
-                idle = theme.actions_entry_background_color_generic_block.getColor();
-                hover = theme.actions_entry_background_color_generic_block_hover.getColor();
+                idle = theme.actions_entry_background_color_generic_block;
+                hover = theme.actions_entry_background_color_generic_block_hover;
             }
 
-            this.setBackgroundColorIdle(idle);
-            this.setBackgroundColorHover(hover);
+            DrawableColor idleColor = idle;
+            DrawableColor hoverColor = hover;
+            this.setBackgroundColorNormal(() -> idleColor);
+            this.setBackgroundColorHover(() -> hoverColor);
         }
 
         @SuppressWarnings("all")
@@ -3019,14 +3027,8 @@ public class ActionScriptEditorScreen extends Screen {
             return super.isHovered();
         }
 
-        @SuppressWarnings({"removal"})
         @Override
-        public void updateEntry() {
-            super.updateEntry();
-            // Make the entry not look like it is hovered when navigating in the context menu
-            if (!this.isSelected() && ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) {
-                this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorIdle, 1);
-            }
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         }
 
         @Override
@@ -3058,10 +3060,12 @@ public class ActionScriptEditorScreen extends Screen {
                 }
             }
 
-            int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
-            int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
+            int baseX = (int)this.getX();
+            int baseY = (int)this.getY();
+            int centerYLine1 = baseY + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
+            int centerYLine2 = baseY + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
 
-            int renderX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
+            int renderX = baseX + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
 
             UIColorTheme theme = UIBase.getUIColorTheme();
 
@@ -3136,8 +3140,8 @@ public class ActionScriptEditorScreen extends Screen {
         }
         private void renderChainColumn(@NotNull GuiGraphics graphics, @NotNull Color color, @NotNull ExecutableEntry anchorEntry) {
             int barX = ActionScriptEditorScreen.this.getChainBarX(anchorEntry);
-            int barTop = this.getY() + 1;
-            int barBottom = this.getY() + this.getHeight() - 1;
+            int barTop = (int)this.getY() + 1;
+            int barBottom = (int)(this.getY() + this.getHeight() - 1);
             if (barBottom <= barTop) {
                 barBottom = barTop + 1;
             }
@@ -3265,7 +3269,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         protected int getNameFieldX() {
-            int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
+            int baseX = (int)this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
             int nameX = baseX + 5 + COLLAPSE_TOGGLE_SIZE + 3;
             if (this.folderLabelComponent != null) {
                 nameX += this.font.width(this.folderLabelComponent);
@@ -3274,18 +3278,18 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         protected int getNameFieldY() {
-            int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
+            int centerYLine1 = (int)this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             return centerYLine1 - (this.font.lineHeight / 2);
         }
 
         protected int getNameFieldAvailableWidth() {
             ScrollArea scrollArea = ActionScriptEditorScreen.this.scriptEntriesScrollArea;
-            int visibleRight = scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN;
+            int visibleRight = (int)(scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN);
             return Math.max(1, visibleRight - this.getNameFieldX());
         }
 
         protected int getValueFieldX() {
-            int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
+            int baseX = (int)this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
             int valueX = baseX + 5 + 4 + 3 + 4 + 3;
             if (this.valueLabelComponent != null) {
                 valueX += this.font.width(this.valueLabelComponent);
@@ -3294,14 +3298,14 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         protected int getValueFieldY() {
-            int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
+            int centerYLine2 = (int)this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
             return centerYLine2 - (this.font.lineHeight / 2);
         }
 
         protected int getValueFieldAvailableWidth() {
             int valueX = this.getValueFieldX();
             ScrollArea scrollArea = ActionScriptEditorScreen.this.scriptEntriesScrollArea;
-            int visibleRight = scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN;
+            int visibleRight = (int)(scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN);
             int available = visibleRight - valueX;
             return Math.max(1, available);
         }
@@ -3321,12 +3325,12 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         private int getCollapseToggleX() {
-            int baseX = this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
+            int baseX = (int)this.getX() + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
             return baseX + 5;
         }
 
         private int getCollapseToggleY() {
-            int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
+            int centerYLine1 = (int)this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             return centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
         }
 
@@ -3398,7 +3402,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         @Override
-        public void onClick(ScrollAreaEntry entry) {
+        public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return;
             if (this.parent.getEntries().contains(this)) {
                 this.leftMouseDownDragging = true;

@@ -15,9 +15,9 @@ import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -144,6 +144,10 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
         this.updateFileTypeScrollArea();
 
+        this.addWidget(this.fileListScrollArea);
+        this.addWidget(this.fileTypeScrollArea);
+        this.addWidget(this.previewTextScrollArea);
+
     }
 
     @NotNull
@@ -221,7 +225,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         this.fileTypeScrollArea.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileTypeScrollArea.getWidthWithBorder());
         this.fileTypeScrollArea.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + this.fileTypeScrollListYOffset);
         this.fileTypeScrollArea.render(graphics, mouseX, mouseY, partial);
-        graphics.drawString(this.font, FILE_TYPE_PREFIX_TEXT, this.fileTypeScrollArea.getXWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5, this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().element_label_color_normal.getColorInt(), false);
+        graphics.drawString(this.font, FILE_TYPE_PREFIX_TEXT, (int)(this.fileTypeScrollArea.getXWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5), (int)(this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2) - (Minecraft.getInstance().font.lineHeight / 2)), UIBase.getUIColorTheme().element_label_color_normal.getColorInt(), false);
     }
 
     protected void renderFileScrollArea(GuiGraphics graphics, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
@@ -274,7 +278,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     }
 
     protected int getBelowFileScrollAreaElementWidth() {
-        return this.fileListScrollArea.getWidthWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5;
+        return (int)(this.fileListScrollArea.getWidthWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5);
     }
 
     protected void updateCurrentDirectoryComponent() {
@@ -493,7 +497,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         TextScrollAreaEntry entry = new TextScrollAreaEntry(this.fileTypeScrollArea, this.currentFileTypesComponent, textScrollAreaEntry -> {});
         entry.setPlayClickSound(false);
         entry.setSelectable(false);
-        entry.setBackgroundColorHover(entry.getBackgroundColorIdle());
+        entry.setBackgroundColorHover(entry.getBackgroundColorNormal());
         entry.setHeight(this.fileTypeScrollArea.getInnerHeight());
         this.fileTypeScrollArea.addEntry(entry);
     }
@@ -543,24 +547,24 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                             if (line < 70) {
                                 TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
                                 e.setSelectable(false);
-                                e.setBackgroundColorHover(e.getBackgroundColorIdle());
+                                e.setBackgroundColorHover(e.getBackgroundColorNormal());
                                 e.setPlayClickSound(false);
                                 this.previewTextScrollArea.addEntry(e);
                             } else {
                                 TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal("......").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
                                 e.setSelectable(false);
-                                e.setBackgroundColorHover(e.getBackgroundColorIdle());
+                                e.setBackgroundColorHover(e.getBackgroundColorNormal());
                                 e.setPlayClickSound(false);
                                 this.previewTextScrollArea.addEntry(e);
                                 TextScrollAreaEntry e2 = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal("  ").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
                                 e2.setSelectable(false);
-                                e2.setBackgroundColorHover(e2.getBackgroundColorIdle());
+                                e2.setBackgroundColorHover(e2.getBackgroundColorNormal());
                                 e2.setPlayClickSound(false);
                                 this.previewTextScrollArea.addEntry(e2);
                                 break;
                             }
                         }
-                        int totalWidth = this.previewTextScrollArea.getTotalEntryWidth();
+                        float totalWidth = this.previewTextScrollArea.getTotalEntryWidth();
                         for (ScrollAreaEntry e : this.previewTextScrollArea.getEntries()) {
                             e.setWidth(totalWidth);
                         }
@@ -582,7 +586,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         this.previewTextScrollArea.clearEntries();
         TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
         e.setSelectable(false);
-        e.setBackgroundColorHover(e.getBackgroundColorIdle());
+        e.setBackgroundColorHover(e.getBackgroundColorNormal());
         e.setPlayClickSound(false);
         this.previewTextScrollArea.addEntry(e);
     }
@@ -654,7 +658,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
-        if ((button == 0) && !this.fileListScrollArea.isMouseInsideArea() && !this.fileListScrollArea.isMouseInteractingWithGrabbers() && !this.previewTextScrollArea.isMouseInsideArea() && !this.previewTextScrollArea.isMouseInteractingWithGrabbers() && !this.isWidgetHovered()) {
+        if ((button == 0) && !this.fileListScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.fileListScrollArea.isMouseInteractingWithGrabbers() && !this.previewTextScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.previewTextScrollArea.isMouseInteractingWithGrabbers() && !this.isWidgetHovered()) {
             for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
                 e.setSelected(false);
             }
@@ -698,9 +702,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-            super.render(graphics, mouseX, mouseY, partial);
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             if (this.file.exists()) {
 
@@ -709,15 +711,15 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 //Render icon
                 UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
                 ResourceLocation loc = this.file.isFile() ? FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
-                graphics.blit(loc, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20);
+                graphics.blit(loc, (int)(this.x + BORDER), (int)(this.y + BORDER), 0.0F, 0.0F, 20, 20, 20, 20);
                 UIBase.resetShaderColor(graphics);
 
                 //Render file name
                 int textColor = this.resourceUnfriendlyFileName ? UIBase.getUIColorTheme().error_text_color.getColorInt() : UIBase.getUIColorTheme().description_area_text_color.getColorInt();
-                graphics.drawString(this.font, this.fileNameComponent, this.x + BORDER + 20 + 3, this.y + (this.height / 2) - (this.font.lineHeight / 2) , textColor, false);
+                graphics.drawString(this.font, this.fileNameComponent, (int)(this.x + BORDER + 20 + 3), (int)(this.y + (this.height / 2) - (this.font.lineHeight / 2)) , textColor, false);
 
                 //Show "unsupported characters" tooltip on hover, if resource-unfriendly file name
-                if (this.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.height) && this.parent.isMouseInsideArea() && this.resourceUnfriendlyFileName) {
+                if (this.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.height) && this.parent.isMouseOverInnerArea(mouseX, mouseY) && this.resourceUnfriendlyFileName) {
                     TooltipHandler.INSTANCE.addTooltip(Tooltip.of(Component.translatable("fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip")).setDefaultStyle(), () -> true, true, true);
                 }
 
@@ -726,7 +728,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         }
 
         @Override
-        public abstract void onClick(ScrollAreaEntry entry);
+        public abstract void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button);
 
     }
 
@@ -751,24 +753,22 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-            super.render(graphics, mouseX, mouseY, partial);
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             RenderSystem.enableBlend();
 
             //Render icon
             UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
-            graphics.blit(GO_UP_ICON_TEXTURE, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20);
+            graphics.blit(GO_UP_ICON_TEXTURE, (int)(this.x + BORDER), (int)(this.y + BORDER), 0.0F, 0.0F, 20, 20, 20, 20);
             UIBase.resetShaderColor(graphics);
 
             //Render file name
-            graphics.drawString(this.font, this.labelComponent, this.x + BORDER + 20 + 3, this.y + (this.height / 2) - (this.font.lineHeight / 2) , -1, false);
+            graphics.drawString(this.font, this.labelComponent, (int)(this.x + BORDER + 20 + 3), (int)(this.y + (this.height / 2) - (this.font.lineHeight / 2)) , -1, false);
 
         }
 
         @Override
-        public void onClick(ScrollAreaEntry entry) {
+        public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {
                 if (!AbstractFileBrowserScreen.this.currentIsRootDirectory()) {

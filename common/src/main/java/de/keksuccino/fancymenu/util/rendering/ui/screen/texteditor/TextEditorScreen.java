@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar.ScrollBar;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.TextEditorFormattingRules;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
@@ -57,10 +57,10 @@ public class TextEditorScreen extends Screen {
     protected final CharacterFilter characterFilter;
     protected final Consumer<String> callback;
     protected List<TextEditorLine> textFieldLines = new ArrayList<>();
-    protected ScrollBar verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
-    protected ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
-    protected ScrollBar verticalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
-    protected ScrollBar horizontalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
+    protected ScrollBar verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUIColorTheme().scroll_grabber_color_normal, () -> UIBase.getUIColorTheme().scroll_grabber_color_hover);
+    protected ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUIColorTheme().scroll_grabber_color_normal, () -> UIBase.getUIColorTheme().scroll_grabber_color_hover);
+    protected ScrollBar verticalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUIColorTheme().scroll_grabber_color_normal, () -> UIBase.getUIColorTheme().scroll_grabber_color_hover);
+    protected ScrollBar horizontalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUIColorTheme().scroll_grabber_color_normal, () -> UIBase.getUIColorTheme().scroll_grabber_color_hover);
     protected ContextMenu rightClickContextMenu;
     protected ExtendedButton cancelButton;
     protected ExtendedButton doneButton;
@@ -78,8 +78,8 @@ public class TextEditorScreen extends Screen {
     protected Color editorAreaBackgroundColor = UIBase.getUIColorTheme().area_background_color.getColor();
     protected Color textColor = UIBase.getUIColorTheme().text_editor_text_color.getColor();
     protected Color focusedLineColor = UIBase.getUIColorTheme().list_entry_color_selected_hovered.getColor();
-    protected Color scrollGrabberIdleColor = UIBase.getUIColorTheme().scroll_grabber_color_normal.getColor();
-    protected Color scrollGrabberHoverColor = UIBase.getUIColorTheme().scroll_grabber_color_hover.getColor();
+    protected DrawableColor scrollGrabberIdleColor = UIBase.getUIColorTheme().scroll_grabber_color_normal;
+    protected DrawableColor scrollGrabberHoverColor = UIBase.getUIColorTheme().scroll_grabber_color_hover;
     protected Color sideBarColor = UIBase.getUIColorTheme().text_editor_sidebar_color.getColor();
     protected Color lineNumberTextColorNormal = UIBase.getUIColorTheme().text_editor_line_number_text_color_normal.getColor();
     protected Color lineNumberTextColorFocused = UIBase.getUIColorTheme().text_editor_line_number_text_color_selected.getColor();
@@ -187,16 +187,21 @@ public class TextEditorScreen extends Screen {
         this.horizontalScrollBarPlaceholderMenu.scrollAreaEndY = this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight() - 1;
 
         //Set scroll grabber colors
-        this.verticalScrollBar.idleBarColor = this.scrollGrabberIdleColor;
-        this.verticalScrollBar.hoverBarColor = this.scrollGrabberHoverColor;
-        this.horizontalScrollBar.idleBarColor = this.scrollGrabberIdleColor;
-        this.horizontalScrollBar.hoverBarColor = this.scrollGrabberHoverColor;
+        this.verticalScrollBar.idleBarColor = () -> this.scrollGrabberIdleColor;
+        this.verticalScrollBar.hoverBarColor = () -> this.scrollGrabberHoverColor;
+        this.horizontalScrollBar.idleBarColor = () -> this.scrollGrabberIdleColor;
+        this.horizontalScrollBar.hoverBarColor = () -> this.scrollGrabberHoverColor;
 
         //Set placeholder menu scroll bar colors
-        this.verticalScrollBarPlaceholderMenu.idleBarColor = this.scrollGrabberIdleColor;
-        this.verticalScrollBarPlaceholderMenu.hoverBarColor = this.scrollGrabberHoverColor;
-        this.horizontalScrollBarPlaceholderMenu.idleBarColor = this.scrollGrabberIdleColor;
-        this.horizontalScrollBarPlaceholderMenu.hoverBarColor = this.scrollGrabberHoverColor;
+        this.verticalScrollBarPlaceholderMenu.idleBarColor = () -> this.scrollGrabberIdleColor;
+        this.verticalScrollBarPlaceholderMenu.hoverBarColor = () -> this.scrollGrabberHoverColor;
+        this.horizontalScrollBarPlaceholderMenu.idleBarColor = () -> this.scrollGrabberIdleColor;
+        this.horizontalScrollBarPlaceholderMenu.hoverBarColor = () -> this.scrollGrabberHoverColor;
+
+        this.addWidget(this.verticalScrollBar);
+        this.addWidget(this.horizontalScrollBar);
+        this.addWidget(this.verticalScrollBarPlaceholderMenu);
+        this.addWidget(this.horizontalScrollBarPlaceholderMenu);
 
         this.cancelButton = new ExtendedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.onClose();
@@ -356,8 +361,8 @@ public class TextEditorScreen extends Screen {
 
         UIBase.renderBorder(graphics, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
 
-        this.verticalScrollBar.render(graphics);
-        this.horizontalScrollBar.render(graphics);
+        this.verticalScrollBar.render(graphics, mouseX, mouseY, partial);
+        this.horizontalScrollBar.render(graphics, mouseX, mouseY, partial);
 
         this.renderPlaceholderMenu(graphics, mouseX, mouseY, partial);
 
@@ -433,8 +438,8 @@ public class TextEditorScreen extends Screen {
             UIBase.renderBorder(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.headerHeight - 1 + 25, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
 
             //Render placeholder menu scroll bars
-            this.verticalScrollBarPlaceholderMenu.render(graphics);
-            this.horizontalScrollBarPlaceholderMenu.render(graphics);
+            this.verticalScrollBarPlaceholderMenu.render(graphics, mouseX, mouseY, partial);
+            this.horizontalScrollBarPlaceholderMenu.render(graphics, mouseX, mouseY, partial);
 
         }
 
