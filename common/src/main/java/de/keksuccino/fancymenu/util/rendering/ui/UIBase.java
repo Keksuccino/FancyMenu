@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.ExtendedSliderButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -40,25 +39,10 @@ public class UIBase extends RenderingUtils {
 		if (widget instanceof EditBoxSuggestions s) {
 			return (T) applyDefaultEditBoxSuggestionsSkinTo(s);
 		}
-		if (widget instanceof ExtendedSliderButton s) {
-			return (T) applyDefaultSliderSkinTo(s);
-		}
 		if (widget instanceof AbstractExtendedSlider s) {
 			return (T) applyDefaultV2SliderSkinTo(s);
 		}
 		return widget;
-	}
-
-	@SuppressWarnings("all")
-	private static ExtendedSliderButton applyDefaultSliderSkinTo(ExtendedSliderButton slider) {
-		slider.setBackgroundColor(UIBase.getUIColorTheme().element_background_color_normal);
-		slider.setBorderColor(UIBase.getUIColorTheme().element_border_color_normal);
-		slider.setHandleColorNormal(UIBase.getUIColorTheme().slider_handle_color_normal);
-		slider.setHandleColorHover(UIBase.getUIColorTheme().slider_handle_color_hover);
-		slider.setLabelColorNormal(UIBase.getUIColorTheme().element_label_color_normal);
-		slider.setLabelColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
-		slider.setLabelShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
-		return slider;
 	}
 
 	private static AbstractExtendedSlider applyDefaultV2SliderSkinTo(AbstractExtendedSlider slider) {

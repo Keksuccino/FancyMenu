@@ -10,11 +10,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.RangeSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -447,7 +446,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
         public AbstractWidget activeWidget;
         public ExtendedButton rotationStringButton;
-        public RangeSliderButton rotationSlider;
+        public RangeSlider rotationSlider;
         public CycleButton<CommonCycles.CycleEnabledDisabled> toggleModeButton;
 
         public RotationCell(@NotNull String localizationKeySuffix, @NotNull Supplier<String> rotationValueGetter, @NotNull Consumer<String> rotationValueSetter, @NotNull Supplier<Boolean> advancedModeGetter, @NotNull Consumer<Boolean> advancedModeSetter) {
@@ -472,14 +471,13 @@ public class PlayerEntityPoseScreen extends CellScreen {
             });
             UIBase.applyDefaultWidgetSkinTo(this.rotationStringButton);
 
-            this.rotationSlider = new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, stringToFloat(rotationValueGetter.get()), (slider) -> {
-                if (!advancedModeGetter.get()) rotationValueSetter.accept("" + (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue());
-            }) {
-                @Override
-                public String getSliderMessageWithoutPrefixSuffix() {
-                    return I18n.get("fancymenu.elements.player_entity.pose." + localizationKeySuffix, super.getSliderMessageWithoutPrefixSuffix());
-                }
-            };
+            this.rotationSlider = new RangeSlider(0, 0, 20, 20, Component.empty(), -180.0D, 180.0D, stringToFloat(rotationValueGetter.get()));
+            this.rotationSlider.setShowAsInteger(true);
+            this.rotationSlider.setRoundingDecimalPlace(-1);
+            this.rotationSlider.setLabelSupplier(consumes -> Component.translatable("fancymenu.elements.player_entity.pose." + localizationKeySuffix, Component.literal(((RangeSlider)consumes).getValueDisplayText())));
+            this.rotationSlider.setSliderValueUpdateListener((slider1, valueDisplayText, value) -> {
+                if (!advancedModeGetter.get()) rotationValueSetter.accept("" + (float)((RangeSlider)slider1).getRangeValue());
+            });
             UIBase.applyDefaultWidgetSkinTo(this.rotationSlider);
 
             this.activeWidget = advancedModeGetter.get() ? this.rotationStringButton : this.rotationSlider;
