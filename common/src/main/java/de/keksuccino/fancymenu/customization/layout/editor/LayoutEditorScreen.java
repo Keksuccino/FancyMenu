@@ -244,7 +244,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
         return (menuBarRaw instanceof MenuBar b) ? b : null;
     }
 
-	@Override
+    @Override
+    public void removed() {
+        this.closeActiveElementMenu(true);
+        this.closeRightClickMenu(true);
+        PiPWindowHandler.INSTANCE.closeAllWindows();
+    }
+
+    @Override
 	public boolean shouldCloseOnEsc() {
 		return false;
 	}
@@ -967,14 +974,18 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 	}
 
-	public void closeRightClickMenu() {
+	public void closeRightClickMenu(boolean forceClose) {
 		if (this.rightClickMenu != null) {
-			if (this.rightClickMenu.isUserNavigatingInMenu()) return;
+			if (!forceClose && this.rightClickMenu.isUserNavigatingInMenu()) return;
 			this.rightClickMenuOpenPosX = -1000;
 			this.rightClickMenuOpenPosY = -1000;
 			this.rightClickMenu.closeMenu();
 		}
 	}
+
+    public void closeRightClickMenu() {
+        this.closeRightClickMenu(false);
+    }
 
 	public void openElementContextMenuAtMouseIfPossible() {
 		this.closeActiveElementMenu();
@@ -1385,17 +1396,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
     }
 
     public void beforeOpenChildScreen(@NotNull Screen screen) {
-        LOGGER.info("############################## BEFORE OPEN CHILD SCREEN: " + screen);
-        this.closeActiveElementMenu();
-        this.closeRightClickMenu();
-        PiPWindowHandler.INSTANCE.closeAllWindows();
+        this.removed();
     }
 
     @SuppressWarnings("deprecation")
 	public void closeEditor() {
         PiPWindowHandler.INSTANCE.closeAllWindows();
-        this.closeActiveElementMenu();
-        this.closeRightClickMenu();
+        this.closeActiveElementMenu(true);
+        this.closeRightClickMenu(true);
 		this.saveWidgetSettings();
 		this.buddyWidget.cleanup();
 		this.getAllElements().forEach(element -> {

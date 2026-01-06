@@ -318,10 +318,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             int iconPadding = Math.max(0, Math.round(4.0F * scale));
             int maxIconSize = Math.max(1, Math.round(DEFAULT_ICON_TEXTURE_SIZE * scale));
             int iconSize = Math.max(1, Math.min(size - iconPadding, maxIconSize));
-            int iconX = x + (size - iconSize) / 2;
-            int iconY = y + (size - iconSize) / 2;
+            int iconX = x + (size - iconSize + 1) / 2;
+            int iconY = y + (size - iconSize + 1) / 2;
             UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
-            graphics.blit(icon, iconX, iconY, 0, 0, iconSize, iconSize, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
+            graphics.blit(icon, iconX, iconY, iconSize, iconSize, 0, 0, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
             RenderingUtils.resetShaderColor(graphics);
         } else {
             Font font = this.minecraft.font;
