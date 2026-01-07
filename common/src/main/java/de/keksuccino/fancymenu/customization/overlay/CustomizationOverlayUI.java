@@ -543,6 +543,17 @@ public class CustomizationOverlayUI {
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.settings.caching.requirements.set.desc")));
 
+        customizationSettingsMenu.addSeparatorEntry("separator_before_developer");
+
+        ContextMenu developerMenu = new ContextMenu();
+        customizationSettingsMenu.addSubMenuEntry("developer", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.developer"), developerMenu);
+
+        developerMenu.addValueCycleEntry("show_pip_window_debug",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.developer.show_pip_window_debug", FancyMenu.getOptions().devShowPipWindowDebug.getValue())
+                                .addCycleListener(cycle -> {
+                                    FancyMenu.getOptions().devShowPipWindowDebug.setValue(cycle.getAsBoolean());
+                                }));
+
         return customizationSettingsMenu;
 
     }

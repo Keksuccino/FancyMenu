@@ -2423,5 +2423,7 @@
   "fancymenu.placeholders.base64_decode": "Decode From Base64",
   "fancymenu.placeholders.base64_decode.desc": "Decodes a Base64 string back to text.\n\nRequired values:\n- text: The Base64 string to decode",
   "fancymenu.elements.player_entity.nametag_rotation": "Nametag Rotation: %s",
-  "fancymenu.elements.player_entity.nametag_rotation.desc": "If the nametag should rotate."
+  "fancymenu.elements.player_entity.nametag_rotation.desc": "If the nametag should rotate.",
+  "fancymenu.overlay.menu_bar.customization.settings.developer": "Developer",
+  "fancymenu.overlay.menu_bar.customization.settings.developer.show_pip_window_debug": "Show PiP Window Debug: %s"
 }
