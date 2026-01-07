@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -95,7 +95,7 @@ public class ManageAudiosScreen extends CellScreen {
             if (selected != null) {
                 String source = selected.getMemoryValue("source");
                 if (source != null) {
-                    MessageDialogs.openWithCallback(Component.translatable("fancymenu.elements.audio.manage_audios.remove_audio.confirm"), MessageDialogStyle.WARNING, aBoolean -> {
+                    Dialogs.openMessageWithCallback(Component.translatable("fancymenu.elements.audio.manage_audios.remove_audio.confirm"), MessageDialogStyle.WARNING, aBoolean -> {
                         if (aBoolean) this.removeAudio(source);
                     });
                 }

@@ -35,7 +35,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
@@ -341,7 +341,7 @@ public class CustomizationOverlayUI {
         customGuiMenu.addClickableEntry("override_current", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.override_current"), (menu, entry) -> {
                     Screen current = Minecraft.getInstance().screen;
                     if (!(current instanceof CustomGuiBaseScreen)) {
-                        MessageDialogs.openWithCallback(Component.translatable("fancymenu.custom_guis.override.confirm"), MessageDialogStyle.WARNING, override -> {
+                        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.custom_guis.override.confirm"), MessageDialogStyle.WARNING, override -> {
                             if (override) {
                                 Minecraft.getInstance().setScreen(new StringListChooserScreen(Component.translatable("fancymenu.custom_guis.override.choose_custom"), CustomGuiHandler.getGuiIdentifiers(), s -> {
                                     CustomGuiBaseScreen customInstance = null;
@@ -450,7 +450,7 @@ public class CustomizationOverlayUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("reload"));
 
         customizationMenu.addClickableEntry("disable_customization_for_all", Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all"), (menu, entry) -> {
-            MessageDialogs.openWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.confirm"), MessageDialogStyle.WARNING, call -> {
+            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.confirm"), MessageDialogStyle.WARNING, call -> {
                 if (call) {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
@@ -466,7 +466,7 @@ public class CustomizationOverlayUI {
 
         customizationMenu.addClickableEntry("hide_menu_bar", Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay"), (menu, entry) -> {
             menuBar.closeAllContextMenus();
-            MessageDialogs.openWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay.confirm"), MessageDialogStyle.ERROR, call -> {
+            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay.confirm"), MessageDialogStyle.ERROR, call -> {
                 if (call) {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
@@ -1066,7 +1066,7 @@ public class CustomizationOverlayUI {
 
         menu.addClickableEntry("delete_layout", Component.translatable("fancymenu.layout.manage.delete"), (menu1, entry) -> {
             menu1.closeMenu();
-            MessageDialogs.openWithCallback(Component.translatable("fancymenu.layout.manage.delete.confirm"), MessageDialogStyle.WARNING, call -> {
+            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.layout.manage.delete.confirm"), MessageDialogStyle.WARNING, call -> {
                 if (call) {
                     layout.delete(false);
                 }

@@ -35,20 +35,21 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     private PiPWindowHandler() {
     }
 
-    public void openWindow(@NotNull PiPWindow window, @Nullable PiPWindow parentWindow) {
+    public PiPWindow openWindow(@NotNull PiPWindow window, @Nullable PiPWindow parentWindow) {
         if (parentWindow != null) {
             parentWindow.registerChildWindow(window);
         }
         if (windows.contains(window)) {
             bringToFront(window);
-            return;
+            return window;
         }
         windows.add(window);
         window.addCloseCallback(() -> closeWindow(window));
         bringToFront(window);
+        return window;
     }
 
-    public void openWindowCentered(@NotNull PiPWindow window, @Nullable PiPWindow parentWindow) {
+    public PiPWindow openWindowCentered(@NotNull PiPWindow window, @Nullable PiPWindow parentWindow) {
         int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
         int windowWidth = window.getWidth();
@@ -56,10 +57,10 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         int x = (screenWidth - windowWidth) / 2;
         int y = (screenHeight - windowHeight) / 2;
         window.setPosition(x, y);
-        openWindow(window, parentWindow);
+        return openWindow(window, parentWindow);
     }
 
-    public void openWindowWithDefaultSizeAndPosition(@NotNull PiPWindow window, @Nullable PiPWindow parentWindow) {
+    public PiPWindow openWindowWithDefaultSizeAndPosition(@NotNull PiPWindow window, @Nullable PiPWindow parentWindow) {
         Minecraft minecraft = Minecraft.getInstance();
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
         int screenHeight = minecraft.getWindow().getGuiScaledHeight();
@@ -74,7 +75,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         int x = (screenWidth - targetWidth) / 2;
         int y = (screenHeight - targetHeight) / 2;
         window.setBounds(x, y, rawWidth, rawHeight);
-        openWindow(window, parentWindow);
+        return openWindow(window, parentWindow);
     }
 
     public void closeWindow(@NotNull PiPWindow window) {

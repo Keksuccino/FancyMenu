@@ -1,12 +1,13 @@
 package de.keksuccino.fancymenu.customization.variables;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
@@ -107,16 +108,7 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
         UIBase.applyDefaultWidgetSkinTo(setValueButton);
 
         ExtendedButton deleteVariableButton = new ExtendedButton(deleteButtonX, deleteButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable"), (button) -> {
-            VariableScrollEntry e = this.getSelectedEntry();
-            if (e != null) {
-                MessageDialogs.openWithCallback(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm"), MessageDialogStyle.WARNING, call -> {
-                    if (call) {
-                        VariableHandler.removeVariable(e.variable.getName());
-                        this.updateVariablesList();
-                        this.resize(Minecraft.getInstance(), this.width, this.height);
-                    }
-                });
-            }
+            this.requestDeleteSelectedVariable();
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addRenderableWidget(deleteVariableButton);
         UIBase.applyDefaultWidgetSkinTo(deleteVariableButton);
@@ -174,6 +166,18 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (super.keyPressed(keyCode, scanCode, modifiers)) return true;
+        if (keyCode == InputConstants.KEY_DELETE) {
+            if (this.getSelectedEntry() != null) {
+                this.requestDeleteSelectedVariable();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
@@ -216,6 +220,18 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
             this.variableListScrollArea.addEntry(new TextScrollAreaEntry(this.variableListScrollArea, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), (entry) -> {}));
         }
 
+    }
+
+    protected void requestDeleteSelectedVariable() {
+        VariableScrollEntry e = this.getSelectedEntry();
+        if (e == null) return;
+        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm"), MessageDialogStyle.WARNING, call -> {
+            if (call) {
+                VariableHandler.removeVariable(e.variable.getName());
+                this.updateVariablesList();
+                this.resize(Minecraft.getInstance(), this.width, this.height);
+            }
+        });
     }
 
     public static class VariableScrollEntry extends TextListScrollAreaEntry {

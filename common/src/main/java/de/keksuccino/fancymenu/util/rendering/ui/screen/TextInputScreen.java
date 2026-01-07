@@ -5,116 +5,92 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class TextInputScreen extends Screen {
+public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScreen {
+
+    public static final int PIP_WINDOW_WIDTH = 600;
+    public static final int PIP_WINDOW_HEIGHT = 600;
 
     @NotNull
     protected Consumer<String> callback;
-
     protected ExtendedEditBox input;
-    protected ExtendedButton cancelButton;
-    protected ExtendedButton doneButton;
     protected ConsumingSupplier<TextInputScreen, Boolean> textValidator = null;
     protected Tooltip textValidatorFeedbackTooltip = null;
+    @Nullable
+    protected CharacterFilter filter;
 
-    @NotNull
-    public static TextInputScreen build(@NotNull Component title, @Nullable CharacterFilter filter, @NotNull Consumer<String> callback) {
-        return new TextInputScreen(title, filter, callback);
-    }
-
-    public TextInputScreen(@NotNull Component title, @Nullable CharacterFilter filter, @NotNull Consumer<String> callback) {
-
-        super(title);
-
+    public TextInputScreen(@Nullable CharacterFilter filter, @NotNull Consumer<String> callback) {
+        super(Component.empty());
         this.callback = callback;
-
-        this.input = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 200, 20, Component.empty());
-        this.input.setMaxLength(10000);
-        this.input.setCharacterFilter(filter);
-        UIBase.applyDefaultWidgetSkinTo(this.input);
-
+        this.filter = filter;
     }
 
     @Override
     protected void init() {
 
-        this.addWidget(this.input);
-        this.setFocused(this.input);
+        String val = "";
+        if (this.input != null) {
+            val = this.input.getValue();
+        }
+        this.input = this.addRenderableWidget(new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 100, (this.height / 2) - 10, 200, 20, Component.empty()));
+        this.input.setMaxLength(10000);
+        this.input.setCharacterFilter(this.filter);
+        this.input.setValue(val);
+        UIBase.applyDefaultWidgetSkinTo(this.input);
+        this.setupInitialFocusWidget(this, this.input);
 
-        this.cancelButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
+        ExtendedButton cancelButton = this.addRenderableWidget(new ExtendedButton((this.width / 2) - 5 - 100, this.height - 40, 100, 20, Component.translatable("fancymenu.common_components.cancel"), button -> {
             this.callback.accept(null);
-        });
-        this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+            this.closeWindow();
+        }));
+        UIBase.applyDefaultWidgetSkinTo(cancelButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
-            if (this.isTextValid()) this.callback.accept(this.input.getValue());
-        });
-        this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+        if (this.textValidatorFeedbackTooltip != null) this.textValidatorFeedbackTooltip.setDefaultStyle();
+
+        ExtendedButton doneButton = this.addRenderableWidget(new ExtendedButton((this.width / 2) + 5, this.height - 40, 100, 20, Component.translatable("fancymenu.common_components.done"), button -> {
+            if (this.isTextValid()) {
+                this.callback.accept(this.input.getValue());
+                this.closeWindow();
+            }
+        })).setIsActiveSupplier(consumes -> this.isTextValid())
+                .setTooltip(this.textValidatorFeedbackTooltip);
+        UIBase.applyDefaultWidgetSkinTo(doneButton);
 
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        RenderSystem.enableBlend();
-        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
-
-        RenderSystem.enableBlend();
-        MutableComponent t = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        int titleWidth = Minecraft.getInstance().font.width(t);
-        graphics.drawString(this.font, t, (int)(this.width / 2) - (int)(titleWidth / 2), (int)(this.height / 2) - 30, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-
-        this.input.setX((this.width / 2) - (this.input.getWidth() / 2));
-        this.input.setY((this.height / 2) - (this.input.getHeight() / 2));
-        this.input.render(graphics, mouseX, mouseY, partial);
-
-        this.cancelButton.setX((this.width / 2) - 5 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.height - 40);
-        this.cancelButton.render(graphics, mouseX, mouseY, partial);
-
-        this.doneButton.active = this.isTextValid();
-        if (this.textValidatorFeedbackTooltip != null) this.textValidatorFeedbackTooltip.setDefaultStyle();
-        this.doneButton.setTooltip(this.textValidatorFeedbackTooltip);
-        this.doneButton.setX((this.width / 2) + 5);
-        this.doneButton.setY(this.height - 40);
-        this.doneButton.render(graphics, mouseX, mouseY, partial);
-
+    public void onWindowClosedExternally() {
+        this.callback.accept(null);
     }
 
     @Override
     public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        this.performInitialWidgetFocusActionInRender();
+
+        RenderSystem.enableBlend();
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+
     }
 
     @Override
-    public boolean keyPressed(int button, int p_96553_, int p_96554_) {
-
-        if ((button == InputConstants.KEY_ENTER) && this.isTextValid()) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if ((keyCode == InputConstants.KEY_ENTER) && this.isTextValid()) {
             this.callback.accept(this.input.getValue());
+            this.closeWindow();
             return true;
         }
-
-        return super.keyPressed(button, p_96553_, p_96554_);
-
-    }
-
-    @Override
-    public void onClose() {
-        this.callback.accept(null);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     public TextInputScreen setText(@Nullable String text) {

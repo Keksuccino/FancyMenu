@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import net.minecraft.util.FormattedCharSequence;
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +27,7 @@ import java.util.Objects;
 @SuppressWarnings("unused")
 public class PiPWindow extends AbstractContainerEventHandler implements Renderable {
 
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
     public static final int DEFAULT_TITLE_BAR_HEIGHT = 18;
     public static final int DEFAULT_BORDER_THICKNESS = 1;
     public static final int DEFAULT_BUTTON_SIZE = 12;
@@ -79,7 +79,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private boolean screenAutoScalingEnabled = true;
     @Nullable
     private Double customBodyScale;
-    private boolean forceFancyMenuUiScaleEnabled = false;
+    private boolean forceFancyMenuUiScaleEnabled = true;
     private double forcedFancyMenuUiScale = 1.0;
     private boolean alwaysOnTop = false;
     private boolean forceFocusEnabled = false;
@@ -117,15 +117,15 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private int lastScreenHeight = -1;
     private boolean screenRendering = false;
 
-    public PiPWindow(@Nonnull Component title, int x, int y, int width, int height) {
+    public PiPWindow(@NotNull Component title, int x, int y, int width, int height) {
         this(title, x, y, width, height, null);
     }
 
-    public PiPWindow(@Nonnull Component title, int width, int height) {
+    public PiPWindow(@NotNull Component title, int width, int height) {
         this(title, 0, 0, width, height, null);
     }
 
-    public PiPWindow(@Nonnull Component title) {
+    public PiPWindow(@NotNull Component title) {
         this(title, 0, 0, 200, 200, null);
     }
 
@@ -137,7 +137,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         this(Component.literal("Window"));
     }
 
-    public PiPWindow(@Nonnull Component title, int x, int y, int width, int height, @Nullable Screen screen) {
+    public PiPWindow(@NotNull Component title, int x, int y, int width, int height, @Nullable Screen screen) {
         this.title = Objects.requireNonNull(title, "title");
         this.x = x;
         this.y = y;
@@ -148,7 +148,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     @Override
-    public void render(@Nonnull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.visible) {
             return;
@@ -174,7 +174,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     }
 
-    private void renderWindowBackground(@Nonnull GuiGraphics graphics) {
+    private void renderWindowBackground(@NotNull GuiGraphics graphics) {
         int frameX = this.x;
         int frameY = this.y;
         int frameWidth = getWidth();
@@ -194,7 +194,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         graphics.fill(innerLeft, innerTop, innerRight, innerBottom, theme.pip_window_body_color.getColorInt());
     }
 
-    private void renderBodyScreen(@Nonnull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    private void renderBodyScreen(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (this.screen == null) {
             return;
         }
@@ -238,7 +238,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         graphics.disableScissor();
     }
 
-    private void renderWindowForeground(@Nonnull GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderWindowForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
         renderWindowFrame(graphics);
 
         Font font = this.minecraft.font;
@@ -297,7 +297,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    private void renderWindowFrame(@Nonnull GuiGraphics graphics) {
+    private void renderWindowFrame(@NotNull GuiGraphics graphics) {
         int frameX = this.x;
         int frameY = this.y;
         int frameWidth = getWidth();
@@ -324,7 +324,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    private void renderDebugOverlay(@Nonnull GuiGraphics graphics) {
+    private void renderDebugOverlay(@NotNull GuiGraphics graphics) {
         Font font = this.minecraft.font;
         List<String> lines = new ArrayList<>();
         double renderScale = getScreenRenderScaleFactor();
@@ -366,7 +366,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    private void renderButton(@Nonnull GuiGraphics graphics, @Nonnull UIColorTheme theme, int x, int y, int size, boolean hovered, @Nullable ResourceLocation icon, @Nonnull String label, float scale) {
+    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme, int x, int y, int size, boolean hovered, @Nullable ResourceLocation icon, @NotNull String label, float scale) {
         int color = hovered
                 ? theme.pip_window_button_color_hover.getColorInt()
                 : theme.pip_window_button_color_normal.getColorInt();
@@ -390,7 +390,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    private void drawScaledString(@Nonnull GuiGraphics graphics, @Nonnull Font font, @Nonnull FormattedCharSequence text, int x, int y, int color, float scale) {
+    private void drawScaledString(@NotNull GuiGraphics graphics, @NotNull Font font, @NotNull FormattedCharSequence text, int x, int y, int color, float scale) {
         graphics.pose().pushPose();
         graphics.pose().translate(x, y, 0);
         if (scale != 1.0F) {
@@ -400,7 +400,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         graphics.pose().popPose();
     }
 
-    private void drawScaledString(@Nonnull GuiGraphics graphics, @Nonnull Font font, @Nonnull String text, int x, int y, int color, float scale) {
+    private void drawScaledString(@NotNull GuiGraphics graphics, @NotNull Font font, @NotNull String text, int x, int y, int color, float scale) {
         graphics.pose().pushPose();
         graphics.pose().translate(x, y, 0);
         if (scale != 1.0F) {
@@ -447,7 +447,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.screen;
     }
 
-    public PiPWindow setTitle(@Nonnull Component title) {
+    public PiPWindow setTitle(@NotNull Component title) {
         this.title = Objects.requireNonNull(title, "title");
         return this;
     }
@@ -545,7 +545,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this;
     }
 
-    public boolean isForceFancyMenuUiScaleEnabled() {
+    public boolean isForceFancyMenuUiScale() {
         return this.forceFancyMenuUiScaleEnabled;
     }
 
@@ -578,7 +578,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.forceFocusEnabled;
     }
 
-    public PiPWindow setForceFocusEnabled(boolean forceFocusEnabled) {
+    public PiPWindow setForceFocus(boolean forceFocusEnabled) {
         if (this.forceFocusEnabled == forceFocusEnabled) {
             return this;
         }
@@ -648,7 +648,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this;
     }
 
-    public void addCloseCallback(@Nonnull Runnable closeCallback) {
+    public void addCloseCallback(@NotNull Runnable closeCallback) {
         Objects.requireNonNull(closeCallback, "closeCallback");
         if (this.closeCallback == null) {
             this.closeCallback = closeCallback;
@@ -881,7 +881,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return Collections.unmodifiableList(this.childWindows);
     }
 
-    void registerChildWindow(@Nonnull PiPWindow child) {
+    void registerChildWindow(@NotNull PiPWindow child) {
         if (this.childWindows.contains(child)) {
             return;
         }
@@ -890,7 +890,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         child.parentWindow = this;
     }
 
-    void unregisterChildWindow(@Nonnull PiPWindow child) {
+    void unregisterChildWindow(@NotNull PiPWindow child) {
         if (this.childWindows.remove(child)) {
             child.parentWindow = null;
             this.inputLockedByChildren = !this.childWindows.isEmpty();
@@ -1086,11 +1086,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.children;
     }
 
-    public void addChild(@Nonnull GuiEventListener child) {
+    public void addChild(@NotNull GuiEventListener child) {
         this.children.add(Objects.requireNonNull(child, "child"));
     }
 
-    public void removeChild(@Nonnull GuiEventListener child) {
+    public void removeChild(@NotNull GuiEventListener child) {
         this.children.remove(child);
     }
 
@@ -1204,7 +1204,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         this.setDragging(true);
     }
 
-    private void beginResize(@Nonnull PiPWindowResizeHandle handle, double mouseX, double mouseY) {
+    private void beginResize(@NotNull PiPWindowResizeHandle handle, double mouseX, double mouseY) {
         this.activeResizeHandle = handle;
         this.resizeStartMouseX = mouseX;
         this.resizeStartMouseY = mouseY;

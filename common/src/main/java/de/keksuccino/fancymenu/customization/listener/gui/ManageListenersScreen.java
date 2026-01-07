@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -138,7 +138,7 @@ public class ManageListenersScreen extends CellScreen {
         this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.remove"), button -> {
             ListenerInstance sel = this.selectedInstance;
             if (sel != null) {
-                MessageDialogs.openWithCallback(Component.translatable("fancymenu.listeners.manage.delete_warning"), MessageDialogStyle.WARNING, call -> {
+                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.listeners.manage.delete_warning"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         this.tempInstances.remove(sel);
                         this.selectedInstance = null;
@@ -235,7 +235,7 @@ public class ManageListenersScreen extends CellScreen {
 
     @Override
     protected void onCancel() {
-        MessageDialogs.openWithCallback(Component.translatable("fancymenu.listeners.manage.cancel_warning"), MessageDialogStyle.WARNING, call -> {
+        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.listeners.manage.cancel_warning"), MessageDialogStyle.WARNING, call -> {
             if (call) {
                 this.callback.accept(false);
             }

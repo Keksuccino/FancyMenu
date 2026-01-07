@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
@@ -896,45 +897,40 @@ public interface ContextMenuBuilder<O> {
                     if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
                         defaultText = targetFieldGetter.get(this.self());
                     }
-                    Screen inputScreen;
                     if (!multiLineInput && !allowPlaceholders) {
-                        TextInputScreen s = TextInputScreen.build(label, inputCharacterFilter, call -> {
+                        menu.closeMenuChain();
+                        TextInputScreen s = new TextInputScreen(inputCharacterFilter, call -> {
                             if (call != null) {
                                 this.saveSnapshot();
                                 this.applyStackAppliers(entry, call);
                             }
-                            menu.closeMenu();
-                            this.openContextMenuScreen(this.getContextMenuCallbackScreen());
-                        });
+                        }).setText(defaultText);
                         if (textValidator != null) {
                             s.setTextValidator(consumes -> {
                                 if (textValidatorUserFeedback != null) consumes.setTextValidatorUserFeedback(textValidatorUserFeedback.get(consumes.getText()));
                                 return textValidator.get(consumes.getText());
                             });
                         }
-                        s.setText(defaultText);
-                        inputScreen = s;
+                        Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
                     } else {
                         TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
                             if (call != null) {
                                 this.saveSnapshot();
                                 this.applyStackAppliers(entry, call);
                             }
-                            menu.closeMenu();
+                            menu.closeMenuChain();
                             this.openContextMenuScreen(this.getContextMenuCallbackScreen());
-                        });
+                        }).setText(defaultText)
+                                .setMultilineMode(multiLineInput)
+                                .setPlaceholdersAllowed(allowPlaceholders);
                         if (textValidator != null) {
                             s.setTextValidator(consumes -> {
                                 if (textValidatorUserFeedback != null) consumes.setTextValidatorUserFeedback(textValidatorUserFeedback.get(consumes.getText()));
                                 return textValidator.get(consumes.getText());
                             });
                         }
-                        s.setText(defaultText);
-                        s.setMultilineMode(multiLineInput);
-                        s.setPlaceholdersAllowed(allowPlaceholders);
-                        inputScreen = s;
+                        this.openContextMenuScreen(s);
                     }
-                    this.openContextMenuScreen(inputScreen);
                 }).setStackable(true)
                 .setStackApplier((stackEntry, value) -> {
                     if (!(value instanceof String call)) {

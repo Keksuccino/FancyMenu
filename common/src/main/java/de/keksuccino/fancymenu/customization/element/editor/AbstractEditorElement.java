@@ -22,7 +22,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -249,7 +249,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 anchorPointMenu.addClickableEntry("anchor_point_element", ElementAnchorPoints.ELEMENT.getDisplayName(),
                                 (menu, entry) -> {
                                     if (entry.getStackMeta().isFirstInStack()) {
-                                        TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.elements.anchor_points.element.setidentifier"), null, call -> {
+                                        TextInputScreen s = new TextInputScreen(null, call -> {
                                             if (call != null) {
                                                 AbstractEditorElement<?, ?> editorElement = this.editor.getElementByInstanceIdentifier(call);
                                                 if (editorElement != null) {
@@ -261,21 +261,20 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                                             e.setAnchorPoint(ElementAnchorPoints.ELEMENT, true);
                                                         }
                                                     }
-                                                    this.openContextMenuScreen(this.editor);
                                                 } else {
                                                     this.openContextMenuScreen(NotificationScreen.error(b -> {
                                                         this.openContextMenuScreen(this.editor);
                                                     }, LocalizationUtils.splitLocalizedLines("fancymenu.elements.anchor_points.element.setidentifier.identifiernotfound")));
                                                 }
-                                            } else {
-                                                this.openContextMenuScreen(this.editor);
                                             }
                                         });
                                         if (!entry.getStackMeta().isPartOfStack()) {
                                             s.setText(this.element.getAnchorPointElementIdentifier());
                                         }
-                                        this.openContextMenuScreen(s);
-                                        menu.closeMenu();
+                                        Dialogs.openGeneric(s,
+                                                Component.translatable("fancymenu.elements.anchor_points.element.setidentifier"),
+                                                ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                                        menu.closeMenuChain();
                                     }
                                 })
                         .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.anchor_points.element.desc")))
@@ -431,7 +430,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             if (allEqual) {
                                 this.openContextMenuScreen(s);
                             } else {
-                                MessageDialogs.openWithCallback(Component.translatable("fancymenu.elements.multiselect.loading_requirements.warning.override"), MessageDialogStyle.WARNING, call -> {
+                                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.elements.multiselect.loading_requirements.warning.override"), MessageDialogStyle.WARNING, call -> {
                                     if (call) {
                                         this.openContextMenuScreen(s);
                                     }

@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementCon
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -118,7 +118,7 @@ public class ManageRequirementsScreen extends Screen {
         this.removeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             if (this.isInstanceSelected()) {
                 RequirementInstance i = this.getSelectedInstance();
-                MessageDialogs.openWithCallback(Component.translatable("fancymenu.requirements.screens.remove_requirement.confirm"), MessageDialogStyle.WARNING, call -> {
+                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.screens.remove_requirement.confirm"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         this.container.removeInstance(i);
                         this.updateRequirementsScrollArea();
@@ -126,7 +126,7 @@ public class ManageRequirementsScreen extends Screen {
                 });
             } else if (this.isGroupSelected()) {
                 RequirementGroup g = this.getSelectedGroup();
-                MessageDialogs.openWithCallback(Component.translatable("fancymenu.requirements.screens.remove_group.confirm"), MessageDialogStyle.WARNING, call -> {
+                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.screens.remove_group.confirm"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         this.container.removeGroup(g);
                         this.updateRequirementsScrollArea();

@@ -28,8 +28,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuild
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -413,7 +414,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             callback.accept(true);
             return;
         }
-        MessageDialogs.openWithCallback(Component.translatable("fancymenu.editor.warning.unsaved"), MessageDialogStyle.WARNING, callback);
+        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.editor.warning.unsaved"), MessageDialogStyle.WARNING, callback);
 //        this.openContextMenuScreen(ConfirmationScreen.warning(callback, LocalizationUtils.splitLocalizedLines("fancymenu.editor.warning.unsaved")));
     }
 
@@ -454,23 +455,24 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             menu.addSubMenuEntry("universal_layout_settings", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options"), universalLayoutMenu);
 
             universalLayoutMenu.addClickableEntry("add_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist"), (menu1, entry) -> {
-                TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, call -> {
+                TextInputScreen s = new TextInputScreen(null, call -> {
                     if (call != null) {
                         editor.history.saveSnapshot();
                         if (!editor.layout.universalLayoutMenuBlacklist.contains(call)) {
                             editor.layout.universalLayoutMenuBlacklist.add(call);
                         }
                     }
-                    this.openContextMenuScreen(editor);
                 });
-                this.openContextMenuScreen(s);
+                Dialogs.openGeneric(s,
+                        Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"),
+                        ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
             }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")));
 
             universalLayoutMenu.addClickableEntry("remove_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), (menu1, entry) -> {
                 this.openContextMenuScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuBlacklist, s1 -> {
                     if (s1 != null) {
                         this.openContextMenuScreen(editor);
-                        MessageDialogs.openWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm"), MessageDialogStyle.WARNING, call2 -> {
+                        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm"), MessageDialogStyle.WARNING, call2 -> {
                             if (call2) {
                                 editor.history.saveSnapshot();
                                 editor.layout.universalLayoutMenuBlacklist.remove(s1);
@@ -483,7 +485,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             });
 
             universalLayoutMenu.addClickableEntry("clear_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), (menu1, entry) -> {
-                MessageDialogs.openWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm"), MessageDialogStyle.WARNING, call2 -> {
+                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm"), MessageDialogStyle.WARNING, call2 -> {
                     if (call2) {
                         editor.history.saveSnapshot();
                         editor.layout.universalLayoutMenuBlacklist.clear();
@@ -510,7 +512,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 this.openContextMenuScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuWhitelist, s1 -> {
                     if (s1 != null) {
                         this.openContextMenuScreen(editor);
-                        MessageDialogs.openWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm"), MessageDialogStyle.WARNING, call2 -> {
+                        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm"), MessageDialogStyle.WARNING, call2 -> {
                             if (call2) {
                                 editor.history.saveSnapshot();
                                 editor.layout.universalLayoutMenuWhitelist.remove(s1);
@@ -523,7 +525,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             });
 
             universalLayoutMenu.addClickableEntry("clear_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), (menu1, entry) -> {
-                MessageDialogs.openWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm"), MessageDialogStyle.WARNING, call2 -> {
+                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm"), MessageDialogStyle.WARNING, call2 -> {
                     if (call2) {
                         editor.history.saveSnapshot();
                         editor.layout.universalLayoutMenuWhitelist.clear();

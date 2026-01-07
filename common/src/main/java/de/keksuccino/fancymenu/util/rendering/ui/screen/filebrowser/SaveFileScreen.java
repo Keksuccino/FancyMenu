@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -180,7 +180,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
             if (!f.isFile()) {
                 this.callback.accept(new File(f.getPath().replace("\\", "/")));
             } else {
-                MessageDialogs.openWithCallback(Component.translatable("fancymenu.ui.save_file.save.override_warning"), MessageDialogStyle.WARNING, call -> {
+                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.ui.save_file.save.override_warning"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         try {
                             this.callback.accept(new File(f.getPath().replace("\\", "/")));

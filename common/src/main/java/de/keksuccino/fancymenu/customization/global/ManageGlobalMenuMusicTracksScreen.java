@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.global;
 
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
@@ -67,7 +67,7 @@ public class ManageGlobalMenuMusicTracksScreen extends CellScreen {
         this.addRightSideButton(20, Component.translatable("fancymenu.global_customizations.menu_music_tracks.remove"), button -> {
             String selected = this.getSelectedSource();
             if (selected == null) return;
-            MessageDialogs.openWithCallback(Component.translatable("fancymenu.global_customizations.menu_music_tracks.remove.confirm"), MessageDialogStyle.WARNING, result -> {
+            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.global_customizations.menu_music_tracks.remove.confirm"), MessageDialogStyle.WARNING, result -> {
                 if (result) {
                     this.cachedTracks.remove(selected);
                     this.rebuild();
@@ -76,7 +76,7 @@ public class ManageGlobalMenuMusicTracksScreen extends CellScreen {
         }).setIsActiveSupplier(consumes -> (this.getSelectedSource() != null));
 
         this.addRightSideButton(20, Component.translatable("fancymenu.global_customizations.menu_music_tracks.clear"), button -> {
-            MessageDialogs.openWithCallback(Component.translatable("fancymenu.global_customizations.menu_music_tracks.clear.confirm"), MessageDialogStyle.WARNING, result -> {
+            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.global_customizations.menu_music_tracks.clear.confirm"), MessageDialogStyle.WARNING, result -> {
                 if (result) {
                     this.cachedTracks.clear();
                     this.rebuild();
