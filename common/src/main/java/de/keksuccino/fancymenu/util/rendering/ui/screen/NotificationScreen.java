@@ -18,6 +18,15 @@ import java.util.function.Consumer;
 @SuppressWarnings("unused")
 public class NotificationScreen extends Screen {
 
+    //TODO Make this a PipableScreen !!!!!!!!!!!!
+    //TODO Make this a PipableScreen !!!!!!!!!!!!
+    //TODO Make this a PipableScreen !!!!!!!!!!!!
+    //TODO Make this a PipableScreen !!!!!!!!!!!!
+    //TODO Make this a PipableScreen !!!!!!!!!!!!
+    //TODO Make this a PipableScreen !!!!!!!!!!!!
+    //TODO Make this a PipableScreen !!!!!!!!!!!!
+    //TODO Make this a PipableScreen !!!!!!!!!!!!
+
     protected List<Component> textLines;
     protected DrawableColor headlineColor;
     protected boolean headlineBold = false;
