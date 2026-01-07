@@ -22,7 +22,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.resource.Resource;
@@ -803,9 +803,9 @@ public class Property<T> {
                                 contextMenu.closeMenuChain();
                                 PiPWindow window = new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"))
                                         .setScreen(picker)
-                                        .setForceFancyMenuUiScale(true);
-                                window.setMinSize(375, 300);
-                                window.setSize(375, 300);
+                                        .setForceFancyMenuUiScale(true)
+                                        .setMinSize(375, 300)
+                                        .setSize(375, 300);
                                 PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
                             })
                     .setStackable(true)

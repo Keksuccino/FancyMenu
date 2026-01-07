@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.customgui;
 
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.network.chat.Component;

@@ -6,8 +6,9 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
@@ -77,16 +78,17 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
 
         // Create buttons with positions in constructors
         ExtendedButton addVariableButton = new ExtendedButton(addButtonX, addButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable"), (button) -> {
-            TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name"), CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
+            TextInputScreen s = new TextInputScreen(CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
                 if (call != null) {
                     if (!VariableHandler.variableExists(call)) {
                         VariableHandler.setVariable(call, "");
                         updateVariablesList();
                     }
                 }
-                Minecraft.getInstance().setScreen(this);
             });
-            Minecraft.getInstance().setScreen(s);
+            Dialogs.openGeneric(s,
+                    Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name"),
+                    ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
         });
         this.addRenderableWidget(addVariableButton);
         UIBase.applyDefaultWidgetSkinTo(addVariableButton);
@@ -94,14 +96,15 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
         ExtendedButton setValueButton = new ExtendedButton(setValueButtonX, setValueButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
-                TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), null, (call) -> {
+                TextInputScreen s = new TextInputScreen(null, (call) -> {
                     if (call != null) {
                         e.variable.setValue(call);
                     }
-                    Minecraft.getInstance().setScreen(this);
                 });
+                Dialogs.openGeneric(s,
+                        Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"),
+                        ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
                 s.setText(e.variable.getValue());
-                Minecraft.getInstance().setScreen(s);
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addRenderableWidget(setValueButton);

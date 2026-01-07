@@ -28,9 +28,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuild
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -466,6 +465,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 Dialogs.openGeneric(s,
                         Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"),
                         ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                menu1.closeMenuChain();
             }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")));
 
             universalLayoutMenu.addClickableEntry("remove_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), (menu1, entry) -> {
@@ -496,16 +496,18 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             universalLayoutMenu.addSeparatorEntry("separator_after_clear_blacklist");
 
             universalLayoutMenu.addClickableEntry("add_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist"), (menu1, entry) -> {
-                TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, call -> {
+                TextInputScreen s = new TextInputScreen(null, call -> {
                     if (call != null) {
                         editor.history.saveSnapshot();
                         if (!editor.layout.universalLayoutMenuWhitelist.contains(call)) {
                             editor.layout.universalLayoutMenuWhitelist.add(call);
                         }
                     }
-                    this.openContextMenuScreen(editor);
                 });
-                this.openContextMenuScreen(s);
+                Dialogs.openGeneric(s,
+                        Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"),
+                        ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                menu1.closeMenuChain();
             }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")));
 
             universalLayoutMenu.addClickableEntry("remove_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), (menu1, entry) -> {
@@ -574,16 +576,18 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         menu.addSeparatorEntry("separator_after_scroll_list_customizations");
 
         menu.addClickableEntry("layout_index", Component.translatable("fancymenu.editor.layout.index"), (menu1, entry) -> {
-                    TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.editor.layout.index"), CharacterFilter.buildIntegerFilter(), s1 -> {
+                    TextInputScreen s = new TextInputScreen(CharacterFilter.buildIntegerFilter(), s1 -> {
                         if ((s1 != null) && MathUtils.isInteger(s1)) {
                             editor.history.saveSnapshot();
                             editor.layout.layoutIndex = Integer.parseInt(s1);
                         }
-                        this.openContextMenuScreen(editor);
                     });
                     s.setTextValidator(consumes -> TextValidators.INTEGER_TEXT_VALIDATOR.get(consumes.getText()));
+                    Dialogs.openGeneric(s,
+                            Component.translatable("fancymenu.editor.layout.index"),
+                            ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
                     s.setText("" + editor.layout.layoutIndex);
-                    this.openContextMenuScreen(s);
+                    menu1.closeMenuChain();
                 }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.layout.index.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("stack"));
 
@@ -596,7 +600,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 .setIcon(ContextMenu.IconFactory.getIcon("random"));
 
         menu.addClickableEntry("random_mode_group", Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), (menu1, entry) -> {
-                    this.openContextMenuScreen(TextInputScreen.build(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerFilter(), call -> {
+                    TextInputScreen s = new TextInputScreen(CharacterFilter.buildIntegerFilter(), call -> {
                         if (call != null) {
                             if (!MathUtils.isInteger(call)) {
                                 call = "1";
@@ -604,8 +608,12 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.history.saveSnapshot();
                             editor.layout.randomGroup = call;
                         }
-                        this.openContextMenuScreen(editor);
-                    }).setText(editor.layout.randomGroup));
+                    });
+                    Dialogs.openGeneric(s,
+                            Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"),
+                            ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                    s.setText(editor.layout.randomGroup);
+                    menu1.closeMenuChain();
                 }).addIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("group"));

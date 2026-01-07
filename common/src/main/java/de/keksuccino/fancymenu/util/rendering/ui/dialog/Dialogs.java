@@ -1,6 +1,8 @@
-package de.keksuccino.fancymenu.util.rendering.ui.dialog.message;
+package de.keksuccino.fancymenu.util.rendering.ui.dialog;
 
 import de.keksuccino.fancymenu.util.Pair;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogBody;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
@@ -14,14 +16,15 @@ import java.util.function.Consumer;
 public class Dialogs {
 
     public static <D extends Screen & PipableScreen> Pair<D, PiPWindow> openGeneric(@NotNull D dialog, @Nullable Component title, @Nullable ResourceLocation icon, int width, int height) {
-        PiPWindow window = PiPWindowHandler.INSTANCE.openWindowCentered(new PiPWindow(dialog), null)
-                .setTitle((title != null) ? title : Component.empty())
+        PiPWindow window = PiPWindowHandler.INSTANCE.openWindowCentered(new PiPWindow((title != null) ? title : Component.empty()), null)
+                .setScreen(dialog)
                 .setIcon(icon)
                 .setSize(width, height)
                 .setMinSize(width, height)
                 .setAlwaysOnTop(true)
                 .setForceFocus(true)
-                .setBlockMinecraftScreenInputs(true);
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFancyMenuUiScale(true);
         return Pair.of(dialog, window);
     }
 

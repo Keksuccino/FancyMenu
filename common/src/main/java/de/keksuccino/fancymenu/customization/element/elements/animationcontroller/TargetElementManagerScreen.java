@@ -5,8 +5,9 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import net.minecraft.client.Minecraft;
@@ -99,7 +100,7 @@ public class TargetElementManagerScreen extends CellScreen {
         this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.edit"), button -> {
             AnimationControllerElement.TargetElement target = this.getSelectedTarget();
             if (target == null) return;
-            TextInputScreen inputScreen = TextInputScreen.build(Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.input"), CharacterFilter.buildIntegerFilter(), result -> {
+            TextInputScreen inputScreen = new TextInputScreen(CharacterFilter.buildIntegerFilter(), result -> {
                 if (result != null) {
                     String trimmed = result.trim();
                     int offsetMs = 0;
@@ -112,11 +113,12 @@ public class TargetElementManagerScreen extends CellScreen {
                     }
                     target.timingOffsetMs = offsetMs;
                 }
-                Minecraft.getInstance().setScreen(this);
                 this.rebuild();
             });
+            Dialogs.openGeneric(inputScreen,
+                    Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.input"),
+                    ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
             inputScreen.setText("" + target.timingOffsetMs);
-            Minecraft.getInstance().setScreen(inputScreen);
         }).setIsActiveSupplier(consumes -> (this.getSelectedTarget() != null));
         this.addRightSideDefaultSpacer();
 
@@ -129,7 +131,7 @@ public class TargetElementManagerScreen extends CellScreen {
         this.addRightSideDefaultSpacer();
 
         this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id"), button -> {
-            TextInputScreen inputScreen = TextInputScreen.build(Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id.input"), null, result -> {
+            TextInputScreen inputScreen = new TextInputScreen(null, result -> {
                 boolean removed = false;
                 if (result != null) {
                     String trimmed = result.trim();
@@ -137,12 +139,13 @@ public class TargetElementManagerScreen extends CellScreen {
                         removed = TargetElementManagerScreen.this.targets.removeIf(target -> target.targetElementId.equals(trimmed));
                     }
                 }
-                Minecraft.getInstance().setScreen(this);
                 if (removed) {
                     TargetElementManagerScreen.this.rebuild();
                 }
             });
-            Minecraft.getInstance().setScreen(inputScreen);
+            Dialogs.openGeneric(inputScreen,
+                    Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id.input"),
+                    ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
         });
         this.addRightSideDefaultSpacer();
     }

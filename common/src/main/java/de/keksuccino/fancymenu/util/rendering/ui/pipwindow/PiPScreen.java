@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
@@ -9,6 +10,7 @@ public abstract class PiPScreen extends Screen implements PipableScreen {
 
     @Nullable
     private PiPWindow window;
+    protected boolean allowCloseOnEsc = true;
 
     public PiPScreen(Component title) {
         super(title);
@@ -49,6 +51,25 @@ public abstract class PiPScreen extends Screen implements PipableScreen {
             }
         }
         return null;
+    }
+
+    public boolean isAllowCloseOnEsc() {
+        return allowCloseOnEsc;
+    }
+
+    public PiPScreen setAllowCloseOnEsc(boolean allowCloseOnEsc) {
+        this.allowCloseOnEsc = allowCloseOnEsc;
+        return this;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.allowCloseOnEsc && (keyCode == InputConstants.KEY_ESCAPE)) {
+            this.closeWindow();
+            this.onWindowClosedExternally();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

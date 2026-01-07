@@ -35,7 +35,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
@@ -1076,8 +1076,7 @@ public class CustomizationOverlayUI {
 
         menu.addClickableEntry("rename_layout", Component.translatable("fancymenu.layout.manage.rename"), (menu1, entry) -> {
             if (layout.layoutFile == null) return;
-            menu1.closeMenu();
-            Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.layout.manage.rename"), CharacterFilter.buildLowercaseAndUppercaseFileNameFilter(), s -> {
+            TextInputScreen inputScreen = new TextInputScreen(CharacterFilter.buildLowercaseAndUppercaseFileNameFilter(), s -> {
                 if ((s != null) && !s.isBlank()) {
                     String newName = s + ".txt";
                     String newPath = layout.layoutFile.getParent();
@@ -1091,24 +1090,18 @@ public class CustomizationOverlayUI {
                             LOGGER.error("[FANCYMENU] Failed to rename layout file!", ex);
                         }
                         LayoutHandler.reloadLayouts();
-                        Minecraft.getInstance().setScreen(screen);
-                        forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
                     } else {
-                        Minecraft.getInstance().setScreen(NotificationScreen.error(aBoolean -> {
-                            Minecraft.getInstance().setScreen(screen);
-                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
-                        }, LocalizationUtils.splitLocalizedLines("fancymenu.layout.manage.rename.error.file_already_exists")));
+                        Dialogs.openMessage(Component.literal(String.join("\n", LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.rename.error.file_already_exists"))), MessageDialogStyle.ERROR);
                     }
                 } else if (s != null) {
-                    Minecraft.getInstance().setScreen(NotificationScreen.error(aBoolean -> {
-                        Minecraft.getInstance().setScreen(screen);
-                        forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
-                    }, LocalizationUtils.splitLocalizedLines("fancymenu.layout.manage.rename.error.empty_name")));
-                } else {
-                    Minecraft.getInstance().setScreen(screen);
-                    forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
+                    Dialogs.openMessage(Component.literal(String.join("\n", LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.rename.error.empty_name"))), MessageDialogStyle.ERROR);
                 }
-            }).setText(layout.getLayoutName()));
+            });
+            Dialogs.openGeneric(inputScreen,
+                    Component.translatable("fancymenu.layout.manage.rename"),
+                    ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+            inputScreen.setText(layout.getLayoutName());
+            menu1.closeMenuChain();
         });
 
         menu.addClickableEntry("edit_in_system_text_editor", Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (menu1, entry) -> {

@@ -18,8 +18,8 @@ import java.util.function.Consumer;
 
 public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScreen {
 
-    public static final int PIP_WINDOW_WIDTH = 600;
-    public static final int PIP_WINDOW_HEIGHT = 600;
+    public static final int PIP_WINDOW_WIDTH = 663;
+    public static final int PIP_WINDOW_HEIGHT = 294;
 
     @NotNull
     protected Consumer<String> callback;
@@ -28,6 +28,9 @@ public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScre
     protected Tooltip textValidatorFeedbackTooltip = null;
     @Nullable
     protected CharacterFilter filter;
+
+    @Nullable
+    private String cachedValue;
 
     public TextInputScreen(@Nullable CharacterFilter filter, @NotNull Consumer<String> callback) {
         super(Component.empty());
@@ -41,8 +44,11 @@ public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScre
         String val = "";
         if (this.input != null) {
             val = this.input.getValue();
+        } else if (this.cachedValue != null) {
+            val = this.cachedValue;
+            this.cachedValue = null;
         }
-        this.input = this.addRenderableWidget(new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 100, (this.height / 2) - 10, 200, 20, Component.empty()));
+        this.input = this.addRenderableWidget(new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 100, (this.height / 2) - 30, 200, 20, Component.empty()));
         this.input.setMaxLength(10000);
         this.input.setCharacterFilter(this.filter);
         this.input.setValue(val);
@@ -85,7 +91,7 @@ public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScre
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if ((keyCode == InputConstants.KEY_ENTER) && this.isTextValid()) {
+        if ((keyCode == InputConstants.KEY_ENTER) && this.isTextValid() && (this.input != null) && this.input.isFocused()) {
             this.callback.accept(this.input.getValue());
             this.closeWindow();
             return true;
@@ -95,7 +101,11 @@ public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScre
 
     public TextInputScreen setText(@Nullable String text) {
         if (text == null) text = "";
-        this.input.setValue(text);
+        if (this.input != null) {
+            this.input.setValue(text);
+        } else {
+            this.cachedValue = text;
+        }
         return this;
     }
 

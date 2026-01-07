@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -10,6 +11,7 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
 
     @Nullable
     private PiPWindow window;
+    protected boolean allowCloseOnEsc = true;
 
     public PiPCellScreen(Component title) {
         super(title);
@@ -23,7 +25,6 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
         PiPWindow resolvedWindow = resolveWindow();
         if (resolvedWindow == null) {
             onScreenClosed();
-            Minecraft.getInstance().setScreen(null);
             return;
         }
         resolvedWindow.markClosingFromScreen();
@@ -51,6 +52,25 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
             }
         }
         return null;
+    }
+
+    public boolean isAllowCloseOnEsc() {
+        return allowCloseOnEsc;
+    }
+
+    public PiPCellScreen setAllowCloseOnEsc(boolean allowCloseOnEsc) {
+        this.allowCloseOnEsc = allowCloseOnEsc;
+        return this;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.allowCloseOnEsc && (keyCode == InputConstants.KEY_ESCAPE)) {
+            this.closeWindow();
+            this.onWindowClosedExternally();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

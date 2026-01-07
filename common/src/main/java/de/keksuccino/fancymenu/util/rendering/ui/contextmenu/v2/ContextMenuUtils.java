@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
@@ -193,7 +194,7 @@ public class ContextMenuUtils {
         ContextMenu subMenu = new ContextMenu();
 
         subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) -> {
-            menu.closeMenu();
+            menu.closeMenuChain();
             inputLogic.accept(setter);
         });
 
@@ -272,14 +273,12 @@ public class ContextMenuUtils {
             Screen current = Minecraft.getInstance().screen;
             Screen inputScreen;
             if (!multiLineInput && !allowPlaceholders) {
-                TextInputScreen s = TextInputScreen.build(label, inputCharacterFilter, call -> {
+                TextInputScreen s = new TextInputScreen(inputCharacterFilter, call -> {
                     if (call != null) {
                         valueSetter.accept(call);
                     }
                     if (onCloseEditor != null) {
                         onCloseEditor.accept(current, call);
-                    } else {
-                        Minecraft.getInstance().setScreen(current);
                     }
                 });
                 if (textValidator != null) {
@@ -288,8 +287,9 @@ public class ContextMenuUtils {
                         return textValidator.get(consumes.getText());
                     });
                 }
+                Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
                 s.setText(getter.get());
-                inputScreen = s;
+                inputScreen = null;
             } else {
                 TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
                     if (call != null) {
@@ -312,7 +312,9 @@ public class ContextMenuUtils {
                 s.setText(getter.get());
                 inputScreen = s;
             }
-            Minecraft.getInstance().setScreen(inputScreen);
+            if (inputScreen != null) {
+                Minecraft.getInstance().setScreen(inputScreen);
+            }
         });
     }
 
