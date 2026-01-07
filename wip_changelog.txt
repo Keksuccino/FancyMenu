@@ -68,6 +68,7 @@
 - Added "Is Active Cursor Type" requirement that checks if a specific standard cursor type (normal, pointing hand, writing cursor, etc.) is currently the active cursor (#1430)
 - Ported "Is Player Using Item" requirement from Spiffy (#1401)
 - Ported "Is Player In Structure" requirement from Spiffy (#1402)
+- The "Player Entity" element now has an option to disable the rotation of the nametag (#1454)
 - Most color inputs now allow for using a color picker instead of manually typing the color (plain text input still works like before, color pickers are just an alternative way to set the color)
 - Menu backgrounds got reworked to be more in line with the new "decoration overlays"
   - You can now enable multiple menu background types in the same layout
