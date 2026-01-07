@@ -18,8 +18,8 @@ import java.util.function.Consumer;
 
 public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScreen {
 
-    public static final int PIP_WINDOW_WIDTH = 663;
-    public static final int PIP_WINDOW_HEIGHT = 294;
+    public static final int PIP_WINDOW_WIDTH = 331;
+    public static final int PIP_WINDOW_HEIGHT = 133;
 
     @NotNull
     protected Consumer<String> callback;

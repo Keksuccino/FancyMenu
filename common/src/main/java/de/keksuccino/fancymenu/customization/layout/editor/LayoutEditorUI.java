@@ -671,7 +671,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                                 editor.layout.autoScalingWidth = 0;
                                 editor.layout.autoScalingHeight = 0;
                             }
-                            editor.init();
+                            ScreenCustomization.reInitCurrentScreen();
                         },
                         Component.translatable("fancymenu.editor.rightclick.scale"),
                         true, 0, consumes -> {

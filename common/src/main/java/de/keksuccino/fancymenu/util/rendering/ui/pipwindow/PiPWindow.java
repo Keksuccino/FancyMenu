@@ -27,7 +27,7 @@ import java.util.Objects;
 @SuppressWarnings("unused")
 public class PiPWindow extends AbstractContainerEventHandler implements Renderable {
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     public static final int DEFAULT_TITLE_BAR_HEIGHT = 18;
     public static final int DEFAULT_BORDER_THICKNESS = 1;
     public static final int DEFAULT_BUTTON_SIZE = 12;
@@ -331,20 +331,30 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (!Double.isFinite(renderScale) || renderScale <= 0.0) {
             renderScale = 1.0;
         }
-        lines.add("renderScale: " + String.format(Locale.ROOT, "%.3f", renderScale));
-        lines.add("size: raw " + this.width + "x" + this.height + " | scaled " + getWidth() + "x" + getHeight());
-        int rawMinWidth = getRawMinimumWidth();
-        int rawMinHeight = getRawMinimumHeight();
-        lines.add("min: raw " + rawMinWidth + "x" + rawMinHeight + " | scaled " + getMinimumWidth() + "x" + getMinimumHeight());
+        lines.add("render_scale: " + String.format(Locale.ROOT, "%.3f", renderScale));
+        double guiScale = 1.0;
+        if (this.sizeScaledToGuiScale) {
+            guiScale = getMainGuiScale();
+            if (!Double.isFinite(guiScale) || guiScale <= 0.0) {
+                guiScale = 1.0;
+            }
+        }
+        double sizeDivisor = renderScale * guiScale;
+        if (!Double.isFinite(sizeDivisor) || sizeDivisor <= 0.0) {
+            sizeDivisor = 1.0;
+        }
+        int baseWidth = Math.max(1, (int) Math.floor(this.width / sizeDivisor));
+        int baseHeight = Math.max(1, (int) Math.floor(this.height / sizeDivisor));
+        lines.add("size: base " + baseWidth + "x" + baseHeight + " | scaled " + getWidth() + "x" + getHeight());
+        int rawMinWidth = getBaseMinimumWidth();
+        int rawMinHeight = getBaseMinimumHeight();
+        lines.add("min_size: base " + rawMinWidth + "x" + rawMinHeight + " | scaled " + getMinimumWidth() + "x" + getMinimumHeight());
         int maxWidth = getMaximumWidth();
         int maxHeight = getMaximumHeight();
         if (maxWidth > 0 && maxHeight > 0) {
             int rawMaxWidth = getRawSizeForScaled(maxWidth);
             int rawMaxHeight = getRawSizeForScaled(maxHeight);
-            lines.add("max: raw " + rawMaxWidth + "x" + rawMaxHeight + " | scaled " + maxWidth + "x" + maxHeight);
-        }
-        if (lines.isEmpty()) {
-            return;
+            lines.add("max_size: raw " + rawMaxWidth + "x" + rawMaxHeight + " | scaled " + maxWidth + "x" + maxHeight);
         }
         int padding = 2;
         int maxTextWidth = 0;
