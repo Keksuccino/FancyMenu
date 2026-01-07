@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -27,7 +28,6 @@ import java.util.Objects;
 @SuppressWarnings("unused")
 public class PiPWindow extends AbstractContainerEventHandler implements Renderable {
 
-    private static final boolean DEBUG = false;
     public static final int DEFAULT_TITLE_BAR_HEIGHT = 18;
     public static final int DEFAULT_BORDER_THICKNESS = 1;
     public static final int DEFAULT_BUTTON_SIZE = 12;
@@ -164,7 +164,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         renderWindowBackground(graphics);
         renderBodyScreen(graphics, mouseX, mouseY, partial);
         renderWindowForeground(graphics, mouseX, mouseY);
-        if (DEBUG) {
+        if (this.isDebug()) {
             renderDebugOverlay(graphics);
         }
         updateResizeCursor(mouseX, mouseY);
@@ -1598,4 +1598,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             this.y = maxY;
         }
     }
+
+    public boolean isDebug() {
+        return FancyMenu.getOptions().devShowPipWindowDebug.getValue();
+    }
+
 }

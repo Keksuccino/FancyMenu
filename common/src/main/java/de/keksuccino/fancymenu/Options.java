@@ -79,6 +79,8 @@ public class Options extends AbstractOptions {
     public final Option<Long> placeholderCachingDurationMs = new Option<>(config, "placeholder_caching_duration_ms", 30L, "advanced");
     public final Option<Long> requirementCachingDurationMs = new Option<>(config, "requirement_caching_duration_ms", 0L, "advanced");
 
+    public final Option<Boolean> devShowPipWindowDebug = new Option<>(config, "dev_pip_window_debug", false, "dev");
+
     public Options() {
         this.config.syncConfig();
         this.config.clearUnusedValues();
