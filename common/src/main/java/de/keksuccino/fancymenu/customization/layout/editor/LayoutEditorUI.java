@@ -30,7 +30,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -470,13 +469,13 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             universalLayoutMenu.addClickableEntry("remove_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), (menu1, entry) -> {
                 this.openContextMenuScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuBlacklist, s1 -> {
                     if (s1 != null) {
-                        this.openContextMenuScreen(ConfirmationScreen.ofStrings((call2) -> {
+                        this.openContextMenuScreen(editor);
+                        MessageDialogs.openWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm"), MessageDialogStyle.WARNING, call2 -> {
                             if (call2) {
                                 editor.history.saveSnapshot();
                                 editor.layout.universalLayoutMenuBlacklist.remove(s1);
                             }
-                            this.openContextMenuScreen(editor);
-                        }, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm")));
+                        });
                     } else {
                         this.openContextMenuScreen(editor);
                     }
@@ -484,13 +483,12 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             });
 
             universalLayoutMenu.addClickableEntry("clear_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), (menu1, entry) -> {
-                this.openContextMenuScreen(ConfirmationScreen.ofStrings((call2) -> {
+                MessageDialogs.openWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm"), MessageDialogStyle.WARNING, call2 -> {
                     if (call2) {
                         editor.history.saveSnapshot();
                         editor.layout.universalLayoutMenuBlacklist.clear();
                     }
-                    this.openContextMenuScreen(editor);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm")));
+                });
             });
 
             universalLayoutMenu.addSeparatorEntry("separator_after_clear_blacklist");
@@ -511,13 +509,13 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             universalLayoutMenu.addClickableEntry("remove_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), (menu1, entry) -> {
                 this.openContextMenuScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuWhitelist, s1 -> {
                     if (s1 != null) {
-                        this.openContextMenuScreen(ConfirmationScreen.ofStrings((call2) -> {
+                        this.openContextMenuScreen(editor);
+                        MessageDialogs.openWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm"), MessageDialogStyle.WARNING, call2 -> {
                             if (call2) {
                                 editor.history.saveSnapshot();
                                 editor.layout.universalLayoutMenuWhitelist.remove(s1);
                             }
-                            this.openContextMenuScreen(editor);
-                        }, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm")));
+                        });
                     } else {
                         this.openContextMenuScreen(editor);
                     }
@@ -525,13 +523,12 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             });
 
             universalLayoutMenu.addClickableEntry("clear_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), (menu1, entry) -> {
-                this.openContextMenuScreen(ConfirmationScreen.ofStrings((call2) -> {
+                MessageDialogs.openWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm"), MessageDialogStyle.WARNING, call2 -> {
                     if (call2) {
                         editor.history.saveSnapshot();
                         editor.layout.universalLayoutMenuWhitelist.clear();
                     }
-                    this.openContextMenuScreen(editor);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm")));
+                });
             });
 
         }

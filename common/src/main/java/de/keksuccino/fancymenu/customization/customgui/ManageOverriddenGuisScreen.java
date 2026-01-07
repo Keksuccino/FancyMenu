@@ -1,11 +1,10 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
@@ -44,10 +43,9 @@ public class ManageOverriddenGuisScreen extends CellScreen {
                 this.addLabelCell(Component.translatable("fancymenu.custom_guis.manage_overridden.screen", Component.literal(overriddenScreen).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
                 this.addLabelCell(Component.translatable("fancymenu.custom_guis.manage_overridden.overridden_with", Component.literal(overriddenWith).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
                 this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.custom_guis.manage_overridden.remove_override").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), var1 -> {
-                    Minecraft.getInstance().setScreen(ConfirmationScreen.warning(remove -> {
+                    MessageDialogs.openWithCallback(Component.translatable("fancymenu.custom_guis.manage_overridden.remove_override.confirm"), MessageDialogStyle.WARNING, remove -> {
                         if (remove) this.removedOverrides.add(overriddenScreen);
-                        Minecraft.getInstance().setScreen(this);
-                    }, LocalizationUtils.splitLocalizedLines("fancymenu.custom_guis.manage_overridden.remove_override.confirm")));
+                    });
                 }), true);
 
             }

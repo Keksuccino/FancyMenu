@@ -34,6 +34,8 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
@@ -44,7 +46,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -340,7 +341,7 @@ public class CustomizationOverlayUI {
         customGuiMenu.addClickableEntry("override_current", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.override_current"), (menu, entry) -> {
                     Screen current = Minecraft.getInstance().screen;
                     if (!(current instanceof CustomGuiBaseScreen)) {
-                        Minecraft.getInstance().setScreen(ConfirmationScreen.warning(override -> {
+                        MessageDialogs.openWithCallback(Component.translatable("fancymenu.custom_guis.override.confirm"), MessageDialogStyle.WARNING, override -> {
                             if (override) {
                                 Minecraft.getInstance().setScreen(new StringListChooserScreen(Component.translatable("fancymenu.custom_guis.override.choose_custom"), CustomGuiHandler.getGuiIdentifiers(), s -> {
                                     CustomGuiBaseScreen customInstance = null;
@@ -351,10 +352,8 @@ public class CustomizationOverlayUI {
                                     }
                                     Minecraft.getInstance().setScreen((customInstance != null) ? customInstance : current);
                                 }));
-                            } else {
-                                Minecraft.getInstance().setScreen(current);
                             }
-                        }, LocalizationUtils.splitLocalizedLines("fancymenu.custom_guis.override.confirm")));
+                        }).setDelay(2000);
                     }
                 }).addIsActiveSupplier((menu, entry) -> FancyMenu.getOptions().advancedCustomizationMode.getValue() && !(Minecraft.getInstance().screen instanceof CustomGuiBaseScreen))
                 .setTooltipSupplier((menu, entry) -> {
@@ -451,8 +450,7 @@ public class CustomizationOverlayUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("reload"));
 
         customizationMenu.addClickableEntry("disable_customization_for_all", Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all"), (menu, entry) -> {
-            Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
-                Minecraft.getInstance().setScreen(screen);
+            MessageDialogs.openWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.confirm"), MessageDialogStyle.WARNING, call -> {
                 if (call) {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
@@ -460,7 +458,7 @@ public class CustomizationOverlayUI {
                         ScreenCustomization.reInitCurrentScreen();
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
-            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.confirm")));
+            }).setDelay(4000);
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.tooltip")))
                 .setIcon(ContextMenu.IconFactory.getIcon("warning"));
 
@@ -468,15 +466,14 @@ public class CustomizationOverlayUI {
 
         customizationMenu.addClickableEntry("hide_menu_bar", Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay"), (menu, entry) -> {
             menuBar.closeAllContextMenus();
-            Minecraft.getInstance().setScreen(ConfirmationScreen.critical((call) -> {
-                Minecraft.getInstance().setScreen(screen);
+            MessageDialogs.openWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay.confirm"), MessageDialogStyle.ERROR, call -> {
                 if (call) {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
                         ScreenCustomization.reInitCurrentScreen();
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
-            }, LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.hide_overlay.confirm")).setDelay(4000));
+            }).setDelay(4000);
         }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay.shortcut"))
                 .setIcon(ContextMenu.IconFactory.getIcon("close"));
 
@@ -1069,13 +1066,12 @@ public class CustomizationOverlayUI {
 
         menu.addClickableEntry("delete_layout", Component.translatable("fancymenu.layout.manage.delete"), (menu1, entry) -> {
             menu1.closeMenu();
-            Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
+            MessageDialogs.openWithCallback(Component.translatable("fancymenu.layout.manage.delete.confirm"), MessageDialogStyle.WARNING, call -> {
                 if (call) {
                     layout.delete(false);
                 }
-                Minecraft.getInstance().setScreen(screen);
                 forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
-            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.delete.confirm")));
+            });
         }).setIcon(ContextMenu.IconFactory.getIcon("delete"));
 
         menu.addClickableEntry("rename_layout", Component.translatable("fancymenu.layout.manage.rename"), (menu1, entry) -> {

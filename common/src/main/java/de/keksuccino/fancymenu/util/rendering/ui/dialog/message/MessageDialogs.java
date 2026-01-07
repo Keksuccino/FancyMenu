@@ -9,15 +9,15 @@ import java.util.function.Consumer;
 
 public class MessageDialogs {
 
-    public static void open(@NotNull Component message, @NotNull MessageDialogStyle style) {
-        openInternal(message, style, null);
+    public static MessageDialogBody open(@NotNull Component message, @NotNull MessageDialogStyle style) {
+        return openInternal(message, style, null);
     }
 
-    public static void openWithCallback(@NotNull Component message, @NotNull MessageDialogStyle style, @NotNull Consumer<Boolean> callback) {
-        openInternal(message, style, callback);
+    public static MessageDialogBody openWithCallback(@NotNull Component message, @NotNull MessageDialogStyle style, @NotNull Consumer<Boolean> callback) {
+        return openInternal(message, style, callback);
     }
 
-    private static void openInternal(@NotNull Component message, @NotNull MessageDialogStyle style, @Nullable Consumer<Boolean> callback) {
+    private static MessageDialogBody openInternal(@NotNull Component message, @NotNull MessageDialogStyle style, @Nullable Consumer<Boolean> callback) {
 
         MessageDialogBody body = new MessageDialogBody(message, style, callback);
         PiPWindow window = new PiPWindow(style.getTitle())
@@ -30,6 +30,7 @@ public class MessageDialogs {
                 .setForceFocusEnabled(true);
 
         PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+        return body;
 
     }
 

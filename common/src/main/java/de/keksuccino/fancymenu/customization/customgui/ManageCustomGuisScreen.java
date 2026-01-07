@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
-import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -83,13 +83,11 @@ public class ManageCustomGuisScreen extends CellScreen {
         }).setIsActiveSupplier(consumes -> this.selected != null);
 
         this.addRightSideButton(20, Component.translatable("fancymenu.custom_guis.manage.remove"), var1 -> {
-            Screen s = Minecraft.getInstance().screen;
             CustomGui selected = this.selected;
             if (selected != null) {
-                Minecraft.getInstance().setScreen(ConfirmationScreen.warning(remove -> {
+                MessageDialogs.openWithCallback(Component.translatable("fancymenu.custom_guis.manage.remove.confirm"), MessageDialogStyle.WARNING, remove -> {
                     if (remove) this.guis.remove(selected);
-                    Minecraft.getInstance().setScreen(s);
-                }, LocalizationUtils.splitLocalizedLines("fancymenu.custom_guis.manage.remove.confirm")));
+                });
             }
         }).setIsActiveSupplier(consumes -> this.selected != null);
 

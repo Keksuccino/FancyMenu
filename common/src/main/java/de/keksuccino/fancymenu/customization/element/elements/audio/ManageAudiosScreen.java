@@ -2,10 +2,10 @@ package de.keksuccino.fancymenu.customization.element.elements.audio;
 
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import net.minecraft.client.Minecraft;
@@ -95,10 +95,9 @@ public class ManageAudiosScreen extends CellScreen {
             if (selected != null) {
                 String source = selected.getMemoryValue("source");
                 if (source != null) {
-                    Minecraft.getInstance().setScreen(ConfirmationScreen.warning(aBoolean -> {
+                    MessageDialogs.openWithCallback(Component.translatable("fancymenu.elements.audio.manage_audios.remove_audio.confirm"), MessageDialogStyle.WARNING, aBoolean -> {
                         if (aBoolean) this.removeAudio(source);
-                        Minecraft.getInstance().setScreen(this);
-                    }, LocalizationUtils.splitLocalizedLines("fancymenu.elements.audio.manage_audios.remove_audio.confirm")));
+                    });
                 }
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedCell() != null));

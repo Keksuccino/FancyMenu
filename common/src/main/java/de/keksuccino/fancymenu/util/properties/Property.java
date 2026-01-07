@@ -22,7 +22,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuild
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.resource.Resource;
@@ -1004,13 +1005,11 @@ public class Property<T> {
                 if (allEqual) {
                     builder.openContextMenuScreen(s);
                 } else {
-                    builder.openContextMenuScreen(ConfirmationScreen.ofStrings((call) -> {
+                    MessageDialogs.openWithCallback(Component.translatable("fancymenu.requirements.multiselect.warning.override"), MessageDialogStyle.WARNING, call -> {
                         if (call) {
                             builder.openContextMenuScreen(s);
-                        } else {
-                            builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                         }
-                    }, LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.multiselect.warning.override")));
+                    });
                 }
             }
         }).setStackable(true);
@@ -1154,13 +1153,11 @@ public class Property<T> {
                 if (allEqual) {
                     builder.openContextMenuScreen(s);
                 } else {
-                    builder.openContextMenuScreen(ConfirmationScreen.ofStrings((call) -> {
+                    MessageDialogs.openWithCallback(Component.translatable("fancymenu.actions.multiselect.warning.override"), MessageDialogStyle.WARNING, call -> {
                         if (call) {
                             builder.openContextMenuScreen(s);
-                        } else {
-                            builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                         }
-                    }, LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.multiselect.warning.override")));
+                    });
                 }
             }
         }).setStackable(true);

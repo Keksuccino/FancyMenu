@@ -4,7 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -115,28 +116,22 @@ public class ManageRequirementsScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.editButton);
 
         this.removeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
-            Screen s = null;
             if (this.isInstanceSelected()) {
                 RequirementInstance i = this.getSelectedInstance();
-                s = ConfirmationScreen.ofStrings((call) -> {
+                MessageDialogs.openWithCallback(Component.translatable("fancymenu.requirements.screens.remove_requirement.confirm"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         this.container.removeInstance(i);
                         this.updateRequirementsScrollArea();
                     }
-                    Minecraft.getInstance().setScreen(this);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.remove_requirement.confirm"));
+                });
             } else if (this.isGroupSelected()) {
                 RequirementGroup g = this.getSelectedGroup();
-                s = ConfirmationScreen.ofStrings((call) -> {
+                MessageDialogs.openWithCallback(Component.translatable("fancymenu.requirements.screens.remove_group.confirm"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         this.container.removeGroup(g);
                         this.updateRequirementsScrollArea();
                     }
-                    Minecraft.getInstance().setScreen(this);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.remove_group.confirm"));
-            }
-            if (s != null) {
-                Minecraft.getInstance().setScreen(s);
+                });
             }
         }) {
             @Override

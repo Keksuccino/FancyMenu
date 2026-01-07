@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.te
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.entity.FancyEntityRendererUtils;
 import de.keksuccino.fancymenu.util.rendering.entity.WrappedFancyPlayerWidget;
@@ -37,6 +38,7 @@ public class PlayerEntityElement extends AbstractElement {
     @NotNull
     public volatile String playerName = "Steve";
     public boolean showPlayerName = true;
+    public final Property<Boolean> nametagRotation = putProperty(Property.booleanProperty("nametag_rotation", true, "fancymenu.elements.player_entity.nametag_rotation"));
     @NotNull
     public PlayerPose pose = PlayerPose.STANDING;
     public boolean bodyMovement = false;
@@ -178,6 +180,7 @@ public class PlayerEntityElement extends AbstractElement {
 
             this.widget.setShowName(this.showPlayerName);
             this.widget.setName(PlaceholderParser.replacePlaceholders(this.playerName));
+            this.widget.setPinName(!this.nametagRotation.tryGetNonNull());
             this.widget.setBaby(this.isBaby);
             this.widget.setHeadFollowsMouse(this.headFollowsMouse);
             this.widget.setBodyFollowsMouse(this.bodyFollowsMouse);

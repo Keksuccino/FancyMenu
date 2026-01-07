@@ -21,7 +21,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -430,13 +431,11 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             if (allEqual) {
                                 this.openContextMenuScreen(s);
                             } else {
-                                this.openContextMenuScreen(ConfirmationScreen.ofStrings((call) -> {
+                                MessageDialogs.openWithCallback(Component.translatable("fancymenu.elements.multiselect.loading_requirements.warning.override"), MessageDialogStyle.WARNING, call -> {
                                     if (call) {
                                         this.openContextMenuScreen(s);
-                                    } else {
-                                        this.openContextMenuScreen(this.editor);
                                     }
-                                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.elements.multiselect.loading_requirements.warning.override")));
+                                });
                             }
                         }
                     })

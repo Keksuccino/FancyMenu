@@ -3,11 +3,11 @@ package de.keksuccino.fancymenu.customization.element.elements.animationcontroll
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -82,9 +82,7 @@ public class TargetElementManagerScreen extends CellScreen {
                             String elementId = selectedElement.element.getInstanceIdentifier();
                             // Check if already in targets
                             if (this.targets.stream().anyMatch(t -> t.targetElementId.equals(elementId))) {
-                                Minecraft.getInstance().setScreen(ConfirmationScreen.warning(result -> {
-                                    Minecraft.getInstance().setScreen(this);
-                                }, LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_targets.already_exists")));
+                                MessageDialogs.open(Component.translatable("fancymenu.elements.animation_controller.manage_targets.already_exists"), MessageDialogStyle.WARNING);
                             } else {
                                 this.targets.add(new AnimationControllerElement.TargetElement(elementId));
                                 Minecraft.getInstance().setScreen(this);

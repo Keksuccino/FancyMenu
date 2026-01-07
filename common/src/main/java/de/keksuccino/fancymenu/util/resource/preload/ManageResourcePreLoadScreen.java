@@ -3,11 +3,11 @@ package de.keksuccino.fancymenu.util.resource.preload;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
@@ -98,13 +98,11 @@ public class ManageResourcePreLoadScreen extends CellScreen {
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.remove"), extendedButton -> {
             String source = this.getSelectedSource();
             if (source != null) {
-                ConfirmationScreen s = ConfirmationScreen.warning(aBoolean -> {
+                MessageDialogs.openWithCallback(Component.translatable("fancymenu.resources.pre_loading.manage.remove.confirm"), MessageDialogStyle.WARNING, aBoolean -> {
                     if (aBoolean) {
                         this.cachedSerialized = ResourcePreLoader.removeResourceSource(ResourcePreLoader.buildSourceFromString(source), this.cachedSerialized, false);
                     }
-                    Minecraft.getInstance().setScreen(this);
-                }, LocalizationUtils.splitLocalizedLines("fancymenu.resources.pre_loading.manage.remove.confirm"));
-                Minecraft.getInstance().setScreen(s);
+                });
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedSource() != null));
 

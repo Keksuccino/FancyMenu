@@ -2,7 +2,8 @@ package de.keksuccino.fancymenu.customization.requirement.ui;
 
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -135,13 +136,12 @@ public class BuildRequirementGroupScreen extends Screen {
         this.removeRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.remove_requirement"), (button) -> {
             RequirementInstance i = this.getSelectedInstance();
             if (i != null) {
-                Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
+                MessageDialogs.openWithCallback(Component.translatable("fancymenu.requirements.screens.remove_requirement.confirm"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         this.group.removeInstance(i);
                         this.updateRequirementsScrollArea();
                     }
-                    Minecraft.getInstance().setScreen(this);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.remove_requirement.confirm")));
+                });
             }
         }) {
             @Override

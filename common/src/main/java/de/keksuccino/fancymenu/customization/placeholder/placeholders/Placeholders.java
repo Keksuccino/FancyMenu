@@ -66,6 +66,8 @@ public class Placeholders {
     public static final RealtimeSecondPlaceholder REALTIME_SECOND = new RealtimeSecondPlaceholder();
     public static final UnixTimestampPlaceholder UNIX_TIMESTAMP = new UnixTimestampPlaceholder();
     public static final StringifyPlaceholder STRINGIFY = new StringifyPlaceholder();
+    public static final Base64EncodePlaceholder BASE64_ENCODE = new Base64EncodePlaceholder();
+    public static final Base64DecodePlaceholder BASE64_DECODE = new Base64DecodePlaceholder();
     public static final JsonPlaceholder JSON = new JsonPlaceholder();
     public static final GetVariablePlaceholder GET_VARIABLE = new GetVariablePlaceholder();
     public static final LocalizationPlaceholder LOCALIZATION = new LocalizationPlaceholder();
@@ -298,6 +300,8 @@ public class Placeholders {
 
         //Advanced
         PlaceholderRegistry.register(STRINGIFY);
+        PlaceholderRegistry.register(BASE64_ENCODE);
+        PlaceholderRegistry.register(BASE64_DECODE);
         PlaceholderRegistry.register(JSON);
         PlaceholderRegistry.register(GET_VARIABLE);
         PlaceholderRegistry.register(LOCALIZATION);

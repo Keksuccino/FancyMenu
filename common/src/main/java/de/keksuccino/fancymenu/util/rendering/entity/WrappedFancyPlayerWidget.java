@@ -304,6 +304,14 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     }
 
     /**
+     * If the entity's nametag should be pinned. Pinning the nametag disables nametag rotation.
+     */
+    public WrappedFancyPlayerWidget setPinName(boolean pin) {
+        wrapped.setPinName(pin);
+        return this;
+    }
+
+    /**
      * Sets whether to show the player's name.
      *
      * @param showName whether to show the player's name.

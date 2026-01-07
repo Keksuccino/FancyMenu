@@ -5,14 +5,13 @@ import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.cycle.ValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -78,14 +77,13 @@ public class ManageLayoutsScreen extends Screen {
         this.deleteButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.delete"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if (e != null) {
-                Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
+                MessageDialogs.openWithCallback(Component.translatable("fancymenu.layout.manage.delete.confirm"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         e.layout.delete(false);
                         this.layouts.remove(e.layout);
                         this.updateLayoutScrollArea();
                     }
-                    Minecraft.getInstance().setScreen(this);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.delete.confirm")));
+                });
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addWidget(this.deleteButton);

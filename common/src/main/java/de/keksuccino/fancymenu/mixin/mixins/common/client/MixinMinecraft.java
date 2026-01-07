@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
@@ -196,6 +197,10 @@ public class MixinMinecraft {
 //            info.cancel();
 //            return;
 //        }
+
+        if (screen instanceof PipableScreen) {
+            throw new RuntimeException("[FANCYMENU] PipableScreens can't be set as normal screens! They are meant to be used only for PiPWindows! Failed to open as normal screen: " + screen);
+        }
 
 		// This is just for giving FM the correct screen identifiers for all possible scenarios
 		if ((screen == null) && (this.level == null)) {
