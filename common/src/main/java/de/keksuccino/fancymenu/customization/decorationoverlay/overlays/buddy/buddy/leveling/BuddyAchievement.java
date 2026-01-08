@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling;
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.leveling;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

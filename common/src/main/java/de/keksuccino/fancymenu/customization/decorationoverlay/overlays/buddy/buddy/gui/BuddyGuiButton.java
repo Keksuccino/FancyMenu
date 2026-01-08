@@ -1,6 +1,6 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy.gui;
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.gui;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.Buddy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

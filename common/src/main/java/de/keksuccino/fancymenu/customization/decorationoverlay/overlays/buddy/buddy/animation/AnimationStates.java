@@ -1,6 +1,6 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy.animation;
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.animation;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.Buddy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy.MAX_POOPS_BEFORE_SAD;
+import static de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.Buddy.MAX_POOPS_BEFORE_SAD;
 
 public class AnimationStates {
 

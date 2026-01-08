@@ -1,6 +1,6 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy;
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.Poop;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.Poop;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;

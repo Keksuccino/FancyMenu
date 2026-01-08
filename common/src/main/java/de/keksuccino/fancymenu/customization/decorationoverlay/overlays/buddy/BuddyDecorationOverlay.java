@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.BuddyWidget;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.BuddyWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

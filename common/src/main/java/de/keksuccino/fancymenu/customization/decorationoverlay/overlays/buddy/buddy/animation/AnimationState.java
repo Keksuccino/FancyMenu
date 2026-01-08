@@ -1,6 +1,6 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy.animation;
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.animation;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.Buddy;
 import de.keksuccino.fancymenu.util.MathUtils;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;

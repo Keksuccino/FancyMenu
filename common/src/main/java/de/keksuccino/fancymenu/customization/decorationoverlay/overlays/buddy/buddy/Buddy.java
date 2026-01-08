@@ -1,14 +1,14 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy;
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationState;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.BuddyStatusScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.Poop;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyAchievement;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.LevelingManager;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.animation.AnimationState;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.animation.AnimationStates;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.gui.BuddyStatusScreen;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.FoodItem;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.PlayBall;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.Poop;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.leveling.BuddyAchievement;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.leveling.LevelingManager;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
@@ -23,9 +23,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
-import static de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationState.*;
-import static de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates.RUNNING;
-import static de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates.WALKING;
+import static de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.animation.AnimationState.*;
+import static de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.animation.AnimationStates.RUNNING;
+import static de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.animation.AnimationStates.WALKING;
 
 /**
  * Buddy is a cute Easter egg that adds a pixel art pet
