@@ -377,6 +377,13 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
     protected Set<ResourceLocation> getAllResourceLocations() {
         if (this.cachedResourceLocations == null) {
             this.cachedResourceLocations = new HashSet<>(Services.PLATFORM.getLoadedClientResourceLocations());
+            try {
+                Minecraft.getInstance().getResourceManager().listResources("", location -> true)
+                        .keySet()
+                        .forEach(this.cachedResourceLocations::add);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         return this.cachedResourceLocations;
     }
@@ -388,9 +395,13 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
     public void setDirectory(@Nullable String namespace, @NotNull String path, boolean playSound) {
         if (playSound) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         this.updatePreviewForKey(null);
+        boolean namespaceChanged = !Objects.equals(this.currentNamespace, namespace);
         this.currentNamespace = namespace;
         this.currentPath = path;
         this.preselectedLocation = null;
+        if (namespaceChanged) {
+            this.cachedResourceLocations = null;
+        }
         this.updateResourceList();
         this.updateCurrentDirectoryComponent();
     }
