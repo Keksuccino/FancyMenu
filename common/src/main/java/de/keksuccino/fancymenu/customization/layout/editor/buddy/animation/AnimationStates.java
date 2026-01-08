@@ -40,7 +40,7 @@ public class AnimationStates {
             .allowsHopping(false)
             .animationSpeed((buddy, state) -> 50) // Slow animation for peeking
             .activationCondition(buddy -> buddy.isPeeking && buddy.isActivelyPeeking)
-            .preventionCondition(buddy -> !buddy.hasBeenAwakened ? false : (buddy.needsFood || buddy.needsPet || buddy.needsPlay || buddy.isSleepy))
+            .preventionCondition(buddy -> buddy.needsFood || buddy.needsPet || buddy.needsPlay || buddy.isSleepy)
             .ignoresLockedState(true)
             .build());
 

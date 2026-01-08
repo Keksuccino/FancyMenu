@@ -2425,5 +2425,7 @@
   "fancymenu.elements.player_entity.nametag_rotation": "Nametag Rotation: %s",
   "fancymenu.elements.player_entity.nametag_rotation.desc": "If the nametag should rotate.",
   "fancymenu.overlay.menu_bar.customization.settings.developer": "Developer",
-  "fancymenu.overlay.menu_bar.customization.settings.developer.show_pip_window_debug": "Show PiP Window Debug: %s"
+  "fancymenu.overlay.menu_bar.customization.settings.developer.show_pip_window_debug": "Show PiP Window Debug: %s",
+  "fancymenu.decoration_overlays.buddy": "Buddy",
+  "fancymenu.decoration_overlays.buddy.desc": "A tiny companion that wanders along the bottom of the screen and reacts to clicks."
 }

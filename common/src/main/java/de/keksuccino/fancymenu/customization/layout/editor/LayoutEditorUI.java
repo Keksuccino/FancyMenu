@@ -360,13 +360,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
         windowMenu.addSeparatorEntry("separator_after_rotation_tilting_controls");
 
-        if (!LayoutEditorScreen.FORCE_DISABLE_BUDDY) {
-            windowMenu.addValueCycleEntry("toggle_buddy", CommonCycles.cycleEnabledDisabled("fancymenu.editor.buddy.enable", FancyMenu.getOptions().enableBuddy.getValue()).addCycleListener(cycleEnabledDisabled -> {
-                FancyMenu.getOptions().enableBuddy.setValue(cycleEnabledDisabled.getAsBoolean());
-                ScreenCustomization.reInitCurrentScreen();
-            })).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.buddy.enable.desc")));
-        }
-
         //USER INTERFACE
         CustomizationOverlayUI.buildUITabAndAddTo(menuBar);
 
@@ -978,13 +971,13 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 String moreLayoutCount = "" + (allLayoutsCount-8);
                 menu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu1, entry) -> {
                     displayUnsavedWarning(call -> {
-                        if (call) {
-                            editor.saveWidgetSettings();
-                            editor.buddyWidget.cleanup();
-                            this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
-                                this.openContextMenuScreen(editor);
-                            }));
-                        }
+						if (call) {
+							editor.saveWidgetSettings();
+							editor.layout.decorationOverlays.forEach(pair -> pair.getValue().onCloseScreen(null, null));
+							this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
+								this.openContextMenuScreen(editor);
+							}));
+						}
                     });
                 });
             }

@@ -29,7 +29,7 @@ import static de.keksuccino.fancymenu.customization.layout.editor.buddy.animatio
 
 /**
  * Buddy is a cute Easter egg that adds a pixel art pet
- * to the layout editor. It walks along the bottom of the screen,
+ * to decoration overlays. It walks along the bottom of the screen,
  * has needs, and reacts to your interactions.
  */
 public class Buddy extends AbstractContainerEventHandler implements Renderable, FancyMenuUiComponent {
@@ -86,10 +86,10 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public boolean isSitting = false;
     public boolean isWaving = false;
     public boolean isYawning = false;
-    public boolean isPeeking = true; // Start in peeking mode until user clicks
-    public boolean hasBeenAwakened = false; // Track if buddy has been clicked for the first time ever
+    public boolean isPeeking = false;
+    public boolean hasBeenAwakened = true; // Legacy flag, buddy now starts active
     public boolean isActivelyPeeking = false; // Whether buddy is currently visible during a peek
-    public int peekTimer; // Timer for when to peek next
+    public int peekTimer; // Legacy timer (no longer used for awakening)
     public int peekDuration = 0; // How long the current peek should last
 
     // Timers and behaviors
@@ -165,20 +165,20 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         // Initialize GUI
         this.statusScreen = new BuddyStatusScreen(this, levelingManager);
         
-        // Start in peeking state
-        this.isPeeking = true;
-        
-        // Set initial peek timer (buddy will peek after 1-2 minutes initially)
-        this.peekTimer = (60 * 20) + MathUtils.getRandomNumberInRange(0, 1200); // 1-2 minutes in ticks
-        this.isActivelyPeeking = false; // Start hidden
-        
-        // Position buddy off-screen initially
-        this.buddyPosX = -SPRITE_WIDTH - 10;
+        this.isPeeking = false;
+        this.isActivelyPeeking = false;
+        this.peekTimer = 0;
+        this.peekDuration = 0;
+
+        if (screenWidth > 0) {
+            this.buddyPosX = MathUtils.getRandomNumberInRange(20, Math.max(20, screenWidth - SPRITE_WIDTH - 20));
+        } else {
+            this.buddyPosX = 0;
+        }
         this.buddyPosY = screenHeight - SPRITE_HEIGHT - 10;
+        this.isOffScreen = false;
         
-        LOGGER.debug("Buddy created in hidden state, will peek in {} seconds", peekTimer / 20.0f);
-        
-        // Start with full stats since buddy is dormant until awakened
+        // Start with full stats
         this.hunger = 100.0f;
         this.happiness = 100.0f;
         this.energy = 100.0f;
@@ -330,9 +330,6 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         // Don't render thought bubble if any of these conditions are true
         if (isEating || isBeingPet || isPlaying || isSleeping) return;
         
-        // Don't show needs if buddy hasn't been awakened yet
-        if (!hasBeenAwakened) return;
-
         int iconSize = 16;
         int bubbleSize = 32; // Increased from 24 to give more breathing room
         int bubbleX = buddyPosX + (SPRITE_WIDTH / 2) - (bubbleSize / 2);
@@ -384,73 +381,23 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         
         // If buddy is peeking, only update minimal things
         if (isPeeking) {
-            // First-time peeking - buddy is dormant until awakened
-            if (!hasBeenAwakened) {
-                // Update peek timer
-                if (peekTimer > 0) {
-                    peekTimer--;
-                } else if (!isActivelyPeeking) {
-                    // Start peeking
-                    startActivelyPeeking();
-                    // Set duration for this peek (15 seconds +/- a few seconds)
-                    peekDuration = (15 * 20) + MathUtils.getRandomNumberInRange(-60, 60); // 14-16 seconds in ticks
-                    LOGGER.debug("Buddy starting to peek for {} seconds", peekDuration / 20.0f);
-                }
-                
-                // Update peek duration if actively peeking
-                if (isActivelyPeeking && peekDuration > 0) {
-                    peekDuration--;
-                    if (peekDuration <= 0) {
-                        // Stop peeking and go back off-screen
-                        stopActivelyPeeking();
-                        // Set timer for next peek (5 minutes +/- 1-2 minutes)
-                        peekTimer = (5 * 60 * 20) + MathUtils.getRandomNumberInRange(-2400, 2400); // 3-7 minutes in ticks
-                        LOGGER.debug("Buddy hiding again, will peek again in {} seconds", peekTimer / 20.0f);
-                    }
-                }
-                
-                // No stat changes, no needs, just wait for the player
-                updateVisualState();
-                return;
+            if (!isActivelyPeeking) {
+                startReturnPeek(buddyPosX < (screenWidth / 2));
             }
-            
-            // Regular peeking after being awakened - stats still decrease but at half rate
-            hunger = Math.max(0, hunger - (0.0025f * hungerMultiplier));
-            happiness = Math.max(0, happiness - (0.0015f * happinessMultiplier));
-            energy = Math.max(0, energy - (0.001f * energyMultiplier));
-            funLevel = Math.max(0, funLevel - 0.001f);
-            
-            // Update needs
+
             updateStatsAndNeeds();
-            
-            // Stop peeking if buddy has critical needs
-            if (needsFood || needsPet || needsPlay || isSleepy) {
-                isPeeking = false;
-                LOGGER.debug("Buddy stopped peeking due to critical needs");
-                // Move away from edge
-                if (facingLeft) {
-                    buddyPosX = screenWidth - SPRITE_WIDTH - 50;
-                } else {
-                    buddyPosX = 50;
-                }
+
+            if (peekDuration <= 0) {
+                peekDuration = getPeekDurationTicks();
+            } else {
+                peekDuration--;
             }
-            
-            // Small chance to come out of peeking on its own (only after being awakened)
-            if (this.chanceCheck(0.1f)) {
-                isPeeking = false;
-                LOGGER.debug("Buddy came out of peeking on its own!");
-                // Move away from edge
-                if (facingLeft) {
-                    buddyPosX = screenWidth - SPRITE_WIDTH - 50;
-                } else {
-                    buddyPosX = 50;
-                }
+
+            if (peekDuration <= 0 || needsFood || needsPet || needsPlay || isSleepy) {
+                stopPeekingAndWalkOut();
             }
-            
-            // Update visual state for peeking
+
             updateVisualState();
-            
-            // Skip most other behaviors while peeking
             return;
         }
         
@@ -624,11 +571,6 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
      */
     public void updateStatsAndNeeds() {
 
-        // Don't update stats or needs if buddy hasn't been awakened yet
-        if (!hasBeenAwakened) {
-            return;
-        }
-
         // Apply attribute effects from leveling system to stat changes
         
         // Decrease stats over time - modified by attributes (10x slower)
@@ -783,12 +725,16 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
                 }
                 // Random chance to come back
                 if (this.chanceCheck(1f)) {
-                    LOGGER.debug("Buddy coming back onscreen from the left");
-                    facingLeft = false;
-                    isOffScreen = false;
-                    buddyPosX = -SPRITE_WIDTH; // teleport buddy to screen edge
-                    pixelsSinceLastDirectionChange = 0;
-                    this.stopAllStandingActions();
+                    if (this.chanceCheck(25f)) {
+                        startReturnPeek(true);
+                    } else {
+                        LOGGER.debug("Buddy coming back onscreen from the left");
+                        facingLeft = false;
+                        isOffScreen = false;
+                        buddyPosX = -SPRITE_WIDTH; // teleport buddy to screen edge
+                        pixelsSinceLastDirectionChange = 0;
+                        this.stopAllStandingActions();
+                    }
                 }
             } else if ((buddyPosX < 0 && this.chanceCheck(1f)) || shouldTurn) {
                 facingLeft = false;
@@ -810,12 +756,16 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
                 }
                 // Random chance to come back
                 if (this.chanceCheck(1f)) {
-                    LOGGER.debug("Buddy coming back onscreen from the right");
-                    facingLeft = true;
-                    isOffScreen = false;
-                    buddyPosX = screenWidth; // teleport buddy to screen edge
-                    pixelsSinceLastDirectionChange = 0;
-                    this.stopAllStandingActions();
+                    if (this.chanceCheck(25f)) {
+                        startReturnPeek(false);
+                    } else {
+                        LOGGER.debug("Buddy coming back onscreen from the right");
+                        facingLeft = true;
+                        isOffScreen = false;
+                        buddyPosX = screenWidth; // teleport buddy to screen edge
+                        pixelsSinceLastDirectionChange = 0;
+                        this.stopAllStandingActions();
+                    }
                 }
             } else if ((buddyPosX > screenWidth - SPRITE_WIDTH && this.chanceCheck(1f)) || shouldTurn) {
                 facingLeft = true;
@@ -853,12 +803,6 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
      * Performs a random action
      */
     public void performRandomAction() {
-
-        // Small chance to go back to peeking (only if already awakened)
-        if (hasBeenAwakened && this.chanceCheck(0.5f) && !needsFood && !needsPet && !needsPlay && !isSleepy && happiness > 30) {
-            startPeeking();
-            return;
-        }
 
         // Chance to randomly stop and stand
         if ((pixelsSinceLastDirectionChange > minWalkDistance) && this.chanceCheck(standChancePercentage)) {
@@ -962,65 +906,45 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         // Don't stop isPeeking here - it's handled separately
     }
 
-    /**
-     * Starts actively showing the buddy during a peek
-     */
-    public void startActivelyPeeking() {
-        isActivelyPeeking = true;
-        
-        // Position buddy at edge for peeking
-        if (random.nextBoolean()) {
-            // Peek from left side
-            buddyPosX = -(int)(SPRITE_WIDTH * 0.1f);
-            facingLeft = false;
-        } else {
-            // Peek from right side  
-            buddyPosX = screenWidth - (int)(SPRITE_WIDTH * 0.9f);
-            facingLeft = true;
-        }
-        
-        LOGGER.debug("Buddy actively peeking from {} side", facingLeft ? "right" : "left");
-    }
-    
-    /**
-     * Stops actively showing the buddy and hides it off-screen
-     */
-    public void stopActivelyPeeking() {
-        isActivelyPeeking = false;
-        
-        // Move buddy completely off-screen
-        if (facingLeft) {
-            buddyPosX = screenWidth + SPRITE_WIDTH;
-        } else {
-            buddyPosX = -SPRITE_WIDTH - 10;
-        }
-        
-        LOGGER.debug("Buddy hiding off-screen");
+    private int getPeekDurationTicks() {
+        return (15 * 20) + MathUtils.getRandomNumberInRange(-60, 60);
     }
 
     /**
-     * Starts the buddy peeking animation
+     * Starts the buddy peeking before returning from off-screen.
      */
-    public void startPeeking() {
-        if (this.lockedInState()) return;
-        
-        LOGGER.debug("Buddy starting to peek from the edge");
-        
+    public void startReturnPeek(boolean fromLeft) {
         isPeeking = true;
-        // Move buddy to edge of screen
-        if (buddyPosX < screenWidth / 2) {
-            // Peek from left edge - hide only 10% of sprite
+        isActivelyPeeking = true;
+        peekDuration = getPeekDurationTicks();
+        isOffScreen = false;
+        pixelsSinceLastDirectionChange = 0;
+
+        if (fromLeft) {
             buddyPosX = -(int)(SPRITE_WIDTH * 0.1f);
-            facingLeft = false; // Face right when peeking from left
+            facingLeft = false;
         } else {
-            // Peek from right edge - show 90% of sprite
             buddyPosX = screenWidth - (int)(SPRITE_WIDTH * 0.9f);
-            facingLeft = true; // Face left when peeking from right
+            facingLeft = true;
         }
-        
-        // Stop all other activities
+
         stopAllStandingActions();
-        isPeeking = true; // Set again after stopAllStandingActions
+
+        LOGGER.debug("Buddy peeking before returning from {}", fromLeft ? "left" : "right");
+    }
+
+    /**
+     * Stops peeking and lets buddy walk out normally.
+     */
+    public void stopPeekingAndWalkOut() {
+        if (!isPeeking) return;
+        isPeeking = false;
+        isActivelyPeeking = false;
+        peekDuration = 0;
+        peekTimer = 0;
+        isOffScreen = false;
+        stopAllStandingActions();
+        LOGGER.debug("Buddy finished peeking and is walking out");
     }
 
     /**
@@ -1398,8 +1322,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         }
 
         if (button == 1) { // Right click
-            // If clicked on buddy, open the stats screen directly (only if awakened)
-            if (isMouseOverBuddy(mouseX, mouseY) && hasBeenAwakened) {
+            if (isMouseOverBuddy(mouseX, mouseY)) {
                 statusScreen.show(screenWidth, screenHeight);
                 LOGGER.debug("Opening buddy stats screen (on right-click)");
                 return true;
@@ -1409,55 +1332,30 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             if (isMouseOverBuddy(mouseX, mouseY)) {
                 // If buddy is peeking, stop peeking and start walking
                 if (isPeeking && isActivelyPeeking) {
-                    isPeeking = false;
-                    isActivelyPeeking = false;
-                    peekTimer = 0;
-                    peekDuration = 0;
-                    
-                    // Move buddy away from edge to a visible position
-                    if (facingLeft) {
-                        // Was peeking from right, move left a bit
-                        buddyPosX = screenWidth - SPRITE_WIDTH - 50;
-                    } else {
-                        // Was peeking from left, move right a bit
-                        buddyPosX = 50;
-                    }
-                    
-                    // First time being awakened?
-                    if (!hasBeenAwakened) {
-                        hasBeenAwakened = true;
-                        LOGGER.debug("Buddy has been awakened for the first time!");
-                        // Give a bigger happiness boost for first awakening
-                        happiness = Math.min(100, happiness + 10);
-                        // Award special XP for first interaction
-                        gainExperience("firstAwakening", 50, Long.MAX_VALUE); // One-time XP bonus
-                    } else {
-                        LOGGER.debug("Buddy stopped peeking and came out to play!");
-                        // Give a small happiness boost for coming out
-                        happiness = Math.min(100, happiness + 2.5f); // Reduced from 5
-                    }
+                    stopPeekingAndWalkOut();
+                    LOGGER.debug("Buddy stopped peeking and came out to play!");
                 } else {
                     // Normal petting
                     pet();
-                    
+
                     // Award XP for petting
                     gainExperience("petBuddy", 5, 10000); // Increased from 2 to compensate for slower gameplay
                     if (levelingManager != null) {
                         levelingManager.incrementPetCount();
                     }
                 }
-                
+
                 return true;
             }
 
-            // Check if clicked on food (only if awakened)
-            if (hasBeenAwakened && droppedFood != null && droppedFood.isMouseOver(mouseX, mouseY)) {
+            // Check if clicked on food
+            if (droppedFood != null && droppedFood.isMouseOver(mouseX, mouseY)) {
                 droppedFood.pickup((int)mouseX, (int)mouseY);
                 return true;
             }
 
-            // Check if clicked on play ball (only if awakened)
-            if (hasBeenAwakened && playBall != null && playBall.isMouseOver(mouseX, mouseY)) {
+            // Check if clicked on play ball
+            if (playBall != null && playBall.isMouseOver(mouseX, mouseY)) {
                 // Start dragging ball instead of just kicking it
                 playBall.pickup((int)mouseX, (int)mouseY);
 
@@ -1832,6 +1730,13 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         if (levelingManager != null) {
             boolean levelingResult = levelingManager.loadState();
             LOGGER.debug("Leveling data loading result: {}", levelingResult);
+        }
+
+        this.hasBeenAwakened = true;
+        if (this.isPeeking && !this.isActivelyPeeking) {
+            this.isPeeking = false;
+            this.peekDuration = 0;
+            this.peekTimer = 0;
         }
 
         // After loading, clean up any poops that might be off-screen

@@ -99,9 +99,6 @@ public class BuddyStatusScreen implements Renderable {
                 this.buddy,
                 buddy -> "Feed",
                 () -> {
-                    // Only allow feeding if awakened
-                    if (!buddy.hasBeenAwakened) return;
-                    
                     int mouseX = MouseInput.getMouseX();
                     int mouseY = MouseInput.getMouseY();
                     
@@ -124,9 +121,6 @@ public class BuddyStatusScreen implements Renderable {
                 this.buddy,
                 buddy -> "Play",
                 () -> {
-                    // Only allow feeding if awakened
-                    if (!buddy.hasBeenAwakened) return;
-                    
                     int mouseX = MouseInput.getMouseX();
                     int mouseY = MouseInput.getMouseY();
                     
@@ -157,9 +151,6 @@ public class BuddyStatusScreen implements Renderable {
                     return "Sleep";
                 },
                 () -> {
-                    // Only allow if not awakened
-                    if (!buddy.hasBeenAwakened) return;
-                    
                     // Check if buddy refuses to sleep (8% chance)
                     if (buddy.chanceCheck(8f)) {
                         LOGGER.debug("Buddy refuses to go to sleep!");

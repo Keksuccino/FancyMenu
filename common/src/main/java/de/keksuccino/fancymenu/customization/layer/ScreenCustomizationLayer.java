@@ -145,6 +145,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		this.layoutBase.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
+		this.layoutBase.decorationOverlays.forEach(pair -> pair.getValue().onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
 
 		if (this.layoutBase.closeAudio != null) {
 			final ResourceSupplier<IAudio> closeAudioSupplier = this.layoutBase.closeAudio;

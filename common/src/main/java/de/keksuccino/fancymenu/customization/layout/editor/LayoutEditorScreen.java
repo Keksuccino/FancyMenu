@@ -18,7 +18,6 @@ import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.BuddyWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
 import de.keksuccino.fancymenu.customization.overlay.ScreenOverlays;
@@ -64,8 +63,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final boolean FORCE_DISABLE_BUDDY = true;
-
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
 	public static final int ELEMENT_DRAG_CRUMPLE_ZONE = 5;
 
@@ -97,7 +94,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
 	public boolean unsavedChanges = false;
-	protected final BuddyWidget buddyWidget = new BuddyWidget(0, 0);
 	public boolean justOpened = true;
     protected final LayoutEditorUI layoutEditorUI = new LayoutEditorUI(this);
 
@@ -216,11 +212,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			w.refresh();
 		}
 
-		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			this.addWidget(this.buddyWidget);
-			this.buddyWidget.setScreenSize(this.width, this.height);
-		}
-
 		this.justOpened = false;
 
 	}
@@ -259,10 +250,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public void tick() {
 
-		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			this.buddyWidget.tick();
-		}
-
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.tick();
 		}
@@ -297,10 +284,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.anchorPointOverlay.render(graphics, mouseX, mouseY, partial);
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
-
-		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			this.buddyWidget.render(graphics, mouseX, mouseY, partial);
-		}
 
 		//Render active element context menu
 		if (this.activeElementContextMenu != null) {
@@ -1261,14 +1244,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
-		boolean handled = false;
-		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			handled = this.buddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
-		}
-		if (!handled && super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
-			return true;
-		}
-		return handled;
+		return super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
 	}
 
 	@Override
@@ -1399,7 +1375,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
         this.closeActiveElementMenu(true);
         this.closeRightClickMenu(true);
 		this.saveWidgetSettings();
-		this.buddyWidget.cleanup();
 		this.getAllElements().forEach(element -> {
 			element.element.onDestroyElement();
 			element.element.onCloseScreen(null, null);
@@ -1407,6 +1382,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		});
 		this.layout.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(null, null));
 		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
+		this.layout.decorationOverlays.forEach(pair -> pair.getValue().onCloseScreen(null, null));
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
 			if (!((IMixinScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {
