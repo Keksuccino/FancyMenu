@@ -12,6 +12,8 @@ import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.bu
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
@@ -21,6 +23,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 import static de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.animation.AnimationState.*;
@@ -123,6 +126,9 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public boolean wasOffScreen = false;
 
     public BuddyStatusScreen statusScreen;
+
+    @Nullable
+    private ResourceSupplier<ITexture> customAtlasTextureSupplier = null;
     
     // Leveling system
     private final LevelingManager levelingManager;
@@ -232,6 +238,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         // Calculate texture coordinates
         int texX = currentFrame * SPRITE_WIDTH;
         int texY = currentState.getAtlasIndex() * SPRITE_HEIGHT;
+        ResourceLocation atlasTexture = getAtlasTextureLocation();
 
         // Render the play ball if it exists (non-dragged balls render before buddy)
         if (playBall != null && !playBall.isBeingDragged()) {
@@ -252,7 +259,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
                 // Use our custom method for mirrored rendering
                 RenderingUtils.blitMirrored(
                         graphics,
-                        TEXTURE_ATLAS,
+                        atlasTexture,
                         buddyPosX, renderY,
                         texX, texY,
                         SPRITE_WIDTH, SPRITE_HEIGHT,
@@ -261,7 +268,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             } else {
                 // Standard rendering
                 graphics.blit(
-                        TEXTURE_ATLAS,
+                        atlasTexture,
                         buddyPosX, renderY,
                         texX, texY,
                         SPRITE_WIDTH, SPRITE_HEIGHT,
@@ -274,7 +281,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
                 // Use our custom method for mirrored rendering
                 RenderingUtils.blitMirrored(
                         graphics,
-                        TEXTURE_ATLAS,
+                        atlasTexture,
                         buddyPosX, buddyPosY,
                         texX, texY,
                         SPRITE_WIDTH, SPRITE_HEIGHT,
@@ -283,7 +290,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             } else {
                 // Standard rendering
                 graphics.blit(
-                        TEXTURE_ATLAS,
+                        atlasTexture,
                         buddyPosX, buddyPosY,
                         texX, texY,
                         SPRITE_WIDTH, SPRITE_HEIGHT,
@@ -311,6 +318,24 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         if (statusScreen.isVisible()) {
             statusScreen.render(graphics, mouseX, mouseY, partialTick);
         }
+    }
+
+    @NotNull
+    private ResourceLocation getAtlasTextureLocation() {
+        if (this.customAtlasTextureSupplier != null) {
+            ITexture texture = this.customAtlasTextureSupplier.get();
+            if (texture != null) {
+                ResourceLocation location = texture.getResourceLocation();
+                if (location != null) {
+                    return location;
+                }
+            }
+        }
+        return TEXTURE_ATLAS;
+    }
+
+    public void setCustomAtlasTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.customAtlasTextureSupplier = supplier;
     }
 
     /**

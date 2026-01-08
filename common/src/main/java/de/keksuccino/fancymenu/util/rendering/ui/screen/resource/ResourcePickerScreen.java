@@ -377,13 +377,6 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
     protected Set<ResourceLocation> getAllResourceLocations() {
         if (this.cachedResourceLocations == null) {
             this.cachedResourceLocations = new HashSet<>(Services.PLATFORM.getLoadedClientResourceLocations());
-            try {
-                Minecraft.getInstance().getResourceManager().listResources("", location -> true)
-                        .keySet()
-                        .forEach(this.cachedResourceLocations::add);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
         }
         return this.cachedResourceLocations;
     }

@@ -200,10 +200,29 @@ public class FabricPlatformHelper implements IPlatformHelper {
 
     private void collectLocationsFromVanillaPack(@NotNull VanillaPackResources pack, @NotNull Set<ResourceLocation> output) {
         IMixinVanillaPackResources accessor = (IMixinVanillaPackResources) pack;
+        boolean collected = false;
         List<Path> roots = accessor.getPathsForType_FancyMenu().get(PackType.CLIENT_RESOURCES);
-        if (roots == null) return;
-        for (Path root : roots) {
-            collectLocationsFromRoot(root, output);
+        if (roots != null) {
+            for (Path root : roots) {
+                if (Files.isDirectory(root)) {
+                    collectLocationsFromRoot(root, output);
+                    collected = true;
+                } else {
+                    Path parent = root.getParent();
+                    if ((parent != null) && Files.isDirectory(parent)) {
+                        collectLocationsFromRoot(parent, output);
+                        collected = true;
+                    }
+                }
+            }
+        }
+        if (!collected) {
+            List<Path> rootPaths = accessor.getRootPaths_FancyMenu();
+            if (rootPaths == null) return;
+            for (Path root : rootPaths) {
+                Path assetsRoot = root.resolve(PackType.CLIENT_RESOURCES.getDirectory());
+                collectLocationsFromRoot(assetsRoot, output);
+            }
         }
     }
 

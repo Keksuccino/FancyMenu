@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.b
 
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.Poop;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
@@ -12,6 +14,7 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -171,6 +174,10 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
             LOGGER.debug("Saving buddy leveling data");
             buddy.getLevelingManager().saveState();
         }
+    }
+
+    public void setCustomAtlasTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.buddy.setCustomAtlasTextureSupplier(supplier);
     }
 
 }
