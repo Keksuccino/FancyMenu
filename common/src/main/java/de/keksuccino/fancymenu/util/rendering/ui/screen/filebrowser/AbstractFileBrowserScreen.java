@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -39,11 +40,14 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 @SuppressWarnings("all")
 public abstract class AbstractFileBrowserScreen extends Screen {
@@ -83,6 +87,11 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea fileTypeScrollArea = new ScrollArea(0, 0, 0, 20);
     protected ScrollArea previewTextScrollArea = new ScrollArea(0, 0, 0, 0);
+    protected boolean searchBarEnabled = true;
+    @Nullable
+    protected ExtendedEditBox searchBar;
+    @NotNull
+    protected Component searchBarPlaceholder = Component.translatable("fancymenu.ui.generic.search");
     @Nullable
     protected ResourceSupplier<ITexture> previewTextureSupplier;
     @Nullable
@@ -122,6 +131,20 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     @Override
     protected void init() {
+
+        if (this.searchBar != null) {
+            this.removeWidget(this.searchBar);
+        }
+        if (this.searchBarEnabled) {
+            String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
+            this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 0, 20 - 2, Component.empty());
+            this.searchBar.setHintFancyMenu(consumes -> AbstractFileBrowserScreen.this.searchBarPlaceholder);
+            this.searchBar.setValue(oldSearchValue);
+            this.searchBar.setResponder(s -> AbstractFileBrowserScreen.this.updateFilesList());
+            UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+            this.searchBar.setMaxLength(100000);
+            this.addWidget(this.searchBar);
+        }
 
         this.confirmButton = this.buildConfirmButton();
         this.addWidget(this.confirmButton);
@@ -180,7 +203,13 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
         graphics.drawString(this.font, Component.translatable("fancymenu.ui.filechooser.files"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        int currentDirFieldYEnd = this.renderCurrentDirectoryField(graphics, mouseX, mouseY, partial, 20, 50 + 15, this.width - 260 - 20, this.font.lineHeight + 6);
+        int leftAreaWidth = this.width - 260 - 20;
+        int currentDirFieldY = 50 + 15;
+        if (this.searchBarEnabled) {
+            this.renderSearchBar(graphics, mouseX, mouseY, partial, 20, currentDirFieldY, leftAreaWidth, 20);
+            currentDirFieldY += 25;
+        }
+        int currentDirFieldYEnd = this.renderCurrentDirectoryField(graphics, mouseX, mouseY, partial, 20, currentDirFieldY, leftAreaWidth, this.font.lineHeight + 6);
 
         this.renderFileScrollArea(graphics, mouseX, mouseY, partial, currentDirFieldYEnd);
 
@@ -235,7 +264,9 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     protected void renderFileScrollArea(GuiGraphics graphics, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
         this.fileListScrollArea.setWidth(this.width - 260 - 20, true);
-        this.fileListScrollArea.setHeight(this.height - 85 - (this.font.lineHeight + 6) - 2 - 25 + this.fileScrollListHeightOffset, true);
+        int listHeight = this.height - 85 - (this.font.lineHeight + 6) - 2 - 25 + this.fileScrollListHeightOffset;
+        if (this.searchBarEnabled) listHeight -= 25;
+        this.fileListScrollArea.setHeight(listHeight, true);
         this.fileListScrollArea.setX(20, true);
         this.fileListScrollArea.setY(currentDirFieldYEnd + 2, true);
         this.fileListScrollArea.render(graphics, mouseX, mouseY, partial);
@@ -280,6 +311,15 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         this.currentDirectoryComponent.setY(y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2));
         this.currentDirectoryComponent.render(graphics, mouseX, mouseY, partial);
         return yEnd;
+    }
+
+    protected void renderSearchBar(GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
+        if (this.searchBar == null) return;
+        this.searchBar.setX(x + 1);
+        this.searchBar.setY(y + 1);
+        this.searchBar.setWidth(width - 2);
+        this.searchBar.setHeight(height - 2);
+        this.searchBar.render(graphics, mouseX, mouseY, partial);
     }
 
     protected int getBelowFileScrollAreaElementWidth() {
@@ -453,6 +493,22 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         return this;
     }
 
+    /**
+     * Enable or disable the search bar feature.
+     * Should be called before {@link #init()} for proper initialization.
+     */
+    protected void setSearchBarEnabled(boolean enabled) {
+        this.searchBarEnabled = enabled;
+    }
+
+    /**
+     * Set the placeholder text for the search bar.
+     * Only used when search bar is enabled.
+     */
+    protected void setSearchBarPlaceholder(@NotNull Component placeholder) {
+        this.searchBarPlaceholder = placeholder;
+    }
+
     @Nullable
     protected AbstractFileScrollAreaEntry getSelectedEntry() {
         for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
@@ -602,44 +658,109 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             ParentDirScrollAreaEntry e = new ParentDirScrollAreaEntry(this.fileListScrollArea);
             this.fileListScrollArea.addEntry(e);
         }
-        File[] filesList = this.currentDir.listFiles();
-        if (filesList != null) {
-            List<File> files = new ArrayList<>();
-            List<File> folders = new ArrayList<>();
-            for (File f : filesList) {
-                if (f.isFile()) {
-                    files.add(f);
-                } else if (f.isDirectory()) {
-                    folders.add(f);
-                }
-            }
+        String searchValue = this.getSearchValue();
+        if (searchValue != null) {
+            List<File> matches = new ArrayList<>();
+            this.collectSearchMatches(this.currentDir, searchValue.toLowerCase(), matches);
             FilenameComparator comp = new FilenameComparator();
-            Collections.sort(folders, (o1, o2) -> {
-                return comp.compare(o1.getName(), o2.getName());
-            });
-            Collections.sort(files, (o1, o2) -> {
-                return comp.compare(o1.getName(), o2.getName());
-            });
-            if (this.showSubDirectories) {
-                for (File f : folders) {
-                    AbstractFileScrollAreaEntry e = this.buildFileEntry(f);
-                    if (this.blockResourceUnfriendlyFileNames) e.resourceUnfriendlyFileName = !FileFilter.RESOURCE_NAME_FILTER.checkFile(f);
-                    if (e.resourceUnfriendlyFileName) e.setSelectable(false);
-                    this.fileListScrollArea.addEntry(e);
-                }
-            }
-            for (File f : files) {
-                if (!this.shouldShowFile(f)) continue;
+            Collections.sort(matches, (o1, o2) -> comp.compare(this.getSearchSortKey(o1), this.getSearchSortKey(o2)));
+            for (File f : matches) {
                 AbstractFileScrollAreaEntry e = this.buildFileEntry(f);
                 if (this.blockResourceUnfriendlyFileNames) e.resourceUnfriendlyFileName = !FileFilter.RESOURCE_NAME_FILTER.checkFile(f);
                 if (e.resourceUnfriendlyFileName) e.setSelectable(false);
                 if (e.resourceUnfriendlyFileName && !this.showBlockedResourceUnfriendlyFiles) continue;
                 this.fileListScrollArea.addEntry(e);
             }
+        } else {
+            File[] filesList = this.currentDir.listFiles();
+            if (filesList != null) {
+                List<File> files = new ArrayList<>();
+                List<File> folders = new ArrayList<>();
+                for (File f : filesList) {
+                    if (f.isFile()) {
+                        files.add(f);
+                    } else if (f.isDirectory()) {
+                        folders.add(f);
+                    }
+                }
+                FilenameComparator comp = new FilenameComparator();
+                Collections.sort(folders, (o1, o2) -> {
+                    return comp.compare(o1.getName(), o2.getName());
+                });
+                Collections.sort(files, (o1, o2) -> {
+                    return comp.compare(o1.getName(), o2.getName());
+                });
+                if (this.showSubDirectories) {
+                    for (File f : folders) {
+                        AbstractFileScrollAreaEntry e = this.buildFileEntry(f);
+                        if (this.blockResourceUnfriendlyFileNames) e.resourceUnfriendlyFileName = !FileFilter.RESOURCE_NAME_FILTER.checkFile(f);
+                        if (e.resourceUnfriendlyFileName) e.setSelectable(false);
+                        this.fileListScrollArea.addEntry(e);
+                    }
+                }
+                for (File f : files) {
+                    if (!this.shouldShowFile(f)) continue;
+                    AbstractFileScrollAreaEntry e = this.buildFileEntry(f);
+                    if (this.blockResourceUnfriendlyFileNames) e.resourceUnfriendlyFileName = !FileFilter.RESOURCE_NAME_FILTER.checkFile(f);
+                    if (e.resourceUnfriendlyFileName) e.setSelectable(false);
+                    if (e.resourceUnfriendlyFileName && !this.showBlockedResourceUnfriendlyFiles) continue;
+                    this.fileListScrollArea.addEntry(e);
+                }
+            }
         }
     }
 
     protected abstract AbstractFileScrollAreaEntry buildFileEntry(@NotNull File f);
+
+    @Nullable
+    protected String getSearchValue() {
+        if (!this.searchBarEnabled || this.searchBar == null) return null;
+        String value = this.searchBar.getValue();
+        if (value == null || value.isBlank()) return null;
+        return value;
+    }
+
+    protected String getSearchSortKey(@NotNull File file) {
+        String relativePath = this.getRelativePathForFile(file);
+        if (relativePath != null) return relativePath;
+        return file.getName();
+    }
+
+    protected void collectSearchMatches(@NotNull File directory, @NotNull String searchLower, @NotNull List<File> matches) {
+        try (Stream<Path> stream = Files.walk(directory.toPath())) {
+            stream.filter(Files::isRegularFile).forEach(path -> {
+                File f = path.toFile();
+                if (!this.shouldShowFile(f)) return;
+                if (this.fileMatchesSearch(f, searchLower)) {
+                    matches.add(f);
+                }
+            });
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    protected boolean fileMatchesSearch(@NotNull File file, @NotNull String searchLower) {
+        String fileNameLower = file.getName().toLowerCase();
+        if (fileNameLower.contains(searchLower)) return true;
+        String relativePath = this.getRelativePathForFile(file);
+        return (relativePath != null) && relativePath.toLowerCase().contains(searchLower);
+    }
+
+    @Nullable
+    protected String getRelativePathForFile(@NotNull File file) {
+        try {
+            Path base = this.currentDir.toPath();
+            Path target = file.toPath();
+            if (target.startsWith(base)) {
+                String relative = base.relativize(target).toString().replace("\\", "/");
+                return relative.isEmpty() ? file.getName() : relative;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return file.getName();
+    }
 
     protected boolean currentIsRootDirectory() {
         return this.isRootDirectory(this.currentDir);
@@ -698,7 +819,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
             super(parent, 100, 30);
             this.file = file;
-            this.fileNameComponent = Component.literal(this.file.getName());
+            this.fileNameComponent = Component.literal(AbstractFileBrowserScreen.this.getDisplayNameForFile(this.file));
 
             this.setWidth(this.font.width(this.fileNameComponent) + (BORDER * 2) + 20 + 3);
             this.setHeight((BORDER * 2) + 20);
@@ -747,6 +868,15 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         @Override
         public abstract void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button);
 
+    }
+
+    protected String getDisplayNameForFile(@NotNull File file) {
+        String searchValue = this.getSearchValue();
+        if (searchValue != null) {
+            String relative = this.getRelativePathForFile(file);
+            if (relative != null) return relative;
+        }
+        return file.getName();
     }
 
     public class ParentDirScrollAreaEntry extends ScrollAreaEntry {
