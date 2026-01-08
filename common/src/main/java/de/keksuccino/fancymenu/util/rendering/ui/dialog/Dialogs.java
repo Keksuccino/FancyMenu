@@ -11,6 +11,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class Dialogs {
@@ -33,7 +35,9 @@ public class Dialogs {
     }
 
     public static MessageDialogBody openMessageWithCallback(@NotNull Component message, @NotNull MessageDialogStyle style, @NotNull Consumer<Boolean> callback) {
-        return openMessageInternal(message, style, callback);
+        MessageDialogBody body = openMessageInternal(message, style, Objects.requireNonNull(callback));
+        if ((style == MessageDialogStyle.INFO) || (style == MessageDialogStyle.ERROR)) body.setForceOkOnly(true);
+        return body;
     }
 
     private static MessageDialogBody openMessageInternal(@NotNull Component message, @NotNull MessageDialogStyle style, @Nullable Consumer<Boolean> callback) {

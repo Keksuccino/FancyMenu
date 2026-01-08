@@ -23,7 +23,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuild
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.Minecraft;
@@ -262,9 +261,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                                         }
                                                     }
                                                 } else {
-                                                    this.openContextMenuScreen(NotificationScreen.error(b -> {
-                                                        this.openContextMenuScreen(this.editor);
-                                                    }, LocalizationUtils.splitLocalizedLines("fancymenu.elements.anchor_points.element.setidentifier.identifiernotfound")));
+                                                    Dialogs.openMessage(Component.translatable("fancymenu.elements.anchor_points.element.setidentifier.identifiernotfound"), MessageDialogStyle.ERROR);
                                                 }
                                             }
                                         });
@@ -1902,7 +1899,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         protected boolean isMouseOver(double mouseX, double mouseY) {
             int x = this.getX();
             int y = this.getY();
-            return (mouseX >= x - size / 2) && (mouseX <= x + size / 2) && (mouseY >= y - size / 2) && (mouseY <= y + size / 2);
+            return (mouseX >= x - (double)size/2) && (mouseX <= x + (double)size/2) && (mouseY >= y - (double)size/2) && (mouseY <= y + (double)size/2);
         }
 
     }
@@ -1931,11 +1928,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         }
 
         protected int getY() {
-            float centerY = AbstractEditorElement.this.getY() + (AbstractEditorElement.this.getHeight() / 2.0F);
             float lineExtension = 20;
             float lineLength = AbstractEditorElement.this.getHeight() + (lineExtension * 2);
             float lineTop = AbstractEditorElement.this.getY() - lineExtension;
-
             // Map tilt angle (-60 to 60) to position on line
             // 0 degrees = center, -60 = top, 60 = bottom
             float normalizedTilt = (AbstractEditorElement.this.element.verticalTiltDegrees + 60.0F) / 120.0F; // 0 to 1
@@ -1961,7 +1956,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         protected boolean isMouseOver(double mouseX, double mouseY) {
             int x = this.getX();
             int y = this.getY();
-            return (mouseX >= x - size/2) && (mouseX <= x + size/2) && (mouseY >= y - size/2) && (mouseY <= y + size/2);
+            return (mouseX >= x - (double)size/2) && (mouseX <= x + (double)size/2) && (mouseY >= y - (double)size/2) && (mouseY <= y + (double)size/2);
         }
 
     }
@@ -1985,11 +1980,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         }
 
         protected int getX() {
-            float centerX = AbstractEditorElement.this.getX() + (AbstractEditorElement.this.getWidth() / 2.0F);
             float lineExtension = 20;
             float lineLength = AbstractEditorElement.this.getWidth() + (lineExtension * 2);
             float lineLeft = AbstractEditorElement.this.getX() - lineExtension;
-
             // Map tilt angle (-60 to 60) to position on line
             // 0 degrees = center, -60 = left, 60 = right
             float normalizedTilt = (AbstractEditorElement.this.element.horizontalTiltDegrees + 60.0F) / 120.0F; // 0 to 1
@@ -2020,7 +2013,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         protected boolean isMouseOver(double mouseX, double mouseY) {
             int x = this.getX();
             int y = this.getY();
-            return (mouseX >= x - size/2) && (mouseX <= x + size/2) && (mouseY >= y - size/2) && (mouseY <= y + size/2);
+            return (mouseX >= x - (double)size/2) && (mouseX <= x + (double)size/2) && (mouseY >= y - (double)size/2) && (mouseY <= y + (double)size/2);
         }
 
     }

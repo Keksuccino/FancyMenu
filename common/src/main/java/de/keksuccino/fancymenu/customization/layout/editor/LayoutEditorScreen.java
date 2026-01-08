@@ -27,7 +27,6 @@ import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -38,9 +37,10 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -897,9 +897,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.layout.updateLastEditedTime();
 			this.serializeElementInstancesToLayoutInstance();
 			if (!this.layout.saveToFileIfPossible()) {
-				this.openChildScreen(NotificationScreen.error((call) -> {
-					Minecraft.getInstance().setScreen(this);
-				}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+				Dialogs.openMessage(Component.translatable("fancymenu.editor.saving_failed.generic"), MessageDialogStyle.ERROR);
 			} else {
 				this.unsavedChanges = false;
 				LayoutHandler.reloadLayouts();
@@ -932,18 +930,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						if (old != null) old.delete(false);
 					}
 					if (!this.layout.saveToFileIfPossible()) {
-                        this.openChildScreen(NotificationScreen.error((call2) -> {
-							Minecraft.getInstance().setScreen(this);
-						}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+                        Dialogs.openMessage(Component.translatable("fancymenu.editor.saving_failed.generic"), MessageDialogStyle.ERROR);
 					} else {
 						this.unsavedChanges = false;
 						LayoutHandler.reloadLayouts();
 					}
 				} catch (Exception ex) {
 					LOGGER.error("[FANCYMENU] Error while saving layout in editor!", ex);
-                    this.openChildScreen(NotificationScreen.error((call2) -> {
-						Minecraft.getInstance().setScreen(this);
-					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+                    Dialogs.openMessage(Component.translatable("fancymenu.editor.saving_failed.generic"), MessageDialogStyle.ERROR);
 				}
 			}
 			Minecraft.getInstance().setScreen(this);

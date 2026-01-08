@@ -3,9 +3,8 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.widget.WidgetLocatorHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,10 +35,7 @@ public class MimicButtonAction extends Action {
             if (value.contains(":")) {
                 if (!WidgetLocatorHandler.invokeWidgetOnClick(value)) {
                     LOGGER.error("[FANCYMENU] Failed to mimic button '" + value + "'!", new Exception());
-                    Screen current = Minecraft.getInstance().screen;
-                    Minecraft.getInstance().setScreen(NotificationScreen.error(aBoolean -> {
-                        Minecraft.getInstance().setScreen(current);
-                    }, LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimic_button.error")));
+                    Dialogs.openMessage(Component.translatable("fancymenu.actions.mimic_button.error"), MessageDialogStyle.ERROR);
                 }
             }
         }

@@ -47,6 +47,7 @@ public class MessageDialogBody extends PiPScreen {
     private ExtendedButton okayButton;
 
     private long delayEnd = -1;
+    private boolean forceOkOnly = false;
 
     public MessageDialogBody(@NotNull Component message, @NotNull MessageDialogStyle style, @Nullable Consumer<Boolean> callback) {
         super(Component.empty());
@@ -57,39 +58,14 @@ public class MessageDialogBody extends PiPScreen {
 
     @Override
     protected void init() {
-        if (this.callback != null) {
-            this.cancelButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
-                handleResult(false);
-            });
-            this.addRenderableWidget(this.cancelButton);
-            UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
-
-            this.acceptButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.accept"), (button) -> {
-                handleResult(true);
-            });
-            this.acceptButton.setForceDefaultTooltipStyle(true);
-            this.acceptButton.setIsActiveSupplier(consumes -> canAccept());
-            this.acceptButton.setTooltipSupplier(consumes -> buildDelayTooltip());
-            this.addRenderableWidget(this.acceptButton);
-            UIBase.applyDefaultWidgetSkinTo(this.acceptButton);
-        } else {
-            this.okayButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.ok"), (button) -> {
-                handleResult(true);
-            });
-            this.okayButton.setForceDefaultTooltipStyle(true);
-            this.okayButton.setIsActiveSupplier(consumes -> canAccept());
-            this.okayButton.setTooltipSupplier(consumes -> buildDelayTooltip());
-            this.addRenderableWidget(this.okayButton);
-            UIBase.applyDefaultWidgetSkinTo(this.okayButton);
-        }
-
+        rebuildButtons();
         this.updateRenderLines();
     }
 
     @Override
     public void onWindowClosedExternally() {
         if (this.callback != null) {
-            this.callback.accept(false);
+            this.callback.accept(this.forceOkOnly); // returns false by default, but since force-ok should always return true, we simply use the forceOkOnly flag here
         }
     }
 
@@ -196,6 +172,62 @@ public class MessageDialogBody extends PiPScreen {
 
     private void renderIcon(@NotNull GuiGraphics graphics, @NotNull ResourceLocation icon, int x, int y) {
         graphics.blit(icon, x, y, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+    }
+
+    private void rebuildButtons() {
+        if (this.okayButton != null) {
+            this.removeWidget(this.okayButton);
+            this.okayButton = null;
+        }
+        if (this.cancelButton != null) {
+            this.removeWidget(this.cancelButton);
+            this.cancelButton = null;
+        }
+        if (this.acceptButton != null) {
+            this.removeWidget(this.acceptButton);
+            this.acceptButton = null;
+        }
+
+        if (isOkOnlyMode()) {
+            this.okayButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.ok"), (button) -> {
+                handleResult(true);
+            });
+            this.okayButton.setForceDefaultTooltipStyle(true);
+            this.okayButton.setIsActiveSupplier(consumes -> canAccept());
+            this.okayButton.setTooltipSupplier(consumes -> buildDelayTooltip());
+            this.addRenderableWidget(this.okayButton);
+            UIBase.applyDefaultWidgetSkinTo(this.okayButton);
+        } else {
+            this.cancelButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
+                handleResult(false);
+            });
+            this.addRenderableWidget(this.cancelButton);
+            UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+
+            this.acceptButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.accept"), (button) -> {
+                handleResult(true);
+            });
+            this.acceptButton.setForceDefaultTooltipStyle(true);
+            this.acceptButton.setIsActiveSupplier(consumes -> canAccept());
+            this.acceptButton.setTooltipSupplier(consumes -> buildDelayTooltip());
+            this.addRenderableWidget(this.acceptButton);
+            UIBase.applyDefaultWidgetSkinTo(this.acceptButton);
+        }
+    }
+
+    private boolean isOkOnlyMode() {
+        return this.callback == null || this.forceOkOnly;
+    }
+
+    public MessageDialogBody setForceOkOnly(boolean forceOkOnly) {
+        if (this.forceOkOnly == forceOkOnly) {
+            return this;
+        }
+        this.forceOkOnly = forceOkOnly;
+        if (this.okayButton != null || this.cancelButton != null || this.acceptButton != null) {
+            rebuildButtons();
+        }
+        return this;
     }
 
     public MessageDialogBody setDelay(long delayMs) {

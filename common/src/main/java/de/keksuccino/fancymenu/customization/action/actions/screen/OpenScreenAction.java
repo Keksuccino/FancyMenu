@@ -6,7 +6,8 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
@@ -55,10 +56,7 @@ public class OpenScreenAction extends Action {
                             Minecraft.getInstance().setScreen(s);
                         } else {
                             LOGGER.error("[FANCYMENU] Unable to construct screen instance for '" + value + "'!", new Exception());
-                            Screen current = Minecraft.getInstance().screen;
-                            Minecraft.getInstance().setScreen(NotificationScreen.error(aBoolean -> {
-                                Minecraft.getInstance().setScreen(current);
-                            }, LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_screen.error")));
+                            Dialogs.openMessage(Component.translatable("fancymenu.actions.open_screen.error"), MessageDialogStyle.ERROR);
                         }
                     }
                 }

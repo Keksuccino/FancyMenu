@@ -8,7 +8,8 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -181,8 +182,7 @@ public class MimicKeybindAction extends Action {
         long now = System.currentTimeMillis();
         if ((lastErrorNotification + 60000) < now) {
             lastErrorNotification = now;
-            Screen current = Minecraft.getInstance().screen;
-            Minecraft.getInstance().setScreen(NotificationScreen.error(callback -> Minecraft.getInstance().setScreen(current), LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimic_keybind.error")));
+            Dialogs.openMessage(Component.translatable("fancymenu.actions.mimic_keybind.error"), MessageDialogStyle.ERROR);
         }
     }
 

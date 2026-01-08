@@ -36,7 +36,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
@@ -778,11 +777,11 @@ public class CustomizationOverlayUI {
                                 if (tex != null) {
                                     tex.waitForReady(5000);
                                     if ((tex.getWidth() != 16) || (tex.getHeight() != 16)) {
-                                        Minecraft.getInstance().setScreen(NotificationScreen.error(b -> {
+                                        Minecraft.getInstance().setScreen(screen1);
+                                        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.wrong_resolution", "16x16"), MessageDialogStyle.ERROR, b -> {
                                             FancyMenu.getOptions().customWindowIcon16.setValue("");
-                                            Minecraft.getInstance().setScreen(screen1);
                                             forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("global_customizations", "window_icon")));
-                                        }, LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.wrong_resolution", "16x16")));
+                                        });
                                     } else {
                                         Minecraft.getInstance().setScreen(screen1);
                                         forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("global_customizations", "window_icon")));
@@ -822,11 +821,11 @@ public class CustomizationOverlayUI {
                                 if (tex != null) {
                                     tex.waitForReady(5000);
                                     if ((tex.getWidth() != 32) || (tex.getHeight() != 32)) {
-                                        Minecraft.getInstance().setScreen(NotificationScreen.error(b -> {
+                                        Minecraft.getInstance().setScreen(screen1);
+                                        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.wrong_resolution", "32x32"), MessageDialogStyle.ERROR, b -> {
                                             FancyMenu.getOptions().customWindowIcon32.setValue("");
-                                            Minecraft.getInstance().setScreen(screen1);
                                             forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("global_customizations", "window_icon")));
-                                        }, LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.wrong_resolution", "32x32")));
+                                        });
                                     } else {
                                         Minecraft.getInstance().setScreen(screen1);
                                         forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("global_customizations", "window_icon")));

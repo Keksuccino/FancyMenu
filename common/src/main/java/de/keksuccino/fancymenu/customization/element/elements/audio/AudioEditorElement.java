@@ -2,10 +2,10 @@ package de.keksuccino.fancymenu.customization.element.elements.audio;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundSource;
@@ -61,9 +61,7 @@ public class AudioEditorElement extends AbstractEditorElement<AudioEditorElement
         this.rightClickMenu.addSeparatorEntry("separator_after_volume");
 
         this.rightClickMenu.addClickableEntry("disable_vanilla_music", Component.translatable("fancymenu.elements.audio.disable_vanilla_music"), (menu, entry) -> {
-                    this.openContextMenuScreen(NotificationScreen.notificationWithHeadline(
-                            aBoolean -> this.openContextMenuScreen(this.editor),
-                            LocalizationUtils.splitLocalizedLines("fancymenu.elements.audio.disable_vanilla_music.desc")));
+                    Dialogs.openMessage(Component.translatable("fancymenu.elements.audio.disable_vanilla_music.desc"), MessageDialogStyle.INFO);
                 })
                 .setStackable(true);
 
