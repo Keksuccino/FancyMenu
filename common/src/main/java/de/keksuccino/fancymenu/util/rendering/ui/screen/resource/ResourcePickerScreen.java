@@ -24,6 +24,8 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.sounds.SoundEvents;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -34,6 +36,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public class ResourcePickerScreen extends AbstractBrowserScreen {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @Nullable
     protected FileTypeGroup<?> allowedFileTypes;
@@ -170,42 +174,22 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
         return null;
     }
 
-    @Nullable
-    protected ResourceLocation getSelectedLocation() {
-        ResourceScrollAreaEntry selected = this.getSelectedEntry();
-        if ((selected != null) && !selected.resourceUnfriendlyName) {
-            return selected.location;
-        }
-        return null;
-    }
-
-    public void setFileTypes(@Nullable FileTypeGroup<?> typeGroup) {
-        this.allowedFileTypes = typeGroup;
-        this.updateResourceList();
-        this.updateFileTypeScrollArea();
-    }
-
-    @Nullable
-    public FileTypeGroup<?> getFileTypes() {
-        return this.allowedFileTypes;
-    }
-
     @Override
     public void updateFileTypeScrollArea() {
         this.fileTypeScrollArea.clearEntries();
         this.currentFileTypesComponent = Component.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
         if (this.allowedFileTypes != null) {
-            String types = "";
+            StringBuilder types = new StringBuilder();
             for (FileType<?> type : this.allowedFileTypes.getFileTypes()) {
                 if (!type.isLocationAllowed()) continue;
                 for (String s : type.getExtensions()) {
-                    if (!types.isEmpty()) types += ";";
-                    types += "*." + s.toUpperCase();
+                    if (!types.isEmpty()) types.append(";");
+                    types.append("*.").append(s.toUpperCase());
                 }
             }
             Component fileTypeDisplayName = this.allowedFileTypes.getDisplayName();
             if (fileTypeDisplayName == null) fileTypeDisplayName = Component.empty();
-            this.currentFileTypesComponent = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types)).append(Component.literal(")"));
+            this.currentFileTypesComponent = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types.toString())).append(Component.literal(")"));
         }
         this.currentFileTypesComponent = this.currentFileTypesComponent.withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
         TextScrollAreaEntry entry = new TextScrollAreaEntry(this.fileTypeScrollArea, this.currentFileTypesComponent, textScrollAreaEntry -> {});
@@ -358,11 +342,12 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
 
     @Nullable
     protected String getRelativePathForLocation(@NotNull ResourceLocation location) {
+        String s = location.getNamespace() + "/" + location.getPath();
         if (this.currentNamespace == null) {
-            return location.getNamespace() + "/" + location.getPath();
+            return s;
         }
         if (!Objects.equals(location.getNamespace(), this.currentNamespace)) {
-            return location.getNamespace() + "/" + location.getPath();
+            return s;
         }
         String prefix = this.currentPath.isEmpty() ? "" : this.currentPath + "/";
         String path = location.getPath();
@@ -397,11 +382,6 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
         }
         this.updateResourceList();
         this.updateCurrentDirectoryComponent();
-    }
-
-    public void updatePreviewSelection() {
-        ResourceLocation location = this.getSelectedLocation();
-        this.updatePreview(location);
     }
 
     protected boolean isAllowedLocation(@NotNull ResourceLocation location) {
@@ -505,7 +485,7 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
             this.addWidget(this.currentDirectoryComponent);
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to update current directory Component in ResourcePickerScreen!", ex);
         }
     }
 
