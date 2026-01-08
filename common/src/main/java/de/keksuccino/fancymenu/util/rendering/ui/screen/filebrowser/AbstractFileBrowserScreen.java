@@ -7,9 +7,7 @@ import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
-import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
-import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
-import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
+import de.keksuccino.fancymenu.util.file.type.types.*;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
@@ -694,6 +692,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         protected boolean resourceUnfriendlyFileName = false;
         protected final MutableComponent fileNameComponent;
         protected long lastClick = -1;
+        protected final FileType<?> fileType;
 
         public AbstractFileScrollAreaEntry(@NotNull ScrollArea parent, @NotNull File file) {
 
@@ -706,6 +705,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
             this.playClickSound = false;
 
+            this.fileType = this.file.isFile() ? FileTypes.getLocalType(this.file) : null;
+
         }
 
         @Override
@@ -717,6 +718,12 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
                 //Render icon
                 ResourceLocation loc = this.file.isFile() ? GENERIC_FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
+                if (!this.file.isFile() && (this.fileType != null)) {
+                    if (this.fileType instanceof TextFileType) loc = TEXT_FILE_ICON_TEXTURE;
+                    if (this.fileType instanceof VideoFileType) loc = VIDEO_FILE_ICON_TEXTURE;
+                    if (this.fileType instanceof AudioFileType) loc = AUDIO_FILE_ICON_TEXTURE;
+                    if (this.fileType instanceof ImageFileType) loc = IMAGE_FILE_ICON_TEXTURE;
+                }
                 graphics.blit(loc, (int)(this.x + BORDER), (int)(this.y + BORDER), 0.0F, 0.0F, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
 
                 //Render file name
