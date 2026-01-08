@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
-import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -43,18 +42,6 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
     @Override
     protected AbstractFileScrollAreaEntry buildFileEntry(@NotNull File f) {
         return new FileScrollAreaEntry(this.fileListScrollArea, f);
-    }
-
-    @Override
-    public boolean keyPressed(int keycode, int scancode, int modifiers) {
-        if (keycode == InputConstants.KEY_ENTER) {
-            AbstractFileScrollAreaEntry selected = this.getSelectedEntry();
-            if (selected != null) {
-                this.callback.accept(new File(selected.file.getPath().replace("\\", "/")));
-                return true;
-            }
-        }
-        return super.keyPressed(keycode, scancode, modifiers);
     }
 
     public class FileScrollAreaEntry extends AbstractFileScrollAreaEntry {

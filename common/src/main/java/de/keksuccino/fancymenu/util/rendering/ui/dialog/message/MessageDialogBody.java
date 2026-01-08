@@ -195,12 +195,16 @@ public class MessageDialogBody extends PiPScreen {
             this.okayButton.setForceDefaultTooltipStyle(true);
             this.okayButton.setIsActiveSupplier(consumes -> canAccept());
             this.okayButton.setTooltipSupplier(consumes -> buildDelayTooltip());
+            this.okayButton.setFocusable(false);
+            this.okayButton.setNavigatable(false);
             this.addRenderableWidget(this.okayButton);
             UIBase.applyDefaultWidgetSkinTo(this.okayButton);
         } else {
             this.cancelButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
                 handleResult(false);
             });
+            this.cancelButton.setFocusable(false);
+            this.cancelButton.setNavigatable(false);
             this.addRenderableWidget(this.cancelButton);
             UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
@@ -210,6 +214,8 @@ public class MessageDialogBody extends PiPScreen {
             this.acceptButton.setForceDefaultTooltipStyle(true);
             this.acceptButton.setIsActiveSupplier(consumes -> canAccept());
             this.acceptButton.setTooltipSupplier(consumes -> buildDelayTooltip());
+            this.acceptButton.setFocusable(false);
+            this.acceptButton.setNavigatable(false);
             this.addRenderableWidget(this.acceptButton);
             UIBase.applyDefaultWidgetSkinTo(this.acceptButton);
         }

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.*;
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
@@ -57,6 +58,7 @@ public abstract class AbstractFileBrowserScreen extends Screen implements Initia
 
     protected static final int ICON_WIDTH = 32;
     protected static final int ICON_HEIGHT = 32;
+    protected static final long PREVIEW_DELAY_MS = 1000L;
 
     // All icon textures are 32x32 pixels
     protected static final ResourceLocation GO_UP_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/go_up_icon.png");
@@ -93,12 +95,19 @@ public abstract class AbstractFileBrowserScreen extends Screen implements Initia
     protected ExtendedEditBox searchBar;
     @NotNull
     protected Component searchBarPlaceholder = Component.translatable("fancymenu.ui.generic.search");
+    protected boolean enterKeyForDoneEnabled = true;
     @Nullable
     protected ResourceSupplier<ITexture> previewTextureSupplier;
     @Nullable
     protected ResourceSupplier<IText> previewTextSupplier;
     @Nullable
     protected IText currentPreviewText;
+    @Nullable
+    protected File pendingPreviewFile;
+    @Nullable
+    protected File activePreviewFile;
+    protected long pendingPreviewLoadAtMs = 0L;
+    protected boolean previewPending = false;
     protected ExtendedButton confirmButton;
     protected ExtendedButton cancelButton;
     protected ExtendedButton openInExplorerButton;
@@ -239,6 +248,24 @@ public abstract class AbstractFileBrowserScreen extends Screen implements Initia
     public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
+    @Override
+    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+        if (keycode == InputConstants.KEY_TAB) {
+            return true;
+        }
+        if ((keycode == InputConstants.KEY_ENTER) || (keycode == InputConstants.KEY_NUMPADENTER)) {
+            return this.handleEnterKey();
+        }
+        if ((keycode == InputConstants.KEY_UP) || (keycode == InputConstants.KEY_DOWN)) {
+            return this.handleVerticalNavigation(keycode == InputConstants.KEY_DOWN);
+        }
+        if ((keycode == InputConstants.KEY_LEFT) || (keycode == InputConstants.KEY_RIGHT)) {
+            this.forwardKeyToFocusedWidget(keycode, scancode, modifiers);
+            return true;
+        }
+        return super.keyPressed(keycode, scancode, modifiers);
+    }
+
     protected void renderOpenInExplorerButton(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.openInExplorerButton.setX(this.width - 20 - this.openInExplorerButton.getWidth());
         this.openInExplorerButton.setY(this.cancelButton.getY() - 15 - 20);
@@ -277,6 +304,7 @@ public abstract class AbstractFileBrowserScreen extends Screen implements Initia
     }
 
     protected void renderPreview(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.tickPreviewDelay();
         this.tickTextPreview();
         if (this.previewTextureSupplier != null) {
             ITexture t = this.previewTextureSupplier.get();
@@ -459,6 +487,16 @@ public abstract class AbstractFileBrowserScreen extends Screen implements Initia
         return this;
     }
 
+    protected boolean goUpDirectory() {
+        if (this.currentIsRootDirectory()) return false;
+        File parent = this.getParentDirectoryOfCurrent();
+        if ((parent != null) && parent.isDirectory()) {
+            this.setDirectory(parent, true);
+            return true;
+        }
+        return false;
+    }
+
     public int getVisibleDirectoryLevelsAboveRoot() {
         return this.visibleDirectoryLevelsAboveRoot;
     }
@@ -513,12 +551,31 @@ public abstract class AbstractFileBrowserScreen extends Screen implements Initia
         this.searchBarPlaceholder = placeholder;
     }
 
+    /**
+     * Enable or disable the enter key action (acts like pressing the confirm button).
+     */
+    protected void setEnterKeyForDoneEnabled(boolean enabled) {
+        this.enterKeyForDoneEnabled = enabled;
+    }
+
+    protected boolean allowEnterForDone() {
+        return this.enterKeyForDoneEnabled;
+    }
+
     @Nullable
     protected AbstractFileScrollAreaEntry getSelectedEntry() {
         for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
             if (e instanceof AbstractFileScrollAreaEntry f) {
                 if (f.isSelected()) return f;
             }
+        }
+        return null;
+    }
+
+    @Nullable
+    protected ScrollAreaEntry getSelectedScrollEntry() {
+        for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
+            if (e.isSelected()) return e;
         }
         return null;
     }
@@ -569,16 +626,74 @@ public abstract class AbstractFileBrowserScreen extends Screen implements Initia
 
     public void updatePreview(@Nullable File file) {
         if ((file != null) && file.isFile()) {
+            if (!this.previewPending && (this.activePreviewFile != null) && this.activePreviewFile.equals(file)) {
+                return;
+            }
+            this.pendingPreviewFile = file;
+            this.pendingPreviewLoadAtMs = System.currentTimeMillis() + PREVIEW_DELAY_MS;
+            this.previewPending = true;
+            this.activePreviewFile = null;
+            this.clearPreviewDisplay(false);
+        } else {
+            this.cancelPendingPreview();
+            this.activePreviewFile = null;
+            this.clearPreviewDisplay(true);
+        }
+    }
+
+    protected void tickPreviewDelay() {
+        if (!this.previewPending) return;
+        if (this.pendingPreviewFile == null) {
+            this.previewPending = false;
+            return;
+        }
+        if (System.currentTimeMillis() < this.pendingPreviewLoadAtMs) return;
+        File pending = this.pendingPreviewFile;
+        this.pendingPreviewFile = null;
+        this.previewPending = false;
+        if (this.isFileStillSelected(pending)) {
+            this.loadPreviewNow(pending);
+        }
+    }
+
+    protected boolean isFileStillSelected(@NotNull File file) {
+        AbstractFileScrollAreaEntry selected = this.getSelectedEntry();
+        if (selected == null) return false;
+        return selected.file.getPath().equals(file.getPath());
+    }
+
+    protected void loadPreviewNow(@NotNull File file) {
+        if (file.isFile()) {
             this.setTextPreview(file);
             if (FileTypes.getLocalType(file) instanceof ImageFileType) {
                 this.previewTextureSupplier = ResourceSupplier.image(file.getPath());
             } else {
                 this.previewTextureSupplier = null;
             }
+            if (this.previewTextureSupplier == null && this.previewTextSupplier == null) {
+                this.setNoTextPreview();
+            }
+            this.activePreviewFile = file;
         } else {
-            this.setTextPreview(null);
-            this.previewTextureSupplier = null;
+            this.activePreviewFile = null;
+            this.clearPreviewDisplay(true);
         }
+    }
+
+    protected void clearPreviewDisplay(boolean showNoPreview) {
+        this.previewTextureSupplier = null;
+        this.setTextPreview(null);
+        this.currentPreviewText = null;
+        if (showNoPreview) {
+            this.setNoTextPreview();
+        } else if (this.previewTextScrollArea != null) {
+            this.previewTextScrollArea.clearEntries();
+        }
+    }
+
+    protected void cancelPendingPreview() {
+        this.pendingPreviewFile = null;
+        this.previewPending = false;
     }
 
     protected void setTextPreview(@Nullable File file) {
@@ -596,6 +711,7 @@ public abstract class AbstractFileBrowserScreen extends Screen implements Initia
     }
 
     protected void tickTextPreview() {
+        if (this.previewPending) return;
         if (this.previewTextScrollArea == null) return;
         if (this.previewTextSupplier != null) {
             IText text = this.previewTextSupplier.get();
@@ -883,6 +999,132 @@ public abstract class AbstractFileBrowserScreen extends Screen implements Initia
         return file.getName();
     }
 
+    protected boolean handleEnterKey() {
+        ScrollAreaEntry selectedEntry = this.getSelectedScrollEntry();
+        if (selectedEntry instanceof ParentDirScrollAreaEntry) {
+            this.goUpDirectory();
+            return true;
+        }
+        if (selectedEntry instanceof AbstractFileScrollAreaEntry fileEntry) {
+            if (!fileEntry.resourceUnfriendlyFileName && fileEntry.file.isDirectory()) {
+                this.setDirectory(fileEntry.file, true);
+                return true;
+            }
+        }
+        if (!this.allowEnterForDone()) return true;
+        if (this.confirmButton != null && this.confirmButton.active) {
+            this.confirmButton.onPress();
+            return true;
+        }
+        return true;
+    }
+
+    protected boolean handleVerticalNavigation(boolean moveDown) {
+        List<ScrollAreaEntry> entries = this.getSelectableFileEntries();
+        if (entries.isEmpty()) {
+            if (!moveDown) {
+                this.focusSearchBar();
+            }
+            return true;
+        }
+        if (this.searchBarEnabled && this.searchBar != null && this.searchBar.isFocused()) {
+            if (moveDown) {
+                this.selectEntry(entries.get(0));
+            }
+            return true;
+        }
+        ScrollAreaEntry selected = this.getSelectedScrollEntry();
+        int selectedIndex = (selected != null) ? entries.indexOf(selected) : -1;
+        if (moveDown) {
+            if (selectedIndex < 0) {
+                this.selectEntry(entries.get(0));
+            } else if (selectedIndex < entries.size() - 1) {
+                this.selectEntry(entries.get(selectedIndex + 1));
+            }
+        } else {
+            if (selectedIndex <= 0) {
+                if (this.searchBarEnabled && this.searchBar != null) {
+                    this.clearSelectedEntries();
+                    this.focusSearchBar();
+                }
+            } else {
+                this.selectEntry(entries.get(selectedIndex - 1));
+            }
+        }
+        return true;
+    }
+
+    @NotNull
+    protected List<ScrollAreaEntry> getSelectableFileEntries() {
+        List<ScrollAreaEntry> entries = new ArrayList<>();
+        for (ScrollAreaEntry entry : this.fileListScrollArea.getEntries()) {
+            if (entry.isSelectable()) {
+                entries.add(entry);
+            }
+        }
+        return entries;
+    }
+
+    protected void selectEntry(@NotNull ScrollAreaEntry entry) {
+        entry.setSelected(true);
+        this.ensureEntryVisible(entry);
+        if (entry instanceof AbstractFileScrollAreaEntry fileEntry) {
+            this.updatePreview(fileEntry.file);
+        } else {
+            this.updatePreview(null);
+        }
+        this.setFocused(null);
+    }
+
+    protected void clearSelectedEntries() {
+        for (ScrollAreaEntry entry : this.fileListScrollArea.getEntries()) {
+            entry.setSelected(false);
+        }
+        this.updatePreview(null);
+    }
+
+    protected void ensureEntryVisible(@NotNull ScrollAreaEntry entry) {
+        float totalScrollHeight = this.fileListScrollArea.getTotalScrollHeight();
+        if (totalScrollHeight <= 0.0F) return;
+        float innerY = this.fileListScrollArea.getInnerY();
+        float innerHeight = this.fileListScrollArea.getInnerHeight();
+        float entryTopUnscrolled = innerY;
+        for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
+            if (e == entry) break;
+            entryTopUnscrolled += e.getHeight();
+        }
+        float entryTop = entryTopUnscrolled + this.fileListScrollArea.getEntryRenderOffsetY(totalScrollHeight);
+        float entryBottom = entryTop + entry.getHeight();
+        float innerBottom = innerY + innerHeight;
+        float scroll = this.fileListScrollArea.verticalScrollBar.getScroll();
+        float newScroll = scroll;
+        if (entryTop < innerY) {
+            float delta = innerY - entryTop;
+            newScroll = scroll - (delta / totalScrollHeight);
+        } else if (entryBottom > innerBottom) {
+            float delta = entryBottom - innerBottom;
+            newScroll = scroll + (delta / totalScrollHeight);
+        }
+        if (newScroll < 0.0F) newScroll = 0.0F;
+        if (newScroll > 1.0F) newScroll = 1.0F;
+        if (newScroll != scroll) {
+            this.fileListScrollArea.verticalScrollBar.setScroll(newScroll);
+        }
+    }
+
+    protected void focusSearchBar() {
+        if (!this.searchBarEnabled || this.searchBar == null) return;
+        this.setFocused(this.searchBar);
+    }
+
+    protected boolean forwardKeyToFocusedWidget(int keycode, int scancode, int modifiers) {
+        GuiEventListener focused = this.getFocused();
+        if (focused != null) {
+            return focused.keyPressed(keycode, scancode, modifiers);
+        }
+        return false;
+    }
+
     public class ParentDirScrollAreaEntry extends ScrollAreaEntry {
 
         private static final int BORDER = 3;
@@ -925,12 +1167,7 @@ public abstract class AbstractFileBrowserScreen extends Screen implements Initia
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {
-                if (!AbstractFileBrowserScreen.this.currentIsRootDirectory()) {
-                    File parent = AbstractFileBrowserScreen.this.getParentDirectoryOfCurrent();
-                    if ((parent != null) && parent.isDirectory()) {
-                        AbstractFileBrowserScreen.this.setDirectory(parent, true);
-                    }
-                }
+                AbstractFileBrowserScreen.this.goUpDirectory();
             }
             AbstractFileBrowserScreen.this.updatePreview(null);
             this.lastClick = now;

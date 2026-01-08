@@ -217,7 +217,18 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
-        if (keycode == InputConstants.KEY_ENTER) {
+        if ((keycode == InputConstants.KEY_ENTER) || (keycode == InputConstants.KEY_NUMPADENTER)) {
+            ScrollAreaEntry selectedEntry = this.getSelectedScrollEntry();
+            if (selectedEntry instanceof ParentDirScrollAreaEntry) {
+                this.goUpDirectory();
+                return true;
+            }
+            if (selectedEntry instanceof AbstractFileScrollAreaEntry fileEntry) {
+                if (!fileEntry.resourceUnfriendlyFileName && fileEntry.file.isDirectory()) {
+                    this.setDirectory(fileEntry.file, true);
+                    return true;
+                }
+            }
             this.trySave();
             return true;
         }
