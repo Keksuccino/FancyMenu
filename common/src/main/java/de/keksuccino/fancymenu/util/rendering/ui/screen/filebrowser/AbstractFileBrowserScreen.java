@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
@@ -53,8 +52,16 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     protected static final Logger LOGGER = LogManager.getLogger();
 
+    protected static final int ICON_WIDTH = 32;
+    protected static final int ICON_HEIGHT = 32;
+
+    // All icon textures are 32x32 pixels
     protected static final ResourceLocation GO_UP_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/go_up_icon.png");
-    protected static final ResourceLocation FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/file_icon.png");
+    protected static final ResourceLocation GENERIC_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/file_icon.png");
+    protected static final ResourceLocation TEXT_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/text_file_icon.png");
+    protected static final ResourceLocation AUDIO_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/audio_file_icon.png");
+    protected static final ResourceLocation VIDEO_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/video_file_icon.png");
+    protected static final ResourceLocation IMAGE_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/image_file_icon.png");
     protected static final ResourceLocation FOLDER_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/folder_icon.png");
     protected static final Component FILE_TYPE_PREFIX_TEXT = Component.translatable("fancymenu.file_browser.file_type");
 
@@ -709,10 +716,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 RenderSystem.enableBlend();
 
                 //Render icon
-                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
-                ResourceLocation loc = this.file.isFile() ? FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
-                graphics.blit(loc, (int)(this.x + BORDER), (int)(this.y + BORDER), 0.0F, 0.0F, 20, 20, 20, 20);
-                UIBase.resetShaderColor(graphics);
+                ResourceLocation loc = this.file.isFile() ? GENERIC_FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
+                graphics.blit(loc, (int)(this.x + BORDER), (int)(this.y + BORDER), 0.0F, 0.0F, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
 
                 //Render file name
                 int textColor = this.resourceUnfriendlyFileName ? UIBase.getUIColorTheme().error_text_color.getColorInt() : UIBase.getUIColorTheme().description_area_text_color.getColorInt();
@@ -758,9 +763,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             RenderSystem.enableBlend();
 
             //Render icon
-            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
-            graphics.blit(GO_UP_ICON_TEXTURE, (int)(this.x + BORDER), (int)(this.y + BORDER), 0.0F, 0.0F, 20, 20, 20, 20);
-            UIBase.resetShaderColor(graphics);
+            graphics.blit(GO_UP_ICON_TEXTURE, (int)(this.x + BORDER), (int)(this.y + BORDER), 0.0F, 0.0F, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
 
             //Render file name
             graphics.drawString(this.font, this.labelComponent, (int)(this.x + BORDER + 20 + 3), (int)(this.y + (this.height / 2) - (this.font.lineHeight / 2)) , -1, false);
