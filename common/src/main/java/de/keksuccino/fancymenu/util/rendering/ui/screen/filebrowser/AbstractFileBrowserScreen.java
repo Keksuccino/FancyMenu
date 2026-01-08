@@ -718,13 +718,18 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
                 //Render icon
                 ResourceLocation loc = this.file.isFile() ? GENERIC_FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
-                if (!this.file.isFile() && (this.fileType != null)) {
+                if (this.file.isFile() && (this.fileType != null)) {
                     if (this.fileType instanceof TextFileType) loc = TEXT_FILE_ICON_TEXTURE;
                     if (this.fileType instanceof VideoFileType) loc = VIDEO_FILE_ICON_TEXTURE;
                     if (this.fileType instanceof AudioFileType) loc = AUDIO_FILE_ICON_TEXTURE;
                     if (this.fileType instanceof ImageFileType) loc = IMAGE_FILE_ICON_TEXTURE;
                 }
-                graphics.blit(loc, (int)(this.x + BORDER), (int)(this.y + BORDER), 0.0F, 0.0F, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
+                float iconScale = 20.0F / (float) ICON_WIDTH;
+                graphics.pose().pushPose();
+                graphics.pose().translate(this.x + BORDER, this.y + BORDER, 0.0F);
+                graphics.pose().scale(iconScale, iconScale, 1.0F);
+                graphics.blit(loc, 0, 0, 0.0F, 0.0F, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
+                graphics.pose().popPose();
 
                 //Render file name
                 int textColor = this.resourceUnfriendlyFileName ? UIBase.getUIColorTheme().error_text_color.getColorInt() : UIBase.getUIColorTheme().description_area_text_color.getColorInt();
@@ -770,7 +775,12 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             RenderSystem.enableBlend();
 
             //Render icon
-            graphics.blit(GO_UP_ICON_TEXTURE, (int)(this.x + BORDER), (int)(this.y + BORDER), 0.0F, 0.0F, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
+            float iconScale = 20.0F / (float) ICON_WIDTH;
+            graphics.pose().pushPose();
+            graphics.pose().translate(this.x + BORDER, this.y + BORDER, 0.0F);
+            graphics.pose().scale(iconScale, iconScale, 1.0F);
+            graphics.blit(GO_UP_ICON_TEXTURE, 0, 0, 0.0F, 0.0F, ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
+            graphics.pose().popPose();
 
             //Render file name
             graphics.drawString(this.font, this.labelComponent, (int)(this.x + BORDER + 20 + 3), (int)(this.y + (this.height / 2) - (this.font.lineHeight / 2)) , -1, false);
