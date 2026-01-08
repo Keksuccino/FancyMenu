@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.*;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
@@ -50,7 +51,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 @SuppressWarnings("all")
-public abstract class AbstractFileBrowserScreen extends Screen {
+public abstract class AbstractFileBrowserScreen extends Screen implements InitialWidgetFocusScreen {
 
     protected static final Logger LOGGER = LogManager.getLogger();
 
@@ -144,6 +145,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             UIBase.applyDefaultWidgetSkinTo(this.searchBar);
             this.searchBar.setMaxLength(100000);
             this.addWidget(this.searchBar);
+            this.setupInitialFocusWidget(this, this.searchBar);
         }
 
         this.confirmButton = this.buildConfirmButton();
@@ -188,6 +190,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        this.performInitialWidgetFocusActionInRender();
 
         //Update horizontal scroll bar of file types area
         if (this.currentFileTypesComponent != null) {
