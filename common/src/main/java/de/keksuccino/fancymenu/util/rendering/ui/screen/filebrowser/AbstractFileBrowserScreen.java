@@ -53,9 +53,9 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     protected static final Logger LOGGER = LogManager.getLogger();
 
-    protected static final ResourceLocation GO_UP_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/go_up_icon.png");
-    protected static final ResourceLocation FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_icon.png");
-    protected static final ResourceLocation FOLDER_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/folder_icon.png");
+    protected static final ResourceLocation GO_UP_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/go_up_icon.png");
+    protected static final ResourceLocation FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/file_icon.png");
+    protected static final ResourceLocation FOLDER_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/folder_icon.png");
     protected static final Component FILE_TYPE_PREFIX_TEXT = Component.translatable("fancymenu.file_browser.file_type");
 
     @Nullable
