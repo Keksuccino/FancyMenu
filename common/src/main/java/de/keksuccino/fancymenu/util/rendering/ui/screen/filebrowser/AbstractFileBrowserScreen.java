@@ -592,11 +592,6 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
         }
 
         @Override
-        protected int getTextColor() {
-            return -1;
-        }
-
-        @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {

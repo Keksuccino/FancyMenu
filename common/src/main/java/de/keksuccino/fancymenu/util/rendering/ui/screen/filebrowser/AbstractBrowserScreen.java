@@ -662,10 +662,6 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
             return ICON_PIXEL_SIZE;
         }
 
-        protected boolean useThemeTextureColor() {
-            return false;
-        }
-
         protected boolean isResourceUnfriendly() {
             return false;
         }
@@ -682,10 +678,6 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
 
             RenderSystem.enableBlend();
 
-            if (this.useThemeTextureColor()) {
-                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
-            }
-
             int textureWidth = this.getIconTextureWidth();
             int textureHeight = this.getIconTextureHeight();
             if ((textureWidth == ICON_PIXEL_SIZE) && (textureHeight == ICON_PIXEL_SIZE)) {
@@ -698,10 +690,6 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
                 graphics.pose().scale(scaleX, scaleY, 1.0F);
                 graphics.blit(this.getIconTexture(), 0, 0, 0.0F, 0.0F, textureWidth, textureHeight, textureWidth, textureHeight);
                 graphics.pose().popPose();
-            }
-
-            if (this.useThemeTextureColor()) {
-                UIBase.resetShaderColor(graphics);
             }
 
             graphics.drawString(this.font, this.entryNameComponent, (int)(this.x + BORDER + ICON_PIXEL_SIZE + 3), (int)(this.y + (this.height / 2) - (this.font.lineHeight / 2)), this.getTextColor(), false);

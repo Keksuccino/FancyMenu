@@ -4,9 +4,7 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
-import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
-import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
-import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
+import de.keksuccino.fancymenu.util.file.type.types.*;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.AbstractBrowserScreen;
@@ -498,11 +496,6 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
         }
 
         @Override
-        protected boolean useThemeTextureColor() {
-            return true;
-        }
-
-        @Override
         protected boolean isResourceUnfriendly() {
             return this.resourceUnfriendlyName;
         }
@@ -544,14 +537,23 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
     public class ResourceScrollAreaEntry extends AbstractResourceScrollAreaEntry {
 
         protected final ResourceLocation location;
+        @Nullable
+        protected final FileType<?> fileType;
 
         public ResourceScrollAreaEntry(@NotNull ScrollArea parent, @NotNull ResourceLocation location) {
             super(parent, ResourcePickerScreen.this.getDisplayNameForLocation(location));
             this.location = location;
+            this.fileType = FileTypes.getLocationType(this.location);
         }
 
         @Override
         protected @NotNull ResourceLocation getIconTexture() {
+            if (this.fileType != null) {
+                if (this.fileType instanceof TextFileType) return TEXT_FILE_ICON_TEXTURE;
+                if (this.fileType instanceof VideoFileType) return VIDEO_FILE_ICON_TEXTURE;
+                if (this.fileType instanceof AudioFileType) return AUDIO_FILE_ICON_TEXTURE;
+                if (this.fileType instanceof ImageFileType) return IMAGE_FILE_ICON_TEXTURE;
+            }
             return GENERIC_FILE_ICON_TEXTURE;
         }
 
@@ -577,16 +579,6 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
         @Override
         protected @NotNull ResourceLocation getIconTexture() {
             return GO_UP_ICON_TEXTURE;
-        }
-
-        @Override
-        protected boolean useThemeTextureColor() {
-            return true;
-        }
-
-        @Override
-        protected int getTextColor() {
-            return -1;
         }
 
         @Override
