@@ -924,7 +924,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				}
 			}
 			Minecraft.getInstance().setScreen(this);
-		}).setVisibleDirectoryLevelsAboveRoot(2).setShowSubDirectories(false);
+		}).setVisibleDirectoryLevelsAboveRoot(2).setShowSubDirectories(true);
 		FileTypeGroup<?> fileTypeGroup = FileTypeGroup.of(FileTypes.TXT_TEXT);
 		fileTypeGroup.setDisplayName(Component.translatable("fancymenu.file_types.groups.text"));
 		s.setFileTypes(fileTypeGroup);

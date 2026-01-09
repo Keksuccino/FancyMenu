@@ -67,21 +67,29 @@ public class LayoutHandler {
 		if (!directory.exists()) {
 			directory.mkdirs();
 		}
+		collectLayoutsInDirectory(directory, layouts, LAYOUT_DIR.equals(directory));
+		return layouts;
+	}
+
+	private static void collectLayoutsInDirectory(@NotNull File directory, @NotNull List<Layout> layouts, boolean skipDisabledDir) {
 		File[] filesArray = directory.listFiles();
-		if (filesArray != null) {
-			for (File f : filesArray) {
-				if (f.getPath().toLowerCase().endsWith(".txt")) {
-					PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(f.getAbsolutePath().replace("\\", "/"));
-					if (s != null) {
-						Layout layout = deserializeLayout(s, f);
-						if (layout != null) {
-							layouts.add(layout);
-						}
+		if (filesArray == null) return;
+		for (File f : filesArray) {
+			if (f.isDirectory()) {
+				if (skipDisabledDir && f.getName().equalsIgnoreCase(".disabled")) continue;
+				collectLayoutsInDirectory(f, layouts, skipDisabledDir);
+				continue;
+			}
+			if (f.getPath().toLowerCase().endsWith(".txt")) {
+				PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(f.getAbsolutePath().replace("\\", "/"));
+				if (s != null) {
+					Layout layout = deserializeLayout(s, f);
+					if (layout != null) {
+						layouts.add(layout);
 					}
 				}
 			}
 		}
-		return layouts;
 	}
 
 	@Nullable
