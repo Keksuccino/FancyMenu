@@ -8,8 +8,6 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.Poop;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileReader;
@@ -192,18 +190,8 @@ public class BuddySerializer {
         }
     }
 
-    @NotNull
-    private static String getSaveFileName(@NotNull Buddy buddy) {
-        String instanceIdentifier = buddy.getInstanceIdentifier();
-        return SAVE_FILENAME_PREFIX + sanitizeIdentifier(instanceIdentifier) + ".json";
-    }
-
-    @NotNull
-    private static String sanitizeIdentifier(@Nullable String identifier) {
-        if (identifier == null || identifier.isBlank()) {
-            return "default";
-        }
-        return identifier.replaceAll("[^a-zA-Z0-9_-]", "_");
+    private static String getSaveFileName(Buddy buddy) {
+        return BuddySaveFileNames.buildSaveFileName(SAVE_FILENAME_PREFIX, buddy.getInstanceIdentifier());
     }
 
 }

@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.Buddy;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.BuddySaveFileNames;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -685,15 +686,7 @@ public class LevelingManager {
 
     @NotNull
     private String getSaveFileName() {
-        return SAVE_FILENAME_PREFIX + sanitizeIdentifier(this.buddy.getInstanceIdentifier()) + ".json";
-    }
-
-    @NotNull
-    private static String sanitizeIdentifier(@NotNull String identifier) {
-        if (identifier.isBlank()) {
-            return "default";
-        }
-        return identifier.replaceAll("[^a-zA-Z0-9_-]", "_");
+        return BuddySaveFileNames.buildSaveFileName(SAVE_FILENAME_PREFIX, this.buddy.getInstanceIdentifier());
     }
 
 }
