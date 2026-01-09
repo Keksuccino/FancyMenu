@@ -2429,5 +2429,7 @@
   "fancymenu.decoration_overlays.buddy": "Buddy",
   "fancymenu.decoration_overlays.buddy.desc": "A tiny companion that wanders along the bottom of the screen and reacts to clicks.",
   "fancymenu.decoration_overlays.buddy.custom_atlas_texture": "Custom Buddy Atlas Texture",
-  "fancymenu.decoration_overlays.buddy.custom_atlas_texture.desc": "Optional texture atlas for Buddy. Leave empty to use the default atlas."
+  "fancymenu.decoration_overlays.buddy.custom_atlas_texture.desc": "Optional texture atlas for Buddy. Leave empty to use the default atlas.",
+  "fancymenu.ui.filechooser.create_folder": "Create Folder",
+  "fancymenu.ui.filechooser.create_folder.default_name": "new_folder"
 }

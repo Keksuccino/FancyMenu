@@ -7,7 +7,10 @@ import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.*;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
@@ -58,6 +61,7 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
     protected boolean showSubDirectories = true;
     protected boolean blockResourceUnfriendlyFileNames = true;
     protected boolean showBlockedResourceUnfriendlyFiles = true;
+    protected ExtendedButton createFolderButton;
     protected ExtendedButton openInExplorerButton;
 
     public AbstractFileBrowserScreen(@NotNull Component title, @Nullable File rootDirectory, @NotNull File startDirectory, @NotNull Consumer<File> callback) {
@@ -84,6 +88,13 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
 
     @Override
     protected void initExtraButtons() {
+        this.createFolderButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.ui.filechooser.create_folder"), (button) -> {
+            this.openCreateFolderDialog();
+            MainThreadTaskExecutor.executeInMainThread(() -> button.setFocused(false), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        });
+        this.addWidget(this.createFolderButton);
+        UIBase.applyDefaultWidgetSkinTo(this.createFolderButton);
+
         this.openInExplorerButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.ui.filechooser.open_in_explorer"), (button) -> {
             File selected = this.getSelectedFile();
             if ((selected != null) && selected.isDirectory()) {
@@ -99,6 +110,7 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
 
     @Override
     protected void renderExtraButtons(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.renderCreateFolderButton(graphics, mouseX, mouseY, partial);
         this.renderOpenInExplorerButton(graphics, mouseX, mouseY, partial);
     }
 
@@ -170,6 +182,61 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
         this.openInExplorerButton.setX(this.width - 20 - this.openInExplorerButton.getWidth());
         this.openInExplorerButton.setY(this.cancelButton.getY() - 15 - 20);
         this.openInExplorerButton.render(graphics, mouseX, mouseY, partial);
+    }
+
+    protected void renderCreateFolderButton(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.createFolderButton.setX(this.width - 20 - this.createFolderButton.getWidth());
+        this.createFolderButton.setY(this.cancelButton.getY() - 15 - 20 - 5 - 20);
+        this.createFolderButton.render(graphics, mouseX, mouseY, partial);
+    }
+
+    protected void openCreateFolderDialog() {
+        TextInputScreen inputScreen = new TextInputScreen(CharacterFilter.buildResourceNameFilter(), (call) -> {
+            if (call == null) return;
+            this.createFolder(call);
+        });
+        Dialogs.openGeneric(inputScreen, Component.translatable("fancymenu.ui.filechooser.create_folder"), null, TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+        inputScreen.setText(Component.translatable("fancymenu.ui.filechooser.create_folder.default_name").getString());
+    }
+
+    protected void createFolder(@NotNull String folderName) {
+        String trimmed = folderName.trim();
+        if (trimmed.isEmpty()) return;
+        File folder = new File(this.currentDir, trimmed);
+        FileUtils.createDirectory(folder);
+        if (!folder.isDirectory()) return;
+        this.clearSearchBar();
+        this.updateFilesList();
+        this.selectEntryForFile(folder);
+    }
+
+    protected void clearSearchBar() {
+        if (!this.searchBarEnabled || this.searchBar == null) return;
+        if (this.searchBar.getValue().isEmpty()) return;
+        this.searchBar.setValue("");
+    }
+
+    @Nullable
+    protected AbstractFileScrollAreaEntry findEntryForFile(@NotNull File file) {
+        String targetPath = file.getAbsoluteFile().getPath();
+        for (ScrollAreaEntry entry : this.fileListScrollArea.getEntries()) {
+            if (entry instanceof AbstractFileScrollAreaEntry fileEntry) {
+                if (fileEntry.file.getAbsoluteFile().getPath().equals(targetPath)) {
+                    return fileEntry;
+                }
+            }
+        }
+        return null;
+    }
+
+    protected void selectEntryForFile(@NotNull File file) {
+        AbstractFileScrollAreaEntry entry = this.findEntryForFile(file);
+        if (entry != null) {
+            if (entry.resourceUnfriendlyFileName && !entry.isSelectable()) {
+                entry.setSelectable(true);
+            }
+            this.selectEntry(entry);
+        }
     }
 
     protected void updateCurrentDirectoryComponent() {
