@@ -8,6 +8,8 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.Poop;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileReader;
@@ -23,7 +25,7 @@ public class BuddySerializer {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final String SAVE_FILENAME = "buddy_save.json";
+    private static final String SAVE_FILENAME_PREFIX = "buddy_save_";
     private static final File BUDDY_DIR = new File(FancyMenu.INSTANCE_DATA_DIR, "buddy");
 
     static {
@@ -41,7 +43,7 @@ public class BuddySerializer {
      */
     public static void saveBuddy(Buddy buddy) {
         try {
-            File saveFile = new File(BUDDY_DIR, SAVE_FILENAME);
+            File saveFile = new File(BUDDY_DIR, getSaveFileName(buddy));
             JsonObject json = new JsonObject();
 
             // Save basic stats
@@ -87,7 +89,7 @@ public class BuddySerializer {
      * @return True if data was successfully loaded, false otherwise.
      */
     public static boolean loadBuddy(Buddy buddy) {
-        File saveFile = new File(BUDDY_DIR, SAVE_FILENAME);
+        File saveFile = new File(BUDDY_DIR, getSaveFileName(buddy));
         if (!saveFile.exists()) {
             LOGGER.debug("No buddy save file found at {}", saveFile.getAbsolutePath());
             return false;
@@ -188,6 +190,20 @@ public class BuddySerializer {
             LOGGER.error("Failed to load buddy data", e);
             return false;
         }
+    }
+
+    @NotNull
+    private static String getSaveFileName(@NotNull Buddy buddy) {
+        String instanceIdentifier = buddy.getInstanceIdentifier();
+        return SAVE_FILENAME_PREFIX + sanitizeIdentifier(instanceIdentifier) + ".json";
+    }
+
+    @NotNull
+    private static String sanitizeIdentifier(@Nullable String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return "default";
+        }
+        return identifier.replaceAll("[^a-zA-Z0-9_-]", "_");
     }
 
 }

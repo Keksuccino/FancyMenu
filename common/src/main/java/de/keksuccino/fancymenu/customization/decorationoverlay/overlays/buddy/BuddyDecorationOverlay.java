@@ -25,6 +25,7 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
     private int lastGuiTick = -1;
 
     public BuddyDecorationOverlay() {
+        this.buddyWidget.setInstanceIdentifier(getInstanceIdentifier());
         this.customAtlasTexture.addValueSetListener((oldValue, newValue) -> this.buddyWidget.setCustomAtlasTextureSupplier(newValue));
         this.buddyWidget.setCustomAtlasTextureSupplier(this.customAtlasTexture.get());
         this.showOverlay.addValueSetListener((oldValue, newValue) -> {
@@ -57,6 +58,12 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
     @Override
     public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
         this.buddyWidget.cleanup();
+    }
+
+    @Override
+    public void setInstanceIdentifier(@NotNull String instanceIdentifier) {
+        super.setInstanceIdentifier(instanceIdentifier);
+        this.buddyWidget.setInstanceIdentifier(instanceIdentifier);
     }
 
     @Override

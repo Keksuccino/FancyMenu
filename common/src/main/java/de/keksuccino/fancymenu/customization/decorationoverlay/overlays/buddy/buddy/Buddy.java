@@ -129,6 +129,8 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
     @Nullable
     private ResourceSupplier<ITexture> customAtlasTextureSupplier = null;
+    @NotNull
+    private String instanceIdentifier = "default";
     
     // Leveling system
     private final LevelingManager levelingManager;
@@ -336,6 +338,15 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
     public void setCustomAtlasTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
         this.customAtlasTextureSupplier = supplier;
+    }
+
+    @NotNull
+    public String getInstanceIdentifier() {
+        return this.instanceIdentifier;
+    }
+
+    public void setInstanceIdentifier(@NotNull String instanceIdentifier) {
+        this.instanceIdentifier = Objects.requireNonNull(instanceIdentifier);
     }
 
     /**

@@ -176,6 +176,10 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
         }
     }
 
+    public void setInstanceIdentifier(@NotNull String instanceIdentifier) {
+        this.buddy.setInstanceIdentifier(instanceIdentifier);
+    }
+
     public void setCustomAtlasTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
         this.buddy.setCustomAtlasTextureSupplier(supplier);
     }

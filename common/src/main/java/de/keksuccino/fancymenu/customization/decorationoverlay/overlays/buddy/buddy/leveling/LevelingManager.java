@@ -22,7 +22,7 @@ public class LevelingManager {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final String SAVE_FILENAME = "buddy_leveling.json";
+    private static final String SAVE_FILENAME_PREFIX = "buddy_leveling_";
     private static final File BUDDY_DIR = new File(FancyMenu.INSTANCE_DATA_DIR, "buddy");
 
     // Constants for the leveling system
@@ -512,7 +512,7 @@ public class LevelingManager {
                 BUDDY_DIR.mkdirs();
             }
             
-            File saveFile = new File(BUDDY_DIR, SAVE_FILENAME);
+            File saveFile = getSaveFile();
             JsonObject json = new JsonObject();
             
             // Save basic leveling data
@@ -559,7 +559,7 @@ public class LevelingManager {
      * @return True if the load was successful, false otherwise
      */
     public boolean loadState() {
-        File saveFile = new File(BUDDY_DIR, SAVE_FILENAME);
+        File saveFile = getSaveFile();
         if (!saveFile.exists()) {
             LOGGER.debug("No buddy leveling save file found at {}", saveFile.getAbsolutePath());
             return false;
@@ -676,6 +676,24 @@ public class LevelingManager {
     
     public int getLayoutCreationCount() {
         return layoutCreationCount;
+    }
+
+    @NotNull
+    private File getSaveFile() {
+        return new File(BUDDY_DIR, getSaveFileName());
+    }
+
+    @NotNull
+    private String getSaveFileName() {
+        return SAVE_FILENAME_PREFIX + sanitizeIdentifier(this.buddy.getInstanceIdentifier()) + ".json";
+    }
+
+    @NotNull
+    private static String sanitizeIdentifier(@NotNull String identifier) {
+        if (identifier.isBlank()) {
+            return "default";
+        }
+        return identifier.replaceAll("[^a-zA-Z0-9_-]", "_");
     }
 
 }
