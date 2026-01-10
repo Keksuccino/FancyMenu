@@ -43,8 +43,9 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    public static final float ENTRY_BACKGROUND_ALPHA_FOR_BLUR = 0.4F;
     public static final int HEIGHT = 28;
-    protected static final int ENTRY_LABEL_SPACE_LEFT_RIGHT = 6;
+    public static final int ENTRY_LABEL_SPACE_LEFT_RIGHT = 6;
 
     protected final List<MenuBarEntry> leftEntries = new ArrayList<>();
     protected final List<MenuBarEntry> rightEntries = new ArrayList<>();
@@ -171,20 +172,8 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         int blurX = Math.round(xMin * scale);
         int blurY = Math.round(yMin * scale);
         if (width > 0 && height > 0) {
-            float intensity = Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue());
             // Blur the menu bar background without rounded corners; use the UI theme color as a light tint.
-            GuiBlurRenderer.renderBlurAreaWithIntensity(
-                    graphics,
-                    blurX,
-                    blurY,
-                    width,
-                    height,
-                    4.0F,
-                    intensity,
-                    0.0F,
-                    UIBase.getUIColorTheme().ui_background_blur_tint_color,
-                    partial
-            );
+            GuiBlurRenderer.renderBlurAreaWithIntensity(graphics, blurX, blurY, width, height, 4.0F, 0.0F, UIBase.getUIColorTheme().ui_background_blur_tint_color, partial);
         }
         UIBase.resetShaderColor(graphics);
     }
@@ -744,7 +733,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         protected void renderBackground(GuiGraphics graphics) {
             UIBase.resetShaderColor(graphics);
-            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + HEIGHT, this.getBackgroundColor().getColorInt());
+            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + HEIGHT, this.getBackgroundColor());
             UIBase.resetShaderColor(graphics);
         }
 
@@ -800,10 +789,14 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             return this;
         }
 
-        @NotNull
-        protected DrawableColor getBackgroundColor() {
-            if (this.isHovered() && this.isActive()) return UIBase.getUIColorTheme().element_background_color_hover;
-            return UIBase.getUIColorTheme().element_background_color_normal;
+        protected int getBackgroundColor() {
+            if (this.isHovered() && this.isActive()) {
+                if (FancyMenu.getOptions().enableUiBlur.getValue()) {
+                    return UIBase.getUIColorTheme().element_background_color_hover.getColorIntWithAlpha(ENTRY_BACKGROUND_ALPHA_FOR_BLUR);
+                }
+                return UIBase.getUIColorTheme().element_background_color_hover.getColorInt();
+            }
+            return UIBase.getUIColorTheme().element_background_color_normal.getColorIntWithAlpha(FancyMenu.getOptions().enableUiBlur.getValue() ? 0.0F : 1.0F);
         }
 
         @NotNull
@@ -980,8 +973,13 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         @Override
-        protected @NotNull DrawableColor getBackgroundColor() {
-            if (this.contextMenu.isOpen()) return UIBase.getUIColorTheme().element_background_color_hover;
+        protected int getBackgroundColor() {
+            if (this.contextMenu.isOpen()) {
+                if (FancyMenu.getOptions().enableUiBlur.getValue()) {
+                    return UIBase.getUIColorTheme().element_background_color_hover.getColorIntWithAlpha(ENTRY_BACKGROUND_ALPHA_FOR_BLUR);
+                }
+                return UIBase.getUIColorTheme().element_background_color_hover.getColorInt();
+            }
             return super.getBackgroundColor();
         }
 
@@ -1020,7 +1018,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         protected void renderBackground(GuiGraphics graphics) {
-            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + HEIGHT, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + HEIGHT, UIBase.getUIColorTheme().element_background_color_normal.getColorIntWithAlpha(FancyMenu.getOptions().enableUiBlur.getValue() ? 0.0F : 1.0F));
             UIBase.resetShaderColor(graphics);
         }
 
