@@ -111,11 +111,11 @@ public class RenderingUtils {
         return lockDepthTest;
     }
 
-    public static void setMenuBlurringBlocked(boolean blocked) {
+    public static void setVanillaMenuBlurringBlocked(boolean blocked) {
         blurBlocked = blocked;
     }
 
-    public static boolean isMenuBlurringBlocked() {
+    public static boolean isVanillaMenuBlurringBlocked() {
         return blurBlocked;
     }
 

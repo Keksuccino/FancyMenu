@@ -30,29 +30,9 @@ public class Test {
     @EventListener(priority = EventPriority.VERY_LOW)
     public void onRenderPost(RenderScreenEvent.Post e) {
 
-//        e.getGraphics().pose().pushPose();
-//
-//        e.getGraphics().setColor(1.0F, 1.0F, 1.0F, 1.0F);
-//
-//        e.getGraphics().flush();
-//        RenderSystem.enableDepthTest();
-//        RenderSystem.defaultBlendFunc();
-//        RenderSystem.enableBlend();
-
-//        RenderSystem.disableDepthTest();
-
         GuiBlurRenderer.renderBlurArea(e.getGraphics(), 50, 40, 300, 300, 4, 6, TINT, e.getPartial());
 
         GuiBlurRenderer.renderBlurArea(e.getGraphics(), e.getScreen().width - 300, e.getScreen().height - 300, 200, 200, 4, 6, TINT, e.getPartial());
-
-//        e.getGraphics().flush();
-//        RenderSystem.enableDepthTest();
-//        RenderSystem.defaultBlendFunc();
-//        RenderSystem.enableBlend();
-//
-//        e.getGraphics().setColor(1.0F, 1.0F, 1.0F, 1.0F);
-//
-//        e.getGraphics().pose().popPose();
 
     }
 

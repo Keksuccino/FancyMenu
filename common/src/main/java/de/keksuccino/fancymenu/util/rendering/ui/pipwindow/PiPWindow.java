@@ -227,9 +227,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         PiPWindowHandler.INSTANCE.beginScreenRender(this, renderScale);
         this.screenRendering = true;
         try {
-            RenderingUtils.setMenuBlurringBlocked(true);
+            RenderingUtils.setVanillaMenuBlurringBlocked(true);
             this.screen.renderWithTooltip(graphics, localMouseX, localMouseY, partial);
-            RenderingUtils.setMenuBlurringBlocked(false);
+            RenderingUtils.setVanillaMenuBlurringBlocked(false);
         } finally {
             this.screenRendering = false;
             PiPWindowHandler.INSTANCE.endScreenRender(this);

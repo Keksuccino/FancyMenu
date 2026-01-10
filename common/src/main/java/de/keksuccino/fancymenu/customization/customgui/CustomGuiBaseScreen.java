@@ -109,7 +109,7 @@ public class CustomGuiBaseScreen extends Screen {
     }
 
     protected void renderPopupMenuBackgroundScreen(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        if (this.gui.popupModeBackgroundOverlay) RenderingUtils.setMenuBlurringBlocked(true);
+        if (this.gui.popupModeBackgroundOverlay) RenderingUtils.setVanillaMenuBlurringBlocked(true);
         RenderingUtils.setTooltipRenderingBlocked(true);
         Screen current = Minecraft.getInstance().screen;
         CustomGui.isCurrentlyRenderingPopupBackgroundScreen = true;
@@ -123,7 +123,7 @@ public class CustomGuiBaseScreen extends Screen {
         CustomGui.isCurrentlyRenderingPopupBackgroundScreen = false;
         Minecraft.getInstance().screen = current;
         RenderingUtils.setTooltipRenderingBlocked(false);
-        RenderingUtils.setMenuBlurringBlocked(false);
+        RenderingUtils.setVanillaMenuBlurringBlocked(false);
     }
 
 	@NotNull

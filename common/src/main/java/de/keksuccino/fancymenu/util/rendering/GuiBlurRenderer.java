@@ -4,25 +4,20 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.PostPass;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.WeakHashMap;
 
 public final class GuiBlurRenderer {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    // It's important to have shader files in the default 'minecraft' namespace
     private static final ResourceLocation GUI_BLUR_POST_CHAIN = ResourceLocation.withDefaultNamespace("shaders/post/fancymenu_gui_blur.json");
-    private static final Map<Screen, List<BlurArea>> QUEUED_AREAS = new WeakHashMap<>();
 
     private static PostChain blurPostChain;
     private static boolean blurPostChainFailed;
@@ -30,49 +25,6 @@ public final class GuiBlurRenderer {
     private static int cachedHeight = -1;
 
     private GuiBlurRenderer() {
-    }
-
-    /**
-     * Queues a blur area that gets rendered after the screen background.
-     *
-     * @param screen The screen this blur area belongs to. The area will render when that screen draws its background.
-     * @param x The X position in GUI pixels (top-left origin). Recommended range: 0 to screen width.
-     * @param y The Y position in GUI pixels (top-left origin). Recommended range: 0 to screen height.
-     * @param width The width in GUI pixels. Recommended range: 1 to screen width.
-     * @param height The height in GUI pixels. Recommended range: 1 to screen height.
-     * @param blurRadius The blur intensity in GUI pixels. Recommended range: 0 to 16 (4 is a good default).
-     * @param cornerRadius The rounded corner radius in GUI pixels. Recommended range: 0 to min(width, height) / 2 (6 is a good default).
-     * @param tint The tint color that is mixed into the blurred area. Use alpha to control strength (0.15 is a good default).
-     *
-     * Example defaults: x=0, y=0, width=200, height=100, blurRadius=4, cornerRadius=6, tint=DrawableColor.of(0, 0, 0, 38)
-     */
-    public static void queueBlurArea(@Nonnull Screen screen, int x, int y, int width, int height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint) {
-        Objects.requireNonNull(screen);
-        Objects.requireNonNull(tint);
-        if (width <= 0 || height <= 0) {
-            return;
-        }
-        BlurArea area = new BlurArea(x, y, width, height, blurRadius, cornerRadius, tint);
-        QUEUED_AREAS.computeIfAbsent(screen, key -> new ArrayList<>()).add(area);
-    }
-
-    /**
-     * Renders all queued blur areas for the given screen immediately.
-     *
-     * @param screen The screen that owns the queued blur areas.
-     * @param graphics The GuiGraphics for the current render pass.
-     * @param partial Partial tick for the frame; pass the current render partial.
-     */
-    public static void renderQueuedBlurAreas(@Nonnull Screen screen, @Nonnull GuiGraphics graphics, float partial) {
-        Objects.requireNonNull(screen);
-        Objects.requireNonNull(graphics);
-        List<BlurArea> areas = QUEUED_AREAS.remove(screen);
-        if (areas == null || areas.isEmpty()) {
-            return;
-        }
-        for (BlurArea area : areas) {
-            renderBlurAreaInternal(graphics, partial, area);
-        }
     }
 
     /**
@@ -96,13 +48,10 @@ public final class GuiBlurRenderer {
         if (width <= 0 || height <= 0) {
             return;
         }
-        renderBlurAreaInternal(graphics, partial, new BlurArea(x, y, width, height, blurRadius, cornerRadius, tint));
+        _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, blurRadius, cornerRadius, tint));
     }
 
-    private static void renderBlurAreaInternal(GuiGraphics graphics, float partial, BlurArea area) {
-        if (RenderingUtils.isMenuBlurringBlocked()) {
-            return;
-        }
+    private static void _renderBlurArea(GuiGraphics graphics, float partial, BlurArea area) {
         Minecraft minecraft = Minecraft.getInstance();
         PostChain postChain = getOrCreatePostChain(minecraft);
         if (postChain == null) {

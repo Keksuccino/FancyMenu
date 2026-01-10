@@ -41,7 +41,7 @@ public class MixinGameRenderer {
 
     @Inject(method = "processBlurEffect", at = @At("HEAD"), cancellable = true)
     private void head_processBlurEffect_FancyMenu(float radius, CallbackInfo info) {
-        if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
+        if (RenderingUtils.isVanillaMenuBlurringBlocked()) info.cancel();
     }
 
     @Inject(method = "render", at = @At("HEAD"))

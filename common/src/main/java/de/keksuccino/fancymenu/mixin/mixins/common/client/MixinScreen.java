@@ -11,8 +11,6 @@ import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRender
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
@@ -27,8 +25,6 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositione
 import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,7 +40,6 @@ import java.util.List;
 @Mixin(Screen.class)
 public abstract class MixinScreen implements CustomizableScreen {
 
-	@Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
     @Unique private static final ResourceLocation DIRT_TEXTURE_FANCYMENU = ResourceLocation.withDefaultNamespace("textures/block/dirt.png");
 
 	@Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
@@ -84,7 +79,7 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Inject(method = "renderBlurredBackground", at = @At("HEAD"), cancellable = true)
     private void head_renderBlurredBackground_FancyMenu(float f, CallbackInfo info) {
-        if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
+        if (RenderingUtils.isVanillaMenuBlurringBlocked()) info.cancel();
     }
 
     @Inject(method = "renderPanorama", at = @At("HEAD"), cancellable = true)
@@ -150,7 +145,6 @@ public abstract class MixinScreen implements CustomizableScreen {
 			original.call(instance, graphics, mouseX, mouseY, partial);
 		}
 		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, mouseX, mouseY, partial));
-		GuiBlurRenderer.renderQueuedBlurAreas(instance, graphics, partial);
 	}
 
 	@Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;"))
