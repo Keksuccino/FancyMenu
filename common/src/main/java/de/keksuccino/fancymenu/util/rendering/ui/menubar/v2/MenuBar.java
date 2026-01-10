@@ -167,10 +167,10 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         // Menu bar is rendered at a custom scale; convert back to screen-space for blur so the blurred region matches what users see.
-        int width = Math.round(widthScaled * scale);
-        int height = Math.round(heightScaled * scale);
-        int blurX = Math.round(xMin * scale);
-        int blurY = Math.round(yMin * scale);
+        float width = widthScaled * scale;
+        float height = heightScaled * scale;
+        float blurX = xMin * scale;
+        float blurY = yMin * scale;
         if (width > 0 && height > 0) {
             // Blur the menu bar background without rounded corners; use the UI theme color as a light tint.
             GuiBlurRenderer.renderBlurAreaWithIntensity(graphics, blurX, blurY, width, height, 4.0F, 0.0F, UIBase.getUIColorTheme().ui_background_blur_tint_color, partial);
