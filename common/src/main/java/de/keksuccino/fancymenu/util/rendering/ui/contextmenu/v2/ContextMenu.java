@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -43,7 +44,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private static final ResourceLocation SCROLL_DOWN_ARROW = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_down_arrow.png");
     private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
     private static final int SCROLL_INDICATOR_HEIGHT = 12; // Space reserved for arrows
-    public static final float ENTRY_BACKGROUND_ALPHA_FOR_BLUR = 0.4F;
 
     protected final List<ContextMenuEntry<?>> entries = new ArrayList<>();
     protected float scale = UIBase.getUIScale();
@@ -61,6 +61,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     protected boolean forceRawXY = false;
     protected boolean forceSide = false;
     protected boolean forceSideSubMenus = true;
+    protected boolean roundTopLeftCorner = true;
+    protected boolean roundTopRightCorner = true;
+    protected boolean roundBottomLeftCorner = true;
+    protected boolean roundBottomRightCorner = true;
     protected float scrollPosition = 0.0f; // Current scroll position
     private boolean needsScrolling = false; // Flag to track if menu is scrollable
     private float displayHeight = 0; // Adjusted height when scrollable
@@ -157,16 +161,27 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         //Render shadow
         if (this.hasShadow()) {
-            RenderingUtils.fillF(graphics, (float) (scaledX + 4), (float) (scaledY + 4),
-                    (float) (scaledX + this.getWidth() + 4),
-                    (float) (scaledY + displayHeight + 4), SHADOW_COLOR.getColorInt());
+            RenderingUtils.fillF(graphics, (float) (scaledX + 4), (float) (scaledY + 4), (float) (scaledX + this.getWidth() + 4), (float) (scaledY + displayHeight + 4), SHADOW_COLOR.getColorInt());
         }
 
-        //Render background
-        RenderingUtils.fillF(graphics, (float) scaledX, (float) scaledY,
-                (float) (scaledX + this.getWidth()),
-                (float) (scaledY + displayHeight),
-                UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+        if (FancyMenu.getOptions().enableUiBlur.getValue()) {
+            // Render blur background
+            float blurX = scaledX * scale;
+            float blurY = scaledY * scale;
+            float blurWidth = this.getWidth() * scale;
+            float blurHeight = displayHeight * scale;
+            if (blurWidth > 0.0F && blurHeight > 0.0F) {
+                float rounded = 4.0F;
+                float cornerTopLeft = this.roundTopLeftCorner ? rounded : 0.0F;
+                float cornerTopRight = this.roundTopRightCorner ? rounded : 0.0F;
+                float cornerBottomLeft = this.roundBottomLeftCorner ? rounded : 0.0F;
+                float cornerBottomRight = this.roundBottomRightCorner ? rounded : 0.0F;
+                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, 4.0F, cornerTopLeft, cornerTopRight, cornerBottomRight, cornerBottomLeft, UIBase.getUIColorTheme().ui_background_blur_tint_color, partial);
+            }
+        } else {
+            //Render normal background
+            RenderingUtils.fillF(graphics, (float) scaledX, (float) scaledY, (float) (scaledX + this.getWidth()), (float) (scaledY + displayHeight), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+        }
 
         // Enable scissoring if scrollable
         if (needsScrolling) {
@@ -184,12 +199,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float logicalMaxY = scissorBottomInScaledContext * scale;
 
             // enableScissor expects unscaled logical GUI coordinates
-            graphics.enableScissor(
-                    (int)logicalMinX,
-                    (int)logicalMinY,
-                    (int)logicalMaxX,
-                    (int)logicalMaxY
-            );
+            graphics.enableScissor((int)logicalMinX, (int)logicalMinY, (int)logicalMaxX, (int)logicalMaxY);
         }
 
         //Update + render entries
@@ -262,7 +272,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
                 // Render arrow centered
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().ui_texture_color.setAsShaderColor(graphics);
+                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
                 graphics.blit(
                         SCROLL_UP_ARROW,
                         (int)(scaledX + this.getWidth()/2 - 5),
@@ -284,7 +294,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
                 // Render arrow centered (with fixed position)
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().ui_texture_color.setAsShaderColor(graphics);
+                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
                 graphics.blit(
                         SCROLL_DOWN_ARROW,
                         (int)(scaledX + this.getWidth()/2 - 5),
@@ -302,7 +312,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 (float) (scaledX + this.getWidth() + this.getBorderThickness()),
                 (float) (scaledY + displayHeight + this.getBorderThickness()),
                 (float) this.getBorderThickness(),
-                UIBase.getUIColorTheme().element_border_color_normal.getColorInt(),
+                UIBase.shouldBlur() ? UIBase.getUIColorTheme().element_border_color_normal_over_blur.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt(),
                 true, true, true, true);
 
         //Post-tick
@@ -715,6 +725,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     public ContextMenu setForceRawXY(boolean forceRawXY) {
         this.forceRawXY = forceRawXY;
+        return this;
+    }
+
+    public ContextMenu setRoundedCorners(boolean topLeft, boolean topRight, boolean bottomLeft, boolean bottomRight) {
+        this.roundTopLeftCorner = topLeft;
+        this.roundTopRightCorner = topRight;
+        this.roundBottomLeftCorner = bottomLeft;
+        this.roundBottomRightCorner = bottomRight;
         return this;
     }
 
@@ -1496,14 +1514,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             int labelX = (int) (this.x + 10);
             if ((this.icon != null) || this.addSpaceForIcon) labelX += 20;
             int labelY = (int) (this.y + (this.height / 2) - (this.font.lineHeight / 2));
-            UIBase.drawElementLabel(graphics, this.font, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt());
+            UIBase.drawElementLabel(graphics, this.font, this.getLabel(), labelX, labelY, this.getLabelColor());
 
             int shortcutTextWidth = 0;
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
                 shortcutTextWidth = this.font.width(shortcutText);
                 int shortcutX = (int) (this.x + this.width - 10 - shortcutTextWidth);
-                UIBase.drawElementLabel(graphics, this.font, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt());
+                UIBase.drawElementLabel(graphics, this.font, shortcutText, shortcutX, labelY, this.getLabelColor());
             }
 
             this.renderIcon(graphics);
@@ -1515,7 +1533,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected void renderIcon(GuiGraphics graphics) {
             if (this.icon != null) {
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().ui_texture_color.setAsShaderColor(graphics);
+                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
                 graphics.blit(this.icon, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
                 RenderingUtils.resetShaderColor(graphics);
             }
@@ -1571,8 +1589,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected void renderBackground(@NotNull GuiGraphics graphics) {
             if (this.isChangeBackgroundColorOnHover() && this.isHovered() && this.isActive()) {
-                RenderingUtils.fillF(graphics, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                int backColor = FancyMenu.getOptions().enableUiBlur.getValue() ? UIBase.getUIColorTheme().element_background_color_hover_over_blur.getColorInt() : UIBase.getUIColorTheme().element_background_color_hover.getColorInt();
+                RenderingUtils.fillF(graphics, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), backColor);
             }
+        }
+
+        protected int getLabelColor() {
+            if (FancyMenu.getOptions().enableUiBlur.getValue()) {
+                return this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal_over_blur.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive_over_blur.getColorInt();
+            }
+            return this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt();
         }
 
         @Nullable
@@ -1769,7 +1795,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected void renderSubMenuArrow(GuiGraphics graphics) {
             RenderSystem.enableBlend();
-            UIBase.getUIColorTheme().ui_texture_color.setAsShaderColor(graphics);
+            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
             graphics.blit(SUB_CONTEXT_MENU_ARROW_ICON, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10);
             RenderingUtils.resetShaderColor(graphics);
         }
@@ -1945,7 +1971,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
+            RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.shouldBlur() ? UIBase.getUIColorTheme().element_border_color_normal_over_blur.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
         }
 
         @Override

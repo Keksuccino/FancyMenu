@@ -65,7 +65,7 @@ public class Options extends AbstractOptions {
     public final Option<Integer> contextMenuHoverOpenSpeed = new Option<>(config, "context_menu_hover_open_speed", 1, "ui");
     public final Option<String> uiTheme = new Option<>(config, "ui_theme", "dark", "ui");
     public final Option<Boolean> enableUiBlur = new Option<>(config, "enable_ui_blur", true, "ui");
-    public final Option<Float> uiBlurIntensity = new Option<>(config, "ui_blur_intensity", 1.0F, "ui");
+    public final Option<Float> uiBlurIntensity = new Option<>(config, "ui_blur_intensity", 2.0F, "ui");
 
     public final Option<Boolean> showDebugOverlay = new Option<>(config, "show_debug_overlay", false, "debug_overlay");
     public final Option<Boolean> debugOverlayShowBasicScreenCategory = new Option<>(config, "debug_overlay_show_basic_screen_category", true, "debug_overlay");

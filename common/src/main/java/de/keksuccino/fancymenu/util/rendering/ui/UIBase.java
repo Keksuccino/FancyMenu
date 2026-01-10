@@ -115,6 +115,10 @@ public class UIBase extends RenderingUtils {
 		return (float)(1.0D * (1.0D / guiScale) * fixedScale);
 	}
 
+    public static boolean shouldBlur() {
+        return FancyMenu.getOptions().enableUiBlur.getValue();
+    }
+
 	public static void renderListingDot(GuiGraphics graphics, float x, float y, int color) {
 		fillF(graphics, x, y, x + 4, y + 4, color);
 	}
