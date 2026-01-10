@@ -52,6 +52,21 @@ public final class GuiBlurRenderer {
         _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, blurRadius, cornerRadius, tint));
     }
 
+    /**
+     * Renders a blur area using FancyMenu's blur intensity setting (a normalized multiplier, e.g., 0.25–3.0).
+     * Callers provide the base radius they would normally use; this helper applies the current intensity
+     * and renders the blur so UI code doesn’t need to recompute the radius everywhere.
+     */
+    public static void renderBlurAreaWithIntensity(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float baseBlurRadius, float intensity, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
+        Objects.requireNonNull(graphics);
+        Objects.requireNonNull(tint);
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+        float appliedRadius = Math.max(0.0F, baseBlurRadius * Math.max(0.0F, intensity));
+        _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, appliedRadius, cornerRadius, tint));
+    }
+
     private static void _renderBlurArea(GuiGraphics graphics, float partial, BlurArea area) {
         Minecraft minecraft = Minecraft.getInstance();
         PostChain postChain = getOrCreatePostChain(minecraft);

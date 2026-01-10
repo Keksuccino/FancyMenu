@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.PressState;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -90,9 +91,9 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         graphics.pose().scale(scale, scale, scale);
 
         if (this.expanded) {
-            this.renderBackground(graphics, 0, y, scaledWidth, HEIGHT);
+            this.renderBackground(graphics, 0, y, scaledWidth, HEIGHT, partial, scale);
         } else {
-            this.renderBackground(graphics, this.collapseOrExpandEntry.x, y, this.collapseOrExpandEntry.x + this.collapseOrExpandEntry.getWidth(), HEIGHT);
+            this.renderBackground(graphics, this.collapseOrExpandEntry.x, y, this.collapseOrExpandEntry.x + this.collapseOrExpandEntry.getWidth(), HEIGHT, partial, scale);
         }
 
         if (this.expanded) {
@@ -153,8 +154,38 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
     }
 
-    protected void renderBackground(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax) {
-        graphics.fill(xMin, yMin, xMax, yMax, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+    protected void renderBackground(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax, float partial, float scale) {
+        boolean blurEnabled = FancyMenu.getOptions().enableUiBlur.getValue();
+        int widthScaled = xMax - xMin;
+        int heightScaled = yMax - yMin;
+        if (!blurEnabled) {
+            // Classic solid background in the menu bar's scaled coordinate space.
+            graphics.fill(xMin, yMin, xMax, yMax, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+            UIBase.resetShaderColor(graphics);
+            return;
+        }
+
+        // Menu bar is rendered at a custom scale; convert back to screen-space for blur so the blurred region matches what users see.
+        int width = Math.round(widthScaled * scale);
+        int height = Math.round(heightScaled * scale);
+        int blurX = Math.round(xMin * scale);
+        int blurY = Math.round(yMin * scale);
+        if (width > 0 && height > 0) {
+            float intensity = Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue());
+            // Blur the menu bar background without rounded corners; use the UI theme color as a light tint.
+            GuiBlurRenderer.renderBlurAreaWithIntensity(
+                    graphics,
+                    blurX,
+                    blurY,
+                    width,
+                    height,
+                    4.0F,
+                    intensity,
+                    0.0F,
+                    DrawableColor.of(UIBase.getUIColorTheme().element_background_color_normal.getColorIntWithAlpha(0.4F)),
+                    partial
+            );
+        }
         UIBase.resetShaderColor(graphics);
     }
 

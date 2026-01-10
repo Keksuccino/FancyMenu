@@ -55,7 +55,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
-import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.fancymenu.util.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -1021,6 +1021,30 @@ public class CustomizationOverlayUI {
                     FancyMenu.getOptions().playUiClickSounds.setValue(cycle.getAsBoolean());
                 })).setClickSoundEnabled(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+
+        userInterfaceMenu.addSeparatorEntry("separator_before_blur_settings");
+
+        userInterfaceMenu.addValueCycleEntry("ui_blur", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_blur", FancyMenu.getOptions().enableUiBlur.getValue())
+                        .addCycleListener(cycle -> FancyMenu.getOptions().enableUiBlur.setValue(cycle.getAsBoolean())));
+
+        ContextMenu.ClickableContextMenuEntry<?> blurIntensityEntry = ContextMenuUtils.addRangeSliderInputContextMenuEntryTo(
+                userInterfaceMenu,
+                "ui_blur_intensity",
+                Component.translatable("fancymenu.overlay.menu_bar.user_interface.ui_blur_intensity"),
+                () -> FancyMenu.getOptions().uiBlurIntensity.getValue().doubleValue(),
+                value -> FancyMenu.getOptions().uiBlurIntensity.setValue(value.floatValue()),
+                true,
+                FancyMenu.getOptions().uiBlurIntensity.getDefaultValue().doubleValue(),
+                0.25D,
+                3.0D,
+                v -> {
+                    double pct = MathUtils.round(v * 100.0D, 1);
+                    return Component.translatable("fancymenu.overlay.menu_bar.user_interface.ui_blur_intensity.slider_label", pct);
+                }
+        );
+        blurIntensityEntry.addIsActiveSupplier((menu, entry) -> FancyMenu.getOptions().enableUiBlur.getValue());
+
+        userInterfaceMenu.addSeparatorEntry("separator_after_blur_settings");
 
         int preSelectedContextHoverOpenSpeed = FancyMenu.getOptions().contextMenuHoverOpenSpeed.getValue();
         if ((preSelectedContextHoverOpenSpeed != 1) && (preSelectedContextHoverOpenSpeed != 2) && (preSelectedContextHoverOpenSpeed != 3)) {
