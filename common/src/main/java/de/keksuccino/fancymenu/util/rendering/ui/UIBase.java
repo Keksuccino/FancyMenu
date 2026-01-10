@@ -265,7 +265,8 @@ public class UIBase extends RenderingUtils {
 	}
 
 	private static int getCornerVertexCount(float radius) {
-		return Math.max(1, Math.min(32, Mth.ceil(radius * 1.5F)));
+		// Higher segment count keeps borders visually aligned with the smoother blur mask.
+		return Math.max(8, Math.min(128, Mth.ceil(radius * 6.0F)));
 	}
 
 	@NotNull

@@ -187,7 +187,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float blurWidth = this.getWidth() * scale;
             float blurHeight = displayHeight * scale;
             if (blurWidth > 0.0F && blurHeight > 0.0F) {
-                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, 4.0F, cornerTopLeft, cornerTopRight, cornerBottomRight, cornerBottomLeft, UIBase.getUIColorTheme().ui_background_blur_tint_color, partial);
+                float blurCornerInset = 0.9F;
+                float blurTopLeft = Math.max(0.0F, cornerTopLeft - blurCornerInset);
+                float blurTopRight = Math.max(0.0F, cornerTopRight - blurCornerInset);
+                float blurBottomRight = Math.max(0.0F, cornerBottomRight - blurCornerInset);
+                float blurBottomLeft = Math.max(0.0F, cornerBottomLeft - blurCornerInset);
+                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, 4.0F, blurTopLeft, blurTopRight, blurBottomRight, blurBottomLeft, UIBase.getUIColorTheme().ui_background_blur_tint_color, partial);
             }
         } else {
             //Render normal background
@@ -317,16 +322,24 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         //Render border
+        boolean blurEnabled = FancyMenu.getOptions().enableUiBlur.getValue();
+        float blurBorderRadiusScale = blurEnabled ? 1.12F : 1.0F;
+        float blurBorderRadiusOffset = blurEnabled ? (this.getBorderThickness() * 0.35F) : 0.0F;
+        float borderCornerTopLeft = (cornerTopLeft * blurBorderRadiusScale) + blurBorderRadiusOffset;
+        float borderCornerTopRight = (cornerTopRight * blurBorderRadiusScale) + blurBorderRadiusOffset;
+        float borderCornerBottomRight = (cornerBottomRight * blurBorderRadiusScale) + blurBorderRadiusOffset;
+        float borderCornerBottomLeft = (cornerBottomLeft * blurBorderRadiusScale) + blurBorderRadiusOffset;
+
         UIBase.renderRoundedBorder(graphics,
                 (float) (scaledX - this.getBorderThickness()),
                 (float) (scaledY - this.getBorderThickness()),
                 (float) (scaledX + this.getWidth() + this.getBorderThickness()),
                 (float) (scaledY + displayHeight + this.getBorderThickness()),
                 (float) this.getBorderThickness(),
-                cornerTopLeft,
-                cornerTopRight,
-                cornerBottomRight,
-                cornerBottomLeft,
+                borderCornerTopLeft,
+                borderCornerTopRight,
+                borderCornerBottomRight,
+                borderCornerBottomLeft,
                 UIBase.shouldBlur() ? UIBase.getUIColorTheme().element_border_color_normal_over_blur.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
 
         //Post-tick
