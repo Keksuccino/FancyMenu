@@ -75,6 +75,7 @@
   - Audio files now have previews (you can listen to them in the browser screens)
   - You can now drag-n-drop files into the file browser to copy them to the current directory
   - The file browser will now reload when files or folders change in the current directory, so you can add/delete files from there outside Minecraft and the in-game file browser will reflect these changes
+  - You can use the Arrow keys and Enter key now to navigate in the files list
 - Layouts can now get saved to and loaded from subdirectories of "/fancymenu/customization/" (useful when organizing large amounts of layouts)
 - It's possible now to press DEL in the Manage Variables screen to delete the selected variable (#1475)
 - The "Player Entity" element now has an option to disable the rotation of the nametag (#1454)
