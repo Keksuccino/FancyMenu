@@ -55,7 +55,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     protected float rawHeight; // without border
     protected SubMenuContextMenuEntry parentEntry = null;
     protected SubMenuOpeningSide subMenuOpeningSide = SubMenuOpeningSide.RIGHT;
-    protected boolean shadow = true;
+    protected boolean shadow = false;
     protected boolean keepDistanceToEdges = true;
     protected boolean forceDefaultTooltipStyle = true;
     protected boolean forceRawXY = false;
