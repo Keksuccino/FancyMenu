@@ -68,6 +68,11 @@
 - Added "Is Active Cursor Type" requirement that checks if a specific standard cursor type (normal, pointing hand, writing cursor, etc.) is currently the active cursor (#1430)
 - Ported "Is Player Using Item" requirement from Spiffy (#1401)
 - Ported "Is Player In Structure" requirement from Spiffy (#1402)
+- The file browser screens (choose/save file) got a little glow-up
+  - They have a new set of icons and show different icons for audio, video, image and text files now
+  - There is a Search button now to search for files
+  - There is a Create Folder button now to create a new folder in the current directory
+  - Audio files now have previews (you can listen to them in the browser screens)
 - Layouts can now get saved to and loaded from subdirectories of "/fancymenu/customization/" (useful when organizing large amounts of layouts)
 - It's possible now to press DEL in the Manage Variables screen to delete the selected variable (#1475)
 - The "Player Entity" element now has an option to disable the rotation of the nametag (#1454)
