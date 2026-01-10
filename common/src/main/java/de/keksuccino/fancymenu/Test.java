@@ -41,9 +41,9 @@ public class Test {
 
 //        RenderSystem.disableDepthTest();
 
-//        GuiBlurRenderer.renderBlurArea(e.getGraphics(), 50, 40, 300, 300, 4, 6, TINT, e.getPartial());
-//
-//        GuiBlurRenderer.renderBlurArea(e.getGraphics(), e.getScreen().width - 300, e.getScreen().height - 300, 200, 200, 4, 6, TINT, e.getPartial());
+        GuiBlurRenderer.renderBlurArea(e.getGraphics(), 50, 40, 300, 300, 4, 6, TINT, e.getPartial());
+
+        GuiBlurRenderer.renderBlurArea(e.getGraphics(), e.getScreen().width - 300, e.getScreen().height - 300, 200, 200, 4, 6, TINT, e.getPartial());
 
 //        e.getGraphics().flush();
 //        RenderSystem.enableDepthTest();

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
+import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
@@ -30,8 +31,16 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.ClosedWatchServiceException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -63,6 +72,14 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
     protected boolean showBlockedResourceUnfriendlyFiles = true;
     protected ExtendedButton createFolderButton;
     protected ExtendedButton openInExplorerButton;
+    @Nullable
+    protected WatchService directoryWatchService;
+    @Nullable
+    protected Thread directoryWatchThread;
+    @Nullable
+    protected Path watchedDirectoryPath;
+    protected volatile boolean directoryWatchStopRequested = false;
+    protected volatile boolean directoryReloadPending = false;
 
     public AbstractFileBrowserScreen(@NotNull Component title, @Nullable File rootDirectory, @NotNull File startDirectory, @NotNull Consumer<File> callback) {
 
@@ -83,7 +100,14 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
 
         this.updatePreviewForKey(null);
         this.updateFilesList();
+        this.refreshDirectoryWatcherForCurrentDir();
 
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        this.tickDirectoryWatcher();
     }
 
     @Override
@@ -371,6 +395,7 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
         lastDirectory = newDirectory;
         this.updateFilesList();
         MainThreadTaskExecutor.executeInMainThread(this::updateCurrentDirectoryComponent, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+        this.refreshDirectoryWatcherForCurrentDir();
         return this;
     }
 
@@ -470,6 +495,30 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
         this.updatePreviewForKey(file);
     }
 
+    @Override
+    public void removed() {
+        this.stopDirectoryWatcher();
+        super.removed();
+    }
+
+    @Override
+    public void onFilesDrop(@NotNull List<Path> paths) {
+        if (paths.isEmpty()) return;
+        File dropTargetDir = this.currentDir;
+        if ((dropTargetDir == null) || !dropTargetDir.isDirectory()) return;
+
+        List<Path> safePaths = new ArrayList<>(paths);
+        TaskExecutor.execute(() -> {
+            List<File> copied = this.copyDroppedFilesIntoDirectory(dropTargetDir, safePaths);
+            if (copied.isEmpty()) return;
+            MainThreadTaskExecutor.executeInMainThread(() -> {
+                this.clearSearchBar();
+                this.updateFilesList();
+                this.selectEntryForFile(copied.get(0));
+            }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        }, false);
+    }
+
     protected void setTextPreview(@Nullable File file) {
         if (file == null) {
             this.previewTextSupplier = null;
@@ -544,6 +593,99 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
 
     protected abstract AbstractFileScrollAreaEntry buildFileEntry(@NotNull File f);
 
+    protected void tickDirectoryWatcher() {
+        if (!this.directoryReloadPending) return;
+        this.directoryReloadPending = false;
+        this.updateFilesList();
+    }
+
+    protected void refreshDirectoryWatcherForCurrentDir() {
+        Path newPath;
+        try {
+            newPath = this.currentDir.getAbsoluteFile().toPath();
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to resolve current directory for watching!", ex);
+            this.stopDirectoryWatcher();
+            return;
+        }
+
+        if ((this.watchedDirectoryPath != null) && this.watchedDirectoryPath.equals(newPath) && (this.directoryWatchService != null)) {
+            return;
+        }
+
+        this.stopDirectoryWatcher();
+        if (!this.currentDir.isDirectory()) return;
+
+        try {
+            WatchService service = FileSystems.getDefault().newWatchService();
+            newPath.register(service, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
+            this.directoryWatchService = service;
+            this.watchedDirectoryPath = newPath;
+            this.directoryWatchStopRequested = false;
+            Thread watcherThread = new Thread(() -> this.watchDirectoryLoop(service, newPath), "FancyMenu-FileBrowserWatcher");
+            watcherThread.setDaemon(true);
+            this.directoryWatchThread = watcherThread;
+            watcherThread.start();
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to start directory watcher for '{}'.", this.currentDir.getAbsolutePath(), ex);
+            this.stopDirectoryWatcher();
+        }
+    }
+
+    protected void watchDirectoryLoop(@NotNull WatchService service, @NotNull Path path) {
+        try {
+            while (!this.directoryWatchStopRequested) {
+                WatchKey key;
+                try {
+                    key = service.take();
+                } catch (InterruptedException ignored) {
+                    continue;
+                } catch (ClosedWatchServiceException ignored) {
+                    break;
+                }
+
+                boolean triggerRefresh = false;
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    WatchEvent.Kind<?> kind = event.kind();
+                    if (kind == StandardWatchEventKinds.OVERFLOW) continue;
+                    triggerRefresh = true;
+                    break;
+                }
+
+                if (!key.reset()) {
+                    break;
+                }
+
+                if (triggerRefresh) {
+                    this.directoryReloadPending = true;
+                }
+            }
+        } catch (ClosedWatchServiceException ignored) {
+            // Closed while stopping watcher
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Directory watcher crashed for '{}'.", path.toAbsolutePath(), ex);
+        }
+    }
+
+    protected void stopDirectoryWatcher() {
+        this.directoryWatchStopRequested = true;
+
+        if (this.directoryWatchService != null) {
+            try {
+                this.directoryWatchService.close();
+            } catch (IOException ignored) {
+            }
+        }
+
+        if ((this.directoryWatchThread != null) && this.directoryWatchThread.isAlive()) {
+            this.directoryWatchThread.interrupt();
+        }
+
+        this.directoryWatchService = null;
+        this.directoryWatchThread = null;
+        this.watchedDirectoryPath = null;
+    }
+
     protected String getSearchSortKey(@NotNull File file) {
         String relativePath = this.getRelativePathForFile(file);
         if (relativePath != null) return relativePath;
@@ -603,6 +745,32 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
     protected boolean isInRootOrSubOfRoot(File file) {
         if (this.rootDirectory == null) return true;
         return file.getAbsolutePath().startsWith(this.rootDirectory.getAbsolutePath());
+    }
+
+    protected @NotNull List<File> copyDroppedFilesIntoDirectory(@NotNull File targetDir, @NotNull List<Path> droppedPaths) {
+        List<File> copied = new ArrayList<>();
+        for (Path p : droppedPaths) {
+            try {
+                if (!Files.isRegularFile(p)) continue;
+                File source = p.toFile();
+                File target = new File(targetDir, source.getName());
+                if (target.isFile()) target = FileUtils.generateUniqueFileName(target, false);
+                try {
+                    Files.copy(source.toPath(), target.toPath(), StandardCopyOption.COPY_ATTRIBUTES);
+                    copied.add(target);
+                } catch (Exception copyWithAttributesFailed) {
+                    try {
+                        Files.copy(source.toPath(), target.toPath());
+                        copied.add(target);
+                    } catch (Exception fallbackEx) {
+                        LOGGER.warn("[FANCYMENU] Failed to copy dropped file '{}' into '{}'.", p, targetDir, fallbackEx);
+                    }
+                }
+            } catch (Exception ex) {
+                LOGGER.warn("[FANCYMENU] Failed to prepare dropped file '{}' for copy into '{}'.", p, targetDir, ex);
+            }
+        }
+        return copied;
     }
 
     public abstract class AbstractFileScrollAreaEntry extends AbstractIconTextScrollAreaEntry {
