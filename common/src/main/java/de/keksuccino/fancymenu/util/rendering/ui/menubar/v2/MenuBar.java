@@ -182,7 +182,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                     4.0F,
                     intensity,
                     0.0F,
-                    DrawableColor.of(UIBase.getUIColorTheme().element_background_color_normal.getColorIntWithAlpha(0.4F)),
+                    UIBase.getUIColorTheme().ui_background_blur_tint_color,
                     partial
             );
         }
