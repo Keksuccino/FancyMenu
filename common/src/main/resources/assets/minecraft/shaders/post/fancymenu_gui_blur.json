@@ -1,0 +1,82 @@
+{
+  "targets": [
+    "fancymenu_gui_blur_original",
+    "fancymenu_gui_blur_swap",
+    "fancymenu_gui_blur_blurred"
+  ],
+  "passes": [
+    {
+      "name": "blit",
+      "intarget": "minecraft:main",
+      "outtarget": "fancymenu_gui_blur_original"
+    },
+    {
+      "name": "box_blur",
+      "intarget": "fancymenu_gui_blur_original",
+      "outtarget": "fancymenu_gui_blur_swap",
+      "use_linear_filter": true,
+      "uniforms": [
+        { "name": "BlurDir", "values": [ 1.0, 0.0 ] }
+      ]
+    },
+    {
+      "name": "box_blur",
+      "intarget": "fancymenu_gui_blur_swap",
+      "outtarget": "fancymenu_gui_blur_blurred",
+      "use_linear_filter": true,
+      "uniforms": [
+        { "name": "BlurDir", "values": [ 0.0, 1.0 ] }
+      ]
+    },
+    {
+      "name": "box_blur",
+      "intarget": "fancymenu_gui_blur_blurred",
+      "outtarget": "fancymenu_gui_blur_swap",
+      "use_linear_filter": true,
+      "uniforms": [
+        { "name": "BlurDir", "values": [ 1.0, 0.0 ], "RadiusMultiplier": 0.5 }
+      ]
+    },
+    {
+      "name": "box_blur",
+      "intarget": "fancymenu_gui_blur_swap",
+      "outtarget": "fancymenu_gui_blur_blurred",
+      "use_linear_filter": true,
+      "uniforms": [
+        { "name": "BlurDir", "values": [ 0.0, 1.0 ], "RadiusMultiplier": 0.5 }
+      ]
+    },
+    {
+      "name": "box_blur",
+      "intarget": "fancymenu_gui_blur_blurred",
+      "outtarget": "fancymenu_gui_blur_swap",
+      "use_linear_filter": true,
+      "uniforms": [
+        { "name": "BlurDir", "values": [ 1.0, 0.0 ], "RadiusMultiplier": 0.25 }
+      ]
+    },
+    {
+      "name": "box_blur",
+      "intarget": "fancymenu_gui_blur_swap",
+      "outtarget": "fancymenu_gui_blur_blurred",
+      "use_linear_filter": true,
+      "uniforms": [
+        { "name": "BlurDir", "values": [ 0.0, 1.0 ], "RadiusMultiplier": 0.25 }
+      ]
+    },
+    {
+      "name": "fancymenu_gui_blur",
+      "intarget": "fancymenu_gui_blur_original",
+      "outtarget": "minecraft:main",
+      "use_linear_filter": true,
+      "auxtargets": [
+        { "name": "BlurSampler", "id": "fancymenu_gui_blur_blurred" }
+      ],
+      "uniforms": [
+        { "name": "Rect", "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+        { "name": "CornerRadius", "values": [ 0.0 ] },
+        { "name": "Tint", "values": [ 1.0, 1.0, 1.0, 0.0 ] }
+      ]
+    }
+  ]
+}

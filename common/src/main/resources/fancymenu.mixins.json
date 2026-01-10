@@ -23,6 +23,7 @@
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",
     "client.IMixinOptions",
+    "client.IMixinPostChain",
     "client.IMixinPathPackResources",
     "client.IMixinPlayerModel",
     "client.IMixinProgressScreen",
