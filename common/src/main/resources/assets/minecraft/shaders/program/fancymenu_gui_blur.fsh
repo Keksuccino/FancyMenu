@@ -26,20 +26,13 @@ void main() {
     vec4 blurred = texture(BlurSampler, uv);
 
     float tintStrength = clamp(Tint.a, 0.0, 1.0);
-    // Work in premultiplied space to keep soft edges of translucent textures intact.
-    float blurAlpha = blurred.a;
-    vec3 blurStraight = (blurAlpha > 0.0001) ? blurred.rgb / blurAlpha : vec3(0.0);
-    vec3 blurTintStraight = mix(blurStraight, Tint.rgb, tintStrength);
-    vec3 blurTintPremul = blurTintStraight * blurAlpha;
-
-    float originalAlpha = original.a;
-    vec3 originalPremul = original.rgb * originalAlpha;
+    vec3 blurColor = mix(blurred.rgb, Tint.rgb, tintStrength);
 
     vec2 pixel = uv * OutSize;
     float mask = roundedRectMask(pixel, Rect.xy, Rect.zw, CornerRadius);
-    float finalAlpha = mix(originalAlpha, blurAlpha, mask);
-    vec3 finalPremul = mix(originalPremul, blurTintPremul, mask);
-    vec3 finalColor = (finalAlpha > 0.0001) ? finalPremul / finalAlpha : vec3(0.0);
+    if (mask <= 0.0001) {
+        discard; // leave pixels outside the blur rect untouched
+    }
 
-    fragColor = vec4(finalColor, finalAlpha);
+    fragColor = vec4(blurColor, mask);
 }

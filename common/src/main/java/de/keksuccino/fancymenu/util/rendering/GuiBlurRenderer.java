@@ -6,8 +6,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.PostPass;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
@@ -88,10 +88,14 @@ public final class GuiBlurRenderer {
         // Post effects must render with blending disabled or they'll repeatedly alpha‑multiply
         // the framebuffer content (causing translucent draws to darken each time we blur).
         RenderSystem.disableBlend();
-        runPostChainWithScissor(graphics, minecraft, area, postChain, partial);
+        postChain.process(partial);
+        RenderTarget finalTarget = getFinalTarget(postChain);
         minecraft.getMainRenderTarget().bindWrite(false);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
+        if (finalTarget != null) {
+            finalTarget.blitToScreen(minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight(), false);
+        }
         RenderingUtils.resetShaderColor(graphics);
     }
 
@@ -146,22 +150,15 @@ public final class GuiBlurRenderer {
         }
     }
 
-    private static void runPostChainWithScissor(GuiGraphics graphics, Minecraft minecraft, BlurArea area, PostChain postChain, float partial) {
-        // Limit writes to the blur rectangle (plus blur fringe) so unrelated pixels stay untouched.
-        int margin = Mth.ceil(area.blurRadius * 4.0F); // generous padding for multi-pass blur spread
-        int minX = Math.max(0, area.x - margin);
-        int minY = Math.max(0, area.y - margin);
-        int maxX = Math.min(minecraft.getWindow().getGuiScaledWidth(), area.x + area.width + margin);
-        int maxY = Math.min(minecraft.getWindow().getGuiScaledHeight(), area.y + area.height + margin);
-
-        boolean hasArea = maxX > minX && maxY > minY;
-        if (hasArea) {
-            graphics.enableScissor(minX, minY, maxX, maxY);
+    private static RenderTarget getFinalTarget(PostChain postChain) {
+        List<PostPass> passes = ((IMixinPostChain) postChain).getPasses_FancyMenu();
+        for (int i = passes.size() - 1; i >= 0; i--) {
+            PostPass pass = passes.get(i);
+            if ("fancymenu_gui_blur".equals(pass.getName())) {
+                return pass.outTarget;
+            }
         }
-        postChain.process(partial);
-        if (hasArea) {
-            graphics.disableScissor();
-        }
+        return null;
     }
 
     private record BlurArea(int x, int y, int width, int height, float blurRadius, float cornerRadius, DrawableColor tint) {
