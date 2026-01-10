@@ -158,10 +158,26 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         float scaledMouseX = (float) ((float)mouseX / scale);
         float scaledMouseY = (float) ((float)mouseY / scale);
         boolean navigatingInSub = this.isUserNavigatingInSubMenu();
+        float roundedRadius = 6.0F;
+        float cornerTopLeft = this.roundTopLeftCorner ? roundedRadius : 0.0F;
+        float cornerTopRight = this.roundTopRightCorner ? roundedRadius : 0.0F;
+        float cornerBottomLeft = this.roundBottomLeftCorner ? roundedRadius : 0.0F;
+        float cornerBottomRight = this.roundBottomRightCorner ? roundedRadius : 0.0F;
 
         //Render shadow
         if (this.hasShadow()) {
-            RenderingUtils.fillF(graphics, (float) (scaledX + 4), (float) (scaledY + 4), (float) (scaledX + this.getWidth() + 4), (float) (scaledY + displayHeight + 4), SHADOW_COLOR.getColorInt());
+            UIBase.renderRoundedRect(
+                    graphics,
+                    (float) (scaledX + 4),
+                    (float) (scaledY + 4),
+                    (float) this.getWidth(),
+                    (float) displayHeight,
+                    cornerTopLeft,
+                    cornerTopRight,
+                    cornerBottomRight,
+                    cornerBottomLeft,
+                    SHADOW_COLOR.getColorInt()
+            );
         }
 
         if (FancyMenu.getOptions().enableUiBlur.getValue()) {
@@ -171,16 +187,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float blurWidth = this.getWidth() * scale;
             float blurHeight = displayHeight * scale;
             if (blurWidth > 0.0F && blurHeight > 0.0F) {
-                float rounded = 4.0F;
-                float cornerTopLeft = this.roundTopLeftCorner ? rounded : 0.0F;
-                float cornerTopRight = this.roundTopRightCorner ? rounded : 0.0F;
-                float cornerBottomLeft = this.roundBottomLeftCorner ? rounded : 0.0F;
-                float cornerBottomRight = this.roundBottomRightCorner ? rounded : 0.0F;
                 GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, 4.0F, cornerTopLeft, cornerTopRight, cornerBottomRight, cornerBottomLeft, UIBase.getUIColorTheme().ui_background_blur_tint_color, partial);
             }
         } else {
             //Render normal background
-            RenderingUtils.fillF(graphics, (float) scaledX, (float) scaledY, (float) (scaledX + this.getWidth()), (float) (scaledY + displayHeight), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+            UIBase.renderRoundedRect(graphics, scaledX, scaledY, this.getWidth(), displayHeight, cornerTopLeft, cornerTopRight, cornerBottomRight, cornerBottomLeft, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
         }
 
         // Enable scissoring if scrollable
@@ -306,14 +317,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         //Render border
-        UIBase.renderBorder(graphics,
+        UIBase.renderRoundedBorder(graphics,
                 (float) (scaledX - this.getBorderThickness()),
                 (float) (scaledY - this.getBorderThickness()),
                 (float) (scaledX + this.getWidth() + this.getBorderThickness()),
                 (float) (scaledY + displayHeight + this.getBorderThickness()),
                 (float) this.getBorderThickness(),
-                UIBase.shouldBlur() ? UIBase.getUIColorTheme().element_border_color_normal_over_blur.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt(),
-                true, true, true, true);
+                cornerTopLeft,
+                cornerTopRight,
+                cornerBottomRight,
+                cornerBottomLeft,
+                UIBase.shouldBlur() ? UIBase.getUIColorTheme().element_border_color_normal_over_blur.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
 
         //Post-tick
         for (ContextMenuEntry<?> e : renderEntries) {

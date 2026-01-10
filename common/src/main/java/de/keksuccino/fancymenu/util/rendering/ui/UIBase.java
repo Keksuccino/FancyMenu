@@ -1,6 +1,15 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -13,8 +22,12 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtend
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
 
 @SuppressWarnings("unused")
 public class UIBase extends RenderingUtils {
@@ -148,6 +161,192 @@ public class UIBase extends RenderingUtils {
 		if (renderBottom) {
 			RenderingUtils.fillF(graphics, xMin, yMax - borderThickness, xMax, yMax, borderColor);
 		}
+	}
+
+	public static void renderRoundedRect(@NotNull GuiGraphics graphics, float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color) {
+		float clampedWidth = Math.max(0.0F, width);
+		float clampedHeight = Math.max(0.0F, height);
+		if (clampedWidth <= 0.0F || clampedHeight <= 0.0F) {
+			return;
+		}
+
+		float[] radii = clampCornerRadii(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius, clampedWidth, clampedHeight);
+		float topLeft = radii[0];
+		float topRight = radii[1];
+		float bottomRight = radii[2];
+		float bottomLeft = radii[3];
+
+		int cornerSegments = getCornerVertexCount(Math.max(Math.max(topLeft, topRight), Math.max(bottomRight, bottomLeft)));
+		List<Vector2f> outline = buildRoundedRectOutline(x, y, clampedWidth, clampedHeight, topLeft, topRight, bottomRight, bottomLeft, cornerSegments);
+		if (outline.isEmpty()) {
+			return;
+		}
+
+		graphics.flush();
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.disableCull();
+		RenderSystem.setShader(GameRenderer::getPositionColorShader);
+		Matrix4f pose = graphics.pose().last().pose();
+		BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+
+		float centerX = x + clampedWidth * 0.5F;
+		float centerY = y + clampedHeight * 0.5F;
+		for (int i = 0; i < outline.size(); i++) {
+			Vector2f p1 = outline.get(i);
+			Vector2f p2 = outline.get((i + 1) % outline.size());
+			addColoredVertex(buffer, pose, centerX, centerY, color);
+			addColoredVertex(buffer, pose, p1.x(), p1.y(), color);
+			addColoredVertex(buffer, pose, p2.x(), p2.y(), color);
+		}
+
+		BufferUploader.drawWithShader(buffer.buildOrThrow());
+		RenderSystem.enableCull();
+		RenderSystem.disableBlend();
+	}
+
+	public static void renderRoundedBorder(@NotNull GuiGraphics graphics, float xMin, float yMin, float xMax, float yMax, float borderThickness, float innerTopLeftRadius, float innerTopRightRadius, float innerBottomRightRadius, float innerBottomLeftRadius, int borderColor) {
+		float outerWidth = xMax - xMin;
+		float outerHeight = yMax - yMin;
+		float thickness = Math.max(0.0F, borderThickness);
+		if (outerWidth <= 0.0F || outerHeight <= 0.0F || thickness <= 0.0F) {
+			return;
+		}
+
+		float innerX = xMin + thickness;
+		float innerY = yMin + thickness;
+		float innerWidth = outerWidth - (thickness * 2.0F);
+		float innerHeight = outerHeight - (thickness * 2.0F);
+
+		if (innerWidth <= 0.0F || innerHeight <= 0.0F) {
+			renderRoundedRect(graphics, xMin, yMin, outerWidth, outerHeight, innerTopLeftRadius, innerTopRightRadius, innerBottomRightRadius, innerBottomLeftRadius, borderColor);
+			return;
+		}
+
+		float outerTopLeft = innerTopLeftRadius > 0.0F ? innerTopLeftRadius + thickness : 0.0F;
+		float outerTopRight = innerTopRightRadius > 0.0F ? innerTopRightRadius + thickness : 0.0F;
+		float outerBottomRight = innerBottomRightRadius > 0.0F ? innerBottomRightRadius + thickness : 0.0F;
+		float outerBottomLeft = innerBottomLeftRadius > 0.0F ? innerBottomLeftRadius + thickness : 0.0F;
+
+		float[] clampedOuterRadii = clampCornerRadii(outerTopLeft, outerTopRight, outerBottomRight, outerBottomLeft, outerWidth, outerHeight);
+		float[] clampedInnerRadii = clampCornerRadii(innerTopLeftRadius, innerTopRightRadius, innerBottomRightRadius, innerBottomLeftRadius, innerWidth, innerHeight);
+
+		int cornerSegments = getCornerVertexCount(Math.max(Math.max(clampedOuterRadii[0], clampedOuterRadii[1]), Math.max(clampedOuterRadii[2], clampedOuterRadii[3])));
+
+		List<Vector2f> outerOutline = buildRoundedRectOutline(xMin, yMin, outerWidth, outerHeight, clampedOuterRadii[0], clampedOuterRadii[1], clampedOuterRadii[2], clampedOuterRadii[3], cornerSegments);
+		List<Vector2f> innerOutline = buildRoundedRectOutline(innerX, innerY, innerWidth, innerHeight, clampedInnerRadii[0], clampedInnerRadii[1], clampedInnerRadii[2], clampedInnerRadii[3], cornerSegments);
+
+		if (outerOutline.isEmpty() || innerOutline.isEmpty() || outerOutline.size() != innerOutline.size()) {
+			renderBorder(graphics, xMin, yMin, xMax, yMax, thickness, borderColor, true, true, true, true);
+			return;
+		}
+
+		graphics.flush();
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.setShader(GameRenderer::getPositionColorShader);
+		Matrix4f pose = graphics.pose().last().pose();
+		BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+
+		for (int i = 0; i < outerOutline.size(); i++) {
+			Vector2f outer = outerOutline.get(i);
+			Vector2f inner = innerOutline.get(i);
+			addColoredVertex(buffer, pose, outer.x(), outer.y(), borderColor);
+			addColoredVertex(buffer, pose, inner.x(), inner.y(), borderColor);
+		}
+
+		Vector2f firstOuter = outerOutline.get(0);
+		Vector2f firstInner = innerOutline.get(0);
+		addColoredVertex(buffer, pose, firstOuter.x(), firstOuter.y(), borderColor);
+		addColoredVertex(buffer, pose, firstInner.x(), firstInner.y(), borderColor);
+
+		BufferUploader.drawWithShader(buffer.buildOrThrow());
+		RenderSystem.disableBlend();
+	}
+
+	private static int getCornerVertexCount(float radius) {
+		return Math.max(1, Math.min(32, Mth.ceil(radius * 1.5F)));
+	}
+
+	@NotNull
+	private static float[] clampCornerRadii(float topLeft, float topRight, float bottomRight, float bottomLeft, float width, float height) {
+		float tl = Math.max(0.0F, topLeft);
+		float tr = Math.max(0.0F, topRight);
+		float br = Math.max(0.0F, bottomRight);
+		float bl = Math.max(0.0F, bottomLeft);
+
+		float maxWidth = width * 0.5F;
+		float maxHeight = height * 0.5F;
+		tl = Math.min(tl, Math.min(maxWidth, maxHeight));
+		tr = Math.min(tr, Math.min(maxWidth, maxHeight));
+		br = Math.min(br, Math.min(maxWidth, maxHeight));
+		bl = Math.min(bl, Math.min(maxWidth, maxHeight));
+
+		float topSum = tl + tr;
+		if (topSum > width) {
+			float scale = width / topSum;
+			tl *= scale;
+			tr *= scale;
+		}
+		float bottomSum = bl + br;
+		if (bottomSum > width) {
+			float scale = width / bottomSum;
+			bl *= scale;
+			br *= scale;
+		}
+		float leftSum = tl + bl;
+		if (leftSum > height) {
+			float scale = height / leftSum;
+			tl *= scale;
+			bl *= scale;
+		}
+		float rightSum = tr + br;
+		if (rightSum > height) {
+			float scale = height / rightSum;
+			tr *= scale;
+			br *= scale;
+		}
+		return new float[]{tl, tr, br, bl};
+	}
+
+	@NotNull
+	private static List<Vector2f> buildRoundedRectOutline(float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int cornerSegments) {
+		List<Vector2f> points = new ArrayList<>();
+		float xMax = x + width;
+		float yMax = y + height;
+
+		points.add(new Vector2f(x + topLeftRadius, y));
+		points.add(new Vector2f(xMax - topRightRadius, y));
+		addCornerArc(points, xMax - topRightRadius, y + topRightRadius, topRightRadius, -90.0F, 0.0F, cornerSegments);
+
+		points.add(new Vector2f(xMax, y + topRightRadius));
+		points.add(new Vector2f(xMax, yMax - bottomRightRadius));
+		addCornerArc(points, xMax - bottomRightRadius, yMax - bottomRightRadius, bottomRightRadius, 0.0F, 90.0F, cornerSegments);
+
+		points.add(new Vector2f(xMax - bottomRightRadius, yMax));
+		points.add(new Vector2f(x + bottomLeftRadius, yMax));
+		addCornerArc(points, x + bottomLeftRadius, yMax - bottomLeftRadius, bottomLeftRadius, 90.0F, 180.0F, cornerSegments);
+
+		points.add(new Vector2f(x, yMax - bottomLeftRadius));
+		points.add(new Vector2f(x, y + topLeftRadius));
+		addCornerArc(points, x + topLeftRadius, y + topLeftRadius, topLeftRadius, 180.0F, 270.0F, cornerSegments);
+
+		return points;
+	}
+
+	private static void addCornerArc(@NotNull List<Vector2f> points, float centerX, float centerY, float radius, float startAngleDeg, float endAngleDeg, int segments) {
+		if (radius <= 0.0F || segments <= 0) {
+			return;
+		}
+		float angleStep = (endAngleDeg - startAngleDeg) / (float)segments;
+		for (int i = 1; i <= segments; i++) {
+			float angle = (startAngleDeg + (angleStep * i)) * ((float)Math.PI / 180.0F);
+			points.add(new Vector2f(centerX + (Mth.cos(angle) * radius), centerY + (Mth.sin(angle) * radius)));
+		}
+	}
+
+	private static void addColoredVertex(@NotNull BufferBuilder buffer, @NotNull Matrix4f pose, float x, float y, int color) {
+		buffer.addVertex(pose, x, y, 0.0F).setColor(color);
 	}
 
 	public static int drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y) {
