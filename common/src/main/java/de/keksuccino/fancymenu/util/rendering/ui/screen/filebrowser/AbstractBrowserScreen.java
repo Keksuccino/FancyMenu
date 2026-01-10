@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
@@ -32,6 +33,8 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -50,8 +53,12 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     protected static final ResourceLocation VIDEO_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/video_file_icon.png");
     protected static final ResourceLocation IMAGE_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/image_file_icon.png");
     protected static final ResourceLocation FOLDER_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/folder_icon.png");
-    protected static final ResourceLocation AUDIO_PREVIEW_PLAY_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/play_icon.png");
-    protected static final ResourceLocation AUDIO_PREVIEW_PAUSE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/pause_icon.png");
+
+    protected static final ResourceLocation AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/play_button_normal.png");
+    protected static final ResourceLocation AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/pause_button_normal.png");
+    protected static final ResourceLocation AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE_HOVER = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/play_button_hover.png");
+    protected static final ResourceLocation AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE_HOVER = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/pause_button_hover.png");
+
     protected static final int AUDIO_PREVIEW_BUTTON_SIZE = 20;
     protected static final int AUDIO_PREVIEW_BUTTON_SPACING = 6;
     protected static final int AUDIO_PREVIEW_SLIDER_HEIGHT = 20;
@@ -688,15 +695,15 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         }
         this.audioPreviewToggleButton = new AudioPreviewToggleButton(0, 0, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, button -> {
             this.togglePreviewAudio();
-            button.setFocused(false);
         });
+        DrawableColor transparent = DrawableColor.of(new Color(0,0,0,0));
+        this.audioPreviewToggleButton.setBackgroundColor(transparent, transparent, transparent, transparent, transparent, transparent);
         this.audioPreviewToggleButton.setLabelEnabled(false);
         this.audioPreviewToggleButton.setFocusable(false);
         this.audioPreviewToggleButton.setNavigatable(false);
         this.audioPreviewToggleButton.visible = false;
         this.audioPreviewToggleButton.active = false;
         this.addWidget(this.audioPreviewToggleButton);
-        UIBase.applyDefaultWidgetSkinTo(this.audioPreviewToggleButton);
     }
 
     protected void initAudioPreviewVolumeSlider() {
@@ -941,10 +948,17 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         @Override
         public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             super.renderWidget(graphics, mouseX, mouseY, partial);
-            ResourceLocation icon = AbstractBrowserScreen.this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_ICON_TEXTURE : AUDIO_PREVIEW_PLAY_ICON_TEXTURE;
+            ResourceLocation icon = this.getButtonTexture();
             RenderSystem.enableBlend();
             graphics.blit(icon, this.getX(), this.getY(), 0.0F, 0.0F, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE);
             UIBase.resetShaderColor(graphics);
+        }
+
+        protected ResourceLocation getButtonTexture() {
+            if (this.isHoveredOrFocused()) {
+                return AbstractBrowserScreen.this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE_HOVER : AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE_HOVER;
+            }
+            return AbstractBrowserScreen.this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE : AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE;
         }
 
     }
