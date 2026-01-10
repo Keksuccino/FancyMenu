@@ -171,10 +171,16 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
     protected void loadPreviewForKey(@NotNull Object previewKey) {
         if (!(previewKey instanceof File file)) return;
         this.setTextPreview(file);
-        if (FileTypes.getLocalType(file) instanceof ImageFileType) {
+        FileType<?> type = FileTypes.getLocalType(file);
+        if (type instanceof ImageFileType) {
             this.previewTextureSupplier = ResourceSupplier.image(file.getPath());
+            this.setPreviewAudio(null, null);
+        } else if (type instanceof AudioFileType) {
+            this.previewTextureSupplier = null;
+            this.setPreviewAudio(ResourceSupplier.audio(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath())), file);
         } else {
             this.previewTextureSupplier = null;
+            this.setPreviewAudio(null, null);
         }
     }
 

@@ -157,8 +157,13 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
         this.setTextPreview(location);
         if (this.isImageLocation(location)) {
             this.previewTextureSupplier = ResourceSupplier.image(location.toString());
+            this.setPreviewAudio(null, null);
+        } else if (this.isAudioLocation(location)) {
+            this.previewTextureSupplier = null;
+            this.setPreviewAudio(ResourceSupplier.audio(location.toString()), location);
         } else {
             this.previewTextureSupplier = null;
+            this.setPreviewAudio(null, null);
         }
     }
 
@@ -393,6 +398,13 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
 
     protected boolean isImageLocation(@NotNull ResourceLocation location) {
         for (ImageFileType type : FileTypes.getAllImageFileTypes()) {
+            if (type.isFileTypeLocation(location)) return true;
+        }
+        return false;
+    }
+
+    protected boolean isAudioLocation(@NotNull ResourceLocation location) {
+        for (AudioFileType type : FileTypes.getAllAudioFileTypes()) {
             if (type.isFileTypeLocation(location)) return true;
         }
         return false;

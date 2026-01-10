@@ -15,12 +15,14 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -46,6 +48,10 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     protected static final ResourceLocation VIDEO_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/video_file_icon.png");
     protected static final ResourceLocation IMAGE_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/image_file_icon.png");
     protected static final ResourceLocation FOLDER_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/folder_icon.png");
+    protected static final ResourceLocation AUDIO_PREVIEW_PLAY_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/play_icon.png");
+    protected static final ResourceLocation AUDIO_PREVIEW_PAUSE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/pause_icon.png");
+    protected static final int AUDIO_PREVIEW_BUTTON_SIZE = 20;
+    protected static final int AUDIO_PREVIEW_BUTTON_SPACING = 6;
 
     protected static final long PREVIEW_DELAY_MS = 2000L;
     protected static final Component FILE_TYPE_PREFIX_TEXT = Component.translatable("fancymenu.file_browser.file_type");
@@ -64,15 +70,22 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     @Nullable
     protected ResourceSupplier<IText> previewTextSupplier;
     @Nullable
+    protected ResourceSupplier<IAudio> previewAudioSupplier;
+    @Nullable
     protected IText currentPreviewText;
+    @Nullable
+    protected IAudio currentPreviewAudio;
     @Nullable
     protected Object pendingPreviewKey;
     @Nullable
     protected Object activePreviewKey;
     protected long pendingPreviewLoadAtMs = 0L;
     protected boolean previewPending = false;
+    protected boolean previewAudioPlaying = false;
+    protected long previewAudioSeed = 0L;
     protected ExtendedButton confirmButton;
     protected ExtendedButton cancelButton;
+    protected ExtendedButton audioPreviewToggleButton;
     protected ComponentWidget currentDirectoryComponent;
     protected int fileScrollListHeightOffset = 0;
     protected int fileTypeScrollListYOffset = 0;
@@ -110,6 +123,8 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+
+        this.initAudioPreviewButton();
 
         this.updateCurrentDirectoryComponent();
 
@@ -156,6 +171,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
 
     @Override
     public void onClose() {
+        this.stopPreviewAudio();
         this.onCancel();
     }
 
@@ -259,8 +275,15 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
 
     protected void renderPreview(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.tickPreviewDelay();
+        this.tickAudioPreview();
         this.tickTextPreview();
-        if (this.previewTextureSupplier != null) {
+        if (this.previewAudioSupplier == null && this.audioPreviewToggleButton != null) {
+            this.audioPreviewToggleButton.visible = false;
+            this.audioPreviewToggleButton.active = false;
+        }
+        if (this.previewAudioSupplier != null) {
+            this.renderAudioPreview(graphics, mouseX, mouseY, partial);
+        } else if (this.previewTextureSupplier != null) {
             ITexture t = this.previewTextureSupplier.get();
             ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
             if (loc != null) {
@@ -416,7 +439,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         this.previewPending = false;
         if (this.isPreviewKeyStillSelected(pending)) {
             this.loadPreviewForKey(pending);
-            if (this.previewTextureSupplier == null && this.previewTextSupplier == null) {
+            if (this.previewTextureSupplier == null && this.previewTextSupplier == null && this.previewAudioSupplier == null) {
                 this.setNoTextPreview();
             }
             this.activePreviewKey = pending;
@@ -438,7 +461,9 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     protected void clearPreviewDisplay(boolean showNoPreview) {
         this.previewTextureSupplier = null;
         this.previewTextSupplier = null;
+        this.previewAudioSupplier = null;
         this.currentPreviewText = null;
+        this.stopPreviewAudio();
         if (showNoPreview) {
             this.setNoTextPreview();
         } else if (this.previewTextScrollArea != null) {
@@ -452,6 +477,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     }
 
     protected void tickTextPreview() {
+        if (this.previewAudioSupplier != null) return;
         if (this.previewPending) return;
         if (this.previewTextScrollArea == null) return;
         if (this.previewTextSupplier != null) {
@@ -503,6 +529,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     }
 
     protected void setNoTextPreview() {
+        if (this.previewAudioSupplier != null) return;
         if (this.previewTextScrollArea == null) return;
         this.previewTextScrollArea.clearEntries();
         TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
@@ -631,6 +658,192 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
             return focused.keyPressed(keycode, scancode, modifiers);
         }
         return false;
+    }
+
+    protected void initAudioPreviewButton() {
+        if (this.audioPreviewToggleButton != null) {
+            this.removeWidget(this.audioPreviewToggleButton);
+        }
+        this.audioPreviewToggleButton = new AudioPreviewToggleButton(0, 0, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, button -> {
+            this.togglePreviewAudio();
+            button.setFocused(false);
+        });
+        this.audioPreviewToggleButton.setLabelEnabled(false);
+        this.audioPreviewToggleButton.setFocusable(false);
+        this.audioPreviewToggleButton.setNavigatable(false);
+        this.audioPreviewToggleButton.visible = false;
+        this.audioPreviewToggleButton.active = false;
+        this.addWidget(this.audioPreviewToggleButton);
+        UIBase.applyDefaultWidgetSkinTo(this.audioPreviewToggleButton);
+    }
+
+    protected void togglePreviewAudio() {
+        if (this.previewAudioSupplier == null) return;
+        this.setPreviewAudioPlaying(!this.previewAudioPlaying);
+    }
+
+    protected void setPreviewAudio(@Nullable ResourceSupplier<IAudio> supplier, @Nullable Object previewKey) {
+        this.stopPreviewAudio();
+        this.previewAudioSupplier = supplier;
+        this.previewAudioPlaying = false;
+        this.previewAudioSeed = (previewKey != null) ? previewKey.hashCode() * 37L : System.nanoTime();
+    }
+
+    protected void setPreviewAudioPlaying(boolean playing) {
+        this.previewAudioPlaying = playing;
+        IAudio audio = this.getPreviewAudio();
+        if (audio == null) {
+            this.previewAudioPlaying = false;
+            return;
+        }
+        if (playing) {
+            if (!audio.isPlaying()) audio.play();
+        } else {
+            if (audio.isPlaying()) audio.pause();
+        }
+    }
+
+    @Nullable
+    protected IAudio getPreviewAudio() {
+        if (this.previewAudioSupplier == null) return null;
+        IAudio audio = this.previewAudioSupplier.get();
+        if (audio == null || audio.isClosed()) return null;
+        if (!Objects.equals(this.currentPreviewAudio, audio)) {
+            this.stopPreviewAudio();
+            this.currentPreviewAudio = audio;
+            audio.pause();
+        }
+        return this.currentPreviewAudio;
+    }
+
+    protected void stopPreviewAudio() {
+        if (this.currentPreviewAudio != null) {
+            this.currentPreviewAudio.stop();
+        }
+        this.currentPreviewAudio = null;
+        this.previewAudioPlaying = false;
+    }
+
+    protected void tickAudioPreview() {
+        if (this.previewAudioSupplier == null) {
+            this.stopPreviewAudio();
+            return;
+        }
+        IAudio audio = this.getPreviewAudio();
+        if (audio == null) {
+            this.previewAudioPlaying = false;
+            return;
+        }
+        if (this.previewAudioPlaying) {
+            if (!audio.isPlaying()) audio.play();
+            if (audio.getDuration() > 0.0F && audio.getPlayTime() >= audio.getDuration()) {
+                this.previewAudioPlaying = false;
+                audio.stop();
+            }
+        } else if (audio.isPlaying()) {
+            audio.pause();
+        }
+    }
+
+    protected void renderAudioPreview(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        int previewWidth = 200;
+        int topY = 50 + 15;
+        int availableHeight = (this.cancelButton.getY() - 50) - topY;
+        int previewHeight = Math.max(40, availableHeight - (AUDIO_PREVIEW_BUTTON_SIZE + AUDIO_PREVIEW_BUTTON_SPACING));
+        int x = this.width - 20 - previewWidth;
+        int y = topY;
+        graphics.fill(x, y, x + previewWidth, y + previewHeight, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        this.renderAudioVisualizer(graphics, x + 4, y + 4, previewWidth - 8, previewHeight - 8);
+        UIBase.renderBorder(graphics, x, y, x + previewWidth, y + previewHeight, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
+        int buttonX = x + (previewWidth / 2) - (AUDIO_PREVIEW_BUTTON_SIZE / 2);
+        int buttonY = y + previewHeight + AUDIO_PREVIEW_BUTTON_SPACING;
+        this.renderAudioPreviewButton(graphics, mouseX, mouseY, partial, buttonX, buttonY);
+    }
+
+    protected void renderAudioPreviewButton(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, int buttonX, int buttonY) {
+        if (this.audioPreviewToggleButton == null) return;
+        this.audioPreviewToggleButton.setX(buttonX);
+        this.audioPreviewToggleButton.setY(buttonY);
+        this.audioPreviewToggleButton.visible = true;
+        this.audioPreviewToggleButton.active = (this.previewAudioSupplier != null);
+        this.audioPreviewToggleButton.render(graphics, mouseX, mouseY, partial);
+    }
+
+    protected void renderAudioVisualizer(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
+        if (width <= 0 || height <= 0) return;
+        int barWidth = Math.max(2, width / 64);
+        int gap = Math.max(1, barWidth / 2);
+        int barCount = Math.max(8, (width + gap) / (barWidth + gap));
+        float time = this.getAudioVisualizerTime();
+        float baseIntensity = this.previewAudioPlaying ? 1.0F : 0.35F;
+        for (int i = 0; i < barCount; i++) {
+            int barX = x + i * (barWidth + gap);
+            if (barX + barWidth > x + width) break;
+            float phase = (time * 2.6F) + (i * 0.35F);
+            float wave = (float)((Math.sin(phase) + 1.0) * 0.5);
+            float wave2 = (float)((Math.sin(phase * 0.7F + 1.3F) + 1.0) * 0.5);
+            float intensity = (wave * 0.7F + wave2 * 0.3F) * baseIntensity;
+            int barHeight = Math.max(2, (int)(intensity * height));
+            int barY = y + (height - barHeight);
+            int color = this.getAudioVisualizerGradientColor((float)i / (float)Math.max(1, barCount - 1));
+            graphics.fill(barX, barY, barX + barWidth, barY + barHeight, color);
+        }
+    }
+
+    protected float getAudioVisualizerTime() {
+        if (this.previewAudioPlaying && this.currentPreviewAudio != null) {
+            return this.currentPreviewAudio.getPlayTime();
+        }
+        return (float)(this.previewAudioSeed % 10000L) / 1000.0F;
+    }
+
+    protected int getAudioVisualizerGradientColor(float progress) {
+        float clamped = Math.max(0.0F, Math.min(1.0F, progress));
+        int orange = 0xFFFFA500;
+        int red = 0xFFFF0000;
+        int magenta = 0xFFFF00FF;
+        int purple = 0xFF8000FF;
+        if (clamped <= 0.33F) {
+            return this.lerpColor(orange, red, clamped / 0.33F);
+        }
+        if (clamped <= 0.66F) {
+            return this.lerpColor(red, magenta, (clamped - 0.33F) / 0.33F);
+        }
+        return this.lerpColor(magenta, purple, (clamped - 0.66F) / 0.34F);
+    }
+
+    protected int lerpColor(int start, int end, float t) {
+        float clamped = Math.max(0.0F, Math.min(1.0F, t));
+        int a1 = (start >> 24) & 0xFF;
+        int r1 = (start >> 16) & 0xFF;
+        int g1 = (start >> 8) & 0xFF;
+        int b1 = start & 0xFF;
+        int a2 = (end >> 24) & 0xFF;
+        int r2 = (end >> 16) & 0xFF;
+        int g2 = (end >> 8) & 0xFF;
+        int b2 = end & 0xFF;
+        int a = (int)(a1 + (a2 - a1) * clamped);
+        int r = (int)(r1 + (r2 - r1) * clamped);
+        int g = (int)(g1 + (g2 - g1) * clamped);
+        int b = (int)(b1 + (b2 - b1) * clamped);
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    protected class AudioPreviewToggleButton extends ExtendedButton {
+
+        public AudioPreviewToggleButton(int x, int y, int width, int height, @NotNull Button.OnPress onPress) {
+            super(x, y, width, height, Component.empty(), onPress);
+        }
+
+        @Override
+        public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            super.renderWidget(graphics, mouseX, mouseY, partial);
+            ResourceLocation icon = AbstractBrowserScreen.this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_ICON_TEXTURE : AUDIO_PREVIEW_PLAY_ICON_TEXTURE;
+            RenderSystem.enableBlend();
+            graphics.blit(icon, this.getX(), this.getY(), 0.0F, 0.0F, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE);
+            UIBase.resetShaderColor(graphics);
+        }
+
     }
 
     public abstract class AbstractIconTextScrollAreaEntry extends ScrollAreaEntry {
