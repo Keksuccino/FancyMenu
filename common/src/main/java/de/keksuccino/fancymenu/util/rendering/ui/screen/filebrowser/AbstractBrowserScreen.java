@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
@@ -33,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @SuppressWarnings("all")
@@ -52,6 +54,10 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     protected static final ResourceLocation AUDIO_PREVIEW_PAUSE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/pause_icon.png");
     protected static final int AUDIO_PREVIEW_BUTTON_SIZE = 20;
     protected static final int AUDIO_PREVIEW_BUTTON_SPACING = 6;
+    protected static final int AUDIO_PREVIEW_SLIDER_HEIGHT = 20;
+    protected static final int AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT = 6;
+    protected static final int AUDIO_PREVIEW_PROGRESS_BAR_SPACING = 4;
+    protected static final int AUDIO_PREVIEW_TIME_SPACING = 2;
 
     protected static final long PREVIEW_DELAY_MS = 2000L;
     protected static final Component FILE_TYPE_PREFIX_TEXT = Component.translatable("fancymenu.file_browser.file_type");
@@ -86,6 +92,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     protected ExtendedButton confirmButton;
     protected ExtendedButton cancelButton;
     protected ExtendedButton audioPreviewToggleButton;
+    protected RangeSlider audioPreviewVolumeSlider;
     protected ComponentWidget currentDirectoryComponent;
     protected int fileScrollListHeightOffset = 0;
     protected int fileTypeScrollListYOffset = 0;
@@ -115,16 +122,27 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         }
 
         this.confirmButton = this.buildConfirmButton();
+        if (this.confirmButton != null) {
+            Button.OnPress originalConfirmAction = this.confirmButton.getPressAction();
+            this.confirmButton.setPressAction(button -> {
+                this.stopPreviewAudio();
+                if (originalConfirmAction != null) {
+                    originalConfirmAction.onPress(button);
+                }
+            });
+        }
         this.addWidget(this.confirmButton);
         UIBase.applyDefaultWidgetSkinTo(this.confirmButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
+            this.stopPreviewAudio();
             this.onCancel();
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.initAudioPreviewButton();
+        this.initAudioPreviewVolumeSlider();
 
         this.updateCurrentDirectoryComponent();
 
@@ -280,6 +298,10 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         if (this.previewAudioSupplier == null && this.audioPreviewToggleButton != null) {
             this.audioPreviewToggleButton.visible = false;
             this.audioPreviewToggleButton.active = false;
+        }
+        if (this.previewAudioSupplier == null && this.audioPreviewVolumeSlider != null) {
+            this.audioPreviewVolumeSlider.visible = false;
+            this.audioPreviewVolumeSlider.active = false;
         }
         if (this.previewAudioSupplier != null) {
             this.renderAudioPreview(graphics, mouseX, mouseY, partial);
@@ -677,6 +699,26 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         UIBase.applyDefaultWidgetSkinTo(this.audioPreviewToggleButton);
     }
 
+    protected void initAudioPreviewVolumeSlider() {
+        if (this.audioPreviewVolumeSlider != null) {
+            this.removeWidget(this.audioPreviewVolumeSlider);
+        }
+        float volume = BrowserAudioSettings.getVolume();
+        RangeSlider slider = new RangeSlider(0, 0, 100, AUDIO_PREVIEW_SLIDER_HEIGHT, Component.empty(), 0.0D, 1.0D, volume);
+        slider.setRoundingDecimalPlace(2);
+        slider.setLabelSupplier(consumes -> Component.empty());
+        slider.setSliderValueUpdateListener((s, valueDisplayText, value) -> {
+            float newVolume = (float) ((RangeSlider) s).getRangeValue();
+            BrowserAudioSettings.setVolume(newVolume);
+            this.applyPreviewAudioVolume(newVolume);
+        });
+        this.audioPreviewVolumeSlider = slider;
+        this.audioPreviewVolumeSlider.visible = false;
+        this.audioPreviewVolumeSlider.active = false;
+        this.addWidget(this.audioPreviewVolumeSlider);
+        UIBase.applyDefaultWidgetSkinTo(this.audioPreviewVolumeSlider);
+    }
+
     protected void togglePreviewAudio() {
         if (this.previewAudioSupplier == null) return;
         this.setPreviewAudioPlaying(!this.previewAudioPlaying);
@@ -712,6 +754,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
             this.stopPreviewAudio();
             this.currentPreviewAudio = audio;
             audio.pause();
+            this.applyPreviewAudioVolume(BrowserAudioSettings.getVolume());
         }
         return this.currentPreviewAudio;
     }
@@ -749,15 +792,24 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         int previewWidth = 200;
         int topY = 50 + 15;
         int availableHeight = (this.cancelButton.getY() - 50) - topY;
-        int previewHeight = Math.max(40, availableHeight - (AUDIO_PREVIEW_BUTTON_SIZE + AUDIO_PREVIEW_BUTTON_SPACING));
+        int progressAreaHeight = AUDIO_PREVIEW_PROGRESS_BAR_SPACING + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT + AUDIO_PREVIEW_TIME_SPACING + this.font.lineHeight;
+        int basePreviewHeight = Math.max(40, availableHeight - (AUDIO_PREVIEW_BUTTON_SIZE + AUDIO_PREVIEW_BUTTON_SPACING + progressAreaHeight));
+        int previewHeight = Math.max(12, basePreviewHeight / 3);
         int x = this.width - 20 - previewWidth;
         int y = topY;
         graphics.fill(x, y, x + previewWidth, y + previewHeight, UIBase.getUIColorTheme().area_background_color.getColorInt());
         this.renderAudioVisualizer(graphics, x + 4, y + 4, previewWidth - 8, previewHeight - 8);
         UIBase.renderBorder(graphics, x, y, x + previewWidth, y + previewHeight, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
-        int buttonX = x + (previewWidth / 2) - (AUDIO_PREVIEW_BUTTON_SIZE / 2);
-        int buttonY = y + previewHeight + AUDIO_PREVIEW_BUTTON_SPACING;
+        int progressY = y + previewHeight + AUDIO_PREVIEW_PROGRESS_BAR_SPACING;
+        this.renderAudioPreviewProgress(graphics, x, progressY, previewWidth);
+        int controlsY = progressY + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT + AUDIO_PREVIEW_TIME_SPACING + this.font.lineHeight + AUDIO_PREVIEW_BUTTON_SPACING;
+        int buttonX = x;
+        int buttonY = controlsY;
+        int sliderX = buttonX + AUDIO_PREVIEW_BUTTON_SIZE + AUDIO_PREVIEW_BUTTON_SPACING;
+        int sliderWidth = Math.max(10, previewWidth - (AUDIO_PREVIEW_BUTTON_SIZE + AUDIO_PREVIEW_BUTTON_SPACING));
+        int sliderY = controlsY + (AUDIO_PREVIEW_BUTTON_SIZE - AUDIO_PREVIEW_SLIDER_HEIGHT) / 2;
         this.renderAudioPreviewButton(graphics, mouseX, mouseY, partial, buttonX, buttonY);
+        this.renderAudioPreviewVolumeSlider(graphics, mouseX, mouseY, partial, sliderX, sliderY, sliderWidth);
     }
 
     protected void renderAudioPreviewButton(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, int buttonX, int buttonY) {
@@ -767,6 +819,17 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         this.audioPreviewToggleButton.visible = true;
         this.audioPreviewToggleButton.active = (this.previewAudioSupplier != null);
         this.audioPreviewToggleButton.render(graphics, mouseX, mouseY, partial);
+    }
+
+    protected void renderAudioPreviewVolumeSlider(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, int sliderX, int sliderY, int sliderWidth) {
+        if (this.audioPreviewVolumeSlider == null) return;
+        this.audioPreviewVolumeSlider.setX(sliderX);
+        this.audioPreviewVolumeSlider.setY(sliderY);
+        this.audioPreviewVolumeSlider.setWidth(sliderWidth);
+        this.audioPreviewVolumeSlider.setHeight(AUDIO_PREVIEW_SLIDER_HEIGHT);
+        this.audioPreviewVolumeSlider.visible = true;
+        this.audioPreviewVolumeSlider.active = (this.previewAudioSupplier != null);
+        this.audioPreviewVolumeSlider.render(graphics, mouseX, mouseY, partial);
     }
 
     protected void renderAudioVisualizer(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
@@ -787,6 +850,46 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
             int barY = y + (height - barHeight);
             int color = this.getAudioVisualizerGradientColor((float)i / (float)Math.max(1, barCount - 1));
             graphics.fill(barX, barY, barX + barWidth, barY + barHeight, color);
+        }
+    }
+
+    protected void renderAudioPreviewProgress(@NotNull GuiGraphics graphics, int previewX, int progressY, int previewWidth) {
+        int barX = previewX;
+        int barWidth = previewWidth;
+        int barY = progressY;
+        int barYEnd = barY + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT;
+        graphics.fill(barX, barY, barX + barWidth, barYEnd, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        UIBase.renderBorder(graphics, barX, barY, barX + barWidth, barYEnd, 1, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
+
+        IAudio audio = this.getPreviewAudio();
+        float duration = audio != null ? Math.max(0.0F, audio.getDuration()) : 0.0F;
+        float playTime = audio != null ? Math.max(0.0F, audio.getPlayTime()) : 0.0F;
+        float progress = duration > 0.0F ? Math.min(1.0F, playTime / duration) : 0.0F;
+        int filledWidth = (int)(barWidth * progress);
+        if (filledWidth > 0) {
+            int fillColor = this.getAudioVisualizerGradientColor(progress);
+            graphics.fill(barX, barY, barX + filledWidth, barYEnd, fillColor);
+        }
+
+        String timeText = this.formatAudioTime(playTime) + " / " + this.formatAudioTime(duration);
+        int timeY = barYEnd + AUDIO_PREVIEW_TIME_SPACING;
+        int textWidth = this.font.width(timeText);
+        int textX = previewX + (previewWidth / 2) - (textWidth / 2);
+        graphics.drawString(this.font, timeText, textX, timeY, UIBase.getUIColorTheme().element_label_color_inactive.getColorInt(), false);
+    }
+
+    @NotNull
+    protected String formatAudioTime(float seconds) {
+        if (!Float.isFinite(seconds) || seconds < 0.0F) seconds = 0.0F;
+        int totalSeconds = (int) seconds;
+        int minutes = totalSeconds / 60;
+        int secs = totalSeconds % 60;
+        return String.format(Locale.ROOT, "%d:%02d", minutes, secs);
+    }
+
+    protected void applyPreviewAudioVolume(float volume) {
+        if (this.currentPreviewAudio != null) {
+            this.currentPreviewAudio.setVolume(volume);
         }
     }
 
