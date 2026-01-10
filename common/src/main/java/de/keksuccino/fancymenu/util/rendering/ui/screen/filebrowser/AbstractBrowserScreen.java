@@ -66,7 +66,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     protected static final int AUDIO_PREVIEW_PROGRESS_BAR_SPACING = 4;
     protected static final int AUDIO_PREVIEW_TIME_SPACING = 2;
 
-    protected static final long PREVIEW_DELAY_MS = 2000L;
+    protected static final long PREVIEW_DELAY_MS = 1000L;
     protected static final Component FILE_TYPE_PREFIX_TEXT = Component.translatable("fancymenu.file_browser.file_type");
 
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
