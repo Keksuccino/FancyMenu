@@ -169,7 +169,7 @@ public final class GuiBlurRenderer {
         float scaledX = area.x * guiScale;
         float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
         float blurRadius = Math.max(0.0F, area.blurRadius * guiScale);
-        CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F);
+        CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
         applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, tint);
@@ -283,6 +283,10 @@ public final class GuiBlurRenderer {
         private CornerRadii clamped(float maxRadius) {
             float clampedMax = Math.max(0.0F, maxRadius);
             return new CornerRadii(clampCorner(topLeft, clampedMax), clampCorner(topRight, clampedMax), clampCorner(bottomRight, clampedMax), clampCorner(bottomLeft, clampedMax));
+        }
+
+        private CornerRadii flipVertical() {
+            return new CornerRadii(bottomLeft, bottomRight, topRight, topLeft);
         }
 
         private static float clampCorner(float value, float max) {

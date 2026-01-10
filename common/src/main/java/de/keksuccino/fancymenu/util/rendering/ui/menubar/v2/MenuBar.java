@@ -882,6 +882,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         public ContextMenuBarEntry(@NotNull String identifier, @NotNull MenuBar menuBar, @NotNull Component label, ContextMenu contextMenu) {
             super(identifier, menuBar, label, (bar, entry) -> {});
             this.contextMenu = contextMenu;
+            contextMenu.setRoundedCorners(false, false, true, true);
             this.contextMenu.setShadow(false);
             this.contextMenu.setKeepDistanceToEdges(false);
             this.contextMenu.setForceUIScale(false);
