@@ -17,7 +17,7 @@ import java.util.Objects;
 public final class GuiBlurRenderer {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    // It's important to have shader files in the default 'minecraft' namespace
+    // Keep shader files in the default 'minecraft' namespace so the vanilla resource manager finds them for every loader.
     private static final ResourceLocation GUI_BLUR_POST_CHAIN = ResourceLocation.withDefaultNamespace("shaders/post/fancymenu_gui_blur.json");
 
     private static PostChain blurPostChain;
@@ -85,8 +85,8 @@ public final class GuiBlurRenderer {
         applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, cornerRadius, tint);
 
         graphics.flush();
-        // Post effects must render with blending disabled or they'll repeatedly alpha‑multiply
-        // the framebuffer content (causing translucent draws to darken each time we blur).
+        // Run the post chain with blending off; otherwise each full-screen pass would multiply existing alpha,
+        // darkening any translucent GUI content every time a blur area is drawn.
         RenderSystem.disableBlend();
         postChain.process(partial);
         RenderTarget finalTarget = getFinalTarget(postChain);
@@ -94,6 +94,8 @@ public final class GuiBlurRenderer {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         if (finalTarget != null) {
+            // Compose the isolated blur result back onto the main target. The final shader outputs alpha = mask,
+            // so normal alpha blending here preserves untouched pixels outside the rounded blur rect.
             finalTarget.blitToScreen(minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight(), false);
         }
         RenderingUtils.resetShaderColor(graphics);
@@ -144,6 +146,8 @@ public final class GuiBlurRenderer {
             if (!"fancymenu_gui_blur".equals(pass.getName())) {
                 continue;
             }
+            // Pass the unscaled GUI rect into the shader; the shader discards fragments outside this mask,
+            // preventing the blur pass from writing over the whole screen.
             pass.getEffect().safeGetUniform("Rect").set(x, y, width, height);
             pass.getEffect().safeGetUniform("CornerRadius").set(cornerRadius);
             pass.getEffect().safeGetUniform("Tint").set(tint.red(), tint.green(), tint.blue(), tint.alpha());

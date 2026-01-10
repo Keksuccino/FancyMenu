@@ -30,8 +30,9 @@ void main() {
 
     vec2 pixel = uv * OutSize;
     float mask = roundedRectMask(pixel, Rect.xy, Rect.zw, CornerRadius);
+    // Discard everything outside the rounded rect so the post-pass never writes to untouched pixels.
     if (mask <= 0.0001) {
-        discard; // leave pixels outside the blur rect untouched
+        discard;
     }
 
     fragColor = vec4(blurColor, mask);
