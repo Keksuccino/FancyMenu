@@ -27,17 +27,39 @@ public class Test {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DrawableColor TINT = DrawableColor.of(new Color(255, 255, 255, 45));
 
+    private boolean blurFirst = false;
+    private boolean blurSecond = false;
+    private boolean blurThird = false;
+
     @EventListener(priority = EventPriority.VERY_LOW)
     public void onRenderPost(RenderScreenEvent.Post e) {
 
-        GuiBlurRenderer.renderBlurArea(e.getGraphics(), 50, 40, 300, 300, 4, 6, TINT, e.getPartial());
+        if (blurFirst) {
+            GuiBlurRenderer.renderBlurArea(e.getGraphics(), 50, 40, 300, 300, 4, 6, TINT, e.getPartial());
+        }
 
-        GuiBlurRenderer.renderBlurArea(e.getGraphics(), e.getScreen().width - 300, e.getScreen().height - 300, 200, 200, 4, 6, TINT, e.getPartial());
+        if (blurSecond) {
+            GuiBlurRenderer.renderBlurArea(e.getGraphics(), e.getScreen().width - 300, e.getScreen().height - 300, 200, 200, 4, 6, TINT, e.getPartial());
+        }
+
+        if (blurThird) {
+            GuiBlurRenderer.renderBlurArea(e.getGraphics(), e.getScreen().width - 300, 40, 100, 100, 4, 6, TINT, e.getPartial());
+        }
 
     }
 
     @EventListener
     public void onInitScreenPost(InitOrResizeScreenCompletedEvent e) {
+
+        e.addRenderableWidget(new ExtendedButton(20, 20, 100, 20, "Toggle First Blur", button -> {
+            blurFirst = !blurFirst;
+        }));
+        e.addRenderableWidget(new ExtendedButton(20, 40, 100, 20, "Toggle Second Blur", button -> {
+            blurSecond = !blurSecond;
+        }));
+        e.addRenderableWidget(new ExtendedButton(20, 60, 100, 20, "Toggle Third Blur", button -> {
+            blurThird = !blurThird;
+        }));
 
 //        e.addRenderableWidget(new ExtendedButton(20, 20, 100, 20, "Open PiP Window", button -> {
 //            ColorPickerScreen s = new ColorPickerScreen(null, drawableColor -> {}, drawableColor -> {}, drawableColor -> {});
