@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -24,12 +25,34 @@ import java.awt.*;
 public class Test {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final DrawableColor TINT = DrawableColor.of(new Color(255, 255, 255, 121));
+    private static final DrawableColor TINT = DrawableColor.of(new Color(255, 255, 255, 45));
 
     @EventListener(priority = EventPriority.VERY_LOW)
     public void onRenderPost(RenderScreenEvent.Post e) {
 
-        GuiBlurRenderer.renderBlurArea(e.getGraphics(), 50, 40, 300, 300, 4, 6, TINT, e.getPartial());
+//        e.getGraphics().pose().pushPose();
+//
+//        e.getGraphics().setColor(1.0F, 1.0F, 1.0F, 1.0F);
+//
+//        e.getGraphics().flush();
+//        RenderSystem.enableDepthTest();
+//        RenderSystem.defaultBlendFunc();
+//        RenderSystem.enableBlend();
+
+//        RenderSystem.disableDepthTest();
+
+//        GuiBlurRenderer.renderBlurArea(e.getGraphics(), 50, 40, 300, 300, 4, 6, TINT, e.getPartial());
+//
+//        GuiBlurRenderer.renderBlurArea(e.getGraphics(), e.getScreen().width - 300, e.getScreen().height - 300, 200, 200, 4, 6, TINT, e.getPartial());
+
+//        e.getGraphics().flush();
+//        RenderSystem.enableDepthTest();
+//        RenderSystem.defaultBlendFunc();
+//        RenderSystem.enableBlend();
+//
+//        e.getGraphics().setColor(1.0F, 1.0F, 1.0F, 1.0F);
+//
+//        e.getGraphics().pose().popPose();
 
     }
 

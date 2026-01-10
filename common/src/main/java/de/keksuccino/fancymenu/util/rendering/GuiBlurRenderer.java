@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -136,6 +137,9 @@ public final class GuiBlurRenderer {
         graphics.flush();
         postChain.process(partial);
         minecraft.getMainRenderTarget().bindWrite(false);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     private static PostChain getOrCreatePostChain(Minecraft minecraft) {
