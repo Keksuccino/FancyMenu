@@ -168,7 +168,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         float scaledMouseX = (float) ((float)mouseX / renderScale);
         float scaledMouseY = (float) ((float)mouseY / renderScale);
         boolean navigatingInSub = this.isUserNavigatingInSubMenu();
-        float roundedRadius = 6.0F;
+        float roundedRadius = UIBase.getCornerRoundingRadius();
         float cornerTopLeft = this.roundTopLeftCorner ? roundedRadius : 0.0F;
         float cornerTopRight = this.roundTopRightCorner ? roundedRadius : 0.0F;
         float cornerBottomLeft = this.roundBottomLeftCorner ? roundedRadius : 0.0F;
@@ -202,7 +202,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 float blurTopRight = Math.max(0.0F, cornerTopRight - blurCornerInset);
                 float blurBottomRight = Math.max(0.0F, cornerBottomRight - blurCornerInset);
                 float blurBottomLeft = Math.max(0.0F, cornerBottomLeft - blurCornerInset);
-                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, 4.0F, blurTopLeft, blurTopRight, blurBottomRight, blurBottomLeft, UIBase.getUIColorTheme().ui_background_blur_tint_color, partial);
+                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, UIBase.getBlurRadius(), blurTopLeft, blurTopRight, blurBottomRight, blurBottomLeft, UIBase.getUIColorTheme().ui_blur_overlay_element_background_tint, partial);
             }
         } else {
             //Render normal background
@@ -354,7 +354,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 borderCornerTopRight,
                 borderCornerBottomRight,
                 borderCornerBottomLeft,
-                UIBase.shouldBlur() ? UIBase.getUIColorTheme().element_border_color_normal_over_blur.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
+                UIBase.shouldBlur() ? UIBase.getUIColorTheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
 
         //Post-tick
         for (ContextMenuEntry<?> e : renderEntries) {
@@ -1673,14 +1673,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected void renderBackground(@NotNull GuiGraphics graphics) {
             if (this.isChangeBackgroundColorOnHover() && this.isHovered() && this.isActive()) {
-                int backColor = FancyMenu.getOptions().enableUiBlur.getValue() ? UIBase.getUIColorTheme().element_background_color_hover_over_blur.getColorInt() : UIBase.getUIColorTheme().element_background_color_hover.getColorInt();
+                int backColor = FancyMenu.getOptions().enableUiBlur.getValue() ? UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : UIBase.getUIColorTheme().element_background_color_hover.getColorInt();
                 RenderingUtils.fillF(graphics, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), backColor);
             }
         }
 
         protected int getLabelColor() {
             if (FancyMenu.getOptions().enableUiBlur.getValue()) {
-                return this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal_over_blur.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive_over_blur.getColorInt();
+                return this.isActive() ? UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_normal.getColorInt() : UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_inactive.getColorInt();
             }
             return this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt();
         }
@@ -2055,7 +2055,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.shouldBlur() ? UIBase.getUIColorTheme().element_border_color_normal_over_blur.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
+            RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.shouldBlur() ? UIBase.getUIColorTheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
         }
 
         @Override

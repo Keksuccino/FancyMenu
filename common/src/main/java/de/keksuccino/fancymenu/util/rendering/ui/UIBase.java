@@ -38,34 +38,51 @@ public class UIBase extends RenderingUtils {
 	public static final int HORIZONTAL_SCROLL_BAR_WIDTH = 40;
 	public static final int HORIZONTAL_SCROLL_BAR_HEIGHT = 5;
 
-	/**
+    /**
+     * Applies the default UI skin to the given widget and returns it.<br>
+     * Does not apply skins for blurred environments.
+     */
+    public static <T> T applyDefaultWidgetSkinTo(T widget) {
+        return applyDefaultWidgetSkinTo(widget, false);
+    }
+
+    /**
 	 * Applies the default UI skin to the given widget and returns it.
 	 */
 	@SuppressWarnings("all")
-	public static <T> T applyDefaultWidgetSkinTo(T widget) {
+	public static <T> T applyDefaultWidgetSkinTo(T widget, boolean forBlur) {
 		if (widget instanceof ExtendedButton e) {
-			return (T) applyDefaultButtonSkinTo(e);
+			return (T) applyDefaultButtonSkinTo(e, forBlur);
 		}
 		if (widget instanceof ExtendedEditBox e) {
-			return (T) applyDefaultEditBoxSkinTo(e);
+			return (T) applyDefaultEditBoxSkinTo(e, forBlur);
 		}
 		if (widget instanceof EditBoxSuggestions s) {
 			return (T) applyDefaultEditBoxSuggestionsSkinTo(s);
 		}
 		if (widget instanceof AbstractExtendedSlider s) {
-			return (T) applyDefaultV2SliderSkinTo(s);
+			return (T) applyDefaultV2SliderSkinTo(s, forBlur);
 		}
 		return widget;
 	}
 
-	private static AbstractExtendedSlider applyDefaultV2SliderSkinTo(AbstractExtendedSlider slider) {
-		slider.setSliderBackgroundColorNormal(UIBase.getUIColorTheme().element_background_color_normal);
-		slider.setSliderBorderColorNormal(UIBase.getUIColorTheme().element_border_color_normal);
-		slider.setSliderHandleColorNormal(UIBase.getUIColorTheme().slider_handle_color_normal);
-		slider.setSliderHandleColorHover(UIBase.getUIColorTheme().slider_handle_color_hover);
-		slider.setLabelColorNormal(UIBase.getUIColorTheme().element_label_color_normal);
-		slider.setLabelColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
-		slider.setLabelShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
+	private static AbstractExtendedSlider applyDefaultV2SliderSkinTo(AbstractExtendedSlider slider, boolean forBlur) {
+		if (forBlur) {
+            slider.setSliderBackgroundColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_normal_type_1);
+            slider.setSliderBorderColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_border_color);
+            slider.setSliderHandleColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_normal_type_2);
+            slider.setSliderHandleColorHover(UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_hover_type_2);
+            slider.setLabelColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_normal);
+            slider.setLabelColorInactive(UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_inactive);
+        } else {
+            slider.setSliderBackgroundColorNormal(UIBase.getUIColorTheme().element_background_color_normal);
+            slider.setSliderBorderColorNormal(UIBase.getUIColorTheme().element_border_color_normal);
+            slider.setSliderHandleColorNormal(UIBase.getUIColorTheme().slider_handle_color_normal);
+            slider.setSliderHandleColorHover(UIBase.getUIColorTheme().slider_handle_color_hover);
+            slider.setLabelColorNormal(UIBase.getUIColorTheme().element_label_color_normal);
+            slider.setLabelColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
+        }
+        slider.setLabelShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
 		return slider;
 	}
 
@@ -77,28 +94,48 @@ public class UIBase extends RenderingUtils {
 		return editBoxSuggestions;
 	}
 
-	private static ExtendedEditBox applyDefaultEditBoxSkinTo(ExtendedEditBox editBox) {
-		UIColorTheme theme = UIBase.getUIColorTheme();
-		editBox.setTextColor(theme.edit_box_text_color_normal);
-		editBox.setTextColorUneditable(theme.edit_box_text_color_uneditable);
-		editBox.setBackgroundColor(theme.edit_box_background_color);
-		editBox.setBorderNormalColor(theme.edit_box_border_color_normal);
-		editBox.setBorderFocusedColor(theme.edit_box_border_color_focused);
-		editBox.setSuggestionTextColor(theme.edit_box_suggestion_text_color);
-		editBox.setTextShadow_FancyMenu(false);
-		return editBox;
-	}
+    private static ExtendedEditBox applyDefaultEditBoxSkinTo(ExtendedEditBox editBox, boolean forBlur) {
+        UIColorTheme theme = UIBase.getUIColorTheme();
+        if (forBlur) {
+            editBox.setTextColor(theme.ui_blur_interface_input_field_text_color_normal);
+            editBox.setTextColorUneditable(theme.ui_blur_interface_input_field_text_color_uneditable);
+            editBox.setBackgroundColor(theme.ui_blur_interface_input_field_background_color);
+            editBox.setBorderNormalColor(theme.ui_blur_interface_input_field_border_color_normal);
+            editBox.setBorderFocusedColor(theme.ui_blur_interface_input_field_border_color_focused);
+            editBox.setSuggestionTextColor(theme.ui_blur_interface_input_field_suggestion_text_color);
+        } else {
+            editBox.setTextColor(theme.edit_box_text_color_normal);
+            editBox.setTextColorUneditable(theme.edit_box_text_color_uneditable);
+            editBox.setBackgroundColor(theme.edit_box_background_color);
+            editBox.setBorderNormalColor(theme.edit_box_border_color_normal);
+            editBox.setBorderFocusedColor(theme.edit_box_border_color_focused);
+            editBox.setSuggestionTextColor(theme.edit_box_suggestion_text_color);
+        }
+        editBox.setTextShadow_FancyMenu(false);
+        return editBox;
+    }
 
-	private static ExtendedButton applyDefaultButtonSkinTo(ExtendedButton button) {
-		button.setBackgroundColorNormal(UIBase.getUIColorTheme().element_background_color_normal);
-		button.setBackgroundColorHover(UIBase.getUIColorTheme().element_background_color_hover);
-		button.setBackgroundColorInactive(UIBase.getUIColorTheme().element_background_color_normal);
-		button.setBorderColorNormal(UIBase.getUIColorTheme().element_border_color_normal);
-		button.setBorderColorHover(UIBase.getUIColorTheme().element_border_color_hover);
-		button.setBorderColorInactive(UIBase.getUIColorTheme().element_border_color_normal);
-		button.setLabelBaseColorNormal(UIBase.getUIColorTheme().element_label_color_normal);
-		button.setLabelBaseColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
-		button.setLabelShadowEnabled(FancyMenu.getOptions().enableUiTextShadow.getValue());
+	private static ExtendedButton applyDefaultButtonSkinTo(ExtendedButton button, boolean forBlur) {
+		if (forBlur) {
+            button.setBackgroundColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_normal_type_1);
+            button.setBackgroundColorHover(UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_hover_type_1);
+            button.setBackgroundColorInactive(UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_normal_type_1);
+            button.setBorderColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_border_color);
+            button.setBorderColorHover(UIBase.getUIColorTheme().ui_blur_interface_widget_border_color);
+            button.setBorderColorInactive(UIBase.getUIColorTheme().ui_blur_interface_widget_border_color);
+            button.setLabelBaseColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_normal);
+            button.setLabelBaseColorInactive(UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_inactive);
+        } else {
+            button.setBackgroundColorNormal(UIBase.getUIColorTheme().element_background_color_normal);
+            button.setBackgroundColorHover(UIBase.getUIColorTheme().element_background_color_hover);
+            button.setBackgroundColorInactive(UIBase.getUIColorTheme().element_background_color_normal);
+            button.setBorderColorNormal(UIBase.getUIColorTheme().element_border_color_normal);
+            button.setBorderColorHover(UIBase.getUIColorTheme().element_border_color_hover);
+            button.setBorderColorInactive(UIBase.getUIColorTheme().element_border_color_normal);
+            button.setLabelBaseColorNormal(UIBase.getUIColorTheme().element_label_color_normal);
+            button.setLabelBaseColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
+        }
+        button.setLabelShadowEnabled(FancyMenu.getOptions().enableUiTextShadow.getValue());
 		button.setForceDefaultTooltipStyle(true);
 		return button;
 	}
@@ -127,6 +164,14 @@ public class UIBase extends RenderingUtils {
 		double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
 		return (float)(1.0D * (1.0D / guiScale) * fixedScale);
 	}
+
+    public static float getCornerRoundingRadius() {
+        return 6.0F;
+    }
+
+    public static float getBlurRadius() {
+        return 4.0F;
+    }
 
     public static boolean shouldBlur() {
         return FancyMenu.getOptions().enableUiBlur.getValue();

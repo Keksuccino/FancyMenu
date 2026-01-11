@@ -44,6 +44,30 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public static final ResourceLocation TEXTURE_ICON_WANTS_TO_PLAY = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/play.png");
     public static final ResourceLocation TEXTURE_THOUGHT_BUBBLE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/thought.png");
 
+    // Default stat tuning
+    public static final float DEFAULT_HUNGER_DECAY_PER_TICK = 0.005f;
+    public static final float DEFAULT_HAPPINESS_DECAY_PER_TICK = 0.003f;
+    public static final float DEFAULT_FUN_DECAY_PER_TICK = 0.002f;
+    public static final float DEFAULT_ENERGY_DECAY_PER_TICK = 0.002f;
+    public static final float DEFAULT_ENERGY_SLEEP_REGEN_PER_TICK = 0.03f;
+    public static final float DEFAULT_PLAY_ENERGY_DRAIN_PER_TICK = 0.03f;
+    public static final float DEFAULT_PLAY_FUN_GAIN_PER_TICK = 0.05f;
+    public static final float DEFAULT_PLAY_HAPPINESS_GAIN_PER_TICK = 0.01f;
+    public static final float DEFAULT_PLAY_HUNGER_DRAIN_PER_TICK = 0.01f;
+    public static final float DEFAULT_CHASE_ENERGY_DRAIN_PER_TICK = 0.024f;
+    public static final float DEFAULT_CHASE_HUNGER_DRAIN_PER_TICK = 0.005f;
+    public static final float DEFAULT_HOP_ENERGY_DRAIN_PER_TICK = 0.005f;
+    public static final float DEFAULT_HOP_HUNGER_DRAIN_PER_TICK = 0.002f;
+    public static final float DEFAULT_EXCITED_ENERGY_DRAIN_PER_TICK = 0.01f;
+    public static final float DEFAULT_EXCITED_HAPPINESS_GAIN_PER_TICK = 0.01f;
+    public static final float DEFAULT_EXCITED_HUNGER_DRAIN_PER_TICK = 0.003f;
+    public static final float DEFAULT_RUNNING_ENERGY_DRAIN_PER_TICK = 0.01f;
+    public static final float DEFAULT_RUNNING_HUNGER_DRAIN_PER_TICK = 0.005f;
+    public static final float DEFAULT_FOOD_HUNGER_GAIN = 20f;
+    public static final float DEFAULT_FOOD_HAPPINESS_GAIN = 5f;
+    public static final float DEFAULT_PET_HAPPINESS_GAIN = 15f;
+    public static final float DEFAULT_WAKEUP_HAPPINESS_PENALTY = 2.5f;
+
     // Game state
     public int buddyPosX;
     public int buddyPosY;
@@ -128,6 +152,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public BuddyStatusScreen statusScreen;
 
     private final BuddyTextures textures = new BuddyTextures();
+    private BuddyStatConfig statConfig = BuddyStatConfig.defaults();
     @NotNull
     private String instanceIdentifier = "default";
     
@@ -388,6 +413,10 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
     public void setCustomCloseButtonHoverTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
         this.textures.setCustomCloseButtonHoverTextureSupplier(supplier);
+    }
+
+    public void applyStatConfig(@NotNull BuddyStatConfig config) {
+        this.statConfig = config;
     }
 
     @NotNull
@@ -665,49 +694,49 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         // Apply attribute effects from leveling system to stat changes
         
         // Decrease stats over time - modified by attributes (10x slower)
-        hunger = Math.max(0, hunger - (0.005f * hungerMultiplier));
-        happiness = Math.max(0, happiness - (0.003f * happinessMultiplier));
-        funLevel = Math.max(0, funLevel - 0.002f);  // Fun decreases slower than hunger
+        hunger = Math.max(0, hunger - (statConfig.hungerDecayPerTick * hungerMultiplier));
+        happiness = Math.max(0, happiness - (statConfig.happinessDecayPerTick * happinessMultiplier));
+        funLevel = Math.max(0, funLevel - statConfig.funDecayPerTick);  // Fun decreases slower than hunger
 
         // Energy decreases unless sleeping
         if (isSleeping) {
-            energy = Math.min(100, energy + 0.03f);  // Reduced from 0.3f to match slower stat decrease
+            energy = Math.min(100, energy + statConfig.energySleepRegenPerTick);  // Reduced from 0.3f to match slower stat decrease
         } else {
-            energy = Math.max(0, energy - (0.002f * energyMultiplier));
+            energy = Math.max(0, energy - (statConfig.energyDecayPerTick * energyMultiplier));
 
             // Playing increases fun but drains energy much faster (3x normal rate)
             // This makes playing a strategic choice - great for fun but exhausting
             if (isPlaying) {
-                energy = Math.max(0, energy - (0.03f * energyMultiplier)); // Increased 3x from 0.01f
-                funLevel = Math.min(100, funLevel + 0.05f);  // Playing significantly increases fun
-                happiness = Math.min(100, happiness + (0.01f * happinessGainMultiplier)); // Playing also makes buddy happy!
-                hunger = Math.max(0, hunger - (0.01f * hungerMultiplier)); // Playing makes buddy hungrier (2x normal rate)
+                energy = Math.max(0, energy - (statConfig.playEnergyDrainPerTick * energyMultiplier)); // Increased 3x from 0.01f
+                funLevel = Math.min(100, funLevel + statConfig.playFunGainPerTick);  // Playing significantly increases fun
+                happiness = Math.min(100, happiness + (statConfig.playHappinessGainPerTick * happinessGainMultiplier)); // Playing also makes buddy happy!
+                hunger = Math.max(0, hunger - (statConfig.playHungerDrainPerTick * hungerMultiplier)); // Playing makes buddy hungrier (2x normal rate)
             }
 
             // Chasing drains energy faster (3x normal rate when actively chasing)
             if (isChasingBall) {
-                energy = Math.max(0, energy - (0.024f * energyMultiplier)); // Increased 3x from 0.008f
-                hunger = Math.max(0, hunger - (0.005f * hungerMultiplier)); // Chasing makes even hungrier (3x normal rate total)
+                energy = Math.max(0, energy - (statConfig.chaseEnergyDrainPerTick * energyMultiplier)); // Increased 3x from 0.008f
+                hunger = Math.max(0, hunger - (statConfig.chaseHungerDrainPerTick * hungerMultiplier)); // Chasing makes even hungrier (3x normal rate total)
             }
 
             // Hopping drains energy faster
             if (isHopping) {
-                energy = Math.max(0, energy - (0.005f * energyMultiplier));
-                hunger = Math.max(0, hunger - (0.002f * hungerMultiplier)); // Slight hunger increase from activity
+                energy = Math.max(0, energy - (statConfig.hopEnergyDrainPerTick * energyMultiplier));
+                hunger = Math.max(0, hunger - (statConfig.hopHungerDrainPerTick * hungerMultiplier)); // Slight hunger increase from activity
             }
 
             // Excitement drains energy faster
             if (isExcited) {
-                energy = Math.max(0, energy - (0.01f * energyMultiplier));
+                energy = Math.max(0, energy - (statConfig.excitedEnergyDrainPerTick * energyMultiplier));
                 // But it also increases happiness!
-                happiness = Math.min(100, happiness + (0.01f * happinessGainMultiplier));
-                hunger = Math.max(0, hunger - (0.003f * hungerMultiplier)); // Excitement burns calories too
+                happiness = Math.min(100, happiness + (statConfig.excitedHappinessGainPerTick * happinessGainMultiplier));
+                hunger = Math.max(0, hunger - (statConfig.excitedHungerDrainPerTick * hungerMultiplier)); // Excitement burns calories too
             }
 
             // Running drains energy faster
             if (this.currentState == RUNNING) {
-                energy = Math.max(0, energy - (0.01f * energyMultiplier));
-                hunger = Math.max(0, hunger - (0.005f * hungerMultiplier)); // Running also makes buddy hungrier
+                energy = Math.max(0, energy - (statConfig.runningEnergyDrainPerTick * energyMultiplier));
+                hunger = Math.max(0, hunger - (statConfig.runningHungerDrainPerTick * hungerMultiplier)); // Running also makes buddy hungrier
             }
 
         }
@@ -1289,8 +1318,8 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         // Apply level-based bonus to food effectiveness
         float levelRatio = (float) Math.min(30, levelingManager.getCurrentLevel()) / 30f;
         float foodEffectiveness = 1.0f + (levelRatio * 0.5f); // Up to 50% more effective at max level
-        hunger = Math.min(100, hunger + (20 * foodEffectiveness)); // Reduced from 40
-        happiness = Math.min(100, happiness + (5 * happinessGainMultiplier)); // Reduced from 10
+        hunger = Math.min(100, hunger + (statConfig.foodHungerGain * foodEffectiveness)); // Reduced from 40
+        happiness = Math.min(100, happiness + (statConfig.foodHappinessGain * happinessGainMultiplier)); // Reduced from 10
     }
 
     /**
@@ -1301,13 +1330,13 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             // Waking up - make buddy grumpy
             isSleeping = false;
             // Slightly decrease happiness when woken up
-            happiness = Math.max(0, happiness - 2.5f); // Reduced from 5
+            happiness = Math.max(0, happiness - statConfig.wakeupHappinessPenalty); // Reduced from 5
             // Start grumpy state
             startGrumpyState();
         } else {
             isBeingPet = true;
             // Happiness gain is affected by the happiness gain multiplier from Charisma attribute
-            happiness = Math.min(100, happiness + (15 * happinessGainMultiplier)); // Reduced from 30
+            happiness = Math.min(100, happiness + (statConfig.petHappinessGain * happinessGainMultiplier)); // Reduced from 30
             // Sometimes get excited when petted if already happy
             if ((happiness > 70) && this.chanceCheck(30.0f + (luckBonus * 10.0f))) { // Luck affects chance of excitement
                 startExcitement();

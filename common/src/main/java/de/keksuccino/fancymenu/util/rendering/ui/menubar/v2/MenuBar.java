@@ -172,7 +172,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         float blurY = yMin * scale;
         if (width > 0 && height > 0) {
             // Blur the menu bar background without rounded corners; use the UI theme color as a light tint.
-            GuiBlurRenderer.renderBlurAreaWithIntensity(graphics, blurX, blurY, width, height, 4.0F, 0.0F, UIBase.getUIColorTheme().ui_background_blur_tint_color, partial);
+            GuiBlurRenderer.renderBlurAreaWithIntensity(graphics, blurX, blurY, width, height, UIBase.getBlurRadius(), 0.0F, UIBase.getUIColorTheme().ui_blur_overlay_element_background_tint, partial);
         }
         UIBase.resetShaderColor(graphics);
     }
@@ -759,7 +759,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         protected int getLabelColor() {
             if (FancyMenu.getOptions().enableUiBlur.getValue()) {
-                return this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal_over_blur.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive_over_blur.getColorInt();
+                return this.isActive() ? UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_normal.getColorInt() : UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_inactive.getColorInt();
             }
             return this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt();
         }
@@ -802,7 +802,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         protected int getBackgroundColor() {
             if (this.isHovered() && this.isActive()) {
                 if (FancyMenu.getOptions().enableUiBlur.getValue()) {
-                    return UIBase.getUIColorTheme().element_background_color_hover_over_blur.getColorInt();
+                    return UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_hover_type_1.getColorInt();
                 }
                 return UIBase.getUIColorTheme().element_background_color_hover.getColorInt();
             }
@@ -987,7 +987,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         protected int getBackgroundColor() {
             if (this.contextMenu.isOpen()) {
                 if (FancyMenu.getOptions().enableUiBlur.getValue()) {
-                    return UIBase.getUIColorTheme().element_background_color_hover_over_blur.getColorInt();
+                    return UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_hover_type_1.getColorInt();
                 }
                 return UIBase.getUIColorTheme().element_background_color_hover.getColorInt();
             }
@@ -1068,7 +1068,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     public static class SeparatorMenuBarEntry extends MenuBarEntry {
 
         @NotNull
-        protected Supplier<DrawableColor> color = () -> UIBase.shouldBlur() ? UIBase.getUIColorTheme().element_border_color_normal_over_blur : UIBase.getUIColorTheme().element_border_color_normal;
+        protected Supplier<DrawableColor> color = () -> UIBase.shouldBlur() ? UIBase.getUIColorTheme().ui_blur_overlay_element_border_color : UIBase.getUIColorTheme().element_border_color_normal;
 
         public SeparatorMenuBarEntry(@NotNull String identifier, @NotNull MenuBar parent) {
             super(identifier, parent);

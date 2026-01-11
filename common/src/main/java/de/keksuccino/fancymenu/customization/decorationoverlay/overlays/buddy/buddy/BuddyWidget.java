@@ -185,6 +185,10 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
         this.buddy.setCustomAtlasTextureSupplier(supplier);
     }
 
+    public void setStatConfig(@NotNull BuddyStatConfig config) {
+        this.buddy.applyStatConfig(config);
+    }
+
     public BuddyTextures getTextures() {
         return this.buddy.getTextures();
     }

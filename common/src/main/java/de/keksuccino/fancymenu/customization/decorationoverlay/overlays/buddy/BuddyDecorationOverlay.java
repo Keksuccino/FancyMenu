@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy;
 
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.Buddy;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.BuddyStatConfig;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.BuddyWidget;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -36,6 +38,28 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
     public final Property<ResourceSupplier<ITexture>> customDefaultButtonInactiveTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "custom_buddy_default_button_inactive_texture", null, "fancymenu.decoration_overlays.buddy.custom_default_button_inactive_texture", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> customCloseButtonTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "custom_buddy_close_button_texture", null, "fancymenu.decoration_overlays.buddy.custom_close_button_texture", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> customCloseButtonHoverTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "custom_buddy_close_button_hover_texture", null, "fancymenu.decoration_overlays.buddy.custom_close_button_hover_texture", true, true, true, null));
+    public final Property<Float> hungerDecayPerTick = putProperty(Property.floatProperty("buddy_hunger_decay_per_tick", Buddy.DEFAULT_HUNGER_DECAY_PER_TICK, "fancymenu.decoration_overlays.buddy.hunger_decay_per_tick"));
+    public final Property<Float> happinessDecayPerTick = putProperty(Property.floatProperty("buddy_happiness_decay_per_tick", Buddy.DEFAULT_HAPPINESS_DECAY_PER_TICK, "fancymenu.decoration_overlays.buddy.happiness_decay_per_tick"));
+    public final Property<Float> funDecayPerTick = putProperty(Property.floatProperty("buddy_fun_decay_per_tick", Buddy.DEFAULT_FUN_DECAY_PER_TICK, "fancymenu.decoration_overlays.buddy.fun_decay_per_tick"));
+    public final Property<Float> energyDecayPerTick = putProperty(Property.floatProperty("buddy_energy_decay_per_tick", Buddy.DEFAULT_ENERGY_DECAY_PER_TICK, "fancymenu.decoration_overlays.buddy.energy_decay_per_tick"));
+    public final Property<Float> energySleepRegenPerTick = putProperty(Property.floatProperty("buddy_energy_sleep_regen_per_tick", Buddy.DEFAULT_ENERGY_SLEEP_REGEN_PER_TICK, "fancymenu.decoration_overlays.buddy.energy_sleep_regen_per_tick"));
+    public final Property<Float> playEnergyDrainPerTick = putProperty(Property.floatProperty("buddy_play_energy_drain_per_tick", Buddy.DEFAULT_PLAY_ENERGY_DRAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.play_energy_drain_per_tick"));
+    public final Property<Float> playFunGainPerTick = putProperty(Property.floatProperty("buddy_play_fun_gain_per_tick", Buddy.DEFAULT_PLAY_FUN_GAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.play_fun_gain_per_tick"));
+    public final Property<Float> playHappinessGainPerTick = putProperty(Property.floatProperty("buddy_play_happiness_gain_per_tick", Buddy.DEFAULT_PLAY_HAPPINESS_GAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.play_happiness_gain_per_tick"));
+    public final Property<Float> playHungerDrainPerTick = putProperty(Property.floatProperty("buddy_play_hunger_drain_per_tick", Buddy.DEFAULT_PLAY_HUNGER_DRAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.play_hunger_drain_per_tick"));
+    public final Property<Float> chaseEnergyDrainPerTick = putProperty(Property.floatProperty("buddy_chase_energy_drain_per_tick", Buddy.DEFAULT_CHASE_ENERGY_DRAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.chase_energy_drain_per_tick"));
+    public final Property<Float> chaseHungerDrainPerTick = putProperty(Property.floatProperty("buddy_chase_hunger_drain_per_tick", Buddy.DEFAULT_CHASE_HUNGER_DRAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.chase_hunger_drain_per_tick"));
+    public final Property<Float> hopEnergyDrainPerTick = putProperty(Property.floatProperty("buddy_hop_energy_drain_per_tick", Buddy.DEFAULT_HOP_ENERGY_DRAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.hop_energy_drain_per_tick"));
+    public final Property<Float> hopHungerDrainPerTick = putProperty(Property.floatProperty("buddy_hop_hunger_drain_per_tick", Buddy.DEFAULT_HOP_HUNGER_DRAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.hop_hunger_drain_per_tick"));
+    public final Property<Float> excitedEnergyDrainPerTick = putProperty(Property.floatProperty("buddy_excited_energy_drain_per_tick", Buddy.DEFAULT_EXCITED_ENERGY_DRAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.excited_energy_drain_per_tick"));
+    public final Property<Float> excitedHappinessGainPerTick = putProperty(Property.floatProperty("buddy_excited_happiness_gain_per_tick", Buddy.DEFAULT_EXCITED_HAPPINESS_GAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.excited_happiness_gain_per_tick"));
+    public final Property<Float> excitedHungerDrainPerTick = putProperty(Property.floatProperty("buddy_excited_hunger_drain_per_tick", Buddy.DEFAULT_EXCITED_HUNGER_DRAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.excited_hunger_drain_per_tick"));
+    public final Property<Float> runningEnergyDrainPerTick = putProperty(Property.floatProperty("buddy_running_energy_drain_per_tick", Buddy.DEFAULT_RUNNING_ENERGY_DRAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.running_energy_drain_per_tick"));
+    public final Property<Float> runningHungerDrainPerTick = putProperty(Property.floatProperty("buddy_running_hunger_drain_per_tick", Buddy.DEFAULT_RUNNING_HUNGER_DRAIN_PER_TICK, "fancymenu.decoration_overlays.buddy.running_hunger_drain_per_tick"));
+    public final Property<Float> foodHungerGain = putProperty(Property.floatProperty("buddy_food_hunger_gain", Buddy.DEFAULT_FOOD_HUNGER_GAIN, "fancymenu.decoration_overlays.buddy.food_hunger_gain"));
+    public final Property<Float> foodHappinessGain = putProperty(Property.floatProperty("buddy_food_happiness_gain", Buddy.DEFAULT_FOOD_HAPPINESS_GAIN, "fancymenu.decoration_overlays.buddy.food_happiness_gain"));
+    public final Property<Float> petHappinessGain = putProperty(Property.floatProperty("buddy_pet_happiness_gain", Buddy.DEFAULT_PET_HAPPINESS_GAIN, "fancymenu.decoration_overlays.buddy.pet_happiness_gain"));
+    public final Property<Float> wakeupHappinessPenalty = putProperty(Property.floatProperty("buddy_wakeup_happiness_penalty", Buddy.DEFAULT_WAKEUP_HAPPINESS_PENALTY, "fancymenu.decoration_overlays.buddy.wakeup_happiness_penalty"));
 
     private final BuddyWidget buddyWidget = new BuddyWidget(0, 0);
     private int lastGuiTick = -1;
@@ -58,6 +82,7 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         bindTextureProperty(this.customDefaultButtonInactiveTexture, supplier -> this.buddyWidget.getTextures().setCustomDefaultButtonInactiveTextureSupplier(supplier));
         bindTextureProperty(this.customCloseButtonTexture, supplier -> this.buddyWidget.getTextures().setCustomCloseButtonTextureSupplier(supplier));
         bindTextureProperty(this.customCloseButtonHoverTexture, supplier -> this.buddyWidget.getTextures().setCustomCloseButtonHoverTextureSupplier(supplier));
+        bindStatProperties();
         this.showOverlay.addValueSetListener((oldValue, newValue) -> {
             if (Boolean.TRUE.equals(newValue)) {
                 resetTickCounter();
@@ -88,6 +113,32 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         addTextureEntry(texturesMenu, this.customDefaultButtonInactiveTexture, "fancymenu.decoration_overlays.buddy.custom_default_button_inactive_texture.desc");
         addTextureEntry(texturesMenu, this.customCloseButtonTexture, "fancymenu.decoration_overlays.buddy.custom_close_button_texture.desc");
         addTextureEntry(texturesMenu, this.customCloseButtonHoverTexture, "fancymenu.decoration_overlays.buddy.custom_close_button_hover_texture.desc");
+
+        ContextMenu statsMenu = new ContextMenu();
+        menu.addSubMenuEntry("buddy_stats_tuning", Component.translatable("fancymenu.decoration_overlays.buddy.stats"), statsMenu).setStackable(true);
+
+        addFloatEntry(statsMenu, hungerDecayPerTick, "fancymenu.decoration_overlays.buddy.hunger_decay_per_tick.desc");
+        addFloatEntry(statsMenu, happinessDecayPerTick, "fancymenu.decoration_overlays.buddy.happiness_decay_per_tick.desc");
+        addFloatEntry(statsMenu, funDecayPerTick, "fancymenu.decoration_overlays.buddy.fun_decay_per_tick.desc");
+        addFloatEntry(statsMenu, energyDecayPerTick, "fancymenu.decoration_overlays.buddy.energy_decay_per_tick.desc");
+        addFloatEntry(statsMenu, energySleepRegenPerTick, "fancymenu.decoration_overlays.buddy.energy_sleep_regen_per_tick.desc");
+        addFloatEntry(statsMenu, playEnergyDrainPerTick, "fancymenu.decoration_overlays.buddy.play_energy_drain_per_tick.desc");
+        addFloatEntry(statsMenu, playFunGainPerTick, "fancymenu.decoration_overlays.buddy.play_fun_gain_per_tick.desc");
+        addFloatEntry(statsMenu, playHappinessGainPerTick, "fancymenu.decoration_overlays.buddy.play_happiness_gain_per_tick.desc");
+        addFloatEntry(statsMenu, playHungerDrainPerTick, "fancymenu.decoration_overlays.buddy.play_hunger_drain_per_tick.desc");
+        addFloatEntry(statsMenu, chaseEnergyDrainPerTick, "fancymenu.decoration_overlays.buddy.chase_energy_drain_per_tick.desc");
+        addFloatEntry(statsMenu, chaseHungerDrainPerTick, "fancymenu.decoration_overlays.buddy.chase_hunger_drain_per_tick.desc");
+        addFloatEntry(statsMenu, hopEnergyDrainPerTick, "fancymenu.decoration_overlays.buddy.hop_energy_drain_per_tick.desc");
+        addFloatEntry(statsMenu, hopHungerDrainPerTick, "fancymenu.decoration_overlays.buddy.hop_hunger_drain_per_tick.desc");
+        addFloatEntry(statsMenu, excitedEnergyDrainPerTick, "fancymenu.decoration_overlays.buddy.excited_energy_drain_per_tick.desc");
+        addFloatEntry(statsMenu, excitedHappinessGainPerTick, "fancymenu.decoration_overlays.buddy.excited_happiness_gain_per_tick.desc");
+        addFloatEntry(statsMenu, excitedHungerDrainPerTick, "fancymenu.decoration_overlays.buddy.excited_hunger_drain_per_tick.desc");
+        addFloatEntry(statsMenu, runningEnergyDrainPerTick, "fancymenu.decoration_overlays.buddy.running_energy_drain_per_tick.desc");
+        addFloatEntry(statsMenu, runningHungerDrainPerTick, "fancymenu.decoration_overlays.buddy.running_hunger_drain_per_tick.desc");
+        addFloatEntry(statsMenu, foodHungerGain, "fancymenu.decoration_overlays.buddy.food_hunger_gain.desc");
+        addFloatEntry(statsMenu, foodHappinessGain, "fancymenu.decoration_overlays.buddy.food_happiness_gain.desc");
+        addFloatEntry(statsMenu, petHappinessGain, "fancymenu.decoration_overlays.buddy.pet_happiness_gain.desc");
+        addFloatEntry(statsMenu, wakeupHappinessPenalty, "fancymenu.decoration_overlays.buddy.wakeup_happiness_penalty.desc");
     }
 
     @Override
@@ -175,7 +226,67 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         setter.accept(property.get());
     }
 
+    private void bindStatProperties() {
+        Consumer<Float> update = value -> applyStatConfig();
+        hungerDecayPerTick.addValueSetListener((o, n) -> update.accept(n));
+        happinessDecayPerTick.addValueSetListener((o, n) -> update.accept(n));
+        funDecayPerTick.addValueSetListener((o, n) -> update.accept(n));
+        energyDecayPerTick.addValueSetListener((o, n) -> update.accept(n));
+        energySleepRegenPerTick.addValueSetListener((o, n) -> update.accept(n));
+        playEnergyDrainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        playFunGainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        playHappinessGainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        playHungerDrainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        chaseEnergyDrainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        chaseHungerDrainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        hopEnergyDrainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        hopHungerDrainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        excitedEnergyDrainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        excitedHappinessGainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        excitedHungerDrainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        runningEnergyDrainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        runningHungerDrainPerTick.addValueSetListener((o, n) -> update.accept(n));
+        foodHungerGain.addValueSetListener((o, n) -> update.accept(n));
+        foodHappinessGain.addValueSetListener((o, n) -> update.accept(n));
+        petHappinessGain.addValueSetListener((o, n) -> update.accept(n));
+        wakeupHappinessPenalty.addValueSetListener((o, n) -> update.accept(n));
+        applyStatConfig();
+    }
+
+    private void applyStatConfig() {
+        BuddyStatConfig config = new BuddyStatConfig(
+                hungerDecayPerTick.get(),
+                happinessDecayPerTick.get(),
+                funDecayPerTick.get(),
+                energyDecayPerTick.get(),
+                energySleepRegenPerTick.get(),
+                playEnergyDrainPerTick.get(),
+                playFunGainPerTick.get(),
+                playHappinessGainPerTick.get(),
+                playHungerDrainPerTick.get(),
+                chaseEnergyDrainPerTick.get(),
+                chaseHungerDrainPerTick.get(),
+                hopEnergyDrainPerTick.get(),
+                hopHungerDrainPerTick.get(),
+                excitedEnergyDrainPerTick.get(),
+                excitedHappinessGainPerTick.get(),
+                excitedHungerDrainPerTick.get(),
+                runningEnergyDrainPerTick.get(),
+                runningHungerDrainPerTick.get(),
+                foodHungerGain.get(),
+                foodHappinessGain.get(),
+                petHappinessGain.get(),
+                wakeupHappinessPenalty.get()
+        );
+        this.buddyWidget.setStatConfig(config);
+    }
+
     private void addTextureEntry(@NotNull ContextMenu menu, @NotNull Property<ResourceSupplier<ITexture>> property, @NotNull String descriptionKey) {
+        property.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(descriptionKey)));
+    }
+
+    private void addFloatEntry(@NotNull ContextMenu menu, @NotNull Property<Float> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(descriptionKey)));
     }

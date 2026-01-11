@@ -13,14 +13,6 @@ public class LightUIColorTheme extends UIColorTheme {
         menu_bar_bottom_line_color = DrawableColor.of(new Color(119, 119, 119));
         menu_bar_bottom_line_color_over_hover = DrawableColor.of(new Color(119, 119, 119, 200));
 
-        pip_window_border_color = DrawableColor.of(new Color(119, 119, 119));
-        pip_window_title_bar_color = DrawableColor.of(new Color(196, 196, 196));
-        pip_window_body_color = DrawableColor.of(new Color(210, 210, 210));
-        pip_window_button_color_normal = DrawableColor.of(new Color(180, 180, 180));
-        pip_window_button_color_hover = DrawableColor.of(new Color(160, 160, 160));
-        pip_window_title_text_color = DrawableColor.of(new Color(45, 45, 45));
-        pip_window_button_text_color = DrawableColor.of(new Color(45, 45, 45));
-
         layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(3, 148, 252));
         layout_editor_grid_color_normal = DrawableColor.of(new Color(120, 120, 120, 60));
         layout_editor_grid_color_center = DrawableColor.of(new Color(90, 120, 200, 110));
@@ -40,13 +32,12 @@ public class LightUIColorTheme extends UIColorTheme {
         screen_background_color = DrawableColor.of(new Color(178, 178, 178));
         screen_background_color_darker = DrawableColor.of(new Color(173, 173, 173));
         element_border_color_normal = DrawableColor.of(new Color(119, 119, 119));
-        element_border_color_normal_over_blur = DrawableColor.of(new Color(119, 119, 119, 200));
+        ui_blur_overlay_element_border_color = DrawableColor.of(new Color(119, 119, 119, 200));
         element_border_color_hover = DrawableColor.of(new Color(119, 119, 119));
-        element_border_color_hover_over_blur = DrawableColor.of(new Color(119, 119, 119, 200));
         element_background_color_normal = DrawableColor.of(new Color(203, 203, 203));
         element_background_color_hover = DrawableColor.of(new Color(175, 175, 175));
-        ui_background_blur_tint_color = DrawableColor.of(new Color(203, 203, 203, 102));
-        element_background_color_hover_over_blur = DrawableColor.of(new Color(175, 175, 175, 102));
+        ui_blur_overlay_element_background_tint = DrawableColor.of(new Color(203, 203, 203, 102));
+        ui_blur_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(175, 175, 175, 102));
         slider_handle_color_normal = DrawableColor.of(new Color(133, 132, 132));
         slider_handle_color_hover = DrawableColor.of(new Color(162, 162, 162));
         area_background_color = DrawableColor.of(new Color(203, 203, 203));
@@ -93,9 +84,9 @@ public class LightUIColorTheme extends UIColorTheme {
 
         generic_text_base_color = DrawableColor.of(new Color(37, 37, 37));
         element_label_color_normal = DrawableColor.of(new Color(45, 45, 45));
-        element_label_color_normal_over_blur = DrawableColor.of(new Color(206, 221, 237));
+        ui_blur_interface_widget_label_color_normal = DrawableColor.of(new Color(206, 221, 237));
         element_label_color_inactive = DrawableColor.of(new Color(138, 137, 137));
-        element_label_color_inactive_over_blur = DrawableColor.of(new Color(138, 137, 137));
+        ui_blur_interface_widget_label_color_inactive = DrawableColor.of(new Color(138, 137, 137));
         edit_box_text_color_normal = DrawableColor.of(new Color(45, 45, 45));
         edit_box_text_color_uneditable = DrawableColor.of(new Color(138, 137, 137));
         edit_box_suggestion_text_color = DrawableColor.of(new Color(138, 137, 137));

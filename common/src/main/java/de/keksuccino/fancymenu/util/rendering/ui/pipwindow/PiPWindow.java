@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -62,11 +63,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private int resizeMargin = DEFAULT_RESIZE_MARGIN;
     private int buttonSize = DEFAULT_BUTTON_SIZE;
     private int buttonPadding = DEFAULT_BUTTON_PADDING;
-    @Nullable
+    @NotNull
     private ResourceLocation closeButtonIcon = DEFAULT_CLOSE_BUTTON_ICON;
-    @Nullable
+    @NotNull
     private ResourceLocation maximizeButtonIcon = DEFAULT_MAXIMIZE_BUTTON_ICON;
-    @Nullable
+    @NotNull
     private ResourceLocation normalizeButtonIcon = DEFAULT_NORMALIZE_BUTTON_ICON;
 
     private boolean visible = true;
@@ -161,9 +162,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         RenderSystem.disableDepthTest();
         RenderingUtils.setDepthTestLocked(true);
 
-        renderWindowBackground(graphics);
+//        renderWindowBackground(graphics);
+
         renderBodyScreen(graphics, mouseX, mouseY, partial);
-        renderWindowForeground(graphics, mouseX, mouseY);
+        renderWindowForeground(graphics, mouseX, mouseY, partial);
         if (this.isDebug()) {
             renderDebugOverlay(graphics);
         }
@@ -191,7 +193,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return;
         }
         UIColorTheme theme = getTheme();
-        graphics.fill(innerLeft, innerTop, innerRight, innerBottom, theme.pip_window_body_color.getColorInt());
+        graphics.fill(innerLeft, innerTop, innerRight, innerBottom, UIBase.shouldBlur() ? theme.ui_blur_interface_area_color_type_1.getColorInt() : theme.area_background_color.getColorInt());
     }
 
     private void renderBodyScreen(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -238,8 +240,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         graphics.disableScissor();
     }
 
-    private void renderWindowForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
-        renderWindowFrame(graphics);
+    private void renderWindowForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        renderWindowFrame(graphics, partial);
 
         Font font = this.minecraft.font;
 
@@ -288,16 +290,16 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         int maxTitleWidthForFont = scale <= 0.0F ? maxTitleWidth : Math.max(0, (int) Math.floor(maxTitleWidth / scale));
         var split = font.split(this.title, maxTitleWidthForFont);
         FormattedCharSequence titleText = !split.isEmpty() ? split.get(0) : Component.empty().getVisualOrderText();
-        drawScaledString(graphics, font, titleText, textStartX, titleCenterY, theme.pip_window_title_text_color.getColorInt(), scale);
+        drawScaledString(graphics, font, titleText, textStartX, titleCenterY, this.getLabelColor(theme), scale);
 
         if (titleBarHeight > 0) {
             int bottom = titleBarY + titleBarHeight;
             int divider = Math.max(1, Math.round(scale));
-            graphics.fill(titleBarX, bottom - divider, titleBarRight, bottom, theme.pip_window_border_color.getColorInt());
+            graphics.fill(titleBarX, bottom - divider, titleBarRight, bottom, this.getBorderColor(theme));
         }
     }
 
-    private void renderWindowFrame(@NotNull GuiGraphics graphics) {
+    private void renderWindowFrame(@NotNull GuiGraphics graphics, float partial) {
         int frameX = this.x;
         int frameY = this.y;
         int frameWidth = getWidth();
@@ -307,10 +309,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         UIColorTheme theme = getTheme();
         int border = getScaledBorderThickness();
         if (border > 0) {
-            graphics.fill(frameX, frameY, right, frameY + border, theme.pip_window_border_color.getColorInt());
-            graphics.fill(frameX, bottom - border, right, bottom, theme.pip_window_border_color.getColorInt());
-            graphics.fill(frameX, frameY + border, frameX + border, bottom - border, theme.pip_window_border_color.getColorInt());
-            graphics.fill(right - border, frameY + border, right, bottom - border, theme.pip_window_border_color.getColorInt());
+            graphics.fill(frameX, frameY, right, frameY + border, this.getBorderColor(theme));
+            graphics.fill(frameX, bottom - border, right, bottom, this.getBorderColor(theme));
+            graphics.fill(frameX, frameY + border, frameX + border, bottom - border, this.getBorderColor(theme));
+            graphics.fill(right - border, frameY + border, right, bottom - border, this.getBorderColor(theme));
         }
 
         int innerLeft = frameX + border;
@@ -320,7 +322,13 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         int titleHeight = getScaledTitleBarHeight();
         if (innerRight > innerLeft && innerBottom > innerTop && titleHeight > 0) {
             int titleBottom = innerTop + titleHeight;
-            graphics.fill(innerLeft, innerTop, innerRight, Math.min(titleBottom, innerBottom), theme.pip_window_title_bar_color.getColorInt());
+            if (UIBase.shouldBlur()) {
+                int blurWidth = innerRight - innerLeft;
+                int blurHeight = Math.min(titleBottom, innerBottom) - innerTop;
+                GuiBlurRenderer.renderBlurAreaWithIntensity(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), 0.0F, theme.ui_blur_interface_title_bar_tint, partial);
+            } else {
+                graphics.fill(innerLeft, innerTop, innerRight, Math.min(titleBottom, innerBottom), theme.interface_title_bar_color.getColorInt());
+            }
         }
     }
 
@@ -376,28 +384,19 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme, int x, int y, int size, boolean hovered, @Nullable ResourceLocation icon, @NotNull String label, float scale) {
-        int color = hovered
-                ? theme.pip_window_button_color_hover.getColorInt()
-                : theme.pip_window_button_color_normal.getColorInt();
-        graphics.fill(x, y, x + size, y + size, color);
-        if (icon != null) {
-            int iconPadding = Math.max(0, Math.round(4.0F * scale));
-            int maxIconSize = Math.max(1, Math.round(DEFAULT_ICON_TEXTURE_SIZE * scale));
-            int iconSize = Math.max(1, Math.min(size - iconPadding, maxIconSize));
-            int iconX = x + (size - iconSize + 1) / 2;
-            int iconY = y + (size - iconSize + 1) / 2;
-            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
-            graphics.blit(icon, iconX, iconY, iconSize, iconSize, 0, 0, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
-            RenderingUtils.resetShaderColor(graphics);
-        } else {
-            Font font = this.minecraft.font;
-            int textWidth = Math.max(1, Math.round(font.width(label) * scale));
-            int textHeight = Math.max(1, Math.round(font.lineHeight * scale));
-            int textX = x + (size - textWidth) / 2;
-            int textY = y + (size - textHeight) / 2;
-            drawScaledString(graphics, font, label, textX, textY, theme.pip_window_button_text_color.getColorInt(), scale);
+    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme, int x, int y, int size, boolean hovered, @NotNull ResourceLocation icon, @NotNull String label, float scale) {
+        if (hovered) {
+            int color = UIBase.shouldBlur() ? theme.ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : theme.element_background_color_hover.getColorInt();
+            graphics.fill(x, y, x + size, y + size, color);
         }
+        int iconPadding = Math.max(0, Math.round(4.0F * scale));
+        int maxIconSize = Math.max(1, Math.round(DEFAULT_ICON_TEXTURE_SIZE * scale));
+        int iconSize = Math.max(1, Math.min(size - iconPadding, maxIconSize));
+        int iconX = x + (size - iconSize + 1) / 2;
+        int iconY = y + (size - iconSize + 1) / 2;
+        UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
+        graphics.blit(icon, iconX, iconY, iconSize, iconSize, 0, 0, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     private void drawScaledString(@NotNull GuiGraphics graphics, @NotNull Font font, @NotNull FormattedCharSequence text, int x, int y, int color, float scale) {
@@ -418,6 +417,16 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
         graphics.drawString(font, text, 0, 0, color, false);
         graphics.pose().popPose();
+    }
+
+    private int getLabelColor(UIColorTheme theme) {
+        if (UIBase.shouldBlur()) return theme.ui_blur_interface_widget_label_color_normal.getColorInt();
+        return theme.element_label_color_normal.getColorInt();
+    }
+
+    private int getBorderColor(UIColorTheme theme) {
+        if (!UIBase.shouldBlur()) return theme.element_border_color_normal.getColorInt();
+        return theme.ui_blur_interface_border_color.getColorInt();
     }
 
     public void tick() {
@@ -476,32 +485,32 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this.icon;
     }
 
-    public PiPWindow setCloseButtonIcon(@Nullable ResourceLocation icon) {
+    public PiPWindow setCloseButtonIcon(@NotNull ResourceLocation icon) {
         this.closeButtonIcon = icon;
         return this;
     }
 
-    @Nullable
+    @NotNull
     public ResourceLocation getCloseButtonIcon() {
         return this.closeButtonIcon;
     }
 
-    public PiPWindow setMaximizeButtonIcon(@Nullable ResourceLocation icon) {
+    public PiPWindow setMaximizeButtonIcon(@NotNull ResourceLocation icon) {
         this.maximizeButtonIcon = icon;
         return this;
     }
 
-    @Nullable
+    @NotNull
     public ResourceLocation getMaximizeButtonIcon() {
         return this.maximizeButtonIcon;
     }
 
-    public PiPWindow setNormalizeButtonIcon(@Nullable ResourceLocation icon) {
+    public PiPWindow setNormalizeButtonIcon(@NotNull ResourceLocation icon) {
         this.normalizeButtonIcon = icon;
         return this;
     }
 
-    @Nullable
+    @NotNull
     public ResourceLocation getNormalizeButtonIcon() {
         return this.normalizeButtonIcon;
     }
@@ -1092,7 +1101,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     @Override
-    public List<? extends GuiEventListener> children() {
+    public @NotNull List<? extends GuiEventListener> children() {
         return this.children;
     }
 
@@ -1137,7 +1146,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return getCloseButtonX() - padding - buttonSize;
     }
 
-    @Nullable
+    @NotNull
     private ResourceLocation getActiveMaximizeButtonIcon() {
         return this.maximized ? this.normalizeButtonIcon : this.maximizeButtonIcon;
     }

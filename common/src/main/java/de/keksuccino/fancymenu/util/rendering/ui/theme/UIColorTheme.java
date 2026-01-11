@@ -15,16 +15,33 @@ public class UIColorTheme {
 
     //----------------------------
 
+    public DrawableColor ui_blur_overlay_element_background_tint = DrawableColor.of(new Color(38, 38, 38, 174));
+    public DrawableColor ui_blur_overlay_element_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
+    public DrawableColor ui_blur_interface_background_tint = DrawableColor.of(new Color(38, 38, 38, 174));
+    public DrawableColor ui_blur_interface_border_color = DrawableColor.of(new Color(93, 97, 100, 200));
+    public DrawableColor ui_blur_interface_title_bar_tint = DrawableColor.of(new Color(79, 79, 79, 174));
+    public DrawableColor ui_blur_interface_area_color_type_1 = DrawableColor.of(new Color(43, 43, 43, 100));
+    public DrawableColor ui_blur_interface_area_color_type_2 = DrawableColor.of(new Color(5, 5, 5, 100));
+    public DrawableColor ui_blur_interface_area_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
+    public DrawableColor ui_blur_interface_widget_background_color_normal_type_1 = DrawableColor.of(new Color(71, 71, 71, 102));
+    public DrawableColor ui_blur_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(83, 156, 212, 102));
+    public DrawableColor ui_blur_interface_widget_background_color_normal_type_2 = DrawableColor.of(new Color(126, 126, 126, 102));
+    public DrawableColor ui_blur_interface_widget_background_color_hover_type_2 = DrawableColor.of(new Color(101, 186, 255, 102));
+    public DrawableColor ui_blur_interface_widget_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
+    public DrawableColor ui_blur_interface_widget_label_color_normal = DrawableColor.of(new Color(206, 221, 237));
+    public DrawableColor ui_blur_interface_widget_label_color_inactive = DrawableColor.of(new Color(113, 117, 119));
+    public DrawableColor ui_blur_interface_input_field_background_color = DrawableColor.of(new Color(43, 43, 43, 102));
+    public DrawableColor ui_blur_interface_input_field_border_color_normal = DrawableColor.of(new Color(93, 97, 100, 102));
+    public DrawableColor ui_blur_interface_input_field_border_color_focused = DrawableColor.of(new Color(93, 97, 100, 102));
+    public DrawableColor ui_blur_interface_input_field_text_color_normal = DrawableColor.of(new Color(206, 221, 237));
+    public DrawableColor ui_blur_interface_input_field_text_color_uneditable = DrawableColor.of(new Color(113, 117, 119));
+    public DrawableColor ui_blur_interface_input_field_suggestion_text_color = DrawableColor.of(new Color(128, 128, 128));
+    public DrawableColor ui_blur_interface_generic_text_color = DrawableColor.of(new Color(255, 255, 255));
+
+    public DrawableColor interface_title_bar_color = DrawableColor.of(new Color(58, 58, 58));
+
     public DrawableColor menu_bar_bottom_line_color = DrawableColor.of(new Color(93, 97, 100));
     public DrawableColor menu_bar_bottom_line_color_over_hover = DrawableColor.of(new Color(93, 97, 100, 200));
-
-    public DrawableColor pip_window_border_color = DrawableColor.of(new Color(43, 43, 43));
-    public DrawableColor pip_window_title_bar_color = DrawableColor.of(new Color(58, 58, 58));
-    public DrawableColor pip_window_body_color = DrawableColor.of(new Color(30, 30, 30));
-    public DrawableColor pip_window_button_color_normal = DrawableColor.of(new Color(74, 74, 74));
-    public DrawableColor pip_window_button_color_hover = DrawableColor.of(new Color(92, 92, 92));
-    public DrawableColor pip_window_title_text_color = DrawableColor.of(new Color(230, 230, 230));
-    public DrawableColor pip_window_button_text_color = DrawableColor.of(new Color(230, 230, 230));
 
     public DrawableColor layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(3, 148, 252));
     public DrawableColor layout_editor_grid_color_normal = DrawableColor.of(new Color(186, 121, 241, 100));
@@ -45,13 +62,9 @@ public class UIColorTheme {
     public DrawableColor screen_background_color = DrawableColor.of(new Color(60, 63, 65));
     public DrawableColor screen_background_color_darker = DrawableColor.of(new Color(38, 38, 38));
     public DrawableColor element_border_color_normal = DrawableColor.of(new Color(93, 97, 100));
-    public DrawableColor element_border_color_normal_over_blur = DrawableColor.of(new Color(93, 97, 100, 200));
     public DrawableColor element_border_color_hover = DrawableColor.of(new Color(93, 97, 100));
-    public DrawableColor element_border_color_hover_over_blur = DrawableColor.of(new Color(93, 97, 100, 200));
     public DrawableColor element_background_color_normal = DrawableColor.of(new Color(71, 71, 71));
     public DrawableColor element_background_color_hover = DrawableColor.of(new Color(83, 156, 212));
-    public DrawableColor ui_background_blur_tint_color = DrawableColor.of(new Color(38, 38, 38, 174));
-    public DrawableColor element_background_color_hover_over_blur = DrawableColor.of(new Color(83, 156, 212, 102));
     public DrawableColor slider_handle_color_normal = DrawableColor.of(new Color(71, 132, 180));
     public DrawableColor slider_handle_color_hover = DrawableColor.of(new Color(83, 156, 212));
     public DrawableColor area_background_color = DrawableColor.of(new Color(43, 43, 43));
@@ -98,9 +111,7 @@ public class UIColorTheme {
 
     public DrawableColor generic_text_base_color = DrawableColor.of(new Color(255, 255, 255));
     public DrawableColor element_label_color_normal = DrawableColor.of(new Color(206, 221, 237));
-    public DrawableColor element_label_color_normal_over_blur = DrawableColor.of(new Color(206, 221, 237));
     public DrawableColor element_label_color_inactive = DrawableColor.of(new Color(113, 117, 119));
-    public DrawableColor element_label_color_inactive_over_blur = DrawableColor.of(new Color(113, 117, 119));
     public DrawableColor edit_box_text_color_normal = DrawableColor.of(new Color(206, 221, 237));
     public DrawableColor edit_box_text_color_uneditable = DrawableColor.of(new Color(113, 117, 119));
     public DrawableColor edit_box_suggestion_text_color = DrawableColor.of(new Color(-8355712));
