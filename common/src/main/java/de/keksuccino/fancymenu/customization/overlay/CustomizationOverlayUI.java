@@ -1022,6 +1022,9 @@ public class CustomizationOverlayUI {
                 })).setClickSoundEnabled(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
+        userInterfaceMenu.addValueCycleEntry("ui_animations", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_animations", FancyMenu.getOptions().enableUiAnimations.getValue())
+                        .addCycleListener(cycle -> FancyMenu.getOptions().enableUiAnimations.setValue(cycle.getAsBoolean())));
+
         userInterfaceMenu.addSeparatorEntry("separator_before_blur_settings");
 
         userInterfaceMenu.addValueCycleEntry("ui_blur", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_blur", FancyMenu.getOptions().enableUiBlur.getValue())

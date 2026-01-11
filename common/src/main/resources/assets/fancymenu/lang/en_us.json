@@ -2434,5 +2434,6 @@
   "fancymenu.ui.filechooser.create_folder.default_name": "new_folder",
   "fancymenu.overlay.menu_bar.user_interface.ui_blur": "UI Blur: %s",
   "fancymenu.overlay.menu_bar.user_interface.ui_blur_intensity": "UI Blur Intensity",
-  "fancymenu.overlay.menu_bar.user_interface.ui_blur_intensity.slider_label": "%s%%"
+  "fancymenu.overlay.menu_bar.user_interface.ui_blur_intensity.slider_label": "%s%%",
+  "fancymenu.overlay.menu_bar.user_interface.ui_animations": "UI Animations: %s"
 }
