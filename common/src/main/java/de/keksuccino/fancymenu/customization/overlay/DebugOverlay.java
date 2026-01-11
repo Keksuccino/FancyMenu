@@ -74,10 +74,8 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         int bottomLeftY = this.bottomYOffsetSupplier.get();
         int bottomRightY = this.bottomYOffsetSupplier.get();
 
-        RenderSystem.enableDepthTest();
         RenderSystem.enableBlend();
         graphics.pose().pushPose();
-        graphics.pose().translate(0.0F, 0.0F, 400.0F);
 
         for (DebugOverlayLine line : this.lines) {
 
@@ -116,7 +114,6 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
         graphics.pose().popPose();
 
-        RenderSystem.disableDepthTest();
         RenderingUtils.resetShaderColor(graphics);
 
         //Close right-click context menu if context menu of overlay menu bar is open
@@ -126,12 +123,9 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         //Render right-click context menu
         if (this.rightClickMenu != null) {
             RenderSystem.enableBlend();
-            RenderSystem.enableDepthTest();
             graphics.pose().pushPose();
-            graphics.pose().translate(0.0F, 0.0F, 500.0F);
             this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
             graphics.pose().popPose();
-            RenderSystem.disableDepthTest();
         }
 
         RenderingUtils.resetShaderColor(graphics);

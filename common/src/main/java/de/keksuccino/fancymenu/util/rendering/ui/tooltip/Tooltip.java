@@ -94,24 +94,26 @@ public class Tooltip implements Renderable {
             int x = this.calculateX(s, mouseX);
             int y = this.calculateY(s, mouseY);
 
+            RenderSystem.disableDepthTest();
+            RenderingUtils.setDepthTestLocked(true);
+
             RenderSystem.enableBlend();
 
             graphics.pose().pushPose();
 
-            float scale = 1.0F;
+            float scale;
             if (this.scale != null) {
                 scale = UIBase.calculateFixedScale(this.scale);
                 graphics.pose().scale(scale, scale, scale);
             }
-            graphics.pose().translate(0.0F, 0.0F, 600.0F / scale);
-            RenderSystem.enableDepthTest();
             RenderingUtils.resetShaderColor(graphics);
 
             this.renderBackground(graphics, x, y);
             this.renderTextLines(graphics, x, y);
 
-            RenderSystem.disableDepthTest();
             graphics.pose().popPose();
+
+            RenderingUtils.setDepthTestLocked(false);
 
             RenderingUtils.resetShaderColor(graphics);
 

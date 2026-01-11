@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.dialog.message;
 
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
@@ -72,7 +73,10 @@ public class MessageDialogBody extends PiPScreen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        // Render no background if blur is enabled, because window blur background is used then
+        if (!UIBase.shouldBlur()) {
+            graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        }
 
         this.updateRenderLinesIfNeeded();
 
@@ -96,7 +100,7 @@ public class MessageDialogBody extends PiPScreen {
 
         int textY = contentY + Math.max(0, (contentBlockHeight - textHeight) / 2);
         int y = textY;
-        int textColor = UIBase.getUIColorTheme().generic_text_base_color.getColorInt();
+        int textColor = UIBase.shouldBlur() ? UIBase.getUIColorTheme().ui_blur_interface_generic_text_color.getColorInt() : UIBase.getUIColorTheme().generic_text_base_color.getColorInt();
         for (Component line : this.renderLines) {
             graphics.drawString(this.font, line, textX, y, textColor, false);
             y += LINE_SPACING;
@@ -198,7 +202,7 @@ public class MessageDialogBody extends PiPScreen {
             this.okayButton.setFocusable(false);
             this.okayButton.setNavigatable(false);
             this.addRenderableWidget(this.okayButton);
-            UIBase.applyDefaultWidgetSkinTo(this.okayButton);
+            UIBase.applyDefaultWidgetSkinTo(this.okayButton, UIBase.shouldBlur());
         } else {
             this.cancelButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
                 handleResult(false);
@@ -206,7 +210,7 @@ public class MessageDialogBody extends PiPScreen {
             this.cancelButton.setFocusable(false);
             this.cancelButton.setNavigatable(false);
             this.addRenderableWidget(this.cancelButton);
-            UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+            UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
 
             this.acceptButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.accept"), (button) -> {
                 handleResult(true);
@@ -217,7 +221,7 @@ public class MessageDialogBody extends PiPScreen {
             this.acceptButton.setFocusable(false);
             this.acceptButton.setNavigatable(false);
             this.addRenderableWidget(this.acceptButton);
-            UIBase.applyDefaultWidgetSkinTo(this.acceptButton);
+            UIBase.applyDefaultWidgetSkinTo(this.acceptButton, UIBase.shouldBlur());
         }
     }
 

@@ -162,7 +162,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         RenderSystem.disableDepthTest();
         RenderingUtils.setDepthTestLocked(true);
 
-//        renderWindowBackground(graphics);
+        renderWindowBackground(graphics, partial);
 
         renderBodyScreen(graphics, mouseX, mouseY, partial);
         renderWindowForeground(graphics, mouseX, mouseY, partial);
@@ -176,7 +176,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     }
 
-    private void renderWindowBackground(@NotNull GuiGraphics graphics) {
+    private void renderWindowBackground(@NotNull GuiGraphics graphics, float partial) {
         int frameX = this.x;
         int frameY = this.y;
         int frameWidth = getWidth();
@@ -189,11 +189,17 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         int innerTop = frameY + border + titleHeight;
         int innerRight = right - border;
         int innerBottom = bottom - border;
+        int innerWidth = frameWidth - border - border;
+        int innerHeight = frameHeight - titleHeight - border - border;
         if (innerRight <= innerLeft || innerBottom <= innerTop) {
             return;
         }
         UIColorTheme theme = getTheme();
-        graphics.fill(innerLeft, innerTop, innerRight, innerBottom, UIBase.shouldBlur() ? theme.ui_blur_interface_area_color_type_1.getColorInt() : theme.area_background_color.getColorInt());
+        if (UIBase.shouldBlur()) {
+            GuiBlurRenderer.renderBlurArea(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), 0.0F, theme.ui_blur_interface_background_tint, partial);
+        } else {
+            graphics.fill(innerLeft, innerTop, innerRight, innerBottom, theme.area_background_color.getColorInt());
+        }
     }
 
     private void renderBodyScreen(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {

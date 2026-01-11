@@ -87,10 +87,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         float animationScale = animationsEnabled ? this.getOpenAnimationScale(partial) : 1.0F;
         float renderScale = uiScale * animationScale;
 
+        RenderSystem.disableDepthTest();
+        RenderingUtils.setDepthTestLocked(true);
+
         RenderSystem.enableBlend();
         graphics.pose().pushPose();
         graphics.pose().scale(renderScale, renderScale, renderScale);
-        graphics.pose().translate(0.0F, 0.0F, 500.0F / renderScale);
 
         List<ContextMenuEntry<?>> renderEntries = new ArrayList<>();
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_top", this));
@@ -281,7 +283,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float maxScrollPosition = this.rawHeight - (displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
 
             // Create a darker version of the background color (about 10% darker)
-            Color bgColor = UIBase.getUIColorTheme().element_background_color_normal.getColor();
+            Color bgColor = UIBase.shouldBlur() ? UIBase.getUIColorTheme().ui_blur_overlay_element_background_tint.getColor() : UIBase.getUIColorTheme().element_background_color_normal.getColor();
             Color darkerBgColor = new Color(
                     Math.max(0, (int)(bgColor.getRed() * 0.9)),
                     Math.max(0, (int)(bgColor.getGreen() * 0.9)),
@@ -292,13 +294,19 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             // Render up arrow background and arrow if scrolled down
             if (scrollPosition > 0) {
-                // Fill background
-                RenderingUtils.fillF(graphics,
+                // Fill background with rounded top corners
+                UIBase.renderRoundedRect(
+                        graphics,
                         scaledX,
                         scaledY,
-                        scaledX + this.getWidth(),
-                        scaledY + SCROLL_INDICATOR_HEIGHT,
-                        darkerBackgroundColor);
+                        this.getWidth(),
+                        SCROLL_INDICATOR_HEIGHT,
+                        cornerTopLeft,
+                        cornerTopRight,
+                        0.0F,
+                        0.0F,
+                        darkerBackgroundColor
+                );
 
                 // Render arrow centered
                 RenderSystem.enableBlend();
@@ -314,13 +322,19 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             // Render down arrow background and arrow if can scroll further
             if (scrollPosition < maxScrollPosition) {
-                // Fill background
-                RenderingUtils.fillF(graphics,
+                // Fill background with rounded bottom corners
+                UIBase.renderRoundedRect(
+                        graphics,
                         scaledX,
                         scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT,
-                        scaledX + this.getWidth(),
-                        scaledY + displayHeight,
-                        darkerBackgroundColor);
+                        this.getWidth(),
+                        SCROLL_INDICATOR_HEIGHT,
+                        0.0F,
+                        0.0F,
+                        cornerBottomRight,
+                        cornerBottomLeft,
+                        darkerBackgroundColor
+                );
 
                 // Render arrow centered (with fixed position)
                 RenderSystem.enableBlend();
@@ -364,6 +378,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         graphics.pose().popPose();
+
+        RenderingUtils.setDepthTestLocked(false);
 
         //Render sub context menus
         for (ContextMenuEntry<?> e : renderEntries) {
@@ -1649,7 +1665,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                         tooltip.setDefaultStyle();
                     }
                     tooltip.setScale(this.parent.scale);
-                    TooltipHandler.INSTANCE.addTooltip(tooltip, () ->this.tooltipActive, false, true);
+                    TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
                 }
 
             } else {

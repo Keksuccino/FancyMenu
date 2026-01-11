@@ -17,7 +17,7 @@ public class UIColorTheme {
 
     public DrawableColor ui_blur_overlay_element_background_tint = DrawableColor.of(new Color(38, 38, 38, 174));
     public DrawableColor ui_blur_overlay_element_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
-    public DrawableColor ui_blur_interface_background_tint = DrawableColor.of(new Color(38, 38, 38, 174));
+    public DrawableColor ui_blur_interface_background_tint = DrawableColor.of(new Color(38, 38, 38, 216));
     public DrawableColor ui_blur_interface_border_color = DrawableColor.of(new Color(93, 97, 100, 200));
     public DrawableColor ui_blur_interface_title_bar_tint = DrawableColor.of(new Color(79, 79, 79, 174));
     public DrawableColor ui_blur_interface_area_color_type_1 = DrawableColor.of(new Color(43, 43, 43, 100));

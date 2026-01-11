@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.overlay;
 
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import net.minecraft.client.gui.components.Renderable;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,6 +26,19 @@ public class ScreenOverlays {
     public static final long LAYOUT_EDITOR_MENU_BAR = register(null, true);
     public static final long LAYOUT_EDITOR_RIGHT_CLICK_CONTEXT_MENU = register(null, true);
     public static final long LAYOUT_EDITOR_ELEMENT_CONTEXT_MENU = register(null, true);
+
+    public static final long PLACEHOLDER_11 = register(null, false);
+    public static final long PLACEHOLDER_12 = register(null, false);
+    public static final long PLACEHOLDER_13 = register(null, false);
+    public static final long PLACEHOLDER_14 = register(null, false);
+    public static final long PLACEHOLDER_15 = register(null, false);
+    public static final long PLACEHOLDER_16 = register(null, false);
+    public static final long PLACEHOLDER_17 = register(null, false);
+    public static final long PLACEHOLDER_18 = register(null, false);
+    public static final long PLACEHOLDER_19 = register(null, false);
+    public static final long PLACEHOLDER_20 = register(null, false);
+
+    public static final long TOOLTIPS = register(TooltipHandler.INSTANCE, false);
 
     public static void registerDefaults() {
         // empty dummy just for having something to call on init (yes, it's useless, but it makes me feel better, okay?)
