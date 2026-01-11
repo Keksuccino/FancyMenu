@@ -9,6 +9,10 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class ScreenOverlays {
 
+    //TODO Fix tooltips render behind menu bar and context menus !!!!
+
+    //TODO Fix debug overlay renders in front of menu bar and context menus !!!!
+
     public static final long PLACEHOLDER_1 = register(null, false);
     public static final long PLACEHOLDER_2 = register(null, false);
     public static final long PLACEHOLDER_3 = register(null, false);
