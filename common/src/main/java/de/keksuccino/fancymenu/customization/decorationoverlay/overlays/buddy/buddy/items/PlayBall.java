@@ -79,6 +79,7 @@ public class PlayBall {
     }
 
     public void render(GuiGraphics graphics) {
+        ResourceLocation texture = buddy.getTextures().getBallTexture();
         // If ball is grabbed, position it relative to buddy
         if (isGrabbedByBuddy) {
             // Position ball above buddy's head during play animation
@@ -115,7 +116,7 @@ public class PlayBall {
 
                 DrawableColor.of(trailColor).setAsShaderColor(graphics);
                 graphics.blit(
-                        TEXTURE_BALL,
+                        texture,
                         trailX - size/2, trailY - size/2,
                         0, 0,
                         size, size,
@@ -127,7 +128,7 @@ public class PlayBall {
 
         // Draw the actual ball
         graphics.blit(
-                TEXTURE_BALL,
+                texture,
                 x - size/2, drawY - size/2,
                 0, 0,
                 size, size,

@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 /**
  * Represents a button in the buddy GUI
@@ -38,11 +39,11 @@ public class BuddyGuiButton implements Renderable {
     protected int height;
     protected boolean active = true;
     @Nullable
-    protected ResourceLocation normalTexture = null;
+    protected Supplier<ResourceLocation> normalTexture = null;
     @Nullable
-    protected ResourceLocation hoverTexture = null;
+    protected Supplier<ResourceLocation> hoverTexture = null;
     @Nullable
-    protected ResourceLocation inactiveTexture = null;
+    protected Supplier<ResourceLocation> inactiveTexture = null;
 
     public BuddyGuiButton(@NotNull Buddy buddy, int x, int y, int width, int height, @NotNull ButtonNameSupplier nameSupplier, @NotNull Runnable action, @Nullable BooleanSupplier activeCondition) {
         this.nameSupplier = nameSupplier;
@@ -67,7 +68,7 @@ public class BuddyGuiButton implements Renderable {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         boolean hovered = isMouseOver(mouseX, mouseY) && active;
-        ResourceLocation backgroundTexture = active ? (hovered ? this.hoverTexture : this.normalTexture) : this.inactiveTexture;
+        ResourceLocation backgroundTexture = active ? (hovered ? getTexture(this.hoverTexture) : getTexture(this.normalTexture)) : getTexture(this.inactiveTexture);
         int backgroundColor = active ? (hovered ? 0xFF909090 : 0xFF606060) : 0xFF404040;
         int textColor = active ? 0xFFFFFFFF : 0xFFAAAAAA;
         Font font = Minecraft.getInstance().font;
@@ -93,7 +94,7 @@ public class BuddyGuiButton implements Renderable {
         }
     }
 
-    public BuddyGuiButton setTextures(@Nullable ResourceLocation normal, @Nullable ResourceLocation hover, @Nullable ResourceLocation inactive) {
+    public BuddyGuiButton setTextures(@Nullable Supplier<ResourceLocation> normal, @Nullable Supplier<ResourceLocation> hover, @Nullable Supplier<ResourceLocation> inactive) {
         this.normalTexture = normal;
         this.hoverTexture = hover;
         this.inactiveTexture = inactive;
@@ -101,11 +102,19 @@ public class BuddyGuiButton implements Renderable {
     }
 
     public BuddyGuiButton setDefaultButtonTextures() {
-        return this.setTextures(DEFAULT_BUTTON_NORMAL, DEFAULT_BUTTON_HOVER, DEFAULT_BUTTON_INACTIVE);
+        return this.setTextures(
+                () -> buddy.getTextures().getDefaultButtonTexture(),
+                () -> buddy.getTextures().getDefaultButtonHoverTexture(),
+                () -> buddy.getTextures().getDefaultButtonInactiveTexture()
+        );
     }
 
     public BuddyGuiButton setCloseButtonTextures() {
-        return this.setTextures(BUTTON_CLOSE_NORMAL, BUTTON_CLOSE_HOVER, BUTTON_CLOSE_NORMAL);
+        return this.setTextures(
+                () -> buddy.getTextures().getCloseButtonTexture(),
+                () -> buddy.getTextures().getCloseButtonHoverTexture(),
+                () -> buddy.getTextures().getCloseButtonTexture()
+        );
     }
 
     public BuddyGuiButton setPosition(int x, int y) {
@@ -166,6 +175,11 @@ public class BuddyGuiButton implements Renderable {
 
     public void updateActiveState() {
         this.active = activeCondition == null || activeCondition.getAsBoolean();
+    }
+
+    @Nullable
+    private ResourceLocation getTexture(@Nullable Supplier<ResourceLocation> supplier) {
+        return supplier != null ? supplier.get() : null;
     }
 
     @FunctionalInterface

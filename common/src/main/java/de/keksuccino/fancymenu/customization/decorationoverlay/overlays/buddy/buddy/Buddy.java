@@ -127,8 +127,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
     public BuddyStatusScreen statusScreen;
 
-    @Nullable
-    private ResourceSupplier<ITexture> customAtlasTextureSupplier = null;
+    private final BuddyTextures textures = new BuddyTextures();
     @NotNull
     private String instanceIdentifier = "default";
     
@@ -324,20 +323,71 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
     @NotNull
     private ResourceLocation getAtlasTextureLocation() {
-        if (this.customAtlasTextureSupplier != null) {
-            ITexture texture = this.customAtlasTextureSupplier.get();
-            if (texture != null) {
-                ResourceLocation location = texture.getResourceLocation();
-                if (location != null) {
-                    return location;
-                }
-            }
-        }
-        return TEXTURE_ATLAS;
+        return this.textures.getAtlasTexture();
     }
 
     public void setCustomAtlasTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
-        this.customAtlasTextureSupplier = supplier;
+        this.textures.setCustomAtlasTextureSupplier(supplier);
+    }
+
+    public void setCustomThoughtBubbleTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomThoughtBubbleTextureSupplier(supplier);
+    }
+
+    public void setCustomPetIconTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomPetIconTextureSupplier(supplier);
+    }
+
+    public void setCustomPlayIconTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomPlayIconTextureSupplier(supplier);
+    }
+
+    public void setCustomFoodTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomFoodTextureSupplier(supplier);
+    }
+
+    public void setCustomBallTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomBallTextureSupplier(supplier);
+    }
+
+    public void setCustomPoopTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomPoopTextureSupplier(supplier);
+    }
+
+    public void setCustomStatusBackgroundTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomStatusBackgroundTextureSupplier(supplier);
+    }
+
+    public void setCustomStatusBorderTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomStatusBorderTextureSupplier(supplier);
+    }
+
+    public void setCustomTabButtonTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomTabButtonTextureSupplier(supplier);
+    }
+
+    public void setCustomTabButtonSelectedTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomTabButtonSelectedTextureSupplier(supplier);
+    }
+
+    public void setCustomDefaultButtonTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomDefaultButtonTextureSupplier(supplier);
+    }
+
+    public void setCustomDefaultButtonHoverTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomDefaultButtonHoverTextureSupplier(supplier);
+    }
+
+    public void setCustomDefaultButtonInactiveTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomDefaultButtonInactiveTextureSupplier(supplier);
+    }
+
+    public void setCustomCloseButtonTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomCloseButtonTextureSupplier(supplier);
+    }
+
+    public void setCustomCloseButtonHoverTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.textures.setCustomCloseButtonHoverTextureSupplier(supplier);
     }
 
     @NotNull
@@ -347,6 +397,11 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
     public void setInstanceIdentifier(@NotNull String instanceIdentifier) {
         this.instanceIdentifier = Objects.requireNonNull(instanceIdentifier);
+    }
+
+    @NotNull
+    public BuddyTextures getTextures() {
+        return this.textures;
     }
 
     /**
@@ -378,18 +433,18 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         ResourceLocation icon = null;
 
         if (needsFood) {
-            icon = FoodItem.TEXTURE_FOOD;
+            icon = this.textures.getFoodTexture();
         } else if (needsPet) {
-            icon = TEXTURE_ICON_WANTS_BEING_PET;
+            icon = this.textures.getPetIconTexture();
         } else if (needsPlay && !isChasingBall) {
             // Only show play indicator if buddy isn't already playing or chasing the ball
-            icon = TEXTURE_ICON_WANTS_TO_PLAY;
+            icon = this.textures.getPlayIconTexture();
         }
 
         if (icon != null) {
             // First render the thought bubble
             graphics.blit(
-                    TEXTURE_THOUGHT_BUBBLE,
+                    this.textures.getThoughtBubbleTexture(),
                     bubbleX, bubbleY,
                     0, 0,
                     bubbleSize, bubbleSize,

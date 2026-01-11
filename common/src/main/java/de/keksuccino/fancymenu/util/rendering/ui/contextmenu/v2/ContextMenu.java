@@ -65,9 +65,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     protected boolean roundTopRightCorner = true;
     protected boolean roundBottomLeftCorner = true;
     protected boolean roundBottomRightCorner = true;
+    protected boolean openAnimationEnabled = true;
     protected float scrollPosition = 0.0f; // Current scroll position
     private boolean needsScrolling = false; // Flag to track if menu is scrollable
     private float displayHeight = 0; // Adjusted height when scrollable
+    private static final float OPEN_ANIMATION_GROW_TIME_MS = 120.0F;
+    private static final float OPEN_ANIMATION_MIN_SCALE = 0.78F;
+    private long openAnimationStartMs = 0L;
+    private boolean openAnimationActive = false;
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -76,12 +81,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
 
-        float scale = UIBase.calculateFixedScale(this.getScale());
+        boolean animationsEnabled = FancyMenu.getOptions().enableUiAnimations.getValue() && this.openAnimationEnabled;
+        boolean openingAnimation = animationsEnabled && this.isTopLevelOpenAnimationRunning();
+        float uiScale = UIBase.calculateFixedScale(this.getScale());
+        float animationScale = animationsEnabled ? this.getOpenAnimationScale(partial) : 1.0F;
+        float renderScale = uiScale * animationScale;
 
         RenderSystem.enableBlend();
         graphics.pose().pushPose();
-        graphics.pose().scale(scale, scale, scale);
-        graphics.pose().translate(0.0F, 0.0F, 500.0F / scale);
+        graphics.pose().scale(renderScale, renderScale, renderScale);
+        graphics.pose().translate(0.0F, 0.0F, 500.0F / renderScale);
 
         List<ContextMenuEntry<?>> renderEntries = new ArrayList<>();
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_top", this));
@@ -150,13 +159,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         // If scrollable, adjust displayed height
         this.displayHeight = needsScrolling ? maxMenuHeight : this.rawHeight;
+        boolean renderContent = !openingAnimation;
 
         float x = this.getActualX();
         float y = this.getActualY();
-        float scaledX = (float)((float)x/scale) + this.getBorderThickness();
-        float scaledY = (float)((float)y/scale) + this.getBorderThickness();
-        float scaledMouseX = (float) ((float)mouseX / scale);
-        float scaledMouseY = (float) ((float)mouseY / scale);
+        float scaledX = (float)((float)x/ renderScale) + this.getBorderThickness();
+        float scaledY = (float)((float)y/ renderScale) + this.getBorderThickness();
+        float scaledMouseX = (float) ((float)mouseX / renderScale);
+        float scaledMouseY = (float) ((float)mouseY / renderScale);
         boolean navigatingInSub = this.isUserNavigatingInSubMenu();
         float roundedRadius = 6.0F;
         float cornerTopLeft = this.roundTopLeftCorner ? roundedRadius : 0.0F;
@@ -182,10 +192,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         if (FancyMenu.getOptions().enableUiBlur.getValue()) {
             // Render blur background
-            float blurX = scaledX * scale;
-            float blurY = scaledY * scale;
-            float blurWidth = this.getWidth() * scale;
-            float blurHeight = displayHeight * scale;
+            float blurX = scaledX * renderScale;
+            float blurY = scaledY * renderScale;
+            float blurWidth = this.getWidth() * renderScale;
+            float blurHeight = displayHeight * renderScale;
             if (blurWidth > 0.0F && blurHeight > 0.0F) {
                 float blurCornerInset = 0.9F;
                 float blurTopLeft = Math.max(0.0F, cornerTopLeft - blurCornerInset);
@@ -200,7 +210,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         // Enable scissoring if scrollable
-        if (needsScrolling) {
+        if (needsScrolling && renderContent) {
             // Calculate scissor boundaries IN THE SCALED CONTEXT
             float scissorTopInScaledContext = scaledY + SCROLL_INDICATOR_HEIGHT;
             float scissorBottomInScaledContext = scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT;
@@ -208,59 +218,63 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float scissorRightInScaledContext = scaledX + this.getWidth();
 
             // Convert coordinates from the scaled context to the UNscaled logical GUI space
-            // The 'scale' variable is the one used in graphics.pose().scale()
-            float logicalMinX = scissorLeftInScaledContext * scale;
-            float logicalMinY = scissorTopInScaledContext * scale;
-            float logicalMaxX = scissorRightInScaledContext * scale;
-            float logicalMaxY = scissorBottomInScaledContext * scale;
+            // The 'renderScale' variable is the one used in graphics.pose().scale()
+            float logicalMinX = scissorLeftInScaledContext * renderScale;
+            float logicalMinY = scissorTopInScaledContext * renderScale;
+            float logicalMaxX = scissorRightInScaledContext * renderScale;
+            float logicalMaxY = scissorBottomInScaledContext * renderScale;
 
             // enableScissor expects unscaled logical GUI coordinates
             graphics.enableScissor((int)logicalMinX, (int)logicalMinY, (int)logicalMaxX, (int)logicalMaxY);
         }
 
         //Update + render entries
-        float entryY = scaledY;
-        if (needsScrolling) {
-            // Add space for scroll indicator and apply scroll position
-            entryY += SCROLL_INDICATOR_HEIGHT - scrollPosition;
-        }
-
-        for (ContextMenuEntry<?> e : renderEntries) {
-            e.x = scaledX;
-            e.y = entryY; //already scaled
-            e.width = this.getWidth(); //don't scale, because already scaled via graphics.pose().scale()
-
-            boolean isVisible = true;
+        if (renderContent) {
+            float entryY = scaledY;
             if (needsScrolling) {
-                // Check if entry is visible in the scrollable area
-                float entryBottom = entryY + e.getHeight();
-                float visibleTop = scaledY + SCROLL_INDICATOR_HEIGHT;
-                float visibleBottom = scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT;
-
-                // Entry is visible if it's at least partially within the visible area
-                isVisible = (entryY < visibleBottom && entryBottom > visibleTop);
+                // Add space for scroll indicator and apply scroll position
+                entryY += SCROLL_INDICATOR_HEIGHT - scrollPosition;
             }
 
-            boolean hover = e.isHovered();
-            // Only set hover if the entry is visible in the scroll area
-            e.setHovered(isVisible && !navigatingInSub && UIBase.isXYInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
+            for (ContextMenuEntry<?> e : renderEntries) {
+                e.x = scaledX;
+                e.y = entryY; //already scaled
+                e.width = this.getWidth(); //don't scale, because already scaled via graphics.pose().scale()
 
-            //Run hover action of element if its hover state changed to hovered
-            if (!hover && e.isHovered() && (e.hoverAction != null)) {
-                e.hoverAction.run(this, e, false);
+                boolean isVisible = true;
+                if (needsScrolling) {
+                    // Check if entry is visible in the scrollable area
+                    float entryBottom = entryY + e.getHeight();
+                    float visibleTop = scaledY + SCROLL_INDICATOR_HEIGHT;
+                    float visibleBottom = scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT;
+
+                    // Entry is visible if it's at least partially within the visible area
+                    isVisible = (entryY < visibleBottom && entryBottom > visibleTop);
+                }
+
+                boolean hover = e.isHovered();
+                // Only set hover if the entry is visible in the scroll area
+                e.setHovered(isVisible && !navigatingInSub && UIBase.isXYInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
+
+                //Run hover action of element if its hover state changed to hovered
+                if (!hover && e.isHovered() && (e.hoverAction != null)) {
+                    e.hoverAction.run(this, e, false);
+                }
+
+                // Only render if visible
+                if (isVisible) {
+                    RenderSystem.enableBlend();
+                    e.render(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
+                }
+
+                entryY += e.getHeight(); //don't scale this, because already scaled via graphics.pose().scale()
             }
-
-            // Only render if visible
-            if (isVisible) {
-                RenderSystem.enableBlend();
-                e.render(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
-            }
-
-            entryY += e.getHeight(); //don't scale this, because already scaled via graphics.pose().scale()
+        } else {
+            this.unhoverAllEntries();
         }
 
         // Disable scissoring and render arrow indicators if needed
-        if (needsScrolling) {
+        if (needsScrolling && renderContent) {
             graphics.disableScissor();
 
             // Calculate max scroll position
@@ -553,6 +567,15 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this.scale;
     }
 
+    public boolean isOpenAnimationEnabled() {
+        return this.openAnimationEnabled;
+    }
+
+    public ContextMenu setOpenAnimationEnabled(boolean openAnimationEnabled) {
+        this.openAnimationEnabled = openAnimationEnabled;
+        return this;
+    }
+
     public ContextMenu setScale(float scale) {
         if (this.forceUIScale) LOGGER.error("[FANCYMENU] Unable to set scale of ContextMenu while ContextMenu#isForceUIScale()!");
         this.scale = scale;
@@ -566,6 +589,30 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     public ContextMenu setForceUIScale(boolean forceUIScale) {
         this.forceUIScale = forceUIScale;
         return this;
+    }
+
+    private boolean isTopLevelOpenAnimationRunning() {
+        if (!FancyMenu.getOptions().enableUiAnimations.getValue() || !this.openAnimationEnabled) return false;
+        if (this.isSubMenu() || !this.openAnimationActive) return false;
+        float elapsedMs = (float) (net.minecraft.Util.getMillis() - this.openAnimationStartMs);
+        if (elapsedMs >= OPEN_ANIMATION_GROW_TIME_MS) {
+            this.openAnimationActive = false;
+            return false;
+        }
+        return true;
+    }
+
+    private float getOpenAnimationScale(float partial) {
+        if (!FancyMenu.getOptions().enableUiAnimations.getValue() || !this.openAnimationEnabled) return 1.0F;
+        if (this.isSubMenu() || !this.isOpen()) return 1.0F;
+        if (!this.isTopLevelOpenAnimationRunning()) return 1.0F;
+
+        float elapsedMs = (float) (net.minecraft.Util.getMillis() - this.openAnimationStartMs);
+        float growT = Math.min(elapsedMs / OPEN_ANIMATION_GROW_TIME_MS, 1.0F);
+        // Ease-out cubic for a quick pop
+        float easedGrow = 1.0F - (float) Math.pow(1.0F - growT, 3);
+        float baseScale = OPEN_ANIMATION_MIN_SCALE + (1.0F - OPEN_ANIMATION_MIN_SCALE) * easedGrow;
+        return Math.max(baseScale, 0.01F);
     }
 
     protected float getMinDistanceToScreenEdge() {
@@ -834,6 +881,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.rawX = x;
         this.rawY = y;
         this.open = true;
+        if (!this.isSubMenu() && FancyMenu.getOptions().enableUiAnimations.getValue() && this.openAnimationEnabled) {
+            this.openAnimationStartMs = net.minecraft.Util.getMillis();
+            this.openAnimationActive = true;
+        } else {
+            this.openAnimationActive = false;
+        }
         this.scrollPosition = 0.0f; // Reset scroll position when opening menu
         if ((entryPath != null) && !entryPath.isEmpty()) {
             String firstId = entryPath.get(0);
@@ -878,6 +931,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.closeSubMenus();
         this.unhoverAllEntries();
         this.open = false;
+        this.openAnimationActive = false;
         return this;
     }
 
@@ -912,6 +966,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public boolean isUserNavigatingInMenu() {
+        if (FancyMenu.getOptions().enableUiAnimations.getValue() && this.openAnimationEnabled && this.isTopLevelOpenAnimationRunning()) {
+            return true;
+        }
         // If the menu is scrollable and the mouse is over it, consider it as navigating
         if (this.needsScrolling && this.isOpen() && this.isMouseOverMenu(MouseInput.getMouseX(), MouseInput.getMouseY())) {
             return true;
@@ -955,7 +1012,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isUserNavigatingInMenu()) {
-            float scale = UIBase.calculateFixedScale(this.scale);
+            float scale = UIBase.calculateFixedScale(this.scale) * this.getOpenAnimationScale(0.0F);
             int scaledMouseX = (int) ((float)mouseX / scale);
             int scaledMouseY = (int) ((float)mouseY / scale);
 
@@ -1049,7 +1106,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     // It's important to not use the real isMouseOver() method, because that would break FM's GUIs
     public boolean isMouseOverMenu(double mouseX, double mouseY) {
-        float scale = UIBase.calculateFixedScale(this.getScale());
+        float scale = UIBase.calculateFixedScale(this.getScale()) * this.getOpenAnimationScale(0.0F);
         float actualX = this.getActualX() / scale + this.getBorderThickness();
         float actualY = this.getActualY() / scale + this.getBorderThickness();
         float width = this.getWidth();

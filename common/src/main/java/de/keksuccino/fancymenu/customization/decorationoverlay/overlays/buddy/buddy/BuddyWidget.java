@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy;
 
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.Poop;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.BuddyTextures;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -182,6 +183,10 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
 
     public void setCustomAtlasTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
         this.buddy.setCustomAtlasTextureSupplier(supplier);
+    }
+
+    public BuddyTextures getTextures() {
+        return this.buddy.getTextures();
     }
 
 }

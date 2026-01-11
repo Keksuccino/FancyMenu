@@ -54,13 +54,14 @@ public class Poop {
     }
 
     public void render(GuiGraphics graphics) {
+        ResourceLocation texture = buddy.getTextures().getPoopTexture();
         if (isBeingCleaned) {
             // Fade out during cleaning animation
             float alpha = 1.0f - (cleaningAnimation / (float)CLEANING_DURATION);
             int color = (int)(alpha * 255) << 24 | 0xFFFFFF;
             DrawableColor.of(color).setAsShaderColor(graphics);
             graphics.blit(
-                TEXTURE_POOP,
+                texture,
                 x - size/2, y - size/2,
                 0, 0,
                 size, size,
@@ -69,7 +70,7 @@ public class Poop {
             RenderingUtils.resetShaderColor(graphics);
         } else {
             graphics.blit(
-                TEXTURE_POOP,
+                texture,
                 x - size/2, y - size/2,
                 0, 0,
                 size, size,

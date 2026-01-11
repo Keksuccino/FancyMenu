@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.b
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.Buddy;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.BuddyTextures;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.FoodItem;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.PlayBall;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.leveling.BuddyAchievement;
@@ -34,10 +35,10 @@ public class BuddyStatusScreen implements Renderable {
     private static final int SCREEN_BORDER_HEIGHT = 293;
 
     // GUI Texture
-    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
-    private static final ResourceLocation BACKGROUND_BORDER_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background_border.png");
-    private static final ResourceLocation TAB_BUTTON_TEXTURE_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_normal.png");
-    private static final ResourceLocation TAB_BUTTON_TEXTURE_SELECTED = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_selected.png");
+    public static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
+    public static final ResourceLocation BACKGROUND_BORDER_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background_border.png");
+    public static final ResourceLocation TAB_BUTTON_TEXTURE_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_normal.png");
+    public static final ResourceLocation TAB_BUTTON_TEXTURE_SELECTED = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_selected.png");
 
     // Tab Indices
     private static final int TAB_STATS = 0;
@@ -245,6 +246,7 @@ public class BuddyStatusScreen implements Renderable {
         if (!isVisible) return;
 
         RenderSystem.enableBlend();
+        BuddyTextures textures = buddy.getTextures();
 
         // Push pose stack and move to z=400 for rendering on top of everything
         graphics.pose().pushPose();
@@ -253,8 +255,8 @@ public class BuddyStatusScreen implements Renderable {
         // Render background
         int borderXDiff = 35;
         int borderYDiff = 27;
-        graphics.blit(BACKGROUND_TEXTURE, this.guiX, this.guiY, 0.0F, 0.0F, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT);
-        graphics.blit(BACKGROUND_BORDER_TEXTURE, this.guiX - borderXDiff, this.guiY - borderYDiff, 0.0F, 0.0F, SCREEN_BORDER_WIDTH, SCREEN_BORDER_HEIGHT, SCREEN_BORDER_WIDTH, SCREEN_BORDER_HEIGHT);
+        graphics.blit(textures.getStatusBackgroundTexture(), this.guiX, this.guiY, 0.0F, 0.0F, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT);
+        graphics.blit(textures.getStatusBorderTexture(), this.guiX - borderXDiff, this.guiY - borderYDiff, 0.0F, 0.0F, SCREEN_BORDER_WIDTH, SCREEN_BORDER_HEIGHT, SCREEN_BORDER_WIDTH, SCREEN_BORDER_HEIGHT);
 
         // Render tabs
         renderTabs(graphics, mouseX, mouseY, partial);
@@ -291,12 +293,13 @@ public class BuddyStatusScreen implements Renderable {
 
         String[] tabNames = {"Stats", "Achievements"};
 
+        BuddyTextures textures = buddy.getTextures();
         for (int i = 0; i < tabNames.length; i++) {
             int tabX = tabStartX + (i * tabWidth);
             boolean isSelected = (i == currentTab);
 
             // Draw tab button background using proper button textures
-            ResourceLocation buttonTexture = isSelected ? TAB_BUTTON_TEXTURE_SELECTED : TAB_BUTTON_TEXTURE_NORMAL;
+            ResourceLocation buttonTexture = isSelected ? textures.getTabButtonSelectedTexture() : textures.getTabButtonTexture();
             
             // Render button background
             graphics.blit(buttonTexture, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);

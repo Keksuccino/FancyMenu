@@ -285,11 +285,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
 
-		//Render active element context menu
-		if (this.activeElementContextMenu != null) {
-			this.activeElementContextMenu.render(graphics, mouseX, mouseY, partial);
-		}
-
 	}
 
 	protected void renderLayoutEditorWidgets(GuiGraphics graphics, int mouseX, int mouseY, float partial) {

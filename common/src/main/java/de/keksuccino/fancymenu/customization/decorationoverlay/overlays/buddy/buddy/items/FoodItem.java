@@ -30,8 +30,9 @@ public class FoodItem {
     }
 
     public void render(GuiGraphics graphics) {
+        ResourceLocation texture = buddy.getTextures().getFoodTexture();
         graphics.blit(
-                TEXTURE_FOOD,
+                texture,
                 x - size/2, y - size/2,
                 0, 0,
                 size, size,
