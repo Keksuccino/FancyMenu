@@ -24,10 +24,8 @@ public class UIColorTheme {
     public DrawableColor ui_blur_interface_area_color_type_2 = DrawableColor.of(new Color(5, 5, 5, 100));
     public DrawableColor ui_blur_interface_area_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
     public DrawableColor ui_blur_interface_widget_background_color_normal_type_1 = DrawableColor.of(new Color(71, 71, 71, 102));
-    //public DrawableColor ui_blur_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(83, 156, 212, 102));
     public DrawableColor ui_blur_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(128, 67, 182, 61));
     public DrawableColor ui_blur_interface_widget_background_color_normal_type_2 = DrawableColor.of(new Color(126, 126, 126, 102));
-    //public DrawableColor ui_blur_interface_widget_background_color_hover_type_2 = DrawableColor.of(new Color(101, 186, 255, 102));
     public DrawableColor ui_blur_interface_widget_background_color_hover_type_2 = DrawableColor.of(new Color(167, 130, 215, 61));
     public DrawableColor ui_blur_interface_widget_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
     public DrawableColor ui_blur_interface_widget_label_color_normal = DrawableColor.of(new Color(206, 221, 237));
@@ -39,7 +37,7 @@ public class UIColorTheme {
     public DrawableColor ui_blur_interface_input_field_text_color_uneditable = DrawableColor.of(new Color(113, 117, 119));
     public DrawableColor ui_blur_interface_input_field_suggestion_text_color = DrawableColor.of(new Color(128, 128, 128));
     public DrawableColor ui_blur_interface_generic_text_color = DrawableColor.of(new Color(255, 255, 255));
-    public DrawableColor ui_blur_tooltip_background_tint = DrawableColor.of(new Color(16, 12, 26, 136));
+    public DrawableColor ui_blur_tooltip_background_tint = DrawableColor.of(new Color(19, 19, 19, 169));
 
     public DrawableColor interface_title_bar_color = DrawableColor.of(new Color(58, 58, 58));
 
