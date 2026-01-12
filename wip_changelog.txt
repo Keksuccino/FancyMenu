@@ -12,7 +12,7 @@
 - Added a new type of fullscreen customization: Decoration Overlays
   - These overlays have pre-defined overlay types, similar to menu background types and they can be toggled on/off for each overlay type
   - Decoration overlays can be accessed via right-clicking the layout editor background -> Decoration Overlays
-  - Currently there are three overlay types available:
+  - Currently there are the following overlay types available:
     - Snowfall, that makes it snow in your menus with snow accumulation on the ground and buttons (with customizable snow color and intensity)
     - Rainfall, that makes it rain in menus, with forming puddles and dripping water from buttons (with customizable rain color and intensity)
     - Fireflies, to have groups of fireflies fly around in the menu and sometimes landing on the ground and on buttons (with customizable color, group amount, group density, group size, etc.)
