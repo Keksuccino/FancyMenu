@@ -281,6 +281,7 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         update.accept(canDie.get());
     }
 
+    @SuppressWarnings("all")
     private void applyStatConfig() {
         BuddyStatConfig config = new BuddyStatConfig(
                 hungerDecayPerTick.get(),
