@@ -21,9 +21,9 @@ public class Poop {
     public int cleaningAnimation = 0;
     public static final int CLEANING_DURATION = 20; // increased from 10 to 20 frames
     
-    // Store relative position for screen resizing
+    // Store relative position for screen resizing (Y stays locked to buddy walk path)
     public float relativeX; // Position as percentage of screen width
-    public float relativeY; // Position as percentage of screen height (NEW - replaces groundLevel)
+    public float relativeY; // Position as percentage of screen height
     
     // Reference to the buddy
     public final Buddy buddy;
@@ -46,11 +46,10 @@ public class Poop {
         
         // Clamp coordinates to be within screen bounds
         this.x = Math.min(Math.max(x, 0), screenWidth);
-        this.y = Math.min(Math.max(y, 0), screenHeight);
         
         // Now calculate relative positions using the clamped values
         this.relativeX = (float)this.x / screenWidth;
-        this.relativeY = (float)this.y / screenHeight;
+        alignYToWalkPath(screenHeight);
     }
 
     public void render(GuiGraphics graphics) {
@@ -98,11 +97,19 @@ public class Poop {
         
         // Calculate new position using relative coordinates
         x = (int)(relativeX * screenWidth);
-        y = (int)(relativeY * screenHeight);
-        
+
         // Ensure poop is within screen bounds with some margin
         x = Math.min(Math.max(x, 10), screenWidth - 10);
-        y = Math.min(Math.max(y, 10), screenHeight - 10);
+
+        // Always keep poop grounded to the buddy's walk path
+        alignYToWalkPath(screenHeight);
+    }
+
+    private void alignYToWalkPath(int screenHeight) {
+        this.y = buddy.getWalkPathY();
+        if (screenHeight > 0) {
+            this.relativeY = (float)this.y / screenHeight;
+        }
     }
 
     public boolean isMouseOver(double mouseX, double mouseY) {

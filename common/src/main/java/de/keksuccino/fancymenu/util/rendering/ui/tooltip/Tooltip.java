@@ -139,7 +139,8 @@ public class Tooltip implements Renderable {
                 graphics.blit(loc, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
             }
         } else {
-            float radius = UIBase.getCornerRoundingRadius();
+            float normalRoundingRadius = UIBase.getCornerRoundingRadius();
+            float blurRoundingRadius = UIBase.getBlurCornerRoundingRadius();
             boolean blurEnabled = UIBase.shouldBlur();
             int renderWidth = this.getWidth();
             int renderHeight = this.getHeight();
@@ -157,14 +158,14 @@ public class Tooltip implements Renderable {
                         blurWidth,
                         blurHeight,
                         UIBase.getBlurRadius(),
-                        Math.max(0.0F, radius - 0.9F),
-                        Math.max(0.0F, radius - 0.9F),
-                        Math.max(0.0F, radius - 0.9F),
-                        Math.max(0.0F, radius - 0.9F),
+                        blurRoundingRadius,
+                        blurRoundingRadius,
+                        blurRoundingRadius,
+                        blurRoundingRadius,
                         UIBase.getUIColorTheme().ui_blur_tooltip_background_tint,
                         partial);
             } else {
-                UIBase.renderRoundedRect(graphics, x, y, renderWidth, renderHeight, radius, radius, radius, radius, this.backgroundColor.getColorInt());
+                UIBase.renderRoundedRect(graphics, x, y, renderWidth, renderHeight, normalRoundingRadius, normalRoundingRadius, normalRoundingRadius, normalRoundingRadius, this.backgroundColor.getColorInt());
             }
 
             if (this.borderColor != null) {
@@ -176,10 +177,10 @@ public class Tooltip implements Renderable {
                         x + renderWidth,
                         y + renderHeight,
                         1.0F,
-                        radius,
-                        radius,
-                        radius,
-                        radius,
+                        normalRoundingRadius,
+                        normalRoundingRadius,
+                        normalRoundingRadius,
+                        normalRoundingRadius,
                         borderColorInt);
             }
         }

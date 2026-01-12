@@ -1334,7 +1334,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         }
 
         // Position poop on the ground (at buddy's feet)
-        int poopY = buddyPosY + SPRITE_HEIGHT - 8;
+        int poopY = getWalkPathY();
 
         // Ensure poop doesn't go too close to screen edges (at least 50px from edges)
         int minX = 50;
@@ -1754,6 +1754,13 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
     public int getBuddyPosY() {
         return buddyPosY;
+    }
+
+    /**
+     * Y coordinate of the ground line Buddy walks on (used for grounding items like poop).
+     */
+    public int getWalkPathY() {
+        return buddyPosY + SPRITE_HEIGHT - 8;
     }
 
     public int getSpriteWidth() {

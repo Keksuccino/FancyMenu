@@ -170,11 +170,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         float scaledMouseX = (float) ((float)mouseX / renderScale);
         float scaledMouseY = (float) ((float)mouseY / renderScale);
         boolean navigatingInSub = this.isUserNavigatingInSubMenu();
-        float roundedRadius = UIBase.getCornerRoundingRadius();
-        float cornerTopLeft = this.roundTopLeftCorner ? roundedRadius : 0.0F;
-        float cornerTopRight = this.roundTopRightCorner ? roundedRadius : 0.0F;
-        float cornerBottomLeft = this.roundBottomLeftCorner ? roundedRadius : 0.0F;
-        float cornerBottomRight = this.roundBottomRightCorner ? roundedRadius : 0.0F;
+        float normalRoundingRadius = UIBase.getCornerRoundingRadius();
+        float normalCornerTopLeft = this.roundTopLeftCorner ? normalRoundingRadius : 0.0F;
+        float normalCornerTopRight = this.roundTopRightCorner ? normalRoundingRadius : 0.0F;
+        float normalCornerBottomLeft = this.roundBottomLeftCorner ? normalRoundingRadius : 0.0F;
+        float normalCornerBottomRight = this.roundBottomRightCorner ? normalRoundingRadius : 0.0F;
 
         //Render shadow
         if (this.hasShadow()) {
@@ -184,10 +184,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                     (float) (scaledY + 4),
                     (float) this.getWidth(),
                     (float) displayHeight,
-                    cornerTopLeft,
-                    cornerTopRight,
-                    cornerBottomRight,
-                    cornerBottomLeft,
+                    normalCornerTopLeft,
+                    normalCornerTopRight,
+                    normalCornerBottomRight,
+                    normalCornerBottomLeft,
                     SHADOW_COLOR.getColorInt()
             );
         }
@@ -199,16 +199,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float blurWidth = this.getWidth() * renderScale;
             float blurHeight = displayHeight * renderScale;
             if (blurWidth > 0.0F && blurHeight > 0.0F) {
-                float blurCornerInset = 0.9F;
-                float blurTopLeft = Math.max(0.0F, cornerTopLeft - blurCornerInset);
-                float blurTopRight = Math.max(0.0F, cornerTopRight - blurCornerInset);
-                float blurBottomRight = Math.max(0.0F, cornerBottomRight - blurCornerInset);
-                float blurBottomLeft = Math.max(0.0F, cornerBottomLeft - blurCornerInset);
-                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, UIBase.getBlurRadius(), blurTopLeft, blurTopRight, blurBottomRight, blurBottomLeft, UIBase.getUIColorTheme().ui_blur_overlay_element_background_tint, partial);
+                float blurRoundingRadius = UIBase.getBlurCornerRoundingRadius();
+                float blurCornerTopLeft = this.roundTopLeftCorner ? blurRoundingRadius : 0.0F;
+                float blurCornerTopRight = this.roundTopRightCorner ? blurRoundingRadius : 0.0F;
+                float blurCornerBottomLeft = this.roundBottomLeftCorner ? blurRoundingRadius : 0.0F;
+                float blurCornerBottomRight = this.roundBottomRightCorner ? blurRoundingRadius : 0.0F;
+                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, UIBase.getBlurRadius(), blurCornerTopLeft, blurCornerTopRight, blurCornerBottomRight, blurCornerBottomLeft, UIBase.getUIColorTheme().ui_blur_overlay_element_background_tint, partial);
             }
         } else {
             //Render normal background
-            UIBase.renderRoundedRect(graphics, scaledX, scaledY, this.getWidth(), displayHeight, cornerTopLeft, cornerTopRight, cornerBottomRight, cornerBottomLeft, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+            UIBase.renderRoundedRect(graphics, scaledX, scaledY, this.getWidth(), displayHeight, normalCornerTopLeft, normalCornerTopRight, normalCornerBottomRight, normalCornerBottomLeft, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
         }
 
         // Enable scissoring if scrollable
@@ -301,8 +301,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                         scaledY,
                         this.getWidth(),
                         SCROLL_INDICATOR_HEIGHT,
-                        cornerTopLeft,
-                        cornerTopRight,
+                        normalCornerTopLeft,
+                        normalCornerTopRight,
                         0.0F,
                         0.0F,
                         darkerBackgroundColor
@@ -331,8 +331,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                         SCROLL_INDICATOR_HEIGHT,
                         0.0F,
                         0.0F,
-                        cornerBottomRight,
-                        cornerBottomLeft,
+                        normalCornerBottomRight,
+                        normalCornerBottomLeft,
                         darkerBackgroundColor
                 );
 
@@ -350,24 +350,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         //Render border
-        boolean blurEnabled = FancyMenu.getOptions().enableUiBlur.getValue();
-        float blurBorderRadiusScale = blurEnabled ? 1.12F : 1.0F;
-        float blurBorderRadiusOffset = blurEnabled ? (this.getBorderThickness() * 0.35F) : 0.0F;
-        float borderCornerTopLeft = (cornerTopLeft * blurBorderRadiusScale) + blurBorderRadiusOffset;
-        float borderCornerTopRight = (cornerTopRight * blurBorderRadiusScale) + blurBorderRadiusOffset;
-        float borderCornerBottomRight = (cornerBottomRight * blurBorderRadiusScale) + blurBorderRadiusOffset;
-        float borderCornerBottomLeft = (cornerBottomLeft * blurBorderRadiusScale) + blurBorderRadiusOffset;
-
         UIBase.renderRoundedBorder(graphics,
                 (float) (scaledX - this.getBorderThickness()),
                 (float) (scaledY - this.getBorderThickness()),
                 (float) (scaledX + this.getWidth() + this.getBorderThickness()),
                 (float) (scaledY + displayHeight + this.getBorderThickness()),
                 (float) this.getBorderThickness(),
-                borderCornerTopLeft,
-                borderCornerTopRight,
-                borderCornerBottomRight,
-                borderCornerBottomLeft,
+                normalCornerTopLeft,
+                normalCornerTopRight,
+                normalCornerBottomRight,
+                normalCornerBottomLeft,
                 UIBase.shouldBlur() ? UIBase.getUIColorTheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
 
         //Post-tick
