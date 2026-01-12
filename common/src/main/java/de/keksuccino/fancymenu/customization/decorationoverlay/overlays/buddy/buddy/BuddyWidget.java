@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy;
 
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.Poop;
-import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.BuddyTextures;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.leveling.LevelingManager;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -27,7 +27,7 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final Buddy buddy;
+    private Buddy buddy;
     private final List<GuiEventListener> unusedDummyChildren = new ArrayList<>(); // don't use this and handle event method calls manually instead
     private int screenWidth;
     private int screenHeight;
@@ -108,6 +108,10 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (buddy.isDead() && button == 0 && buddy.isMouseOverBuddy(mouseX, mouseY)) {
+            resetBuddySave();
+            return true;
+        }
         return this.buddy.mouseClicked(mouseX, mouseY, button);
     }
 
@@ -191,6 +195,46 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
 
     public BuddyTextures getTextures() {
         return this.buddy.getTextures();
+    }
+
+    public void setMaxPoopsCap(int cap) {
+        this.buddy.setMaxPoopsCap(cap);
+    }
+
+    public void setCanDie(boolean canDie) {
+        this.buddy.setCanDie(canDie);
+    }
+
+    /**
+     * Deletes persisted buddy data and reinitializes the runtime buddy with defaults.
+     */
+    public void resetBuddySave() {
+        String instanceId = this.buddy.getInstanceIdentifier();
+        BuddyStatConfig currentConfig = this.buddy.getStatConfig();
+        int currentPoopCap = this.buddy.getMaxPoopsCap();
+        boolean currentCanDie = this.buddy.canDie();
+        BuddyTextures previousTextures = new BuddyTextures();
+        previousTextures.copyFrom(this.buddy.getTextures());
+
+        BuddySerializer.deleteBuddySave(instanceId);
+        LevelingManager.deleteLevelingSave(instanceId);
+
+        Buddy newBuddy = new Buddy(this.screenWidth, this.screenHeight);
+        newBuddy.setInstanceIdentifier(instanceId);
+        newBuddy.applyStatConfig(currentConfig);
+        newBuddy.setMaxPoopsCap(currentPoopCap);
+        newBuddy.setCanDie(currentCanDie);
+        newBuddy.getTextures().copyFrom(previousTextures);
+
+        this.buddy = newBuddy;
+        this.saveTimer = 0;
+        this.fullyInitialized = (this.screenWidth > 0) && (this.screenHeight > 0);
+
+        // Persist freshly reset state immediately
+        this.buddy.saveState();
+        this.buddy.getLevelingManager().saveState();
+
+        LOGGER.info("Buddy save reset for instance '{}'", instanceId);
     }
 
 }

@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -12,14 +13,11 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -32,8 +30,6 @@ import java.util.List;
  **/
 @SuppressWarnings("unused")
 public class Tooltip implements Renderable {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     protected Font font = Minecraft.getInstance().font;
     protected List<Component> textLines = new ArrayList<>();
@@ -48,7 +44,6 @@ public class Tooltip implements Renderable {
     protected ITexture backgroundTexture = null;
     protected DrawableColor backgroundColor = null;
     protected DrawableColor borderColor = null;
-    protected boolean vanillaLike = true;
     protected boolean keepBackgroundAspectRatio = true;
     protected boolean textShadow = true;
     protected TooltipTextAlignment textAlignment = TooltipTextAlignment.LEFT;
@@ -86,9 +81,6 @@ public class Tooltip implements Renderable {
         Screen s = Minecraft.getInstance().screen;
         if (!this.isEmpty() && (s != null)) {
 
-            //Dummy-render a Vanilla tooltip to fix the custom one (this is hacky af and I hate it, but I don't have time to analyze the whole frickin Vanilla tooltip rendering tbh)
-            graphics.renderTooltip(Minecraft.getInstance().font, Component.empty(), -10000, -10000);
-
             this.updateAspectRatio();
 
             int x = this.calculateX(s, mouseX);
@@ -105,10 +97,12 @@ public class Tooltip implements Renderable {
             if (this.scale != null) {
                 scale = UIBase.calculateFixedScale(this.scale);
                 graphics.pose().scale(scale, scale, scale);
+            } else {
+                scale = 1.0F;
             }
             RenderingUtils.resetShaderColor(graphics);
 
-            this.renderBackground(graphics, x, y);
+            this.renderBackground(graphics, x, y, partial, scale);
             this.renderTextLines(graphics, x, y);
 
             graphics.pose().popPose();
@@ -138,42 +132,57 @@ public class Tooltip implements Renderable {
         }
     }
 
-    protected void renderBackground(GuiGraphics graphics, int x, int y) {
-        if (this.vanillaLike || ((this.backgroundTexture == null) && (this.backgroundColor == null))) {
-            this.renderVanillaLikeBackground(graphics, x, y, this.getWidth(), this.getHeight());
-        } else if (this.backgroundTexture != null) {
+    protected void renderBackground(GuiGraphics graphics, int x, int y, float partial, float renderScale) {
+        if (this.backgroundTexture != null) {
             ResourceLocation loc = this.backgroundTexture.getResourceLocation();
             if (loc != null) {
                 graphics.blit(loc, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
             }
         } else {
-            if (this.borderColor != null) {
-                //BACKGROUND
-                graphics.fill(x + 1, y + 1, x + this.getWidth() - 1, y + this.getHeight() - 1, this.backgroundColor.getColorInt());
-                //TOP
-                graphics.fill(x + 1, y, x + this.getWidth() - 1, y + 1, this.borderColor.getColorInt());
-                //BOTTOM
-                graphics.fill(x + 1, y + this.getHeight() - 1, x + this.getWidth() - 1, y + this.getHeight(), this.borderColor.getColorInt());
-                //LEFT
-                graphics.fill(x, y, x + 1, y + this.getHeight(), this.borderColor.getColorInt());
-                //RIGHT
-                graphics.fill(x + this.getWidth() - 1, y, x + this.getWidth(), y + this.getHeight(), this.borderColor.getColorInt());
+            float radius = UIBase.getCornerRoundingRadius();
+            boolean blurEnabled = UIBase.shouldBlur();
+            int renderWidth = this.getWidth();
+            int renderHeight = this.getHeight();
+
+            if (blurEnabled) {
+                float blurX = x * renderScale;
+                float blurY = y * renderScale;
+                float blurWidth = renderWidth * renderScale;
+                float blurHeight = renderHeight * renderScale;
+
+                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(
+                        graphics,
+                        blurX,
+                        blurY,
+                        blurWidth,
+                        blurHeight,
+                        UIBase.getBlurRadius(),
+                        Math.max(0.0F, radius - 0.9F),
+                        Math.max(0.0F, radius - 0.9F),
+                        Math.max(0.0F, radius - 0.9F),
+                        Math.max(0.0F, radius - 0.9F),
+                        UIBase.getUIColorTheme().ui_blur_tooltip_background_tint,
+                        partial);
             } else {
-                graphics.fill(x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getColorInt());
+                UIBase.renderRoundedRect(graphics, x, y, renderWidth, renderHeight, radius, radius, radius, radius, this.backgroundColor.getColorInt());
+            }
+
+            if (this.borderColor != null) {
+                int borderColorInt = blurEnabled ? UIBase.getUIColorTheme().ui_blur_overlay_element_border_color.getColorInt() : this.borderColor.getColorInt();
+                UIBase.renderRoundedBorder(
+                        graphics,
+                        x,
+                        y,
+                        x + renderWidth,
+                        y + renderHeight,
+                        1.0F,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        borderColorInt);
             }
         }
-    }
-
-    protected void renderVanillaLikeBackground(GuiGraphics graphics, int x, int y, int width, int height) {
-
-        graphics.pose().pushPose();
-
-        //Set Z to 0, because Z level gets handled in parent method instead
-        int z = 0;
-        graphics.drawManaged(() -> TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, z));
-
-        graphics.pose().popPose();
-
     }
 
     protected int calculateX(Screen screen, int mouseX) {
@@ -185,9 +194,6 @@ public class Tooltip implements Renderable {
             mouseX = this.x;
         }
         int width = this.getWidth();
-        if (this.vanillaLike) {
-            width += 4;
-        }
         int scaledWidth = (int)((float)width * scale);
         int scaledMouseX = (int)((float)mouseX / scale) + this.mouseOffset;
         int scaledScreenWidth = (int)((float)screen.width / scale);
@@ -208,9 +214,6 @@ public class Tooltip implements Renderable {
             mouseY = this.y;
         }
         int height = this.getHeight();
-        if (this.vanillaLike) {
-            height += 4;
-        }
         int scaledHeight = (int)((float)height * scale);
         int scaledMouseY = (int)((float)mouseY / scale) + this.mouseOffset;
         int scaledScreenHeight = (int)((float)screen.height / scale);
@@ -327,7 +330,6 @@ public class Tooltip implements Renderable {
     public Tooltip setBackgroundTexture(@NotNull ITexture texture) {
         this.backgroundTexture = texture;
         this.backgroundColor = null;
-        this.vanillaLike = false;
         return this;
     }
 
@@ -340,7 +342,6 @@ public class Tooltip implements Renderable {
         this.backgroundColor = backgroundColor;
         this.borderColor = borderColor;
         this.backgroundTexture = null;
-        this.vanillaLike = false;
         return this;
     }
 
@@ -358,17 +359,6 @@ public class Tooltip implements Renderable {
     @Nullable
     public DrawableColor getBorderColor() {
         return this.borderColor;
-    }
-
-    public Tooltip setVanillaLike(boolean vanillaLike) {
-        this.vanillaLike = vanillaLike;
-        this.backgroundColor = null;
-        this.backgroundTexture = null;
-        return this;
-    }
-
-    public boolean isVanillaLike() {
-        return vanillaLike;
     }
 
     public Tooltip setKeepBackgroundAspectRatio(boolean keepBackgroundAspectRatio) {
@@ -418,12 +408,11 @@ public class Tooltip implements Renderable {
         return font;
     }
 
-    public Tooltip copyStyleOf(Tooltip tooltip) {
+    public Tooltip applyStyleOf(@NotNull Tooltip tooltip) {
         this.borderColor = tooltip.borderColor;
         this.backgroundColor = tooltip.backgroundColor;
         this.backgroundTexture = tooltip.backgroundTexture;
         this.keepBackgroundAspectRatio = tooltip.keepBackgroundAspectRatio;
-        this.vanillaLike = tooltip.vanillaLike;
         this.textBorderSize = tooltip.textBorderSize;
         this.textAlignment = tooltip.textAlignment;
         this.textShadow = tooltip.textShadow;

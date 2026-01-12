@@ -25,6 +25,7 @@ public class BuddyTextures {
     public static final ResourceLocation DEFAULT_FOOD = FoodItem.TEXTURE_FOOD;
     public static final ResourceLocation DEFAULT_BALL = PlayBall.TEXTURE_BALL;
     public static final ResourceLocation DEFAULT_POOP = Poop.TEXTURE_POOP;
+    public static final ResourceLocation DEFAULT_GRAVESTONE = Buddy.TEXTURE_GRAVESTONE;
     public static final ResourceLocation DEFAULT_STATUS_BACKGROUND = BuddyStatusScreen.BACKGROUND_TEXTURE;
     public static final ResourceLocation DEFAULT_STATUS_BACKGROUND_BORDER = BuddyStatusScreen.BACKGROUND_BORDER_TEXTURE;
     public static final ResourceLocation DEFAULT_TAB_BUTTON_NORMAL = BuddyStatusScreen.TAB_BUTTON_TEXTURE_NORMAL;
@@ -42,6 +43,7 @@ public class BuddyTextures {
     private @Nullable ResourceSupplier<ITexture> customFoodTextureSupplier = null;
     private @Nullable ResourceSupplier<ITexture> customBallTextureSupplier = null;
     private @Nullable ResourceSupplier<ITexture> customPoopTextureSupplier = null;
+    private @Nullable ResourceSupplier<ITexture> customGravestoneTextureSupplier = null;
     private @Nullable ResourceSupplier<ITexture> customStatusBackgroundTextureSupplier = null;
     private @Nullable ResourceSupplier<ITexture> customStatusBorderTextureSupplier = null;
     private @Nullable ResourceSupplier<ITexture> customTabButtonTextureSupplier = null;
@@ -85,6 +87,11 @@ public class BuddyTextures {
     @NotNull
     public ResourceLocation getPoopTexture() {
         return resolve(customPoopTextureSupplier, DEFAULT_POOP);
+    }
+
+    @NotNull
+    public ResourceLocation getGravestoneTexture() {
+        return resolve(customGravestoneTextureSupplier, DEFAULT_GRAVESTONE);
     }
 
     @NotNull
@@ -160,6 +167,10 @@ public class BuddyTextures {
         this.customPoopTextureSupplier = supplier;
     }
 
+    public void setCustomGravestoneTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.customGravestoneTextureSupplier = supplier;
+    }
+
     public void setCustomStatusBackgroundTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
         this.customStatusBackgroundTextureSupplier = supplier;
     }
@@ -194,6 +205,30 @@ public class BuddyTextures {
 
     public void setCustomCloseButtonHoverTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
         this.customCloseButtonHoverTextureSupplier = supplier;
+    }
+
+    /**
+     * Copies all custom texture suppliers from the provided instance.
+     * Default fallbacks are not affected.
+     */
+    public void copyFrom(@NotNull BuddyTextures source) {
+        this.customAtlasTextureSupplier = source.customAtlasTextureSupplier;
+        this.customThoughtBubbleTextureSupplier = source.customThoughtBubbleTextureSupplier;
+        this.customPetIconTextureSupplier = source.customPetIconTextureSupplier;
+        this.customPlayIconTextureSupplier = source.customPlayIconTextureSupplier;
+        this.customFoodTextureSupplier = source.customFoodTextureSupplier;
+        this.customBallTextureSupplier = source.customBallTextureSupplier;
+        this.customPoopTextureSupplier = source.customPoopTextureSupplier;
+        this.customGravestoneTextureSupplier = source.customGravestoneTextureSupplier;
+        this.customStatusBackgroundTextureSupplier = source.customStatusBackgroundTextureSupplier;
+        this.customStatusBorderTextureSupplier = source.customStatusBorderTextureSupplier;
+        this.customTabButtonTextureSupplier = source.customTabButtonTextureSupplier;
+        this.customTabButtonSelectedTextureSupplier = source.customTabButtonSelectedTextureSupplier;
+        this.customDefaultButtonTextureSupplier = source.customDefaultButtonTextureSupplier;
+        this.customDefaultButtonHoverTextureSupplier = source.customDefaultButtonHoverTextureSupplier;
+        this.customDefaultButtonInactiveTextureSupplier = source.customDefaultButtonInactiveTextureSupplier;
+        this.customCloseButtonTextureSupplier = source.customCloseButtonTextureSupplier;
+        this.customCloseButtonHoverTextureSupplier = source.customCloseButtonHoverTextureSupplier;
     }
 
     @NotNull

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.Poop;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileReader;
@@ -54,6 +55,11 @@ public class BuddySerializer {
             json.addProperty("isActivelyPeeking", buddy.isActivelyPeeking);
             json.addProperty("peekTimer", buddy.peekTimer);
             json.addProperty("peekDuration", buddy.peekDuration);
+            json.addProperty("isDead", buddy.isDead());
+            json.addProperty("canDie", buddy.canDie());
+            json.addProperty("hungerZeroTimestamp", buddy.getHungerZeroTimestamp());
+            json.addProperty("happinessZeroTimestamp", buddy.getHappinessZeroTimestamp());
+            json.addProperty("maxPoopsCap", buddy.getMaxPoopsCap());
             
             // Save screen dimensions
             json.addProperty("screenWidth", buddy.getScreenWidth());
@@ -124,6 +130,21 @@ public class BuddySerializer {
             if (json.has("peekDuration")) {
                 buddy.peekDuration = json.get("peekDuration").getAsInt();
             }
+            if (json.has("canDie")) {
+                buddy.setCanDie(json.get("canDie").getAsBoolean());
+            }
+            if (json.has("isDead")) {
+                buddy.setDeadState(json.get("isDead").getAsBoolean());
+            }
+            if (json.has("hungerZeroTimestamp")) {
+                buddy.setHungerZeroTimestamp(json.get("hungerZeroTimestamp").getAsLong());
+            }
+            if (json.has("happinessZeroTimestamp")) {
+                buddy.setHappinessZeroTimestamp(json.get("happinessZeroTimestamp").getAsLong());
+            }
+            if (json.has("maxPoopsCap")) {
+                buddy.setMaxPoopsCap(json.get("maxPoopsCap").getAsInt());
+            }
             
             // Load poop locations
             if (json.has("poops")) {
@@ -188,6 +209,24 @@ public class BuddySerializer {
             LOGGER.error("Failed to load buddy data", e);
             return false;
         }
+    }
+
+    /**
+     * Deletes the buddy save file for the given instance identifier, if it exists.
+     *
+     * @param instanceIdentifier instance id used to namespace the save
+     * @return true if the file was deleted or did not exist; false if deletion failed
+     */
+    public static boolean deleteBuddySave(@NotNull String instanceIdentifier) {
+        File saveFile = new File(BUDDY_DIR, BuddySaveFileNames.buildSaveFileName(SAVE_FILENAME_PREFIX, instanceIdentifier));
+        if (!saveFile.exists()) {
+            return true;
+        }
+        boolean deleted = saveFile.delete();
+        if (!deleted) {
+            LOGGER.warn("Failed to delete buddy save at {}", saveFile.getAbsolutePath());
+        }
+        return deleted;
     }
 
     private static String getSaveFileName(Buddy buddy) {

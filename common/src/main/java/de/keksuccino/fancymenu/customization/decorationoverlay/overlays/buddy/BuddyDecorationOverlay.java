@@ -7,6 +7,8 @@ import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.bu
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -29,6 +31,7 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
     public final Property<ResourceSupplier<ITexture>> customFoodTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "custom_buddy_food_texture", null, "fancymenu.decoration_overlays.buddy.custom_food_texture", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> customBallTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "custom_buddy_ball_texture", null, "fancymenu.decoration_overlays.buddy.custom_ball_texture", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> customPoopTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "custom_buddy_poop_texture", null, "fancymenu.decoration_overlays.buddy.custom_poop_texture", true, true, true, null));
+    public final Property<ResourceSupplier<ITexture>> customGravestoneTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "custom_buddy_gravestone_texture", null, "fancymenu.decoration_overlays.buddy.custom_gravestone_texture", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> customStatusBackgroundTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "custom_buddy_status_background_texture", null, "fancymenu.decoration_overlays.buddy.custom_status_background_texture", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> customStatusBorderTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "custom_buddy_status_border_texture", null, "fancymenu.decoration_overlays.buddy.custom_status_border_texture", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> customTabButtonTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "custom_buddy_tab_button_texture", null, "fancymenu.decoration_overlays.buddy.custom_tab_button_texture", true, true, true, null));
@@ -60,6 +63,8 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
     public final Property<Float> foodHappinessGain = putProperty(Property.floatProperty("buddy_food_happiness_gain", Buddy.DEFAULT_FOOD_HAPPINESS_GAIN, "fancymenu.decoration_overlays.buddy.food_happiness_gain"));
     public final Property<Float> petHappinessGain = putProperty(Property.floatProperty("buddy_pet_happiness_gain", Buddy.DEFAULT_PET_HAPPINESS_GAIN, "fancymenu.decoration_overlays.buddy.pet_happiness_gain"));
     public final Property<Float> wakeupHappinessPenalty = putProperty(Property.floatProperty("buddy_wakeup_happiness_penalty", Buddy.DEFAULT_WAKEUP_HAPPINESS_PENALTY, "fancymenu.decoration_overlays.buddy.wakeup_happiness_penalty"));
+    public final Property<Integer> maxPoopsCap = putProperty(Property.integerProperty("buddy_max_poops_cap", Buddy.DEFAULT_MAX_POOPS_CAP, "fancymenu.decoration_overlays.buddy.max_poops_cap"));
+    public final Property<Boolean> canDie = putProperty(Property.booleanProperty("buddy_can_die", Buddy.DEFAULT_CAN_DIE, "fancymenu.decoration_overlays.buddy.can_die"));
 
     private final BuddyWidget buddyWidget = new BuddyWidget(0, 0);
     private int lastGuiTick = -1;
@@ -73,6 +78,7 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         bindTextureProperty(this.customFoodTexture, supplier -> this.buddyWidget.getTextures().setCustomFoodTextureSupplier(supplier));
         bindTextureProperty(this.customBallTexture, supplier -> this.buddyWidget.getTextures().setCustomBallTextureSupplier(supplier));
         bindTextureProperty(this.customPoopTexture, supplier -> this.buddyWidget.getTextures().setCustomPoopTextureSupplier(supplier));
+        bindTextureProperty(this.customGravestoneTexture, supplier -> this.buddyWidget.getTextures().setCustomGravestoneTextureSupplier(supplier));
         bindTextureProperty(this.customStatusBackgroundTexture, supplier -> this.buddyWidget.getTextures().setCustomStatusBackgroundTextureSupplier(supplier));
         bindTextureProperty(this.customStatusBorderTexture, supplier -> this.buddyWidget.getTextures().setCustomStatusBorderTextureSupplier(supplier));
         bindTextureProperty(this.customTabButtonTexture, supplier -> this.buddyWidget.getTextures().setCustomTabButtonTextureSupplier(supplier));
@@ -83,6 +89,8 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         bindTextureProperty(this.customCloseButtonTexture, supplier -> this.buddyWidget.getTextures().setCustomCloseButtonTextureSupplier(supplier));
         bindTextureProperty(this.customCloseButtonHoverTexture, supplier -> this.buddyWidget.getTextures().setCustomCloseButtonHoverTextureSupplier(supplier));
         bindStatProperties();
+        bindPoopCapProperty();
+        bindCanDieProperty();
         this.showOverlay.addValueSetListener((oldValue, newValue) -> {
             if (Boolean.TRUE.equals(newValue)) {
                 resetTickCounter();
@@ -104,6 +112,7 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         addTextureEntry(texturesMenu, this.customFoodTexture, "fancymenu.decoration_overlays.buddy.custom_food_texture.desc");
         addTextureEntry(texturesMenu, this.customBallTexture, "fancymenu.decoration_overlays.buddy.custom_ball_texture.desc");
         addTextureEntry(texturesMenu, this.customPoopTexture, "fancymenu.decoration_overlays.buddy.custom_poop_texture.desc");
+        addTextureEntry(texturesMenu, this.customGravestoneTexture, "fancymenu.decoration_overlays.buddy.custom_gravestone_texture.desc");
         addTextureEntry(texturesMenu, this.customStatusBackgroundTexture, "fancymenu.decoration_overlays.buddy.custom_status_background_texture.desc");
         addTextureEntry(texturesMenu, this.customStatusBorderTexture, "fancymenu.decoration_overlays.buddy.custom_status_border_texture.desc");
         addTextureEntry(texturesMenu, this.customTabButtonTexture, "fancymenu.decoration_overlays.buddy.custom_tab_button_texture.desc");
@@ -139,6 +148,13 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         addFloatEntry(statsMenu, foodHappinessGain, "fancymenu.decoration_overlays.buddy.food_happiness_gain.desc");
         addFloatEntry(statsMenu, petHappinessGain, "fancymenu.decoration_overlays.buddy.pet_happiness_gain.desc");
         addFloatEntry(statsMenu, wakeupHappinessPenalty, "fancymenu.decoration_overlays.buddy.wakeup_happiness_penalty.desc");
+        addIntEntry(statsMenu, maxPoopsCap, "fancymenu.decoration_overlays.buddy.max_poops_cap.desc");
+        addBooleanEntry(statsMenu, canDie, "fancymenu.decoration_overlays.buddy.can_die.desc");
+
+        menu.addSeparatorEntry("separator_before_reset_buddy_save").setStackable(true);
+        menu.addClickableEntry("reset_buddy_save", Component.translatable("fancymenu.decoration_overlays.buddy.reset_save"), (contextMenu, entry) -> requestResetBuddySave())
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.buddy.reset_save.desc")))
+                .setStackable(true);
     }
 
     @Override
@@ -253,6 +269,18 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         applyStatConfig();
     }
 
+    private void bindPoopCapProperty() {
+        Consumer<Integer> update = value -> this.buddyWidget.setMaxPoopsCap(Math.max(0, value));
+        maxPoopsCap.addValueSetListener((o, n) -> update.accept(n));
+        update.accept(maxPoopsCap.get());
+    }
+
+    private void bindCanDieProperty() {
+        Consumer<Boolean> update = value -> this.buddyWidget.setCanDie(Boolean.TRUE.equals(value));
+        canDie.addValueSetListener((o, n) -> update.accept(n));
+        update.accept(canDie.get());
+    }
+
     private void applyStatConfig() {
         BuddyStatConfig config = new BuddyStatConfig(
                 hungerDecayPerTick.get(),
@@ -281,12 +309,34 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         this.buddyWidget.setStatConfig(config);
     }
 
+    private void requestResetBuddySave() {
+        Dialogs.openMessageWithCallback(
+                Component.translatable("fancymenu.decoration_overlays.buddy.reset_save.confirm"),
+                MessageDialogStyle.WARNING,
+                confirmed -> {
+                    if (confirmed) {
+                        this.buddyWidget.resetBuddySave();
+                    }
+                }
+        );
+    }
+
     private void addTextureEntry(@NotNull ContextMenu menu, @NotNull Property<ResourceSupplier<ITexture>> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(descriptionKey)));
     }
 
     private void addFloatEntry(@NotNull ContextMenu menu, @NotNull Property<Float> property, @NotNull String descriptionKey) {
+        property.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(descriptionKey)));
+    }
+
+    private void addIntEntry(@NotNull ContextMenu menu, @NotNull Property<Integer> property, @NotNull String descriptionKey) {
+        property.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(descriptionKey)));
+    }
+
+    private void addBooleanEntry(@NotNull ContextMenu menu, @NotNull Property<Boolean> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(descriptionKey)));
     }

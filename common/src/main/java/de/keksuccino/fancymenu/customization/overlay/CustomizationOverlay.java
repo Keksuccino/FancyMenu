@@ -26,8 +26,6 @@ public class CustomizationOverlay {
 
 	private static CustomizationOverlayMenuBar overlayMenuBar;
 	private static DebugOverlay debugOverlay;
-    private static long menuBarId = -1;
-    private static long debugOverlayId = -1;
 
     static {
 
@@ -40,36 +38,26 @@ public class CustomizationOverlay {
 		EventHandler.INSTANCE.registerListenersOf(new CustomizationOverlay());
 	}
 
-	public static long refreshMenuBar() {
+	public static void refreshMenuBar() {
 		overlayMenuBar = CustomizationOverlayUI.buildMenuBar((overlayMenuBar == null) || overlayMenuBar.isExpanded());
-        if (menuBarId != -1) {
-            ScreenOverlayHandler.INSTANCE.addOverlayWithId(menuBarId, overlayMenuBar);
-        } else {
-            menuBarId = ScreenOverlayHandler.INSTANCE.addOverlay(overlayMenuBar);
-        }
-        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(menuBarId, screen -> {
+        ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.CUSTOMIZATION_MENU_BAR, overlayMenuBar);
+        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(ScreenOverlays.CUSTOMIZATION_MENU_BAR, screen -> {
             if (!isOverlayVisible(screen)) return false;
             if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
             return true;
         });
-        return menuBarId;
 	}
 
-	public static long refreshDebugOverlay() {
+	public static void refreshDebugOverlay() {
         if (debugOverlay != null) debugOverlay.resetOverlay();
 		debugOverlay = CustomizationOverlayUI.buildDebugOverlay();
-        if (debugOverlayId != -1) {
-            ScreenOverlayHandler.INSTANCE.addOverlayWithId(debugOverlayId, debugOverlay);
-        } else {
-            debugOverlayId = ScreenOverlayHandler.INSTANCE.addOverlay(debugOverlay);
-        }
-        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(debugOverlayId, screen -> {
+        ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.CUSTOMIZATION_DEBUG_OVERLAY, debugOverlay);
+        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(ScreenOverlays.CUSTOMIZATION_DEBUG_OVERLAY, screen -> {
             if (!isOverlayVisible(screen)) return false;
             if (!FancyMenu.getOptions().showDebugOverlay.getValue()) return false;
             if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
             return true;
         });
-        return debugOverlayId;
 	}
 
 	@Nullable

@@ -679,6 +679,24 @@ public class LevelingManager {
         return layoutCreationCount;
     }
 
+    /**
+     * Deletes the leveling save file for the given instance identifier, if it exists.
+     *
+     * @param instanceIdentifier the buddy instance id used for namespacing
+     * @return true if the file was deleted or didn't exist; false if deletion failed
+     */
+    public static boolean deleteLevelingSave(@NotNull String instanceIdentifier) {
+        File saveFile = new File(BUDDY_DIR, BuddySaveFileNames.buildSaveFileName(SAVE_FILENAME_PREFIX, instanceIdentifier));
+        if (!saveFile.exists()) {
+            return true;
+        }
+        boolean deleted = saveFile.delete();
+        if (!deleted) {
+            LOGGER.warn("Failed to delete buddy leveling save at {}", saveFile.getAbsolutePath());
+        }
+        return deleted;
+    }
+
     @NotNull
     private File getSaveFile() {
         return new File(BUDDY_DIR, getSaveFileName());

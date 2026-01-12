@@ -43,6 +43,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public static final ResourceLocation TEXTURE_ICON_WANTS_BEING_PET = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/heart.png");
     public static final ResourceLocation TEXTURE_ICON_WANTS_TO_PLAY = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/play.png");
     public static final ResourceLocation TEXTURE_THOUGHT_BUBBLE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/thought.png");
+    public static final ResourceLocation TEXTURE_GRAVESTONE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gravestone.png");
 
     // Default stat tuning
     public static final float DEFAULT_HUNGER_DECAY_PER_TICK = 0.005f;
@@ -67,6 +68,9 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public static final float DEFAULT_FOOD_HAPPINESS_GAIN = 5f;
     public static final float DEFAULT_PET_HAPPINESS_GAIN = 15f;
     public static final float DEFAULT_WAKEUP_HAPPINESS_PENALTY = 2.5f;
+    public static final int DEFAULT_MAX_POOPS_CAP = 10;
+    public static final boolean DEFAULT_CAN_DIE = true;
+    private static final long TEN_HOURS_MS = 10L * 60L * 60L * 1000L;
 
     // Game state
     public int buddyPosX;
@@ -118,6 +122,10 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public boolean isActivelyPeeking = false; // Whether buddy is currently visible during a peek
     public int peekTimer; // Legacy timer (no longer used for awakening)
     public int peekDuration = 0; // How long the current peek should last
+    private boolean isDead = false;
+    private boolean canDie = DEFAULT_CAN_DIE;
+    private long hungerZeroTimestamp = -1L;
+    private long happinessZeroTimestamp = -1L;
 
     // Timers and behaviors
     public int stateChangeTimer;
@@ -144,6 +152,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public int poopingInterval = 6000;
     public float poopChancePercentage = 1f;
     public static final int MAX_POOPS_BEFORE_SAD = 3;
+    private int maxPoopsCap = DEFAULT_MAX_POOPS_CAP;
 
     // Track visibility changes
     public boolean wasDisabled = true;
@@ -261,6 +270,19 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             currentFrame = (currentFrame + 1) % ATLAS_COLUMNS;
         }
 
+        // Handle death rendering separately
+        if (isDead) {
+            ResourceLocation gravestone = this.textures.getGravestoneTexture();
+            graphics.blit(
+                    gravestone,
+                    buddyPosX, buddyPosY,
+                    0, 0,
+                    SPRITE_WIDTH, SPRITE_HEIGHT,
+                    SPRITE_WIDTH, SPRITE_HEIGHT
+            );
+            return;
+        }
+
         // Calculate texture coordinates
         int texX = currentFrame * SPRITE_WIDTH;
         int texY = currentState.getAtlasIndex() * SPRITE_HEIGHT;
@@ -326,7 +348,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         }
 
         // Render needs indicator
-        if (!isEating && !isBeingPet && !isPlaying && !isSleeping) {
+        if (!isEating && !isBeingPet && !isPlaying && !isSleeping && !isDead) {
             renderNeedsIndicator(graphics);
         }
 
@@ -418,6 +440,20 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public void applyStatConfig(@NotNull BuddyStatConfig config) {
         this.statConfig = config;
     }
+    
+    public void setMaxPoopsCap(int cap) {
+        this.maxPoopsCap = Math.max(0, cap);
+        cleanupExcessPoopsIfNeeded();
+    }
+
+    public int getMaxPoopsCap() {
+        return this.maxPoopsCap;
+    }
+
+    @NotNull
+    public BuddyStatConfig getStatConfig() {
+        return this.statConfig;
+    }
 
     @NotNull
     public String getInstanceIdentifier() {
@@ -498,6 +534,12 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public void tick() {
 
         if (!isDisabled) return;
+
+        if (isDead) {
+            // Keep the corpse stationary; still allow poop cleanup to avoid leaking entities
+            cleanupInvalidPoops();
+            return;
+        }
         
         // If buddy is peeking, only update minimal things
         if (isPeeking) {
@@ -563,6 +605,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
         // Update stats and needs over time
         updateStatsAndNeeds();
+        checkForDeath();
 
         // Update food item if it exists
         if (droppedFood != null) {
@@ -631,8 +674,8 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             timeSinceLastPoop++;
             // Consider pooping if enough time has passed
             if (timeSinceLastPoop >= poopingInterval) {
-                // Small chance to poop if not already doing something important
-                if (!isSleeping && !isEating && !isPlaying && !isChasingBall && this.chanceCheck(poopChancePercentage)) {
+                // Small chance to poop if not already doing something important and under cap
+                if (poops.size() < maxPoopsCap && !isSleeping && !isEating && !isPlaying && !isChasingBall && this.chanceCheck(poopChancePercentage)) {
                     startPooping();
                 }
             }
@@ -763,6 +806,25 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         // Check for stat-based achievements
         if (levelingManager != null) {
             levelingManager.checkStatAchievements();
+        }
+
+        // Track how long vital stats have been at zero for death checks
+        long now = System.currentTimeMillis();
+        if (!canDie) {
+            hungerZeroTimestamp = -1L;
+            happinessZeroTimestamp = -1L;
+        } else {
+            if (hunger <= 0f) {
+                if (hungerZeroTimestamp < 0) hungerZeroTimestamp = now;
+            } else {
+                hungerZeroTimestamp = -1L;
+            }
+
+            if (happiness <= 0f) {
+                if (happinessZeroTimestamp < 0) happinessZeroTimestamp = now;
+            } else {
+                happinessZeroTimestamp = -1L;
+            }
         }
     }
     
@@ -1233,6 +1295,17 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             return;
         }
 
+        // Respect max poop cap
+        if (poops.size() >= maxPoopsCap) {
+            LOGGER.debug("Poop cap reached ({}), skipping pooping", maxPoopsCap);
+            return;
+        }
+
+        if (isDead) {
+            LOGGER.debug("Dead buddies don't poop");
+            return;
+        }
+
         LOGGER.debug("Buddy starting to poop: x={}, y={}", buddyPosX, buddyPosY);
 
         isPooping = true;
@@ -1246,6 +1319,11 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
      * Creates and drops a poop after the pooping animation ends
      */
     public void dropPoop() {
+        if (poops.size() >= maxPoopsCap) {
+            LOGGER.debug("Poop cap reached ({}), skipping new poop", maxPoopsCap);
+            return;
+        }
+
         int poopX;
 
         // Drop poop to the side based on which way the buddy is facing
@@ -1386,6 +1464,11 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
         if (!isDisabled) return false;
+
+        if (isDead) {
+            // Let the widget handle reset triggers; block other interactions
+            return isMouseOverBuddy(mouseX, mouseY) && button == 0;
+        }
         
         // First handle the leveling screen if it's visible (highest priority)
         if (statusScreen.isVisible()) {
@@ -1625,6 +1708,9 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         this.screenWidth = width;
         this.screenHeight = height;
         this.buddyPosY = height - SPRITE_HEIGHT - 10; // Keep at bottom
+        if (isDead) {
+            this.buddyPosX = Math.max(0, (width - SPRITE_WIDTH) / 2);
+        }
 
         // Update all poop positions when screen size changes
         for (Poop poop : new ArrayList<>(poops)) {
@@ -1786,12 +1872,74 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         this.needsPlay = funLevel < 30;
     }
 
+    public long getHungerZeroTimestamp() {
+        return hungerZeroTimestamp;
+    }
+
+    public void setHungerZeroTimestamp(long hungerZeroTimestamp) {
+        this.hungerZeroTimestamp = hungerZeroTimestamp;
+    }
+
+    public long getHappinessZeroTimestamp() {
+        return happinessZeroTimestamp;
+    }
+
+    public void setHappinessZeroTimestamp(long happinessZeroTimestamp) {
+        this.happinessZeroTimestamp = happinessZeroTimestamp;
+    }
+
+    public void setDeadState(boolean dead) {
+        this.isDead = dead;
+        if (dead) {
+            // Ensure corpse is inert and uses gravestone art
+            isSleeping = false;
+            isBeingPet = false;
+            isPlaying = false;
+            isHoldingBall = false;
+            isChasingBall = false;
+            isHopping = false;
+            isLookingAround = false;
+            isStretching = false;
+            isExcited = false;
+            isGrumpy = false;
+            isStanding = false;
+            isWaving = false;
+            isYawning = false;
+            isPeeking = false;
+            isActivelyPeeking = false;
+            playBall = null;
+            droppedFood = null;
+            currentFrame = 0;
+            animationRenderTicks = 0;
+            currentState = AnimationStates.STANDING;
+            // Center gravestone along bottom of the screen
+            buddyPosX = Math.max(0, (screenWidth - SPRITE_WIDTH) / 2);
+            buddyPosY = screenHeight - SPRITE_HEIGHT - 10;
+        }
+    }
+
     public List<Poop> getPoops() {
         return new ArrayList<>(poops);
     }
 
     public void setPoops(List<Poop> poops) {
         this.poops = new ArrayList<>(poops);
+    }
+
+    public boolean isDead() {
+        return isDead;
+    }
+
+    public boolean canDie() {
+        return canDie;
+    }
+
+    public void setCanDie(boolean canDie) {
+        this.canDie = canDie;
+        if (!canDie) {
+            hungerZeroTimestamp = -1L;
+            happinessZeroTimestamp = -1L;
+        }
     }
 
     /**
@@ -1901,6 +2049,49 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             LOGGER.debug("Cleaned up {} invalid poops", poops.size() - validPoops.size());
             poops = validPoops;
         }
+
+        cleanupExcessPoopsIfNeeded();
+    }
+
+    /**
+     * Ensures the number of poops does not exceed the configured cap.
+     */
+    private void cleanupExcessPoopsIfNeeded() {
+        if (poops == null) return;
+        if (poops.size() <= maxPoopsCap) return;
+
+        int removed = 0;
+        while (poops.size() > maxPoopsCap) {
+            poops.remove(0);
+            removed++;
+        }
+        if (removed > 0) {
+            LOGGER.debug("Removed {} poops to enforce cap {}", removed, maxPoopsCap);
+        }
+    }
+
+    private void checkForDeath() {
+        if (!canDie || isDead) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        boolean hungerElapsed = hungerZeroTimestamp > 0 && (now - hungerZeroTimestamp) >= TEN_HOURS_MS;
+        boolean happinessElapsed = happinessZeroTimestamp > 0 && (now - happinessZeroTimestamp) >= TEN_HOURS_MS;
+
+        if (hungerElapsed || happinessElapsed) {
+            die();
+        }
+    }
+
+    private void die() {
+        setDeadState(true);
+        LOGGER.info("Buddy has died after being ignored for 10 hours (hunger zero: {}, happiness zero: {})",
+                hungerZeroTimestamp > 0, happinessZeroTimestamp > 0);
+        if (statusScreen != null && statusScreen.isVisible()) {
+            statusScreen.hide();
+        }
+        saveState();
     }
 
     /**

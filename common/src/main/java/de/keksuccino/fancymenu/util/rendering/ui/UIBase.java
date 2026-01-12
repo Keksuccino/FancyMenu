@@ -71,7 +71,7 @@ public class UIBase extends RenderingUtils {
             slider.setSliderBackgroundColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_normal_type_1);
             slider.setSliderBorderColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_border_color);
             slider.setSliderHandleColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_normal_type_2);
-            slider.setSliderHandleColorHover(UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_hover_type_2);
+            slider.setSliderHandleColorHover(UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_hover_type_1);
             slider.setLabelColorNormal(UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_normal);
             slider.setLabelColorInactive(UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_inactive);
         } else {

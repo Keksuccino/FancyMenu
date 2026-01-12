@@ -2511,5 +2511,14 @@
   "fancymenu.decoration_overlays.buddy.pet_happiness_gain": "Pet Happiness Gain",
   "fancymenu.decoration_overlays.buddy.pet_happiness_gain.desc": "Happiness gained when you pet Buddy.",
   "fancymenu.decoration_overlays.buddy.wakeup_happiness_penalty": "Wake-Up Happiness Penalty",
-  "fancymenu.decoration_overlays.buddy.wakeup_happiness_penalty.desc": "Happiness lost when Buddy is woken up."
+  "fancymenu.decoration_overlays.buddy.wakeup_happiness_penalty.desc": "Happiness lost when Buddy is woken up.",
+  "fancymenu.decoration_overlays.buddy.reset_save": "Reset Buddy Save",
+  "fancymenu.decoration_overlays.buddy.reset_save.desc": "Erase the buddy data and start from scratch.",
+  "fancymenu.decoration_overlays.buddy.reset_save.confirm": "Reset your buddy to its default state? This deletes the save file and restarts it fresh.",
+  "fancymenu.decoration_overlays.buddy.max_poops_cap": "Max Poops",
+  "fancymenu.decoration_overlays.buddy.max_poops_cap.desc": "Upper limit of poops that can exist at once. Buddy will stop pooping after reaching this cap.",
+  "fancymenu.decoration_overlays.buddy.custom_gravestone_texture": "Custom Gravestone Texture",
+  "fancymenu.decoration_overlays.buddy.custom_gravestone_texture.desc": "Override the texture shown when Buddy has died.",
+  "fancymenu.decoration_overlays.buddy.can_die": "Buddy Can Die",
+  "fancymenu.decoration_overlays.buddy.can_die.desc": "If enabled, Buddy will permanently die after 10 real hours at 0 food or happiness until you reset the save."
 }
