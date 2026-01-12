@@ -265,8 +265,8 @@ public class UITooltip implements Renderable {
         return this;
     }
 
-    /** Returns a COPY of the tooltip list. **/
-    public List<Component> getTooltip() {
+    /** Returns a COPY of the Component list. **/
+    public List<Component> getTooltipContent() {
         return new ArrayList<>(this.textLines);
     }
 
