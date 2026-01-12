@@ -144,12 +144,16 @@ public class PlayBall {
         inactivityTimer++;
         userInactivityTimer++;
 
-        // Skip physics updates if being dragged
-        if (isDragged || stickToCursor) {
-            if (stickToCursor) {
-                x = MouseInput.getMouseX();
-                y = MouseInput.getMouseY();
-            }
+        // Keep the ball attached to the cursor while dragging or in stick-to-cursor mode,
+        // even if a drag event gets swallowed by another UI component.
+        if (isDragged) {
+            updateDragPosition(MouseInput.getMouseX(), MouseInput.getMouseY());
+            return;
+        }
+
+        if (stickToCursor) {
+            x = MouseInput.getMouseX();
+            y = MouseInput.getMouseY();
             return;
         }
 
