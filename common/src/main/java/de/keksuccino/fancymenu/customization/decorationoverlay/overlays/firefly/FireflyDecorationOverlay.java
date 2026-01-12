@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.FireflyOverlay;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -36,25 +36,25 @@ public class FireflyDecorationOverlay extends AbstractDecorationOverlay<FireflyD
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
         this.fireflyFollowMouse.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.follow_mouse.desc")));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.follow_mouse.desc")));
 
         this.fireflyLanding.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.landing.desc")));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.landing.desc")));
 
         this.fireflyColorHex.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.color.desc")));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.color.desc")));
 
         this.fireflyGroupAmount.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.group_amount.desc")));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.group_amount.desc")));
 
         this.fireflyGroupDensity.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.intensity.desc")));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.intensity.desc")));
 
         this.fireflyGroupSize.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.group_size.desc")));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.group_size.desc")));
 
         this.fireflyScale.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.scale.desc")));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireflies.scale.desc")));
 
     }
 

@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScr
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -864,9 +864,8 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             return this;
         }
 
-        public TextInputCell setTooltip(@NotNull Supplier<Tooltip> tooltip) {
-            this.editBox.setTooltip(tooltip);
-            this.editBox.setForceDefaultTooltipStyle(true);
+        public TextInputCell setTooltip(@NotNull Supplier<UITooltip> tooltip) {
+            this.editBox.setUITooltip(tooltip);
             return this;
         }
 

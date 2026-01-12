@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
@@ -153,7 +153,7 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
 
         menu.addSeparatorEntry("separator_before_reset_buddy_save").setStackable(true);
         menu.addClickableEntry("reset_buddy_save", Component.translatable("fancymenu.decoration_overlays.buddy.reset_save"), (contextMenu, entry) -> requestResetBuddySave())
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.buddy.reset_save.desc")))
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.buddy.reset_save.desc")))
                 .setStackable(true);
     }
 
@@ -323,21 +323,21 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
 
     private void addTextureEntry(@NotNull ContextMenu menu, @NotNull Property<ResourceSupplier<ITexture>> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(descriptionKey)));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(descriptionKey)));
     }
 
     private void addFloatEntry(@NotNull ContextMenu menu, @NotNull Property<Float> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(descriptionKey)));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(descriptionKey)));
     }
 
     private void addIntEntry(@NotNull ContextMenu menu, @NotNull Property<Integer> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(descriptionKey)));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(descriptionKey)));
     }
 
     private void addBooleanEntry(@NotNull ContextMenu menu, @NotNull Property<Boolean> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(descriptionKey)));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(descriptionKey)));
     }
 }

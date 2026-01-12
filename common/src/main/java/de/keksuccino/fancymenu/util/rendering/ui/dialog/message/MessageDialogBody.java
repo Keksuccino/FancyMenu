@@ -2,11 +2,10 @@ package de.keksuccino.fancymenu.util.rendering.ui.dialog.message;
 
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -196,9 +195,8 @@ public class MessageDialogBody extends PiPScreen {
             this.okayButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.ok"), (button) -> {
                 handleResult(true);
             });
-            this.okayButton.setForceDefaultTooltipStyle(true);
             this.okayButton.setIsActiveSupplier(consumes -> canAccept());
-            this.okayButton.setTooltipSupplier(consumes -> buildDelayTooltip());
+            this.okayButton.setUITooltipSupplier(consumes -> buildDelayTooltip());
             this.okayButton.setFocusable(false);
             this.okayButton.setNavigatable(false);
             this.addRenderableWidget(this.okayButton);
@@ -215,9 +213,8 @@ public class MessageDialogBody extends PiPScreen {
             this.acceptButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.accept"), (button) -> {
                 handleResult(true);
             });
-            this.acceptButton.setForceDefaultTooltipStyle(true);
             this.acceptButton.setIsActiveSupplier(consumes -> canAccept());
-            this.acceptButton.setTooltipSupplier(consumes -> buildDelayTooltip());
+            this.acceptButton.setUITooltipSupplier(consumes -> buildDelayTooltip());
             this.acceptButton.setFocusable(false);
             this.acceptButton.setNavigatable(false);
             this.addRenderableWidget(this.acceptButton);
@@ -254,13 +251,13 @@ public class MessageDialogBody extends PiPScreen {
     }
 
     @Nullable
-    private Tooltip buildDelayTooltip() {
+    private UITooltip buildDelayTooltip() {
         if (canAccept()) {
             return null;
         }
         int secs = (int)((this.delayEnd - System.currentTimeMillis()) / 1000);
         if (secs < 1) secs = 1;
-        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ui.confirmation_screen.delay.tooltip", "" + secs));
+        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ui.confirmation_screen.delay.tooltip", "" + secs));
     }
 
 }

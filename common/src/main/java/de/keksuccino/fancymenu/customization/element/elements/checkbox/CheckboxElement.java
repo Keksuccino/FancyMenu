@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.properties.Property;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -198,7 +198,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         String tooltip = this.tooltip.get();
         if ((tooltip != null) && (this.checkbox != null) && this.checkbox.isHovered() && this.checkbox.visible && this.shouldRender() && !isEditor()) {
             String converted = tooltip.replace("%n%", "\n");
-            TooltipHandler.INSTANCE.addWidgetTooltip(this.checkbox, Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(converted), "\n")), false, true);
+            TooltipHandler.INSTANCE.addWidgetTooltip(this.checkbox, UITooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(converted), "\n")), false, true);
         }
     }
 

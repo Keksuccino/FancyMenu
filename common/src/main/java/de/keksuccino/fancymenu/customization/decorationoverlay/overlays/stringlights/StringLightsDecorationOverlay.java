@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.StringLightsOverlay;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -55,13 +55,13 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
         this.stringLightsScale.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.scale.desc")));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.scale.desc")));
 
         this.stringLightsWindStrength.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.wind_strength.desc")));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.wind_strength.desc")));
 
         this.stringLightsFlickerSpeed.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.flicker_speed.desc")));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.flicker_speed.desc")));
 
         menu.addSeparatorEntry("separator_before_string_light_strings");
 
@@ -242,13 +242,13 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
         addTo.addSubMenuEntry(entryIdentifier + "_menu", label, subMenu).setStackable(true);
 
         showProperty.buildContextMenuEntryAndAddTo(subMenu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(showTooltipKey)));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(showTooltipKey)));
 
         christmasProperty.buildContextMenuEntryAndAddTo(subMenu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(christmasTooltipKey)));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(christmasTooltipKey)));
 
         colorProperty.buildContextMenuEntryAndAddTo(subMenu, this)
-                .setTooltipSupplier((menu1, entry) -> Tooltip.of(Component.translatable(colorTooltipKey)));
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(colorTooltipKey)));
     }
 
 }

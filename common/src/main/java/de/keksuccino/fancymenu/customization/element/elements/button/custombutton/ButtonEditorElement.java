@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import net.minecraft.client.gui.components.AbstractButton;
@@ -40,7 +40,7 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                         this.openContextMenuScreen(this.editor);
                     });
                     this.openContextMenuScreen(s);
-                }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.manage_actions.desc")))
+                }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
 
@@ -54,7 +54,7 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                     });
                     this.openContextMenuScreen(s);
                 })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
                 .setStackable(false);
 
         this.rightClickMenu.addSeparatorEntry("button_separator_1");
@@ -126,7 +126,7 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                         null, true, true, Component.translatable("fancymenu.elements.button.tooltip"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.tooltip.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.tooltip.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));
 
         if (!(this instanceof VanillaWidgetEditorElement)) {
@@ -137,7 +137,7 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                             consumes -> consumes.element.navigatable,
                             (buttonEditorElement, aBoolean) -> buttonEditorElement.element.navigatable = aBoolean,
                             "fancymenu.elements.widgets.generic.navigatable")
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
 
         }
 
@@ -153,14 +153,14 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                 .addIsVisibleSupplier((menu, entry) -> this.showTemplateOptions);
 
         this.rightClickMenu.addSubMenuEntry("template_settings", Component.translatable("fancymenu.elements.button.template_settings"), templateSettingsMenu)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.template_settings.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.template_settings.desc")))
                 .addIsVisibleSupplier((menu, entry) -> this.showTemplateOptions);
 
         this.addToggleContextMenuEntryTo(templateSettingsMenu, "is_template", this.selfClass(),
                         consumes -> consumes.element.isTemplate,
                         (buttonEditorElement, aBoolean) -> buttonEditorElement.element.isTemplate = aBoolean,
                         "fancymenu.elements.button.is_template")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.template_settings.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.template_settings.desc")));
 
         this.addCycleContextMenuEntryTo(templateSettingsMenu, "share_with", Arrays.asList(ButtonElement.TemplateSharing.values()), this.selfClass(),
                 consumes -> consumes.element.templateShareWith,
@@ -324,7 +324,7 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                         (buttonEditorElement, iTextureResourceSupplier) -> {
                             buttonEditorElement.element.sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
                         }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")));
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_set_texture").setStackable(true);
 

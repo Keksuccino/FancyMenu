@@ -17,7 +17,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -251,14 +251,14 @@ public class KeyframeManagerScreen extends Screen {
                 Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.smoothing"),
                 button -> toggleSmoothingInput()));
         this.smoothingButton.setIsActiveSupplier(consumes -> !this.isPlaying && !this.isRecording && (this.selectedKeyframes.size() > 1) && !this.isShowingTimestampInput);
-        this.smoothingButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.smoothing.desc")));
+        this.smoothingButton.setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.smoothing.desc")));
         this.addBottomWidget(1, 0, this.smoothingButton);
 
         // Offset Mode button
         CycleButton<?> offsetModeButton = new CycleButton<>(0, 0, buttonBaseWidth, 0,
                 CommonCycles.cycleEnabledDisabled("fancymenu.elements.animation_controller.keyframe_manager.offset_mode", this.isOffsetMode),
                 (value, button) -> this.setOffsetMode(value.getAsBoolean()));
-        offsetModeButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.offset_mode.desc")));
+        offsetModeButton.setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.offset_mode.desc")));
         this.addBottomWidget(1, 0, offsetModeButton);
 
         // BOTTOM BUTTON ROW 2 ------------------------------------>
@@ -301,14 +301,14 @@ public class KeyframeManagerScreen extends Screen {
                 Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit"),
                 button -> toggleTimestampInput()));
         timestampButton.setIsActiveSupplier(consumes -> !this.isPlaying && !this.isRecording && (this.selectedKeyframes.size() == 1) && !this.isShowingSmoothingInput);
-        timestampButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.desc")));
+        timestampButton.setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.desc")));
         this.addBottomWidget(2, 0, timestampButton);
 
         // Preview moving toggle
         CycleButton<?> previewMovingButton = new CycleButton<>(0, 0, buttonBaseWidth + 65, 0,
                 CommonCycles.cycleEnabledDisabled("fancymenu.elements.animation_controller.keyframe_manager.move_preview_with_arrow_keys", FancyMenu.getOptions().arrowKeysMovePreview.getValue()),
                 (value, button) -> FancyMenu.getOptions().arrowKeysMovePreview.setValue(value.getAsBoolean()));
-        previewMovingButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.move_preview_with_arrow_keys.desc")));
+        previewMovingButton.setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.move_preview_with_arrow_keys.desc")));
         this.addBottomWidget(2, 0, previewMovingButton);
 
         // ---------------------------------------------------------

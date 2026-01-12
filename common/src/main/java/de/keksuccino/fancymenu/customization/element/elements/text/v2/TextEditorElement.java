@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +34,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                             textEditorElement.element.setSource(sourceMode, null);
                         },
                         (menu, entry, switcherValue) -> switcherValue.getCycleComponent())
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.source_mode.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.source_mode.desc")));
 
         this.addTextResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_text_resource",
                         TextEditorElement.class,
@@ -105,7 +105,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (element, colorHex) -> (element.element).markdownRenderer.setTextBaseColor(DrawableColor.of(colorHex)), null, false, false, Component.translatable("fancymenu.elements.text.base_color"),
                         true, DrawableColor.WHITE.getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.base_color.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.base_color.desc")));
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_border",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -114,7 +114,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         Component.translatable("fancymenu.elements.text.text_border"),
                         true, 2, null, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.text_border.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.text_border.desc")));
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_line_spacing",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -142,7 +142,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         consumes -> consumes.element.markdownRenderer.isParseMarkdown(),
                         (textEditorElement, aBoolean) -> textEditorElement.element.markdownRenderer.setParseMarkdown(aBoolean),
                         "fancymenu.elements.text.markdown.toggle")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.toggle.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.toggle.desc")));
 
         markdownMenu.addSeparatorEntry("separator_after_parse_markdown");
 
@@ -248,7 +248,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
         // Table customization submenu
         ContextMenu tableMenu = new ContextMenu();
         markdownMenu.addSubMenuEntry("tables", Component.translatable("fancymenu.elements.text.markdown.tables"), tableMenu)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.desc")))
                 .setStackable(true);
 
         this.addToggleContextMenuEntryTo(tableMenu, "table_show_header", TextEditorElement.class,
@@ -292,7 +292,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.tables.alternate_row_color"),
                         true, DrawableColor.of(60, 60, 60).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.alternate_row_color.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.alternate_row_color.desc")));
 
         tableMenu.addSeparatorEntry("separator_after_table_colors");
 
@@ -307,14 +307,14 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (textEditorElement, aFloat) -> textEditorElement.element.markdownRenderer.setTableCellPadding(Math.max(0.0F, aFloat)),
                         Component.translatable("fancymenu.elements.text.markdown.tables.cell_padding"), true, 8.0F, null, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.cell_padding.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.cell_padding.desc")));
 
         this.addFloatInputContextMenuEntryTo(tableMenu, "table_margin", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.getTableMargin(),
                         (textEditorElement, aFloat) -> textEditorElement.element.markdownRenderer.setTableMargin(Math.max(0.0F, aFloat)),
                         Component.translatable("fancymenu.elements.text.markdown.tables.margin"), true, 4.0F, null, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.margin.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.margin.desc")));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_markdown");
 
@@ -368,7 +368,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
         ContextMenu grabberColorMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("grabber_color", Component.translatable("fancymenu.elements.text.scroll_grabber_color"), grabberColorMenu)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.scroll_grabber_color.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.scroll_grabber_color.desc")));
 
         this.element.scrollGrabberColorHexNormal.buildContextMenuEntryAndAddTo(grabberColorMenu, this);
 
@@ -380,7 +380,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         consumes -> consumes.element.interactable,
                         (textEditorElement, aBoolean) -> textEditorElement.element.interactable = aBoolean,
                         "fancymenu.elements.text.v2.interactable")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.interactable.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.interactable.desc")));
 
     }
 

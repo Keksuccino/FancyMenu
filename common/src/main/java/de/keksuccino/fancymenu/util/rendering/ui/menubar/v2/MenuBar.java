@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.PressState;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -611,7 +611,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         protected MenuBarEntryBooleanSupplier activeSupplier;
         protected MenuBarEntryBooleanSupplier visibleSupplier;
         @Nullable
-        protected ConsumingSupplier<MenuBarEntry, Tooltip> tooltipSupplier;
+        protected ConsumingSupplier<MenuBarEntry, UITooltip> tooltipSupplier;
 
         public MenuBarEntry(@NotNull String identifier, @NotNull MenuBar parent) {
             this.identifier = identifier;
@@ -622,11 +622,9 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.renderEntry(graphics, mouseX, mouseY, partial);
             if (this.hovered && (this.tooltipSupplier != null)) {
-                Tooltip tooltip = this.tooltipSupplier.get(this);
+                UITooltip tooltip = this.tooltipSupplier.get(this);
                 if (tooltip != null) {
-                    tooltip.setDefaultStyle();
-                    tooltip.setScale(getBaseScale());
-                    TooltipHandler.INSTANCE.addTooltip(tooltip, () -> true, false, true);
+                    TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
                 }
             }
         }
@@ -669,7 +667,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             return this;
         }
 
-        public MenuBarEntry setTooltipSupplier(@Nullable ConsumingSupplier<MenuBarEntry, Tooltip> tooltipSupplier) {
+        public MenuBarEntry setTooltipSupplier(@Nullable ConsumingSupplier<MenuBarEntry, UITooltip> tooltipSupplier) {
             this.tooltipSupplier = tooltipSupplier;
             return this;
         }

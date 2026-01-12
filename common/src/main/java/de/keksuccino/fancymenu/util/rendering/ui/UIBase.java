@@ -157,7 +157,6 @@ public class UIBase extends RenderingUtils {
             button.setLabelBaseColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
         }
         button.setLabelShadowEnabled(FancyMenu.getOptions().enableUiTextShadow.getValue());
-        button.setForceDefaultTooltipStyle(true);
         return button;
     }
 

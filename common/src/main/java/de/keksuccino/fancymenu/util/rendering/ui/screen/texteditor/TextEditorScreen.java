@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -107,7 +107,7 @@ public class TextEditorScreen extends Screen {
     protected boolean allowPlaceholders = true;
     protected boolean boldTitle = true;
     protected ConsumingSupplier<TextEditorScreen, Boolean> textValidator = null;
-    protected Tooltip textValidatorFeedbackTooltip = null;
+    protected UITooltip textValidatorFeedbackUITooltip = null;
     protected boolean selectedHoveredOnRightClickMenuOpen = false;
     protected final TextEditorHistory history = new TextEditorHistory(this);
     protected ExtendedEditBox searchBar;
@@ -227,7 +227,7 @@ public class TextEditorScreen extends Screen {
                     extendedPlaceholderMenu = true;
                 }
                 this.rebuildWidgets();
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.placeholders.desc")));
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.placeholders.desc")));
             this.addWidget(this.placeholderButton);
             UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
         } else {
@@ -369,7 +369,7 @@ public class TextEditorScreen extends Screen {
         this.cancelButton.render(graphics, mouseX, mouseY, partial);
 
         this.doneButton.active = this.isTextValid();
-        this.doneButton.setTooltip(this.textValidatorFeedbackTooltip);
+        this.doneButton.setUITooltip(this.textValidatorFeedbackUITooltip);
         this.doneButton.render(graphics, mouseX, mouseY, partial);
 
         this.renderMultilineNotSupportedNotification(graphics, mouseX, mouseY, partial);
@@ -400,7 +400,7 @@ public class TextEditorScreen extends Screen {
             int indicatorWidth = this.font.width(indicator);
             graphics.drawString(this.font, indicator, indicatorX, indicatorY, -1, false);
             if (UIBase.isXYInArea(mouseX, mouseY, indicatorX, indicatorY, indicatorWidth, this.font.lineHeight)) {
-                TooltipHandler.INSTANCE.addTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.text_editor.single_line_warning")).setDefaultStyle().setTextBaseColor(UIBase.getUIColorTheme().error_text_color), () -> true, true, true);
+                TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.editor.text_editor.single_line_warning").withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), () -> true);
             }
         }
     }
@@ -1229,8 +1229,8 @@ public class TextEditorScreen extends Screen {
         return this;
     }
 
-    public TextEditorScreen setTextValidatorUserFeedback(@Nullable Tooltip feedback) {
-        this.textValidatorFeedbackTooltip = feedback;
+    public TextEditorScreen setTextValidatorUserFeedback(@Nullable UITooltip feedback) {
+        this.textValidatorFeedbackUITooltip = feedback;
         return this;
     }
 
@@ -1871,7 +1871,7 @@ public class TextEditorScreen extends Screen {
         }
 
         public void setDescription(String... desc) {
-            this.buttonBase.setTooltip(Tooltip.of(desc).setDefaultStyle());
+            this.buttonBase.setUITooltip(UITooltip.of(desc));
         }
 
     }

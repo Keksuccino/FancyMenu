@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
@@ -17,7 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -168,10 +169,10 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                 this.resourceSourceType = value;
                 this.rebuild();
             });
-            this.resourceSourceTypeCycleButton.setTooltipSupplier(consumes -> {
-                if (this.resourceSourceType == ResourceSourceType.LOCATION) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc"));
-                if (this.resourceSourceType == ResourceSourceType.LOCAL) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.local.desc"));
-                return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.web.desc"));
+            this.resourceSourceTypeCycleButton.setUITooltipSupplier(consumes -> {
+                if (this.resourceSourceType == ResourceSourceType.LOCATION) return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc"));
+                if (this.resourceSourceType == ResourceSourceType.LOCAL) return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.local.desc"));
+                return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.web.desc"));
             });
             this.resourceSourceTypeCycleButton.setSelectedValue(this.resourceSourceType);
             this.addWidgetCell(this.resourceSourceTypeCycleButton, true);
@@ -255,16 +256,16 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         MutableComponent typesComponent = Component.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
         if (this.allowedFileTypes != null) {
-            String types = "";
+            StringBuilder types = new StringBuilder();
             for (FileType<?> type : this.allowedFileTypes.getFileTypes()) {
                 for (String s : type.getExtensions()) {
-                    if (!types.isEmpty()) types += ";";
-                    types += "*." + s.toUpperCase();
+                    if (!types.isEmpty()) types.append(";");
+                    types.append("*.").append(s.toUpperCase());
                 }
             }
             Component fileTypeDisplayName = this.allowedFileTypes.getDisplayName();
             if (fileTypeDisplayName == null) fileTypeDisplayName = Component.empty();
-            typesComponent = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types)).append(Component.literal(")"));
+            typesComponent = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types.toString())).append(Component.literal(")"));
         }
         this.addLabelCell(typesComponent.setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
 
@@ -277,15 +278,15 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     @NotNull
     protected LocalizedGenericValueCycle<ResourceSourceType> buildSourceTypeCycle(@NotNull List<ResourceSourceType> allowedSourceTypes, @NotNull ResourceSourceType selected) {
         LocalizedGenericValueCycle<ResourceSourceType> cycle = LocalizedGenericValueCycle.of(ResourceSourceType.LOCATION.getLocalizationKeyBase(), allowedSourceTypes.toArray(new ResourceSourceType[0]));
-        cycle.setCycleComponentStyleSupplier(consumes -> consumes.getCycleComponentStyle());
-        cycle.setValueComponentStyleSupplier(consumes -> consumes.getValueComponentStyle());
+        cycle.setCycleComponentStyleSupplier(LocalizedCycleEnum::getCycleComponentStyle);
+        cycle.setValueComponentStyleSupplier(ResourceSourceType::getValueComponentStyle);
         cycle.setValueNameSupplier(consumes -> I18n.get(consumes.getValueLocalizationKey()));
         cycle.setCurrentValue(selected);
         return cycle;
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateLegacyLocalWarning();
         this.updateNoExtensionWarning();
@@ -301,21 +302,17 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     protected void updateInputFieldTooltips() {
         //Update Location Source Input Box Tooltip
         if (!this.showWarningNoExtension && (this.resourceSourceType == ResourceSourceType.LOCATION) && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
-            TooltipHandler.INSTANCE.addTooltip(
-                    Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc.input")).setDefaultStyle(),
-                    () -> true, false, true);
+            TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.resources.source_type.location.desc.input")), () -> true);
         }
         //Update Legacy Local Warning Tooltip
         if (this.showWarningLegacyLocal && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
-            TooltipHandler.INSTANCE.addTooltip(
-                    Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.chooser_screen.legacy_local.warning")).setDefaultStyle().setTextBaseColor(UIBase.getUIColorTheme().warning_text_color),
-                    () -> true, false, true);
+            TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(
+                    Component.translatable("fancymenu.resources.chooser_screen.legacy_local.warning").withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), () -> true);
         }
         //Update No Extension Warning Tooltip
         if (!this.showWarningLegacyLocal && this.showWarningNoExtension && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
-            TooltipHandler.INSTANCE.addTooltip(
-                    Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.chooser_screen.no_extension.warning")).setDefaultStyle().setTextBaseColor(UIBase.getUIColorTheme().warning_text_color),
-                    () -> true, false, true);
+            TooltipHandler.INSTANCE.addRenderTickTooltip(
+                    UITooltip.of(Component.translatable("fancymenu.resources.chooser_screen.no_extension.warning").withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), () -> true);
         }
     }
 

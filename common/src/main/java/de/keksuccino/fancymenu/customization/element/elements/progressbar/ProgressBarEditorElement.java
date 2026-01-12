@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +21,7 @@ public class ProgressBarEditorElement extends AbstractEditorElement<ProgressBarE
         super.init();
 
         this.element.barColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.bar_color.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.bar_color.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("color_palette"));
 
         this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_bar_texture",
@@ -32,7 +32,7 @@ public class ProgressBarEditorElement extends AbstractEditorElement<ProgressBarE
                         Component.translatable("fancymenu.elements.progress_bar.bar_texture"),
                         true, null, true, true, true)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.bar_texture.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.bar_texture.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "bar_nine_slice",
                         ProgressBarEditorElement.class,
@@ -71,7 +71,7 @@ public class ProgressBarEditorElement extends AbstractEditorElement<ProgressBarE
         this.rightClickMenu.addSeparatorEntry("separator_after_bar_entries");
 
         this.element.backgroundColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.background_color.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.background_color.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("color_palette"));
 
         this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_background_texture",
@@ -82,7 +82,7 @@ public class ProgressBarEditorElement extends AbstractEditorElement<ProgressBarE
                         Component.translatable("fancymenu.elements.progress_bar.background_texture"),
                         true, null, true, true, true)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.background_texture.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.background_texture.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "background_nine_slice",
                         ProgressBarEditorElement.class,
@@ -134,7 +134,7 @@ public class ProgressBarEditorElement extends AbstractEditorElement<ProgressBarE
                         (progressBarEditorElement, s) -> progressBarEditorElement.element.progressSource = s,
                         null, false, true, Component.translatable("fancymenu.elements.progress_bar.source"), false, "50", null, null)
                 .setStackable(false)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.source.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.source.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "smooth_filling_animation", ProgressBarEditorElement.class,
                 consumes -> consumes.element.smoothFillingAnimation,
@@ -156,7 +156,7 @@ public class ProgressBarEditorElement extends AbstractEditorElement<ProgressBarE
                         (element, aBoolean) -> element.element.useProgressForElementAnchor = aBoolean,
                         "fancymenu.elements.progress_bar.progress_for_element_anchor")
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.progress_for_element_anchor.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.progress_bar.progress_for_element_anchor.desc")));
 
     }
 

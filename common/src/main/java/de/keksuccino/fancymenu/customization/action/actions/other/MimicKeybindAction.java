@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -272,7 +272,7 @@ public class MimicKeybindAction extends Action {
             @SuppressWarnings("unchecked")
             CycleButton<CommonCycles.CycleEnabledDisabled> keepPressedButton =
                     (CycleButton<CommonCycles.CycleEnabledDisabled>) keepPressedCell.widget;
-            keepPressedButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimic_keybind.edit.keep_pressed.desc")));
+            keepPressedButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimic_keybind.edit.keep_pressed.desc")));
 
             this.addCellGroupEndSpacerCell();
 

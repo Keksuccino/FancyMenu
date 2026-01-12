@@ -8,10 +8,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -55,18 +53,13 @@ public class ChoosePanoramaScreen extends Screen {
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(this.selectedPanoramaName);
-        }) {
-            @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                if (ChoosePanoramaScreen.this.selectedPanoramaName == null) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.panorama.choose.no_panorama_selected")).setDefaultStyle(), false, true);
-                    this.active = false;
-                } else {
-                    this.active = true;
-                }
-                super.renderWidget(graphics, mouseX, mouseY, partial);
-            }
-        };
+        }).setIsActiveSupplier(consumes -> ChoosePanoramaScreen.this.selectedPanoramaName == null)
+                .setUITooltipSupplier(consumes -> {
+                    if (ChoosePanoramaScreen.this.selectedPanoramaName == null) {
+                        return UITooltip.of(Component.translatable("fancymenu.panorama.choose.no_panorama_selected"));
+                    }
+                    return null;
+                });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
@@ -97,7 +90,7 @@ public class ChoosePanoramaScreen extends Screen {
 
         graphics.drawString(this.font, Component.translatable("fancymenu.panorama.choose.available_panoramas"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.panoramaListScrollArea.setWidth((this.width / 2) - 40, true);
+        this.panoramaListScrollArea.setWidth(((float) this.width / 2) - 40, true);
         this.panoramaListScrollArea.setHeight(this.height - 85, true);
         this.panoramaListScrollArea.setX(20, true);
         this.panoramaListScrollArea.setY(50 + 15, true);

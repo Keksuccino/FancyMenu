@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
@@ -25,7 +25,7 @@ public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScre
     protected Consumer<String> callback;
     protected ExtendedEditBox input;
     protected ConsumingSupplier<TextInputScreen, Boolean> textValidator = null;
-    protected Tooltip textValidatorFeedbackTooltip = null;
+    protected UITooltip textValidatorFeedbackUITooltip = null;
     @Nullable
     protected CharacterFilter filter;
 
@@ -61,15 +61,13 @@ public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScre
         }));
         UIBase.applyDefaultWidgetSkinTo(cancelButton);
 
-        if (this.textValidatorFeedbackTooltip != null) this.textValidatorFeedbackTooltip.setDefaultStyle();
-
         ExtendedButton doneButton = this.addRenderableWidget(new ExtendedButton((this.width / 2) + 5, this.height - 40, 100, 20, Component.translatable("fancymenu.common_components.done"), button -> {
             if (this.isTextValid()) {
                 this.callback.accept(this.input.getValue());
                 this.closeWindow();
             }
         })).setIsActiveSupplier(consumes -> this.isTextValid())
-                .setTooltip(this.textValidatorFeedbackTooltip);
+                .setUITooltip(this.textValidatorFeedbackUITooltip);
         UIBase.applyDefaultWidgetSkinTo(doneButton);
 
     }
@@ -123,8 +121,8 @@ public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScre
         return this;
     }
 
-    public TextInputScreen setTextValidatorUserFeedback(@Nullable Tooltip feedback) {
-        this.textValidatorFeedbackTooltip = feedback;
+    public TextInputScreen setTextValidatorUserFeedback(@Nullable UITooltip feedback) {
+        this.textValidatorFeedbackUITooltip = feedback;
         return this;
     }
 

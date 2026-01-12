@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                         element -> element.element.copyClientPlayer,
                         (element, s) -> element.element.setCopyClientPlayer(s),
                         "fancymenu.elements.player_entity.copy_client_player")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.desc")));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_copy_client_player");
 
@@ -51,9 +51,9 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                 .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).copyClientPlayer)
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.set_player_name.desc"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.set_player_name.desc"));
                     }
-                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                    return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
                 });
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "show_name",
@@ -61,7 +61,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                         element -> element.element.showPlayerName,
                         (element, s) -> element.element.setShowPlayerName(s),
                         "fancymenu.elements.player_entity.show_name")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.show_name.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.show_name.desc")));
 
         this.rightClickMenu.addSeparatorEntry("player_entity_separator_1");
 
@@ -80,9 +80,9 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                 .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).copyClientPlayer)
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.desc"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.desc"));
                     }
-                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                    return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
                 });
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "slim_skin",
@@ -93,13 +93,13 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                 .setIsActiveSupplier((menu, entry) -> (!((PlayerEntityElement) this.element).copyClientPlayer && !((PlayerEntityElement) this.element).autoSkin))
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.slim.desc"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.slim.desc"));
                     } else {
                         if (((PlayerEntityElement) this.element).autoSkin) {
-                            return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.blocked_until_disabled"));
+                            return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.blocked_until_disabled"));
                         }
                         if (((PlayerEntityElement) this.element).copyClientPlayer) {
-                            return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                            return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
                         }
                     }
                     return null;
@@ -122,10 +122,10 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                 .setIsActiveSupplier((menu, entry) -> (!this.element.copyClientPlayer && !this.element.autoSkin))
                 .setTooltipSupplier((menu, entry) -> {
                     if (this.element.autoSkin) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.blocked_until_disabled"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.blocked_until_disabled"));
                     }
                     if (this.element.copyClientPlayer) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
                     }
                     return null;
                 });
@@ -147,9 +147,9 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                 .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).copyClientPlayer)
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.cape.auto.desc"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.cape.auto.desc"));
                     }
-                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                    return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
                 });
 
         this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_cape_texture", PlayerEntityEditorElement.class,
@@ -169,10 +169,10 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                 .setIsActiveSupplier((menu, entry) -> (!this.element.copyClientPlayer && !this.element.autoCape))
                 .setTooltipSupplier((menu, entry) -> {
                     if (this.element.autoCape) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.cape.auto.blocked_until_disabled"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.cape.auto.blocked_until_disabled"));
                     }
                     if (this.element.copyClientPlayer) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
                     }
                     return null;
                 });
@@ -209,14 +209,14 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                         element -> element.element.crouching,
                         (element, s) -> element.element.setCrouching(s),
                         "fancymenu.elements.player_entity.crouching")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.crouching.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.crouching.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "is_baby",
                         PlayerEntityEditorElement.class,
                         element -> element.element.isBaby,
                         (element, s) -> element.element.setIsBaby(s),
                         "fancymenu.elements.player_entity.baby")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.baby.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.baby.desc")));
 
         this.rightClickMenu.addSeparatorEntry("player_entity_separator_5");
 
@@ -225,14 +225,14 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                         element -> element.element.hasParrotOnShoulder,
                         (element, s) -> element.element.setHasParrotOnShoulder(s, element.element.parrotOnLeftShoulder),
                         "fancymenu.elements.player_entity.parrot")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.parrot.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.parrot.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "parrot_on_left",
                         PlayerEntityEditorElement.class,
                         element -> element.element.parrotOnLeftShoulder,
                         (element, s) -> element.element.setHasParrotOnShoulder(element.element.hasParrotOnShoulder, s),
                         "fancymenu.elements.player_entity.parrot_left")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.parrot_left.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.parrot_left.desc")));
 
     }
 

@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -26,7 +26,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     @Nullable
     protected Supplier<DrawableColor> backgroundColorHover = () -> getUIColorTheme().list_entry_color_selected_hovered;
     @Nullable
-    protected Tooltip tooltip;
+    protected UITooltip tooltip;
     protected boolean selectable = true;
     protected boolean selected = false;
     protected boolean clickable = true;
@@ -182,8 +182,8 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
         this.backgroundColorHover = backgroundColorHover;
     }
 
-    public void setTooltip(@Nullable Tooltip tooltip) {
-        this.tooltip = tooltip;
+    public void setTooltip(@Nullable UITooltip UITooltip) {
+        this.tooltip = UITooltip;
     }
 
 }

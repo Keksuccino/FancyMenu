@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -67,18 +67,18 @@ public class BuildCustomGuiScreen extends CellScreen {
 
         this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.world_background_overlay", this.guiTemp.worldBackgroundOverlay), (value, button) -> {
             this.guiTemp.worldBackgroundOverlay = value.getAsBoolean();
-        }).setTooltip(Tooltip.of(Component.translatable("fancymenu.custom_guis.build.world_background_overlay.desc")))
+        }).setUITooltip(UITooltip.of(Component.translatable("fancymenu.custom_guis.build.world_background_overlay.desc")))
                 .setIsActiveSupplier(consumes -> this.guiTemp.worldBackground), true);
 
         this.addSpacerCell(10);
 
         this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.popup_mode", this.guiTemp.popupMode), (value, button) -> {
             this.guiTemp.popupMode = value.getAsBoolean();
-        }).setTooltip(Tooltip.of(Component.translatable("fancymenu.custom_guis.build.popup_mode.desc"))), true);
+        }).setUITooltip(UITooltip.of(Component.translatable("fancymenu.custom_guis.build.popup_mode.desc"))), true);
 
         this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.popup_mode_background_overlay", this.guiTemp.popupModeBackgroundOverlay), (value, button) -> {
             this.guiTemp.popupModeBackgroundOverlay = value.getAsBoolean();
-        }).setTooltip(Tooltip.of(Component.translatable("fancymenu.custom_guis.build.popup_mode_background_overlay.desc")))
+        }).setUITooltip(UITooltip.of(Component.translatable("fancymenu.custom_guis.build.popup_mode_background_overlay.desc")))
                 .setIsActiveSupplier(consumes -> this.guiTemp.popupMode), true);
 
         this.addSpacerCell(10);

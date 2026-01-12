@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -57,7 +57,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     protected SubMenuOpeningSide subMenuOpeningSide = SubMenuOpeningSide.RIGHT;
     protected boolean shadow = false;
     protected boolean keepDistanceToEdges = true;
-    protected boolean forceDefaultTooltipStyle = true;
     protected boolean forceRawXY = false;
     protected boolean forceSide = false;
     protected boolean forceSideSubMenus = true;
@@ -783,15 +782,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this;
     }
 
-    public boolean isForceDefaultTooltipStyle() {
-        return this.forceDefaultTooltipStyle;
-    }
-
-    public ContextMenu setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
-        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
-        return this;
-    }
-
     public boolean isKeepDistanceToEdges() {
         return this.keepDistanceToEdges;
     }
@@ -1222,7 +1212,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             stacked.scale = menusToStack[0].scale;
             stacked.subMenuOpeningSide = menusToStack[0].subMenuOpeningSide;
             stacked.shadow = menusToStack[0].shadow;
-            stacked.forceDefaultTooltipStyle = menusToStack[0].forceDefaultTooltipStyle;
             stacked.forceUIScale = menusToStack[0].forceUIScale;
             stacked.keepDistanceToEdges = menusToStack[0].keepDistanceToEdges;
             stacked.forceRawXY = menusToStack[0].forceRawXY;
@@ -1319,7 +1308,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected List<BooleanSupplier> activeStateSuppliers = new ArrayList<>();
         protected List<BooleanSupplier> visibleStateSuppliers = new ArrayList<>();
         @Nullable
-        protected Supplier<Tooltip> tooltipSupplier;
+        protected Supplier<UITooltip> tooltipSupplier;
         protected Font font = Minecraft.getInstance().font;
         protected boolean addSpaceForIcon = false;
         protected boolean changeBackgroundColorOnHover = true;
@@ -1449,13 +1438,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (T) this;
         }
 
-        public T setTooltipSupplier(@Nullable Supplier<Tooltip> tooltipSupplier) {
+        public T setTooltipSupplier(@Nullable Supplier<UITooltip> tooltipSupplier) {
             this.tooltipSupplier = tooltipSupplier;
             return (T) this;
         }
 
         @Nullable
-        public Tooltip getTooltip() {
+        public UITooltip getTooltip() {
             return (this.tooltipSupplier != null) ? this.tooltipSupplier.get(this.parent, this) : null;
         }
 
@@ -1633,7 +1622,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected void renderTooltipIconAndRegisterTooltip(GuiGraphics graphics, int mouseX, int mouseY, int offsetX) {
 
-            Tooltip tooltip = this.getTooltip();
+            UITooltip tooltip = this.getTooltip();
 
             if (tooltip != null) {
 
@@ -1653,10 +1642,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 RenderingUtils.resetShaderColor(graphics);
 
                 if (this.tooltipActive) {
-                    if (this.parent.isForceDefaultTooltipStyle()) {
-                        tooltip.setDefaultStyle();
-                    }
-                    tooltip.setScale(this.parent.scale);
                     TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
                 }
 
@@ -1870,7 +1855,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             super(identifier, parent, label, ((menu, entry) -> {}));
             this.subContextMenu = subContextMenu;
             this.subContextMenu.parentEntry = this;
-            this.subContextMenu.forceDefaultTooltipStyle = parent.forceDefaultTooltipStyle;
             this.clickAction = (menu, entry) -> this.openSubMenu();
         }
 
@@ -1986,7 +1970,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             this.subContextMenu.parentEntry = null;
             this.subContextMenu = subContextMenu;
             this.subContextMenu.parentEntry = this;
-            this.subContextMenu.forceDefaultTooltipStyle = this.parent.forceDefaultTooltipStyle;
         }
 
         @NotNull

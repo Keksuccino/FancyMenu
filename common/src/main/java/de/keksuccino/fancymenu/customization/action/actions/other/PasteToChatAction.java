@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
@@ -123,7 +123,7 @@ public class PasteToChatAction extends Action {
 
             this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.actions.paste_to_chat.append", this.append), (value, button) -> {
                 this.append = value.getAsBoolean();
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.paste_to_chat.append.desc"))), true);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.paste_to_chat.append.desc"))), true);
 
             this.addSpacerCell(20);
 

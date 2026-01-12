@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -58,8 +58,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     @Nullable
     protected ConsumingSupplier<ExtendedEditBox, Boolean> isVisibleSupplier = null;
     @Nullable
-    protected Supplier<Tooltip> customTooltip;
-    protected boolean forceDefaultTooltipStyle = true;
+    protected Supplier<UITooltip> uiTooltip;
     @Nullable
     protected ConsumingSupplier<ExtendedEditBox, Component> hintFancymenu = null;
 
@@ -189,20 +188,17 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
         super.render($$0, $$1, $$2, $$3);
 
-        if ((this.customTooltip != null) && this.visible && this.isHovered()) {
-            Tooltip tt = this.customTooltip.get();
+        if ((this.uiTooltip != null) && this.visible && this.isHovered()) {
+            UITooltip tt = this.uiTooltip.get();
             if (tt != null) {
-                if (this.forceDefaultTooltipStyle) {
-                    tt.setDefaultStyle();
-                }
-                TooltipHandler.INSTANCE.addTooltip(tt, () -> true, true, true);
+                TooltipHandler.INSTANCE.addRenderTickTooltip(tt, () -> true);
             }
         }
 
     }
 
     @Override
-    public void playDownSound(SoundManager handler) {
+    public void playDownSound(@NotNull SoundManager handler) {
         if (this instanceof CustomizableWidget w) {
             IAudio sound = w.getCustomClickSoundFancyMenu();
             if (sound != null) {
@@ -535,17 +531,9 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @NotNull
-    public ExtendedEditBox setTooltip(@Nullable Supplier<Tooltip> tooltip) {
-        this.customTooltip = tooltip;
+    public ExtendedEditBox setUITooltip(@Nullable Supplier<UITooltip> tooltip) {
+        this.uiTooltip = tooltip;
         return this;
-    }
-
-    public boolean isForceDefaultTooltipStyle() {
-        return forceDefaultTooltipStyle;
-    }
-
-    public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
-        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
     }
 
     @NotNull

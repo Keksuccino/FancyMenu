@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -13,7 +12,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
@@ -186,7 +185,7 @@ public class SetTextInputFieldValueAction extends Action {
             TextInputCell identifierCell = this.addTextInputCell(null, true, true)
                     .setEditListener(s -> this.config.elementIdentifier = s)
                     .setText(this.config.elementIdentifier)
-                    .setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.set_text_input_field_value.edit.element_identifier.desc")));
+                    .setTooltip(() -> UITooltip.of(Component.translatable("fancymenu.actions.set_text_input_field_value.edit.element_identifier.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -194,7 +193,7 @@ public class SetTextInputFieldValueAction extends Action {
             TextInputCell valueCell = this.addTextInputCell(null, true, true)
                     .setEditListener(s -> this.config.newValue = s)
                     .setText(this.config.newValue)
-                    .setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.set_text_input_field_value.edit.value.desc")));
+                    .setTooltip(() -> UITooltip.of(Component.translatable("fancymenu.actions.set_text_input_field_value.edit.value.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -202,7 +201,7 @@ public class SetTextInputFieldValueAction extends Action {
                     CommonCycles.cycleEnabledDisabled("fancymenu.actions.set_text_input_field_value.edit.force_set_when_inactive", this.config.forceSetWhenInactive),
                     (val, button) -> this.config.forceSetWhenInactive = val.getAsBoolean()
             );
-            forceSetButton.setTooltip(Tooltip.of(Component.translatable("fancymenu.actions.set_text_input_field_value.edit.force_set_when_inactive.desc")));
+            forceSetButton.setUITooltip(UITooltip.of(Component.translatable("fancymenu.actions.set_text_input_field_value.edit.force_set_when_inactive.desc")));
             this.addWidgetCell(forceSetButton, true);
 
             this.addStartEndSpacerCell();

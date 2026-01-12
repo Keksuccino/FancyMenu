@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsSc
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +62,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                             }
                             return false;
                         }, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.list.set_list_values.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.list.set_list_values.desc")))
                 .addIsVisibleSupplier((menu, entry) -> (this.element).type == SliderElement.SliderType.LIST);
 
         this.addDoubleInputContextMenuEntryTo(this.rightClickMenu, "set_min_range_value",
@@ -74,7 +74,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         },
                         Component.translatable("fancymenu.elements.slider.v2.type.range.set_min"),
                         false, 0, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_min.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_min.desc")))
                 .addIsVisibleSupplier((menu, entry) -> ((this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || ((this.element).type == SliderElement.SliderType.INTEGER_RANGE));
 
         this.addDoubleInputContextMenuEntryTo(this.rightClickMenu, "set_max_range_value",
@@ -86,7 +86,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         },
                         Component.translatable("fancymenu.elements.slider.v2.type.range.set_max"),
                         false, 0, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_max.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_max.desc")))
                 .addIsVisibleSupplier((menu, entry) -> ((this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || ((this.element).type == SliderElement.SliderType.INTEGER_RANGE));
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "rounding_decimal_place",
@@ -98,7 +98,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         },
                         Component.translatable("fancymenu.elements.slider.v2.type.range.decimal.round"),
                         true, 2, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.decimal.round.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.decimal.round.desc")))
                 .addIsVisibleSupplier((menu, entry) -> (this.element).type == SliderElement.SliderType.DECIMAL_RANGE);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_pre_selected_value",
@@ -107,7 +107,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         (sliderEditorElement, s) -> (sliderEditorElement.element).preSelectedValue = s,
                         null, false, true, Component.translatable("fancymenu.elements.slider.v2.pre_selected"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.pre_selected.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.pre_selected.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("edit"));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_set_pre_selected_value");
@@ -123,7 +123,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                             });
                             this.openContextMenuScreen(s);
                         })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.manage_actions.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
 
@@ -137,7 +137,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                     });
                     this.openContextMenuScreen(s);
                 })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
                 .setStackable(false);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_actions");
@@ -152,7 +152,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         (sliderEditorElement, s) -> (sliderEditorElement.element).label = s,
                         null, false, true, Component.translatable("fancymenu.elements.slider.v2.label"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.label.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.label.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_set_label").setStackable(true);
@@ -185,7 +185,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         },
                         null, true, true, Component.translatable("fancymenu.elements.button.tooltip"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.tooltip.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.tooltip.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));
 
         this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
@@ -194,7 +194,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         consumes -> consumes.element.navigatable,
                         (buttonEditorElement, aBoolean) -> buttonEditorElement.element.navigatable = aBoolean,
                         "fancymenu.elements.widgets.generic.navigatable")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
 
     }
 
@@ -250,7 +250,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         (buttonEditorElement, iTextureResourceSupplier) -> {
                             buttonEditorElement.element.sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
                         }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")));
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_set_texture").setStackable(true);
 

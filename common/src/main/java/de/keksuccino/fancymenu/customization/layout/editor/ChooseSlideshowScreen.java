@@ -10,10 +10,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -56,18 +54,13 @@ public class ChooseSlideshowScreen extends Screen {
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(this.selectedSlideshowName);
-        }) {
-            @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                if (ChooseSlideshowScreen.this.selectedSlideshowName == null) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.slideshow.choose.no_slideshow_selected")).setDefaultStyle(), false, true);
-                    this.active = false;
-                } else {
-                    this.active = true;
-                }
-                super.renderWidget(graphics, mouseX, mouseY, partial);
-            }
-        };
+        }).setIsActiveSupplier(consumes -> ChooseSlideshowScreen.this.selectedSlideshowName == null)
+                .setUITooltipSupplier(consumes -> {
+                    if (ChooseSlideshowScreen.this.selectedSlideshowName == null) {
+                        return UITooltip.of(Component.translatable("fancymenu.slideshow.choose.no_slideshow_selected"));
+                    }
+                    return null;
+                });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
@@ -98,7 +91,7 @@ public class ChooseSlideshowScreen extends Screen {
 
         graphics.drawString(this.font, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.slideshowListScrollArea.setWidth((this.width / 2) - 40, true);
+        this.slideshowListScrollArea.setWidth(((float) this.width / 2) - 40, true);
         this.slideshowListScrollArea.setHeight(this.height - 85, true);
         this.slideshowListScrollArea.setX(20, true);
         this.slideshowListScrollArea.setY(50 + 15, true);

@@ -30,32 +30,32 @@ public class TooltipHandler implements Renderable {
             t.remove();
         }
         if (renderTooltip != null) {
-            renderTooltip.tooltip.render(graphics, mouseX, mouseY, partial);
+            renderTooltip.UITooltip.render(graphics, mouseX, mouseY, partial);
         }
     }
 
     @Deprecated
-    public HandledTooltip addWidgetTooltip(@NotNull AbstractWidget widget, @NotNull Tooltip tooltip, boolean unusedBoolean1, boolean unusedBoolean2) {
-        return addRenderTickWidgetTooltip(widget, tooltip);
+    public HandledTooltip addWidgetTooltip(@NotNull AbstractWidget widget, @NotNull UITooltip UITooltip, boolean unusedBoolean1, boolean unusedBoolean2) {
+        return addRenderTickWidgetTooltip(widget, UITooltip);
     }
 
-    public HandledTooltip addRenderTickWidgetTooltip(@NotNull AbstractWidget widget, @NotNull Tooltip tooltip) {
+    public HandledTooltip addRenderTickWidgetTooltip(@NotNull AbstractWidget widget, @NotNull UITooltip UITooltip) {
         if (this.widgetTooltips.containsKey(widget)) {
             this.removeTooltip(this.widgetTooltips.get(widget));
         }
-        HandledTooltip t = this.addRenderTickTooltip(tooltip, () -> widget.isHovered() && widget.visible);
+        HandledTooltip t = this.addRenderTickTooltip(UITooltip, () -> widget.isHovered() && widget.visible);
         t.widget = widget;
         this.widgetTooltips.put(widget, t);
         return t;
     }
 
     @Deprecated
-    public HandledTooltip addTooltip(@NotNull Tooltip tooltip, @NotNull BooleanSupplier shouldRender, boolean unusedBoolean1, boolean unusedBoolean2) {
-        return addRenderTickTooltip(tooltip, shouldRender);
+    public HandledTooltip addTooltip(@NotNull UITooltip UITooltip, @NotNull BooleanSupplier shouldRender, boolean unusedBoolean1, boolean unusedBoolean2) {
+        return addRenderTickTooltip(UITooltip, shouldRender);
     }
 
-    public HandledTooltip addRenderTickTooltip(@NotNull Tooltip tooltip, @NotNull BooleanSupplier shouldRender) {
-        HandledTooltip t = new HandledTooltip(this, tooltip, shouldRender);
+    public HandledTooltip addRenderTickTooltip(@NotNull UITooltip UITooltip, @NotNull BooleanSupplier shouldRender) {
+        HandledTooltip t = new HandledTooltip(this, UITooltip, shouldRender);
         this.tooltips.add(t);
         return t;
     }
@@ -70,13 +70,13 @@ public class TooltipHandler implements Renderable {
     public static class HandledTooltip {
 
         private final TooltipHandler parent;
-        public final Tooltip tooltip;
+        public final UITooltip UITooltip;
         public final BooleanSupplier shouldRender;
         protected AbstractWidget widget = null;
 
-        private HandledTooltip(TooltipHandler parent, Tooltip tooltip, BooleanSupplier shouldRender) {
+        private HandledTooltip(TooltipHandler parent, UITooltip UITooltip, BooleanSupplier shouldRender) {
             this.parent = parent;
-            this.tooltip = tooltip;
+            this.UITooltip = UITooltip;
             this.shouldRender = shouldRender;
         }
 

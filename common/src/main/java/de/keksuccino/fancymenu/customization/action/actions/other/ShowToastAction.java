@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -163,7 +163,7 @@ public class ShowToastAction extends Action {
             TextInputCell widthCell = this.addTextInputCell(CharacterFilter.buildIntegerFilter(), false, false)
                     .setEditListener(s -> this.config.width = parseInteger(s, this.config.width, MIN_WIDTH, MAX_WIDTH))
                     .setText(String.valueOf(this.config.width));
-            widthCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.width.desc")));
+            widthCell.editBox.setUITooltip(() -> UITooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.width.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -171,7 +171,7 @@ public class ShowToastAction extends Action {
             TextInputCell durationCell = this.addTextInputCell(CharacterFilter.buildIntegerFilter(), false, false)
                     .setEditListener(s -> this.config.durationMs = parseLong(s, this.config.durationMs, MIN_DURATION_MS, MAX_DURATION_MS))
                     .setText(String.valueOf(this.config.durationMs));
-            durationCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.duration.desc")));
+            durationCell.editBox.setUITooltip(() -> UITooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.duration.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -179,7 +179,7 @@ public class ShowToastAction extends Action {
             TextInputCell titleCell = this.addTextInputCell(null, true, true)
                     .setEditListener(s -> this.config.title = s.replace("\\n", "\n"))
                     .setText(this.config.title.replace("\n", "\\n"));
-            titleCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.title_text.desc")));
+            titleCell.editBox.setUITooltip(() -> UITooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.title_text.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -188,7 +188,7 @@ public class ShowToastAction extends Action {
                     .setEditorMultiLineMode(true)
                     .setEditListener(s -> this.config.message = s.replace("\\n", "\n"))
                     .setText(this.config.message.replace("\n", "\\n"));
-            messageCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.message.desc")));
+            messageCell.editBox.setUITooltip(() -> UITooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.message.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -206,11 +206,11 @@ public class ShowToastAction extends Action {
                 });
                 chooser.setSource(this.config.iconSource.isBlank() ? null : this.config.iconSource, false);
                 Minecraft.getInstance().setScreen(chooser);
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_icon.desc"))), true);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_icon.desc"))), true);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.clear_icon"), button -> {
                 this.config.iconSource = "";
                 this.iconSourceCell.setText("");
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.clear_icon.desc"))), true);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.clear_icon.desc"))), true);
 
             this.addCellGroupEndSpacerCell();
 
@@ -228,11 +228,11 @@ public class ShowToastAction extends Action {
                 });
                 chooser.setSource(this.config.backgroundSource.isBlank() ? null : this.config.backgroundSource, false);
                 Minecraft.getInstance().setScreen(chooser);
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_background.desc"))), true);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_background.desc"))), true);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.clear_background"), button -> {
                 this.config.backgroundSource = "";
                 this.backgroundSourceCell.setText("");
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.clear_background.desc"))), true);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.clear_background.desc"))), true);
 
             this.addStartEndSpacerCell();
 

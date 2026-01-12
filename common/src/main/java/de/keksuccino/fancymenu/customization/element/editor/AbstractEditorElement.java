@@ -24,7 +24,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -196,7 +196,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             }
         };
         this.rightClickMenu.addSubMenuEntry("pick_element", Component.translatable("fancymenu.element.general.pick_element"), pickElementMenu)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("pick"));
 
         this.rightClickMenu.addSeparatorEntry("separator_1");
@@ -206,7 +206,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             this.rightClickMenu.addClickableEntry("copy_id", Component.translatable("fancymenu.elements.copyid"), (menu, entry) -> {
                         Minecraft.getInstance().keyboardHandler.setClipboard(this.element.getInstanceIdentifier());
                         menu.closeMenu();
-                    }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.copyid.desc")))
+                    }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.copyid.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("notes"));
 
         }
@@ -217,13 +217,13 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                         consumes -> consumes.element.customElementLayerName,
                         (abstractEditorElement, s) -> abstractEditorElement.element.customElementLayerName = s,
                         null, false, false, Component.translatable("fancymenu.elements.in_editor_display_name"), true, null, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.in_editor_display_name.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.in_editor_display_name.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
         if (this.settings.isInEditorColorSupported()) {
 
             this.element.inEditorColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.in_editor_color.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.in_editor_color.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("color_palette"));
 
         }
@@ -239,7 +239,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
             ContextMenu anchorPointMenu = new ContextMenu();
             this.rightClickMenu.addSubMenuEntry("anchor_point", Component.translatable("fancymenu.elements.anchor_point"), anchorPointMenu)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.anchor_points.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.anchor_points.desc")))
                     .setStackable(true)
                     .setIcon(ContextMenu.IconFactory.getIcon("anchor"));
 
@@ -274,7 +274,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                         menu.closeMenuChain();
                                     }
                                 })
-                        .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.anchor_points.element.desc")))
+                        .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.anchor_points.element.desc")))
                         .setStackable(true);
 
             }
@@ -306,7 +306,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             consumes -> consumes.element.stayOnScreen,
                             (element1, aBoolean) -> element1.element.stayOnScreen = aBoolean,
                             "fancymenu.elements.element.stay_on_screen")
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines(!this.element.stickyAnchor ? "fancymenu.elements.element.stay_on_screen.tooltip" : "fancymenu.elements.element.stay_on_screen.tooltip.disable_sticky")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines(!this.element.stickyAnchor ? "fancymenu.elements.element.stay_on_screen.tooltip" : "fancymenu.elements.element.stay_on_screen.tooltip.disable_sticky")))
                     .setIcon(ContextMenu.IconFactory.getIcon("screen"))
                     .setStackable(false)
                     .addIsActiveSupplier((menu, entry) -> !this.element.stickyAnchor);
@@ -317,7 +317,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
             ContextMenu advancedPositioningMenu = new ContextMenu();
             this.rightClickMenu.addSubMenuEntry("advanced_positioning", Component.translatable("fancymenu.elements.features.advanced_positioning"), advancedPositioningMenu)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.features.advanced_positioning.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.features.advanced_positioning.desc")))
                     .setStackable(true)
                     .setIcon(ContextMenu.IconFactory.getIcon("move"));
 
@@ -343,7 +343,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
             ContextMenu advancedSizingMenu = new ContextMenu();
             this.rightClickMenu.addSubMenuEntry("advanced_sizing", Component.translatable("fancymenu.elements.features.advanced_sizing"), advancedSizingMenu)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.features.advanced_sizing.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.features.advanced_sizing.desc")))
                     .setStackable(true)
                     .setIcon(ContextMenu.IconFactory.getIcon("resize"));
 
@@ -435,7 +435,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             }
                         }
                     })
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.elements.loading_requirements.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.elements.loading_requirements.desc")))
                     .setStackable(true)
                     .setIcon(ContextMenu.IconFactory.getIcon("check_list"));
 
@@ -445,7 +445,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                         consumes -> consumes.element.loadOncePerSession,
                         (element1, aBoolean) -> element1.element.loadOncePerSession = aBoolean,
                         "fancymenu.elements.element.load_once_per_session")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.element.load_once_per_session.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.element.load_once_per_session.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("once_per_session"))
                 .setStackable(true);
 
@@ -458,7 +458,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                 this.editor.moveLayerUp(this);
                                 this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(this, true));
                             })
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc")))
                     .addIsActiveSupplier((menu, entry) -> this.editor.canMoveLayerUp(this))
                     .setIcon(ContextMenu.IconFactory.getIcon("arrow_up"));
 
@@ -467,7 +467,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                 this.editor.moveLayerDown(this);
                                 this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(this, false));
                             })
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc")))
                     .addIsActiveSupplier((menu, entry) -> this.editor.canMoveLayerDown(this))
                     .setIcon(ContextMenu.IconFactory.getIcon("arrow_down"));
 
@@ -588,7 +588,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             float f = Float.parseFloat(consumes);
                             if (f <= 0.0F) return null;
                         }
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.error.negative_value"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.error.negative_value"));
                     }).setStackable(true);
 
             fadingMenu.addSeparatorEntry("separator_after_fade_in_speed").setStackable(true);
@@ -608,7 +608,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                 return Component.translatable("fancymenu.element.fading.fade_out", Component.translatable("fancymenu.element.fading.values.no_fading").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
                             }
                     ).setStackable(true)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.fade_out.desc")));
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.fade_out.desc")));
 
             this.addGenericFloatInputContextMenuEntryTo(fadingMenu, "fade_out_speed",
                     consumes -> consumes.settings.isFadeable(),
@@ -627,7 +627,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             float f = Float.parseFloat(consumes);
                             if (f <= 0.0F) return null;
                         }
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.error.negative_value"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.error.negative_value"));
                     }).setStackable(true);
 
         }
@@ -641,7 +641,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             null, false, true, Component.translatable("fancymenu.element.base_opacity"),
                             true, "1.0", null, null)
                     .setStackable(true)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.base_opacity.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.base_opacity.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("opacity"));
 
         }
@@ -657,7 +657,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             },
                             "fancymenu.element.auto_sizing")
                     .setStackable(true)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
         }
@@ -682,7 +682,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             },
                             "fancymenu.element.sticky_anchor")
                     .setStackable(false)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines(!this.element.stayOnScreen ? "fancymenu.element.sticky_anchor.desc" : "fancymenu.element.sticky_anchor.desc.disable_stay_on_screen")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines(!this.element.stayOnScreen ? "fancymenu.element.sticky_anchor.desc" : "fancymenu.element.sticky_anchor.desc.disable_stay_on_screen")))
                     .setIcon(ContextMenu.IconFactory.getIcon("anchor"))
                     .addIsActiveSupplier((menu, entry) -> !this.element.stayOnScreen);
 
@@ -698,14 +698,14 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             "fancymenu.element.rotation.advanced_mode")
                     .setStackable(false)
                     .setIcon(ContextMenu.IconFactory.getIcon("reload"))
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.advanced_mode.desc")));
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.advanced_mode.desc")));
 
             this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "rotation_degrees", this.selfClass(),
                             consumes -> consumes.element.rotationDegrees,
                             (abstractEditorElement, aFloat) -> abstractEditorElement.element.rotationDegrees = aFloat,
                             Component.translatable("fancymenu.element.rotation.degrees"), true, 0, null, null)
                     .setStackable(false)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.degrees.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.degrees.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("reload"))
                     .addIsVisibleSupplier((menu, entry) -> !this.element.advancedRotationMode);
 
@@ -715,7 +715,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             null, false, true, Component.translatable("fancymenu.element.rotation.degrees"),
                             true, null, null, null)
                     .setStackable(false)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.degrees.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.degrees.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("reload"))
                     .addIsVisibleSupplier((menu, entry) -> this.element.advancedRotationMode);
 
@@ -731,14 +731,14 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             "fancymenu.element.tilt.vertical.advanced_mode")
                     .setStackable(false)
                     .setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"))
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.advanced_mode.desc")));
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.advanced_mode.desc")));
 
             this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "vertical_tilt_degrees", this.selfClass(),
                             consumes -> consumes.element.verticalTiltDegrees,
                             (abstractEditorElement, aFloat) -> abstractEditorElement.element.verticalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, aFloat)),
                             Component.translatable("fancymenu.element.tilt.vertical.degrees"), true, 0, null, null)
                     .setStackable(false)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.degrees.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.degrees.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"))
                     .addIsVisibleSupplier((menu, entry) -> !this.element.advancedVerticalTiltMode);
 
@@ -748,7 +748,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             null, false, true, Component.translatable("fancymenu.element.tilt.vertical.degrees"),
                             true, null, null, null)
                     .setStackable(false)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.degrees.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.degrees.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"))
                     .addIsVisibleSupplier((menu, entry) -> this.element.advancedVerticalTiltMode);
 
@@ -758,14 +758,14 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             "fancymenu.element.tilt.horizontal.advanced_mode")
                     .setStackable(false)
                     .setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"))
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.advanced_mode.desc")));
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.advanced_mode.desc")));
 
             this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "horizontal_tilt_degrees", this.selfClass(),
                             consumes -> consumes.element.horizontalTiltDegrees,
                             (abstractEditorElement, aFloat) -> abstractEditorElement.element.horizontalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, aFloat)),
                             Component.translatable("fancymenu.element.tilt.horizontal.degrees"), true, 0, null, null)
                     .setStackable(false)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.degrees.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.degrees.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"))
                     .addIsVisibleSupplier((menu, entry) -> !this.element.advancedHorizontalTiltMode);
 
@@ -775,7 +775,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             null, false, true, Component.translatable("fancymenu.element.tilt.horizontal.degrees"),
                             true, null, null, null)
                     .setStackable(false)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.degrees.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.degrees.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"))
                     .addIsVisibleSupplier((menu, entry) -> this.element.advancedHorizontalTiltMode);
 
@@ -789,7 +789,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             consumes -> consumes.element.enableParallax,
                             (abstractEditorElement, aBoolean) -> abstractEditorElement.element.enableParallax = aBoolean,
                             "fancymenu.elements.parallax")
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.elements.parallax.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("parallax"));
 
             this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_x", this.selfClass(),
@@ -797,7 +797,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             (element1, s) -> element1.element.parallaxIntensityXString = s,
                             null, false, true, Component.translatable("fancymenu.elements.parallax.intensity_x"),
                             true, "0.5", null, null)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_x.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_x.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("parallax_intensity_x"));
 
             this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_y", this.selfClass(),
@@ -805,14 +805,14 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             (element1, s) -> element1.element.parallaxIntensityYString = s,
                             null, false, true, Component.translatable("fancymenu.elements.parallax.intensity_y"),
                             true, "0.5", null, null)
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_y.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_y.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("parallax_intensity_y"));
 
             this.addToggleContextMenuEntryTo(this.rightClickMenu, "invert_parallax", this.selfClass(),
                             consumes -> consumes.element.invertParallax,
                             (abstractEditorElement, aBoolean) -> abstractEditorElement.element.invertParallax = aBoolean,
                             "fancymenu.elements.parallax.invert")
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.elements.parallax.invert.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.elements.parallax.invert.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("invert_parallax"));
 
         }

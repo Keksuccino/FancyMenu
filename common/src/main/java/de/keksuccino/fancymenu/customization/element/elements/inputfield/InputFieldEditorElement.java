@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
@@ -27,7 +27,7 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                         (element, varName) -> element.element.linkedVariable = varName,
                         null, false, false, Component.translatable("fancymenu.elements.input_field.editor.set_variable"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_variable.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_variable.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
         this.rightClickMenu.addSeparatorEntry("input_field_separator_1");
@@ -49,7 +49,7 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                             }
                             return Component.translatable("fancymenu.elements.input_field.type.url");
                         })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_type.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_type.desc")));
 
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_length",
@@ -77,7 +77,7 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                         consumes -> consumes.element.navigatable,
                         (buttonEditorElement, aBoolean) -> buttonEditorElement.element.navigatable = aBoolean,
                         "fancymenu.elements.widgets.generic.navigatable")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
 
     }
 

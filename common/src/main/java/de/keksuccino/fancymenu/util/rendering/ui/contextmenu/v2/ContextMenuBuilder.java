@@ -16,7 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -880,7 +880,7 @@ public interface ContextMenuBuilder<O> {
      * @param multiLineInput true to use multiline text editor
      * @param allowPlaceholders true to allow placeholder tokens
      */
-    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ContextMenu subMenu = new ContextMenu();
         ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) ->
                 {
@@ -991,7 +991,7 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a text input entry to the given menu.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
@@ -1000,7 +1000,7 @@ public interface ContextMenuBuilder<O> {
      * @see #buildInputContextMenuEntry(ContextMenu, String, ConsumingSupplier, ConsumingSupplier, BiConsumer, CharacterFilter, boolean, boolean, Component, boolean, String, ConsumingSupplier, ConsumingSupplier)
      */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, String> getter = (ConsumingSupplier<O, String>) targetFieldGetter;
         BiConsumer<O, String> setter = (BiConsumer<O, String>) targetFieldSetter;
         return buildInputContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
@@ -1009,7 +1009,7 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a text input entry for a specific object type.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
@@ -1018,14 +1018,14 @@ public interface ContextMenuBuilder<O> {
      * <p>
      * This is a convenience alias for {@link #buildInputContextMenuEntry}.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericStringInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericStringInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
     }
 
     /**
      * Adds a generic string input entry to the given menu.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildGenericStringInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
@@ -1034,7 +1034,7 @@ public interface ContextMenuBuilder<O> {
      * @see #buildGenericStringInputContextMenuEntry(ContextMenu, String, ConsumingSupplier, ConsumingSupplier, BiConsumer, CharacterFilter, boolean, boolean, Component, boolean, String, ConsumingSupplier, ConsumingSupplier)
      */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildStringInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildStringInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, String> getter = (ConsumingSupplier<O, String>) targetFieldGetter;
         BiConsumer<O, String> setter = (BiConsumer<O, String>) targetFieldSetter;
         return buildGenericStringInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
@@ -1043,7 +1043,7 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a string input entry for a specific object type.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildStringInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
@@ -1053,7 +1053,7 @@ public interface ContextMenuBuilder<O> {
      * This is a convenience wrapper around {@link #buildInputContextMenuEntry} that
      * converts between text and integer values.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericIntegerInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Integer> targetFieldGetter, @NotNull BiConsumer<O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericIntegerInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Integer> targetFieldGetter, @NotNull BiConsumer<O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultIntegerValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isInteger(consumes);
         return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter,
                 consumes -> {
@@ -1071,7 +1071,7 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds an integer input entry to the given menu.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Integer> targetFieldGetter, @NotNull BiConsumer<O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Integer> targetFieldGetter, @NotNull BiConsumer<O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildGenericIntegerInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
@@ -1079,7 +1079,7 @@ public interface ContextMenuBuilder<O> {
      * Builds an integer input entry for a specific object type.
      */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildIntegerInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Integer> targetFieldGetter, @NotNull BiConsumer <O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildIntegerInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Integer> targetFieldGetter, @NotNull BiConsumer <O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, Integer> getter = (ConsumingSupplier<O, Integer>) targetFieldGetter;
         BiConsumer<O, Integer> setter = (BiConsumer<O, Integer>) targetFieldSetter;
         return buildGenericIntegerInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
@@ -1088,14 +1088,14 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds an integer input entry for a specific object type.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Integer> targetFieldGetter, @NotNull BiConsumer <O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Integer> targetFieldGetter, @NotNull BiConsumer <O, Integer> targetFieldSetter, @NotNull Component label, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildIntegerInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
     /**
      * Builds a long input entry.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericLongInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Long> targetFieldGetter, @NotNull BiConsumer<O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericLongInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Long> targetFieldGetter, @NotNull BiConsumer<O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultLongValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isLong(consumes);
         return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter,
                 consumes -> {
@@ -1113,7 +1113,7 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a long input entry to the given menu.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Long> targetFieldGetter, @NotNull BiConsumer<O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Long> targetFieldGetter, @NotNull BiConsumer<O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildGenericLongInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
@@ -1121,7 +1121,7 @@ public interface ContextMenuBuilder<O> {
      * Builds a long input entry for a specific object type.
      */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildLongInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Long> targetFieldGetter, @NotNull BiConsumer <O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildLongInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Long> targetFieldGetter, @NotNull BiConsumer <O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, Long> getter = (ConsumingSupplier<O, Long>) targetFieldGetter;
         BiConsumer<O, Long> setter = (BiConsumer<O, Long>) targetFieldSetter;
         return buildGenericLongInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
@@ -1130,14 +1130,14 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a long input entry for a specific object type.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Long> targetFieldGetter, @NotNull BiConsumer <O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Long> targetFieldGetter, @NotNull BiConsumer <O, Long> targetFieldSetter, @NotNull Component label, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildLongInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
     /**
      * Builds a double input entry.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericDoubleInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Double> targetFieldGetter, @NotNull BiConsumer<O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericDoubleInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Double> targetFieldGetter, @NotNull BiConsumer<O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultDoubleValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isDouble(consumes);
         return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter,
                 consumes -> {
@@ -1155,7 +1155,7 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a double input entry to the given menu.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Double> targetFieldGetter, @NotNull BiConsumer<O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Double> targetFieldGetter, @NotNull BiConsumer<O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildGenericDoubleInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
@@ -1163,7 +1163,7 @@ public interface ContextMenuBuilder<O> {
      * Builds a double input entry for a specific object type.
      */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildDoubleInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Double> targetFieldGetter, @NotNull BiConsumer <O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildDoubleInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Double> targetFieldGetter, @NotNull BiConsumer <O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, Double> getter = (ConsumingSupplier<O, Double>) targetFieldGetter;
         BiConsumer<O, Double> setter = (BiConsumer<O, Double>) targetFieldSetter;
         return buildGenericDoubleInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
@@ -1172,14 +1172,14 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a double input entry for a specific object type.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Double> targetFieldGetter, @NotNull BiConsumer <O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Double> targetFieldGetter, @NotNull BiConsumer <O, Double> targetFieldSetter, @NotNull Component label, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildDoubleInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
     /**
      * Builds a float input entry.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> buildGenericFloatInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Float> targetFieldGetter, @NotNull BiConsumer<O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildGenericFloatInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Float> targetFieldGetter, @NotNull BiConsumer<O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultFloatValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isFloat(consumes);
         return buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter,
                 consumes -> {
@@ -1197,7 +1197,7 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a float input entry to the given menu.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addGenericFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Float> targetFieldGetter, @NotNull BiConsumer<O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addGenericFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, Float> targetFieldGetter, @NotNull BiConsumer<O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildGenericFloatInputContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 
@@ -1205,7 +1205,7 @@ public interface ContextMenuBuilder<O> {
      * Builds a float input entry for a specific object type.
      */
     @SuppressWarnings("all")
-    default ContextMenu.ClickableContextMenuEntry<?> buildFloatInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Float> targetFieldGetter, @NotNull BiConsumer <O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> buildFloatInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Float> targetFieldGetter, @NotNull BiConsumer <O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         ConsumingSupplier<O, Float> getter = (ConsumingSupplier<O, Float>) targetFieldGetter;
         BiConsumer<O, Float> setter = (BiConsumer<O, Float>) targetFieldSetter;
         return buildGenericFloatInputContextMenuEntry(parentMenu, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), getter, setter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback);
@@ -1214,7 +1214,7 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a float input entry for a specific object type.
      */
-    default ContextMenu.ClickableContextMenuEntry<?> addFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Float> targetFieldGetter, @NotNull BiConsumer <O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+    default ContextMenu.ClickableContextMenuEntry<?> addFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, Float> targetFieldGetter, @NotNull BiConsumer <O, Float> targetFieldSetter, @NotNull Component label, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildFloatInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
     }
 

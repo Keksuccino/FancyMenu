@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -99,11 +99,11 @@ public class BuildRequirementScreen extends Screen {
             if (this.instance.requirement != null) {
                 this.instance.requirement.editValue(this, this.instance);
             }
-        }).setTooltipSupplier(consumes -> {
+        }).setUITooltipSupplier(consumes -> {
             if ((this.instance.requirement != null) && !this.instance.requirement.hasValue()) {
-                return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.edit_value.desc.no_value"));
+                return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.edit_value.desc.no_value"));
             }
-            return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.edit_value.desc.normal"));
+            return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.edit_value.desc.normal"));
         }).setIsActiveSupplier(consumes -> (this.instance.requirement != null) && this.instance.requirement.hasValue());
         this.addRenderableWidget(editValueButton);
         UIBase.applyDefaultWidgetSkinTo(editValueButton);
@@ -111,11 +111,11 @@ public class BuildRequirementScreen extends Screen {
         ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.instance);
-        }).setTooltipSupplier(consumes -> {
+        }).setUITooltipSupplier(consumes -> {
             if (this.instance.requirement == null) {
-                return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.finish.desc.no_requirement_selected"));
+                return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.finish.desc.no_requirement_selected"));
             } else if ((this.instance.value == null) && this.instance.requirement.hasValue()) {
-                return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.finish.desc.no_value_set"));
+                return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.finish.desc.no_value_set"));
             }
             return null;
         }).setIsActiveSupplier(consumes -> {
@@ -147,7 +147,7 @@ public class BuildRequirementScreen extends Screen {
             } else {
                 this.instance.mode = RequirementInstance.RequirementMode.IF;
             }
-        }).setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.requirement_mode.desc")))
+        }).setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.requirement_mode.desc")))
                 .setLabelSupplier(consumes -> {
                     if (this.instance.mode == RequirementInstance.RequirementMode.IF) {
                         return Component.translatable("fancymenu.requirements.screens.build_screen.requirement_mode.normal");

@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -90,7 +90,7 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         };
         this.addWidget(this.groupModeButton);
-        this.groupModeButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.mode.desc")));
+        this.groupModeButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.mode.desc")));
         UIBase.applyDefaultWidgetSkinTo(this.groupModeButton);
 
         this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.add_requirement"), (button) -> {
@@ -103,7 +103,7 @@ public class BuildRequirementGroupScreen extends Screen {
             Minecraft.getInstance().setScreen(s);
         });
         this.addWidget(this.addRequirementButton);
-        this.addRequirementButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.add_requirement.desc")));
+        this.addRequirementButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.add_requirement.desc")));
         UIBase.applyDefaultWidgetSkinTo(this.addRequirementButton);
 
         this.editRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.edit_requirement"), (button) -> {
@@ -120,17 +120,17 @@ public class BuildRequirementGroupScreen extends Screen {
             @Override
             public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.getSelectedInstance() == null) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.no_requirement_selected")));
+                    this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.no_requirement_selected")));
                     this.active = false;
                 } else {
-                    this.setTooltip((Tooltip) null);
+                    this.setUITooltip((UITooltip) null);
                     this.active = true;
                 }
                 super.render(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.editRequirementButton);
-        this.editRequirementButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.edit_requirement.desc")));
+        this.editRequirementButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.edit_requirement.desc")));
         UIBase.applyDefaultWidgetSkinTo(this.editRequirementButton);
 
         this.removeRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.remove_requirement"), (button) -> {
@@ -147,17 +147,17 @@ public class BuildRequirementGroupScreen extends Screen {
             @Override
             public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.getSelectedInstance() == null) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.no_requirement_selected")));
+                    this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.no_requirement_selected")));
                     this.active = false;
                 } else {
-                    this.setTooltip((Tooltip) null);
+                    this.setUITooltip((UITooltip) null);
                     this.active = true;
                 }
                 super.render(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.removeRequirementButton);
-        this.removeRequirementButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.remove_requirement.desc")));
+        this.removeRequirementButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.remove_requirement.desc")));
         UIBase.applyDefaultWidgetSkinTo(this.removeRequirementButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.done"), (button) -> {
@@ -168,16 +168,16 @@ public class BuildRequirementGroupScreen extends Screen {
             public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
                 BuildRequirementGroupScreen s = BuildRequirementGroupScreen.this;
                 if (s.group.getInstances().isEmpty()) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.finish.no_requirements_added")));
+                    this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.finish.no_requirements_added")));
                     this.active = false;
                 } else if ((s.parent.getGroup(s.group.identifier) != null) && (s.parent.getGroup(s.group.identifier) != s.group)) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.finish.identifier_already_used")));
+                    this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.finish.identifier_already_used")));
                     this.active = false;
                 } else if ((s.group.identifier == null) || (s.group.identifier.replace(" ", "").length() == 0)) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.finish.identifier_too_short")));
+                    this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.finish.identifier_too_short")));
                     this.active = false;
                 } else {
-                    this.setTooltip((Tooltip) null);
+                    this.setUITooltip((UITooltip) null);
                     this.active = true;
                 }
                 super.renderWidget(graphics, mouseX, mouseY, partialTicks);

@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
@@ -45,8 +45,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected boolean labelShadow = true;
     @NotNull
     protected ConsumingSupplier<ExtendedButton, Component> labelSupplier = consumes -> Component.empty();
-    protected ConsumingSupplier<ExtendedButton, Tooltip> tooltipSupplier = null;
-    protected boolean forceDefaultTooltipStyle = false;
+    protected ConsumingSupplier<ExtendedButton, UITooltip> uiTooltipSupplier = null;
     @Nullable
     protected DrawableColor backgroundColorNormal;
     @Nullable
@@ -90,12 +89,9 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.updateIsActive();
         this.updateLabel();
-        Tooltip tooltip = this.getTooltipFancyMenu();
+        UITooltip tooltip = this.getUITooltip();
         if ((tooltip != null) && this.isHovered() && this.visible) {
-            if (this.forceDefaultTooltipStyle) {
-                tooltip.setDefaultStyle();
-            }
-            TooltipHandler.INSTANCE.addTooltip(tooltip, () -> true, false, true);
+            TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
         }
         super.render(graphics, mouseX, mouseY, partial);
     }
@@ -203,38 +199,29 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     }
 
     @Nullable
-    public ConsumingSupplier<ExtendedButton, Tooltip> getTooltipSupplier() {
-        return this.tooltipSupplier;
+    public ConsumingSupplier<ExtendedButton, UITooltip> getUITooltipSupplier() {
+        return this.uiTooltipSupplier;
     }
 
-    public ExtendedButton setTooltipSupplier(@Nullable ConsumingSupplier<ExtendedButton, Tooltip> tooltipSupplier) {
-        this.tooltipSupplier = tooltipSupplier;
+    public ExtendedButton setUITooltipSupplier(@Nullable ConsumingSupplier<ExtendedButton, UITooltip> tooltipSupplier) {
+        this.uiTooltipSupplier = tooltipSupplier;
         return this;
     }
 
     @Nullable
-    public Tooltip getTooltipFancyMenu() {
-        if (this.tooltipSupplier != null) {
-            return this.tooltipSupplier.get(this);
+    public UITooltip getUITooltip() {
+        if (this.uiTooltipSupplier != null) {
+            return this.uiTooltipSupplier.get(this);
         }
         return null;
     }
 
-    public ExtendedButton setTooltip(@Nullable Tooltip tooltip) {
+    public ExtendedButton setUITooltip(@Nullable UITooltip tooltip) {
         if (tooltip == null) {
-            this.tooltipSupplier = null;
+            this.uiTooltipSupplier = null;
         } else {
-            this.tooltipSupplier = (button) -> tooltip;
+            this.uiTooltipSupplier = (button) -> tooltip;
         }
-        return this;
-    }
-
-    public boolean isForceDefaultTooltipStyle() {
-        return this.forceDefaultTooltipStyle;
-    }
-
-    public ExtendedButton setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
-        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
         return this;
     }
 

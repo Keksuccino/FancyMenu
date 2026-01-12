@@ -31,7 +31,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.SubMenuContextMenuEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -256,9 +256,9 @@ public class ActionScriptEditorScreen extends Screen {
                 }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetEntry() != null)
                 .setTooltipSupplier((menu, entry) -> {
                     if (this.getContextMenuTargetEntry() == null) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
                     }
-                    return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_up.desc"));
+                    return UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_up.desc"));
                 })
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.shift_arrow_up"))
                 .setIcon(ContextMenu.IconFactory.getIcon("arrow_up"));
@@ -272,9 +272,9 @@ public class ActionScriptEditorScreen extends Screen {
                 }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetEntry() != null)
                 .setTooltipSupplier((menu, entry) -> {
                     if (this.getContextMenuTargetEntry() == null) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.finish.no_action_selected"));
                     }
-                    return Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_down.desc"));
+                    return UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_down.desc"));
                 })
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.shift_arrow_down"))
                 .setIcon(ContextMenu.IconFactory.getIcon("arrow_down"));
@@ -322,7 +322,7 @@ public class ActionScriptEditorScreen extends Screen {
             ExecutableEntry target = this.getContextMenuTargetEntry();
             menu.closeMenu();
             this.onAddDelay(target);
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(Component.translatable("fancymenu.actions.blocks.add.delay.desc")))
+        }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.actions.blocks.add.delay.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("add"));
 
         this.rightClickContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
@@ -406,7 +406,7 @@ public class ActionScriptEditorScreen extends Screen {
                     this.onOpenActionChooser(selectionReference);
                 }).setIcon(ContextMenu.IconFactory.getIcon("pick"))
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.a"))
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_action_chooser.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_action_chooser.desc")));
 
         if (!favoriteActions.isEmpty() || !regularActions.isEmpty()) {
             subMenu.addSeparatorEntry("after_open_action_chooser");
@@ -439,7 +439,7 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     @Nullable
-    protected Tooltip createActionTooltip(@NotNull Action action, boolean isFavorite) {
+    protected UITooltip createActionTooltip(@NotNull Action action, boolean isFavorite) {
         List<Component> lines = new ArrayList<>();
         Component[] description = action.getActionDescription();
         if ((description != null) && (description.length > 0)) {
@@ -454,7 +454,7 @@ public class ActionScriptEditorScreen extends Screen {
             lines.add(Component.empty());
         }
         lines.add(hint);
-        return Tooltip.of(lines.toArray(new Component[0]));
+        return UITooltip.of(lines.toArray(new Component[0]));
     }
 
     protected void markContextMenuActionSelectionSuppressed() {

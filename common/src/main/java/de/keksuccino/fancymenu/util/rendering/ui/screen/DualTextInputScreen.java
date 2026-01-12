@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -30,7 +30,7 @@ public class DualTextInputScreen extends Screen {
     protected ExtendedButton cancelButton;
     protected ExtendedButton doneButton;
     protected ConsumingSupplier<DualTextInputScreen, Boolean> textValidator = null;
-    protected Tooltip textValidatorFeedbackTooltip = null;
+    protected UITooltip textValidatorFeedbackUITooltip = null;
     @NotNull
     protected MutableComponent firstInputLabel;
     @NotNull
@@ -141,9 +141,8 @@ public class DualTextInputScreen extends Screen {
         this.doneButton = new ExtendedButton((this.width / 2) + 5, centerY + 90, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             if (this.isTextValid()) this.onDone();
         }).setIsActiveSupplier(consumes -> this.isTextValid())
-                .setTooltipSupplier(consumes -> {
-                    if (this.textValidatorFeedbackTooltip != null) this.textValidatorFeedbackTooltip.setDefaultStyle();
-                    return this.textValidatorFeedbackTooltip;
+                .setUITooltipSupplier(consumes -> {
+                    return this.textValidatorFeedbackUITooltip;
                 });
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
         this.addRenderableWidget(this.doneButton);
@@ -233,8 +232,8 @@ public class DualTextInputScreen extends Screen {
         return this;
     }
 
-    public DualTextInputScreen setTextValidatorUserFeedback(@Nullable Tooltip feedback) {
-        this.textValidatorFeedbackTooltip = feedback;
+    public DualTextInputScreen setTextValidatorUserFeedback(@Nullable UITooltip feedback) {
+        this.textValidatorFeedbackUITooltip = feedback;
         return this;
     }
 

@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.dragger;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import org.jetbrains.annotations.NotNull;
 
 public class DraggerEditorElement extends AbstractEditorElement<DraggerEditorElement, DraggerElement> {
@@ -27,7 +27,7 @@ public class DraggerEditorElement extends AbstractEditorElement<DraggerEditorEle
                     }
                 },
                 "fancymenu.elements.dragger.save_offset")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.dragger.save_offset.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.dragger.save_offset.desc")));
 
     }
 

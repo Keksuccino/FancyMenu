@@ -10,8 +10,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-@SuppressWarnings("all")
 public abstract class AbstractBrowserScreen extends Screen implements InitialWidgetFocusScreen {
 
     protected static final int ICON_PIXEL_SIZE = 32;
@@ -963,7 +962,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
 
     }
 
-    public abstract class AbstractIconTextScrollAreaEntry extends ScrollAreaEntry {
+    public abstract static class AbstractIconTextScrollAreaEntry extends ScrollAreaEntry {
 
         protected static final int BORDER = 3;
 
@@ -1025,7 +1024,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
             graphics.drawString(this.font, this.entryNameComponent, (int)(this.x + BORDER + ICON_PIXEL_SIZE + 3), (int)(this.y + (this.height / 2) - (this.font.lineHeight / 2)), this.getTextColor(), false);
 
             if (this.isResourceUnfriendly() && this.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.height) && this.parent.isMouseOverInnerArea(mouseX, mouseY)) {
-                TooltipHandler.INSTANCE.addTooltip(Tooltip.of(Component.translatable("fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip")).setDefaultStyle(), () -> true, true, true);
+                TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip")), () -> true);
             }
 
         }

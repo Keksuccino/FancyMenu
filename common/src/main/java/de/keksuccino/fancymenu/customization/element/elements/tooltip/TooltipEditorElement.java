@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
@@ -49,7 +49,7 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                         e -> e.element.sourceMode,
                         (e, mode) -> e.element.setSource(mode, null),
                         (menu, entry, value) -> value.getCycleComponent())
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.source_mode.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.source_mode.desc")));
 
         // Text input for direct mode - using Text element localization
         contentMenu.addClickableEntry("set_text", Component.translatable("fancymenu.elements.text.v2.source.input"),
@@ -180,13 +180,13 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                         (e, texture) -> ((TooltipElement)e.element).backgroundTexture = texture,
                         Component.translatable("fancymenu.elements.tooltip.background_texture"),
                         true, null, true, true, true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.background_texture.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.background_texture.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         // Nine-slice submenu
         ContextMenu nineSliceMenu = new ContextMenu();
         backgroundMenu.addSubMenuEntry("nine_slice", Component.translatable("fancymenu.elements.tooltip.nine_slice"), nineSliceMenu)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.nine_slice.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.nine_slice.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
         // Nine-slice border top
@@ -227,7 +227,7 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                         e -> ((TooltipElement)e.element).mouseFollowing,
                         (e, value) -> ((TooltipElement)e.element).mouseFollowing = value,
                         "fancymenu.elements.tooltip.mouse_following")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.mouse_following.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.mouse_following.desc")));
 
     }
 

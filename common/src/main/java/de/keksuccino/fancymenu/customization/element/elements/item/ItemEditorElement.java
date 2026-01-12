@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -32,7 +32,7 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
                         itemKeyTargetFieldSetter,
                         null, false, true, Component.translatable("fancymenu.elements.item.key"),
                         true, "" + BuiltInRegistries.ITEM.getKey(Items.BARRIER), null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.key.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.key.desc")))
                 .setStackable(false);
 
         if (itemKeyEntry instanceof ContextMenu.SubMenuContextMenuEntry subMenuEntry) {
@@ -79,7 +79,7 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
                         itemEditorElement.element.lore = null;
                     }
                 }, null, true, true, Component.translatable("fancymenu.elements.item.lore"), true, null, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.lore.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.lore.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "enchanted", ItemEditorElement.class,
                 consumes -> consumes.element.enchanted,
@@ -98,7 +98,7 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
                         (itemEditorElement, s) -> itemEditorElement.element.nbtData = s,
                         null, false, true, Component.translatable("fancymenu.elements.item.nbt"),
                         true, null, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.nbt.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.nbt.desc")));
 
     }
 

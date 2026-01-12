@@ -16,7 +16,7 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -109,7 +109,7 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         this.rawVideoUrlSource.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((m, entry) -> {
                     if (this.rawVideoUrlSource.get() == null) {
-                        return Tooltip.of(Component.translatable("fancymenu.backgrounds.video_mcef.configure.no_video"));
+                        return UITooltip.of(Component.translatable("fancymenu.backgrounds.video_mcef.configure.no_video"));
                     }
                     return null;
                 });
@@ -134,11 +134,11 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
 
         this.parallaxEnabled.buildContextMenuEntryAndAddTo(menu, this);
         this.parallaxIntensityXString.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> Tooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")));
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")));
         this.parallaxIntensityYString.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> Tooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")));
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")));
         this.invertParallax.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> Tooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")));
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")));
 
     }
 

@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
@@ -279,7 +279,7 @@ public class PlayAudioAction extends Action {
             this.audioSourceCell = this.addTextInputCell(null, false, true)
                     .setEditListener(s -> this.config.audioSource = s.trim())
                     .setText(this.config.audioSource);
-            this.audioSourceCell.editBox.setTooltip(() -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.audio_source.desc")));
+            this.audioSourceCell.editBox.setUITooltip(() -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.audio_source.desc")));
 
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.play_audio.edit.choose_audio"), button -> {
                 ResourceChooserScreen<IAudio, ?> chooser = ResourceChooserScreen.audio(null, source -> {
@@ -295,12 +295,12 @@ public class PlayAudioAction extends Action {
                 }
                 chooser.setSource(chooserPreset, false);
                 Minecraft.getInstance().setScreen(chooser);
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.choose_audio.desc"))), true);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.choose_audio.desc"))), true);
 
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.play_audio.edit.clear_audio"), button -> {
                 this.config.audioSource = "";
                 this.audioSourceCell.setText("");
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.clear_audio.desc"))), true);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.clear_audio.desc"))), true);
 
             this.addCellGroupEndSpacerCell();
 
@@ -310,7 +310,7 @@ public class PlayAudioAction extends Action {
                             .setValueNameSupplier(soundSource -> Component.translatable("soundCategory." + soundSource.getName()).getString())
                             .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())),
                     (value, button) -> this.config.setSoundSource(value));
-            soundChannelButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.sound_channel.desc")));
+            soundChannelButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.sound_channel.desc")));
             this.addWidgetCell(soundChannelButton, true);
 
             this.addCellGroupEndSpacerCell();

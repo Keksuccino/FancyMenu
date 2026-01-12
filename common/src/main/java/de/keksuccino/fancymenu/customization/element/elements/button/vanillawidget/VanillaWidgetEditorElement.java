@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.custombutto
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import net.minecraft.client.Minecraft;
@@ -50,7 +50,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement<VanillaWidge
                         Minecraft.getInstance().keyboardHandler.setClipboard(this.element.widgetMeta.getLocator());
                         menu.closeMenu();
                     })
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.vanilla_button.copy_locator.desc")))
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.vanilla_button.copy_locator.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("notes"));
 
         }
@@ -82,7 +82,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement<VanillaWidge
                                     (buttonEditorElement, iTextureResourceSupplier) -> {
                                         buttonEditorElement.element.sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
                                     }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
-                            .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")));
+                            .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")));
 
                 }
 

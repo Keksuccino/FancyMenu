@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
@@ -35,7 +35,7 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
                 this.openContextMenuScreen(this.editor);
             });
             this.openContextMenuScreen(s);
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.manage_actions.desc")))
+        }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
 
@@ -47,7 +47,7 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
                         Component.translatable("fancymenu.elements.ticker.tick_delay"), true, 0L, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("timer"))
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.tick_delay.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.tick_delay.desc")));
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "set_async",
                         TickerEditorElement.class,
@@ -55,7 +55,7 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
                         (element, aBoolean) -> element.element.isAsync = aBoolean,
                         "fancymenu.elements.ticker.async")
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.async.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.async.desc")));
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_tick_mode",
                         ListUtils.of(TickerElement.TickMode.NORMAL, TickerElement.TickMode.ONCE_PER_SESSION, TickerElement.TickMode.ON_MENU_LOAD),
@@ -72,7 +72,7 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
                             return Component.translatable("fancymenu.elements.ticker.tick_mode.on_menu_load");
                         })
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.tick_mode.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.tick_mode.desc")));
 
     }
 
