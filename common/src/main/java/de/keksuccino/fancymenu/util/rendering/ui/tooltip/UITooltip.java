@@ -122,12 +122,18 @@ public class UITooltip implements Renderable {
         boolean blurEnabled = UIBase.shouldBlur();
         int renderWidth = this.getWidth();
         int renderHeight = this.getHeight();
+        float borderThickness = 1.0F;
+
+        float backgroundX = x + borderThickness;
+        float backgroundY = y + borderThickness;
+        float backgroundWidth = renderWidth - (borderThickness * 2.0F);
+        float backgroundHeight = renderHeight - (borderThickness * 2.0F);
 
         if (blurEnabled) {
-            float blurX = x * renderScale;
-            float blurY = y * renderScale;
-            float blurWidth = renderWidth * renderScale;
-            float blurHeight = renderHeight * renderScale;
+            float blurX = backgroundX * renderScale;
+            float blurY = backgroundY * renderScale;
+            float blurWidth = backgroundWidth * renderScale;
+            float blurHeight = backgroundHeight * renderScale;
 
             GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(
                     graphics,
@@ -143,7 +149,7 @@ public class UITooltip implements Renderable {
                     UIBase.getUIColorTheme().ui_blur_tooltip_background_tint,
                     partial);
         } else {
-            UIBase.renderRoundedRect(graphics, x, y, renderWidth, renderHeight, normalRoundingRadius, normalRoundingRadius, normalRoundingRadius, normalRoundingRadius, UIBase.getUIColorTheme().area_background_color.getColorInt());
+            UIBase.renderRoundedRect(graphics, backgroundX, backgroundY, backgroundWidth, backgroundHeight, normalRoundingRadius, normalRoundingRadius, normalRoundingRadius, normalRoundingRadius, UIBase.getUIColorTheme().area_background_color.getColorInt());
         }
 
         int borderColorInt = blurEnabled ? UIBase.getUIColorTheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt();
@@ -153,7 +159,7 @@ public class UITooltip implements Renderable {
                 y,
                 x + renderWidth,
                 y + renderHeight,
-                1.0F,
+                borderThickness,
                 normalRoundingRadius,
                 normalRoundingRadius,
                 normalRoundingRadius,
