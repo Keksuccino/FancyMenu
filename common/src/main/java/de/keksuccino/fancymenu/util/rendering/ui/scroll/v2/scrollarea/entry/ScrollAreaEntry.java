@@ -47,7 +47,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.hovered = this.isMouseOver(mouseX, mouseY);
-        if (this.hovered && (this.tooltip != null)) TooltipHandler.INSTANCE.addTooltip(this.tooltip, () -> true, false, true);
+        if (this.hovered && (this.tooltip != null)) TooltipHandler.INSTANCE.addRenderTickTooltip(this.tooltip, () -> true);
         this.renderBackground(graphics, mouseX, mouseY, partial);
         this.renderEntry(graphics, mouseX, mouseY, partial);
     }

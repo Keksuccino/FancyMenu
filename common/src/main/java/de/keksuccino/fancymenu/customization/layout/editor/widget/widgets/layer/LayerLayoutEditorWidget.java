@@ -23,6 +23,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
@@ -39,6 +40,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final int DROP_INDICATOR_THICKNESS = 3;
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
+
         super(editor, builder);
 
         this.displayLabel = Component.translatable("fancymenu.editor.widgets.layers");
@@ -58,9 +60,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             }
         };
 
-        this.scrollArea.borderColor = () -> UIBase.getUIColorTheme().area_background_color;
+        this.scrollArea.backgroundColor = () -> null;
+        this.scrollArea.borderColor = () -> null;
 
         this.updateList(false);
+
     }
 
     @Override
@@ -114,7 +118,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         RenderingUtils.enableScissor(graphics, (int) this.getRealBodyX(), (int) this.getRealBodyY(), (int) (this.getRealBodyX() + this.getBodyWidth()), (int) (this.getRealBodyY() + this.getBodyHeight()));
 
         graphics.pose().pushPose();
-        graphics.pose().translate(0.0F, 0.0F, 400.0F);
 
         this.scrollArea.render(graphics, (int) mouseX, (int) mouseY, partial);
 
@@ -669,6 +672,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             };
             this.editLayerNameBox.setVisible(false);
             this.editLayerNameBox.setMaxLength(10000);
+            this.backgroundColorNormal = null;
+            this.backgroundColorHover = null;
         }
 
         @Override
@@ -931,7 +936,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     }
 
-    public static class VanillaLayerElementEntry extends ScrollAreaEntry {
+    private class VanillaLayerElementEntry extends ScrollAreaEntry {
 
         protected static final ResourceLocation MOVE_TO_TOP_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_top.png");
         protected static final ResourceLocation MOVE_BEHIND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_bottom.png");
@@ -946,6 +951,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.playClickSound = false;
             this.selectable = false;
             this.selectOnClick = false;
+            this.backgroundColorNormal = null;
+            this.backgroundColorHover = null;
         }
 
         @Override
@@ -984,7 +991,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             if (button == 0) {
                 if (this.isMoveTopBottomButtonHovered()) {
-                    if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                     this.layerWidget.editor.history.saveSnapshot();
                     this.layerWidget.editor.layout.renderElementsBehindVanilla = !this.layerWidget.editor.layout.renderElementsBehindVanilla;
                     this.layerWidget.editor.deselectAllElements();
@@ -992,20 +999,23 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 }
             }
         }
+
     }
 
-    public static class SeparatorEntry extends ScrollAreaEntry {
+    private class SeparatorEntry extends ScrollAreaEntry {
 
         public SeparatorEntry(ScrollArea parent) {
             super(parent, 50f, 1f);
             this.selectable = false;
             this.selectOnClick = false;
+            this.backgroundColorNormal = null;
+            this.backgroundColorHover = null;
         }
 
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             RenderSystem.enableBlend();
-            fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
+            fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getBorderColor().getColorInt());
         }
 
         @Override
@@ -1016,5 +1026,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
         }
+
     }
+
 }

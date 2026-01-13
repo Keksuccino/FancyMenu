@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
@@ -95,35 +96,66 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     @Override
     public void renderComponent(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial) {
 
-        float x = this.getRealX();
-        float y = this.getRealY();
+        RenderSystem.disableDepthTest();
+        RenderingUtils.setDepthTestLocked(true);
 
-        //Fix offset on render tick, if needed
-        if (this.getTranslatedX() < this.getMinTranslatedX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
-        if (this.getTranslatedX() > this.getMaxTranslatedX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
-        if (this.getTranslatedY() < this.getMinTranslatedY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
-        if (this.getTranslatedY() > this.getMaxTranslatedY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
+        try {
 
-        this.hovered = this.isMouseOver();
-        this.titleBarHovered = this.isMouseOverTitleBar();
-        this.hoveredResizeEdge = this.updateHoveredResizingEdge();
+            float x = this.getRealX();
+            float y = this.getRealY();
 
-        this.updateCursor();
+            //Fix offset on render tick, if needed
+            if (this.getTranslatedX() < this.getMinTranslatedX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
+            if (this.getTranslatedX() > this.getMaxTranslatedX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
+            if (this.getTranslatedY() < this.getMinTranslatedY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
+            if (this.getTranslatedY() > this.getMaxTranslatedY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
 
-        RenderingUtils.resetShaderColor(graphics);
-        if (this.isExpanded()) {
-            this.renderBackground(graphics, mouseX, mouseY, partial);
-            this.renderBody(graphics, mouseX, mouseY, partial);
+            this.hovered = this.isMouseOver();
+            this.titleBarHovered = this.isMouseOverTitleBar();
+            this.hoveredResizeEdge = this.updateHoveredResizingEdge();
+
+            this.updateCursor();
+
+            RenderingUtils.resetShaderColor(graphics);
+            if (this.isExpanded()) {
+                this.renderBackground(graphics, mouseX, mouseY, partial);
+                this.renderBody(graphics, mouseX, mouseY, partial);
+            }
+            this.renderFrame(graphics, mouseX, mouseY, partial, x, y, this.getWidth(), this.getHeight());
+            RenderingUtils.resetShaderColor(graphics);
+
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Error while rendering a layout editor widget!", ex);
         }
-        this.renderFrame(graphics, mouseX, mouseY, partial, x, y, this.getWidth(), this.getHeight());
-        RenderingUtils.resetShaderColor(graphics);
+
+        RenderingUtils.setDepthTestLocked(false);
 
     }
 
     protected abstract void renderBody(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial);
 
     protected void renderBackground(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial) {
-        fillF(graphics, this.getRealBodyX(), this.getRealBodyY(), this.getRealBodyX() + this.getBodyWidth(), this.getRealBodyY() + this.getBodyHeight(), this.getBackgroundColor().getColorInt());
+        float x = this.getRealBodyX();
+        float y = this.getRealBodyY();
+        float width = this.getBodyWidth();
+        float height = this.getBodyHeight();
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+        float cornerRadius = UIBase.getInterfaceCornerRoundingRadius();
+        if (UIBase.shouldBlur()) {
+            float renderScale = getBlurRenderScale();
+            float blurX = (this.getTranslatedX() + x) * renderScale;
+            float blurY = (this.getTranslatedY() + y) * renderScale;
+            float blurWidth = width * renderScale;
+            float blurHeight = height * renderScale;
+            if (blurWidth > 0.0F && blurHeight > 0.0F) {
+                float blurCornerRadius = UIBase.getBlurInterfaceCornerRoundingRadius();
+                GuiBlurRenderer.renderBlurAreaRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, UIBase.getBlurRadius(), 0.0F, 0.0F, blurCornerRadius, blurCornerRadius, this.getBackgroundColor(), partial);
+            }
+        } else {
+            UIBase.renderRoundedRect(graphics, x, y, width, height, 0.0F, 0.0F, cornerRadius, cornerRadius, this.getBackgroundColor().getColorInt());
+        }
     }
 
     protected void renderFrame(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
@@ -142,11 +174,9 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         //Widget border
         RenderingUtils.resetShaderColor(graphics);
-        if (this.isExpanded()) {
-            UIBase.renderBorder(graphics, x, y, x + width, y + height, this.getBorderThickness(), this.getBorderColor().getColorInt(), true, true, true, true);
-        } else {
-            UIBase.renderBorder(graphics, x, y, x + width, y + this.getBorderThickness() + this.getTitleBarHeight() + this.getBorderThickness(), this.getBorderThickness(), this.getBorderColor().getColorInt(), true, true, true, true);
-        }
+        float frameHeight = this.isExpanded() ? height : this.getBorderThickness() + this.getTitleBarHeight() + this.getBorderThickness();
+        float roundingRadius = UIBase.getInterfaceCornerRoundingRadius();
+        UIBase.renderRoundedBorder(graphics, x, y, x + width, y + frameHeight, this.getBorderThickness(), roundingRadius, roundingRadius, roundingRadius, roundingRadius, this.getBorderColor().getColorInt());
 
         RenderingUtils.resetShaderColor(graphics);
 
@@ -156,7 +186,33 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         //Background
         RenderingUtils.resetShaderColor(graphics);
-        fillF(graphics, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getTitleBarHeight(), this.getTitleBarColor().getColorInt());
+        float innerX = x + this.getBorderThickness();
+        float innerY = y + this.getBorderThickness();
+        float innerWidth = this.getBodyWidth();
+        float innerHeight = this.getTitleBarHeight();
+        if (innerWidth > 0 && innerHeight > 0) {
+            float cornerRadius = UIBase.getInterfaceCornerRoundingRadius();
+            boolean expanded = this.isExpanded();
+            if (UIBase.shouldBlur()) {
+                float renderScale = getBlurRenderScale();
+                float blurX = (this.getTranslatedX() + innerX) * renderScale;
+                float blurY = (this.getTranslatedY() + innerY) * renderScale;
+                float blurWidth = innerWidth * renderScale;
+                float blurHeight = innerHeight * renderScale;
+                float blurCornerRadius = UIBase.getBlurInterfaceCornerRoundingRadius();
+                if (expanded) {
+                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, UIBase.getBlurRadius(), blurCornerRadius, blurCornerRadius, 0.0F, 0.0F, this.getTitleBarColor(), partial);
+                } else {
+                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, UIBase.getBlurRadius(), blurCornerRadius, blurCornerRadius, blurCornerRadius, blurCornerRadius, this.getTitleBarColor(), partial);
+                }
+            } else {
+                if (expanded) {
+                    UIBase.renderRoundedRect(graphics, innerX, innerY, innerWidth, innerHeight, cornerRadius, cornerRadius, 0.0F, 0.0F, this.getTitleBarColor().getColorInt());
+                } else {
+                    UIBase.renderRoundedRect(graphics, innerX, innerY, innerWidth, innerHeight, cornerRadius, cornerRadius, cornerRadius, cornerRadius, this.getTitleBarColor().getColorInt());
+                }
+            }
+        }
         RenderingUtils.resetShaderColor(graphics);
 
         //Buttons
@@ -209,6 +265,14 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected DrawableColor getBackgroundColor() {
         if (UIBase.shouldBlur()) return UIBase.getUIColorTheme().ui_blur_interface_background_tint;
         return UIBase.getUIColorTheme().interface_background_color;
+    }
+
+    protected float getBlurRenderScale() {
+        float scale = this.getFixedComponentScale();
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return 1.0F;
+        }
+        return scale;
     }
 
     protected void updateCursor() {

@@ -29,7 +29,9 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     protected float y;
     protected float width;
     protected float height;
+    @Nullable
     public Supplier<DrawableColor> backgroundColor = () -> getUIColorTheme().area_background_color;
+    @Nullable
     public Supplier<DrawableColor> borderColor = () -> getUIColorTheme().element_border_color_normal;
     protected float borderThickness = 1;
     public boolean makeEntriesWidthOfArea = false;
@@ -83,11 +85,19 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     }
 
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        fillF(graphics, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.get().getColorInt());
+        if (this.backgroundColor == null) return;
+        DrawableColor backColor = this.backgroundColor.get();
+        if (backColor != null) {
+            fillF(graphics, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), backColor.getColorInt());
+        }
     }
 
     public void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        renderBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), this.borderColor.get().getColorInt(), true, true, true, true);
+        if (this.borderColor == null) return;
+        DrawableColor borColor = this.borderColor.get();
+        if (borColor != null) {
+            renderBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), borColor.getColorInt(), true, true, true, true);
+        }
     }
 
     public void renderEntries(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
