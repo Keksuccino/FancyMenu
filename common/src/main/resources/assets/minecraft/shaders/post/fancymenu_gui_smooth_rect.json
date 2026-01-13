@@ -11,6 +11,7 @@
       "uniforms": [
         { "name": "Rect", "values": [ 0.0, 0.0, 0.0, 0.0 ] },
         { "name": "CornerRadii", "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+        { "name": "BorderThickness", "values": [ 0.0 ] },
         { "name": "Color", "values": [ 1.0, 1.0, 1.0, 1.0 ] }
       ]
     }

@@ -31,7 +31,7 @@ public final class SmoothRectangleRenderer {
     }
 
     public static void renderSmoothRect(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
-        renderSmoothRectInternal(graphics, x, y, width, height, CornerRadii.uniform(cornerRadius), color, partial);
+        renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.uniform(cornerRadius), color, partial);
     }
 
     public static void renderSmoothRect(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float cornerRadius, int color, float partial) {
@@ -39,7 +39,7 @@ public final class SmoothRectangleRenderer {
     }
 
     public static void renderSmoothRectRoundTopCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
-        renderSmoothRectInternal(graphics, x, y, width, height, CornerRadii.topOnly(cornerRadius), color, partial);
+        renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.topOnly(cornerRadius), color, partial);
     }
 
     public static void renderSmoothRectRoundTopCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float cornerRadius, int color, float partial) {
@@ -47,7 +47,7 @@ public final class SmoothRectangleRenderer {
     }
 
     public static void renderSmoothRectRoundBottomCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
-        renderSmoothRectInternal(graphics, x, y, width, height, CornerRadii.bottomOnly(cornerRadius), color, partial);
+        renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.bottomOnly(cornerRadius), color, partial);
     }
 
     public static void renderSmoothRectRoundBottomCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float cornerRadius, int color, float partial) {
@@ -55,20 +55,36 @@ public final class SmoothRectangleRenderer {
     }
 
     public static void renderSmoothRectRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
-        renderSmoothRectInternal(graphics, x, y, width, height, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), color, partial);
+        renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), color, partial);
     }
 
     public static void renderSmoothRectRoundAllCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
         renderSmoothRectRoundAllCorners(graphics, (float) x, (float) y, (float) width, (float) height, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius, color, partial);
     }
 
-    private static void renderSmoothRectInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, @Nonnull CornerRadii cornerRadii, int color, float partial) {
+    public static void renderSmoothBorder(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float cornerRadius, int color, float partial) {
+        renderSmoothRectInternal(graphics, x, y, width, height, borderThickness, CornerRadii.uniform(cornerRadius), color, partial);
+    }
+
+    public static void renderSmoothBorder(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float borderThickness, float cornerRadius, int color, float partial) {
+        renderSmoothBorder(graphics, (float) x, (float) y, (float) width, (float) height, borderThickness, cornerRadius, color, partial);
+    }
+
+    public static void renderSmoothBorderRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
+        renderSmoothRectInternal(graphics, x, y, width, height, borderThickness, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), color, partial);
+    }
+
+    public static void renderSmoothBorderRoundAllCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float borderThickness, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
+        renderSmoothBorderRoundAllCorners(graphics, (float) x, (float) y, (float) width, (float) height, borderThickness, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius, color, partial);
+    }
+
+    private static void renderSmoothRectInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, @Nonnull CornerRadii cornerRadii, int color, float partial) {
         Objects.requireNonNull(graphics);
         Objects.requireNonNull(cornerRadii);
         if (width <= 0.0F || height <= 0.0F) {
             return;
         }
-        _renderSmoothRect(graphics, partial, new RectArea(x, y, width, height, cornerRadii, color));
+        _renderSmoothRect(graphics, partial, new RectArea(x, y, width, height, Math.max(0.0F, borderThickness), cornerRadii, color));
     }
 
     private static void _renderSmoothRect(GuiGraphics graphics, float partial, RectArea area) {
@@ -93,6 +109,7 @@ public final class SmoothRectangleRenderer {
 
         float scaledX = area.x * guiScale;
         float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
+        float scaledBorderThickness = area.borderThickness * guiScale;
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         float red = (float) FastColor.ARGB32.red(area.color) / 255.0F;
@@ -100,7 +117,7 @@ public final class SmoothRectangleRenderer {
         float blue = (float) FastColor.ARGB32.blue(area.color) / 255.0F;
         float alpha = (float) FastColor.ARGB32.alpha(area.color) / 255.0F;
 
-        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, scaledRadii, red, green, blue, alpha);
+        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, scaledBorderThickness, scaledRadii, red, green, blue, alpha);
 
         graphics.flush();
         RenderSystem.disableBlend();
@@ -147,7 +164,7 @@ public final class SmoothRectangleRenderer {
         }
     }
 
-    private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, CornerRadii cornerRadii, float red, float green, float blue, float alpha) {
+    private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float borderThickness, CornerRadii cornerRadii, float red, float green, float blue, float alpha) {
         List<PostPass> passes = ((IMixinPostChain) postChain).getPasses_FancyMenu();
         for (PostPass pass : passes) {
             if (!"fancymenu_gui_smooth_rect".equals(pass.getName())) {
@@ -155,6 +172,7 @@ public final class SmoothRectangleRenderer {
             }
             pass.getEffect().safeGetUniform("Rect").set(x, y, width, height);
             pass.getEffect().safeGetUniform("CornerRadii").set(cornerRadii.topLeft(), cornerRadii.topRight(), cornerRadii.bottomRight(), cornerRadii.bottomLeft());
+            pass.getEffect().safeGetUniform("BorderThickness").set(borderThickness);
             pass.getEffect().safeGetUniform("Color").set(red, green, blue, alpha);
         }
     }
@@ -170,7 +188,7 @@ public final class SmoothRectangleRenderer {
         return null;
     }
 
-    private record RectArea(float x, float y, float width, float height, CornerRadii cornerRadii, int color) {
+    private record RectArea(float x, float y, float width, float height, float borderThickness, CornerRadii cornerRadii, int color) {
     }
 
     private record CornerRadii(float topLeft, float topRight, float bottomRight, float bottomLeft) {

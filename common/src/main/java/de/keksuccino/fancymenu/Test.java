@@ -27,6 +27,8 @@ public class Test {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DrawableColor TINT = DrawableColor.of(new Color(255, 0, 234, 95));
+    private static final DrawableColor BORDER_TINT = DrawableColor.of(new Color(12, 32, 92, 200));
+    private static final float BORDER_THICKNESS = 2.0F;
 
     private boolean blurFirst = false;
     private boolean blurSecond = false;
@@ -37,14 +39,17 @@ public class Test {
 
         if (blurFirst) {
             SmoothRectangleRenderer.renderSmoothRect(e.getGraphics(), 50, 40, 300, 300, 4, TINT.getColorInt(), e.getPartial());
+            SmoothRectangleRenderer.renderSmoothBorder(e.getGraphics(), 50, 40, 300, 300, BORDER_THICKNESS, 4, BORDER_TINT.getColorInt(), e.getPartial());
         }
 
         if (blurSecond) {
             SmoothRectangleRenderer.renderSmoothRect(e.getGraphics(), e.getScreen().width - 300, e.getScreen().height - 300, 200, 200, 4, TINT.getColorInt(), e.getPartial());
+            SmoothRectangleRenderer.renderSmoothBorder(e.getGraphics(), e.getScreen().width - 300, e.getScreen().height - 300, 200, 200, BORDER_THICKNESS, 4, BORDER_TINT.getColorInt(), e.getPartial());
         }
 
         if (blurThird) {
             SmoothRectangleRenderer.renderSmoothRect(e.getGraphics(), e.getScreen().width - 300, 40, 100, 100, 4, TINT.getColorInt(), e.getPartial());
+            SmoothRectangleRenderer.renderSmoothBorder(e.getGraphics(), e.getScreen().width - 300, 40, 100, 100, BORDER_THICKNESS, 4, BORDER_TINT.getColorInt(), e.getPartial());
         }
 
     }

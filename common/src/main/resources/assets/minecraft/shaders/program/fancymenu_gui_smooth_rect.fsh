@@ -4,6 +4,7 @@ uniform sampler2D DiffuseSampler;
 uniform vec2 OutSize;
 uniform vec4 Rect;
 uniform vec4 CornerRadii; // top-left, top-right, bottom-right, bottom-left
+uniform float BorderThickness;
 uniform vec4 Color;
 
 in vec2 texCoord;
@@ -54,6 +55,15 @@ void main() {
     vec2 uv = texCoord;
     vec2 pixel = uv * OutSize;
     float mask = roundedRectMask(pixel, Rect.xy, Rect.zw, CornerRadii);
+    if (BorderThickness > 0.0) {
+        vec2 innerPos = Rect.xy + vec2(BorderThickness);
+        vec2 innerSize = Rect.zw - vec2(BorderThickness * 2.0);
+        if (innerSize.x > 0.0 && innerSize.y > 0.0) {
+            vec4 innerRadii = max(CornerRadii - vec4(BorderThickness), vec4(0.0));
+            float innerMask = roundedRectMask(pixel, innerPos, innerSize, innerRadii);
+            mask = max(0.0, mask - innerMask);
+        }
+    }
     // Discard everything outside the rounded rect so the pass never writes to untouched pixels.
     if (mask <= 0.0001) {
         discard;
