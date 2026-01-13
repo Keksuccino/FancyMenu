@@ -250,6 +250,12 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     @NotNull
+    protected DrawableColor getElementHoverColor() {
+        if (UIBase.shouldBlur()) return UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_hover_type_1;
+        return UIBase.getUIColorTheme().element_background_color_hover;
+    }
+
+    @NotNull
     protected DrawableColor getTitleBarColor() {
         if (UIBase.shouldBlur()) return UIBase.getUIColorTheme().ui_blur_interface_title_bar_tint;
         return UIBase.getUIColorTheme().interface_title_bar_color;
@@ -562,7 +568,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     public void tick() {
     }
 
-    protected static class TitleBarButton extends UIBase implements GuiEventListener {
+    protected class TitleBarButton extends UIBase implements GuiEventListener {
 
         protected AbstractLayoutEditorWidget parent;
         protected float x;
@@ -616,9 +622,9 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
                     }
                 }
                 if (topLeft > 0.0F || topRight > 0.0F || bottomRight > 0.0F || bottomLeft > 0.0F) {
-                    UIBase.renderRoundedRect(graphics, this.x, this.y, this.width, this.parent.getTitleBarHeight(), topLeft, topRight, bottomRight, bottomLeft, UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                    UIBase.renderRoundedRect(graphics, this.x, this.y, this.width, this.parent.getTitleBarHeight(), topLeft, topRight, bottomRight, bottomLeft, getElementHoverColor().getColorInt());
                 } else {
-                    fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.parent.getTitleBarHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                    fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.parent.getTitleBarHeight(), getElementHoverColor().getColorInt());
                 }
                 RenderingUtils.resetShaderColor(graphics);
             }

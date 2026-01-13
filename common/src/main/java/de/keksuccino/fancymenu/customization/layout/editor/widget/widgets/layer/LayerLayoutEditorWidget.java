@@ -630,7 +630,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.updateList(false);
     }
 
-    public static class LayerElementEntry extends ScrollAreaEntry {
+    private class LayerElementEntry extends ScrollAreaEntry {
 
         protected static final ResourceLocation MOVE_UP_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_up.png");
         protected static final ResourceLocation MOVE_DOWN_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_down.png");
@@ -687,7 +687,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             RenderSystem.enableBlend();
 
             if (this.element.isSelected() || this.element.isMultiSelected()) {
-                fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
             }
 
             blitF(graphics, MOVE_UP_TEXTURE, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f));

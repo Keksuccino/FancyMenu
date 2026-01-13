@@ -150,13 +150,22 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         int width = this.getWidth();
         int height = this.getHeight();
         float radius = this.roundedColorBackground ? UIBase.getWidgetCornerRoundingRadius() : 0.0F;
+        int borderThickness = borderColor != null ? 1 : 0;
+        int innerX = x + borderThickness;
+        int innerY = y + borderThickness;
+        int innerWidth = width - (borderThickness * 2);
+        int innerHeight = height - (borderThickness * 2);
         if (radius > 0.0F) {
-            UIBase.renderRoundedRect(graphics, x, y, width, height, radius, radius, radius, radius, backgroundColor);
+            if (innerWidth > 0 && innerHeight > 0) {
+                UIBase.renderRoundedRect(graphics, innerX, innerY, innerWidth, innerHeight, radius, radius, radius, radius, backgroundColor);
+            }
             if (borderColor != null) {
                 UIBase.renderRoundedBorder(graphics, x, y, x + width, y + height, 1.0F, radius, radius, radius, radius, borderColor.getColorInt());
             }
         } else {
-            graphics.fill(x, y, x + width, y + height, backgroundColor);
+            if (innerWidth > 0 && innerHeight > 0) {
+                graphics.fill(innerX, innerY, innerX + innerWidth, innerY + innerHeight, backgroundColor);
+            }
             if (borderColor != null) {
                 UIBase.renderBorder(graphics, x, y, x + width, y + height, 1, borderColor.getColorInt(), true, true, true, true);
             }
