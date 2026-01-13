@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
@@ -111,6 +112,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         RenderingUtils.resetShaderColor(graphics);
         if (this.isExpanded()) {
+            this.renderBackground(graphics, mouseX, mouseY, partial);
             this.renderBody(graphics, mouseX, mouseY, partial);
         }
         this.renderFrame(graphics, mouseX, mouseY, partial, x, y, this.getWidth(), this.getHeight());
@@ -119,6 +121,10 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     protected abstract void renderBody(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial);
+
+    protected void renderBackground(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial) {
+        fillF(graphics, this.getRealBodyX(), this.getRealBodyY(), this.getRealBodyX() + this.getBodyWidth(), this.getRealBodyY() + this.getBodyHeight(), this.getBackgroundColor().getColorInt());
+    }
 
     protected void renderFrame(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
@@ -131,15 +137,15 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             float separatorYMin =  y + this.getBorderThickness() + this.getTitleBarHeight();
             float separatorXMax = separatorXMin + this.getBodyWidth();
             float separatorYMax = separatorYMin + this.getBorderThickness();
-            fillF(graphics, separatorXMin, separatorYMin, separatorXMax, separatorYMax, UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
+            fillF(graphics, separatorXMin, separatorYMin, separatorXMax, separatorYMax, this.getBorderColor().getColorInt());
         }
 
         //Widget border
         RenderingUtils.resetShaderColor(graphics);
         if (this.isExpanded()) {
-            UIBase.renderBorder(graphics, x, y, x + width, y + height, this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
+            UIBase.renderBorder(graphics, x, y, x + width, y + height, this.getBorderThickness(), this.getBorderColor().getColorInt(), true, true, true, true);
         } else {
-            UIBase.renderBorder(graphics, x, y, x + width, y + this.getBorderThickness() + this.getTitleBarHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
+            UIBase.renderBorder(graphics, x, y, x + width, y + this.getBorderThickness() + this.getTitleBarHeight() + this.getBorderThickness(), this.getBorderThickness(), this.getBorderColor().getColorInt(), true, true, true, true);
         }
 
         RenderingUtils.resetShaderColor(graphics);
@@ -150,7 +156,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         //Background
         RenderingUtils.resetShaderColor(graphics);
-        fillF(graphics, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getTitleBarHeight(), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+        fillF(graphics, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getTitleBarHeight(), this.getTitleBarColor().getColorInt());
         RenderingUtils.resetShaderColor(graphics);
 
         //Buttons
@@ -185,6 +191,24 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected void addTitleBarButton(@NotNull AbstractLayoutEditorWidget.TitleBarButton button) {
         this.children.add(button);
         this.titleBarButtons.add(button);
+    }
+
+    @NotNull
+    protected DrawableColor getTitleBarColor() {
+        if (UIBase.shouldBlur()) return UIBase.getUIColorTheme().ui_blur_interface_title_bar_tint;
+        return UIBase.getUIColorTheme().interface_title_bar_color;
+    }
+
+    @NotNull
+    protected DrawableColor getBorderColor() {
+        if (UIBase.shouldBlur()) return UIBase.getUIColorTheme().ui_blur_overlay_element_border_color;
+        return UIBase.getUIColorTheme().element_border_color_normal;
+    }
+
+    @NotNull
+    protected DrawableColor getBackgroundColor() {
+        if (UIBase.shouldBlur()) return UIBase.getUIColorTheme().ui_blur_interface_background_tint;
+        return UIBase.getUIColorTheme().interface_background_color;
     }
 
     protected void updateCursor() {

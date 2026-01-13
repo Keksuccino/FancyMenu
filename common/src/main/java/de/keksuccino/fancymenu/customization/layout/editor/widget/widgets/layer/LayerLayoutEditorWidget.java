@@ -102,8 +102,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     @Override
     protected void renderBody(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial) {
 
-        fillF(graphics, this.getRealBodyX(), this.getRealBodyY(), this.getRealBodyX() + this.getBodyWidth(), this.getRealBodyY() + this.getBodyHeight(), UIBase.getUIColorTheme().area_background_color.getColorInt());
-
         this.scrollArea.setX(this.getRealBodyX());
         this.scrollArea.setY(this.getRealBodyY());
         this.scrollArea.setWidth(this.getBodyWidth());
