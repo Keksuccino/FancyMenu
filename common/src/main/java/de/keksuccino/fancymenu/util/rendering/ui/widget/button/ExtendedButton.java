@@ -62,6 +62,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected ConsumingSupplier<ExtendedButton, Boolean> activeSupplier;
     protected boolean focusable = true;
     protected boolean navigatable = true;
+    protected boolean roundedColorBackground = false;
     @Nullable
     protected String identifier;
 
@@ -121,34 +122,45 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
      */
     protected boolean renderColorBackground(@NotNull GuiGraphics graphics) {
         RenderSystem.enableBlend();
+        DrawableColor background = null;
+        DrawableColor border = null;
         if (this.active) {
             if (this.isHoveredOrFocused()) {
-                if (this.backgroundColorHover != null) {
-                    graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorHover.getColorInt());
-                    if (this.borderColorHover != null) {
-                        UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorHover.getColorInt(), true, true, true, true);
-                    }
-                    return false;
-                }
+                background = this.backgroundColorHover;
+                border = this.borderColorHover;
             } else {
-                if (this.backgroundColorNormal != null) {
-                    graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorNormal.getColorInt());
-                    if (this.borderColorNormal != null) {
-                        UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorNormal.getColorInt(), true, true, true, true);
-                    }
-                    return false;
-                }
+                background = this.backgroundColorNormal;
+                border = this.borderColorNormal;
             }
         } else {
-            if (this.backgroundColorInactive != null) {
-                graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorInactive.getColorInt());
-                if (this.borderColorInactive != null) {
-                    UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorInactive.getColorInt(), true, true, true, true);
-                }
-                return false;
-            }
+            background = this.backgroundColorInactive;
+            border = this.borderColorInactive;
+        }
+
+        if (background != null) {
+            renderColoredBackground(graphics, background.getColorInt(), border);
+            return false;
         }
         return true;
+    }
+
+    private void renderColoredBackground(@NotNull GuiGraphics graphics, int backgroundColor, @Nullable DrawableColor borderColor) {
+        int x = this.getX();
+        int y = this.getY();
+        int width = this.getWidth();
+        int height = this.getHeight();
+        float radius = this.roundedColorBackground ? UIBase.getWidgetCornerRoundingRadius() : 0.0F;
+        if (radius > 0.0F) {
+            UIBase.renderRoundedRect(graphics, x, y, width, height, radius, radius, radius, radius, backgroundColor);
+            if (borderColor != null) {
+                UIBase.renderRoundedBorder(graphics, x, y, x + width, y + height, 1.0F, radius, radius, radius, radius, borderColor.getColorInt());
+            }
+        } else {
+            graphics.fill(x, y, x + width, y + height, backgroundColor);
+            if (borderColor != null) {
+                UIBase.renderBorder(graphics, x, y, x + width, y + height, 1, borderColor.getColorInt(), true, true, true, true);
+            }
+        }
     }
 
     protected void renderLabelText(@NotNull GuiGraphics graphics) {
@@ -371,6 +383,15 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     public void setBorderColorInactive(@Nullable DrawableColor borderColorInactive) {
         this.borderColorInactive = borderColorInactive;
+    }
+
+    public boolean isRoundedColorBackgroundEnabled() {
+        return this.roundedColorBackground;
+    }
+
+    public ExtendedButton setRoundedColorBackgroundEnabled(boolean roundedColorBackground) {
+        this.roundedColorBackground = roundedColorBackground;
+        return this;
     }
 
     @Nullable

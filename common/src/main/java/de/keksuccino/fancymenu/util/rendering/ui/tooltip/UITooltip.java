@@ -117,8 +117,8 @@ public class UITooltip implements Renderable {
 
     protected void renderBackground(GuiGraphics graphics, int x, int y, float partial, float renderScale) {
 
-        float normalRoundingRadius = UIBase.getCornerRoundingRadius();
-        float blurRoundingRadius = UIBase.getBlurCornerRoundingRadius();
+        float normalRoundingRadius = UIBase.getInterfaceCornerRoundingRadius();
+        float blurRoundingRadius = UIBase.getBlurInterfaceCornerRoundingRadius();
         boolean blurEnabled = UIBase.shouldBlur();
         int renderWidth = this.getWidth();
         int renderHeight = this.getHeight();

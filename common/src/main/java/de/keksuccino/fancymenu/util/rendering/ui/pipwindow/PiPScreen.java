@@ -1,9 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class PiPScreen extends Screen implements PipableScreen {
@@ -60,6 +62,11 @@ public abstract class PiPScreen extends Screen implements PipableScreen {
     public PiPScreen setAllowCloseOnEsc(boolean allowCloseOnEsc) {
         this.allowCloseOnEsc = allowCloseOnEsc;
         return this;
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        // PiP screens should render no background
     }
 
     @Override

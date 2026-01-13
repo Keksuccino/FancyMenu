@@ -194,11 +194,21 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (innerRight <= innerLeft || innerBottom <= innerTop) {
             return;
         }
+        float normalCornerRadius = getFrameCornerRadius();
+        float blurCornerRadius = getFrameBlurCornerRadius();
         UIColorTheme theme = getTheme();
         if (UIBase.shouldBlur()) {
-            GuiBlurRenderer.renderBlurArea(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), 0.0F, theme.ui_blur_interface_background_tint, partial);
+            if (titleHeight > 0) {
+                GuiBlurRenderer.renderBlurAreaRoundBottomCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), blurCornerRadius, theme.ui_blur_interface_background_tint, partial);
+            } else {
+                GuiBlurRenderer.renderBlurAreaRoundAllCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), blurCornerRadius, blurCornerRadius, blurCornerRadius, blurCornerRadius, theme.ui_blur_interface_background_tint, partial);
+            }
         } else {
-            graphics.fill(innerLeft, innerTop, innerRight, innerBottom, theme.interface_background_color.getColorInt());
+            if (titleHeight > 0) {
+                UIBase.renderRoundedRect(graphics, innerLeft, innerTop, innerWidth, innerHeight, 0.0F, 0.0F, normalCornerRadius, normalCornerRadius, theme.interface_background_color.getColorInt());
+            } else {
+                UIBase.renderRoundedRect(graphics, innerLeft, innerTop, innerWidth, innerHeight, normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.interface_background_color.getColorInt());
+            }
         }
     }
 
@@ -314,12 +324,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         int bottom = frameY + frameHeight;
         UIColorTheme theme = getTheme();
         int border = getScaledBorderThickness();
-        if (border > 0) {
-            graphics.fill(frameX, frameY, right, frameY + border, this.getBorderColor(theme));
-            graphics.fill(frameX, bottom - border, right, bottom, this.getBorderColor(theme));
-            graphics.fill(frameX, frameY + border, frameX + border, bottom - border, this.getBorderColor(theme));
-            graphics.fill(right - border, frameY + border, right, bottom - border, this.getBorderColor(theme));
-        }
+        float normalCornerRadius = getFrameCornerRadius();
+        float blurCornerRadius = getFrameBlurCornerRadius();
 
         int innerLeft = frameX + border;
         int innerTop = frameY + border;
@@ -331,10 +337,26 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             if (UIBase.shouldBlur()) {
                 int blurWidth = innerRight - innerLeft;
                 int blurHeight = Math.min(titleBottom, innerBottom) - innerTop;
-                GuiBlurRenderer.renderBlurAreaWithIntensity(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), 0.0F, theme.ui_blur_interface_title_bar_tint, partial);
+                boolean hasBody = innerBottom > titleBottom;
+                if (hasBody) {
+                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundTopCorners(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), blurCornerRadius, theme.ui_blur_interface_title_bar_tint, partial);
+                } else {
+                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), blurCornerRadius, blurCornerRadius, blurCornerRadius, blurCornerRadius, theme.ui_blur_interface_title_bar_tint, partial);
+                }
             } else {
-                graphics.fill(innerLeft, innerTop, innerRight, Math.min(titleBottom, innerBottom), theme.interface_title_bar_color.getColorInt());
+                float titleWidth = innerRight - innerLeft;
+                float titleHeightClamped = Math.min(titleBottom, innerBottom) - innerTop;
+                boolean hasBody = innerBottom > titleBottom;
+                if (hasBody) {
+                    UIBase.renderRoundedRect(graphics, innerLeft, innerTop, titleWidth, titleHeightClamped, normalCornerRadius, normalCornerRadius, 0.0F, 0.0F, theme.interface_title_bar_color.getColorInt());
+                } else {
+                    UIBase.renderRoundedRect(graphics, innerLeft, innerTop, titleWidth, titleHeightClamped, normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.interface_title_bar_color.getColorInt());
+                }
             }
+        }
+
+        if (border > 0) {
+            UIBase.renderRoundedBorder(graphics, frameX, frameY, right, bottom, (float) border, normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, this.getBorderColor(theme));
         }
     }
 
@@ -433,6 +455,22 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private int getBorderColor(UIColorTheme theme) {
         if (!UIBase.shouldBlur()) return theme.element_border_color_normal.getColorInt();
         return theme.ui_blur_interface_border_color.getColorInt();
+    }
+
+    private float getFrameCornerRadius() {
+        float scale = getFrameScale();
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return 0.0F;
+        }
+        return Math.max(0.0F, UIBase.getInterfaceCornerRoundingRadius() * scale);
+    }
+
+    private float getFrameBlurCornerRadius() {
+        float scale = getFrameScale();
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return 0.0F;
+        }
+        return Math.max(0.0F, UIBase.getBlurInterfaceCornerRoundingRadius() * scale);
     }
 
     public void tick() {

@@ -169,7 +169,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         float scaledMouseX = (float) ((float)mouseX / renderScale);
         float scaledMouseY = (float) ((float)mouseY / renderScale);
         boolean navigatingInSub = this.isUserNavigatingInSubMenu();
-        float normalRoundingRadius = UIBase.getCornerRoundingRadius();
+        float normalRoundingRadius = UIBase.getInterfaceCornerRoundingRadius();
         float normalCornerTopLeft = this.roundTopLeftCorner ? normalRoundingRadius : 0.0F;
         float normalCornerTopRight = this.roundTopRightCorner ? normalRoundingRadius : 0.0F;
         float normalCornerBottomLeft = this.roundBottomLeftCorner ? normalRoundingRadius : 0.0F;
@@ -198,7 +198,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float blurWidth = this.getWidth() * renderScale;
             float blurHeight = displayHeight * renderScale;
             if (blurWidth > 0.0F && blurHeight > 0.0F) {
-                float blurRoundingRadius = UIBase.getBlurCornerRoundingRadius();
+                float blurRoundingRadius = UIBase.getBlurInterfaceCornerRoundingRadius();
                 float blurCornerTopLeft = this.roundTopLeftCorner ? blurRoundingRadius : 0.0F;
                 float blurCornerTopRight = this.roundTopRightCorner ? blurRoundingRadius : 0.0F;
                 float blurCornerBottomLeft = this.roundBottomLeftCorner ? blurRoundingRadius : 0.0F;

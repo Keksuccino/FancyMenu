@@ -2,9 +2,10 @@ package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class PiPCellScreen extends CellScreen implements PipableScreen {
@@ -61,6 +62,11 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
     public PiPCellScreen setAllowCloseOnEsc(boolean allowCloseOnEsc) {
         this.allowCloseOnEsc = allowCloseOnEsc;
         return this;
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        // PiP screens should render no background
     }
 
     @Override

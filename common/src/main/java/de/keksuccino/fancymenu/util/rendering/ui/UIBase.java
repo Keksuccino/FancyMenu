@@ -157,6 +157,7 @@ public class UIBase extends RenderingUtils {
             button.setLabelBaseColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
         }
         button.setLabelShadowEnabled(FancyMenu.getOptions().enableUiTextShadow.getValue());
+        button.setRoundedColorBackgroundEnabled(true);
         return button;
     }
 
@@ -201,20 +202,24 @@ public class UIBase extends RenderingUtils {
         return fixedScale / (float) guiScale;
     }
 
+    public static float getWidgetCornerRoundingRadius() {
+        return 4.0F;
+    }
+
     /**
-     * Default corner radius for UI elements.
+     * Default corner radius for UI interfaces.
      */
-    public static float getCornerRoundingRadius() {
+    public static float getInterfaceCornerRoundingRadius() {
         return 6.0F;
     }
 
     /**
-     * Corner radius used for blur areas. Corrected default corner radius to make the blur rounding match with the normal rounding.
+     * Corner radius used for blur interfaces. Corrected default corner radius to make the blur rounding match with the normal rounding.
      */
-    public static float getBlurCornerRoundingRadius() {
+    public static float getBlurInterfaceCornerRoundingRadius() {
         if (getUIScale() == 1) return 2.0F;
         if (getUIScale() == 2) return 4.0F;
-        return getCornerRoundingRadius();
+        return getInterfaceCornerRoundingRadius();
     }
 
     /**

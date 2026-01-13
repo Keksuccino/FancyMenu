@@ -372,7 +372,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         this.updateSelectedCell();
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
+        this.renderBackground(graphics, mouseX, mouseY, partial);
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
@@ -391,6 +391,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     @Override
     public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
     }
 
     @Override
