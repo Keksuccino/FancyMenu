@@ -23,16 +23,12 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 @SuppressWarnings("all")
 public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     protected ScrollArea scrollArea;
 

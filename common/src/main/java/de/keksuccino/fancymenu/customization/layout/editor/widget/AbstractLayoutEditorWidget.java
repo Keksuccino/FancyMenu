@@ -43,12 +43,12 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     private float bodyWidth = 100;
     private float bodyHeight = 100;
     protected SnappingSide snappingSide = SnappingSide.TOP_RIGHT;
-    protected List<HeaderButton> headerButtons = new ArrayList<>();
-    protected boolean headerHovered = false;
+    protected List<TitleBarButton> titleBarButtons = new ArrayList<>();
+    protected boolean titleBarHovered = false;
     protected boolean expanded = true;
     protected ResizingEdge activeResizeEdge = null;
     protected ResizingEdge hoveredResizeEdge = null;
-    protected boolean leftMouseDownHeader = false;
+    protected boolean leftMouseDownTitleBar = false;
     protected double leftMouseDownMouseX = 0;
     protected double leftMouseDownMouseY = 0;
     protected float leftMouseDownWidgetOffsetX = 0;
@@ -68,13 +68,13 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected void init() {
 
         this.children.clear();
-        this.headerButtons.clear();
+        this.titleBarButtons.clear();
 
-        this.addHeaderButton(new HeaderButton(this, consumes -> hideButtonIconTextureSupplier.get(), button -> {
+        this.addTitleBarButton(new TitleBarButton(this, consumes -> hideButtonIconTextureSupplier.get(), button -> {
             this.setVisible(false);
         }));
 
-        this.addHeaderButton(new HeaderButton(this, consumes -> this.isExpanded() ? this.collapseButtonIconTextureSupplier.get() : this.expandButtonIconTextureSupplier.get(), button -> {
+        this.addTitleBarButton(new TitleBarButton(this, consumes -> this.isExpanded() ? this.collapseButtonIconTextureSupplier.get() : this.expandButtonIconTextureSupplier.get(), button -> {
             this.setExpanded(!this.isExpanded());
         }));
 
@@ -83,7 +83,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     public void refresh() {
         this.activeResizeEdge = null;
         this.hoveredResizeEdge = null;
-        this.leftMouseDownHeader = false;
+        this.leftMouseDownTitleBar = false;
     }
 
     @NotNull
@@ -104,7 +104,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         if (this.getTranslatedY() > this.getMaxTranslatedY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
 
         this.hovered = this.isMouseOver();
-        this.headerHovered = this.isMouseOverHeader();
+        this.titleBarHovered = this.isMouseOverTitleBar();
         this.hoveredResizeEdge = this.updateHoveredResizingEdge();
 
         this.updateCursor();
@@ -122,13 +122,13 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     protected void renderFrame(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
-        this.renderHeader(graphics, mouseX, mouseY, partial, x, y, width, height);
+        this.renderTitleBar(graphics, mouseX, mouseY, partial, x, y, width, height);
 
-        //Separator between header and body
+        //Separator between title bar and body
         if (this.isExpanded()) {
             RenderingUtils.resetShaderColor(graphics);
             float separatorXMin = x + this.getBorderThickness();
-            float separatorYMin =  y + this.getBorderThickness() + this.getHeaderHeight();
+            float separatorYMin =  y + this.getBorderThickness() + this.getTitleBarHeight();
             float separatorXMax = separatorXMin + this.getBodyWidth();
             float separatorYMax = separatorYMin + this.getBorderThickness();
             fillF(graphics, separatorXMin, separatorYMin, separatorXMax, separatorYMax, UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
@@ -139,23 +139,23 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         if (this.isExpanded()) {
             UIBase.renderBorder(graphics, x, y, x + width, y + height, this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
         } else {
-            UIBase.renderBorder(graphics, x, y, x + width, y + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
+            UIBase.renderBorder(graphics, x, y, x + width, y + this.getBorderThickness() + this.getTitleBarHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
         }
 
         RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected void renderHeader(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
+    protected void renderTitleBar(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
         //Background
         RenderingUtils.resetShaderColor(graphics);
-        fillF(graphics, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+        fillF(graphics, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getTitleBarHeight(), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
 
         //Buttons
         float buttonX = x + this.getBorderThickness() + this.getBodyWidth();
-        for (HeaderButton b : this.headerButtons) {
+        for (TitleBarButton b : this.titleBarButtons) {
             buttonX -= b.width;
             b.x = buttonX;
             b.y = y + this.getBorderThickness();
@@ -167,24 +167,24 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     protected void renderLabel(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
-        float headerX = x + this.getBorderThickness();
-        float headerY = y + this.getBorderThickness();
-        float labelDisplayWidth = Math.max(1, this.getBodyWidth() - this.getCombinedHeaderButtonWidth() - 3);
+        float titleBarX = x + this.getBorderThickness();
+        float titleBarY = y + this.getBorderThickness();
+        float labelDisplayWidth = Math.max(1, this.getBodyWidth() - this.getCombinedTitleBarButtonWidth() - 3);
         float scissorX = x + this.getBorderThickness() - 1;
         float scissorY = y + this.getBorderThickness() - 1;
         RenderingUtils.resetShaderColor(graphics);
         RenderSystem.enableBlend();
         graphics.pose().pushPose();
-        this.enableComponentScissor(graphics, (int) scissorX, (int) scissorY, (int) labelDisplayWidth + 1, (int) this.getHeaderHeight() + 2, true);
-        UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.displayLabel, (int)(headerX + 3), (int)(headerY + (this.getHeaderHeight() / 2f) - (Minecraft.getInstance().font.lineHeight / 2f)));
+        this.enableComponentScissor(graphics, (int) scissorX, (int) scissorY, (int) labelDisplayWidth + 1, (int) this.getTitleBarHeight() + 2, true);
+        UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.displayLabel, (int)(titleBarX + 3), (int)(titleBarY + (this.getTitleBarHeight() / 2f) - (Minecraft.getInstance().font.lineHeight / 2f)));
         this.disableComponentScissor(graphics);
         graphics.pose().popPose();
         RenderingUtils.resetShaderColor(graphics);
     }
 
-    protected void addHeaderButton(@NotNull HeaderButton button) {
+    protected void addTitleBarButton(@NotNull AbstractLayoutEditorWidget.TitleBarButton button) {
         this.children.add(button);
-        this.headerButtons.add(button);
+        this.titleBarButtons.add(button);
     }
 
     protected void updateCursor() {
@@ -199,10 +199,10 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected ResizingEdge updateHoveredResizingEdge() {
         if (!this.isVisible()) return null;
         if (!this.isExpanded()) return null;
-        if (this.leftMouseDownHeader) return null;
+        if (this.leftMouseDownTitleBar) return null;
         if (this.activeResizeEdge != null) return this.activeResizeEdge;
         //It's important to check this AFTER possibly returning the active edge
-        if (this.isHeaderButtonHovered()) return null;
+        if (this.isTitleBarButtonHovered()) return null;
         float hoverAreaThickness = 10.0f;
         float halfHoverAreaThickness = hoverAreaThickness / 2f;
         if (this.isComponentAreaHovered(this.getTranslatedX() - halfHoverAreaThickness, this.getTranslatedY(), hoverAreaThickness, this.getHeight(), false)) {
@@ -273,13 +273,13 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     @Override
     public float getHeight() {
-        if (!this.isExpanded()) return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness();
-        return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness() + this.bodyHeight + this.getBorderThickness();
+        if (!this.isExpanded()) return this.getBorderThickness() + this.getTitleBarHeight() + this.getBorderThickness();
+        return this.getBorderThickness() + this.getTitleBarHeight() + this.getBorderThickness() + this.bodyHeight + this.getBorderThickness();
     }
 
-    public float getCombinedHeaderButtonWidth() {
+    public float getCombinedTitleBarButtonWidth() {
         float i = 0;
-        for (HeaderButton b : this.headerButtons) {
+        for (TitleBarButton b : this.titleBarButtons) {
             i += b.width;
         }
         return i;
@@ -327,7 +327,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     public float getRealBodyY() {
-        return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness();
+        return this.getBorderThickness() + this.getTitleBarHeight() + this.getBorderThickness();
     }
 
     public void setBodyWidth(float innerWidth) {
@@ -346,7 +346,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         return this.bodyHeight;
     }
 
-    public float getHeaderHeight() {
+    public float getTitleBarHeight() {
         return 15;
     }
 
@@ -357,18 +357,18 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     @Override
     public boolean isHovered() {
         if (!this.isVisible()) return false;
-        if (!this.isExpanded()) return this.isHeaderHovered();
+        if (!this.isExpanded()) return this.isTitleBarHovered();
         return this.hovered;
     }
 
-    public boolean isHeaderHovered() {
+    public boolean isTitleBarHovered() {
         if (!this.isVisible()) return false;
-        return this.headerHovered;
+        return this.titleBarHovered;
     }
 
-    public boolean isHeaderButtonHovered() {
+    public boolean isTitleBarButtonHovered() {
         if (!this.isVisible()) return false;
-        for (HeaderButton b : this.headerButtons) {
+        for (TitleBarButton b : this.titleBarButtons) {
             if (b.isHovered()) return true;
         }
         return false;
@@ -388,19 +388,19 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         return this.displayLabel;
     }
 
-    public boolean isMouseOverHeader() {
+    public boolean isMouseOverTitleBar() {
         if (!this.isVisible()) return false;
-        return this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY(), this.getWidth(), this.getHeaderHeight() + (this.getBorderThickness() * 2), false);
+        return this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY(), this.getWidth(), this.getTitleBarHeight() + (this.getBorderThickness() * 2), false);
     }
 
     @Override
     protected boolean mouseClickedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
         if (this.isVisible()) {
             this.activeResizeEdge = this.hoveredResizeEdge;
-            if ((this.activeResizeEdge == null) && this.isHeaderHovered() && !this.isHeaderButtonHovered()) {
-                this.leftMouseDownHeader = true;
+            if ((this.activeResizeEdge == null) && this.isTitleBarHovered() && !this.isTitleBarButtonHovered()) {
+                this.leftMouseDownTitleBar = true;
             }
-            if ((this.activeResizeEdge != null) || this.leftMouseDownHeader) {
+            if ((this.activeResizeEdge != null) || this.leftMouseDownTitleBar) {
                 this.leftMouseDownMouseX = translatedMouseX;
                 this.leftMouseDownMouseY = translatedMouseY;
                 this.leftMouseDownWidgetOffsetX = this.unscaledWidgetOffsetX;
@@ -416,7 +416,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     @Override
     protected boolean mouseReleasedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
-        this.leftMouseDownHeader = false;
+        this.leftMouseDownTitleBar = false;
         this.activeResizeEdge = null;
         return super.mouseReleasedComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, button);
     }
@@ -429,7 +429,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             if (this.activeResizeEdge != null) {
                 this.handleResize((float) offsetX, (float) offsetY);
                 return true;
-            } else if (this.leftMouseDownHeader) {
+            } else if (this.leftMouseDownTitleBar) {
                 this.setUnscaledWidgetOffsetX((int)(this.leftMouseDownWidgetOffsetX + offsetX), false);
                 this.setUnscaledWidgetOffsetY((int)(this.leftMouseDownWidgetOffsetY + offsetY), false);
                 return true;
@@ -441,14 +441,14 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected void handleResize(float dragOffsetX, float dragOffsetY) {
         if ((this.activeResizeEdge == ResizingEdge.LEFT) || (this.activeResizeEdge == ResizingEdge.RIGHT)) {
             float i = (this.activeResizeEdge == ResizingEdge.LEFT) ? (this.leftMouseDownInnerWidth - dragOffsetX) : (this.leftMouseDownInnerWidth + dragOffsetX);
-            if (i >= (this.getCombinedHeaderButtonWidth() + 10)) {
+            if (i >= (this.getCombinedTitleBarButtonWidth() + 10)) {
                 this.bodyWidth = i;
                 this.unscaledWidgetOffsetX = this.leftMouseDownWidgetOffsetX + ((this.activeResizeEdge == ResizingEdge.LEFT) ? dragOffsetX : 0);
             }
         }
         if ((this.activeResizeEdge == ResizingEdge.TOP) || (this.activeResizeEdge == ResizingEdge.BOTTOM)) {
             float i = (this.activeResizeEdge == ResizingEdge.TOP) ? (this.leftMouseDownInnerHeight - dragOffsetY) : (this.leftMouseDownInnerHeight + dragOffsetY);
-            if (i >= (this.getHeaderHeight() + 10)) {
+            if (i >= (this.getTitleBarHeight() + 10)) {
                 this.bodyHeight = i;
                 this.unscaledWidgetOffsetY = this.leftMouseDownWidgetOffsetY + ((this.activeResizeEdge == ResizingEdge.TOP) ? dragOffsetY : 0);
             }
@@ -474,19 +474,19 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     public void tick() {
     }
 
-    protected static class HeaderButton extends UIBase implements GuiEventListener {
+    protected static class TitleBarButton extends UIBase implements GuiEventListener {
 
         protected AbstractLayoutEditorWidget parent;
         protected float x;
         protected float y;
         protected float width = 15;
         @NotNull
-        protected Consumer<HeaderButton> clickAction;
+        protected Consumer<TitleBarButton> clickAction;
         @NotNull
-        protected ConsumingSupplier<HeaderButton, ITexture> iconSupplier;
+        protected ConsumingSupplier<TitleBarButton, ITexture> iconSupplier;
         protected boolean hovered = false;
 
-        protected HeaderButton(AbstractLayoutEditorWidget parent, @NotNull ConsumingSupplier<HeaderButton, ITexture> iconSupplier, @NotNull Consumer<HeaderButton> clickAction) {
+        protected TitleBarButton(AbstractLayoutEditorWidget parent, @NotNull ConsumingSupplier<TitleBarButton, ITexture> iconSupplier, @NotNull Consumer<TitleBarButton> clickAction) {
             this.parent = parent;
             this.iconSupplier = iconSupplier;
             this.clickAction = clickAction;
@@ -504,7 +504,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
                 if (location != null) {
                     UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
                     RenderSystem.enableBlend();
-                    blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight());
+                    blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getTitleBarHeight(), (int) this.width, (int) this.parent.getTitleBarHeight());
                     RenderingUtils.resetShaderColor(graphics);
                 }
             }
@@ -514,7 +514,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         protected void renderHoverBackground(GuiGraphics graphics) {
             if (this.isMouseOver()) {
                 RenderingUtils.resetShaderColor(graphics);
-                fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.parent.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.parent.getTitleBarHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
                 RenderingUtils.resetShaderColor(graphics);
             }
         }
@@ -545,7 +545,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         }
 
         public boolean isMouseOver() {
-            return this.parent.isComponentAreaHovered(this.x, this.y, this.width, this.parent.getHeaderHeight(), true);
+            return this.parent.isComponentAreaHovered(this.x, this.y, this.width, this.parent.getTitleBarHeight(), true);
         }
 
         @Deprecated
