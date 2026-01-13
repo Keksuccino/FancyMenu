@@ -602,7 +602,24 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         protected void renderHoverBackground(GuiGraphics graphics) {
             if (this.isMouseOver()) {
                 RenderingUtils.resetShaderColor(graphics);
-                fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.parent.getTitleBarHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                float radius = UIBase.getInterfaceCornerRoundingRadius();
+                float topLeft = 0.0F;
+                float topRight = 0.0F;
+                float bottomRight = 0.0F;
+                float bottomLeft = 0.0F;
+                float rightEdge = this.parent.getBorderThickness() + this.parent.getBodyWidth();
+                boolean isRightmost = Math.abs((this.x + this.width) - rightEdge) <= 0.01F;
+                if (isRightmost) {
+                    topRight = radius;
+                    if (!this.parent.isExpanded()) {
+                        bottomRight = radius;
+                    }
+                }
+                if (topLeft > 0.0F || topRight > 0.0F || bottomRight > 0.0F || bottomLeft > 0.0F) {
+                    UIBase.renderRoundedRect(graphics, this.x, this.y, this.width, this.parent.getTitleBarHeight(), topLeft, topRight, bottomRight, bottomLeft, UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                } else {
+                    fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.parent.getTitleBarHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                }
                 RenderingUtils.resetShaderColor(graphics);
             }
         }

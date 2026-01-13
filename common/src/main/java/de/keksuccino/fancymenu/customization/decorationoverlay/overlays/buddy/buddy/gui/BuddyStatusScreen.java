@@ -7,12 +7,12 @@ import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.bu
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.PlayBall;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.leveling.BuddyAchievement;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.leveling.LevelingManager;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,12 +33,25 @@ public class BuddyStatusScreen implements Renderable {
     private static final int SCREEN_HEIGHT = 240;
     private static final int SCREEN_BORDER_WIDTH = 390;
     private static final int SCREEN_BORDER_HEIGHT = 293;
+    private static final int STATUS_BAR_COUNT = 4;
+    private static final int STATUS_BAR_WIDTH = 150;
+    private static final int STATUS_BAR_HEIGHT = 10;
+    private static final int STATUS_BAR_GAP = 6;
+    private static final int STATUS_ICON_SIZE = 12;
+    private static final int STATUS_ICON_GAP = 6;
 
     // GUI Texture
     public static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
     public static final ResourceLocation BACKGROUND_BORDER_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background_border.png");
     public static final ResourceLocation TAB_BUTTON_TEXTURE_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_normal.png");
     public static final ResourceLocation TAB_BUTTON_TEXTURE_SELECTED = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_selected.png");
+    public static final ResourceLocation STATUS_BAR_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_bar_fill.png");
+    public static final ResourceLocation STATUS_BAR_BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_bar_background.png");
+    public static final ResourceLocation STATUS_ICON_HUNGER = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/icon_hunger.png");
+    public static final ResourceLocation STATUS_ICON_HAPPINESS = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/icon_happiness.png");
+    public static final ResourceLocation STATUS_ICON_ENERGY = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/icon_energy.png");
+    public static final ResourceLocation STATUS_ICON_FUN = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/icon_fun.png");
+    public static final ResourceLocation STATUS_ICON_EXPERIENCE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/icon_experience.png");
 
     // Tab Indices
     private static final int TAB_STATS = 0;
@@ -219,22 +232,27 @@ public class BuddyStatusScreen implements Renderable {
         }
         
         // Position action buttons centered between status bars and right edge
-        int statusBarsEndX = guiX + 20 + 150; // status bars start + bar width
+        int statusBarsEndX = guiX + 20 + STATUS_ICON_SIZE + STATUS_ICON_GAP + STATUS_BAR_WIDTH; // status bars start + icon + bar width
         int rightEdgeX = guiX + SCREEN_WIDTH - 20; // right edge minus padding
         int actionButtonWidth = 80; // approximate button width
         int actionButtonStartX = statusBarsEndX + ((rightEdgeX - statusBarsEndX - actionButtonWidth) / 2);
         
         // Vertically center the buttons to the status bars area
         int statusBarsStartY = guiY + 50; // where status bars start
-        int statusBarsHeight = 4 * (font.lineHeight + 10 + 2 + 4); // 4 bars with spacing
+        int statusBarsHeight = getStatusBarsHeight();
         int totalButtonsHeight = actionButtons.size() * 20 + (actionButtons.size() - 1) * 5; // buttons + spacing
-        int actionButtonStartY = statusBarsStartY + ((statusBarsHeight - totalButtonsHeight) / 2);
+        int actionButtonStartY = statusBarsStartY + Math.max(0, (statusBarsHeight - totalButtonsHeight) / 2);
         int actionButtonSpacing = 25; // Reduced from 40 for tighter spacing
         
         for (int i = 0; i < actionButtons.size(); i++) {
             int y = actionButtonStartY + (i * actionButtonSpacing);
             actionButtons.get(i).setPosition(actionButtonStartX, y);
         }
+    }
+
+    private static int getStatusBarsHeight() {
+        int itemHeight = Math.max(STATUS_ICON_SIZE, STATUS_BAR_HEIGHT);
+        return (STATUS_BAR_COUNT * itemHeight) + ((STATUS_BAR_COUNT - 1) * STATUS_BAR_GAP);
     }
 
     /**
@@ -319,13 +337,14 @@ public class BuddyStatusScreen implements Renderable {
         Font font = Minecraft.getInstance().font;
         int contentStartX = guiX + 20;
         int contentStartY = guiY + 30;
+        Component tooltip = null;
 
         // Draw title
         String title = "Status & Stats";
         graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
 
         // Draw status bars (moved from BuddyGui)
-        renderStatusBars(graphics, contentStartX, contentStartY + 20);
+        tooltip = renderStatusBars(graphics, contentStartX, contentStartY + 20, mouseX, mouseY);
         
         // Update button states before rendering
         for (BuddyGuiButton button : actionButtons) {
@@ -347,19 +366,21 @@ public class BuddyStatusScreen implements Renderable {
         graphics.drawString(font, levelText, contentStartX, contentStartY + 140, 0xFFFFFF);
 
         // Draw XP bar - moved further down
-        int xpBarX = contentStartX + 80;
+        int minXpBarX = contentStartX + font.width(levelText) + STATUS_ICON_SIZE + STATUS_ICON_GAP + 10;
+        int xpBarX = Math.max(contentStartX + 80, minXpBarX);
         int xpBarY = contentStartY + 140;
-        int xpBarWidth = 150;
-        int xpBarHeight = 10;
-
-        // Background
-        graphics.fill(xpBarX, xpBarY, xpBarX + xpBarWidth, xpBarY + xpBarHeight, 0x80000000);
+        int xpIconX = xpBarX - STATUS_ICON_GAP - STATUS_ICON_SIZE;
+        int xpIconY = xpBarY + (STATUS_BAR_HEIGHT - STATUS_ICON_SIZE) / 2;
+        graphics.blit(STATUS_ICON_EXPERIENCE, xpIconX, xpIconY, 0.0F, 0.0F, STATUS_ICON_SIZE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
+        renderTexturedBar(graphics, xpBarX, xpBarY, levelingManager.getLevelProgressPercentage() / 100f, 0.3f, 0.85f, 0.45f);
 
         // Fill based on progress to next level
-        int progressPercentage = levelingManager.getLevelProgressPercentage();
-        int fillWidth = (xpBarWidth * progressPercentage) / 100;
-        if (fillWidth > 0) {
-            graphics.fill(xpBarX, xpBarY, xpBarX + fillWidth, xpBarY + xpBarHeight, 0xFF00FF00);
+        if (tooltip == null && isMouseOver(mouseX, mouseY, xpBarX, xpBarY, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT)) {
+            if (levelingManager.getCurrentLevel() < 30) {
+                tooltip = Component.translatable("fancymenu.buddy.status_bar.experience", levelingManager.getExperience(), levelingManager.getExperienceForNextLevel());
+            } else {
+                tooltip = Component.translatable("fancymenu.buddy.status_bar.experience_max", levelingManager.getExperience());
+            }
         }
 
         // XP text - moved further down
@@ -372,6 +393,10 @@ public class BuddyStatusScreen implements Renderable {
         graphics.drawString(font, xpText, contentStartX, contentStartY + 155, 0xFFFFFF);
 
         // Removed attribute points, titles and buttons
+
+        if (tooltip != null) {
+            graphics.renderTooltip(font, tooltip, mouseX, mouseY);
+        }
     }
 
     /**
@@ -641,83 +666,95 @@ public class BuddyStatusScreen implements Renderable {
      * Renders the buddy's status bars in the stats screen
      * Adapted from BuddyGui.renderStatusBars()
      */
-    private void renderStatusBars(GuiGraphics graphics, int startX, int startY) {
-        int barWidth = 150;
-        int barHeight = 10;
-        Font font = Minecraft.getInstance().font;
-
-        // Calculate spacing using font line height
-        int labelHeight = font.lineHeight;
-        int verticalGap = 4; // Gap between components
-        int totalItemHeight = labelHeight + barHeight + verticalGap;
+    private Component renderStatusBars(GuiGraphics graphics, int startX, int startY, int mouseX, int mouseY) {
+        Component tooltip = null;
+        int itemHeight = Math.max(STATUS_ICON_SIZE, STATUS_BAR_HEIGHT);
+        int barX = startX + STATUS_ICON_SIZE + STATUS_ICON_GAP;
 
         // Draw each status bar with proper spacing
-        for (int i = 0; i < 4; i++) {
-            int currentY = startY + (totalItemHeight * i);
-
-            // Draw the label
-            String label;
-            int color;
-
-            switch (i) {
-                case 0:
-                    label = "Hunger";
-                    color = 0xFFFF5050; // Red
-                    break;
-                case 1:
-                    label = "Happiness";
-                    color = 0xFF50FF50; // Green
-                    break;
-                case 2:
-                    label = "Energy";
-                    color = 0xFF5050FF; // Blue
-                    break;
-                case 3:
-                    label = "Fun";
-                    color = 0xFFC850FF; // Purple
-                    break;
-                default:
-                    label = "";
-                    color = 0xFFFFFFFF;
-            }
-
-            graphics.drawString(font, label, startX, currentY, color);
-
-            // Draw the bar below its label
-            int barY = currentY + labelHeight + 2;
-            float fillAmount = 0;
-            DrawableColor barColor;
+        for (int i = 0; i < STATUS_BAR_COUNT; i++) {
+            int currentY = startY + (itemHeight + STATUS_BAR_GAP) * i;
+            int iconY = currentY + (itemHeight - STATUS_ICON_SIZE) / 2;
+            int barY = currentY + (itemHeight - STATUS_BAR_HEIGHT) / 2;
+            float fillAmount;
+            float tintR;
+            float tintG;
+            float tintB;
+            int displayValue;
+            ResourceLocation iconTexture;
+            String tooltipKey;
 
             switch (i) {
                 case 0:
                     fillAmount = buddy.getHunger() / 100f;
-                    barColor = DrawableColor.of(255, 80, 80);
+                    displayValue = Math.round(Math.max(0f, Math.min(100f, buddy.getHunger())));
+                    iconTexture = STATUS_ICON_HUNGER;
+                    tooltipKey = "fancymenu.buddy.status_bar.hunger";
+                    tintR = 0.95f;
+                    tintG = 0.35f;
+                    tintB = 0.35f;
                     break;
                 case 1:
                     fillAmount = buddy.getHappiness() / 100f;
-                    barColor = DrawableColor.of(80, 255, 80);
+                    displayValue = Math.round(Math.max(0f, Math.min(100f, buddy.getHappiness())));
+                    iconTexture = STATUS_ICON_HAPPINESS;
+                    tooltipKey = "fancymenu.buddy.status_bar.happiness";
+                    tintR = 0.35f;
+                    tintG = 0.9f;
+                    tintB = 0.35f;
                     break;
                 case 2:
                     fillAmount = buddy.getEnergy() / 100f;
-                    barColor = DrawableColor.of(80, 80, 255);
+                    displayValue = Math.round(Math.max(0f, Math.min(100f, buddy.getEnergy())));
+                    iconTexture = STATUS_ICON_ENERGY;
+                    tooltipKey = "fancymenu.buddy.status_bar.energy";
+                    tintR = 0.35f;
+                    tintG = 0.55f;
+                    tintB = 0.95f;
                     break;
                 case 3:
                     fillAmount = buddy.getFunLevel() / 100f;
-                    barColor = DrawableColor.of(200, 80, 255);
+                    displayValue = Math.round(Math.max(0f, Math.min(100f, buddy.getFunLevel())));
+                    iconTexture = STATUS_ICON_FUN;
+                    tooltipKey = "fancymenu.buddy.status_bar.fun";
+                    tintR = 0.8f;
+                    tintG = 0.4f;
+                    tintB = 0.95f;
                     break;
                 default:
-                    fillAmount = 0;
-                    barColor = DrawableColor.of(255, 255, 255);
+                    fillAmount = 0f;
+                    displayValue = 0;
+                    iconTexture = STATUS_ICON_HUNGER;
+                    tooltipKey = "fancymenu.buddy.status_bar.hunger";
+                    tintR = 1.0f;
+                    tintG = 1.0f;
+                    tintB = 1.0f;
+                    break;
             }
 
-            // Bar background
-            graphics.fill(startX, barY, startX + barWidth, barY + barHeight, 0x80000000);
+            graphics.blit(iconTexture, startX, iconY, 0.0F, 0.0F, STATUS_ICON_SIZE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
+            renderTexturedBar(graphics, barX, barY, fillAmount, tintR, tintG, tintB);
 
-            // Bar fill
-            int fillWidth = Math.max(1, (int)(barWidth * fillAmount));
-            if (fillWidth > 0) {
-                graphics.fill(startX, barY, startX + fillWidth, barY + barHeight, barColor.getColorInt());
+            if (tooltip == null && isMouseOver(mouseX, mouseY, barX, barY, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT)) {
+                tooltip = Component.translatable(tooltipKey, displayValue);
             }
         }
+
+        return tooltip;
+    }
+
+    private static void renderTexturedBar(GuiGraphics graphics, int barX, int barY, float fillAmount, float tintR, float tintG, float tintB) {
+        float clampedFill = Math.max(0f, Math.min(1f, fillAmount));
+        graphics.blit(STATUS_BAR_BACKGROUND_TEXTURE, barX, barY, 0.0F, 0.0F, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT);
+        int fillWidth = (int)(STATUS_BAR_WIDTH * clampedFill);
+        if (fillWidth > 0) {
+            graphics.setColor(tintR, tintG, tintB, 1.0F);
+            graphics.blit(STATUS_BAR_TEXTURE, barX, barY, 0.0F, 0.0F, fillWidth, STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT);
+            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        }
+    }
+
+    private static boolean isMouseOver(int mouseX, int mouseY, int x, int y, int width, int height) {
+        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
     }
 }

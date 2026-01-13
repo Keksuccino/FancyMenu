@@ -2520,5 +2520,11 @@
   "fancymenu.decoration_overlays.buddy.custom_gravestone_texture": "Custom Gravestone Texture",
   "fancymenu.decoration_overlays.buddy.custom_gravestone_texture.desc": "Override the texture shown when Buddy has died.",
   "fancymenu.decoration_overlays.buddy.can_die": "Buddy Can Die",
-  "fancymenu.decoration_overlays.buddy.can_die.desc": "If enabled, Buddy will permanently die after 10 real hours at 0 food or happiness until you reset the save."
+  "fancymenu.decoration_overlays.buddy.can_die.desc": "If enabled, Buddy will permanently die after 10 real hours at 0 food or happiness until you reset the save.",
+  "fancymenu.buddy.status_bar.hunger": "Hunger: %s%%",
+  "fancymenu.buddy.status_bar.happiness": "Happiness: %s%%",
+  "fancymenu.buddy.status_bar.energy": "Energy: %s%%",
+  "fancymenu.buddy.status_bar.fun": "Fun: %s%%",
+  "fancymenu.buddy.status_bar.experience": "Experience: %s / %s XP",
+  "fancymenu.buddy.status_bar.experience_max": "Experience: %s XP (Max Level)"
 }
