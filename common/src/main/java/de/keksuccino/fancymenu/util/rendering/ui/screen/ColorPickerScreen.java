@@ -103,7 +103,7 @@ public class ColorPickerScreen extends PiPScreen {
 
         UIColorTheme theme = UIBase.getUIColorTheme();
         RenderSystem.enableBlend();
-        graphics.fill(0, 0, this.width, this.height, theme.screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, theme.interface_background_color.getColorInt());
 
         this.updateLayout();
 

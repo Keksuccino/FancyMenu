@@ -1367,7 +1367,7 @@
   "fancymenu.listeners.manage.add": "Add Listener",
   "fancymenu.listeners.manage.cancel_warning": "Do you really want to cancel?\n§xThis will undo everything you've done in here!",
   "fancymenu.listeners.manage.delete_warning": "Do you really want to §xdelete§r the selected listener?\n§xThis action cannot be undone!",
-  "fancymenu.listeners.manage.desc": "Listeners are a very powerful feature that allows you\nto execute an action script when specific things happen,\nlike when a user types on their keyboard, performs a mouse click\nor even when things happen in worlds, like when the player dies.\n\nListeners aren't bound to screens, to they constantly\nlisten for events, even if there isn't a screen open at all,\nlike when playing in a singleplayer world or on a server.",
+  "fancymenu.listeners.manage.desc": "Listeners are a very powerful feature that allows you to execute an action script when specific things happen, like when a user types on their keyboard, performs a mouse click or even when things happen in worlds, like when the player dies.\n\nListeners aren't bound to screens, so they constantly listen for events, even if there isn't a screen open at all, like when playing in a singleplayer world or on a server.",
   "fancymenu.listeners.manage.description.actions": "Action Script",
   "fancymenu.listeners.manage.description.listener_desc": "Listener Type",
   "fancymenu.listeners.manage.edit": "Edit Actions",

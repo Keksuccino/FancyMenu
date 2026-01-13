@@ -807,7 +807,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         UIColorTheme theme = UIBase.getUIColorTheme();
-        graphics.fill(0, 0, this.width, this.height, theme.screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, theme.interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, theme.generic_text_base_color.getColorInt(), false);
@@ -1011,7 +1011,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         UIColorTheme theme = UIBase.getUIColorTheme();
-        Color backgroundColor = withAlpha(theme.screen_background_color.getColor(), 220);
+        Color backgroundColor = withAlpha(theme.interface_background_color.getColor(), 220);
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();

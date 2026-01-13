@@ -73,7 +73,7 @@ public class TextEditorScreen extends Screen {
     protected int borderLeft = 40;
     protected int borderRight = 20;
     protected int lineHeight = 14;
-    protected DrawableColor screenBackgroundColor = UIBase.getUIColorTheme().screen_background_color;
+    protected DrawableColor screenBackgroundColor = UIBase.getUIColorTheme().interface_background_color;
     protected Color editorAreaBorderColor = UIBase.getUIColorTheme().element_border_color_normal.getColor();
     protected Color editorAreaBackgroundColor = UIBase.getUIColorTheme().area_background_color.getColor();
     protected Color textColor = UIBase.getUIColorTheme().text_editor_text_color.getColor();

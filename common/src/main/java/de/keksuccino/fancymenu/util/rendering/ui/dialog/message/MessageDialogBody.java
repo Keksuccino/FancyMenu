@@ -74,7 +74,7 @@ public class MessageDialogBody extends PiPScreen {
 
         // Render no background if blur is enabled, because window blur background is used then
         if (!UIBase.shouldBlur()) {
-            graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+            graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
         }
 
         this.updateRenderLinesIfNeeded();

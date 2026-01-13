@@ -24,9 +24,9 @@ public class UIColorTheme {
     public DrawableColor ui_blur_interface_area_color_type_2 = DrawableColor.of(new Color(5, 5, 5, 100));
     public DrawableColor ui_blur_interface_area_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
     public DrawableColor ui_blur_interface_widget_background_color_normal_type_1 = DrawableColor.of(new Color(71, 71, 71, 102));
-    public DrawableColor ui_blur_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(128, 67, 182, 61));
+    public DrawableColor ui_blur_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(83, 156, 212, 77));
     public DrawableColor ui_blur_interface_widget_background_color_normal_type_2 = DrawableColor.of(new Color(126, 126, 126, 102));
-    public DrawableColor ui_blur_interface_widget_background_color_hover_type_2 = DrawableColor.of(new Color(167, 130, 215, 61));
+    public DrawableColor ui_blur_interface_widget_background_color_hover_type_2 = DrawableColor.of(new Color(134, 198, 248, 77));
     public DrawableColor ui_blur_interface_widget_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
     public DrawableColor ui_blur_interface_widget_label_color_normal = DrawableColor.of(new Color(206, 221, 237));
     public DrawableColor ui_blur_interface_widget_label_color_inactive = DrawableColor.of(new Color(113, 117, 119));
@@ -39,6 +39,7 @@ public class UIColorTheme {
     public DrawableColor ui_blur_interface_generic_text_color = DrawableColor.of(new Color(255, 255, 255));
     public DrawableColor ui_blur_tooltip_background_tint = DrawableColor.of(new Color(19, 19, 19, 169));
 
+    public DrawableColor interface_background_color = DrawableColor.of(new Color(60, 63, 65));
     public DrawableColor interface_title_bar_color = DrawableColor.of(new Color(58, 58, 58));
 
     public DrawableColor menu_bar_bottom_line_color = DrawableColor.of(new Color(93, 97, 100));
@@ -60,7 +61,6 @@ public class UIColorTheme {
     public DrawableColor layout_editor_close_icon_color = DrawableColor.of(new Color(218, 60, 30));
     public DrawableColor scroll_grabber_color_normal = DrawableColor.of(new Color(89, 91, 93, 100));
     public DrawableColor scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));
-    public DrawableColor screen_background_color = DrawableColor.of(new Color(60, 63, 65));
     public DrawableColor screen_background_color_darker = DrawableColor.of(new Color(38, 38, 38));
     public DrawableColor element_border_color_normal = DrawableColor.of(new Color(93, 97, 100));
     public DrawableColor element_border_color_hover = DrawableColor.of(new Color(93, 97, 100));

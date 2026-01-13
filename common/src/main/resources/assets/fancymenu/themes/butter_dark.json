@@ -1,6 +1,6 @@
 {
   "identifier": "butter_dark",
-  "display_name": "Butter Dark [by caelaThinx]",
+  "display_name": "Butter Dark [by caela]",
   "menu_bar_bottom_line_color": {
     "hex": "#3A3A3AFF"
   },
@@ -37,7 +37,7 @@
   "scroll_grabber_color_hover": {
     "hex": "#4D4D4D64"
   },
-  "screen_background_color": {
+  "interface_background_color": {
     "hex": "#303030FF"
   },
   "screen_background_color_darker": {

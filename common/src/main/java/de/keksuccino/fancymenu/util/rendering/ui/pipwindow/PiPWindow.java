@@ -198,7 +198,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (UIBase.shouldBlur()) {
             GuiBlurRenderer.renderBlurArea(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), 0.0F, theme.ui_blur_interface_background_tint, partial);
         } else {
-            graphics.fill(innerLeft, innerTop, innerRight, innerBottom, theme.area_background_color.getColorInt());
+            graphics.fill(innerLeft, innerTop, innerRight, innerBottom, theme.interface_background_color.getColorInt());
         }
     }
 

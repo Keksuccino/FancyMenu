@@ -458,7 +458,7 @@ public class KeyframeManagerScreen extends Screen {
         }
 
         // Render screen background
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
 
         LayoutEditorScreen.renderGrid(graphics, this.width, this.height);
 

@@ -29,7 +29,7 @@ public class LightUIColorTheme extends UIColorTheme {
         layout_editor_close_icon_color = DrawableColor.of(new Color(147, 40, 19));
         scroll_grabber_color_normal = DrawableColor.of(new Color(89, 91, 93, 100));
         scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));
-        screen_background_color = DrawableColor.of(new Color(178, 178, 178));
+        interface_background_color = DrawableColor.of(new Color(178, 178, 178));
         screen_background_color_darker = DrawableColor.of(new Color(173, 173, 173));
         element_border_color_normal = DrawableColor.of(new Color(119, 119, 119));
         ui_blur_overlay_element_border_color = DrawableColor.of(new Color(119, 119, 119, 200));
