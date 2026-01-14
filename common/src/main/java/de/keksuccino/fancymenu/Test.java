@@ -58,14 +58,17 @@ public class Test {
 
         if (circleFirst) {
             SmoothCircleRenderer.renderSmoothCircle(e.getGraphics(), 50, 380, 120, 120, 2.0F, TINT.getColorInt(), e.getPartial());
+            SmoothCircleRenderer.renderSmoothCircleBorder(e.getGraphics(), 50, 380, 120, 120, BORDER_THICKNESS, 2.0F, BORDER_TINT.getColorInt(), e.getPartial());
         }
 
         if (circleSecond) {
             SmoothCircleRenderer.renderSmoothCircle(e.getGraphics(), e.getScreen().width - 260, e.getScreen().height - 260, 180, 120, 2.0F, TINT.getColorInt(), e.getPartial());
+            SmoothCircleRenderer.renderSmoothCircleBorder(e.getGraphics(), e.getScreen().width - 260, e.getScreen().height - 260, 180, 120, BORDER_THICKNESS, 2.0F, BORDER_TINT.getColorInt(), e.getPartial());
         }
 
         if (circleThird) {
             SmoothCircleRenderer.renderSmoothCircle(e.getGraphics(), e.getScreen().width - 220, 180, 120, 180, 4.0F, TINT.getColorInt(), e.getPartial());
+            SmoothCircleRenderer.renderSmoothCircleBorder(e.getGraphics(), e.getScreen().width - 220, 180, 120, 180, BORDER_THICKNESS, 4.0F, BORDER_TINT.getColorInt(), e.getPartial());
         }
 
     }
