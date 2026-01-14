@@ -232,7 +232,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int a = alpha[index++] & 0xFF;
-                int color = FastColor.ABGR32.color(a, 255, 255, 255);
+                int color = FastColor.ABGR32.color(a, a, a, a);
                 atlasImage.setPixelRGBA(atlasX + x, atlasY + y, color);
             }
         }

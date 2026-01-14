@@ -18,6 +18,7 @@ final class SmoothTextShader {
     private static final float DEFAULT_SDF_SHARPNESS = 1.0F;
     private static final float DEFAULT_SDF_EDGE = 0.5F;
     private static final boolean DEBUG_LOG = Boolean.getBoolean("fancymenu.debugSmoothTextShader");
+    private static final int DEBUG_MODE = Math.max(0, Integer.getInteger("fancymenu.debugSmoothTextMode", 0));
 
     private static ShaderInstance shader;
     private static boolean shaderFailed;
@@ -51,19 +52,31 @@ final class SmoothTextShader {
         if (current == null) {
             return;
         }
-        current.safeGetUniform("SdfSharpness").set(DEFAULT_SDF_SHARPNESS);
-        current.safeGetUniform("SdfEdge").set(DEFAULT_SDF_EDGE);
+        float sharpness = DEFAULT_SDF_SHARPNESS;
+        float edge = DEFAULT_SDF_EDGE;
+        if (DEBUG_MODE == 1) {
+            sharpness = -1.0F;
+        } else if (DEBUG_MODE == 2) {
+            edge = -1.0F;
+        }
+        current.safeGetUniform("SdfSharpness").set(sharpness);
+        current.safeGetUniform("SdfEdge").set(edge);
+        current.safeGetUniform("DebugMode").set(DEBUG_MODE);
         if (DEBUG_LOG && !debugLogged) {
             boolean sharpnessPresent = current.getUniform("SdfSharpness") != null;
             boolean edgePresent = current.getUniform("SdfEdge") != null;
+            boolean debugPresent = current.getUniform("DebugMode") != null;
             LOGGER.info("[FANCYMENU] SmoothTextShader active: name={} id={} sharpnessUniform={} edgeUniform={} sharpness={} edge={}",
                     current.getName(),
                     current.getId(),
                     sharpnessPresent,
                     edgePresent,
-                    DEFAULT_SDF_SHARPNESS,
-                    DEFAULT_SDF_EDGE
+                    sharpness,
+                    edge
             );
+            if (debugPresent && DEBUG_MODE != 0) {
+                LOGGER.info("[FANCYMENU] SmoothTextShader debug mode active: {}", DEBUG_MODE);
+            }
             debugLogged = true;
         }
     }

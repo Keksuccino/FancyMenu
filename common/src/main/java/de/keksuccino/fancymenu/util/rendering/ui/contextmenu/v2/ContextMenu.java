@@ -175,19 +175,28 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         float normalCornerTopRight = this.roundTopRightCorner ? normalRoundingRadius : 0.0F;
         float normalCornerBottomLeft = this.roundBottomLeftCorner ? normalRoundingRadius : 0.0F;
         float normalCornerBottomRight = this.roundBottomRightCorner ? normalRoundingRadius : 0.0F;
+        float smoothScale = renderScale;
+        float smoothX = scaledX * smoothScale;
+        float smoothY = scaledY * smoothScale;
+        float smoothWidth = this.getWidth() * smoothScale;
+        float smoothHeight = displayHeight * smoothScale;
+        float smoothCornerTopLeft = normalCornerTopLeft * smoothScale;
+        float smoothCornerTopRight = normalCornerTopRight * smoothScale;
+        float smoothCornerBottomLeft = normalCornerBottomLeft * smoothScale;
+        float smoothCornerBottomRight = normalCornerBottomRight * smoothScale;
 
         //Render shadow
         if (this.hasShadow()) {
-            SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
                     graphics,
-                    scaledX + 4.0F,
-                    scaledY + 4.0F,
-                    this.getWidth(),
-                    displayHeight,
-                    normalCornerTopLeft,
-                    normalCornerTopRight,
-                    normalCornerBottomRight,
-                    normalCornerBottomLeft,
+                    (scaledX + 4.0F) * smoothScale,
+                    (scaledY + 4.0F) * smoothScale,
+                    smoothWidth,
+                    smoothHeight,
+                    smoothCornerTopLeft,
+                    smoothCornerTopRight,
+                    smoothCornerBottomRight,
+                    smoothCornerBottomLeft,
                     SHADOW_COLOR.getColorInt(),
                     partial
             );
@@ -195,32 +204,38 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         if (FancyMenu.getOptions().enableUiBlur.getValue()) {
             // Render blur background
-            GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCornersScaled(
-                    graphics,
-                    scaledX,
-                    scaledY,
-                    this.getWidth(),
-                    displayHeight,
-                    UIBase.getBlurRadius(),
-                    normalCornerTopLeft,
-                    normalCornerTopRight,
-                    normalCornerBottomRight,
-                    normalCornerBottomLeft,
-                    UIBase.getUIColorTheme().ui_blur_overlay_element_background_tint,
-                    partial
-            );
+            float blurX = smoothX;
+            float blurY = smoothY;
+            float blurWidth = smoothWidth;
+            float blurHeight = smoothHeight;
+            if (blurWidth > 0.0F && blurHeight > 0.0F) {
+                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(
+                        graphics,
+                        blurX,
+                        blurY,
+                        blurWidth,
+                        blurHeight,
+                        UIBase.getBlurRadius(),
+                        smoothCornerTopLeft,
+                        smoothCornerTopRight,
+                        smoothCornerBottomRight,
+                        smoothCornerBottomLeft,
+                        UIBase.getUIColorTheme().ui_blur_overlay_element_background_tint,
+                        partial
+                );
+            }
         } else {
             //Render normal background
-            SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
                     graphics,
-                    scaledX,
-                    scaledY,
-                    this.getWidth(),
-                    displayHeight,
-                    normalCornerTopLeft,
-                    normalCornerTopRight,
-                    normalCornerBottomRight,
-                    normalCornerBottomLeft,
+                    smoothX,
+                    smoothY,
+                    smoothWidth,
+                    smoothHeight,
+                    smoothCornerTopLeft,
+                    smoothCornerTopRight,
+                    smoothCornerBottomRight,
+                    smoothCornerBottomLeft,
                     UIBase.getUIColorTheme().element_background_color_normal.getColorInt(),
                     partial
             );
@@ -310,14 +325,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             // Render up arrow background and arrow if scrolled down
             if (scrollPosition > 0) {
                 // Fill background with rounded top corners
-                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
                         graphics,
-                        scaledX,
-                        scaledY,
-                        this.getWidth(),
-                        SCROLL_INDICATOR_HEIGHT,
-                        normalCornerTopLeft,
-                        normalCornerTopRight,
+                        smoothX,
+                        smoothY,
+                        smoothWidth,
+                        SCROLL_INDICATOR_HEIGHT * smoothScale,
+                        smoothCornerTopLeft,
+                        smoothCornerTopRight,
                         0.0F,
                         0.0F,
                         darkerBackgroundColor,
@@ -339,16 +354,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             // Render down arrow background and arrow if can scroll further
             if (scrollPosition < maxScrollPosition) {
                 // Fill background with rounded bottom corners
-                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
                         graphics,
-                        scaledX,
-                        scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT,
-                        this.getWidth(),
-                        SCROLL_INDICATOR_HEIGHT,
+                        smoothX,
+                        (scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT) * smoothScale,
+                        smoothWidth,
+                        SCROLL_INDICATOR_HEIGHT * smoothScale,
                         0.0F,
                         0.0F,
-                        normalCornerBottomRight,
-                        normalCornerBottomLeft,
+                        smoothCornerBottomRight,
+                        smoothCornerBottomLeft,
                         darkerBackgroundColor,
                         partial
                 );
@@ -367,22 +382,22 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         //Render border
-        float borderThickness = this.getBorderThickness();
-        float borderCornerTopLeft = normalCornerTopLeft > 0.0F ? normalCornerTopLeft + borderThickness : 0.0F;
-        float borderCornerTopRight = normalCornerTopRight > 0.0F ? normalCornerTopRight + borderThickness : 0.0F;
-        float borderCornerBottomRight = normalCornerBottomRight > 0.0F ? normalCornerBottomRight + borderThickness : 0.0F;
-        float borderCornerBottomLeft = normalCornerBottomLeft > 0.0F ? normalCornerBottomLeft + borderThickness : 0.0F;
-        SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
+        float smoothBorderThickness = this.getBorderThickness() * smoothScale;
+        float smoothBorderCornerTopLeft = normalCornerTopLeft > 0.0F ? (normalCornerTopLeft + this.getBorderThickness()) * smoothScale : 0.0F;
+        float smoothBorderCornerTopRight = normalCornerTopRight > 0.0F ? (normalCornerTopRight + this.getBorderThickness()) * smoothScale : 0.0F;
+        float smoothBorderCornerBottomRight = normalCornerBottomRight > 0.0F ? (normalCornerBottomRight + this.getBorderThickness()) * smoothScale : 0.0F;
+        float smoothBorderCornerBottomLeft = normalCornerBottomLeft > 0.0F ? (normalCornerBottomLeft + this.getBorderThickness()) * smoothScale : 0.0F;
+        SmoothRectangleRenderer.renderSmoothBorderRoundAllCorners(
                 graphics,
-                scaledX - borderThickness,
-                scaledY - borderThickness,
-                this.getWidth() + (borderThickness * 2.0F),
-                displayHeight + (borderThickness * 2.0F),
-                borderThickness,
-                borderCornerTopLeft,
-                borderCornerTopRight,
-                borderCornerBottomRight,
-                borderCornerBottomLeft,
+                (scaledX - this.getBorderThickness()) * smoothScale,
+                (scaledY - this.getBorderThickness()) * smoothScale,
+                (this.getWidth() + (this.getBorderThickness() * 2.0F)) * smoothScale,
+                (displayHeight + (this.getBorderThickness() * 2.0F)) * smoothScale,
+                smoothBorderThickness,
+                smoothBorderCornerTopLeft,
+                smoothBorderCornerTopRight,
+                smoothBorderCornerBottomRight,
+                smoothBorderCornerBottomLeft,
                 UIBase.shouldBlur() ? UIBase.getUIColorTheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt(),
                 partial
         );

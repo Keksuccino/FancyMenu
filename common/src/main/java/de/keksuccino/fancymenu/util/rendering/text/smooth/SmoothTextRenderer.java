@@ -30,8 +30,10 @@ public final class SmoothTextRenderer {
     private static final boolean DEBUG_RENDER = Boolean.getBoolean("fancymenu.debugSmoothTextRender");
     private static final boolean DEBUG_FORCE_VANILLA_SHADER = Boolean.getBoolean("fancymenu.debugSmoothTextVanillaShader");
     private static final boolean DEBUG_DRAW_ATLAS = Boolean.getBoolean("fancymenu.debugSmoothTextShowAtlas");
+    private static final int DEBUG_MODE = Math.max(0, Integer.getInteger("fancymenu.debugSmoothTextMode", 0));
     private static boolean debugLogged;
     private static boolean debugAtlasDrawn;
+    private static boolean debugShaderLogged;
 
     private SmoothTextRenderer() {
     }
@@ -307,11 +309,19 @@ public final class SmoothTextRenderer {
     }
 
     private static void applyShaderState() {
-        if (DEBUG_FORCE_VANILLA_SHADER) {
+        if (DEBUG_FORCE_VANILLA_SHADER && DEBUG_MODE == 0) {
             RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+            if (!debugShaderLogged) {
+                LOGGER.info("[FANCYMENU] SmoothTextRenderer using vanilla shader (debugSmoothTextVanillaShader=true).");
+                debugShaderLogged = true;
+            }
         } else {
             RenderSystem.setShader(SmoothTextShader::getShader);
             SmoothTextShader.applyDefaults();
+            if (!debugShaderLogged && DEBUG_FORCE_VANILLA_SHADER) {
+                LOGGER.info("[FANCYMENU] SmoothTextRenderer forcing smooth shader (debugSmoothTextMode={} overrides vanilla debug).", DEBUG_MODE);
+                debugShaderLogged = true;
+            }
         }
     }
 
