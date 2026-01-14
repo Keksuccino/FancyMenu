@@ -1,6 +1,5 @@
 #version 150
 
-uniform sampler2D DiffuseSampler;
 uniform sampler2D BlurSampler;
 uniform vec2 OutSize;
 uniform vec4 Rect;
@@ -54,7 +53,6 @@ float roundedRectMask(vec2 pixel, vec2 pos, vec2 size, vec4 radii) {
 
 void main() {
     vec2 uv = texCoord;
-    vec4 original = texture(DiffuseSampler, uv);
     vec4 blurred = texture(BlurSampler, uv);
 
     float tintStrength = clamp(Tint.a, 0.0, 1.0);

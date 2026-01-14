@@ -399,11 +399,7 @@ final class SmoothFontAtlas implements AutoCloseable {
     }
 
     private static int coverageFromPixel(int argb) {
-        int alpha = (argb >>> 24) & 0xFF;
-        int red = (argb >> 16) & 0xFF;
-        int green = (argb >> 8) & 0xFF;
-        int blue = argb & 0xFF;
-        return Math.max(alpha, Math.max(red, Math.max(green, blue)));
+        return (argb >>> 24) & 0xFF;
     }
 
     private static float[] computeDistance(boolean[] inside, int width, int height, boolean invert) {

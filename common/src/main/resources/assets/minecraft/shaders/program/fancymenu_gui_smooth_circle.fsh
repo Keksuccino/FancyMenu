@@ -1,6 +1,5 @@
 #version 150
 
-uniform sampler2D DiffuseSampler;
 uniform vec2 OutSize;
 uniform vec4 Rect;
 uniform float BorderThickness;

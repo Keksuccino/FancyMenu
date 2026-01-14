@@ -19,6 +19,10 @@ public final class SmoothFont implements AutoCloseable {
     private final float ascent;
     private final float descent;
     private final float lineHeight;
+    private final float underlineOffset;
+    private final float underlineThickness;
+    private final float strikethroughOffset;
+    private final float strikethroughThickness;
     private final SmoothFontAtlas plainAtlas;
     private final SmoothFontAtlas boldAtlas;
     private final SmoothFontAtlas italicAtlas;
@@ -38,6 +42,10 @@ public final class SmoothFont implements AutoCloseable {
         this.ascent = metrics.getAscent();
         this.descent = metrics.getDescent();
         this.lineHeight = metrics.getHeight();
+        this.underlineOffset = metrics.getUnderlineOffset();
+        this.underlineThickness = metrics.getUnderlineThickness();
+        this.strikethroughOffset = metrics.getStrikethroughOffset();
+        this.strikethroughThickness = metrics.getStrikethroughThickness();
 
         this.plainAtlas = new SmoothFontAtlas(this, this.plainFont, this.fontRenderContext, this.sdfRange, this.debugName + "_plain");
         this.boldAtlas = new SmoothFontAtlas(this, this.boldFont, this.fontRenderContext, this.sdfRange, this.debugName + "_bold");
@@ -59,6 +67,22 @@ public final class SmoothFont implements AutoCloseable {
 
     public float getDescent(float size) {
         return descent * scaleForSize(size);
+    }
+
+    public float getUnderlineOffset(float size) {
+        return underlineOffset * scaleForSize(size);
+    }
+
+    public float getUnderlineThickness(float size) {
+        return Math.max(1.0F, underlineThickness * scaleForSize(size));
+    }
+
+    public float getStrikethroughOffset(float size) {
+        return strikethroughOffset * scaleForSize(size);
+    }
+
+    public float getStrikethroughThickness(float size) {
+        return Math.max(1.0F, strikethroughThickness * scaleForSize(size));
     }
 
     SmoothFontGlyph getGlyph(int codepoint, boolean bold, boolean italic) {

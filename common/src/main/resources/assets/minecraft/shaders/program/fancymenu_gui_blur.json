@@ -2,7 +2,6 @@
   "vertex": "fancymenu_gui_blur",
   "fragment": "fancymenu_gui_blur",
   "samplers": [
-    { "name": "DiffuseSampler" },
     { "name": "BlurSampler" }
   ],
   "attributes": [

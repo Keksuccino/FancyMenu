@@ -1,9 +1,7 @@
 {
   "vertex": "fancymenu_gui_smooth_rect",
   "fragment": "fancymenu_gui_smooth_rect",
-  "samplers": [
-    { "name": "DiffuseSampler" }
-  ],
+  "samplers": [],
   "attributes": [
     "Position"
   ],

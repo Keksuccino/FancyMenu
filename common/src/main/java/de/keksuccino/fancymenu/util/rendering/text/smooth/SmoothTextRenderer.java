@@ -166,6 +166,8 @@ public final class SmoothTextRenderer {
         float strikeStartX = 0.0F;
         int underlineColor = style.color;
         int strikeColor = style.color;
+        float underlineThickness = font.getUnderlineThickness(size);
+        float strikeThickness = font.getStrikethroughThickness(size);
 
         for (int index = 0; index < text.length(); ) {
             char c = text.charAt(index);
@@ -173,8 +175,8 @@ public final class SmoothTextRenderer {
                 quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
                 buffer = null;
                 currentAtlas = null;
-                drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + (size * 0.9F), underlineColor, size);
-                drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + (size * 0.5F), strikeColor, size);
+                drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
+                drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
                 penX = x;
                 lineY += lineHeight;
                 baseline = lineY + ascent;
@@ -199,7 +201,7 @@ public final class SmoothTextRenderer {
                         quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
                         buffer = null;
                         currentAtlas = null;
-                        drawLineIfNeeded(graphics, true, underlineStartX, penX, baseline + (size * 0.9F), underlineColor, size);
+                        drawLineIfNeeded(graphics, true, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
                         underlineStartX = penX;
                         underlineColor = style.color;
                     } else if (!wasUnderline && style.underline) {
@@ -210,7 +212,7 @@ public final class SmoothTextRenderer {
                         quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
                         buffer = null;
                         currentAtlas = null;
-                        drawLineIfNeeded(graphics, true, strikeStartX, penX, baseline + (size * 0.5F), strikeColor, size);
+                        drawLineIfNeeded(graphics, true, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
                         strikeStartX = penX;
                         strikeColor = style.color;
                     } else if (!wasStrikethrough && style.strikethrough) {
@@ -286,8 +288,8 @@ public final class SmoothTextRenderer {
         }
 
         quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
-        drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + (size * 0.9F), underlineColor, size);
-        drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + (size * 0.5F), strikeColor, size);
+        drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
+        drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
 
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.disableBlend();
@@ -457,11 +459,10 @@ public final class SmoothTextRenderer {
         return FastColor.ARGB32.color(alpha, red, green, blue);
     }
 
-    private static void drawLineIfNeeded(GuiGraphics graphics, boolean enabled, float startX, float endX, float y, int color, float size) {
+    private static void drawLineIfNeeded(GuiGraphics graphics, boolean enabled, float startX, float endX, float y, int color, float thickness) {
         if (!enabled || endX <= startX) {
             return;
         }
-        float thickness = Math.max(1.0F, size * 0.075F);
         RenderingUtils.fillF(graphics, startX, y, endX, y + thickness, color);
     }
 
