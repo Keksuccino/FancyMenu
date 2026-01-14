@@ -39,7 +39,7 @@ final class SmoothFontAtlas implements AutoCloseable {
     private static final boolean DEBUG_DUMP = Boolean.getBoolean("fancymenu.debugSmoothFontDump");
     private static final boolean DEBUG_USE_RAW_ALPHA = Boolean.getBoolean("fancymenu.debugSmoothFontRawAlpha");
     private static final boolean DEBUG_DUMP_ATLAS = Boolean.getBoolean("fancymenu.debugSmoothFontAtlasDump");
-    private static final int ALPHA_THRESHOLD = Math.max(1, Integer.getInteger("fancymenu.smoothFontAlphaThreshold", 1));
+    private static final int ALPHA_THRESHOLD = Math.max(1, Integer.getInteger("fancymenu.smoothFontAlphaThreshold", 128));
     private static final int DEBUG_DUMP_LIMIT = 8;
     private static int debugDumpCount;
     private static int debugAtlasDumpCount;
@@ -72,6 +72,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
         this.textureLocation = textureManager.register("fancymenu_smooth_font_" + debugName, dynamicTexture);
         this.textureId = dynamicTexture.getId();
+        applyLinearFilter();
     }
 
     ResourceLocation getTextureLocation() {
@@ -220,11 +221,24 @@ final class SmoothFontAtlas implements AutoCloseable {
         if (RenderSystem.isOnRenderThread()) {
             TextureUtil.prepareImage(dynamicTexture.getId(), atlasWidth, atlasHeight);
             dynamicTexture.upload();
+            applyLinearFilter();
         } else {
             RenderSystem.recordRenderCall(() -> {
                 TextureUtil.prepareImage(dynamicTexture.getId(), atlasWidth, atlasHeight);
                 dynamicTexture.upload();
+                applyLinearFilter();
             });
+        }
+    }
+
+    private void applyLinearFilter() {
+        if (dynamicTexture == null) {
+            return;
+        }
+        if (RenderSystem.isOnRenderThreadOrInit()) {
+            dynamicTexture.setFilter(true, false);
+        } else {
+            RenderSystem.recordRenderCall(() -> dynamicTexture.setFilter(true, false));
         }
     }
 
