@@ -34,48 +34,24 @@ public final class SmoothRectangleRenderer {
         renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.uniform(cornerRadius), color, partial);
     }
 
-    public static void renderSmoothRect(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float cornerRadius, int color, float partial) {
-        renderSmoothRect(graphics, (float) x, (float) y, (float) width, (float) height, cornerRadius, color, partial);
-    }
-
     public static void renderSmoothRectRoundTopCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.topOnly(cornerRadius), color, partial);
-    }
-
-    public static void renderSmoothRectRoundTopCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float cornerRadius, int color, float partial) {
-        renderSmoothRectRoundTopCorners(graphics, (float) x, (float) y, (float) width, (float) height, cornerRadius, color, partial);
     }
 
     public static void renderSmoothRectRoundBottomCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.bottomOnly(cornerRadius), color, partial);
     }
 
-    public static void renderSmoothRectRoundBottomCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float cornerRadius, int color, float partial) {
-        renderSmoothRectRoundBottomCorners(graphics, (float) x, (float) y, (float) width, (float) height, cornerRadius, color, partial);
-    }
-
     public static void renderSmoothRectRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), color, partial);
-    }
-
-    public static void renderSmoothRectRoundAllCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
-        renderSmoothRectRoundAllCorners(graphics, (float) x, (float) y, (float) width, (float) height, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius, color, partial);
     }
 
     public static void renderSmoothBorder(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float cornerRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, borderThickness, CornerRadii.uniform(cornerRadius), color, partial);
     }
 
-    public static void renderSmoothBorder(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float borderThickness, float cornerRadius, int color, float partial) {
-        renderSmoothBorder(graphics, (float) x, (float) y, (float) width, (float) height, borderThickness, cornerRadius, color, partial);
-    }
-
     public static void renderSmoothBorderRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, borderThickness, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), color, partial);
-    }
-
-    public static void renderSmoothBorderRoundAllCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float borderThickness, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
-        renderSmoothBorderRoundAllCorners(graphics, (float) x, (float) y, (float) width, (float) height, borderThickness, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius, color, partial);
     }
 
     private static void renderSmoothRectInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, @Nonnull CornerRadii cornerRadii, int color, float partial) {

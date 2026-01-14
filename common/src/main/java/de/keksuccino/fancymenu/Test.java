@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
+import de.keksuccino.fancymenu.util.rendering.SmoothCircleRenderer;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
@@ -33,6 +34,9 @@ public class Test {
     private boolean blurFirst = false;
     private boolean blurSecond = false;
     private boolean blurThird = false;
+    private boolean circleFirst = false;
+    private boolean circleSecond = false;
+    private boolean circleThird = false;
 
     @EventListener(priority = EventPriority.VERY_LOW)
     public void onRenderPost(RenderScreenEvent.Post e) {
@@ -52,6 +56,18 @@ public class Test {
             SmoothRectangleRenderer.renderSmoothBorder(e.getGraphics(), e.getScreen().width - 300, 40, 100, 100, BORDER_THICKNESS, 4, BORDER_TINT.getColorInt(), e.getPartial());
         }
 
+        if (circleFirst) {
+            SmoothCircleRenderer.renderSmoothCircle(e.getGraphics(), 50, 380, 120, 120, 2.0F, TINT.getColorInt(), e.getPartial());
+        }
+
+        if (circleSecond) {
+            SmoothCircleRenderer.renderSmoothCircle(e.getGraphics(), e.getScreen().width - 260, e.getScreen().height - 260, 180, 120, 2.0F, TINT.getColorInt(), e.getPartial());
+        }
+
+        if (circleThird) {
+            SmoothCircleRenderer.renderSmoothCircle(e.getGraphics(), e.getScreen().width - 220, 180, 120, 180, 4.0F, TINT.getColorInt(), e.getPartial());
+        }
+
     }
 
     @EventListener
@@ -65,6 +81,15 @@ public class Test {
         }));
         e.addRenderableWidget(new ExtendedButton(20, 60, 100, 20, "Toggle Third Blur", button -> {
             blurThird = !blurThird;
+        }));
+        e.addRenderableWidget(new ExtendedButton(20, 80, 100, 20, "Toggle First Circle", button -> {
+            circleFirst = !circleFirst;
+        }));
+        e.addRenderableWidget(new ExtendedButton(20, 100, 100, 20, "Toggle Second Circle", button -> {
+            circleSecond = !circleSecond;
+        }));
+        e.addRenderableWidget(new ExtendedButton(20, 120, 100, 20, "Toggle Third Circle", button -> {
+            circleThird = !circleThird;
         }));
 
     }

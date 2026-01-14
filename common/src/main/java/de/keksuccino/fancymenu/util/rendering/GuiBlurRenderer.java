@@ -48,20 +48,11 @@ public final class GuiBlurRenderer {
         renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, CornerRadii.uniform(cornerRadius), tint, partial);
     }
 
-    // Backwards-compatible overload for existing int callers.
-    public static void renderBlurArea(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        renderBlurArea(graphics, (float) x, (float) y, (float) width, (float) height, blurRadius, cornerRadius, tint, partial);
-    }
-
     /**
      * Renders a blur area with only the top-left and top-right corners rounded.
      */
     public static void renderBlurAreaRoundTopCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
         renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, CornerRadii.topOnly(cornerRadius), tint, partial);
-    }
-
-    public static void renderBlurAreaRoundTopCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        renderBlurAreaRoundTopCorners(graphics, (float) x, (float) y, (float) width, (float) height, blurRadius, cornerRadius, tint, partial);
     }
 
     /**
@@ -71,19 +62,11 @@ public final class GuiBlurRenderer {
         renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, CornerRadii.bottomOnly(cornerRadius), tint, partial);
     }
 
-    public static void renderBlurAreaRoundBottomCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        renderBlurAreaRoundBottomCorners(graphics, (float) x, (float) y, (float) width, (float) height, blurRadius, cornerRadius, tint, partial);
-    }
-
     /**
      * Renders a blur area with individually specified corner radii (top-left, top-right, bottom-right, bottom-left).
      */
     public static void renderBlurAreaRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
         renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), tint, partial);
-    }
-
-    public static void renderBlurAreaRoundAllCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float blurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
-        renderBlurAreaRoundAllCorners(graphics, (float) x, (float) y, (float) width, (float) height, blurRadius, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius, tint, partial);
     }
 
     /**
@@ -96,20 +79,12 @@ public final class GuiBlurRenderer {
         renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.uniform(cornerRadius), tint, partial);
     }
 
-    public static void renderBlurAreaWithIntensity(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        renderBlurAreaWithIntensity(graphics, (float) x, (float) y, (float) width, (float) height, baseBlurRadius, cornerRadius, tint, partial);
-    }
-
     /**
      * Blur area using FancyMenu's blur intensity with only the top corners rounded.
      */
     public static void renderBlurAreaWithIntensityRoundTopCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
         float appliedRadius = Math.max(0.0F, baseBlurRadius * Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue()));
         renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.topOnly(cornerRadius), tint, partial);
-    }
-
-    public static void renderBlurAreaWithIntensityRoundTopCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        renderBlurAreaWithIntensityRoundTopCorners(graphics, (float) x, (float) y, (float) width, (float) height, baseBlurRadius, cornerRadius, tint, partial);
     }
 
     /**
@@ -120,20 +95,12 @@ public final class GuiBlurRenderer {
         renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.bottomOnly(cornerRadius), tint, partial);
     }
 
-    public static void renderBlurAreaWithIntensityRoundBottomCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        renderBlurAreaWithIntensityRoundBottomCorners(graphics, (float) x, (float) y, (float) width, (float) height, baseBlurRadius, cornerRadius, tint, partial);
-    }
-
     /**
      * Blur area using FancyMenu's blur intensity with individually specified corner radii (top-left, top-right, bottom-right, bottom-left).
      */
     public static void renderBlurAreaWithIntensityRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
         float appliedRadius = Math.max(0.0F, baseBlurRadius * Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue()));
         renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), tint, partial);
-    }
-
-    public static void renderBlurAreaWithIntensityRoundAllCorners(@Nonnull GuiGraphics graphics, int x, int y, int width, int height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
-        renderBlurAreaWithIntensityRoundAllCorners(graphics, (float) x, (float) y, (float) width, (float) height, baseBlurRadius, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius, tint, partial);
     }
 
     private static void renderBlurAreaInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, @Nonnull CornerRadii cornerRadii, @Nonnull DrawableColor tint, float partial) {
