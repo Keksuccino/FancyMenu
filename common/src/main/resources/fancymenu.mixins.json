@@ -73,6 +73,7 @@
     "client.MixinOnlineServerEntry",
     "client.MixinOptions",
     "client.MixinPauseScreen",
+    "client.MixinPoseStack",
     "client.MixinPlainTextButton",
     "client.MixinPlayer",
     "client.MixinProgressScreen",

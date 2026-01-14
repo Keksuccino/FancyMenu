@@ -191,12 +191,16 @@ public class TextEditorScreen extends Screen {
         this.verticalScrollBar.hoverBarColor = () -> this.scrollGrabberHoverColor;
         this.horizontalScrollBar.idleBarColor = () -> this.scrollGrabberIdleColor;
         this.horizontalScrollBar.hoverBarColor = () -> this.scrollGrabberHoverColor;
+        this.verticalScrollBar.setRoundedGrabberEnabled(true);
+        this.horizontalScrollBar.setRoundedGrabberEnabled(true);
 
         //Set placeholder menu scroll bar colors
         this.verticalScrollBarPlaceholderMenu.idleBarColor = () -> this.scrollGrabberIdleColor;
         this.verticalScrollBarPlaceholderMenu.hoverBarColor = () -> this.scrollGrabberHoverColor;
         this.horizontalScrollBarPlaceholderMenu.idleBarColor = () -> this.scrollGrabberIdleColor;
         this.horizontalScrollBarPlaceholderMenu.hoverBarColor = () -> this.scrollGrabberHoverColor;
+        this.verticalScrollBarPlaceholderMenu.setRoundedGrabberEnabled(true);
+        this.horizontalScrollBarPlaceholderMenu.setRoundedGrabberEnabled(true);
 
         this.addWidget(this.verticalScrollBar);
         this.addWidget(this.horizontalScrollBar);
@@ -322,6 +326,8 @@ public class TextEditorScreen extends Screen {
 
         this.renderScreenBackground(graphics);
 
+        this.renderLineNumberBackground(graphics, this.borderLeft);
+
         this.renderEditorAreaBackground(graphics);
 
         // Render indentation guides if enabled
@@ -345,8 +351,6 @@ public class TextEditorScreen extends Screen {
 
         graphics.disableScissor();
 
-        this.renderLineNumberBackground(graphics, this.borderLeft);
-
         //Don't render line numbers outside the line number area
         graphics.enableScissor(this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1);
 
@@ -359,7 +363,8 @@ public class TextEditorScreen extends Screen {
         this.lastTickFocusedLineIndex = this.getFocusedLineIndex();
         this.triggeredFocusedLineWasTooHighInCursorPosMethod = false;
 
-        UIBase.renderBorder(graphics, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
+        float editorAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
+        UIBase.renderRoundedBorder(graphics, this.borderLeft - 1, this.headerHeight - 1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1.0F, editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.editorAreaBorderColor.getRGB());
 
         this.verticalScrollBar.render(graphics, mouseX, mouseY, partial);
         this.horizontalScrollBar.render(graphics, mouseX, mouseY, partial);
@@ -417,7 +422,8 @@ public class TextEditorScreen extends Screen {
             }
 
             //Render placeholder menu background
-            graphics.fill(RenderType.gui(), this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+            float placeholderAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
+            UIBase.renderRoundedRect(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.getPlaceholderAreaWidth(), this.getPlaceholderAreaHeight(), placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.editorAreaBackgroundColor.getRGB());
 
             //Don't render parts of placeholder entries outside of placeholder menu area
             graphics.enableScissor(this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight());
@@ -435,7 +441,7 @@ public class TextEditorScreen extends Screen {
             graphics.disableScissor();
 
             //Render placeholder menu border
-            UIBase.renderBorder(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.headerHeight - 1 + 25, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
+            UIBase.renderRoundedBorder(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.headerHeight - 1 + 25, this.width - this.borderRight, this.height - this.footerHeight + 1, 1.0F, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.editorAreaBorderColor.getRGB());
 
             //Render placeholder menu scroll bars
             this.verticalScrollBarPlaceholderMenu.render(graphics, mouseX, mouseY, partial);
@@ -639,7 +645,12 @@ public class TextEditorScreen extends Screen {
     }
 
     protected void renderLineNumberBackground(GuiGraphics graphics, int width) {
-        graphics.fill(RenderType.gui(), this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
+        float overlap = UIBase.getInterfaceCornerRoundingRadius() + 1.0F;
+        float xMin = this.getEditorAreaX() - width - 1.0F;
+        float xMax = this.getEditorAreaX() + overlap;
+        float yMin = this.getEditorAreaY() - 1.0F;
+        float yMax = this.getEditorAreaY() + this.getEditorAreaHeight() + 1.0F;
+        UIBase.fillF(graphics, xMin, yMin, xMax, yMax, this.sideBarColor.getRGB());
     }
 
     protected void renderLineNumber(GuiGraphics graphics, TextEditorLine line) {
@@ -649,7 +660,8 @@ public class TextEditorScreen extends Screen {
     }
 
     protected void renderEditorAreaBackground(GuiGraphics graphics) {
-        graphics.fill(RenderType.gui(), this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+        float editorAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
+        UIBase.renderRoundedRect(graphics, this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaWidth(), this.getEditorAreaHeight(), editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.editorAreaBackgroundColor.getRGB());
     }
 
     protected void renderScreenBackground(GuiGraphics graphics) {

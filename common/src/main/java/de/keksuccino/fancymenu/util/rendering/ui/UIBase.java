@@ -95,6 +95,7 @@ public class UIBase extends RenderingUtils {
             slider.setLabelColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
         }
         slider.setLabelShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
+        slider.setRoundedColorBackgroundEnabled(true);
         return slider;
     }
 
@@ -130,6 +131,7 @@ public class UIBase extends RenderingUtils {
             editBox.setSuggestionTextColor(theme.edit_box_suggestion_text_color);
         }
         editBox.setTextShadow_FancyMenu(false);
+        editBox.setRoundedColorBackgroundEnabled(true);
         return editBox;
     }
 
@@ -211,15 +213,6 @@ public class UIBase extends RenderingUtils {
      */
     public static float getInterfaceCornerRoundingRadius() {
         return 6.0F;
-    }
-
-    /**
-     * Corner radius used for blur interfaces. Corrected default corner radius to make the blur rounding match with the normal rounding.
-     */
-    public static float getBlurInterfaceCornerRoundingRadius() {
-        if (getUIScale() == 1) return 2.0F;
-        if (getUIScale() == 2) return 4.0F;
-        return getInterfaceCornerRoundingRadius();
     }
 
     /**

@@ -48,6 +48,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected boolean focusable = true;
     protected boolean navigatable = true;
     protected boolean canConsumeUserInput = true;
+    protected boolean roundedColorBackground = false;
     @Nullable
     protected String inputPrefix;
     @Nullable
@@ -80,10 +81,20 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
         if (this.isVisible()) {
 
-            graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
+            if (this.roundedColorBackground) {
+                float radius = UIBase.getWidgetCornerRoundingRadius();
+                UIBase.renderRoundedRect(graphics, this.getX(), this.getY(), this.width, this.height, radius, radius, radius, radius, this.backgroundColor.getColorInt());
+            } else {
+                graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
+            }
             if (bordered) {
                 int borderColor = this.isFocused() ? this.borderFocusedColor.getColorInt() : this.borderNormalColor.getColorInt();
-                UIBase.renderBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
+                if (this.roundedColorBackground) {
+                    float radius = UIBase.getWidgetCornerRoundingRadius();
+                    UIBase.renderRoundedBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1.0F, radius, radius, radius, radius, borderColor);
+                } else {
+                    UIBase.renderBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
+                }
             }
 
             int textColor = access.getIsEditableFancyMenu() ? this.textColor.getColorInt() : this.textColorUneditable.getColorInt();
@@ -331,6 +342,15 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     public ExtendedEditBox setCanConsumeUserInput(boolean canConsumeUserInput) {
         this.canConsumeUserInput = canConsumeUserInput;
+        return this;
+    }
+
+    public boolean isRoundedColorBackgroundEnabled() {
+        return this.roundedColorBackground;
+    }
+
+    public ExtendedEditBox setRoundedColorBackgroundEnabled(boolean roundedColorBackground) {
+        this.roundedColorBackground = roundedColorBackground;
         return this;
     }
 

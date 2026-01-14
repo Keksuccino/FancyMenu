@@ -195,13 +195,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return;
         }
         float normalCornerRadius = getFrameCornerRadius();
-        float blurCornerRadius = getFrameBlurCornerRadius();
         UIColorTheme theme = getTheme();
         if (UIBase.shouldBlur()) {
             if (titleHeight > 0) {
-                GuiBlurRenderer.renderBlurAreaRoundBottomCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), blurCornerRadius, theme.ui_blur_interface_background_tint, partial);
+                GuiBlurRenderer.renderBlurAreaRoundBottomCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), normalCornerRadius, theme.ui_blur_interface_background_tint, partial);
             } else {
-                GuiBlurRenderer.renderBlurAreaRoundAllCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), blurCornerRadius, blurCornerRadius, blurCornerRadius, blurCornerRadius, theme.ui_blur_interface_background_tint, partial);
+                GuiBlurRenderer.renderBlurAreaRoundAllCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.ui_blur_interface_background_tint, partial);
             }
         } else {
             if (titleHeight > 0) {
@@ -273,19 +272,21 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         int titleCenterY = titleBarY + Math.max(0, Math.round((titleBarHeight - font.lineHeight * scale) / 2.0F));
 
         UIColorTheme theme = getTheme();
+        int buttonSlotSize = getTitleBarButtonSlotSize();
         int closeX = getCloseButtonX();
         int buttonY = getButtonY();
         int maximizeX = getMaximizeButtonX();
-        int buttonSize = getScaledButtonSize();
-        boolean maximizeHovered = this.maximizable && isPointInArea(mouseX, mouseY, maximizeX, buttonY, buttonSize, buttonSize);
-        boolean closeHovered = this.closable && isPointInArea(mouseX, mouseY, closeX, buttonY, buttonSize, buttonSize);
+        boolean maximizeHovered = this.maximizable && isPointInArea(mouseX, mouseY, maximizeX, buttonY, buttonSlotSize, titleBarHeight);
+        boolean closeHovered = this.closable && isPointInArea(mouseX, mouseY, closeX, buttonY, buttonSlotSize, titleBarHeight);
+        boolean hasBody = getBodyHeight() > 0;
 
         if (this.maximizable) {
-            renderButton(graphics, theme, maximizeX, buttonY, buttonSize, maximizeHovered, getActiveMaximizeButtonIcon(), getMaximizeButtonLabel(), scale);
+            boolean rightmost = !this.closable;
+            renderButton(graphics, theme, maximizeX, buttonY, buttonSlotSize, titleBarHeight, maximizeHovered, getActiveMaximizeButtonIcon(), rightmost, hasBody, scale);
         }
 
         if (this.closable) {
-            renderButton(graphics, theme, closeX, buttonY, buttonSize, closeHovered, this.closeButtonIcon, "X", scale);
+            renderButton(graphics, theme, closeX, buttonY, buttonSlotSize, titleBarHeight, closeHovered, this.closeButtonIcon, true, hasBody, scale);
         }
 
         int padding = getScaledButtonPadding();
@@ -298,10 +299,14 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             textStartX = iconX + iconSize + padding;
         }
 
-        int titleRightLimit = maximizeX - padding;
-        if (!this.maximizable) {
-            titleRightLimit = closeX - padding;
+        int buttonsWidth = 0;
+        if (this.maximizable) {
+            buttonsWidth += buttonSlotSize;
         }
+        if (this.closable) {
+            buttonsWidth += buttonSlotSize;
+        }
+        int titleRightLimit = titleBarRight - buttonsWidth - padding;
         int maxTitleWidth = Math.max(0, titleRightLimit - textStartX);
         int maxTitleWidthForFont = scale <= 0.0F ? maxTitleWidth : Math.max(0, (int) Math.floor(maxTitleWidth / scale));
         var split = font.split(this.title, maxTitleWidthForFont);
@@ -325,7 +330,6 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         UIColorTheme theme = getTheme();
         int border = getScaledBorderThickness();
         float normalCornerRadius = getFrameCornerRadius();
-        float blurCornerRadius = getFrameBlurCornerRadius();
 
         int innerLeft = frameX + border;
         int innerTop = frameY + border;
@@ -339,9 +343,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                 int blurHeight = Math.min(titleBottom, innerBottom) - innerTop;
                 boolean hasBody = innerBottom > titleBottom;
                 if (hasBody) {
-                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundTopCorners(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), blurCornerRadius, theme.ui_blur_interface_title_bar_tint, partial);
+                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundTopCorners(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), normalCornerRadius, theme.ui_blur_interface_title_bar_tint, partial);
                 } else {
-                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), blurCornerRadius, blurCornerRadius, blurCornerRadius, blurCornerRadius, theme.ui_blur_interface_title_bar_tint, partial);
+                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.ui_blur_interface_title_bar_tint, partial);
                 }
             } else {
                 float titleWidth = innerRight - innerLeft;
@@ -412,16 +416,25 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme, int x, int y, int size, boolean hovered, @NotNull ResourceLocation icon, @NotNull String label, float scale) {
+    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme, int x, int y, int width, int height, boolean hovered, @NotNull ResourceLocation icon, boolean rightmost, boolean hasBody, float scale) {
         if (hovered) {
             int color = UIBase.shouldBlur() ? theme.ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : theme.element_background_color_hover.getColorInt();
-            graphics.fill(x, y, x + size, y + size, color);
+            float radius = getFrameCornerRadius();
+            float topRight = rightmost ? radius : 0.0F;
+            float bottomRight = (rightmost && !hasBody) ? radius : 0.0F;
+            if (topRight > 0.0F || bottomRight > 0.0F) {
+                UIBase.renderRoundedRect(graphics, x, y, width, height, 0.0F, topRight, bottomRight, 0.0F, color);
+            } else {
+                graphics.fill(x, y, x + width, y + height, color);
+            }
         }
+        int buttonSize = getScaledButtonSize();
         int iconPadding = Math.max(0, Math.round(4.0F * scale));
         int maxIconSize = Math.max(1, Math.round(DEFAULT_ICON_TEXTURE_SIZE * scale));
-        int iconSize = Math.max(1, Math.min(size - iconPadding, maxIconSize));
-        int iconX = x + (size - iconSize + 1) / 2;
-        int iconY = y + (size - iconSize + 1) / 2;
+        int iconSize = Math.max(1, Math.min(buttonSize - iconPadding, maxIconSize));
+        iconSize = Math.min(iconSize, Math.min(width, height));
+        int iconX = x + (width - iconSize + 1) / 2;
+        int iconY = y + (height - iconSize + 1) / 2;
         UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
         graphics.blit(icon, iconX, iconY, iconSize, iconSize, 0, 0, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
         RenderingUtils.resetShaderColor(graphics);
@@ -463,14 +476,6 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return 0.0F;
         }
         return Math.max(0.0F, UIBase.getInterfaceCornerRoundingRadius() * scale);
-    }
-
-    private float getFrameBlurCornerRadius() {
-        float scale = getFrameScale();
-        if (!Float.isFinite(scale) || scale <= 0.0F) {
-            return 0.0F;
-        }
-        return Math.max(0.0F, UIBase.getBlurInterfaceCornerRoundingRadius() * scale);
     }
 
     public void tick() {
@@ -975,12 +980,14 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
 
         if (button == 0) {
-            int buttonSize = getScaledButtonSize();
-            if (this.closable && isPointInArea(mouseX, mouseY, getCloseButtonX(), getButtonY(), buttonSize, buttonSize)) {
+            int buttonSlotSize = getTitleBarButtonSlotSize();
+            int titleBarHeight = getScaledTitleBarHeight();
+            int buttonY = getButtonY();
+            if (this.closable && isPointInArea(mouseX, mouseY, getCloseButtonX(), buttonY, buttonSlotSize, titleBarHeight)) {
                 close();
                 return true;
             }
-            if (this.maximizable && isPointInArea(mouseX, mouseY, getMaximizeButtonX(), getButtonY(), buttonSize, buttonSize)) {
+            if (this.maximizable && isPointInArea(mouseX, mouseY, getMaximizeButtonX(), buttonY, buttonSlotSize, titleBarHeight)) {
                 toggleMaximized();
                 return true;
             }
@@ -1171,23 +1178,23 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return isPointInArea(mouseX, mouseY, getBodyX(), getBodyY(), getBodyWidth(), getBodyHeight());
     }
 
+    private int getTitleBarButtonSlotSize() {
+        return getScaledTitleBarHeight();
+    }
+
     private int getButtonY() {
-        int titleHeight = getScaledTitleBarHeight();
-        int buttonSize = getScaledButtonSize();
-        return this.y + getScaledBorderThickness() + Math.max(0, (titleHeight - buttonSize) / 2);
+        return this.y + getScaledBorderThickness();
     }
 
     private int getCloseButtonX() {
         int border = getScaledBorderThickness();
-        int padding = getScaledButtonPadding();
-        int buttonSize = getScaledButtonSize();
-        return this.x + getWidth() - border - padding - buttonSize;
+        int buttonSlotSize = getTitleBarButtonSlotSize();
+        return this.x + getWidth() - border - buttonSlotSize;
     }
 
     private int getMaximizeButtonX() {
-        int padding = getScaledButtonPadding();
-        int buttonSize = getScaledButtonSize();
-        return getCloseButtonX() - padding - buttonSize;
+        int buttonSlotSize = getTitleBarButtonSlotSize();
+        return getCloseButtonX() - buttonSlotSize;
     }
 
     @NotNull

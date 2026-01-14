@@ -47,6 +47,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     public Float renderScale = null;
     protected boolean hovered = false;
     protected boolean innerAreaHovered = false;
+    protected boolean roundedColorBackground = false;
 
     public ScrollArea(float x, float y, float width, float height) {
         this.setX(x, true);
@@ -88,7 +89,12 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         if (this.backgroundColor == null) return;
         DrawableColor backColor = this.backgroundColor.get();
         if (backColor != null) {
-            fillF(graphics, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), backColor.getColorInt());
+            if (this.roundedColorBackground) {
+                float radius = UIBase.getInterfaceCornerRoundingRadius();
+                renderRoundedRect(graphics, this.getInnerX(), this.getInnerY(), this.getInnerWidth(), this.getInnerHeight(), radius, radius, radius, radius, backColor.getColorInt());
+            } else {
+                fillF(graphics, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), backColor.getColorInt());
+            }
         }
     }
 
@@ -96,7 +102,12 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         if (this.borderColor == null) return;
         DrawableColor borColor = this.borderColor.get();
         if (borColor != null) {
-            renderBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), borColor.getColorInt(), true, true, true, true);
+            if (this.roundedColorBackground) {
+                float radius = UIBase.getInterfaceCornerRoundingRadius();
+                renderRoundedBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), radius, radius, radius, radius, borColor.getColorInt());
+            } else {
+                renderBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), borColor.getColorInt(), true, true, true, true);
+            }
         }
     }
 
@@ -334,6 +345,15 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
 
     public boolean isHovered() {
         return this.hovered;
+    }
+
+    public boolean isRoundedColorBackgroundEnabled() {
+        return this.roundedColorBackground;
+    }
+
+    public ScrollArea setRoundedColorBackgroundEnabled(boolean roundedColorBackground) {
+        this.roundedColorBackground = roundedColorBackground;
+        return this;
     }
 
     public boolean isMouseOverInnerArea(double mouseX, double mouseY) {

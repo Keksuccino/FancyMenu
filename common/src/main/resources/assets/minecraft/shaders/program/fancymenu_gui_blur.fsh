@@ -48,7 +48,8 @@ float roundedRectMask(vec2 pixel, vec2 pos, vec2 size, vec4 radii) {
         dist = max(dx, dy);
     }
 
-    return 1.0 - smoothstep(0.0, 1.0, dist);
+    float aa = fwidth(dist);
+    return 1.0 - smoothstep(-aa, aa, dist);
 }
 
 void main() {

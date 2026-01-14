@@ -51,6 +51,7 @@ final class SmoothFontAtlas implements AutoCloseable {
     private NativeImage atlasImage;
     private DynamicTexture dynamicTexture;
     private ResourceLocation textureLocation;
+    private int textureId;
     private int atlasWidth;
     private int atlasHeight;
     private int cursorX;
@@ -68,10 +69,15 @@ final class SmoothFontAtlas implements AutoCloseable {
         this.dynamicTexture = new DynamicTexture(atlasImage);
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
         this.textureLocation = textureManager.register("fancymenu_smooth_font_" + debugName, dynamicTexture);
+        this.textureId = dynamicTexture.getId();
     }
 
     ResourceLocation getTextureLocation() {
         return textureLocation;
+    }
+
+    int getTextureId() {
+        return textureId;
     }
 
     SmoothFontGlyph getGlyph(int codepoint) {

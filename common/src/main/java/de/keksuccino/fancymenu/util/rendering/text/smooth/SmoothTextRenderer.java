@@ -146,6 +146,7 @@ public final class SmoothTextRenderer {
         int quadCount = 0;
         Matrix4f matrix = graphics.pose().last().pose();
 
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(SmoothTextShader::getShader);
@@ -159,7 +160,7 @@ public final class SmoothTextRenderer {
         for (int index = 0; index < text.length(); ) {
             char c = text.charAt(index);
             if (c == '\n') {
-                quadCount = flushIfNeeded(buffer, quadCount);
+                quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
                 buffer = null;
                 currentAtlas = null;
                 drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + (size * 0.9F), underlineColor, size);
@@ -185,7 +186,7 @@ public final class SmoothTextRenderer {
                 int consumed = applyFormatting(text, index + 1, style, baseColor);
                 if (consumed > 0) {
                     if (wasUnderline && (!style.underline || previousColor != style.color)) {
-                        quadCount = flushIfNeeded(buffer, quadCount);
+                        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
                         buffer = null;
                         currentAtlas = null;
                         drawLineIfNeeded(graphics, true, underlineStartX, penX, baseline + (size * 0.9F), underlineColor, size);
@@ -196,7 +197,7 @@ public final class SmoothTextRenderer {
                         underlineColor = style.color;
                     }
                     if (wasStrikethrough && (!style.strikethrough || previousColor != style.color)) {
-                        quadCount = flushIfNeeded(buffer, quadCount);
+                        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
                         buffer = null;
                         currentAtlas = null;
                         drawLineIfNeeded(graphics, true, strikeStartX, penX, baseline + (size * 0.5F), strikeColor, size);
@@ -220,10 +221,10 @@ public final class SmoothTextRenderer {
             if (glyph.hasTexture()) {
                 SmoothFontAtlas atlas = glyph.atlas();
                 if (currentAtlas != atlas) {
-                    quadCount = flushIfNeeded(buffer, quadCount);
+                    quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
                     buffer = null;
                     currentAtlas = atlas;
-                    RenderSystem.setShaderTexture(0, atlas.getTextureLocation());
+                    RenderSystem.setShaderTexture(0, atlas.getTextureId());
                 }
                 if (buffer == null) {
                     buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
@@ -242,7 +243,7 @@ public final class SmoothTextRenderer {
             penX += advance;
         }
 
-        quadCount = flushIfNeeded(buffer, quadCount);
+        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
         drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + (size * 0.9F), underlineColor, size);
         drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + (size * 0.5F), strikeColor, size);
 
@@ -251,8 +252,16 @@ public final class SmoothTextRenderer {
         RenderingUtils.resetShaderColor(graphics);
     }
 
-    private static int flushIfNeeded(BufferBuilder buffer, int quadCount) {
+    private static int flushIfNeeded(BufferBuilder buffer, int quadCount, SmoothFontAtlas atlas) {
         if (buffer != null && quadCount > 0) {
+            // Re-apply shader state in case other GUI draws changed it (underline/strike use RenderType.gui()).
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShader(SmoothTextShader::getShader);
+            SmoothTextShader.applyDefaults();
+            if (atlas != null) {
+                RenderSystem.setShaderTexture(0, atlas.getTextureId());
+            }
             BufferUploader.drawWithShader(buffer.buildOrThrow());
         }
         return 0;

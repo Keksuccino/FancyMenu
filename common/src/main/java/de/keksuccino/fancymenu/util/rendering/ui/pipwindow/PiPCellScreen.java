@@ -65,7 +65,7 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderCellScreenBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         // PiP screens should render no background
     }
 
