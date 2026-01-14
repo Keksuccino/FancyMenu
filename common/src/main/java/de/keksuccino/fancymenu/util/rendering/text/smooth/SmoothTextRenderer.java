@@ -28,7 +28,10 @@ public final class SmoothTextRenderer {
     private static final String OBFUSCATION_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final boolean DEBUG_RENDER = Boolean.getBoolean("fancymenu.debugSmoothTextRender");
+    private static final boolean DEBUG_FORCE_VANILLA_SHADER = Boolean.getBoolean("fancymenu.debugSmoothTextVanillaShader");
+    private static final boolean DEBUG_DRAW_ATLAS = Boolean.getBoolean("fancymenu.debugSmoothTextShowAtlas");
     private static boolean debugLogged;
+    private static boolean debugAtlasDrawn;
 
     private SmoothTextRenderer() {
     }
@@ -155,8 +158,7 @@ public final class SmoothTextRenderer {
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(SmoothTextShader::getShader);
-        SmoothTextShader.applyDefaults();
+        applyShaderState();
 
         float underlineStartX = 0.0F;
         float strikeStartX = 0.0F;
@@ -235,6 +237,10 @@ public final class SmoothTextRenderer {
                 if (buffer == null) {
                     buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
                 }
+                if (DEBUG_DRAW_ATLAS && !debugAtlasDrawn) {
+                    drawAtlasPreview(matrix, atlas.getTextureId());
+                    debugAtlasDrawn = true;
+                }
                 if (DEBUG_RENDER && !debugLogged) {
                     ShaderInstance activeShader = RenderSystem.getShader();
                     float[] shaderColor = RenderSystem.getShaderColor();
@@ -291,14 +297,39 @@ public final class SmoothTextRenderer {
             // Re-apply shader state in case other GUI draws changed it (underline/strike use RenderType.gui()).
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            RenderSystem.setShader(SmoothTextShader::getShader);
-            SmoothTextShader.applyDefaults();
+            applyShaderState();
             if (atlas != null) {
                 RenderSystem.setShaderTexture(0, atlas.getTextureId());
             }
             BufferUploader.drawWithShader(buffer.buildOrThrow());
         }
         return 0;
+    }
+
+    private static void applyShaderState() {
+        if (DEBUG_FORCE_VANILLA_SHADER) {
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        } else {
+            RenderSystem.setShader(SmoothTextShader::getShader);
+            SmoothTextShader.applyDefaults();
+        }
+    }
+
+    private static void drawAtlasPreview(Matrix4f matrix, int textureId) {
+        float x0 = 4.0F;
+        float y0 = 4.0F;
+        float x1 = 4.0F + 128.0F;
+        float y1 = 4.0F + 128.0F;
+        RenderSystem.setShaderTexture(0, textureId);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        buffer.addVertex(matrix, x0, y0, 0.0F).setUv(0.0F, 0.0F).setColor(0xFFFFFFFF);
+        buffer.addVertex(matrix, x0, y1, 0.0F).setUv(0.0F, 1.0F).setColor(0xFFFFFFFF);
+        buffer.addVertex(matrix, x1, y1, 0.0F).setUv(1.0F, 1.0F).setColor(0xFFFFFFFF);
+        buffer.addVertex(matrix, x1, y0, 0.0F).setUv(1.0F, 0.0F).setColor(0xFFFFFFFF);
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        applyShaderState();
+        RenderSystem.setShaderTexture(0, textureId);
     }
 
     private static void addGlyph(BufferBuilder buffer, Matrix4f matrix, SmoothFontGlyph glyph, float penX, float baseline, float scale, int color, boolean italic) {
