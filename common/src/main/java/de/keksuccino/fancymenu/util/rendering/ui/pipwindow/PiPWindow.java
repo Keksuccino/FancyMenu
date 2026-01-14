@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
@@ -204,9 +205,33 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             }
         } else {
             if (titleHeight > 0) {
-                UIBase.renderRoundedRect(graphics, innerLeft, innerTop, innerWidth, innerHeight, 0.0F, 0.0F, normalCornerRadius, normalCornerRadius, theme.interface_background_color.getColorInt());
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                        graphics,
+                        innerLeft,
+                        innerTop,
+                        innerWidth,
+                        innerHeight,
+                        0.0F,
+                        0.0F,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        theme.interface_background_color.getColorInt(),
+                        partial
+                );
             } else {
-                UIBase.renderRoundedRect(graphics, innerLeft, innerTop, innerWidth, innerHeight, normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.interface_background_color.getColorInt());
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                        graphics,
+                        innerLeft,
+                        innerTop,
+                        innerWidth,
+                        innerHeight,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        theme.interface_background_color.getColorInt(),
+                        partial
+                );
             }
         }
     }
@@ -282,11 +307,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
         if (this.maximizable) {
             boolean rightmost = !this.closable;
-            renderButton(graphics, theme, maximizeX, buttonY, buttonSlotSize, titleBarHeight, maximizeHovered, getActiveMaximizeButtonIcon(), rightmost, hasBody, scale);
+            renderButton(graphics, theme, maximizeX, buttonY, buttonSlotSize, titleBarHeight, maximizeHovered, getActiveMaximizeButtonIcon(), rightmost, hasBody, scale, partial);
         }
 
         if (this.closable) {
-            renderButton(graphics, theme, closeX, buttonY, buttonSlotSize, titleBarHeight, closeHovered, this.closeButtonIcon, true, hasBody, scale);
+            renderButton(graphics, theme, closeX, buttonY, buttonSlotSize, titleBarHeight, closeHovered, this.closeButtonIcon, true, hasBody, scale, partial);
         }
 
         int padding = getScaledButtonPadding();
@@ -352,15 +377,54 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                 float titleHeightClamped = Math.min(titleBottom, innerBottom) - innerTop;
                 boolean hasBody = innerBottom > titleBottom;
                 if (hasBody) {
-                    UIBase.renderRoundedRect(graphics, innerLeft, innerTop, titleWidth, titleHeightClamped, normalCornerRadius, normalCornerRadius, 0.0F, 0.0F, theme.interface_title_bar_color.getColorInt());
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                            graphics,
+                            innerLeft,
+                            innerTop,
+                            titleWidth,
+                            titleHeightClamped,
+                            normalCornerRadius,
+                            normalCornerRadius,
+                            0.0F,
+                            0.0F,
+                            theme.interface_title_bar_color.getColorInt(),
+                            partial
+                    );
                 } else {
-                    UIBase.renderRoundedRect(graphics, innerLeft, innerTop, titleWidth, titleHeightClamped, normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.interface_title_bar_color.getColorInt());
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                            graphics,
+                            innerLeft,
+                            innerTop,
+                            titleWidth,
+                            titleHeightClamped,
+                            normalCornerRadius,
+                            normalCornerRadius,
+                            normalCornerRadius,
+                            normalCornerRadius,
+                            theme.interface_title_bar_color.getColorInt(),
+                            partial
+                    );
                 }
             }
         }
 
         if (border > 0) {
-            UIBase.renderRoundedBorder(graphics, frameX, frameY, right, bottom, (float) border, normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, this.getBorderColor(theme));
+            float borderThickness = (float) border;
+            float smoothBorderCorner = normalCornerRadius > 0.0F ? normalCornerRadius + borderThickness : 0.0F;
+            SmoothRectangleRenderer.renderSmoothBorderRoundAllCorners(
+                    graphics,
+                    frameX,
+                    frameY,
+                    frameWidth,
+                    frameHeight,
+                    borderThickness,
+                    smoothBorderCorner,
+                    smoothBorderCorner,
+                    smoothBorderCorner,
+                    smoothBorderCorner,
+                    this.getBorderColor(theme),
+                    partial
+            );
         }
     }
 
@@ -416,14 +480,26 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme, int x, int y, int width, int height, boolean hovered, @NotNull ResourceLocation icon, boolean rightmost, boolean hasBody, float scale) {
+    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme, int x, int y, int width, int height, boolean hovered, @NotNull ResourceLocation icon, boolean rightmost, boolean hasBody, float scale, float partial) {
         if (hovered) {
             int color = UIBase.shouldBlur() ? theme.ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : theme.element_background_color_hover.getColorInt();
             float radius = getFrameCornerRadius();
             float topRight = rightmost ? radius : 0.0F;
             float bottomRight = (rightmost && !hasBody) ? radius : 0.0F;
             if (topRight > 0.0F || bottomRight > 0.0F) {
-                UIBase.renderRoundedRect(graphics, x, y, width, height, 0.0F, topRight, bottomRight, 0.0F, color);
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                        graphics,
+                        x,
+                        y,
+                        width,
+                        height,
+                        0.0F,
+                        topRight,
+                        bottomRight,
+                        0.0F,
+                        color,
+                        partial
+                );
             } else {
                 graphics.fill(x, y, x + width, y + height, color);
             }

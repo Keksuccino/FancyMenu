@@ -48,11 +48,25 @@ public final class GuiBlurRenderer {
         renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, CornerRadii.uniform(cornerRadius), tint, partial);
     }
 
+    public static void renderBlurAreaScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderBlurArea(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, blurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
+    }
+
     /**
      * Renders a blur area with only the top-left and top-right corners rounded.
      */
     public static void renderBlurAreaRoundTopCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
         renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, CornerRadii.topOnly(cornerRadius), tint, partial);
+    }
+
+    public static void renderBlurAreaRoundTopCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderBlurAreaRoundTopCorners(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, blurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
     }
 
     /**
@@ -62,11 +76,38 @@ public final class GuiBlurRenderer {
         renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, CornerRadii.bottomOnly(cornerRadius), tint, partial);
     }
 
+    public static void renderBlurAreaRoundBottomCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderBlurAreaRoundBottomCorners(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, blurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
+    }
+
     /**
      * Renders a blur area with individually specified corner radii (top-left, top-right, bottom-right, bottom-left).
      */
     public static void renderBlurAreaRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
         renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), tint, partial);
+    }
+
+    public static void renderBlurAreaRoundAllCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderBlurAreaRoundAllCorners(
+                graphics,
+                x * additionalScale + translationX,
+                y * additionalScale + translationY,
+                width * additionalScale,
+                height * additionalScale,
+                blurRadius * additionalScale,
+                topLeftRadius * additionalScale,
+                topRightRadius * additionalScale,
+                bottomRightRadius * additionalScale,
+                bottomLeftRadius * additionalScale,
+                tint,
+                partial
+        );
     }
 
     /**
@@ -79,12 +120,26 @@ public final class GuiBlurRenderer {
         renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.uniform(cornerRadius), tint, partial);
     }
 
+    public static void renderBlurAreaWithIntensityScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderBlurAreaWithIntensity(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, baseBlurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
+    }
+
     /**
      * Blur area using FancyMenu's blur intensity with only the top corners rounded.
      */
     public static void renderBlurAreaWithIntensityRoundTopCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
         float appliedRadius = Math.max(0.0F, baseBlurRadius * Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue()));
         renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.topOnly(cornerRadius), tint, partial);
+    }
+
+    public static void renderBlurAreaWithIntensityRoundTopCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderBlurAreaWithIntensityRoundTopCorners(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, baseBlurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
     }
 
     /**
@@ -95,12 +150,39 @@ public final class GuiBlurRenderer {
         renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.bottomOnly(cornerRadius), tint, partial);
     }
 
+    public static void renderBlurAreaWithIntensityRoundBottomCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderBlurAreaWithIntensityRoundBottomCorners(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, baseBlurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
+    }
+
     /**
      * Blur area using FancyMenu's blur intensity with individually specified corner radii (top-left, top-right, bottom-right, bottom-left).
      */
     public static void renderBlurAreaWithIntensityRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
         float appliedRadius = Math.max(0.0F, baseBlurRadius * Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue()));
         renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), tint, partial);
+    }
+
+    public static void renderBlurAreaWithIntensityRoundAllCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderBlurAreaWithIntensityRoundAllCorners(
+                graphics,
+                x * additionalScale + translationX,
+                y * additionalScale + translationY,
+                width * additionalScale,
+                height * additionalScale,
+                baseBlurRadius * additionalScale,
+                topLeftRadius * additionalScale,
+                topRightRadius * additionalScale,
+                bottomRightRadius * additionalScale,
+                bottomLeftRadius * additionalScale,
+                tint,
+                partial
+        );
     }
 
     private static void renderBlurAreaInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, @Nonnull CornerRadii cornerRadii, @Nonnull DrawableColor tint, float partial) {
@@ -111,6 +193,21 @@ public final class GuiBlurRenderer {
             return;
         }
         _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, blurRadius, cornerRadii, tint));
+    }
+
+    private static float resolveAdditionalRenderScale() {
+        float scale = RenderScaleUtil.getCurrentAdditionalRenderScale();
+        return Float.isFinite(scale) && scale > 0.0F ? scale : 1.0F;
+    }
+
+    private static float resolveAdditionalRenderTranslationX() {
+        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationX();
+        return Float.isFinite(translation) ? translation : 0.0F;
+    }
+
+    private static float resolveAdditionalRenderTranslationY() {
+        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationY();
+        return Float.isFinite(translation) ? translation : 0.0F;
     }
 
     private static void _renderBlurArea(GuiGraphics graphics, float partial, BlurArea area) {

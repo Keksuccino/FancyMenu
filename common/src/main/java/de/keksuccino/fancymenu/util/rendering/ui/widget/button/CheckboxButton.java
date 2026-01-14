@@ -49,7 +49,7 @@ public class CheckboxButton extends ExtendedButton {
     }
 
     @Override
-    protected void renderBackground(@NotNull GuiGraphics graphics) {
+    protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
 
         RenderSystem.enableBlend();
         graphics.blit(this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());

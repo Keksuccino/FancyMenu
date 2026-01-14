@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -154,7 +155,26 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
                 GuiBlurRenderer.renderBlurAreaRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, UIBase.getBlurRadius(), 0.0F, 0.0F, blurCornerRadius, blurCornerRadius, this.getBackgroundColor(), partial);
             }
         } else {
-            UIBase.renderRoundedRect(graphics, x, y, width, height, 0.0F, 0.0F, cornerRadius, cornerRadius, this.getBackgroundColor().getColorInt());
+            float renderScale = this.getFixedComponentScale();
+            float smoothX = (this.getTranslatedX() + x) * renderScale;
+            float smoothY = (this.getTranslatedY() + y) * renderScale;
+            float smoothWidth = width * renderScale;
+            float smoothHeight = height * renderScale;
+            float smoothBottomRight = cornerRadius * renderScale;
+            float smoothBottomLeft = smoothBottomRight;
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                    graphics,
+                    smoothX,
+                    smoothY,
+                    smoothWidth,
+                    smoothHeight,
+                    0.0F,
+                    0.0F,
+                    smoothBottomRight,
+                    smoothBottomLeft,
+                    this.getBackgroundColor().getColorInt(),
+                    partial
+            );
         }
     }
 
@@ -176,7 +196,27 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         RenderingUtils.resetShaderColor(graphics);
         float frameHeight = this.isExpanded() ? height : this.getBorderThickness() + this.getTitleBarHeight() + this.getBorderThickness();
         float roundingRadius = UIBase.getInterfaceCornerRoundingRadius();
-        UIBase.renderRoundedBorder(graphics, x, y, x + width, y + frameHeight, this.getBorderThickness(), roundingRadius, roundingRadius, roundingRadius, roundingRadius, this.getBorderColor().getColorInt());
+        float renderScale = this.getFixedComponentScale();
+        float smoothX = (this.getTranslatedX() + x) * renderScale;
+        float smoothY = (this.getTranslatedY() + y) * renderScale;
+        float smoothWidth = width * renderScale;
+        float smoothHeight = frameHeight * renderScale;
+        float smoothBorderThickness = this.getBorderThickness() * renderScale;
+        float smoothBorderCorner = roundingRadius > 0.0F ? (roundingRadius + this.getBorderThickness()) * renderScale : 0.0F;
+        SmoothRectangleRenderer.renderSmoothBorderRoundAllCorners(
+                graphics,
+                smoothX,
+                smoothY,
+                smoothWidth,
+                smoothHeight,
+                smoothBorderThickness,
+                smoothBorderCorner,
+                smoothBorderCorner,
+                smoothBorderCorner,
+                smoothBorderCorner,
+                this.getBorderColor().getColorInt(),
+                partial
+        );
 
         RenderingUtils.resetShaderColor(graphics);
 
@@ -206,10 +246,40 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
                     GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, UIBase.getBlurRadius(), blurCornerRadius, blurCornerRadius, blurCornerRadius, blurCornerRadius, this.getTitleBarColor(), partial);
                 }
             } else {
+                float renderScale = this.getFixedComponentScale();
+                float smoothX = (this.getTranslatedX() + innerX) * renderScale;
+                float smoothY = (this.getTranslatedY() + innerY) * renderScale;
+                float smoothWidth = innerWidth * renderScale;
+                float smoothHeight = innerHeight * renderScale;
+                float smoothCorner = cornerRadius * renderScale;
                 if (expanded) {
-                    UIBase.renderRoundedRect(graphics, innerX, innerY, innerWidth, innerHeight, cornerRadius, cornerRadius, 0.0F, 0.0F, this.getTitleBarColor().getColorInt());
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                            graphics,
+                            smoothX,
+                            smoothY,
+                            smoothWidth,
+                            smoothHeight,
+                            smoothCorner,
+                            smoothCorner,
+                            0.0F,
+                            0.0F,
+                            this.getTitleBarColor().getColorInt(),
+                            partial
+                    );
                 } else {
-                    UIBase.renderRoundedRect(graphics, innerX, innerY, innerWidth, innerHeight, cornerRadius, cornerRadius, cornerRadius, cornerRadius, this.getTitleBarColor().getColorInt());
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                            graphics,
+                            smoothX,
+                            smoothY,
+                            smoothWidth,
+                            smoothHeight,
+                            smoothCorner,
+                            smoothCorner,
+                            smoothCorner,
+                            smoothCorner,
+                            this.getTitleBarColor().getColorInt(),
+                            partial
+                    );
                 }
             }
         }
@@ -590,7 +660,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
             this.hovered = this.isMouseOver();
 
-            this.renderHoverBackground(graphics);
+            this.renderHoverBackground(graphics, partial);
 
             ITexture icon = this.iconSupplier.get(this);
             if (icon != null) {
@@ -605,7 +675,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         }
 
-        protected void renderHoverBackground(GuiGraphics graphics) {
+        protected void renderHoverBackground(GuiGraphics graphics, float partial) {
             if (this.isMouseOver()) {
                 RenderingUtils.resetShaderColor(graphics);
                 float radius = UIBase.getInterfaceCornerRoundingRadius();
@@ -622,7 +692,24 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
                     }
                 }
                 if (topLeft > 0.0F || topRight > 0.0F || bottomRight > 0.0F || bottomLeft > 0.0F) {
-                    UIBase.renderRoundedRect(graphics, this.x, this.y, this.width, this.parent.getTitleBarHeight(), topLeft, topRight, bottomRight, bottomLeft, getElementHoverColor().getColorInt());
+                    float renderScale = this.parent.getFixedComponentScale();
+                    float smoothX = (this.parent.getTranslatedX() + this.x) * renderScale;
+                    float smoothY = (this.parent.getTranslatedY() + this.y) * renderScale;
+                    float smoothWidth = this.width * renderScale;
+                    float smoothHeight = this.parent.getTitleBarHeight() * renderScale;
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                            graphics,
+                            smoothX,
+                            smoothY,
+                            smoothWidth,
+                            smoothHeight,
+                            topLeft * renderScale,
+                            topRight * renderScale,
+                            bottomRight * renderScale,
+                            bottomLeft * renderScale,
+                            getElementHoverColor().getColorInt(),
+                            partial
+                    );
                 } else {
                     fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.parent.getTitleBarHeight(), getElementHoverColor().getColorInt());
                 }

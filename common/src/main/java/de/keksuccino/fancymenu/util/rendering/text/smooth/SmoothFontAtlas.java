@@ -38,9 +38,11 @@ final class SmoothFontAtlas implements AutoCloseable {
     private static final boolean DEBUG_LOG = Boolean.getBoolean("fancymenu.debugSmoothFontLog");
     private static final boolean DEBUG_DUMP = Boolean.getBoolean("fancymenu.debugSmoothFontDump");
     private static final boolean DEBUG_USE_RAW_ALPHA = Boolean.getBoolean("fancymenu.debugSmoothFontRawAlpha");
+    private static final boolean DEBUG_DUMP_ATLAS = Boolean.getBoolean("fancymenu.debugSmoothFontAtlasDump");
     private static final int ALPHA_THRESHOLD = Math.max(1, Integer.getInteger("fancymenu.smoothFontAlphaThreshold", 1));
     private static final int DEBUG_DUMP_LIMIT = 8;
     private static int debugDumpCount;
+    private static int debugAtlasDumpCount;
 
     private final String debugName;
     private final Font awtFont;
@@ -160,6 +162,10 @@ final class SmoothFontAtlas implements AutoCloseable {
         float offsetY = bounds.y - padding;
 
         upload();
+        if (DEBUG_DUMP_ATLAS && debugAtlasDumpCount < DEBUG_DUMP_LIMIT) {
+            debugAtlasDumpCount++;
+            dumpAtlasImage(debugName, atlasImage, debugAtlasDumpCount);
+        }
         return new SmoothFontGlyph(this, u0, v0, u1, v1, glyphWidth, glyphHeight, offsetX, offsetY, advance, true);
     }
 
@@ -304,6 +310,23 @@ final class SmoothFontAtlas implements AutoCloseable {
     private static String debugFileName(String baseName, String suffix) {
         String sanitized = baseName.toLowerCase().replaceAll("[^a-z0-9._-]", "_");
         return sanitized + "_" + suffix + ".png";
+    }
+
+    private static void dumpAtlasImage(String debugName, NativeImage atlas, int dumpIndex) {
+        Path outputDir = Minecraft.getInstance().gameDirectory.toPath()
+                .resolve("config")
+                .resolve("fancymenu")
+                .resolve("debug")
+                .resolve("smooth_font");
+        try {
+            Files.createDirectories(outputDir);
+            String baseName = debugName + "_" + dumpIndex;
+            Path atlasPath = outputDir.resolve(debugFileName(baseName, "atlas"));
+            atlas.writeToFile(atlasPath);
+            LOGGER.info("[FANCYMENU] SmoothFont atlas dump written: {}", atlasPath);
+        } catch (IOException ex) {
+            LOGGER.warn("[FANCYMENU] SmoothFont atlas dump failed", ex);
+        }
     }
 
     private static final class AlphaStats {

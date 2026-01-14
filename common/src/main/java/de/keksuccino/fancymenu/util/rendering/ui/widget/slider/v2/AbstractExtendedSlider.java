@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderBu
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -107,14 +108,41 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         if ((this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu()) && (this.sliderBackgroundColorHighlighted != null)) {
             if (this.roundedColorBackground) {
                 float radius = UIBase.getWidgetCornerRoundingRadius();
-                UIBase.renderRoundedRect(graphics, this.getX(), this.getY(), this.getWidth(), this.getHeight(), radius, radius, radius, radius, this.sliderBackgroundColorHighlighted.getColorInt());
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        this.getX(),
+                        this.getY(),
+                        this.getWidth(),
+                        this.getHeight(),
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        this.sliderBackgroundColorHighlighted.getColorInt(),
+                        partial
+                );
             } else {
                 graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorHighlighted.getColorInt());
             }
             if (this.sliderBorderColorHighlighted != null) {
                 if (this.roundedColorBackground) {
                     float radius = UIBase.getWidgetCornerRoundingRadius();
-                    UIBase.renderRoundedBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1.0F, radius, radius, radius, radius, this.sliderBorderColorHighlighted.getColorInt());
+                    float borderThickness = 1.0F;
+                    float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+                    SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
+                            graphics,
+                            this.getX(),
+                            this.getY(),
+                            this.getWidth(),
+                            this.getHeight(),
+                            borderThickness,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            this.sliderBorderColorHighlighted.getColorInt(),
+                            partial
+                    );
                 } else {
                     UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorHighlighted.getColorInt(), true, true, true, true);
                 }
@@ -123,14 +151,41 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         } else if (this.sliderBackgroundColorNormal != null) {
             if (this.roundedColorBackground) {
                 float radius = UIBase.getWidgetCornerRoundingRadius();
-                UIBase.renderRoundedRect(graphics, this.getX(), this.getY(), this.getWidth(), this.getHeight(), radius, radius, radius, radius, this.sliderBackgroundColorNormal.getColorInt());
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        this.getX(),
+                        this.getY(),
+                        this.getWidth(),
+                        this.getHeight(),
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        this.sliderBackgroundColorNormal.getColorInt(),
+                        partial
+                );
             } else {
                 graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
             }
             if (this.sliderBorderColorNormal != null) {
                 if (this.roundedColorBackground) {
                     float radius = UIBase.getWidgetCornerRoundingRadius();
-                    UIBase.renderRoundedBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1.0F, radius, radius, radius, radius, this.sliderBorderColorNormal.getColorInt());
+                    float borderThickness = 1.0F;
+                    float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+                    SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
+                            graphics,
+                            this.getX(),
+                            this.getY(),
+                            this.getWidth(),
+                            this.getHeight(),
+                            borderThickness,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            this.sliderBorderColorNormal.getColorInt(),
+                            partial
+                    );
                 } else {
                     UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorNormal.getColorInt(), true, true, true, true);
                 }
@@ -167,7 +222,19 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
                 if (this.sliderHandleColorHover != null) {
                     if (this.roundedColorBackground) {
                         float radius = UIBase.getWidgetCornerRoundingRadius();
-                        UIBase.renderRoundedRect(graphics, handleX, this.getY(), handleWidth, this.getHeight(), radius, radius, radius, radius, this.sliderHandleColorHover.getColorInt());
+                        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                                graphics,
+                                handleX,
+                                this.getY(),
+                                handleWidth,
+                                this.getHeight(),
+                                radius,
+                                radius,
+                                radius,
+                                radius,
+                                this.sliderHandleColorHover.getColorInt(),
+                                partial
+                        );
                     } else {
                         graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorHover.getColorInt());
                     }
@@ -177,7 +244,19 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
                 if (this.sliderHandleColorNormal != null) {
                     if (this.roundedColorBackground) {
                         float radius = UIBase.getWidgetCornerRoundingRadius();
-                        UIBase.renderRoundedRect(graphics, handleX, this.getY(), handleWidth, this.getHeight(), radius, radius, radius, radius, this.sliderHandleColorNormal.getColorInt());
+                        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                                graphics,
+                                handleX,
+                                this.getY(),
+                                handleWidth,
+                                this.getHeight(),
+                                radius,
+                                radius,
+                                radius,
+                                radius,
+                                this.sliderHandleColorNormal.getColorInt(),
+                                partial
+                        );
                     } else {
                         graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
                     }
@@ -188,7 +267,19 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
             if (this.sliderHandleColorInactive != null) {
                 if (this.roundedColorBackground) {
                     float radius = UIBase.getWidgetCornerRoundingRadius();
-                    UIBase.renderRoundedRect(graphics, handleX, this.getY(), handleWidth, this.getHeight(), radius, radius, radius, radius, this.sliderHandleColorInactive.getColorInt());
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                            graphics,
+                            handleX,
+                            this.getY(),
+                            handleWidth,
+                            this.getHeight(),
+                            radius,
+                            radius,
+                            radius,
+                            radius,
+                            this.sliderHandleColorInactive.getColorInt(),
+                            partial
+                    );
                 } else {
                     graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
                 }

@@ -51,6 +51,13 @@ public final class SmoothCircleRenderer {
         renderSmoothCircleInternal(graphics, x, y, width, height, 0.0F, roundness, color, partial);
     }
 
+    public static void renderSmoothCircleScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float roundness, int color, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderSmoothCircle(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, roundness, color, partial);
+    }
+
     /**
      * Renders a smooth superellipse border using the provided bounding rectangle.
      *
@@ -72,6 +79,13 @@ public final class SmoothCircleRenderer {
         renderSmoothCircleInternal(graphics, x, y, width, height, borderThickness, roundness, color, partial);
     }
 
+    public static void renderSmoothCircleBorderScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float roundness, int color, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderSmoothCircleBorder(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, borderThickness * additionalScale, roundness, color, partial);
+    }
+
     private static void renderSmoothCircleInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float roundness, int color, float partial) {
         Objects.requireNonNull(graphics);
         if (width <= 0.0F || height <= 0.0F) {
@@ -79,6 +93,21 @@ public final class SmoothCircleRenderer {
         }
         float clampedRoundness = Math.max(0.1F, roundness);
         _renderSmoothCircle(graphics, partial, new CircleArea(x, y, width, height, Math.max(0.0F, borderThickness), clampedRoundness, color));
+    }
+
+    private static float resolveAdditionalRenderScale() {
+        float scale = RenderScaleUtil.getCurrentAdditionalRenderScale();
+        return Float.isFinite(scale) && scale > 0.0F ? scale : 1.0F;
+    }
+
+    private static float resolveAdditionalRenderTranslationX() {
+        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationX();
+        return Float.isFinite(translation) ? translation : 0.0F;
+    }
+
+    private static float resolveAdditionalRenderTranslationY() {
+        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationY();
+        return Float.isFinite(translation) ? translation : 0.0F;
     }
 
     private static void _renderSmoothCircle(GuiGraphics graphics, float partial, CircleArea area) {

@@ -11,7 +11,10 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.util.FastColor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joml.Matrix4f;
 
 import javax.annotation.Nonnull;
@@ -23,6 +26,9 @@ public final class SmoothTextRenderer {
     private static final char FORMAT_PREFIX = ChatFormatting.PREFIX_CODE;
     private static final Random OBFUSCATION_RANDOM = new Random();
     private static final String OBFUSCATION_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final boolean DEBUG_RENDER = Boolean.getBoolean("fancymenu.debugSmoothTextRender");
+    private static boolean debugLogged;
 
     private SmoothTextRenderer() {
     }
@@ -228,6 +234,34 @@ public final class SmoothTextRenderer {
                 }
                 if (buffer == null) {
                     buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                }
+                if (DEBUG_RENDER && !debugLogged) {
+                    ShaderInstance activeShader = RenderSystem.getShader();
+                    float[] shaderColor = RenderSystem.getShaderColor();
+                    LOGGER.info(
+                            "[FANCYMENU] SmoothTextRenderer debug: shader={} id={} atlasTexId={} shaderTex0={} color=0x{} size={} scale={} glyph=U+{} uv=({},{} -> {},{}) glyphSize={}x{} offsets=({}, {}) shaderColor=({}, {}, {}, {})",
+                            activeShader != null ? activeShader.getName() : "null",
+                            activeShader != null ? activeShader.getId() : -1,
+                            atlas.getTextureId(),
+                            RenderSystem.getShaderTexture(0),
+                            String.format("%08X", style.color),
+                            size,
+                            scale,
+                            String.format("%04X", codepoint),
+                            glyph.u0(),
+                            glyph.v0(),
+                            glyph.u1(),
+                            glyph.v1(),
+                            glyph.width(),
+                            glyph.height(),
+                            glyph.xOffset(),
+                            glyph.yOffset(),
+                            shaderColor[0],
+                            shaderColor[1],
+                            shaderColor[2],
+                            shaderColor[3]
+                    );
+                    debugLogged = true;
                 }
                 addGlyph(buffer, matrix, glyph, penX, baseline, scale, style.color, style.italic);
                 quadCount++;

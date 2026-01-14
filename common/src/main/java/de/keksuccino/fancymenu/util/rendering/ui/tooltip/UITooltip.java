@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
@@ -149,22 +150,43 @@ public class UITooltip implements Renderable {
                     UIBase.getUIColorTheme().ui_blur_tooltip_background_tint,
                     partial);
         } else {
-            UIBase.renderRoundedRect(graphics, backgroundX, backgroundY, backgroundWidth, backgroundHeight, normalRoundingRadius, normalRoundingRadius, normalRoundingRadius, normalRoundingRadius, UIBase.getUIColorTheme().area_background_color.getColorInt());
+            float smoothX = backgroundX * renderScale;
+            float smoothY = backgroundY * renderScale;
+            float smoothWidth = backgroundWidth * renderScale;
+            float smoothHeight = backgroundHeight * renderScale;
+            float smoothCornerRadius = normalRoundingRadius * renderScale;
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                    graphics,
+                    smoothX,
+                    smoothY,
+                    smoothWidth,
+                    smoothHeight,
+                    smoothCornerRadius,
+                    smoothCornerRadius,
+                    smoothCornerRadius,
+                    smoothCornerRadius,
+                    UIBase.getUIColorTheme().area_background_color.getColorInt(),
+                    partial
+            );
         }
 
         int borderColorInt = blurEnabled ? UIBase.getUIColorTheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt();
-        UIBase.renderRoundedBorder(
+        float smoothBorderThickness = borderThickness * renderScale;
+        float smoothBorderCorner = normalRoundingRadius > 0.0F ? (normalRoundingRadius + borderThickness) * renderScale : 0.0F;
+        SmoothRectangleRenderer.renderSmoothBorderRoundAllCorners(
                 graphics,
-                x,
-                y,
-                x + renderWidth,
-                y + renderHeight,
-                borderThickness,
-                normalRoundingRadius,
-                normalRoundingRadius,
-                normalRoundingRadius,
-                normalRoundingRadius,
-                borderColorInt);
+                x * renderScale,
+                y * renderScale,
+                renderWidth * renderScale,
+                renderHeight * renderScale,
+                smoothBorderThickness,
+                smoothBorderCorner,
+                smoothBorderCorner,
+                smoothBorderCorner,
+                smoothBorderCorner,
+                borderColorInt,
+                partial
+        );
 
         RenderingUtils.resetShaderColor(graphics);
 

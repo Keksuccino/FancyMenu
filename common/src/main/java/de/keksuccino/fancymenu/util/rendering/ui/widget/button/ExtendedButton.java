@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -99,14 +100,14 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        this.renderBackground(graphics);
+        this.renderBackground(graphics, partial);
         this.renderLabelText(graphics);
     }
 
-    protected void renderBackground(@NotNull GuiGraphics graphics) {
+    protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
         //Renders the custom widget background if one is present or the Vanilla background if no custom background is present
         if (this.getExtendedAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, graphics, this.getX(), this.getY(), this.getWidth(), this.getHeight())) {
-            if (this.renderColorBackground(graphics)) {
+            if (this.renderColorBackground(graphics, partial)) {
                 graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
                 RenderSystem.enableBlend();
                 RenderSystem.enableDepthTest();
@@ -120,7 +121,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     /**
      * Returns if the button should render its Vanilla background (true) or not (false).
      */
-    protected boolean renderColorBackground(@NotNull GuiGraphics graphics) {
+    protected boolean renderColorBackground(@NotNull GuiGraphics graphics, float partial) {
         RenderSystem.enableBlend();
         DrawableColor background = null;
         DrawableColor border = null;
@@ -138,13 +139,13 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         }
 
         if (background != null) {
-            renderColoredBackground(graphics, background.getColorInt(), border);
+            renderColoredBackground(graphics, background.getColorInt(), border, partial);
             return false;
         }
         return true;
     }
 
-    private void renderColoredBackground(@NotNull GuiGraphics graphics, int backgroundColor, @Nullable DrawableColor borderColor) {
+    private void renderColoredBackground(@NotNull GuiGraphics graphics, int backgroundColor, @Nullable DrawableColor borderColor, float partial) {
         int x = this.getX();
         int y = this.getY();
         int width = this.getWidth();
@@ -157,10 +158,36 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         int innerHeight = height - (borderThickness * 2);
         if (radius > 0.0F) {
             if (innerWidth > 0 && innerHeight > 0) {
-                UIBase.renderRoundedRect(graphics, innerX, innerY, innerWidth, innerHeight, radius, radius, radius, radius, backgroundColor);
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        innerX,
+                        innerY,
+                        innerWidth,
+                        innerHeight,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        backgroundColor,
+                        partial
+                );
             }
             if (borderColor != null) {
-                UIBase.renderRoundedBorder(graphics, x, y, x + width, y + height, 1.0F, radius, radius, radius, radius, borderColor.getColorInt());
+                float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+                SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
+                        graphics,
+                        x,
+                        y,
+                        width,
+                        height,
+                        borderThickness,
+                        borderRadius,
+                        borderRadius,
+                        borderRadius,
+                        borderRadius,
+                        borderColor.getColorInt(),
+                        partial
+                );
             }
         } else {
             if (innerWidth > 0 && innerHeight > 0) {

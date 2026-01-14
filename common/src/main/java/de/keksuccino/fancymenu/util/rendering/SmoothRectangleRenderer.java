@@ -34,24 +34,101 @@ public final class SmoothRectangleRenderer {
         renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.uniform(cornerRadius), color, partial);
     }
 
+    public static void renderSmoothRectScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderSmoothRect(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, cornerRadius * additionalScale, color, partial);
+    }
+
     public static void renderSmoothRectRoundTopCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.topOnly(cornerRadius), color, partial);
+    }
+
+    public static void renderSmoothRectRoundTopCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderSmoothRectRoundTopCorners(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, cornerRadius * additionalScale, color, partial);
     }
 
     public static void renderSmoothRectRoundBottomCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.bottomOnly(cornerRadius), color, partial);
     }
 
+    public static void renderSmoothRectRoundBottomCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderSmoothRectRoundBottomCorners(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, cornerRadius * additionalScale, color, partial);
+    }
+
     public static void renderSmoothRectRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, 0.0F, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), color, partial);
+    }
+
+    public static void renderSmoothRectRoundAllCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderSmoothRectRoundAllCorners(
+                graphics,
+                x * additionalScale + translationX,
+                y * additionalScale + translationY,
+                width * additionalScale,
+                height * additionalScale,
+                topLeftRadius * additionalScale,
+                topRightRadius * additionalScale,
+                bottomRightRadius * additionalScale,
+                bottomLeftRadius * additionalScale,
+                color,
+                partial
+        );
     }
 
     public static void renderSmoothBorder(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float cornerRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, borderThickness, CornerRadii.uniform(cornerRadius), color, partial);
     }
 
+    public static void renderSmoothBorderScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float cornerRadius, int color, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderSmoothBorder(
+                graphics,
+                x * additionalScale + translationX,
+                y * additionalScale + translationY,
+                width * additionalScale,
+                height * additionalScale,
+                borderThickness * additionalScale,
+                cornerRadius * additionalScale,
+                color,
+                partial
+        );
+    }
+
     public static void renderSmoothBorderRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, borderThickness, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), color, partial);
+    }
+
+    public static void renderSmoothBorderRoundAllCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderSmoothBorderRoundAllCorners(
+                graphics,
+                x * additionalScale + translationX,
+                y * additionalScale + translationY,
+                width * additionalScale,
+                height * additionalScale,
+                borderThickness * additionalScale,
+                topLeftRadius * additionalScale,
+                topRightRadius * additionalScale,
+                bottomRightRadius * additionalScale,
+                bottomLeftRadius * additionalScale,
+                color,
+                partial
+        );
     }
 
     private static void renderSmoothRectInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, @Nonnull CornerRadii cornerRadii, int color, float partial) {
@@ -61,6 +138,21 @@ public final class SmoothRectangleRenderer {
             return;
         }
         _renderSmoothRect(graphics, partial, new RectArea(x, y, width, height, Math.max(0.0F, borderThickness), cornerRadii, color));
+    }
+
+    private static float resolveAdditionalRenderScale() {
+        float scale = RenderScaleUtil.getCurrentAdditionalRenderScale();
+        return Float.isFinite(scale) && scale > 0.0F ? scale : 1.0F;
+    }
+
+    private static float resolveAdditionalRenderTranslationX() {
+        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationX();
+        return Float.isFinite(translation) ? translation : 0.0F;
+    }
+
+    private static float resolveAdditionalRenderTranslationY() {
+        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationY();
+        return Float.isFinite(translation) ? translation : 0.0F;
     }
 
     private static void _renderSmoothRect(GuiGraphics graphics, float partial, RectArea area) {

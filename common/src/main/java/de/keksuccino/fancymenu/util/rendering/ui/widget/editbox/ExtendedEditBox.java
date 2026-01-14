@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -83,7 +84,19 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
             if (this.roundedColorBackground) {
                 float radius = UIBase.getWidgetCornerRoundingRadius();
-                UIBase.renderRoundedRect(graphics, this.getX(), this.getY(), this.width, this.height, radius, radius, radius, radius, this.backgroundColor.getColorInt());
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        this.getX(),
+                        this.getY(),
+                        this.width,
+                        this.height,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        this.backgroundColor.getColorInt(),
+                        partial
+                );
             } else {
                 graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
             }
@@ -91,7 +104,22 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                 int borderColor = this.isFocused() ? this.borderFocusedColor.getColorInt() : this.borderNormalColor.getColorInt();
                 if (this.roundedColorBackground) {
                     float radius = UIBase.getWidgetCornerRoundingRadius();
-                    UIBase.renderRoundedBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1.0F, radius, radius, radius, radius, borderColor);
+                    float borderThickness = 1.0F;
+                    float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+                    SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
+                            graphics,
+                            this.getX() - 1,
+                            this.getY() - 1,
+                            this.width + 2,
+                            this.height + 2,
+                            borderThickness,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            borderColor,
+                            partial
+                    );
                 } else {
                     UIBase.renderBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
                 }
