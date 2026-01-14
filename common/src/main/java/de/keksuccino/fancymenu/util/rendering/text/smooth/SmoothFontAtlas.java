@@ -96,7 +96,8 @@ final class SmoothFontAtlas implements AutoCloseable {
         if (!awtFont.canDisplay(codepoint)) {
             codepoint = '?';
         }
-        GlyphVector glyphVector = awtFont.createGlyphVector(fontRenderContext, new int[]{codepoint});
+        String glyphText = new String(Character.toChars(codepoint));
+        GlyphVector glyphVector = awtFont.createGlyphVector(fontRenderContext, glyphText);
         GlyphMetrics metrics = glyphVector.getGlyphMetrics(0);
         float advance = metrics.getAdvanceX();
         Rectangle bounds = glyphVector.getGlyphPixelBounds(0, fontRenderContext, 0, 0);
