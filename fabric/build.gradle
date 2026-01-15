@@ -27,12 +27,42 @@ dependencies {
     include(implementation("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}") {
         transitive = false
     })
-    include("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-windows")
-    include("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-windows-arm64")
-    include("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-linux")
-    include("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-linux-arm64")
-    include("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-macos")
-    include("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-macos-arm64")
+    include(implementation("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-windows") {
+        transitive = false
+    })
+    include(implementation("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-windows-arm64") {
+        transitive = false
+    })
+    include(implementation("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-linux") {
+        transitive = false
+    })
+    include(implementation("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-linux-arm64") {
+        transitive = false
+    })
+    include(implementation("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-macos") {
+        transitive = false
+    })
+    include(implementation("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-macos-arm64") {
+        transitive = false
+    })
+    runtimeOnly("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-windows") {
+        transitive = false
+    }
+    runtimeOnly("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-windows-arm64") {
+        transitive = false
+    }
+    runtimeOnly("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-linux") {
+        transitive = false
+    }
+    runtimeOnly("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-linux-arm64") {
+        transitive = false
+    }
+    runtimeOnly("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-macos") {
+        transitive = false
+    }
+    runtimeOnly("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-macos-arm64") {
+        transitive = false
+    }
     modImplementation "maven.modrinth:melody:1.0.10-1.21-fabric"
     modImplementation "maven.modrinth:konkrete:1.9.9-1.21-fabric"
     modImplementation "maven.modrinth:modmenu:11.0.0-beta.1"

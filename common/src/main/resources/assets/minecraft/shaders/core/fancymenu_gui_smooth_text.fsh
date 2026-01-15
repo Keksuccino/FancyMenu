@@ -19,8 +19,13 @@ float screenPxRange(vec2 uv) {
     return max(0.5 * dot(unitRange, screenTexSize), 1.0);
 }
 
+float median(float a, float b, float c) {
+    return max(min(a, b), min(max(a, b), c));
+}
+
 void main() {
-    float dist = texture(Sampler0, texCoord0).r;
+    vec4 sample = texture(Sampler0, texCoord0);
+    float dist = median(sample.r, sample.g, sample.b);
     if (DebugMode == 1) {
         fragColor = vec4(1.0, 0.0, 1.0, 1.0);
         return;

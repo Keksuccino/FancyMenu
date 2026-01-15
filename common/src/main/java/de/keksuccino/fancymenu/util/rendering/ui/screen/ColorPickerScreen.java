@@ -83,14 +83,14 @@ public class ColorPickerScreen extends PiPScreen {
             this.closeWindow();
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
 
         this.doneButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.onDone.accept(DrawableColor.of(this.getCurrentHex()));
             this.closeWindow();
         });
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, UIBase.shouldBlur());
     }
 
     @Override
