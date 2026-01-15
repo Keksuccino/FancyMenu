@@ -10,12 +10,16 @@ public final class SmoothFont implements AutoCloseable {
 
     private final String debugName;
     private final float baseSize;
+    private final float generationSize;
+    private final float renderScale;
     private final float sdfRange;
     private final FontRenderContext fontRenderContext;
     private final Font plainFont;
     private final Font boldFont;
     private final Font italicFont;
     private final Font boldItalicFont;
+
+    // Metrics are stored relative to baseSize (logical size)
     private final float ascent;
     private final float descent;
     private final float lineHeight;
@@ -23,22 +27,33 @@ public final class SmoothFont implements AutoCloseable {
     private final float underlineThickness;
     private final float strikethroughOffset;
     private final float strikethroughThickness;
+
     private final SmoothFontAtlas plainAtlas;
     private final SmoothFontAtlas boldAtlas;
     private final SmoothFontAtlas italicAtlas;
     private final SmoothFontAtlas boldItalicAtlas;
 
-    SmoothFont(@Nonnull String debugName, @Nonnull Font baseFont, float baseSize, float sdfRange) {
+    SmoothFont(@Nonnull String debugName, @Nonnull Font rawFont, float baseSize, float generationSize, float sdfRange) {
         this.debugName = Objects.requireNonNull(debugName);
         this.baseSize = Math.max(1.0F, baseSize);
+        this.generationSize = Math.max(1.0F, generationSize);
         this.sdfRange = Math.max(1.0F, sdfRange);
-        this.fontRenderContext = new FontRenderContext(null, true, true);
-        this.plainFont = Objects.requireNonNull(baseFont).deriveFont(Font.PLAIN, this.baseSize);
-        this.boldFont = baseFont.deriveFont(Font.BOLD, this.baseSize);
-        this.italicFont = baseFont.deriveFont(Font.ITALIC, this.baseSize);
-        this.boldItalicFont = baseFont.deriveFont(Font.BOLD | Font.ITALIC, this.baseSize);
 
-        LineMetrics metrics = this.plainFont.getLineMetrics("Hg", this.fontRenderContext);
+        // The scale factor to bring generated glyphs back to logical size
+        this.renderScale = baseSize / generationSize;
+
+        this.fontRenderContext = new FontRenderContext(null, true, true);
+
+        // Create AWT fonts at the high-res generation size
+        this.plainFont = Objects.requireNonNull(rawFont).deriveFont(Font.PLAIN, this.generationSize);
+        this.boldFont = rawFont.deriveFont(Font.BOLD, this.generationSize);
+        this.italicFont = rawFont.deriveFont(Font.ITALIC, this.generationSize);
+        this.boldItalicFont = rawFont.deriveFont(Font.BOLD | Font.ITALIC, this.generationSize);
+
+        // Calculate metrics based on the logical size for consistent layout
+        Font logicalFont = rawFont.deriveFont(Font.PLAIN, this.baseSize);
+        LineMetrics metrics = logicalFont.getLineMetrics("Hg", this.fontRenderContext);
+
         this.ascent = metrics.getAscent();
         this.descent = metrics.getDescent();
         this.lineHeight = metrics.getHeight();
@@ -57,32 +72,37 @@ public final class SmoothFont implements AutoCloseable {
         return baseSize;
     }
 
+    // Scale calculation includes the internal downscaling from generation size
+    float scaleForSize(float size) {
+        return (size / baseSize) * renderScale;
+    }
+
     public float getLineHeight(float size) {
-        return lineHeight * scaleForSize(size);
+        return lineHeight * (size / baseSize);
     }
 
     public float getAscent(float size) {
-        return ascent * scaleForSize(size);
+        return ascent * (size / baseSize);
     }
 
     public float getDescent(float size) {
-        return descent * scaleForSize(size);
+        return descent * (size / baseSize);
     }
 
     public float getUnderlineOffset(float size) {
-        return underlineOffset * scaleForSize(size);
+        return underlineOffset * (size / baseSize);
     }
 
     public float getUnderlineThickness(float size) {
-        return Math.max(1.0F, underlineThickness * scaleForSize(size));
+        return Math.max(1.0F, underlineThickness * (size / baseSize));
     }
 
     public float getStrikethroughOffset(float size) {
-        return strikethroughOffset * scaleForSize(size);
+        return strikethroughOffset * (size / baseSize);
     }
 
     public float getStrikethroughThickness(float size) {
-        return Math.max(1.0F, strikethroughThickness * scaleForSize(size));
+        return Math.max(1.0F, strikethroughThickness * (size / baseSize));
     }
 
     SmoothFontGlyph getGlyph(int codepoint, boolean bold, boolean italic) {
@@ -102,10 +122,6 @@ public final class SmoothFont implements AutoCloseable {
         return plainAtlas;
     }
 
-    float scaleForSize(float size) {
-        return size / baseSize;
-    }
-
     float getSdfRange() {
         return sdfRange;
     }
@@ -117,5 +133,4 @@ public final class SmoothFont implements AutoCloseable {
         italicAtlas.close();
         boldItalicAtlas.close();
     }
-
 }

@@ -11,10 +11,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.util.FastColor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.joml.Matrix4f;
 
 import javax.annotation.Nonnull;
@@ -26,83 +23,26 @@ public final class SmoothTextRenderer {
     private static final char FORMAT_PREFIX = ChatFormatting.PREFIX_CODE;
     private static final Random OBFUSCATION_RANDOM = new Random();
     private static final String OBFUSCATION_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final boolean DEBUG_RENDER = Boolean.getBoolean("fancymenu.debugSmoothTextRender");
-    private static final boolean DEBUG_FORCE_VANILLA_SHADER = Boolean.getBoolean("fancymenu.debugSmoothTextVanillaShader");
-    private static final boolean DEBUG_DRAW_ATLAS = Boolean.getBoolean("fancymenu.debugSmoothTextShowAtlas");
-    private static final int DEBUG_MODE = Math.max(0, Integer.getInteger("fancymenu.debugSmoothTextMode", 0));
-    private static boolean debugLogged;
-    private static boolean debugAtlasDrawn;
-    private static boolean debugShaderLogged;
 
     private SmoothTextRenderer() {
     }
 
-    /**
-     * Renders smooth text at the given GUI coordinates. The Y coordinate is the top of the text line,
-     * just like {@link net.minecraft.client.gui.Font#drawInBatch}.
-     * <p>
-     * Supports Minecraft-style formatting codes such as {@code \\u00A70-\\u00A7f} (colors), {@code \\u00A7l} (bold),
-     * {@code \\u00A7o} (italic), {@code \\u00A7n} (underline), {@code \\u00A7m} (strikethrough), {@code \\u00A7k} (obfuscated),
-     * {@code \\u00A7r} (reset), and hex colors in the {@code \\u00A7x\\u00A7R\\u00A7R\\u00A7G\\u00A7G\\u00A7B\\u00A7B} format.
-     */
     public static void renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float x, float y, int color, float size, boolean shadow) {
-        Objects.requireNonNull(graphics);
-        Objects.requireNonNull(font);
-        Objects.requireNonNull(text);
-        if (text.isEmpty() || size <= 0.0F) {
-            return;
-        }
+        if (text.isEmpty() || size <= 0.0F) return;
         if (shadow) {
             renderTextInternal(graphics, font, text, x + 1.0F, y + 1.0F, darkenColor(color), size);
         }
         renderTextInternal(graphics, font, text, x, y, color, size);
     }
 
-    /**
-     * Renders smooth text using screen-space (framebuffer pixel) coordinates. This is useful when your
-     * rendering code already operates in pixel space rather than GUI-scaled coordinates.
-     */
     public static void renderTextScreenSpace(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float xPixels, float yPixels, int color, float sizePixels, boolean shadow) {
         float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
-        if (guiScale <= 0.0F) {
-            return;
-        }
+        if (guiScale <= 0.0F) return;
         renderText(graphics, font, text, xPixels / guiScale, yPixels / guiScale, color, sizePixels / guiScale, shadow);
     }
 
-    /**
-     * Calculates a size in screen-space pixels that matches vanilla text at the current GUI scale.
-     * Use this together with {@link #renderTextScreenSpace(GuiGraphics, SmoothFont, String, float, float, int, float, boolean)}
-     * when you render in framebuffer coordinates or have applied additional scale factors.
-     * <p>
-     * Examples:
-     * <ul>
-     *     <li>GUI scale 2.0, additionalScale 1.0 -> returns ~18 (vanilla 9px text at 2x scale).</li>
-     *     <li>GUI scale 2.0, additionalScale 0.5 -> returns ~9 (useful when you already halve the render scale).</li>
-     * </ul>
-     */
-    public static float snapshotGuiScaledTextSize(float additionalScale) {
-        float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
-        float baseSize = Minecraft.getInstance().font.lineHeight;
-        float scale = Math.max(0.0F, additionalScale);
-        return baseSize * guiScale * scale;
-    }
-
-    public static void setDebugSharpness(float sharpness) {
-        SmoothTextShader.setRuntimeSharpness(sharpness);
-    }
-
-    public static float getDebugSharpness() {
-        return SmoothTextShader.getResolvedSharpness();
-    }
-
     public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull String text, float size) {
-        Objects.requireNonNull(font);
-        Objects.requireNonNull(text);
-        if (text.isEmpty() || size <= 0.0F) {
-            return 0.0F;
-        }
+        if (text.isEmpty() || size <= 0.0F) return 0.0F;
         float scale = font.scaleForSize(size);
         float maxWidth = 0.0F;
         float lineWidth = 0.0F;
@@ -136,21 +76,16 @@ public final class SmoothTextRenderer {
     }
 
     public static float getTextHeight(@Nonnull SmoothFont font, @Nonnull String text, float size) {
-        Objects.requireNonNull(font);
-        Objects.requireNonNull(text);
-        if (text.isEmpty() || size <= 0.0F) {
-            return 0.0F;
-        }
+        if (text.isEmpty() || size <= 0.0F) return 0.0F;
         int lines = 1;
         for (int i = 0; i < text.length(); i++) {
-            if (text.charAt(i) == '\n') {
-                lines++;
-            }
+            if (text.charAt(i) == '\n') lines++;
         }
         return font.getLineHeight(size) * lines;
     }
 
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
+        // scaleForSize handles the internal downscaling from the high-res atlas
         float scale = font.scaleForSize(size);
         float baseRange = font.getSdfRange();
         float ascent = font.getAscent(size);
@@ -262,38 +197,6 @@ public final class SmoothTextRenderer {
                 if (buffer == null) {
                     buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
                 }
-                if (DEBUG_DRAW_ATLAS && !debugAtlasDrawn) {
-                    drawAtlasPreview(matrix, atlas.getTextureId(), atlas.getEffectiveSdfRange());
-                    debugAtlasDrawn = true;
-                }
-                if (DEBUG_RENDER && !debugLogged) {
-                    ShaderInstance activeShader = RenderSystem.getShader();
-                    float[] shaderColor = RenderSystem.getShaderColor();
-                    LOGGER.info(
-                            "[FANCYMENU] SmoothTextRenderer debug: shader={} id={} atlasTexId={} shaderTex0={} color=0x{} size={} scale={} glyph=U+{} uv=({},{} -> {},{}) glyphSize={}x{} offsets=({}, {}) shaderColor=({}, {}, {}, {})",
-                            activeShader != null ? activeShader.getName() : "null",
-                            activeShader != null ? activeShader.getId() : -1,
-                            atlas.getTextureId(),
-                            RenderSystem.getShaderTexture(0),
-                            String.format("%08X", style.color),
-                            size,
-                            scale,
-                            String.format("%04X", codepoint),
-                            glyph.u0(),
-                            glyph.v0(),
-                            glyph.u1(),
-                            glyph.v1(),
-                            glyph.width(),
-                            glyph.height(),
-                            glyph.xOffset(),
-                            glyph.yOffset(),
-                            shaderColor[0],
-                            shaderColor[1],
-                            shaderColor[2],
-                            shaderColor[3]
-                    );
-                    debugLogged = true;
-                }
                 addGlyph(buffer, matrix, glyph, penX, baseline, scale, style.color, style.italic);
                 quadCount++;
                 if (style.bold) {
@@ -308,7 +211,7 @@ public final class SmoothTextRenderer {
             penX += advance;
         }
 
-        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, currentUsesTrueSdf);
+        flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, currentUsesTrueSdf);
         drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
         drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
 
@@ -319,7 +222,6 @@ public final class SmoothTextRenderer {
 
     private static int flushIfNeeded(BufferBuilder buffer, int quadCount, SmoothFontAtlas atlas, float sdfRange, boolean useTrueSdf) {
         if (buffer != null && quadCount > 0) {
-            // Re-apply shader state in case other GUI draws changed it (underline/strike use RenderType.gui()).
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             applyShaderState();
@@ -334,38 +236,7 @@ public final class SmoothTextRenderer {
     }
 
     private static void applyShaderState() {
-        if (DEBUG_FORCE_VANILLA_SHADER && DEBUG_MODE == 0) {
-            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-            if (!debugShaderLogged) {
-                LOGGER.info("[FANCYMENU] SmoothTextRenderer using vanilla shader (debugSmoothTextVanillaShader=true).");
-                debugShaderLogged = true;
-            }
-        } else {
-            RenderSystem.setShader(SmoothTextShader::getShader);
-            SmoothTextShader.applyDefaults();
-            if (!debugShaderLogged && DEBUG_FORCE_VANILLA_SHADER) {
-                LOGGER.info("[FANCYMENU] SmoothTextRenderer forcing smooth shader (debugSmoothTextMode={} overrides vanilla debug).", DEBUG_MODE);
-                debugShaderLogged = true;
-            }
-        }
-    }
-
-    private static void drawAtlasPreview(Matrix4f matrix, int textureId, float sdfRange) {
-        float x0 = 4.0F;
-        float y0 = 4.0F;
-        float x1 = 4.0F + 128.0F;
-        float y1 = 4.0F + 128.0F;
-        RenderSystem.setShaderTexture(0, textureId);
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        buffer.addVertex(matrix, x0, y0, 0.0F).setUv(0.0F, 0.0F).setColor(0xFFFFFFFF);
-        buffer.addVertex(matrix, x0, y1, 0.0F).setUv(0.0F, 1.0F).setColor(0xFFFFFFFF);
-        buffer.addVertex(matrix, x1, y1, 0.0F).setUv(1.0F, 1.0F).setColor(0xFFFFFFFF);
-        buffer.addVertex(matrix, x1, y0, 0.0F).setUv(1.0F, 0.0F).setColor(0xFFFFFFFF);
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
-        applyShaderState();
-        SmoothTextShader.applySdfRange(sdfRange);
-        RenderSystem.setShaderTexture(0, textureId);
+        RenderSystem.setShader(SmoothTextShader::getShader);
     }
 
     private static void addGlyph(BufferBuilder buffer, Matrix4f matrix, SmoothFontGlyph glyph, float penX, float baseline, float scale, int color, boolean italic) {
@@ -394,11 +265,10 @@ public final class SmoothTextRenderer {
     }
 
     private static int applyFormatting(String text, int formatIndex, StyleState style, int baseColor) {
-        if (formatIndex >= text.length()) {
-            return 0;
-        }
+        if (formatIndex >= text.length()) return 0;
         char code = text.charAt(formatIndex);
         ChatFormatting formatting = ChatFormatting.getByCode(code);
+
         if (formatting == null && Character.toLowerCase(code) == 'x') {
             Integer hexColor = parseHexColor(text, formatIndex);
             if (hexColor != null) {
@@ -407,18 +277,15 @@ public final class SmoothTextRenderer {
             }
             return 0;
         }
-        if (formatting == null) {
-            return 0;
-        }
+        if (formatting == null) return 0;
+
         if (formatting == ChatFormatting.RESET) {
             style.resetToBase();
             return 1;
         }
         if (formatting.isColor()) {
             Integer color = formatting.getColor();
-            if (color != null) {
-                style.setColor(color, FastColor.ARGB32.alpha(baseColor));
-            }
+            if (color != null) style.setColor(color, FastColor.ARGB32.alpha(baseColor));
             return 1;
         }
         switch (formatting) {
@@ -427,66 +294,40 @@ public final class SmoothTextRenderer {
             case UNDERLINE -> style.underline = true;
             case STRIKETHROUGH -> style.strikethrough = true;
             case OBFUSCATED -> style.obfuscated = true;
-            default -> {
-            }
         }
         return 1;
     }
 
     private static Integer parseHexColor(String text, int formatIndex) {
-        if (formatIndex + 13 >= text.length()) {
-            return null;
-        }
+        if (formatIndex + 13 >= text.length()) return null;
         int start = formatIndex + 1;
-        int r = parseHexDigit(text.charAt(start + 1));
-        int r2 = parseHexDigit(text.charAt(start + 3));
-        int g = parseHexDigit(text.charAt(start + 5));
-        int g2 = parseHexDigit(text.charAt(start + 7));
-        int b = parseHexDigit(text.charAt(start + 9));
-        int b2 = parseHexDigit(text.charAt(start + 11));
-        if (r < 0 || r2 < 0 || g < 0 || g2 < 0 || b < 0 || b2 < 0) {
+        try {
+            int r = Integer.parseInt(text.substring(start + 1, start + 2), 16);
+            int r2 = Integer.parseInt(text.substring(start + 3, start + 4), 16);
+            int g = Integer.parseInt(text.substring(start + 5, start + 6), 16);
+            int g2 = Integer.parseInt(text.substring(start + 7, start + 8), 16);
+            int b = Integer.parseInt(text.substring(start + 9, start + 10), 16);
+            int b2 = Integer.parseInt(text.substring(start + 11, start + 12), 16);
+            return ((r << 4 | r2) << 16) | ((g << 4 | g2) << 8) | (b << 4 | b2);
+        } catch (NumberFormatException e) {
             return null;
         }
-        if (text.charAt(start) != FORMAT_PREFIX || text.charAt(start + 2) != FORMAT_PREFIX || text.charAt(start + 4) != FORMAT_PREFIX
-                || text.charAt(start + 6) != FORMAT_PREFIX || text.charAt(start + 8) != FORMAT_PREFIX || text.charAt(start + 10) != FORMAT_PREFIX) {
-            return null;
-        }
-        int red = (r << 4) | r2;
-        int green = (g << 4) | g2;
-        int blue = (b << 4) | b2;
-        return (red << 16) | (green << 8) | blue;
-    }
-
-    private static int parseHexDigit(char c) {
-        if (c >= '0' && c <= '9') {
-            return c - '0';
-        }
-        c = Character.toLowerCase(c);
-        if (c >= 'a' && c <= 'f') {
-            return 10 + (c - 'a');
-        }
-        return -1;
     }
 
     private static int getObfuscatedCodepoint(int original) {
-        if (original == ' ') {
-            return original;
-        }
-        return OBFUSCATION_CHARS.charAt(OBFUSCATION_RANDOM.nextInt(OBFUSCATION_CHARS.length()));
+        return original == ' ' ? original : OBFUSCATION_CHARS.charAt(OBFUSCATION_RANDOM.nextInt(OBFUSCATION_CHARS.length()));
     }
 
     private static int darkenColor(int color) {
         int alpha = FastColor.ARGB32.alpha(color);
-        int red = (int)(FastColor.ARGB32.red(color) * 0.25F);
-        int green = (int)(FastColor.ARGB32.green(color) * 0.25F);
-        int blue = (int)(FastColor.ARGB32.blue(color) * 0.25F);
+        int red = (int) (FastColor.ARGB32.red(color) * 0.25F);
+        int green = (int) (FastColor.ARGB32.green(color) * 0.25F);
+        int blue = (int) (FastColor.ARGB32.blue(color) * 0.25F);
         return FastColor.ARGB32.color(alpha, red, green, blue);
     }
 
     private static void drawLineIfNeeded(GuiGraphics graphics, boolean enabled, float startX, float endX, float y, int color, float thickness) {
-        if (!enabled || endX <= startX) {
-            return;
-        }
+        if (!enabled || endX <= startX) return;
         RenderingUtils.fillF(graphics, startX, y, endX, y + thickness, color);
     }
 
@@ -522,5 +363,4 @@ public final class SmoothTextRenderer {
             this.obfuscated = false;
         }
     }
-
 }

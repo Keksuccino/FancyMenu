@@ -2,10 +2,7 @@
 
 uniform sampler2D Sampler0;
 uniform vec4 ColorModulator;
-uniform float SdfSharpness;
-uniform float SdfEdge;
-uniform float SdfPixelRange;
-uniform int DebugMode;
+uniform float SdfPixelRange; // The range in texels (e.g. 4.0)
 uniform int UseTrueSdf;
 
 in vec4 vertexColor;
@@ -13,34 +10,40 @@ in vec2 texCoord0;
 
 out vec4 fragColor;
 
-float screenPxRange(vec2 uv) {
-    vec2 texSize = vec2(textureSize(Sampler0, 0));
-    vec2 unitRange = vec2(max(SdfPixelRange, 0.5)) / texSize;
-    vec2 screenTexSize = vec2(1.0) / fwidth(uv);
-    return max(0.5 * dot(unitRange, screenTexSize), 1.0);
-}
-
-float median(float a, float b, float c) {
-    return max(min(a, b), min(max(a, b), c));
+float median(float r, float g, float b) {
+    return max(min(r, g), min(max(r, g), b));
 }
 
 void main() {
-    vec4 sample = texture(Sampler0, texCoord0);
-    float dist = UseTrueSdf != 0 ? sample.a : median(sample.r, sample.g, sample.b);
-    if (DebugMode == 1) {
-        fragColor = vec4(1.0, 0.0, 1.0, 1.0);
-        return;
-    }
-    if (DebugMode == 2) {
-        fragColor = vec4(dist, dist, dist, 1.0);
-        return;
-    }
-    float sharpness = max(SdfSharpness, 0.001);
-    float sd = dist - SdfEdge;
-    float pxRange = screenPxRange(texCoord0) * sharpness;
-    float alpha = clamp(sd * pxRange + 0.5, 0.0, 1.0);
+    vec4 sampleColor = texture(Sampler0, texCoord0);
+
+    // Calculate signed distance (0..1 range)
+    float dist = UseTrueSdf != 0 ? sampleColor.a : median(sampleColor.r, sampleColor.g, sampleColor.b);
+
+    // Convert 0..1 distance to centered -0.5..0.5
+    float sd = dist - 0.5;
+
+    // Calculate the screen-space width of the SDF range.
+    // texSize: Size of texture in pixels.
+    // fwidth(texCoord0): Change in UV per screen pixel.
+    // fwidth(texCoord0) * texSize: Change in Texels per screen pixel.
+    vec2 texSize = vec2(textureSize(Sampler0, 0));
+    vec2 dTex = fwidth(texCoord0) * texSize;
+    float texelsPerPixel = length(dTex); // Approximate diagonal length
+
+    // We want the gradient to change by 1.0 unit over 1.0 screen pixel.
+    // The current 'sd' changes by 1.0 unit over 'SdfPixelRange' texels.
+    // So 'sd' changes by (1.0 / SdfPixelRange) per texel.
+    // Therefore 'sd' changes by (texelsPerPixel / SdfPixelRange) per screen pixel.
+
+    float sdChangePerPixel = texelsPerPixel / max(SdfPixelRange, 0.1);
+
+    // Apply anti-aliasing
+    // We divide the distance by the rate of change to normalize it to pixel units.
+    float alpha = clamp(sd / sdChangePerPixel + 0.5, 0.0, 1.0);
+
     vec4 color = vec4(vertexColor.rgb, vertexColor.a * alpha) * ColorModulator;
-    if (color.a <= 0.001) {
+    if (color.a <= 0.01) {
         discard;
     }
     fragColor = color;
