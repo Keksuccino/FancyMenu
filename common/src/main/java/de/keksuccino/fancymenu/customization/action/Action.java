@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.ui.AsyncActionErrorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -79,11 +80,11 @@ public abstract class Action {
 
     public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
         if (this.hasValue()) {
-            TextEditorScreen s = new TextEditorScreen(this.getValueDisplayName(), null, (call) -> {
+            Component title = (this.getValueDisplayName() != null) ? this.getValueDisplayName() : Component.empty();
+            TextEditorScreen s = new TextEditorScreen(title, null, (call) -> {
                 if (call != null) {
                     instance.value = call;
                 }
-                Minecraft.getInstance().setScreen(parentScreen);
             });
             List<TextEditorFormattingRule> formattingRules = this.getValueFormattingRules();
             if (formattingRules != null) s.formattingRules.addAll(formattingRules);
@@ -93,7 +94,7 @@ public abstract class Action {
             } else {
                 s.setText(this.getValueExample());
             }
-            Minecraft.getInstance().setScreen(s);
+            Dialogs.openGeneric(s, title, null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
         }
     }
 

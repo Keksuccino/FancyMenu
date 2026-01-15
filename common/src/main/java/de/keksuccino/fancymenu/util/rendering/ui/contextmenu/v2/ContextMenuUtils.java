@@ -303,8 +303,6 @@ public class ContextMenuUtils {
                     }
                     if (onCloseEditor != null) {
                         onCloseEditor.accept(current, call);
-                    } else {
-                        Minecraft.getInstance().setScreen(current);
                     }
                 });
                 if (textValidator != null) {
@@ -316,7 +314,8 @@ public class ContextMenuUtils {
                 s.setMultilineMode(multiLineInput);
                 s.setPlaceholdersAllowed(allowPlaceholders);
                 s.setText(getter.get());
-                inputScreen = s;
+                Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+                inputScreen = null;
             }
             if (inputScreen != null) {
                 Minecraft.getInstance().setScreen(inputScreen);

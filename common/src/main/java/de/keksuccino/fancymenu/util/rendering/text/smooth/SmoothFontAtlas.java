@@ -15,6 +15,7 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.msdfgen.MSDFGen;
 import org.lwjgl.util.msdfgen.MSDFGenBitmap;
+import org.lwjgl.util.msdfgen.MSDFGenMultichannelConfig;
 import org.lwjgl.util.msdfgen.MSDFGenRange;
 import org.lwjgl.util.msdfgen.MSDFGenTransform;
 import org.lwjgl.util.msdfgen.MSDFGenVector2;
@@ -53,6 +54,7 @@ final class SmoothFontAtlas implements AutoCloseable {
     private static final boolean DEBUG_USE_RAW_ALPHA = Boolean.getBoolean("fancymenu.debugSmoothFontRawAlpha");
     private static final boolean DEBUG_DUMP_ATLAS = Boolean.getBoolean("fancymenu.debugSmoothFontAtlasDump");
     private static final boolean DEBUG_DUMP_MSDF = Boolean.getBoolean("fancymenu.debugSmoothFontDumpMsdf");
+    private static final boolean DISABLE_MTSDF = Boolean.getBoolean("fancymenu.debugSmoothFontDisableMtsdf");
     private static final int ALPHA_THRESHOLD = Math.max(1, Integer.getInteger("fancymenu.smoothFontAlphaThreshold", 128));
     private static final float MSDF_EDGE_THRESHOLD = 3.0F;
     private static boolean msdfAvailable = true;
@@ -65,6 +67,8 @@ final class SmoothFontAtlas implements AutoCloseable {
     private final Font awtFont;
     private final FontRenderContext fontRenderContext;
     private final float sdfRange;
+    private float msdfRangeScale = 1.0F;
+    private boolean msdfRangeScaleInitialized;
     private final Int2ObjectOpenHashMap<SmoothFontGlyph> glyphs = new Int2ObjectOpenHashMap<>();
 
     private NativeImage atlasImage;
@@ -90,6 +94,12 @@ final class SmoothFontAtlas implements AutoCloseable {
         this.textureLocation = textureManager.register("fancymenu_smooth_font_" + debugName, dynamicTexture);
         this.textureId = dynamicTexture.getId();
         applyLinearFilter();
+    }
+
+    float getEffectiveSdfRange() {
+        float scale = msdfRangeScaleInitialized ? msdfRangeScale : 1.0F;
+        float effective = sdfRange * scale;
+        return Mth.clamp(effective, 0.5F, sdfRange);
     }
 
     ResourceLocation getTextureLocation() {
@@ -121,13 +131,13 @@ final class SmoothFontAtlas implements AutoCloseable {
         java.awt.Shape outline = glyphVector.getGlyphOutline(0);
         Rectangle2D bounds = outline.getBounds2D();
         if (bounds == null || bounds.isEmpty() || bounds.getWidth() <= 0.0 || bounds.getHeight() <= 0.0) {
-            return new SmoothFontGlyph(this, 0.0F, 0.0F, 0.0F, 0.0F, 0, 0, 0.0F, 0.0F, advance, false);
+            return new SmoothFontGlyph(this, 0.0F, 0.0F, 0.0F, 0.0F, 0, 0, 0.0F, 0.0F, advance, false, true);
         }
         int padding = Math.max(2, (int)Math.ceil(sdfRange));
         int glyphWidth = (int)Math.ceil(bounds.getWidth() + (padding * 2.0));
         int glyphHeight = (int)Math.ceil(bounds.getHeight() + (padding * 2.0));
         if (glyphWidth <= 0 || glyphHeight <= 0) {
-            return new SmoothFontGlyph(this, 0.0F, 0.0F, 0.0F, 0.0F, 0, 0, 0.0F, 0.0F, advance, false);
+            return new SmoothFontGlyph(this, 0.0F, 0.0F, 0.0F, 0.0F, 0, 0, 0.0F, 0.0F, advance, false, true);
         }
 
         BufferedImage image = null;
@@ -138,14 +148,16 @@ final class SmoothFontAtlas implements AutoCloseable {
         }
 
         byte[] atlasPixels;
+        boolean usesTrueSdf;
         if (DEBUG_USE_RAW_ALPHA) {
             if (image == null) {
                 image = renderGlyphImage(glyphVector, bounds, glyphWidth, glyphHeight, padding);
             }
             atlasPixels = image != null ? buildRawRgba(image, glyphWidth, glyphHeight) : new byte[glyphWidth * glyphHeight * 4];
+            usesTrueSdf = true;
         } else {
-            atlasPixels = buildMsdf(outline, bounds, glyphWidth, glyphHeight, padding, sdfRange);
-            if (atlasPixels == null) {
+            GeneratedBitmap msdf = buildMsdf(outline, bounds, glyphWidth, glyphHeight, padding, sdfRange);
+            if (msdf == null || msdf.pixels == null) {
                 if (image == null) {
                     image = renderGlyphImage(glyphVector, bounds, glyphWidth, glyphHeight, padding);
                 }
@@ -154,6 +166,10 @@ final class SmoothFontAtlas implements AutoCloseable {
                 }
                 byte[] fallbackSdf = image != null ? buildSdf(image, glyphWidth, glyphHeight, sdfRange) : null;
                 atlasPixels = fallbackSdf != null ? expandAlphaToRgba(fallbackSdf) : new byte[glyphWidth * glyphHeight * 4];
+                usesTrueSdf = true;
+            } else {
+                atlasPixels = msdf.pixels;
+                usesTrueSdf = msdf.usesTrueSdf;
             }
         }
 
@@ -198,7 +214,7 @@ final class SmoothFontAtlas implements AutoCloseable {
             debugAtlasDumpCount++;
             dumpAtlasImage(debugName, atlasImage, debugAtlasDumpCount);
         }
-        return new SmoothFontGlyph(this, u0, v0, u1, v1, glyphWidth, glyphHeight, offsetX, offsetY, advance, true);
+        return new SmoothFontGlyph(this, u0, v0, u1, v1, glyphWidth, glyphHeight, offsetX, offsetY, advance, true, usesTrueSdf);
     }
 
     private Rect allocate(int width, int height) {
@@ -311,7 +327,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         return image;
     }
 
-    private byte[] buildMsdf(java.awt.Shape outline, Rectangle2D bounds, int width, int height, int padding, float range) {
+    private GeneratedBitmap buildMsdf(java.awt.Shape outline, Rectangle2D bounds, int width, int height, int padding, float range) {
         if (!msdfAvailable) {
             return null;
         }
@@ -337,7 +353,7 @@ final class SmoothFontAtlas implements AutoCloseable {
                     );
                 }
                 MSDFGen.msdf_shape_orient_contours(shape);
-                MSDFGen.msdf_shape_edge_colors_simple(shape, MSDF_EDGE_THRESHOLD);
+                MSDFGen.msdf_shape_edge_colors_ink_trap(shape, MSDF_EDGE_THRESHOLD);
 
                 MSDFGenTransform transform = MSDFGenTransform.calloc(stack);
                 transform.scale().x(1.0).y(1.0);
@@ -346,21 +362,48 @@ final class SmoothFontAtlas implements AutoCloseable {
                 rangeStruct.lower(-range);
                 rangeStruct.upper(range);
 
-            MSDFGenBitmap bitmap = MSDFGenBitmap.malloc(stack);
-            int allocResult = MSDFGen.msdf_bitmap_alloc(MSDFGen.MSDF_BITMAP_TYPE_MSDF, width, height, bitmap);
-            if (allocResult != MSDFGen.MSDF_SUCCESS) {
-                LOGGER.warn("[FANCYMENU] MSDF bitmap allocation failed (code={})", allocResult);
-                return null;
-            }
-            int genResult = MSDFGen.msdf_generate_msdf(bitmap, shape, transform);
-            if (genResult != MSDFGen.MSDF_SUCCESS) {
-                LOGGER.warn("[FANCYMENU] MSDF generation failed (code={})", genResult);
+                MSDFGenBitmap bitmap = MSDFGenBitmap.malloc(stack);
+                MSDFGenMultichannelConfig config = MSDFGenMultichannelConfig.calloc(stack);
+                config.overlap_support(MSDFGen.MSDF_TRUE);
+                config.mode(MSDFGen.MSDF_ERROR_CORRECTION_MODE_EDGE_PRIORITY);
+                config.distance_check_mode(MSDFGen.MSDF_DISTANCE_CHECK_MODE_ALWAYS);
+                config.min_deviation_ratio(0.1);
+                config.min_improve_ratio(0.1);
+
+                int allocResult;
+                int genResult;
+                boolean usesTrueSdf;
+                if (DISABLE_MTSDF) {
+                    allocResult = MSDFGen.msdf_bitmap_alloc(MSDFGen.MSDF_BITMAP_TYPE_MSDF, width, height, bitmap);
+                    if (allocResult != MSDFGen.MSDF_SUCCESS) {
+                        LOGGER.warn("[FANCYMENU] MSDF bitmap allocation failed (code={})", allocResult);
+                        return null;
+                    }
+                    genResult = MSDFGen.msdf_generate_msdf_with_config(bitmap, shape, transform, config);
+                    usesTrueSdf = false;
+                } else {
+                    allocResult = MSDFGen.msdf_bitmap_alloc(MSDFGen.MSDF_BITMAP_TYPE_MTSDF, width, height, bitmap);
+                    if (allocResult != MSDFGen.MSDF_SUCCESS) {
+                        LOGGER.warn("[FANCYMENU] MTSDF bitmap allocation failed (code={})", allocResult);
+                        return null;
+                    }
+                    genResult = MSDFGen.msdf_generate_mtsdf_with_config(bitmap, shape, transform, config);
+                    usesTrueSdf = true;
+                }
+
+                if (genResult != MSDFGen.MSDF_SUCCESS) {
+                    LOGGER.warn("[FANCYMENU] MSDF generation failed (code={})", genResult);
+                    MSDFGen.msdf_bitmap_free(bitmap);
+                    return null;
+                }
+                MsdfBitmapData data = readBitmapPixels(bitmap, width, height, range);
                 MSDFGen.msdf_bitmap_free(bitmap);
-                return null;
-            }
-                byte[] rgba = readBitmapPixels(bitmap, width, height, range);
-                MSDFGen.msdf_bitmap_free(bitmap);
-                return rgba;
+                if (data == null || data.rgba == null) {
+                    return null;
+                }
+                boolean trueSdf = usesTrueSdf || data.channels >= 4;
+                updateMsdfRangeScale(data.rgba, trueSdf);
+                return new GeneratedBitmap(data.rgba, trueSdf);
             } finally {
                 MSDFGen.msdf_shape_free(shape);
             }
@@ -374,7 +417,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         }
     }
 
-    private byte[] readBitmapPixels(MSDFGenBitmap bitmap, int width, int height, float range) {
+    private MsdfBitmapData readBitmapPixels(MSDFGenBitmap bitmap, int width, int height, float range) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             PointerBuffer pixelPtr = stack.mallocPointer(1);
             int pixelResult = MSDFGen.msdf_bitmap_get_pixels(bitmap, pixelPtr);
@@ -406,17 +449,17 @@ final class SmoothFontAtlas implements AutoCloseable {
                 for (int i = 0; i < pixelCount; i++) {
                     int srcBase = i * channels;
                     int dstBase = i * 4;
-                byte r = buffer.get(srcBase);
-                byte g = channels > 1 ? buffer.get(srcBase + 1) : r;
-                byte b = channels > 2 ? buffer.get(srcBase + 2) : r;
-                byte a = channels > 3 ? buffer.get(srcBase + 3) : (byte)0xFF;
-                rgba[dstBase] = r;
-                rgba[dstBase + 1] = g;
-                rgba[dstBase + 2] = b;
-                rgba[dstBase + 3] = channels > 3 ? a : (byte)0xFF;
+                    byte r = buffer.get(srcBase);
+                    byte g = channels > 1 ? buffer.get(srcBase + 1) : r;
+                    byte b = channels > 2 ? buffer.get(srcBase + 2) : r;
+                    byte a = channels > 3 ? buffer.get(srcBase + 3) : (byte)0xFF;
+                    rgba[dstBase] = r;
+                    rgba[dstBase + 1] = g;
+                    rgba[dstBase + 2] = b;
+                    rgba[dstBase + 3] = channels > 3 ? a : (byte)0xFF;
+                }
+                return new MsdfBitmapData(rgba, channels);
             }
-            return rgba;
-        }
 
             if (bytesPerChannel == 4) {
                 FloatBuffer floats = buffer.asFloatBuffer();
@@ -447,7 +490,7 @@ final class SmoothFontAtlas implements AutoCloseable {
                     rgba[dstBase + 2] = (byte)Math.round(Mth.clamp(b, 0.0F, 1.0F) * 255.0F);
                     rgba[dstBase + 3] = (byte)Math.round(Mth.clamp(channels > 3 ? a : 1.0F, 0.0F, 1.0F) * 255.0F);
                 }
-                return rgba;
+                return new MsdfBitmapData(rgba, channels);
             }
 
             LOGGER.warn("[FANCYMENU] Unsupported MSDF pixel format: channels={} bytesPerChannel={}", channels, bytesPerChannel);
@@ -630,6 +673,70 @@ final class SmoothFontAtlas implements AutoCloseable {
             alpha[i] = (byte)coverageFromPixel(pixels[i]);
         }
         return alpha;
+    }
+
+    private void updateMsdfRangeScale(byte[] rgba, boolean useAlpha) {
+        int min = 255;
+        int max = 0;
+        if (useAlpha) {
+            for (int i = 3; i < rgba.length; i += 4) {
+                int value = rgba[i] & 0xFF;
+                min = Math.min(min, value);
+                max = Math.max(max, value);
+            }
+        } else {
+            for (int i = 0; i < rgba.length; i += 4) {
+                int r = rgba[i] & 0xFF;
+                int g = rgba[i + 1] & 0xFF;
+                int b = rgba[i + 2] & 0xFF;
+                int med = median(r, g, b);
+                min = Math.min(min, med);
+                max = Math.max(max, med);
+            }
+        }
+        int maxDeviation = Math.max(Math.abs(max - 128), Math.abs(min - 128));
+        float scale = maxDeviation / 128.0F;
+        if (scale <= 0.01F) {
+            return;
+        }
+        if (!msdfRangeScaleInitialized) {
+            msdfRangeScale = scale;
+            msdfRangeScaleInitialized = true;
+        } else {
+            msdfRangeScale = Math.max(msdfRangeScale, scale);
+        }
+        if (DEBUG_LOG) {
+            LOGGER.info("[FANCYMENU] SmoothFontAtlas {} MSDF range scale updated: min={} max={} scale={}",
+                    debugName,
+                    min,
+                    max,
+                    msdfRangeScale
+            );
+        }
+    }
+
+    private static int median(int a, int b, int c) {
+        return Math.max(Math.min(a, b), Math.min(Math.max(a, b), c));
+    }
+
+    private static final class MsdfBitmapData {
+        private final byte[] rgba;
+        private final int channels;
+
+        private MsdfBitmapData(byte[] rgba, int channels) {
+            this.rgba = rgba;
+            this.channels = channels;
+        }
+    }
+
+    private static final class GeneratedBitmap {
+        private final byte[] pixels;
+        private final boolean usesTrueSdf;
+
+        private GeneratedBitmap(byte[] pixels, boolean usesTrueSdf) {
+            this.pixels = pixels;
+            this.usesTrueSdf = usesTrueSdf;
+        }
     }
 
     private static void dumpDebugImages(String debugName, BufferedImage rawImage, byte[] rgba, int width, int height, int codepoint) {

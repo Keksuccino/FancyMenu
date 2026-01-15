@@ -25,6 +25,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -601,7 +602,6 @@ public class ActionScriptEditorScreen extends Screen {
                         }
                     }
                 }
-                Minecraft.getInstance().setScreen(this);
             });
             s.setMultilineMode(false);
             s.setPlaceholdersAllowed(false);
@@ -610,7 +610,7 @@ public class ActionScriptEditorScreen extends Screen {
                 String text = Objects.requireNonNullElse(editor.getText(), "").trim();
                 return !text.isEmpty() && de.keksuccino.konkrete.math.MathUtils.isLong(text) && Long.parseLong(text) >= 0L;
             });
-            Minecraft.getInstance().setScreen(s);
+            Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.delay.edit"), null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
         }
     }
 
@@ -708,7 +708,6 @@ public class ActionScriptEditorScreen extends Screen {
                 block.setDelayMs(call);
                 this.finalizeExecutableAddition(block, resolvedReference, true);
             }
-            Minecraft.getInstance().setScreen(this);
         });
         s.setMultilineMode(false);
         s.setPlaceholdersAllowed(false);
@@ -717,7 +716,7 @@ public class ActionScriptEditorScreen extends Screen {
             String text = Objects.requireNonNullElse(editor.getText(), "").trim();
             return !text.isEmpty() && de.keksuccino.konkrete.math.MathUtils.isLong(text) && Long.parseLong(text) >= 0L;
         });
-        Minecraft.getInstance().setScreen(s);
+        Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.delay.edit"), null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
     }
 
     protected void onAppendElseIf(@Nullable ExecutableEntry targetEntry) {

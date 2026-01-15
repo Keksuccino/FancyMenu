@@ -920,13 +920,12 @@ public interface ContextMenuBuilder<O> {
                         }
                         Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
                     } else {
+                        menu.closeMenuChain();
                         TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
                             if (call != null) {
                                 this.saveSnapshot();
                                 this.applyStackAppliers(entry, call);
                             }
-                            menu.closeMenuChain();
-                            this.openContextMenuScreen(this.getContextMenuCallbackScreen());
                         }).setText(defaultText)
                                 .setMultilineMode(multiLineInput)
                                 .setPlaceholdersAllowed(allowPlaceholders);
@@ -936,7 +935,7 @@ public interface ContextMenuBuilder<O> {
                                 return textValidator.get(consumes.getText());
                             });
                         }
-                        this.openContextMenuScreen(s);
+                        Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
                     }
                 }).setStackable(true)
                 .setStackApplier((stackEntry, value) -> {

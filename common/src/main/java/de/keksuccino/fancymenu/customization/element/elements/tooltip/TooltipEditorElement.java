@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
@@ -64,12 +65,12 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                                             ((TooltipElement)e.element).setSource(TooltipElement.SourceMode.DIRECT, call);
                                         }
                                     }
-                                    this.openContextMenuScreen(this.editor);
                                 });
                                 s.setText(defaultText);
                                 s.setMultilineMode(true);
                                 s.setPlaceholdersAllowed(true);
-                                this.openContextMenuScreen(s);
+                                menu.closeMenuChain();
+                                Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.text.v2.source.input"), ContextMenu.IconFactory.getIcon("text"), TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
                             }
                         })
                 .setStackable(true)

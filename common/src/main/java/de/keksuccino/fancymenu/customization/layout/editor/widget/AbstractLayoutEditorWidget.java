@@ -152,7 +152,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             float blurHeight = height * renderScale;
             if (blurWidth > 0.0F && blurHeight > 0.0F) {
                 float blurCornerRadius = cornerRadius * renderScale;
-                GuiBlurRenderer.renderBlurAreaRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, UIBase.getBlurRadius(), 0.0F, 0.0F, blurCornerRadius, blurCornerRadius, this.getBackgroundColor(), partial);
+                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, blurX, blurY, blurWidth, blurHeight, UIBase.getBlurRadius(), 0.0F, 0.0F, blurCornerRadius, blurCornerRadius, this.getBackgroundColor(), partial);
             }
         } else {
             float renderScale = this.getFixedComponentScale();

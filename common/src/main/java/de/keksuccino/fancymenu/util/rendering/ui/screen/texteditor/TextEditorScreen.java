@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.TextEditorFormattingRules;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
@@ -45,7 +46,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("all")
-public class TextEditorScreen extends Screen {
+public class TextEditorScreen extends PiPScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -53,6 +54,8 @@ public class TextEditorScreen extends Screen {
 
     public static final String NEWLINE_CODE = "%!n!%";
     public static final String SPACE_CODE = "%!s!%";
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     protected final CharacterFilter characterFilter;
     protected final Consumer<String> callback;
@@ -208,16 +211,20 @@ public class TextEditorScreen extends Screen {
         this.addWidget(this.horizontalScrollBarPlaceholderMenu);
 
         this.cancelButton = new ExtendedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
-            this.onClose();
+            this.callback.accept(null);
+            this.closeWindow();
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
 
         this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
-            if (this.isTextValid()) this.callback.accept(this.getText());
+            if (this.isTextValid()) {
+                this.callback.accept(this.getText());
+                this.closeWindow();
+            }
         });
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, UIBase.shouldBlur());
 
         if (this.allowPlaceholders) {
             MutableComponent placeholderButtonLabel = Component.translatable("fancymenu.ui.text_editor.placeholders");
@@ -233,7 +240,7 @@ public class TextEditorScreen extends Screen {
                 this.rebuildWidgets();
             }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.placeholders.desc")));
             this.addWidget(this.placeholderButton);
-            UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
+            UIBase.applyDefaultWidgetSkinTo(this.placeholderButton, UIBase.shouldBlur());
         } else {
             this.placeholderButton = null;
             extendedPlaceholderMenu = false;
@@ -382,10 +389,6 @@ public class TextEditorScreen extends Screen {
         this.rightClickContextMenu.render(graphics, mouseX, mouseY, partial);
 
         this.tickMouseHighlighting();
-
-        MutableComponent t = this.title.copy();
-        t.setStyle(t.getStyle().withBold(this.boldTitle));
-        graphics.drawString(this.font, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         RenderSystem.enableDepthTest();
 
@@ -1575,7 +1578,7 @@ public class TextEditorScreen extends Screen {
     }
 
     @Override
-    public void onClose() {
+    public void onWindowClosedExternally() {
         this.callback.accept(null);
     }
 

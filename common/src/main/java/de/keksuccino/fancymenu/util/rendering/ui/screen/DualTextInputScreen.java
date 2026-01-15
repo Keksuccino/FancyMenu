@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -105,22 +106,13 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
 
         if (this.allowPlaceholders) {
             UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(editorButtonX, this.input_one.getY(), editorButtonWidth, inputHeight, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
-                TextEditorScreen s = new TextEditorScreen((this.filter != null) ? this.filter.convertToLegacyFilter() : null, callback -> {
+                TextEditorScreen s = new TextEditorScreen(this.firstInputLabel, (this.filter != null) ? this.filter.convertToLegacyFilter() : null, callback -> {
                     if (callback != null) {
                         this.setFirstText(callback);
                     }
-                    if (this.getWindow() != null) {
-                        this.getWindow().setScreen(this);
-                    } else {
-                        Minecraft.getInstance().setScreen(this);
-                    }
                 });
                 s.setText(this.getFirstText());
-                if (this.getWindow() != null) {
-                    this.getWindow().setScreen(s);
-                } else {
-                    Minecraft.getInstance().setScreen(s);
-                }
+                Dialogs.openGeneric(s, this.firstInputLabel, null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
             })), UIBase.shouldBlur());
         }
 
@@ -145,22 +137,13 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
 
         if (this.allowPlaceholders) {
             UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(editorButtonX, this.input_two.getY(), editorButtonWidth, inputHeight, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
-                TextEditorScreen s = new TextEditorScreen((this.filter != null) ? this.filter.convertToLegacyFilter() : null, callback -> {
+                TextEditorScreen s = new TextEditorScreen(this.secondInputLabel, (this.filter != null) ? this.filter.convertToLegacyFilter() : null, callback -> {
                     if (callback != null) {
                         this.setSecondText(callback);
                     }
-                    if (this.getWindow() != null) {
-                        this.getWindow().setScreen(this);
-                    } else {
-                        Minecraft.getInstance().setScreen(this);
-                    }
                 });
                 s.setText(this.getSecondText());
-                if (this.getWindow() != null) {
-                    this.getWindow().setScreen(s);
-                } else {
-                    Minecraft.getInstance().setScreen(s);
-                }
+                Dialogs.openGeneric(s, this.secondInputLabel, null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
             })), UIBase.shouldBlur());
         }
 

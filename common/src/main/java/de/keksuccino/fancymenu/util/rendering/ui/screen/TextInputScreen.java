@@ -48,27 +48,34 @@ public class TextInputScreen extends PiPScreen implements InitialWidgetFocusScre
             val = this.cachedValue;
             this.cachedValue = null;
         }
-        this.input = this.addRenderableWidget(new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 100, (this.height / 2) - 30, 200, 20, Component.empty()));
+        int inputHeight = 20;
+        int inputWidth = Math.max(160, this.width - 80);
+        int inputX = (this.width - inputWidth) / 2;
+        int buttonY = this.height - 40;
+        int contentBottom = buttonY - 12;
+        int inputY = Math.max(16, (contentBottom - inputHeight) / 2);
+
+        this.input = this.addRenderableWidget(new ExtendedEditBox(Minecraft.getInstance().font, inputX, inputY, inputWidth, inputHeight, Component.empty()));
         this.input.setMaxLength(10000);
         this.input.setCharacterFilter(this.filter);
         this.input.setValue(val);
-        UIBase.applyDefaultWidgetSkinTo(this.input);
+        UIBase.applyDefaultWidgetSkinTo(this.input, UIBase.shouldBlur());
         this.setupInitialFocusWidget(this, this.input);
 
-        ExtendedButton cancelButton = this.addRenderableWidget(new ExtendedButton((this.width / 2) - 5 - 100, this.height - 40, 100, 20, Component.translatable("fancymenu.common_components.cancel"), button -> {
+        ExtendedButton cancelButton = this.addRenderableWidget(new ExtendedButton((this.width / 2) - 5 - 100, buttonY, 100, 20, Component.translatable("fancymenu.common_components.cancel"), button -> {
             this.callback.accept(null);
             this.closeWindow();
         }));
-        UIBase.applyDefaultWidgetSkinTo(cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(cancelButton, UIBase.shouldBlur());
 
-        ExtendedButton doneButton = this.addRenderableWidget(new ExtendedButton((this.width / 2) + 5, this.height - 40, 100, 20, Component.translatable("fancymenu.common_components.done"), button -> {
+        ExtendedButton doneButton = this.addRenderableWidget(new ExtendedButton((this.width / 2) + 5, buttonY, 100, 20, Component.translatable("fancymenu.common_components.done"), button -> {
             if (this.isTextValid()) {
                 this.callback.accept(this.input.getValue());
                 this.closeWindow();
             }
         })).setIsActiveSupplier(consumes -> this.isTextValid())
                 .setUITooltip(this.textValidatorFeedbackUITooltip);
-        UIBase.applyDefaultWidgetSkinTo(doneButton);
+        UIBase.applyDefaultWidgetSkinTo(doneButton, UIBase.shouldBlur());
 
     }
 

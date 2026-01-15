@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementIns
 import de.keksuccino.fancymenu.customization.requirement.ui.AsyncRequirementErrorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
@@ -114,11 +115,11 @@ public abstract class Requirement {
     public void editValue(@NotNull Screen parentScreen, @NotNull RequirementInstance requirementInstance) {
         if (this.hasValue()) {
             String displayName = this.getValueDisplayName();
-            TextEditorScreen s = new TextEditorScreen((displayName != null) ? Component.literal(displayName) : Component.translatable("fancymenu.elements.requirements.edit_value"), null, (call) -> {
+            Component title = (displayName != null) ? Component.literal(displayName) : Component.translatable("fancymenu.elements.requirements.edit_value");
+            TextEditorScreen s = new TextEditorScreen(title, null, (call) -> {
                 if (call != null) {
                     requirementInstance.value = call;
                 }
-                Minecraft.getInstance().setScreen(parentScreen);
             });
             if (this.getValueFormattingRules() != null) {
                 s.formattingRules.addAll(this.getValueFormattingRules());
@@ -129,7 +130,7 @@ public abstract class Requirement {
             } else {
                 s.setText(this.getValuePreset());
             }
-            Minecraft.getInstance().setScreen(s);
+            Dialogs.openGeneric(s, title, null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
         }
     }
 

@@ -97,6 +97,14 @@ final class SmoothTextShader {
         current.safeGetUniform("SdfPixelRange").set(range);
     }
 
+    static void applyUseTrueSdf(boolean useTrueSdf) {
+        ShaderInstance current = RenderSystem.getShader();
+        if (current == null) {
+            return;
+        }
+        current.safeGetUniform("UseTrueSdf").set(useTrueSdf ? 1 : 0);
+    }
+
     static void setRuntimeSharpness(float sharpness) {
         runtimeSharpness = Math.max(0.05F, sharpness);
     }

@@ -2,7 +2,7 @@
 
 uniform vec2 OutSize;
 uniform vec4 Rect;
-uniform vec4 CornerRadii; // top-left, top-right, bottom-right, bottom-left
+uniform vec4 CornerRadii; // BL, BR, TR, TL (matches Java flipVertical)
 uniform float BorderThickness;
 uniform vec4 Color;
 
@@ -10,65 +10,67 @@ in vec2 texCoord;
 
 out vec4 fragColor;
 
-float roundedRectMask(vec2 pixel, vec2 pos, vec2 size, vec4 radii) {
-    // Clamp radii so they never exceed half the respective axis; prevents inverted corners when callers pass large values.
-    float maxX = size.x * 0.5;
-    float maxY = size.y * 0.5;
-    vec4 r = clamp(radii, 0.0, min(maxX, maxY));
+// Signed Distance Field for a Box with 4 independent corner radii
+// Adapted from Inigo Quilez
+float sdRoundedBox(vec2 p, vec2 b, vec4 r) {
+    // Select radius based on quadrant (relative to center)
+    // r components: x=BL, y=BR, z=TR, w=TL
 
-    vec2 rel = pixel - pos;
+    // Step returns 0.0 if negative, 1.0 if positive
+    vec2 section = step(0.0, p);
 
-    // Outside fast path
-    if (rel.x < 0.0 || rel.y < 0.0 || rel.x > size.x || rel.y > size.y) {
-        return 0.0;
-    }
+    // Select between Left (x/w) and Right (y/z)
+    vec2 botTop = mix(r.xw, r.yz, section.x);
+    // Select between Bottom (x/y) and Top (w/z)
+    float rad = mix(botTop.x, botTop.y, section.y);
 
-    float dist;
-    // Top-left corner region
-    if (rel.x < r.x && rel.y < r.x) {
-        dist = length(rel - vec2(r.x, r.x)) - r.x;
-    }
-    // Top-right corner region
-    else if (rel.x > size.x - r.y && rel.y < r.y) {
-        dist = length(rel - vec2(size.x - r.y, r.y)) - r.y;
-    }
-    // Bottom-right corner region
-    else if (rel.x > size.x - r.z && rel.y > size.y - r.z) {
-        dist = length(rel - vec2(size.x - r.z, size.y - r.z)) - r.z;
-    }
-    // Bottom-left corner region
-    else if (rel.x < r.w && rel.y > size.y - r.w) {
-        dist = length(rel - vec2(r.w, size.y - r.w)) - r.w;
-    }
-    // Edges / center: distance to rectangle
-    else {
-        float dx = max(-rel.x, rel.x - size.x);
-        float dy = max(-rel.y, rel.y - size.y);
-        dist = max(dx, dy);
-    }
-
-    float aa = fwidth(dist);
-    return 1.0 - smoothstep(-aa, aa, dist);
+    // Standard rounded box SDF calculation
+    vec2 q = abs(p) - b + rad;
+    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - rad;
 }
 
 void main() {
-    vec2 uv = texCoord;
-    vec2 pixel = uv * OutSize;
-    float mask = roundedRectMask(pixel, Rect.xy, Rect.zw, CornerRadii);
+    // Convert 0..1 UV to actual Screen Pixel coordinates
+    vec2 pixel = texCoord * OutSize;
+
+    // Calculate Center and Half-Size of the rectangle
+    vec2 halfSize = Rect.zw * 0.5;
+    vec2 center = Rect.xy + halfSize;
+
+    // Position relative to center
+    vec2 p = pixel - center;
+
+    // 1. Calculate Outer Distance (Negative = inside, Positive = outside)
+    float dist = sdRoundedBox(p, halfSize, CornerRadii);
+
+    // 2. Anti-Aliasing
+    // fwidth gives the change in distance over one pixel.
+    // This allows for perfectly smooth edges regardless of scale.
+    float aa = fwidth(dist);
+
+    // Calculate alpha (1.0 inside, 0.0 outside, smooth gradient at edge)
+    // Using 0.0 to 1.0 smoothstep ensures the AA is contained within the pixel boundary
+    float alpha = 1.0 - smoothstep(-aa, aa, dist);
+
+    // 3. Border Logic
     if (BorderThickness > 0.0) {
-        vec2 innerPos = Rect.xy + vec2(BorderThickness);
-        vec2 innerSize = Rect.zw - vec2(BorderThickness * 2.0);
-        if (innerSize.x > 0.0 && innerSize.y > 0.0) {
-            vec4 innerRadii = max(CornerRadii - vec4(BorderThickness), vec4(0.0));
-            float innerMask = roundedRectMask(pixel, innerPos, innerSize, innerRadii);
-            mask = max(0.0, mask - innerMask);
+        // Calculate inner box dimensions
+        // Inner radii are Outer - Thickness (clamped to 0 by max)
+        vec4 innerRadii = max(CornerRadii - vec4(BorderThickness), vec4(0.0));
+        vec2 innerHalfSize = halfSize - vec2(BorderThickness);
+
+        // Only render hole if the border isn't thicker than the box itself
+        if (innerHalfSize.x > 0.0 && innerHalfSize.y > 0.0) {
+             float innerDist = sdRoundedBox(p, innerHalfSize, innerRadii);
+             float innerAlpha = 1.0 - smoothstep(-aa, aa, innerDist);
+
+             // Subtract inner alpha from outer alpha
+             alpha = clamp(alpha - innerAlpha, 0.0, 1.0);
         }
     }
-    // Discard everything outside the rounded rect so the pass never writes to untouched pixels.
-    if (mask <= 0.0001) {
-        discard;
-    }
 
-    float alpha = clamp(Color.a, 0.0, 1.0) * mask;
-    fragColor = vec4(Color.rgb, alpha);
+    // Optimization: discard fully transparent pixels
+    if (alpha <= 0.0) discard;
+
+    fragColor = vec4(Color.rgb, Color.a * alpha);
 }

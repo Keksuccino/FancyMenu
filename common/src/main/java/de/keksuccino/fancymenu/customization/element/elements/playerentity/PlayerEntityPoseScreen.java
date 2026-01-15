@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -460,14 +461,14 @@ public class PlayerEntityPoseScreen extends CellScreen {
             UIBase.applyDefaultWidgetSkinTo(this.toggleModeButton);
 
             this.rotationStringButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.elements.player_entity.pose.advanced." + localizationKeySuffix), button -> {
-                TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.elements.player_entity.pose.advanced." + localizationKeySuffix), null, call -> {
+                Component title = Component.translatable("fancymenu.elements.player_entity.pose.advanced." + localizationKeySuffix);
+                TextEditorScreen s = new TextEditorScreen(title, null, call -> {
                     if (call != null) {
                         rotationValueSetter.accept(call);
                     }
-                    Minecraft.getInstance().setScreen(PlayerEntityPoseScreen.this);
                 });
                 s.setText(rotationValueGetter.get());
-                Minecraft.getInstance().setScreen(s);
+                Dialogs.openGeneric(s, title, null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
             });
             UIBase.applyDefaultWidgetSkinTo(this.rotationStringButton);
 

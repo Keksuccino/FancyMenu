@@ -6,6 +6,7 @@ uniform float SdfSharpness;
 uniform float SdfEdge;
 uniform float SdfPixelRange;
 uniform int DebugMode;
+uniform int UseTrueSdf;
 
 in vec4 vertexColor;
 in vec2 texCoord0;
@@ -25,7 +26,7 @@ float median(float a, float b, float c) {
 
 void main() {
     vec4 sample = texture(Sampler0, texCoord0);
-    float dist = median(sample.r, sample.g, sample.b);
+    float dist = UseTrueSdf != 0 ? sample.a : median(sample.r, sample.g, sample.b);
     if (DebugMode == 1) {
         fragColor = vec4(1.0, 0.0, 1.0, 1.0);
         return;

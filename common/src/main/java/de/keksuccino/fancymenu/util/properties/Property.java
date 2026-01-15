@@ -24,6 +24,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -727,14 +728,12 @@ public class Property<T> {
                                             builder.saveSnapshot();
                                             builder.applyStackAppliers(entry, call);
                                         }
-                                        contextMenu.closeMenuChain();
-                                        builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                                     });
                                     s.setText(defaultText);
                                     s.setMultilineMode(false);
                                     s.setPlaceholdersAllowed(true);
                                     contextMenu.closeMenuChain();
-                                    builder.openContextMenuScreen(s);
+                                    Dialogs.openGeneric(s, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), ContextMenu.IconFactory.getIcon("text"), TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
                                 })
                         .setStackable(true)
                         .setStackApplier((stackEntry, value) -> {
