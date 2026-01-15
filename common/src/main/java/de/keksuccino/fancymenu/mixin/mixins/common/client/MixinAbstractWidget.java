@@ -17,7 +17,6 @@ import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -164,14 +163,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.customClickSoundFancyMenu != null) {
 			this.customClickSoundFancyMenu.stop();
 			this.customClickSoundFancyMenu.play();
-			info.cancel();
-			return;
-		}
-		IAudio globalClickSound = GlobalCustomizationHandler.getCustomButtonClickSound();
-		if (globalClickSound != null) {
-			globalClickSound.setSoundChannel(SoundSource.MASTER);
-			globalClickSound.stop();
-			globalClickSound.play();
 			info.cancel();
 		}
 	}

@@ -336,7 +336,6 @@ final class SmoothFontAtlas implements AutoCloseable {
                             edgeResult
                     );
                 }
-                MSDFGen.msdf_shape_normalize(shape);
                 MSDFGen.msdf_shape_orient_contours(shape);
                 MSDFGen.msdf_shape_edge_colors_simple(shape, MSDF_EDGE_THRESHOLD);
 

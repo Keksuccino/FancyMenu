@@ -16,7 +16,7 @@ float screenPxRange(vec2 uv) {
     vec2 texSize = vec2(textureSize(Sampler0, 0));
     vec2 unitRange = vec2(max(SdfPixelRange, 0.5)) / texSize;
     vec2 screenTexSize = vec2(1.0) / fwidth(uv);
-    return max(dot(unitRange, screenTexSize), 1.0);
+    return max(0.5 * dot(unitRange, screenTexSize), 1.0);
 }
 
 float median(float a, float b, float c) {
@@ -34,9 +34,10 @@ void main() {
         fragColor = vec4(dist, dist, dist, 1.0);
         return;
     }
-    float sigDist = dist - SdfEdge;
-    float range = screenPxRange(texCoord0) * SdfSharpness;
-    float alpha = clamp(sigDist * range + 0.5, 0.0, 1.0);
+    float sharpness = max(SdfSharpness, 0.001);
+    float sd = dist - SdfEdge;
+    float pxRange = screenPxRange(texCoord0) * sharpness;
+    float alpha = clamp(sd * pxRange + 0.5, 0.0, 1.0);
     vec4 color = vec4(vertexColor.rgb, vertexColor.a * alpha) * ColorModulator;
     if (color.a <= 0.001) {
         discard;

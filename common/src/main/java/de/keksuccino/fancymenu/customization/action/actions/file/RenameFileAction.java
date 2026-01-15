@@ -5,8 +5,8 @@ import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -97,7 +97,6 @@ public class RenameFileAction extends Action {
                     if (callback != null) {
                         instance.value = callback.getKey() + "||" + callback.getValue();
                     }
-                    Minecraft.getInstance().setScreen(parentScreen);
                 });
 
         String val = instance.value;
@@ -107,7 +106,7 @@ public class RenameFileAction extends Action {
             s.setSecondText(array[1]);
         }
 
-        Minecraft.getInstance().setScreen(s);
+        Dialogs.openGeneric(s, this.getActionDisplayName(), null, DualTextInputScreen.PIP_WINDOW_WIDTH, DualTextInputScreen.PIP_WINDOW_HEIGHT);
 
     }
 
