@@ -311,7 +311,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         return image;
     }
 
-    private static byte[] buildMsdf(java.awt.Shape outline, Rectangle2D bounds, int width, int height, int padding, float range) {
+    private byte[] buildMsdf(java.awt.Shape outline, Rectangle2D bounds, int width, int height, int padding, float range) {
         if (!msdfAvailable) {
             return null;
         }
@@ -322,9 +322,19 @@ final class SmoothFontAtlas implements AutoCloseable {
             }
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 if (DEBUG_LOG) {
-                    int contours = MSDFGen.msdf_shape_get_contour_count(shape);
-                    int edges = MSDFGen.msdf_shape_get_edge_count(shape);
-                    LOGGER.info("[FANCYMENU] SmoothFontAtlas {} MSDF shape stats: contours={} edges={}", debugName, contours, edges);
+                    PointerBuffer contourCountPtr = stack.mallocPointer(1);
+                    PointerBuffer edgeCountPtr = stack.mallocPointer(1);
+                    int contourResult = MSDFGen.msdf_shape_get_contour_count(shape, contourCountPtr);
+                    int edgeResult = MSDFGen.msdf_shape_get_edge_count(shape, edgeCountPtr);
+                    long contours = contourCountPtr.get(0);
+                    long edges = edgeCountPtr.get(0);
+                    LOGGER.info("[FANCYMENU] SmoothFontAtlas {} MSDF shape stats: contours={} edges={} (result={}, {})",
+                            debugName,
+                            contours,
+                            edges,
+                            contourResult,
+                            edgeResult
+                    );
                 }
                 MSDFGen.msdf_shape_normalize(shape);
                 MSDFGen.msdf_shape_orient_contours(shape);
@@ -365,7 +375,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         }
     }
 
-    private static byte[] readBitmapPixels(MSDFGenBitmap bitmap, int width, int height, float range) {
+    private byte[] readBitmapPixels(MSDFGenBitmap bitmap, int width, int height, float range) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             PointerBuffer pixelPtr = stack.mallocPointer(1);
             int pixelResult = MSDFGen.msdf_bitmap_get_pixels(bitmap, pixelPtr);
@@ -467,10 +477,10 @@ final class SmoothFontAtlas implements AutoCloseable {
                 int seg = iterator.currentSegment(coords);
                 switch (seg) {
                     case PathIterator.SEG_MOVETO -> {
-                        contour = finishContour(shape, contour, contourHasEdges, startX, startY, lastX, lastY, stack);
+                        contour = closeContour(shape, contour, contourHasEdges, startX, startY, lastX, lastY);
                         contourHasEdges = false;
                         PointerBuffer contourPtr = stack.mallocPointer(1);
-                        int contourResult = MSDFGen.msdf_contour_alloc(contourPtr);
+                        int contourResult = MSDFGen.msdf_shape_add_contour(shape, contourPtr);
                         contour = contourResult == MSDFGen.MSDF_SUCCESS ? contourPtr.get(0) : MemoryUtil.NULL;
                         startX = coords[0];
                         startY = coords[1];
@@ -505,7 +515,7 @@ final class SmoothFontAtlas implements AutoCloseable {
                         lastY = coords[5];
                     }
                     case PathIterator.SEG_CLOSE -> {
-                        contour = finishContour(shape, contour, contourHasEdges, startX, startY, lastX, lastY, stack);
+                        contour = closeContour(shape, contour, contourHasEdges, startX, startY, lastX, lastY);
                         contourHasEdges = false;
                     }
                     default -> {
@@ -513,7 +523,7 @@ final class SmoothFontAtlas implements AutoCloseable {
                 }
                 iterator.next();
             }
-            finishContour(shape, contour, contourHasEdges, startX, startY, lastX, lastY, stack);
+            closeContour(shape, contour, contourHasEdges, startX, startY, lastX, lastY);
             if (!hasAnyEdges) {
                 MSDFGen.msdf_shape_free(shape);
                 return MemoryUtil.NULL;
@@ -522,16 +532,15 @@ final class SmoothFontAtlas implements AutoCloseable {
         }
     }
 
-    private static long finishContour(long shape, long contour, boolean hasEdges, double startX, double startY, double lastX, double lastY, MemoryStack stack) {
+    private static long closeContour(long shape, long contour, boolean hasEdges, double startX, double startY, double lastX, double lastY) {
         if (contour == MemoryUtil.NULL) {
             return contour;
         }
         if (hasEdges && (Math.abs(lastX - startX) > 0.0001 || Math.abs(lastY - startY) > 0.0001)) {
             addSegment(contour, MSDFGen.MSDF_SEGMENT_TYPE_LINEAR, lastX, lastY, startX, startY);
         }
-        if (hasEdges) {
-            MSDFGen.nmsdf_shape_add_contour(shape, contour);
-        } else {
+        if (!hasEdges) {
+            MSDFGen.msdf_shape_remove_contour(shape, contour);
             MSDFGen.msdf_contour_free(contour);
         }
         return MemoryUtil.NULL;
