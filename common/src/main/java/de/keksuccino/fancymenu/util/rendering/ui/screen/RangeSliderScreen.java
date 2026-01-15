@@ -1,13 +1,15 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
-public class RangeSliderScreen extends PiPCellScreen {
+public class RangeSliderScreen extends PiPScreen {
 
     public static final int PIP_WINDOW_WIDTH = 420;
     public static final int PIP_WINDOW_HEIGHT = 220;
@@ -24,9 +26,12 @@ public class RangeSliderScreen extends PiPCellScreen {
     protected double currentValue;
     @NotNull
     protected final ConsumingSupplier<Double, Component> labelSupplier;
+    protected RangeSlider slider;
+    protected ExtendedButton doneButton;
+    protected ExtendedButton cancelButton;
 
-    public RangeSliderScreen(@NotNull Component title, double minValue, double maxValue, double valuePreset, @NotNull ConsumingSupplier<Double, Component> labelSupplier, @NotNull Consumer<Double> onValueUpdate, @NotNull Consumer<Double> onDone, @NotNull Consumer<Double> onCancel) {
-        super(title);
+    public RangeSliderScreen(double minValue, double maxValue, double valuePreset, @NotNull ConsumingSupplier<Double, Component> labelSupplier, @NotNull Consumer<Double> onValueUpdate, @NotNull Consumer<Double> onDone, @NotNull Consumer<Double> onCancel) {
+        super(Component.empty());
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.presetValue = valuePreset;
@@ -38,33 +43,34 @@ public class RangeSliderScreen extends PiPCellScreen {
     }
 
     @Override
-    protected void initCells() {
+    protected void init() {
 
-        this.addStartEndSpacerCell();
+        int sliderWidth = Math.max(160, this.width - 80);
+        int sliderX = (this.width - sliderWidth) / 2;
+        int sliderY = (this.height / 2) - 20;
 
-        RangeSlider slider = new RangeSlider(0, 0, 20, 20, Component.empty(), this.minValue, this.maxValue, this.currentValue);
-        slider.setRoundingDecimalPlace(2);
-        slider.setLabelSupplier(consumes -> this.labelSupplier.get(((RangeSlider)consumes).getRangeValue()));
-        slider.setSliderValueUpdateListener((slider1, valueDisplayText, value) -> {
+        this.slider = new RangeSlider(sliderX, sliderY, sliderWidth, 20, Component.empty(), this.minValue, this.maxValue, this.currentValue);
+        this.slider.setRoundingDecimalPlace(2);
+        this.slider.setLabelSupplier(consumes -> this.labelSupplier.get(((RangeSlider)consumes).getRangeValue()));
+        this.slider.setSliderValueUpdateListener((slider1, valueDisplayText, value) -> {
             this.currentValue = ((RangeSlider)slider1).getRangeValue();
             this.onValueUpdate.accept(this.currentValue);
         });
-        this.addWidgetCell(slider, true);
+        UIBase.applyDefaultWidgetSkinTo(this.slider, UIBase.shouldBlur());
+        this.addRenderableWidget(this.slider);
 
-        this.addStartEndSpacerCell();
+        this.cancelButton = this.addRenderableWidget(new ExtendedButton((this.width / 2) - 5 - 100, this.height - 40, 100, 20, Component.translatable("fancymenu.common_components.cancel"), button -> {
+            this.onCancel.accept(this.presetValue);
+            this.closeWindow();
+        }));
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
 
-    }
+        this.doneButton = this.addRenderableWidget(new ExtendedButton((this.width / 2) + 5, this.height - 40, 100, 20, Component.translatable("fancymenu.common_components.done"), button -> {
+            this.onDone.accept(this.currentValue);
+            this.closeWindow();
+        }));
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, UIBase.shouldBlur());
 
-    @Override
-    protected void onCancel() {
-        this.onCancel.accept(this.presetValue);
-        this.closeWindow();
-    }
-
-    @Override
-    protected void onDone() {
-        this.onDone.accept(this.currentValue);
-        this.closeWindow();
     }
 
     @Override

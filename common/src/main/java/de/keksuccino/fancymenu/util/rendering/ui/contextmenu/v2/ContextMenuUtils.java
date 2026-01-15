@@ -255,7 +255,7 @@ public class ContextMenuUtils {
     public static ContextMenu.ClickableContextMenuEntry<?> addRangeSliderInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Double> getter, @NotNull Consumer<Double> setter, boolean addResetOption, double defaultValue, double minSliderValue, double maxSliderValue, @NotNull ConsumingSupplier<Double, Component> sliderLabelSupplier) {
         return addGenericInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, valueSetter -> {
             double presetValue = Objects.requireNonNullElse(getter.get(), 0.0D);
-            RangeSliderScreen sliderScreen = new RangeSliderScreen(label, minSliderValue, maxSliderValue, presetValue, sliderLabelSupplier,
+            RangeSliderScreen sliderScreen = new RangeSliderScreen(minSliderValue, maxSliderValue, presetValue, sliderLabelSupplier,
                     valueSetter::accept,
                     valueSetter::accept,
                     valueSetter::accept);

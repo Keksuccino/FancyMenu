@@ -16,7 +16,7 @@ float screenPxRange(vec2 uv) {
     vec2 texSize = vec2(textureSize(Sampler0, 0));
     vec2 unitRange = vec2(max(SdfPixelRange, 0.5)) / texSize;
     vec2 screenTexSize = vec2(1.0) / fwidth(uv);
-    return max(0.5 * dot(unitRange, screenTexSize), 1.0);
+    return max(dot(unitRange, screenTexSize), 1.0);
 }
 
 float median(float a, float b, float c) {

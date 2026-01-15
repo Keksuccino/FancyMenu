@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -43,6 +44,8 @@ public class Test {
     private static final float TEXT_SAMPLE_X = 380.0F;
     private static final float TEXT_SAMPLE_Y = 40.0F;
     private static final String SAMPLE_TEXT = buildSampleText();
+    private static final float SHARPNESS_MIN = 0.25F;
+    private static final float SHARPNESS_MAX = 3.0F;
 
     private boolean blurFirst = false;
     private boolean blurSecond = false;
@@ -140,6 +143,12 @@ public class Test {
         e.addRenderableWidget(new ExtendedButton(20, 240, 100, 20, "Toggle Sexton", button -> {
             textSextonSans = !textSextonSans;
         }));
+        RangeSlider sharpnessSlider = new RangeSlider(20, 260, 160, 20, Component.literal(""), SHARPNESS_MIN, SHARPNESS_MAX, getInitialSharpness());
+        sharpnessSlider.setRoundingDecimalPlace(2);
+        sharpnessSlider.setLabelSupplier(slider -> Component.literal("Sharpness: " + slider.getValueDisplayText()));
+        sharpnessSlider.setSliderValueUpdateListener((slider, valueText, value) -> SmoothTextRenderer.setDebugSharpness((float)((RangeSlider)slider).getRangeValue()));
+        SmoothTextRenderer.setDebugSharpness((float)sharpnessSlider.getRangeValue());
+        e.addRenderableWidget(sharpnessSlider);
 
     }
 
@@ -204,6 +213,19 @@ public class Test {
                 .resolve("fancymenu")
                 .resolve("assets")
                 .resolve("fonts");
+    }
+
+    private static float getInitialSharpness() {
+        String property = System.getProperty("fancymenu.smoothTextSharpness");
+        if (property == null || property.isBlank()) {
+            return SmoothTextRenderer.getDebugSharpness();
+        }
+        try {
+            float value = Float.parseFloat(property.trim());
+            return Math.max(SHARPNESS_MIN, Math.min(SHARPNESS_MAX, value));
+        } catch (NumberFormatException ex) {
+            return SmoothTextRenderer.getDebugSharpness();
+        }
     }
 
 }

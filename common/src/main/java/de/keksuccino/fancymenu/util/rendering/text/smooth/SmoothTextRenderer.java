@@ -89,6 +89,14 @@ public final class SmoothTextRenderer {
         return baseSize * guiScale * scale;
     }
 
+    public static void setDebugSharpness(float sharpness) {
+        SmoothTextShader.setRuntimeSharpness(sharpness);
+    }
+
+    public static float getDebugSharpness() {
+        return SmoothTextShader.getResolvedSharpness();
+    }
+
     public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull String text, float size) {
         Objects.requireNonNull(font);
         Objects.requireNonNull(text);

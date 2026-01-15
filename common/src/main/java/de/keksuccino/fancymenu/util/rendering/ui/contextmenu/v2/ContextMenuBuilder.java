@@ -804,7 +804,7 @@ public interface ContextMenuBuilder<O> {
                     }
                     Double presetValue = targetFieldGetter.get(this.self());
                     menu.closeMenuChain();
-                    RangeSliderScreen sliderScreen = new RangeSliderScreen(label, minSliderValue, maxSliderValue, Objects.requireNonNullElse(presetValue, 0.0D), sliderLabelSupplier,
+                    RangeSliderScreen sliderScreen = new RangeSliderScreen(minSliderValue, maxSliderValue, Objects.requireNonNullElse(presetValue, 0.0D), sliderLabelSupplier,
                             value -> this.applyStackAppliers(entry, value),
                             value -> {
                                 this.saveSnapshot();

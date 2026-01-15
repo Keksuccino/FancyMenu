@@ -15,8 +15,8 @@ final class SmoothTextShader {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String SHADER_NAME = "fancymenu_gui_smooth_text";
-    private static final float DEFAULT_SDF_SHARPNESS = 1.0F;
-    private static final float DEFAULT_SDF_EDGE = 0.5F;
+    private static final float DEFAULT_SDF_SHARPNESS = getFloatProperty("fancymenu.smoothTextSharpness", 1.0F);
+    private static final float DEFAULT_SDF_EDGE = getFloatProperty("fancymenu.smoothTextEdge", 0.5F);
     private static final float DEFAULT_SDF_PIXEL_RANGE = 4.0F;
     private static final boolean DEBUG_LOG = Boolean.getBoolean("fancymenu.debugSmoothTextShader");
     private static final int DEBUG_MODE = Math.max(0, Integer.getInteger("fancymenu.debugSmoothTextMode", 0));
@@ -25,6 +25,8 @@ final class SmoothTextShader {
     private static boolean shaderFailed;
     private static boolean reloadListenerRegistered;
     private static boolean debugLogged;
+    private static volatile Float runtimeSharpness;
+    private static volatile Float runtimeEdge;
 
     private SmoothTextShader() {
     }
@@ -53,8 +55,8 @@ final class SmoothTextShader {
         if (current == null) {
             return;
         }
-        float sharpness = DEFAULT_SDF_SHARPNESS;
-        float edge = DEFAULT_SDF_EDGE;
+        float sharpness = runtimeSharpness != null ? runtimeSharpness : DEFAULT_SDF_SHARPNESS;
+        float edge = runtimeEdge != null ? runtimeEdge : DEFAULT_SDF_EDGE;
         if (DEBUG_MODE == 1) {
             sharpness = -1.0F;
         } else if (DEBUG_MODE == 2) {
@@ -95,6 +97,30 @@ final class SmoothTextShader {
         current.safeGetUniform("SdfPixelRange").set(range);
     }
 
+    static void setRuntimeSharpness(float sharpness) {
+        runtimeSharpness = Math.max(0.05F, sharpness);
+    }
+
+    static void clearRuntimeSharpness() {
+        runtimeSharpness = null;
+    }
+
+    static float getResolvedSharpness() {
+        return runtimeSharpness != null ? runtimeSharpness : DEFAULT_SDF_SHARPNESS;
+    }
+
+    static void setRuntimeEdge(float edge) {
+        runtimeEdge = edge;
+    }
+
+    static void clearRuntimeEdge() {
+        runtimeEdge = null;
+    }
+
+    static float getResolvedEdge() {
+        return runtimeEdge != null ? runtimeEdge : DEFAULT_SDF_EDGE;
+    }
+
     static void clear() {
         if (shader != null) {
             shader.close();
@@ -114,6 +140,19 @@ final class SmoothTextShader {
                 RenderSystem.recordRenderCall(SmoothTextShader::clear);
             }
         });
+    }
+
+    private static float getFloatProperty(String key, float fallback) {
+        String value = System.getProperty(key);
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Float.parseFloat(value.trim());
+        } catch (NumberFormatException ex) {
+            LOGGER.warn("[FANCYMENU] Invalid float for {}: {}", key, value);
+            return fallback;
+        }
     }
 
 }
