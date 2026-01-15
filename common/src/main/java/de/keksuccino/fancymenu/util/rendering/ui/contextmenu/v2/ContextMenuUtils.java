@@ -10,6 +10,8 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
@@ -252,13 +254,17 @@ public class ContextMenuUtils {
     @NotNull
     public static ContextMenu.ClickableContextMenuEntry<?> addRangeSliderInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Double> getter, @NotNull Consumer<Double> setter, boolean addResetOption, double defaultValue, double minSliderValue, double maxSliderValue, @NotNull ConsumingSupplier<Double, Component> sliderLabelSupplier) {
         return addGenericInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, valueSetter -> {
-            Screen current = Minecraft.getInstance().screen;
-            Minecraft.getInstance().setScreen(new RangeSliderScreen(label, minSliderValue, maxSliderValue, Objects.requireNonNullElse(getter.get(), 0.0D), sliderLabelSupplier, aDouble -> {
-                if (aDouble != null) {
-                    valueSetter.accept(aDouble);
-                }
-                Minecraft.getInstance().setScreen(current);
-            }));
+            double presetValue = Objects.requireNonNullElse(getter.get(), 0.0D);
+            RangeSliderScreen sliderScreen = new RangeSliderScreen(label, minSliderValue, maxSliderValue, presetValue, sliderLabelSupplier,
+                    valueSetter::accept,
+                    valueSetter::accept,
+                    valueSetter::accept);
+            PiPWindow window = new PiPWindow(label)
+                    .setScreen(sliderScreen)
+                    .setForceFancyMenuUiScale(true)
+                    .setMinSize(RangeSliderScreen.PIP_WINDOW_WIDTH, RangeSliderScreen.PIP_WINDOW_HEIGHT)
+                    .setSize(RangeSliderScreen.PIP_WINDOW_WIDTH, RangeSliderScreen.PIP_WINDOW_HEIGHT);
+            PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
         });
     }
 

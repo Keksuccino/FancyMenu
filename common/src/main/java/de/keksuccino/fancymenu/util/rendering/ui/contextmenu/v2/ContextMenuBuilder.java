@@ -12,6 +12,8 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
@@ -801,15 +803,20 @@ public interface ContextMenuBuilder<O> {
                         return;
                     }
                     Double presetValue = targetFieldGetter.get(this.self());
-                    RangeSliderScreen sliderScreen = new RangeSliderScreen(label, minSliderValue, maxSliderValue, Objects.requireNonNullElse(presetValue, 0.0D), sliderLabelSupplier, value -> {
-                        if (value != null) {
-                            this.saveSnapshot();
-                            this.applyStackAppliers(entry, value);
-                        }
-                        menu.closeMenu();
-                        this.openContextMenuScreen(this.getContextMenuCallbackScreen());
-                    });
-                    this.openContextMenuScreen(sliderScreen);
+                    menu.closeMenuChain();
+                    RangeSliderScreen sliderScreen = new RangeSliderScreen(label, minSliderValue, maxSliderValue, Objects.requireNonNullElse(presetValue, 0.0D), sliderLabelSupplier,
+                            value -> this.applyStackAppliers(entry, value),
+                            value -> {
+                                this.saveSnapshot();
+                                this.applyStackAppliers(entry, value);
+                            },
+                            value -> this.applyStackAppliers(entry, value));
+                    PiPWindow window = new PiPWindow(label)
+                            .setScreen(sliderScreen)
+                            .setForceFancyMenuUiScale(true)
+                            .setMinSize(RangeSliderScreen.PIP_WINDOW_WIDTH, RangeSliderScreen.PIP_WINDOW_HEIGHT)
+                            .setSize(RangeSliderScreen.PIP_WINDOW_WIDTH, RangeSliderScreen.PIP_WINDOW_HEIGHT);
+                    PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
                 }).setStackable(true)
                 .setStackApplier((stackEntry, value) -> {
                     if (!(value instanceof Number number)) {

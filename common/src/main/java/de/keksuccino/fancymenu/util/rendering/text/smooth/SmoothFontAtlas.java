@@ -52,6 +52,7 @@ final class SmoothFontAtlas implements AutoCloseable {
     private static final boolean DEBUG_DUMP = Boolean.getBoolean("fancymenu.debugSmoothFontDump");
     private static final boolean DEBUG_USE_RAW_ALPHA = Boolean.getBoolean("fancymenu.debugSmoothFontRawAlpha");
     private static final boolean DEBUG_DUMP_ATLAS = Boolean.getBoolean("fancymenu.debugSmoothFontAtlasDump");
+    private static final boolean DEBUG_DUMP_MSDF = Boolean.getBoolean("fancymenu.debugSmoothFontDumpMsdf");
     private static final int ALPHA_THRESHOLD = Math.max(1, Integer.getInteger("fancymenu.smoothFontAlphaThreshold", 128));
     private static final float MSDF_EDGE_THRESHOLD = 3.0F;
     private static boolean msdfAvailable = true;
@@ -138,12 +139,18 @@ final class SmoothFontAtlas implements AutoCloseable {
 
         byte[] atlasPixels;
         if (DEBUG_USE_RAW_ALPHA) {
+            if (image == null) {
+                image = renderGlyphImage(glyphVector, bounds, glyphWidth, glyphHeight, padding);
+            }
             atlasPixels = image != null ? buildRawRgba(image, glyphWidth, glyphHeight) : new byte[glyphWidth * glyphHeight * 4];
         } else {
             atlasPixels = buildMsdf(outline, bounds, glyphWidth, glyphHeight, padding, sdfRange);
             if (atlasPixels == null) {
                 if (image == null) {
                     image = renderGlyphImage(glyphVector, bounds, glyphWidth, glyphHeight, padding);
+                }
+                if (rawStats == null && image != null && (DEBUG_LOG || DEBUG_DUMP)) {
+                    rawStats = AlphaStats.fromImage(image);
                 }
                 byte[] fallbackSdf = image != null ? buildSdf(image, glyphWidth, glyphHeight, sdfRange) : null;
                 atlasPixels = fallbackSdf != null ? expandAlphaToRgba(fallbackSdf) : new byte[glyphWidth * glyphHeight * 4];
@@ -168,8 +175,11 @@ final class SmoothFontAtlas implements AutoCloseable {
                     sdfStats.nonZeroCount,
                     ALPHA_THRESHOLD
             );
+            if (!DEBUG_USE_RAW_ALPHA && msdfAvailable) {
+                logMsdfStats(debugName, codepoint, atlasPixels);
+            }
         }
-        if (DEBUG_DUMP && rawStats != null && sdfStats != null && debugDumpCount < DEBUG_DUMP_LIMIT) {
+        if ((DEBUG_DUMP || DEBUG_DUMP_MSDF) && rawStats != null && sdfStats != null && debugDumpCount < DEBUG_DUMP_LIMIT) {
             debugDumpCount++;
             dumpDebugImages(debugName, image, atlasPixels, glyphWidth, glyphHeight, codepoint);
         }
@@ -311,6 +321,11 @@ final class SmoothFontAtlas implements AutoCloseable {
                 return null;
             }
             try (MemoryStack stack = MemoryStack.stackPush()) {
+                if (DEBUG_LOG) {
+                    int contours = MSDFGen.msdf_shape_get_contour_count(shape);
+                    int edges = MSDFGen.msdf_shape_get_edge_count(shape);
+                    LOGGER.info("[FANCYMENU] SmoothFontAtlas {} MSDF shape stats: contours={} edges={}", debugName, contours, edges);
+                }
                 MSDFGen.msdf_shape_normalize(shape);
                 MSDFGen.msdf_shape_orient_contours(shape);
                 MSDFGen.msdf_shape_edge_colors_simple(shape, MSDF_EDGE_THRESHOLD);
@@ -322,19 +337,19 @@ final class SmoothFontAtlas implements AutoCloseable {
                 rangeStruct.lower(-range);
                 rangeStruct.upper(range);
 
-                MSDFGenBitmap bitmap = MSDFGenBitmap.malloc(stack);
-                int allocResult = MSDFGen.msdf_bitmap_alloc(MSDFGen.MSDF_BITMAP_TYPE_MTSDF, width, height, bitmap);
-                if (allocResult != MSDFGen.MSDF_SUCCESS) {
-                    LOGGER.warn("[FANCYMENU] MSDF bitmap allocation failed (code={})", allocResult);
-                    return null;
-                }
-                int genResult = MSDFGen.msdf_generate_mtsdf(bitmap, shape, transform);
-                if (genResult != MSDFGen.MSDF_SUCCESS) {
-                    LOGGER.warn("[FANCYMENU] MSDF generation failed (code={})", genResult);
-                    MSDFGen.msdf_bitmap_free(bitmap);
-                    return null;
-                }
-                byte[] rgba = readBitmapPixels(bitmap, width, height);
+            MSDFGenBitmap bitmap = MSDFGenBitmap.malloc(stack);
+            int allocResult = MSDFGen.msdf_bitmap_alloc(MSDFGen.MSDF_BITMAP_TYPE_MSDF, width, height, bitmap);
+            if (allocResult != MSDFGen.MSDF_SUCCESS) {
+                LOGGER.warn("[FANCYMENU] MSDF bitmap allocation failed (code={})", allocResult);
+                return null;
+            }
+            int genResult = MSDFGen.msdf_generate_msdf(bitmap, shape, transform);
+            if (genResult != MSDFGen.MSDF_SUCCESS) {
+                LOGGER.warn("[FANCYMENU] MSDF generation failed (code={})", genResult);
+                MSDFGen.msdf_bitmap_free(bitmap);
+                return null;
+            }
+                byte[] rgba = readBitmapPixels(bitmap, width, height, range);
                 MSDFGen.msdf_bitmap_free(bitmap);
                 return rgba;
             } finally {
@@ -350,17 +365,21 @@ final class SmoothFontAtlas implements AutoCloseable {
         }
     }
 
-    private static byte[] readBitmapPixels(MSDFGenBitmap bitmap, int width, int height) {
+    private static byte[] readBitmapPixels(MSDFGenBitmap bitmap, int width, int height, float range) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             PointerBuffer pixelPtr = stack.mallocPointer(1);
-            MSDFGen.msdf_bitmap_get_pixels(bitmap, pixelPtr);
+            int pixelResult = MSDFGen.msdf_bitmap_get_pixels(bitmap, pixelPtr);
             long pixels = pixelPtr.get(0);
             PointerBuffer sizePtr = stack.mallocPointer(1);
-            MSDFGen.msdf_bitmap_get_byte_size(bitmap, sizePtr);
+            int sizeResult = MSDFGen.msdf_bitmap_get_byte_size(bitmap, sizePtr);
             long byteSize = sizePtr.get(0);
             IntBuffer channelsBuf = stack.mallocInt(1);
-            MSDFGen.msdf_bitmap_get_channel_count(bitmap, channelsBuf);
+            int channelResult = MSDFGen.msdf_bitmap_get_channel_count(bitmap, channelsBuf);
             int channels = channelsBuf.get(0);
+            if (pixelResult != MSDFGen.MSDF_SUCCESS || sizeResult != MSDFGen.MSDF_SUCCESS || channelResult != MSDFGen.MSDF_SUCCESS) {
+                LOGGER.warn("[FANCYMENU] MSDF bitmap query failed (pixels={}, size={}, channels={})", pixelResult, sizeResult, channelResult);
+                return null;
+            }
             if (pixels == MemoryUtil.NULL || byteSize <= 0 || channels <= 0) {
                 return null;
             }
@@ -370,24 +389,36 @@ final class SmoothFontAtlas implements AutoCloseable {
             ByteBuffer buffer = MemoryUtil.memByteBuffer(pixels, (int)byteSize).order(ByteOrder.nativeOrder());
             byte[] rgba = new byte[pixelCount * 4];
 
+            if (DEBUG_LOG) {
+                LOGGER.info("[FANCYMENU] MSDF bitmap stats: bytesPerChannel={} channels={} byteSize={}", bytesPerChannel, channels, byteSize);
+            }
+
             if (bytesPerChannel == 1) {
                 for (int i = 0; i < pixelCount; i++) {
                     int srcBase = i * channels;
                     int dstBase = i * 4;
-                    byte r = buffer.get(srcBase);
-                    byte g = channels > 1 ? buffer.get(srcBase + 1) : r;
-                    byte b = channels > 2 ? buffer.get(srcBase + 2) : r;
-                    byte a = channels > 3 ? buffer.get(srcBase + 3) : (byte)0xFF;
-                    rgba[dstBase] = r;
-                    rgba[dstBase + 1] = g;
-                    rgba[dstBase + 2] = b;
-                    rgba[dstBase + 3] = a;
-                }
-                return rgba;
+                byte r = buffer.get(srcBase);
+                byte g = channels > 1 ? buffer.get(srcBase + 1) : r;
+                byte b = channels > 2 ? buffer.get(srcBase + 2) : r;
+                byte a = channels > 3 ? buffer.get(srcBase + 3) : (byte)0xFF;
+                rgba[dstBase] = r;
+                rgba[dstBase + 1] = g;
+                rgba[dstBase + 2] = b;
+                rgba[dstBase + 3] = channels > 3 ? a : (byte)0xFF;
             }
+            return rgba;
+        }
 
             if (bytesPerChannel == 4) {
                 FloatBuffer floats = buffer.asFloatBuffer();
+                float min = Float.POSITIVE_INFINITY;
+                float max = Float.NEGATIVE_INFINITY;
+                for (int i = 0; i < pixelCount * channels; i++) {
+                    float value = floats.get(i);
+                    min = Math.min(min, value);
+                    max = Math.max(max, value);
+                }
+                boolean needsNormalization = min < -0.01f || max > 1.01f;
                 for (int i = 0; i < pixelCount; i++) {
                     int srcBase = i * channels;
                     int dstBase = i * 4;
@@ -395,10 +426,17 @@ final class SmoothFontAtlas implements AutoCloseable {
                     float g = channels > 1 ? floats.get(srcBase + 1) : r;
                     float b = channels > 2 ? floats.get(srcBase + 2) : r;
                     float a = channels > 3 ? floats.get(srcBase + 3) : 1.0F;
+                    if (needsNormalization && range > 0.0f) {
+                        float invRange = 1.0f / (2.0f * range);
+                        r = r * invRange + 0.5f;
+                        g = g * invRange + 0.5f;
+                        b = b * invRange + 0.5f;
+                        a = a * invRange + 0.5f;
+                    }
                     rgba[dstBase] = (byte)Math.round(Mth.clamp(r, 0.0F, 1.0F) * 255.0F);
                     rgba[dstBase + 1] = (byte)Math.round(Mth.clamp(g, 0.0F, 1.0F) * 255.0F);
                     rgba[dstBase + 2] = (byte)Math.round(Mth.clamp(b, 0.0F, 1.0F) * 255.0F);
-                    rgba[dstBase + 3] = (byte)Math.round(Mth.clamp(a, 0.0F, 1.0F) * 255.0F);
+                    rgba[dstBase + 3] = (byte)Math.round(Mth.clamp(channels > 3 ? a : 1.0F, 0.0F, 1.0F) * 255.0F);
                 }
                 return rgba;
             }
@@ -492,9 +530,7 @@ final class SmoothFontAtlas implements AutoCloseable {
             addSegment(contour, MSDFGen.MSDF_SEGMENT_TYPE_LINEAR, lastX, lastY, startX, startY);
         }
         if (hasEdges) {
-            PointerBuffer contourPtr = stack.mallocPointer(1);
-            contourPtr.put(0, contour);
-            MSDFGen.msdf_shape_add_contour(shape, contourPtr);
+            MSDFGen.nmsdf_shape_add_contour(shape, contour);
         } else {
             MSDFGen.msdf_contour_free(contour);
         }
@@ -535,6 +571,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         vec.y(y);
         MSDFGen.msdf_segment_set_point(segment, index, vec);
     }
+
 
     private static byte[] expandAlphaToRgba(byte[] alpha) {
         byte[] rgba = new byte[alpha.length * 4];
@@ -610,10 +647,55 @@ final class SmoothFontAtlas implements AutoCloseable {
             }
             Path sdfPath = outputDir.resolve(debugFileName(baseName, "sdf"));
             ImageIO.write(sdfImage, "png", sdfPath.toFile());
-            LOGGER.info("[FANCYMENU] SmoothFont debug dump written: {} and {}", rawPath, sdfPath);
+            if (DEBUG_DUMP_MSDF && !DEBUG_USE_RAW_ALPHA) {
+                BufferedImage msdfImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+                index = 0;
+                for (int y = 0; y < height; y++) {
+                    for (int x = 0; x < width; x++) {
+                        int r = rgba[index] & 0xFF;
+                        int g = rgba[index + 1] & 0xFF;
+                        int b = rgba[index + 2] & 0xFF;
+                        int argb = (0xFF << 24) | (r << 16) | (g << 8) | b;
+                        msdfImage.setRGB(x, y, argb);
+                        index += 4;
+                    }
+                }
+                Path msdfPath = outputDir.resolve(debugFileName(baseName, "msdf_rgb"));
+                ImageIO.write(msdfImage, "png", msdfPath.toFile());
+                LOGGER.info("[FANCYMENU] SmoothFont debug dump written: {}, {}, {}", rawPath, sdfPath, msdfPath);
+            } else {
+                LOGGER.info("[FANCYMENU] SmoothFont debug dump written: {} and {}", rawPath, sdfPath);
+            }
         } catch (IOException ex) {
             LOGGER.warn("[FANCYMENU] SmoothFont debug dump failed", ex);
         }
+    }
+
+    private static void logMsdfStats(String debugName, int codepoint, byte[] rgba) {
+        ChannelStats r = ChannelStats.fromChannel(rgba, 0);
+        ChannelStats g = ChannelStats.fromChannel(rgba, 1);
+        ChannelStats b = ChannelStats.fromChannel(rgba, 2);
+        ChannelStats a = ChannelStats.fromChannel(rgba, 3);
+        LOGGER.info("[FANCYMENU] SmoothFontAtlas {} U+{} MSDF channels: r[min={}, max={}, zero={}, nonZero={}] g[min={}, max={}, zero={}, nonZero={}] b[min={}, max={}, zero={}, nonZero={}] a[min={}, max={}, zero={}, nonZero={}]",
+                debugName,
+                String.format("%04X", codepoint),
+                r.min,
+                r.max,
+                r.zeroCount,
+                r.nonZeroCount,
+                g.min,
+                g.max,
+                g.zeroCount,
+                g.nonZeroCount,
+                b.min,
+                b.max,
+                b.zeroCount,
+                b.nonZeroCount,
+                a.min,
+                a.max,
+                a.zeroCount,
+                a.nonZeroCount
+        );
     }
 
     private static String debugFileName(String baseName, String suffix) {
@@ -689,6 +771,38 @@ final class SmoothFontAtlas implements AutoCloseable {
                 }
             }
             return new AlphaStats(min, max, zero, nonZero);
+        }
+    }
+
+    private static final class ChannelStats {
+        private final int min;
+        private final int max;
+        private final int zeroCount;
+        private final int nonZeroCount;
+
+        private ChannelStats(int min, int max, int zeroCount, int nonZeroCount) {
+            this.min = min;
+            this.max = max;
+            this.zeroCount = zeroCount;
+            this.nonZeroCount = nonZeroCount;
+        }
+
+        private static ChannelStats fromChannel(byte[] rgba, int channelIndex) {
+            int min = 255;
+            int max = 0;
+            int zero = 0;
+            int nonZero = 0;
+            for (int i = channelIndex; i < rgba.length; i += 4) {
+                int value = rgba[i] & 0xFF;
+                min = Math.min(min, value);
+                max = Math.max(max, value);
+                if (value == 0) {
+                    zero++;
+                } else {
+                    nonZero++;
+                }
+            }
+            return new ChannelStats(min, max, zero, nonZero);
         }
     }
 

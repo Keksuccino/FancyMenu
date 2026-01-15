@@ -289,13 +289,13 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             oldScrollX = this.scrollArea.horizontalScrollBar.getScroll();
             oldScrollY = this.scrollArea.verticalScrollBar.getScroll();
         }
-        this.scrollArea = new de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea(scrollAreaX, scrollAreaY, scrollAreaWidth, scrollAreaHeight);
+        this.scrollArea = new ScrollArea(scrollAreaX, scrollAreaY, scrollAreaWidth, scrollAreaHeight);
         this.initCells();
         this.addWidget(this.scrollArea);
         this.scrollArea.horizontalScrollBar.setScroll(oldScrollX);
         this.scrollArea.verticalScrollBar.setScroll(oldScrollY);
 
-        for (de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry e : this.scrollArea.getEntries()) {
+        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof CellScrollEntry ce) {
                 ce.cell.updateSize(ce);
                 ce.setHeight(ce.cell.getHeight());
@@ -330,11 +330,15 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             widgetY -= w.getHeight() + this.getRightSideDefaultSpaceBetweenWidgets();
         }
 
+        this.autoScaleScreen(topRightSideWidget);
+
+    }
+
+    protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         Window window = Minecraft.getInstance().getWindow();
         boolean resized = (window.getScreenWidth() != this.lastWidth) || (window.getScreenHeight() != this.lastHeight);
         this.lastWidth = window.getScreenWidth();
         this.lastHeight = window.getScreenHeight();
-
         //Adjust GUI scale to make all right-side buttons fit in the screen
         if ((topRightSideWidget != null) && (topRightSideWidget.getY() < 20) && (window.getGuiScale() > 1)) {
             double newScale = window.getGuiScale();
@@ -346,11 +350,6 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             RenderingUtils.resetGuiScale();
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
-
-        if (this.descriptionAreaEnabled) {
-            this.updateDescriptionArea();
-        }
-
     }
 
     @Override
@@ -374,8 +373,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         this.renderCellScreenBackground(graphics, mouseX, mouseY, partial);
 
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        this.renderTitle(graphics);
 
         if (this.descriptionAreaEnabled && (this.descriptionScrollArea != null)) {
             this.descriptionScrollArea.render(graphics, mouseX, mouseY, partial);
@@ -387,6 +385,11 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         this.performInitialWidgetFocusActionInRender();
 
+    }
+
+    protected void renderTitle(@NotNull GuiGraphics graphics) {
+        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
     }
 
     protected void renderCellScreenBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {

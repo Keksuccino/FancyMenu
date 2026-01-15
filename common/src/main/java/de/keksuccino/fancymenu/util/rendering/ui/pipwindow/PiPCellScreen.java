@@ -1,8 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +22,29 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
 
     public PiPCellScreen() {
         super(Component.empty());
+    }
+
+    @Override
+    protected void init() {
+
+        super.init();
+
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar, UIBase.shouldBlur());
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, UIBase.shouldBlur());
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
+
+    }
+
+    @Override
+    protected <T extends AbstractWidget> T addRightSideWidget(@NotNull T widget) {
+        return UIBase.applyDefaultWidgetSkinTo(super.addRightSideWidget(widget), UIBase.shouldBlur());
+    }
+
+    @Override
+    protected @NotNull CellScreen.WidgetCell addWidgetCell(@NotNull AbstractWidget widget, boolean applyDefaultButtonSkin) {
+        WidgetCell c = super.addWidgetCell(widget, applyDefaultButtonSkin);
+        if (applyDefaultButtonSkin) UIBase.applyDefaultWidgetSkinTo(widget, UIBase.shouldBlur());
+        return c;
     }
 
     public void closeWindow() {
@@ -65,8 +90,18 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
     }
 
     @Override
+    protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
+        // PiP screens should not scale itself
+    }
+
+    @Override
     public void renderCellScreenBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         // PiP screens should render no background
+    }
+
+    @Override
+    protected void renderTitle(@NotNull GuiGraphics graphics) {
+        // PiP screens render no title, because it gets set as PiPWindow title instead
     }
 
     @Override

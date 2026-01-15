@@ -25,6 +25,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 
@@ -51,7 +52,7 @@ public class UIBase extends RenderingUtils {
      * Applies the default UI skin to the given widget and returns it.<br>
      * Does not apply skins for blurred environments.
      */
-    public static <T> T applyDefaultWidgetSkinTo(T widget) {
+    public static <T> T applyDefaultWidgetSkinTo(@Nullable T widget) {
         return applyDefaultWidgetSkinTo(widget, false);
     }
 
@@ -59,7 +60,8 @@ public class UIBase extends RenderingUtils {
      * Applies the default UI skin to the given widget and returns it.
      */
     @SuppressWarnings("all")
-    public static <T> T applyDefaultWidgetSkinTo(T widget, boolean forBlur) {
+    public static <T> T applyDefaultWidgetSkinTo(@Nullable T widget, boolean forBlur) {
+        if (widget == null) return null;
         if (widget instanceof ExtendedButton e) {
             return (T) applyDefaultButtonSkinTo(e, forBlur);
         }
