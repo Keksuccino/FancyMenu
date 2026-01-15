@@ -17,6 +17,7 @@ final class SmoothTextShader {
     private static final String SHADER_NAME = "fancymenu_gui_smooth_text";
     private static final float DEFAULT_SDF_SHARPNESS = 1.0F;
     private static final float DEFAULT_SDF_EDGE = 0.5F;
+    private static final float DEFAULT_SDF_PIXEL_RANGE = 4.0F;
     private static final boolean DEBUG_LOG = Boolean.getBoolean("fancymenu.debugSmoothTextShader");
     private static final int DEBUG_MODE = Math.max(0, Integer.getInteger("fancymenu.debugSmoothTextMode", 0));
 
@@ -61,24 +62,37 @@ final class SmoothTextShader {
         }
         current.safeGetUniform("SdfSharpness").set(sharpness);
         current.safeGetUniform("SdfEdge").set(edge);
+        current.safeGetUniform("SdfPixelRange").set(DEFAULT_SDF_PIXEL_RANGE);
         current.safeGetUniform("DebugMode").set(DEBUG_MODE);
         if (DEBUG_LOG && !debugLogged) {
             boolean sharpnessPresent = current.getUniform("SdfSharpness") != null;
             boolean edgePresent = current.getUniform("SdfEdge") != null;
+            boolean pixelRangePresent = current.getUniform("SdfPixelRange") != null;
             boolean debugPresent = current.getUniform("DebugMode") != null;
-            LOGGER.info("[FANCYMENU] SmoothTextShader active: name={} id={} sharpnessUniform={} edgeUniform={} sharpness={} edge={}",
+            LOGGER.info("[FANCYMENU] SmoothTextShader active: name={} id={} sharpnessUniform={} edgeUniform={} pixelRangeUniform={} sharpness={} edge={} pixelRange={}",
                     current.getName(),
                     current.getId(),
                     sharpnessPresent,
                     edgePresent,
+                    pixelRangePresent,
                     sharpness,
-                    edge
+                    edge,
+                    DEFAULT_SDF_PIXEL_RANGE
             );
             if (debugPresent && DEBUG_MODE != 0) {
                 LOGGER.info("[FANCYMENU] SmoothTextShader debug mode active: {}", DEBUG_MODE);
             }
             debugLogged = true;
         }
+    }
+
+    static void applySdfRange(float sdfRange) {
+        ShaderInstance current = RenderSystem.getShader();
+        if (current == null) {
+            return;
+        }
+        float range = Math.max(0.5F, sdfRange);
+        current.safeGetUniform("SdfPixelRange").set(range);
     }
 
     static void clear() {

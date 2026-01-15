@@ -33,6 +33,9 @@ dependencies {
     modCompileOnly "maven.modrinth:konkrete:1.9.9-1.21-fabric"
     modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
     implementation "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
+    implementation("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}") {
+        transitive = false
+    }
 }
 
 loom {

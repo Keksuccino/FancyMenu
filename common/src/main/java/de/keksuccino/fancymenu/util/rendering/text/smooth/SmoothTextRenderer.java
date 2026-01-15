@@ -144,6 +144,7 @@ public final class SmoothTextRenderer {
 
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
         float scale = font.scaleForSize(size);
+        float sdfRange = font.getSdfRange();
         float ascent = font.getAscent(size);
         float lineHeight = font.getLineHeight(size);
         float penX = x;
@@ -161,6 +162,7 @@ public final class SmoothTextRenderer {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         applyShaderState();
+        SmoothTextShader.applySdfRange(sdfRange);
 
         float underlineStartX = 0.0F;
         float strikeStartX = 0.0F;
@@ -172,7 +174,7 @@ public final class SmoothTextRenderer {
         for (int index = 0; index < text.length(); ) {
             char c = text.charAt(index);
             if (c == '\n') {
-                quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
+                quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, sdfRange);
                 buffer = null;
                 currentAtlas = null;
                 drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
@@ -198,7 +200,7 @@ public final class SmoothTextRenderer {
                 int consumed = applyFormatting(text, index + 1, style, baseColor);
                 if (consumed > 0) {
                     if (wasUnderline && (!style.underline || previousColor != style.color)) {
-                        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
+                        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, sdfRange);
                         buffer = null;
                         currentAtlas = null;
                         drawLineIfNeeded(graphics, true, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
@@ -209,7 +211,7 @@ public final class SmoothTextRenderer {
                         underlineColor = style.color;
                     }
                     if (wasStrikethrough && (!style.strikethrough || previousColor != style.color)) {
-                        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
+                        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, sdfRange);
                         buffer = null;
                         currentAtlas = null;
                         drawLineIfNeeded(graphics, true, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
@@ -233,7 +235,7 @@ public final class SmoothTextRenderer {
             if (glyph.hasTexture()) {
                 SmoothFontAtlas atlas = glyph.atlas();
                 if (currentAtlas != atlas) {
-                    quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
+                    quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, sdfRange);
                     buffer = null;
                     currentAtlas = atlas;
                     RenderSystem.setShaderTexture(0, atlas.getTextureId());
@@ -242,7 +244,7 @@ public final class SmoothTextRenderer {
                     buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
                 }
                 if (DEBUG_DRAW_ATLAS && !debugAtlasDrawn) {
-                    drawAtlasPreview(matrix, atlas.getTextureId());
+                    drawAtlasPreview(matrix, atlas.getTextureId(), sdfRange);
                     debugAtlasDrawn = true;
                 }
                 if (DEBUG_RENDER && !debugLogged) {
@@ -287,7 +289,7 @@ public final class SmoothTextRenderer {
             penX += advance;
         }
 
-        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas);
+        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, sdfRange);
         drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
         drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
 
@@ -296,12 +298,13 @@ public final class SmoothTextRenderer {
         RenderingUtils.resetShaderColor(graphics);
     }
 
-    private static int flushIfNeeded(BufferBuilder buffer, int quadCount, SmoothFontAtlas atlas) {
+    private static int flushIfNeeded(BufferBuilder buffer, int quadCount, SmoothFontAtlas atlas, float sdfRange) {
         if (buffer != null && quadCount > 0) {
             // Re-apply shader state in case other GUI draws changed it (underline/strike use RenderType.gui()).
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             applyShaderState();
+            SmoothTextShader.applySdfRange(sdfRange);
             if (atlas != null) {
                 RenderSystem.setShaderTexture(0, atlas.getTextureId());
             }
@@ -327,7 +330,7 @@ public final class SmoothTextRenderer {
         }
     }
 
-    private static void drawAtlasPreview(Matrix4f matrix, int textureId) {
+    private static void drawAtlasPreview(Matrix4f matrix, int textureId, float sdfRange) {
         float x0 = 4.0F;
         float y0 = 4.0F;
         float x1 = 4.0F + 128.0F;
@@ -341,6 +344,7 @@ public final class SmoothTextRenderer {
         buffer.addVertex(matrix, x1, y0, 0.0F).setUv(1.0F, 0.0F).setColor(0xFFFFFFFF);
         BufferUploader.drawWithShader(buffer.buildOrThrow());
         applyShaderState();
+        SmoothTextShader.applySdfRange(sdfRange);
         RenderSystem.setShaderTexture(0, textureId);
     }
 

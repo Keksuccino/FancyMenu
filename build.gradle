@@ -161,6 +161,7 @@ subprojects {
                 "parchment_version": parchment_version,
                 "parchment_mc_version": parchment_mc_version,
                 "mixin_extras_version": mixin_extras_version,
+                "lwjgl_msdfgen_version": lwjgl_msdfgen_version,
                 "fabric_loom_version": fabric_loom_version,
                 "neogradle_version": neogradle_version
         ]

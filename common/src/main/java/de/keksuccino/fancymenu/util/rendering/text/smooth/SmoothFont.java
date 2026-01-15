@@ -106,6 +106,10 @@ public final class SmoothFont implements AutoCloseable {
         return size / baseSize;
     }
 
+    float getSdfRange() {
+        return sdfRange;
+    }
+
     @Override
     public void close() {
         plainAtlas.close();
