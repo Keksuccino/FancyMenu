@@ -118,10 +118,10 @@ final class SmoothFontAtlas implements AutoCloseable {
             return new SmoothFontGlyph(this, 0.0F, 0.0F, 0.0F, 0.0F, 0, 0, 0.0F, 0.0F, advance, false, true);
         }
 
-        // Increased padding to avoid texture bleeding during filtering
-        int padding = Math.max(4, (int) Math.ceil(sdfRange));
-        int glyphWidth = (int) Math.ceil(bounds.getWidth() + (padding * 2.0));
-        int glyphHeight = (int) Math.ceil(bounds.getHeight() + (padding * 2.0));
+        // Ensure padding covers the full SDF range + a bit more for anti-aliasing safety
+        int padding = Math.max(4, (int)Math.ceil(sdfRange + 1.0F));
+        int glyphWidth = (int)Math.ceil(bounds.getWidth() + (padding * 2.0));
+        int glyphHeight = (int)Math.ceil(bounds.getHeight() + (padding * 2.0));
 
         if (glyphWidth <= 0 || glyphHeight <= 0) {
             return new SmoothFontGlyph(this, 0.0F, 0.0F, 0.0F, 0.0F, 0, 0, 0.0F, 0.0F, advance, false, true);
@@ -135,23 +135,21 @@ final class SmoothFontAtlas implements AutoCloseable {
             atlasPixels = msdf.pixels;
             usesTrueSdf = msdf.usesTrueSdf;
         } else {
-            // Fallback to standard rasterization
             BufferedImage image = renderGlyphImage(glyphVector, bounds, glyphWidth, glyphHeight, padding);
             atlasPixels = buildRawRgba(image, glyphWidth, glyphHeight);
-            usesTrueSdf = true; // Treated as regular texture or single channel SDF
+            usesTrueSdf = true;
         }
 
         Rect slot = allocate(glyphWidth, glyphHeight);
         blitToAtlas(slot.x, slot.y, glyphWidth, glyphHeight, atlasPixels);
 
-        // Calculate UVs with half-pixel inset to ensure sampling stays within bounds
-        float u0 = (float) slot.x / (float) atlasWidth;
-        float v0 = (float) slot.y / (float) atlasHeight;
-        float u1 = (float) (slot.x + glyphWidth) / (float) atlasWidth;
-        float v1 = (float) (slot.y + glyphHeight) / (float) atlasHeight;
+        float u0 = (float)slot.x / (float)atlasWidth;
+        float v0 = (float)slot.y / (float)atlasHeight;
+        float u1 = (float)(slot.x + glyphWidth) / (float)atlasWidth;
+        float v1 = (float)(slot.y + glyphHeight) / (float)atlasHeight;
 
-        float offsetX = (float) bounds.getX() - padding;
-        float offsetY = (float) bounds.getY() - padding;
+        float offsetX = (float)bounds.getX() - padding;
+        float offsetY = (float)bounds.getY() - padding;
 
         upload();
 
@@ -159,7 +157,7 @@ final class SmoothFontAtlas implements AutoCloseable {
     }
 
     private Rect allocate(int width, int height) {
-        // Add spacing between glyphs in the atlas
+        // Safe spacing to avoid any filter bleeding
         int spacing = 2;
         int allocWidth = width + spacing;
         int allocHeight = height + spacing;
@@ -189,7 +187,6 @@ final class SmoothFontAtlas implements AutoCloseable {
     private void resizeAtlas(int newWidth, int newHeight) {
         int targetWidth = Math.max(newWidth, atlasWidth);
         int targetHeight = Math.max(newHeight, atlasHeight);
-        // Cap max size
         targetWidth = Math.min(targetWidth, 4096);
         targetHeight = Math.min(targetHeight, 4096);
 
@@ -220,7 +217,7 @@ final class SmoothFontAtlas implements AutoCloseable {
 
     private void applyLinearFilter() {
         if (dynamicTexture == null) return;
-        Runnable action = () -> dynamicTexture.setFilter(true, false); // Min: Linear, Mag: Linear, Mipmap: None
+        Runnable action = () -> dynamicTexture.setFilter(true, false);
         if (RenderSystem.isOnRenderThreadOrInit()) {
             action.run();
         } else {
@@ -285,7 +282,6 @@ final class SmoothFontAtlas implements AutoCloseable {
                 transform.translation().x(padding - bounds.getX()).y(padding - bounds.getY());
 
                 MSDFGenRange rangeStruct = transform.distance_mapping();
-                // This maps the SDF distance to 0..1 in the output buffer
                 rangeStruct.lower(-range);
                 rangeStruct.upper(range);
 
@@ -294,7 +290,6 @@ final class SmoothFontAtlas implements AutoCloseable {
                 config.overlap_support(MSDFGen.MSDF_TRUE);
                 config.mode(MSDFGen.MSDF_ERROR_CORRECTION_MODE_EDGE_PRIORITY);
                 config.distance_check_mode(MSDFGen.MSDF_DISTANCE_CHECK_MODE_ALWAYS);
-                // Reduce strictness to prevent artifacts in small corners
                 config.min_deviation_ratio(0.1);
                 config.min_improve_ratio(0.1);
 
@@ -324,7 +319,6 @@ final class SmoothFontAtlas implements AutoCloseable {
                     return null;
                 }
 
-                // If MTSDF channel count is 4, we use alpha, otherwise standard MSDF uses rgb
                 boolean trueSdf = usesTrueSdf || data.channels >= 4;
                 return new GeneratedBitmap(data.rgba, trueSdf);
             } finally {
@@ -359,8 +353,8 @@ final class SmoothFontAtlas implements AutoCloseable {
             }
 
             int pixelCount = width * height;
-            int bytesPerChannel = (int) (byteSize / (long) (pixelCount * channels));
-            ByteBuffer buffer = MemoryUtil.memByteBuffer(pixels, (int) byteSize).order(ByteOrder.nativeOrder());
+            int bytesPerChannel = (int)(byteSize / (long)(pixelCount * channels));
+            ByteBuffer buffer = MemoryUtil.memByteBuffer(pixels, (int)byteSize).order(ByteOrder.nativeOrder());
             byte[] rgba = new byte[pixelCount * 4];
 
             if (bytesPerChannel == 4) {
@@ -369,16 +363,15 @@ final class SmoothFontAtlas implements AutoCloseable {
                     int srcBase = i * channels;
                     int dstBase = i * 4;
 
-                    // MSDFGen outputs 0..1 floats directly because we set rangeStruct
                     float r = floats.get(srcBase);
                     float g = channels > 1 ? floats.get(srcBase + 1) : r;
                     float b = channels > 2 ? floats.get(srcBase + 2) : r;
                     float a = channels > 3 ? floats.get(srcBase + 3) : 1.0F;
 
-                    rgba[dstBase] = (byte) Math.round(Mth.clamp(r, 0.0F, 1.0F) * 255.0F);
-                    rgba[dstBase + 1] = (byte) Math.round(Mth.clamp(g, 0.0F, 1.0F) * 255.0F);
-                    rgba[dstBase + 2] = (byte) Math.round(Mth.clamp(b, 0.0F, 1.0F) * 255.0F);
-                    rgba[dstBase + 3] = (byte) Math.round(Mth.clamp(a, 0.0F, 1.0F) * 255.0F);
+                    rgba[dstBase] = (byte)Math.round(Mth.clamp(r, 0.0F, 1.0F) * 255.0F);
+                    rgba[dstBase + 1] = (byte)Math.round(Mth.clamp(g, 0.0F, 1.0F) * 255.0F);
+                    rgba[dstBase + 2] = (byte)Math.round(Mth.clamp(b, 0.0F, 1.0F) * 255.0F);
+                    rgba[dstBase + 3] = (byte)Math.round(Mth.clamp(a, 0.0F, 1.0F) * 255.0F);
                 }
                 return new MsdfBitmapData(rgba, channels);
             }
@@ -402,22 +395,17 @@ final class SmoothFontAtlas implements AutoCloseable {
                     PointerBuffer contourPtr = stack.mallocPointer(1);
                     MSDFGen.msdf_shape_add_contour(shape, contourPtr);
                     contour = contourPtr.get(0);
-                    startX = coords[0];
-                    startY = coords[1];
-                    lastX = startX;
-                    lastY = startY;
+                    startX = coords[0]; startY = coords[1];
+                    lastX = startX; lastY = startY;
                 } else if (seg == PathIterator.SEG_LINETO) {
                     addSegment(contour, MSDFGen.MSDF_SEGMENT_TYPE_LINEAR, lastX, lastY, coords[0], coords[1]);
-                    lastX = coords[0];
-                    lastY = coords[1];
+                    lastX = coords[0]; lastY = coords[1];
                 } else if (seg == PathIterator.SEG_QUADTO) {
                     addSegment(contour, MSDFGen.MSDF_SEGMENT_TYPE_QUADRATIC, lastX, lastY, coords[0], coords[1], coords[2], coords[3]);
-                    lastX = coords[2];
-                    lastY = coords[3];
+                    lastX = coords[2]; lastY = coords[3];
                 } else if (seg == PathIterator.SEG_CUBICTO) {
                     addSegment(contour, MSDFGen.MSDF_SEGMENT_TYPE_CUBIC, lastX, lastY, coords[0], coords[1], coords[2], coords[3], coords[4], coords[5]);
-                    lastX = coords[4];
-                    lastY = coords[5];
+                    lastX = coords[4]; lastY = coords[5];
                 } else if (seg == PathIterator.SEG_CLOSE) {
                     if (contour != MemoryUtil.NULL) closeContourIfOpen(contour, startX, startY, lastX, lastY);
                     contour = MemoryUtil.NULL;
@@ -473,10 +461,10 @@ final class SmoothFontAtlas implements AutoCloseable {
             int argb = pixels[i];
             int a = (argb >>> 24) & 0xFF;
             int dst = i * 4;
-            rgba[dst] = (byte) 255;
-            rgba[dst + 1] = (byte) 255;
-            rgba[dst + 2] = (byte) 255;
-            rgba[dst + 3] = (byte) a;
+            rgba[dst] = (byte)255;
+            rgba[dst + 1] = (byte)255;
+            rgba[dst + 2] = (byte)255;
+            rgba[dst + 3] = (byte)a;
         }
         return rgba;
     }

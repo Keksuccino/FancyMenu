@@ -2,7 +2,7 @@
 
 uniform sampler2D Sampler0;
 uniform vec4 ColorModulator;
-uniform float SdfPixelRange; // The range in texels (e.g. 4.0)
+uniform float SdfPixelRange; // e.g. 4.0
 uniform int UseTrueSdf;
 
 in vec4 vertexColor;
@@ -15,36 +15,43 @@ float median(float r, float g, float b) {
 }
 
 void main() {
-    vec4 sampleColor = texture(Sampler0, texCoord0);
+    vec4 texColor = texture(Sampler0, texCoord0);
 
-    // Calculate signed distance (0..1 range)
-    float dist = UseTrueSdf != 0 ? sampleColor.a : median(sampleColor.r, sampleColor.g, sampleColor.b);
+    // 1. Retrieve the distance from the texture (0.0 to 1.0)
+    float dist = UseTrueSdf != 0 ? texColor.a : median(texColor.r, texColor.g, texColor.b);
 
-    // Convert 0..1 distance to centered -0.5..0.5
-    float sd = dist - 0.5;
-
-    // Calculate the screen-space width of the SDF range.
-    // texSize: Size of texture in pixels.
-    // fwidth(texCoord0): Change in UV per screen pixel.
-    // fwidth(texCoord0) * texSize: Change in Texels per screen pixel.
+    // 2. Calculate the width of the screen pixel in texture-space units.
+    //    fwidth(texCoord0) gives the change in UV coordinates per screen pixel.
+    //    textureSize(...) gives the dimensions of the texture.
+    //    The product gives the number of Texels per Screen Pixel.
     vec2 texSize = vec2(textureSize(Sampler0, 0));
-    vec2 dTex = fwidth(texCoord0) * texSize;
-    float texelsPerPixel = length(dTex); // Approximate diagonal length
+    float texelsPerPixel = length(fwidth(texCoord0) * texSize);
 
-    // We want the gradient to change by 1.0 unit over 1.0 screen pixel.
-    // The current 'sd' changes by 1.0 unit over 'SdfPixelRange' texels.
-    // So 'sd' changes by (1.0 / SdfPixelRange) per texel.
-    // Therefore 'sd' changes by (texelsPerPixel / SdfPixelRange) per screen pixel.
+    // 3. Convert that to Distance-Field units.
+    //    The total distance range in the texture is [-SdfPixelRange, +SdfPixelRange].
+    //    So the total span in texels is (2.0 * SdfPixelRange).
+    //    We want to know how much the 'dist' value (0..1) changes per screen pixel.
+    float distChangePerPixel = texelsPerPixel / (2.0 * SdfPixelRange);
 
-    float sdChangePerPixel = texelsPerPixel / max(SdfPixelRange, 0.1);
+    // 4. Calculate the Anti-Aliasing window width.
+    //    We want the transition to happen over roughly 1 screen pixel.
+    //    So the smoothing window is half the change per pixel.
+    float w = distChangePerPixel * 0.5;
 
-    // Apply anti-aliasing
-    // We divide the distance by the rate of change to normalize it to pixel units.
-    float alpha = clamp(sd / sdChangePerPixel + 0.5, 0.0, 1.0);
+    // 5. CLAMP the width to prevent artifacts.
+    //    If 'w' > 0.5, the smoothing window extends beyond the 0..1 range of the texture.
+    //    This causes the background (0.0) to partially fade in, creating "translucent rectangles".
+    //    We clamp it to slightly less than 0.5 to keep 0.0 firmly transparent.
+    w = min(w, 0.45);
 
-    vec4 color = vec4(vertexColor.rgb, vertexColor.a * alpha) * ColorModulator;
-    if (color.a <= 0.01) {
+    // 6. Compute Alpha using smoothstep for a crisp edge.
+    //    The edge is at 0.5. We smooth from (0.5 - w) to (0.5 + w).
+    float alpha = smoothstep(0.5 - w, 0.5 + w, dist);
+
+    // 7. Discard fully transparent pixels to save fill rate / fix depth issues
+    if (alpha <= 0.01) {
         discard;
     }
-    fragColor = color;
+
+    fragColor = vec4(vertexColor.rgb, vertexColor.a * alpha) * ColorModulator;
 }

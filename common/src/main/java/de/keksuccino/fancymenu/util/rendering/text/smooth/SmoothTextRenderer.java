@@ -67,9 +67,6 @@ public final class SmoothTextRenderer {
             index += Character.charCount(codepoint);
             SmoothFontGlyph glyph = font.getGlyph(codepoint, style.bold, style.italic);
             float advance = glyph.advance() * scale;
-            if (style.bold) {
-                advance += getBoldOffset(scale);
-            }
             lineWidth += advance;
         }
         return Math.max(maxWidth, lineWidth);
@@ -85,7 +82,6 @@ public final class SmoothTextRenderer {
     }
 
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
-        // scaleForSize handles the internal downscaling from the high-res atlas
         float scale = font.scaleForSize(size);
         float baseRange = font.getSdfRange();
         float ascent = font.getAscent(size);
@@ -197,17 +193,12 @@ public final class SmoothTextRenderer {
                 if (buffer == null) {
                     buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
                 }
+
                 addGlyph(buffer, matrix, glyph, penX, baseline, scale, style.color, style.italic);
                 quadCount++;
-                if (style.bold) {
-                    addGlyph(buffer, matrix, glyph, penX + getBoldOffset(scale), baseline, scale, style.color, style.italic);
-                    quadCount++;
-                }
             }
+
             float advance = glyph.advance() * scale;
-            if (style.bold) {
-                advance += getBoldOffset(scale);
-            }
             penX += advance;
         }
 
@@ -258,10 +249,6 @@ public final class SmoothTextRenderer {
         buffer.addVertex(matrix, x0, y1, 0.0F).setUv(glyph.u0(), glyph.v1()).setColor(color);
         buffer.addVertex(matrix, x1, y1, 0.0F).setUv(glyph.u1(), glyph.v1()).setColor(color);
         buffer.addVertex(matrix, x1 + italicSkew, y0, 0.0F).setUv(glyph.u1(), glyph.v0()).setColor(color);
-    }
-
-    private static float getBoldOffset(float scale) {
-        return Math.max(1.0F, scale);
     }
 
     private static int applyFormatting(String text, int formatIndex, StyleState style, int baseColor) {
@@ -320,9 +307,9 @@ public final class SmoothTextRenderer {
 
     private static int darkenColor(int color) {
         int alpha = FastColor.ARGB32.alpha(color);
-        int red = (int) (FastColor.ARGB32.red(color) * 0.25F);
-        int green = (int) (FastColor.ARGB32.green(color) * 0.25F);
-        int blue = (int) (FastColor.ARGB32.blue(color) * 0.25F);
+        int red = (int)(FastColor.ARGB32.red(color) * 0.25F);
+        int green = (int)(FastColor.ARGB32.green(color) * 0.25F);
+        int blue = (int)(FastColor.ARGB32.blue(color) * 0.25F);
         return FastColor.ARGB32.color(alpha, red, green, blue);
     }
 
