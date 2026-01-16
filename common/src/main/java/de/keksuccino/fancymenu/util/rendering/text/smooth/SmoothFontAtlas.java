@@ -169,8 +169,8 @@ final class SmoothFontAtlas implements AutoCloseable {
     private void resizeAtlas(int newWidth, int newHeight) {
         int targetWidth = Math.max(newWidth, logicalWidth);
         int targetHeight = Math.max(newHeight, logicalHeight);
-        targetWidth = Math.min(targetWidth, 4096);
-        targetHeight = Math.min(targetHeight, 4096);
+        targetWidth = Math.min(targetWidth, RenderSystem.maxSupportedTextureSize());
+        targetHeight = Math.min(targetHeight, RenderSystem.maxSupportedTextureSize());
 
         if (targetWidth == logicalWidth && targetHeight == logicalHeight) {
             return;

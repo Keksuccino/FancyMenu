@@ -217,6 +217,11 @@ public final class SmoothTextRenderer {
             SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
 
             if (glyph.hasTexture()) {
+                if (quadCount >= 4096) {
+                    quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, edge, currentUsesTrueSdf);
+                    buffer = null;
+                }
+
                 SmoothFontAtlas atlas = glyph.atlas();
                 boolean glyphUsesTrueSdf = glyph.usesTrueSdf();
                 if (currentAtlas != atlas) {
@@ -602,6 +607,10 @@ public final class SmoothTextRenderer {
             SmoothFontGlyph glyph = font.getGlyph(lod, renderCodepoint, style.bold, style.italic);
 
             if (glyph.hasTexture()) {
+                if (quadCount >= 4096) {
+                    flushGlyphs();
+                }
+
                 SmoothFontAtlas atlas = glyph.atlas();
                 boolean glyphUsesTrueSdf = glyph.usesTrueSdf();
                 if (currentAtlas != atlas) {
