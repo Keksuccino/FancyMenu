@@ -27,27 +27,6 @@ runs {
         dependencies {
             runtime "com.github.Keksuccino:japng:0.5.3"
             runtime "com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7"
-            runtime("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}") {
-                transitive = false
-            }
-            runtime("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-windows") {
-                transitive = false
-            }
-            runtime("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-windows-arm64") {
-                transitive = false
-            }
-            runtime("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-linux") {
-                transitive = false
-            }
-            runtime("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-linux-arm64") {
-                transitive = false
-            }
-            runtime("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-macos") {
-                transitive = false
-            }
-            runtime("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-macos-arm64") {
-                transitive = false
-            }
         }
     }
     server {
@@ -85,28 +64,6 @@ dependencies {
     }
     implementation(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
-    }
-    implementation(jarJar("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}")) {
-        jarJar.ranged(it, "[${lwjgl_msdfgen_version},)")
-        transitive = false
-    }
-    implementation(jarJar("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-windows")) {
-        transitive = false
-    }
-    implementation(jarJar("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-windows-arm64")) {
-        transitive = false
-    }
-    implementation(jarJar("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-linux")) {
-        transitive = false
-    }
-    implementation(jarJar("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-linux-arm64")) {
-        transitive = false
-    }
-    implementation(jarJar("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-macos")) {
-        transitive = false
-    }
-    implementation(jarJar("org.lwjgl:lwjgl-msdfgen:${lwjgl_msdfgen_version}:natives-macos-arm64")) {
-        transitive = false
     }
     //implementation "maven.modrinth:fancy-entity-renderer:0.4.0"
     implementation "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"

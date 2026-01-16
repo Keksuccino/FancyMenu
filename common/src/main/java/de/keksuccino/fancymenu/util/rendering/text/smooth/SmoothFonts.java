@@ -14,10 +14,10 @@ public class SmoothFonts {
     public static final Supplier<SmoothFont> NOTO_SANS = () -> {
         ResourceLocation folder = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans");
         ResourceLocation base = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans.ttf");
-        ResourceLocation jp   = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_jp.ttf");
-        ResourceLocation kr   = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_kr.ttf");
-        ResourceLocation sc   = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_sc.ttf");
-        ResourceLocation tc   = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_tc.ttf");
+        ResourceLocation jp = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_jp.ttf");
+        ResourceLocation kr = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_kr.ttf");
+        ResourceLocation sc = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_sc.ttf");
+        ResourceLocation tc = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_tc.ttf");
         Map<String, List<ResourceLocation>> overrides = Map.of(
                 "ja_jp", List.of(base, jp, sc, tc, kr),
                 "ko_kr", List.of(base, kr, sc, jp, tc),
@@ -27,5 +27,9 @@ public class SmoothFonts {
         );
         return SmoothFontManager.getFontFromFolder(folder, SMOOTH_FONT_BASE_SIZE, overrides);
     };
+
+    public static void preloadFonts() {
+        NOTO_SANS.get();
+    }
 
 }

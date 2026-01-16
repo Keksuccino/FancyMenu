@@ -113,10 +113,6 @@ public final class SmoothTextRenderer {
     }
 
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
-        // Round to nearest pixel to avoid sub-pixel blurring/waviness
-        x = Math.round(x);
-        y = Math.round(y);
-
         // Select the LOD atlas set for this size.
         int lod = font.getLodLevel(size);
         float scale = font.getScaleForLod(lod, size);
@@ -131,9 +127,6 @@ public final class SmoothTextRenderer {
         // Calculate edge
         float baseEdge = SmoothTextShader.getResolvedEdge();
         float edge = baseEdge;
-        if (scale < 0.5F) {
-            edge = Math.min(baseEdge, 0.2F + 0.3F * (scale / 0.5F));
-        }
 
         StyleState style = new StyleState(baseColor);
 
@@ -263,10 +256,6 @@ public final class SmoothTextRenderer {
     }
 
     private static void renderFormattedTextInternal(GuiGraphics graphics, SmoothFont font, FormattedCharSequence text, float x, float y, int baseColor, float size) {
-        // Round to nearest pixel
-        x = Math.round(x);
-        y = Math.round(y);
-
         int lod = font.getLodLevel(size);
         float scale = font.getScaleForLod(lod, size);
 
@@ -276,9 +265,6 @@ public final class SmoothTextRenderer {
 
         float baseEdge = SmoothTextShader.getResolvedEdge();
         float edge = baseEdge;
-        if (scale < 0.5F) {
-            edge = Math.min(baseEdge, 0.2F + 0.3F * (scale / 0.5F));
-        }
 
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
