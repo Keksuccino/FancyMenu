@@ -27,9 +27,8 @@ public final class SmoothFontManager {
     private static final Map<String, SmoothFont> FONT_CACHE = new HashMap<>();
     private static boolean reloadListenerRegistered;
 
-    // Generates the atlas at a higher resolution than requested to ensure crisp shapes.
-    // 3.0 provides excellent quality for both large and small text.
-    private static final float GENERATION_SCALE = 3.0F;
+    // Increased from 3.0F to 4.0F for ultra-crisp edges.
+    private static final float GENERATION_SCALE = 4.0F;
 
     private SmoothFontManager() {
     }
@@ -94,13 +93,13 @@ public final class SmoothFontManager {
         try {
             Font baseFont = Font.createFont(Font.TRUETYPE_FONT, new ByteArrayInputStream(fontBytes));
 
-            // We upscale the generation size but keep the logic size the same.
             float generationSize = baseSize * GENERATION_SCALE;
 
-            // The SDF range (in pixels) on the generated texture.
-            // A value of 4.0 at 3x scale is effectively 1.33px at 1x scale,
-            // but provides enough gradient for the shader to work with.
-            float sdfRange = 4.0F;
+            // Reduced SDF range to 1.0.
+            // Since we are using high-res rasterization, the "edge" is very tight (approx 1px).
+            // Setting this correctly allows the shader to act as a high-quality supersampler
+            // rather than over-sharpening the image.
+            float sdfRange = 1.0F;
 
             return new SmoothFont(sanitizeKey(key), baseFont, baseSize, generationSize, sdfRange);
         } catch (FontFormatException | IOException ex) {
