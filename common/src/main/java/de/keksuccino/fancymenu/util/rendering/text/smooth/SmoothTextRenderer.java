@@ -124,6 +124,13 @@ public final class SmoothTextRenderer {
         float lineY = y;
         float baseline = lineY + ascent;
 
+        // Calculate edge
+        float baseEdge = SmoothTextShader.getResolvedEdge();
+        float edge = baseEdge;
+        if (scale < 0.5F) {
+            edge = Math.min(baseEdge, 0.2F + 0.3F * (scale / 0.5F));
+        }
+
         StyleState style = new StyleState(baseColor);
 
         BufferBuilder buffer = null;
@@ -137,6 +144,7 @@ public final class SmoothTextRenderer {
         RenderSystem.defaultBlendFunc();
         applyShaderState();
         SmoothTextShader.applySdfRange(baseRange);
+        SmoothTextShader.applyEdge(edge);
         SmoothTextShader.applyUseTrueSdf(currentUsesTrueSdf);
 
         float underlineStartX = 0.0F;
@@ -149,7 +157,7 @@ public final class SmoothTextRenderer {
         for (int index = 0; index < text.length(); ) {
             char c = text.charAt(index);
             if (c == '\n') {
-                quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, currentUsesTrueSdf);
+                quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, edge, currentUsesTrueSdf);
                 buffer = null;
                 currentAtlas = null;
                 drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
@@ -175,7 +183,7 @@ public final class SmoothTextRenderer {
                 int consumed = applyFormatting(text, index + 1, style, baseColor);
                 if (consumed > 0) {
                     if (wasUnderline && (!style.underline || previousColor != style.color)) {
-                        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, currentUsesTrueSdf);
+                        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, edge, currentUsesTrueSdf);
                         buffer = null;
                         currentAtlas = null;
                         drawLineIfNeeded(graphics, true, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
@@ -186,7 +194,7 @@ public final class SmoothTextRenderer {
                         underlineColor = style.color;
                     }
                     if (wasStrikethrough && (!style.strikethrough || previousColor != style.color)) {
-                        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, currentUsesTrueSdf);
+                        quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, edge, currentUsesTrueSdf);
                         buffer = null;
                         currentAtlas = null;
                         drawLineIfNeeded(graphics, true, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
@@ -214,15 +222,16 @@ public final class SmoothTextRenderer {
                 SmoothFontAtlas atlas = glyph.atlas();
                 boolean glyphUsesTrueSdf = glyph.usesTrueSdf();
                 if (currentAtlas != atlas) {
-                    quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, currentUsesTrueSdf);
+                    quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, edge, currentUsesTrueSdf);
                     buffer = null;
                     currentAtlas = atlas;
                     RenderSystem.setShaderTexture(0, atlas.getTextureId());
                     SmoothTextShader.applySdfRange(atlas.getEffectiveSdfRange());
+                    SmoothTextShader.applyEdge(edge);
                     SmoothTextShader.applyUseTrueSdf(glyphUsesTrueSdf);
                     currentUsesTrueSdf = glyphUsesTrueSdf;
                 } else if (glyphUsesTrueSdf != currentUsesTrueSdf) {
-                    quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, currentUsesTrueSdf);
+                    quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, edge, currentUsesTrueSdf);
                     buffer = null;
                     SmoothTextShader.applyUseTrueSdf(glyphUsesTrueSdf);
                     currentUsesTrueSdf = glyphUsesTrueSdf;
@@ -238,7 +247,7 @@ public final class SmoothTextRenderer {
             penX += advance;
         }
 
-        flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, currentUsesTrueSdf);
+        flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, edge, currentUsesTrueSdf);
         drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
         drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
 
@@ -255,14 +264,21 @@ public final class SmoothTextRenderer {
         float ascent = font.getAscent(size);
         float lineHeight = font.getLineHeight(size);
 
+        float baseEdge = SmoothTextShader.getResolvedEdge();
+        float edge = baseEdge;
+        if (scale < 0.5F) {
+            edge = Math.min(baseEdge, 0.2F + 0.3F * (scale / 0.5F));
+        }
+
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         applyShaderState();
         SmoothTextShader.applySdfRange(baseRange);
+        SmoothTextShader.applyEdge(edge);
         SmoothTextShader.applyUseTrueSdf(true);
 
-        ComponentRenderState state = new ComponentRenderState(graphics, font, baseColor, size, lod, scale, baseRange, ascent, lineHeight, x, y);
+        ComponentRenderState state = new ComponentRenderState(graphics, font, baseColor, size, lod, scale, baseRange, edge, ascent, lineHeight, x, y);
         text.accept(state);
         state.finish();
 
@@ -333,12 +349,13 @@ public final class SmoothTextRenderer {
         return new TextDimensions(maxWidth, lineHeight * lines);
     }
 
-    private static int flushIfNeeded(BufferBuilder buffer, int quadCount, SmoothFontAtlas atlas, float sdfRange, boolean useTrueSdf) {
+    private static int flushIfNeeded(BufferBuilder buffer, int quadCount, SmoothFontAtlas atlas, float sdfRange, float sdfEdge, boolean useTrueSdf) {
         if (buffer != null && quadCount > 0) {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             applyShaderState();
             SmoothTextShader.applySdfRange(sdfRange);
+            SmoothTextShader.applyEdge(sdfEdge);
             SmoothTextShader.applyUseTrueSdf(useTrueSdf);
             if (atlas != null) {
                 RenderSystem.setShaderTexture(0, atlas.getTextureId());
@@ -524,6 +541,7 @@ public final class SmoothTextRenderer {
         private final int lod;
         private final float scale;
         private final float baseRange;
+        private final float edge;
         private final float ascent;
         private final float lineHeight;
         private final float startX;
@@ -544,7 +562,7 @@ public final class SmoothTextRenderer {
         private final float underlineThickness;
         private final float strikeThickness;
 
-        private ComponentRenderState(GuiGraphics graphics, SmoothFont font, int baseColor, float size, int lod, float scale, float baseRange, float ascent, float lineHeight, float x, float y) {
+        private ComponentRenderState(GuiGraphics graphics, SmoothFont font, int baseColor, float size, int lod, float scale, float baseRange, float edge, float ascent, float lineHeight, float x, float y) {
             this.graphics = graphics;
             this.font = font;
             this.baseColor = baseColor;
@@ -552,6 +570,7 @@ public final class SmoothTextRenderer {
             this.lod = lod;
             this.scale = scale;
             this.baseRange = baseRange;
+            this.edge = edge;
             this.ascent = ascent;
             this.lineHeight = lineHeight;
             this.startX = x;
@@ -592,6 +611,7 @@ public final class SmoothTextRenderer {
                     currentAtlas = atlas;
                     RenderSystem.setShaderTexture(0, atlas.getTextureId());
                     SmoothTextShader.applySdfRange(atlas.getEffectiveSdfRange());
+                    SmoothTextShader.applyEdge(edge);
                     SmoothTextShader.applyUseTrueSdf(glyphUsesTrueSdf);
                     currentUsesTrueSdf = glyphUsesTrueSdf;
                 } else if (glyphUsesTrueSdf != currentUsesTrueSdf) {
@@ -654,7 +674,7 @@ public final class SmoothTextRenderer {
         }
 
         private void flushGlyphs() {
-            quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, currentUsesTrueSdf);
+            quadCount = flushIfNeeded(buffer, quadCount, currentAtlas, currentAtlas != null ? currentAtlas.getEffectiveSdfRange() : baseRange, edge, currentUsesTrueSdf);
             buffer = null;
             currentAtlas = null;
         }

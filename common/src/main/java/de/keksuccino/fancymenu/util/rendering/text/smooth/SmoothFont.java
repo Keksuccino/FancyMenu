@@ -70,7 +70,7 @@ public final class SmoothFont implements AutoCloseable {
         this.strikethroughOffset = metrics.getStrikethroughOffset();
         this.strikethroughThickness = metrics.getStrikethroughThickness();
 
-        this.lodGenerationSizes = new float[] {this.baseSize * 2.0F, this.baseSize * 4.0F, this.baseSize * 8.0F};
+        this.lodGenerationSizes = new float[] {this.baseSize * 1.0F, this.baseSize * 4.0F, this.baseSize * 8.0F};
         this.sources = new FontSource[baseFonts.size()];
         for (int i = 0; i < baseFonts.size(); i++) {
             Font font = Objects.requireNonNull(baseFonts.get(i));
@@ -219,8 +219,8 @@ public final class SmoothFont implements AutoCloseable {
             this.rawFont = rawFont;
             this.lodLevels = new LodLevel[3];
 
-            // LOD 0: Small (2x scale, starts with 512px atlas)
-            this.lodLevels[0] = new LodLevel(parent, rawFont, baseSize * 2.0F, 512, debugName, "_small");
+            // LOD 0: Small (1x scale, starts with 512px atlas)
+            this.lodLevels[0] = new LodLevel(parent, rawFont, baseSize * 1.0F, 512, debugName, "_small");
 
             // LOD 1: Medium (4x scale, starts with 1024px atlas)
             this.lodLevels[1] = new LodLevel(parent, rawFont, baseSize * 4.0F, 1024, debugName, "_medium");

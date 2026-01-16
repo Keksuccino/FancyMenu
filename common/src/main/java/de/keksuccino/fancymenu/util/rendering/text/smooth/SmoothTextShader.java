@@ -97,6 +97,14 @@ final class SmoothTextShader {
         current.safeGetUniform("SdfPixelRange").set(range);
     }
 
+    static void applyEdge(float edge) {
+        ShaderInstance current = RenderSystem.getShader();
+        if (current == null) {
+            return;
+        }
+        current.safeGetUniform("SdfEdge").set(edge);
+    }
+
     static void applyUseTrueSdf(boolean useTrueSdf) {
         ShaderInstance current = RenderSystem.getShader();
         if (current == null) {
