@@ -270,10 +270,15 @@ public final class SmoothFont implements AutoCloseable {
             Font italic = rawFont.deriveFont(Font.ITALIC, genSize);
             Font boldItalic = rawFont.deriveFont(Font.BOLD | Font.ITALIC, genSize);
 
-            this.plainAtlas = new SmoothFontAtlas(parent, plain, parent.getFontRenderContext(), parent.getSdfRange(), debugName + suffix + "_plain", initialAtlasSize);
-            this.boldAtlas = new SmoothFontAtlas(parent, bold, parent.getFontRenderContext(), parent.getSdfRange(), debugName + suffix + "_bold", initialAtlasSize);
-            this.italicAtlas = new SmoothFontAtlas(parent, italic, parent.getFontRenderContext(), parent.getSdfRange(), debugName + suffix + "_italic", initialAtlasSize);
-            this.boldItalicAtlas = new SmoothFontAtlas(parent, boldItalic, parent.getFontRenderContext(), parent.getSdfRange(), debugName + suffix + "_bold_italic", initialAtlasSize);
+            // Scale SDF range based on LOD size.
+            // This ensures we have a consistent "relative" softness across all LODs.
+            float scale = genSize / parent.getBaseSize();
+            float lodSdfRange = Math.max(1.0F, parent.getSdfRange() * scale);
+
+            this.plainAtlas = new SmoothFontAtlas(parent, plain, parent.getFontRenderContext(), lodSdfRange, debugName + suffix + "_plain", initialAtlasSize);
+            this.boldAtlas = new SmoothFontAtlas(parent, bold, parent.getFontRenderContext(), lodSdfRange, debugName + suffix + "_bold", initialAtlasSize);
+            this.italicAtlas = new SmoothFontAtlas(parent, italic, parent.getFontRenderContext(), lodSdfRange, debugName + suffix + "_italic", initialAtlasSize);
+            this.boldItalicAtlas = new SmoothFontAtlas(parent, boldItalic, parent.getFontRenderContext(), lodSdfRange, debugName + suffix + "_bold_italic", initialAtlasSize);
         }
 
         SmoothFontAtlas getAtlas(boolean bold, boolean italic) {

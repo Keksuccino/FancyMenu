@@ -29,12 +29,12 @@ final class SmoothFontAtlas implements AutoCloseable {
 
     private static final int DEFAULT_ATLAS_SIZE = 1024;
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int GLYPH_PADDING = 4;
 
     private final String debugName;
     private final Font awtFont;
     private final FontRenderContext fontRenderContext;
     private final float sdfRange;
+    private final int padding;
     private final Int2ObjectOpenHashMap<SmoothFontGlyph> glyphs = new Int2ObjectOpenHashMap<>();
 
     private NativeImage atlasImage;
@@ -54,6 +54,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         this.awtFont = Objects.requireNonNull(awtFont);
         this.fontRenderContext = Objects.requireNonNull(fontRenderContext);
         this.sdfRange = Math.max(1.0F, sdfRange);
+        this.padding = (int) Math.ceil(this.sdfRange) + 2;
 
         this.logicalWidth = initialSize;
         this.logicalHeight = initialSize;
@@ -113,7 +114,6 @@ final class SmoothFontAtlas implements AutoCloseable {
             return new SmoothFontGlyph(this, 0, 0, 0, 0, 0.0F, 0.0F, advance, false, true);
         }
 
-        int padding = GLYPH_PADDING;
         int glyphWidth = (int)Math.ceil(bounds.getWidth() + (padding * 2.0));
         int glyphHeight = (int)Math.ceil(bounds.getHeight() + (padding * 2.0));
 
@@ -121,7 +121,7 @@ final class SmoothFontAtlas implements AutoCloseable {
             return new SmoothFontGlyph(this, 0, 0, 0, 0, 0.0F, 0.0F, advance, false, true);
         }
 
-        BufferedImage image = renderGlyphImage(glyphVector, bounds, glyphWidth, glyphHeight, padding);
+        BufferedImage image = renderGlyphImage(glyphVector, bounds, glyphWidth, glyphHeight, padding, sdfRange);
         byte[] atlasPixels = buildRawRgba(image, glyphWidth, glyphHeight);
         boolean usesTrueSdf = true;
 
@@ -234,7 +234,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         }
     }
 
-    private static BufferedImage renderGlyphImage(GlyphVector glyphVector, Rectangle2D bounds, int width, int height, int padding) {
+    private static BufferedImage renderGlyphImage(GlyphVector glyphVector, Rectangle2D bounds, int width, int height, int padding, float sdfRange) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
         graphics.setComposite(AlphaComposite.Clear);
@@ -253,7 +253,42 @@ final class SmoothFontAtlas implements AutoCloseable {
         graphics.translate(padding - bounds.getX(), padding - bounds.getY());
         graphics.drawGlyphVector(glyphVector, 0, 0);
         graphics.dispose();
+
+        // Apply blur to generate SDF-like gradient
+        float sigma = sdfRange / 4.0F;
+        if (sigma > 0.1F) {
+            image = applyBlur(image, sigma);
+        }
+
         return image;
+    }
+
+    private static BufferedImage applyBlur(BufferedImage src, float sigma) {
+        int radius = (int) Math.ceil(sigma * 3.0F);
+        int kernelSize = radius * 2 + 1;
+        float[] kernelData = new float[kernelSize * kernelSize];
+        float twoSigmaSq = 2.0F * sigma * sigma;
+        float sigmaRoot = (float) Math.sqrt(twoSigmaSq * Math.PI);
+        float total = 0.0F;
+
+        for (int y = -radius; y <= radius; y++) {
+            for (int x = -radius; x <= radius; x++) {
+                float distanceSq = x * x + y * y;
+                float value = (float) Math.exp(-distanceSq / twoSigmaSq) / sigmaRoot;
+                kernelData[(y + radius) * kernelSize + (x + radius)] = value;
+                total += value;
+            }
+        }
+
+        for (int i = 0; i < kernelData.length; i++) {
+            kernelData[i] /= total;
+        }
+
+        java.awt.image.Kernel kernel = new java.awt.image.Kernel(kernelSize, kernelSize, kernelData);
+        java.awt.image.ConvolveOp op = new java.awt.image.ConvolveOp(kernel, java.awt.image.ConvolveOp.EDGE_NO_OP, null);
+        
+        BufferedImage dst = new BufferedImage(src.getWidth(), src.getHeight(), src.getType());
+        return op.filter(src, dst);
     }
 
     private static byte[] buildRawRgba(BufferedImage image, int width, int height) {
