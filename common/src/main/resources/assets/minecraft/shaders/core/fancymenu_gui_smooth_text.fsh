@@ -2,7 +2,7 @@
 
 uniform sampler2D Sampler0;
 uniform vec4 ColorModulator;
-uniform float SdfPixelRange; // e.g. 4.0
+uniform float SdfPixelRange; // e.g. 1.0 for raster
 uniform int UseTrueSdf;
 
 in vec4 vertexColor;
@@ -17,38 +17,53 @@ float median(float r, float g, float b) {
 void main() {
     vec4 texColor = texture(Sampler0, texCoord0);
 
-    // 1. Retrieve the distance from the texture (0.0 to 1.0)
+    // For raster atlas, 'dist' is simply the alpha coverage (0..1)
     float dist = UseTrueSdf != 0 ? texColor.a : median(texColor.r, texColor.g, texColor.b);
 
-    // 2. Calculate the width of the screen pixel in texture-space units.
-    //    fwidth(texCoord0) gives the change in UV coordinates per screen pixel.
-    //    textureSize(...) gives the dimensions of the texture.
-    //    The product gives the number of Texels per Screen Pixel.
+    // Calculate how many texture pixels fit in one screen pixel.
     vec2 texSize = vec2(textureSize(Sampler0, 0));
     float texelsPerPixel = length(fwidth(texCoord0) * texSize);
 
-    // 3. Convert that to Distance-Field units.
-    //    The total distance range in the texture is [-SdfPixelRange, +SdfPixelRange].
-    //    So the total span in texels is (2.0 * SdfPixelRange).
-    //    We want to know how much the 'dist' value (0..1) changes per screen pixel.
-    float distChangePerPixel = texelsPerPixel / (2.0 * SdfPixelRange);
+    float alpha;
 
-    // 4. Calculate the Anti-Aliasing window width.
-    //    We want the transition to happen over roughly 1 screen pixel.
-    //    So the smoothing window is half the change per pixel.
-    float w = distChangePerPixel * 0.5;
+    // --- LOGIC SWITCH BASED ON SCALE ---
 
-    // 5. CLAMP the width to prevent artifacts.
-    //    If 'w' > 0.5, the smoothing window extends beyond the 0..1 range of the texture.
-    //    This causes the background (0.0) to partially fade in, creating "translucent rectangles".
-    //    We clamp it to slightly less than 0.5 to keep 0.0 firmly transparent.
-    w = min(w, 0.45);
+    if (texelsPerPixel < 1.0) {
+        // MAGNIFICATION (Text is large, we are zooming in on the texture)
+        // Linear filtering makes the edge blurry. We need to sharpen it.
+        // We use the SDF math here to reconstruct a sharp edge.
 
-    // 6. Compute Alpha using smoothstep for a crisp edge.
-    //    The edge is at 0.5. We smooth from (0.5 - w) to (0.5 + w).
-    float alpha = smoothstep(0.5 - w, 0.5 + w, dist);
+        float distChangePerPixel = texelsPerPixel / (2.0 * SdfPixelRange);
+        float w = distChangePerPixel * 0.5;
+        // Clamp w to ensure we don't exceed the bounds
+        w = clamp(w, 0.0, 0.49);
 
-    // 7. Discard fully transparent pixels to save fill rate / fix depth issues
+        alpha = smoothstep(0.5 - w, 0.5 + w, dist);
+
+    } else {
+        // MINIFICATION (Text is small, texture pixels are tiny)
+        // The GPU linear filtering has already averaged the coverage for us.
+        // We should NOT apply a harsh threshold (smoothstep) because that destroys the anti-aliasing
+        // derived from the averaging, causing wobbling and aliasing.
+
+        // We blend between the sharpened result (at 1.0 scale) and raw alpha (at high downscale)
+        // to ensure a smooth transition.
+
+        float blend = clamp(texelsPerPixel - 1.0, 0.0, 1.0);
+
+        // Sharpened version (for near 1.0 scale)
+        float distChange = texelsPerPixel / (2.0 * SdfPixelRange);
+        float w = min(distChange * 0.5, 0.49);
+        float sharpAlpha = smoothstep(0.5 - w, 0.5 + w, dist);
+
+        // Raw version (for small text)
+        // Just use the raw alpha, which is the correct area coverage.
+        float rawAlpha = dist;
+
+        alpha = mix(sharpAlpha, rawAlpha, blend);
+    }
+
+    // Discard very low alpha to help with sorting/performance
     if (alpha <= 0.01) {
         discard;
     }

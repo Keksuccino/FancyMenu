@@ -30,7 +30,7 @@ final class SmoothFontAtlas implements AutoCloseable {
     private static final int DEFAULT_ATLAS_SIZE = 1024;
     private static final Logger LOGGER = LogManager.getLogger();
 
-    // Slight padding to ensure no anti-aliasing clipping
+    // Padding to ensure edges aren't clipped
     private static final int GLYPH_PADDING = 6;
 
     private final String debugName;
