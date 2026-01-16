@@ -185,7 +185,7 @@ public class ColorPickerScreen extends PiPScreen {
         int bottom = 56;
         int availableWidth = this.width - (padding * 2);
         int availableHeight = this.height - top - bottom;
-        int labelHeight = this.font.lineHeight;
+        int labelHeight = (int)UIBase.getUITextHeight();
         int extraHeight = (labelHeight + SLIDER_HEIGHT + 2) * 2 + (SLIDER_GAP * 3);
 
         this.pickerSize = Math.min(MAX_PICKER_SIZE, Math.max(MIN_PICKER_SIZE, availableHeight - extraHeight));
@@ -246,10 +246,10 @@ public class ColorPickerScreen extends PiPScreen {
         this.renderColorArea(graphics);
         this.renderColorAreaSelector(graphics, theme);
 
-        UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.hue"), this.hueX, this.hueLabelY);
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hue"), this.hueX, this.hueLabelY);
         this.renderHueSlider(graphics, theme);
 
-        UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.alpha"), this.alphaX, this.alphaLabelY);
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.alpha"), this.alphaX, this.alphaLabelY);
         this.renderAlphaSlider(graphics, theme);
     }
 
@@ -264,11 +264,11 @@ public class ColorPickerScreen extends PiPScreen {
 
         int x = this.infoX;
         int y = this.infoY;
-        int labelHeight = this.font.lineHeight;
+        int labelHeight = (int)UIBase.getUITextHeight();
 
         int previewLabelY = y;
         int previewRectY = previewLabelY + labelHeight + 4;
-        UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.preview"), x, previewLabelY);
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.preview"), x, previewLabelY);
 
         this.renderCheckerboard(graphics, x, previewRectY, PREVIEW_SIZE, PREVIEW_SIZE, 6);
         graphics.fill(x, previewRectY, x + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, this.getCurrentColorInt());
@@ -276,7 +276,7 @@ public class ColorPickerScreen extends PiPScreen {
 
         if (this.presetColor != null) {
             int presetX = x + PREVIEW_SIZE + 12;
-            UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.original"), presetX, previewLabelY);
+            UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.original"), presetX, previewLabelY);
             this.renderCheckerboard(graphics, presetX, previewRectY, PREVIEW_SIZE, PREVIEW_SIZE, 6);
             graphics.fill(presetX, previewRectY, presetX + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, this.presetColor.getColorInt());
             UIBase.renderBorder(graphics, presetX, previewRectY, presetX + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
@@ -284,27 +284,27 @@ public class ColorPickerScreen extends PiPScreen {
 
         y = previewRectY + PREVIEW_SIZE + 12;
 
-        UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.hex"), x, y);
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hex"), x, y);
         y += labelHeight + 2;
-        graphics.drawString(this.font, this.getCurrentHex(), x, y, theme.generic_text_base_color.getColorInt(), false);
+        UIBase.renderText(graphics, Component.literal(this.getCurrentHex()), x, y, theme.generic_text_base_color.getColorInt(), false);
 
         y += labelHeight + 8;
-        UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.rgba"), x, y);
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.rgba"), x, y);
         y += labelHeight + 2;
         int rgb = this.getCurrentColorInt();
         int r = (rgb >> 16) & 0xFF;
         int g = (rgb >> 8) & 0xFF;
         int b = rgb & 0xFF;
         int a = Math.round(this.alpha * 255.0F);
-        graphics.drawString(this.font, Component.literal("R: " + r + "  G: " + g + "  B: " + b + "  A: " + a), x, y, theme.generic_text_base_color.getColorInt(), false);
+        UIBase.renderText(graphics, Component.literal("R: " + r + "  G: " + g + "  B: " + b + "  A: " + a), x, y, theme.generic_text_base_color.getColorInt(), false);
 
         y += labelHeight + 8;
-        UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.ui.color_picker.hsv"), x, y);
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hsv"), x, y);
         y += labelHeight + 2;
         int h = Math.round(this.hue * 360.0F);
         int s = Math.round(this.saturation * 100.0F);
         int v = Math.round(this.value * 100.0F);
-        graphics.drawString(this.font, Component.literal("H: " + h + "  S: " + s + "%  V: " + v + "%"), x, y, theme.generic_text_base_color.getColorInt(), false);
+        UIBase.renderText(graphics, Component.literal("H: " + h + "  S: " + s + "%  V: " + v + "%"), x, y, theme.generic_text_base_color.getColorInt(), false);
     }
 
     private void renderColorArea(@NotNull GuiGraphics graphics) {

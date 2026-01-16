@@ -1635,15 +1635,15 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             int labelX = (int) (this.x + 10);
             if ((this.icon != null) || this.addSpaceForIcon) labelX += 20;
-            int labelY = (int) (this.y + (this.height / 2) - (this.font.lineHeight / 2));
-            UIBase.drawElementLabel(graphics, this.font, this.getLabel(), labelX, labelY, this.getLabelColor());
+            int labelY = (int) (this.y + (this.height / 2) - (UIBase.getUITextHeight() / 2));
+            UIBase.renderText(graphics, this.getLabel(), labelX, labelY, this.getLabelColor());
 
             int shortcutTextWidth = 0;
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
-                shortcutTextWidth = this.font.width(shortcutText);
+                shortcutTextWidth = (int) UIBase.getUITextWidth(shortcutText);
                 int shortcutX = (int) (this.x + this.width - 10 - shortcutTextWidth);
-                UIBase.drawElementLabel(graphics, this.font, shortcutText, shortcutX, labelY, this.getLabelColor());
+                UIBase.renderText(graphics, shortcutText, shortcutX, labelY, this.getLabelColor());
             }
 
             this.renderIcon(graphics);
@@ -1795,13 +1795,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public float getMinWidth() {
-            int i = Minecraft.getInstance().font.width(this.getLabel()) + 20;
+            int i = (int) (UIBase.getUITextWidth(this.getLabel()) + 20);
             if (this.tooltipSupplier != null) {
                 i += 30;
             }
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
-                i += Minecraft.getInstance().font.width(shortcutText) + 30;
+                i += UIBase.getUITextWidth(shortcutText) + 30;
             }
             if ((this.icon != null) || this.addSpaceForIcon) {
                 i += 20;

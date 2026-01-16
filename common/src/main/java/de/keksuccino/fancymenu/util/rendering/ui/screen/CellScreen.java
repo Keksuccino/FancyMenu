@@ -731,14 +731,14 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         @Override
         public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             RenderingUtils.resetShaderColor(graphics);
-            UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.text, this.getX(), this.getY());
+            UIBase.renderText(graphics, this.text, this.getX(), this.getY());
             RenderingUtils.resetShaderColor(graphics);
         }
 
         @Override
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
-            this.setWidth(Minecraft.getInstance().font.width(this.text));
-            this.setHeight(Minecraft.getInstance().font.lineHeight);
+            this.setWidth((int)UIBase.getUITextWidth(this.text));
+            this.setHeight((int)UIBase.getUITextHeight());
         }
 
         @NotNull

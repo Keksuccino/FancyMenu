@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGro
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
@@ -29,8 +30,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -213,21 +214,21 @@ public class ManageListenersScreen extends CellScreen {
             int descW = (int) this.descriptionScrollArea.getWidthWithBorder();
             int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
             int descEndY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder());
-            List<FormattedCharSequence> renameTip = this.font.split(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_inactive.getColorInt()).withItalic(true)), descW);
-            List<FormattedCharSequence> quickEditTip = this.font.split(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_inactive.getColorInt()).withItalic(true)), descW);
+            List<MutableComponent> renameTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_inactive.getColorInt()).withItalic(true)), descW);
+            List<MutableComponent> quickEditTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_inactive.getColorInt()).withItalic(true)), descW);
             int lineY = descEndY + 4;
-            for (FormattedCharSequence line : renameTip) {
-                int lineWidth = this.font.width(line);
+            for (MutableComponent line : renameTip) {
+                int lineWidth = (int)UIBase.getUITextWidth(line);
                 int lineX = descEndX - lineWidth;
-                graphics.drawString(this.font, line, lineX, lineY, -1, false);
-                lineY += this.font.lineHeight + 2;
+                UIBase.renderText(graphics, line, lineX, lineY, -1, false);
+                lineY += (int) (UIBase.getUITextHeight() + 2);
             }
             lineY += 2;
-            for (FormattedCharSequence line : quickEditTip) {
-                int lineWidth = this.font.width(line);
+            for (MutableComponent line : quickEditTip) {
+                int lineWidth = (int)UIBase.getUITextWidth(line);
                 int lineX = descEndX - lineWidth;
-                graphics.drawString(this.font, line, lineX, lineY, -1, false);
-                lineY += this.font.lineHeight + 2;
+                UIBase.renderText(graphics, line, lineX, lineY, -1, false);
+                lineY += (int) (UIBase.getUITextHeight() + 2);
             }
         }
 
@@ -478,7 +479,7 @@ public class ManageListenersScreen extends CellScreen {
                 this.editBox.setX(this.getX());
                 this.editBox.setY(this.getY() + TOP_DOWN_CELL_BORDER);
                 this.editBox.setWidth(Math.min(this.getWidth(), 200));
-                this.editBox.setHeight(Minecraft.getInstance().font.lineHeight + 1);
+                this.editBox.setHeight((int)(UIBase.getUITextHeight() + 1));
                 this.editBox.render(graphics, mouseX, mouseY, partial);
                 
                 // Check if user clicked outside or pressed enter
@@ -488,10 +489,10 @@ public class ManageListenersScreen extends CellScreen {
             } else {
                 // Render label
                 RenderingUtils.resetShaderColor(graphics);
-                UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.labelComponent, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER);
+                UIBase.renderText(graphics, this.labelComponent, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER);
                 RenderingUtils.resetShaderColor(graphics);
                 // Show Writing cursor when the label is hovered
-                if (UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER, Minecraft.getInstance().font.width(this.labelComponent), Minecraft.getInstance().font.lineHeight)) {
+                if (UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER, UIBase.getUITextWidth(this.labelComponent), UIBase.getUITextHeight())) {
                     CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
                 }
             }
@@ -502,9 +503,9 @@ public class ManageListenersScreen extends CellScreen {
             if (this.editMode && this.editBox != null) {
                 this.setWidth(Math.min((int)(ManageListenersScreen.this.scrollArea.getInnerWidth() - 40), 200));
             } else {
-                this.setWidth(Minecraft.getInstance().font.width(this.labelComponent));
+                this.setWidth((int)UIBase.getUITextWidth(this.labelComponent));
             }
-            this.setHeight(Minecraft.getInstance().font.lineHeight + (TOP_DOWN_CELL_BORDER * 2));
+            this.setHeight((int)(UIBase.getUITextHeight() + (TOP_DOWN_CELL_BORDER * 2)));
         }
         
         @Override

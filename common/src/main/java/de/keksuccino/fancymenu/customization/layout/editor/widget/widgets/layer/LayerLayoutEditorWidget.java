@@ -697,16 +697,16 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             blitF(graphics, EYE_ICON_TEXTURE, this.getEyeButtonX(), this.getEyeButtonY(), 0.0F, 0.0F, this.getEyeButtonWidth(), this.getEyeButtonHeight(), this.getEyeButtonWidth(), this.getEyeButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(!this.element.element.layerHiddenInEditor ? 1.0f : 0.3f));
 
             if (!this.displayEditLayerNameBox) {
-                UIBase.drawElementLabel(graphics, this.font, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
+                UIBase.renderText(graphics, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
             } else {
                 UIBase.applyDefaultWidgetSkinTo(this.editLayerNameBox);
                 this.editLayerNameBox.setX((int)this.getLayerNameX());
                 this.editLayerNameBox.setY((int)this.getLayerNameY() - 1);
-                this.editLayerNameBox.setWidth((int) Math.min(this.getMaxLayerNameWidth(), this.font.width(this.editLayerNameBox.getValue() + 13)));
+                this.editLayerNameBox.setWidth((int) Math.min(this.getMaxLayerNameWidth(), UIBase.getUITextWidth(this.editLayerNameBox.getValue() + 13)));
                 if (this.editLayerNameBox.getWidth() < this.getMaxLayerNameWidth()) {
                     this.editLayerNameBox.setDisplayPosition(0);
                 }
-                ((IMixinAbstractWidget)this.editLayerNameBox).setHeightFancyMenu(this.font.lineHeight + 2);
+                ((IMixinAbstractWidget)this.editLayerNameBox).setHeightFancyMenu((int)(UIBase.getUITextHeight() + 2));
                 this.editLayerNameBox.render(graphics, mouseX, mouseY, partial);
             }
 
@@ -743,7 +743,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getLayerNameY() {
-            return this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f);
+            return this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeight() / 2f);
         }
 
         public float getMaxLayerNameWidth() {
@@ -787,7 +787,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public boolean isLayerNameMouseOver(double mouseX, double mouseY) {
             if (this.parent.isMouseInteractingWithGrabbers()) return false;
             if (!this.parent.isInnerAreaHovered()) return false;
-            return isXYInArea(mouseX, mouseY, this.getLayerNameX(), this.getLayerNameY(), this.getMaxLayerNameWidth(), this.font.lineHeight);
+            return isXYInArea(mouseX, mouseY, this.getLayerNameX(), this.getLayerNameY(), this.getMaxLayerNameWidth(), UIBase.getUITextHeight());
         }
 
         public float getEyeButtonWidth() {
@@ -965,7 +965,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             ResourceLocation loc = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE;
             blitF(graphics, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
 
-            UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f)));
+            UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeight() / 2f)));
 
         }
 

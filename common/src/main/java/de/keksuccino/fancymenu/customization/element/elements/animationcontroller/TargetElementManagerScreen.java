@@ -197,15 +197,15 @@ public class TargetElementManagerScreen extends CellScreen {
         @Override
         public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             RenderingUtils.resetShaderColor(graphics);
-            int textY = this.getY() + (this.getHeight() - Minecraft.getInstance().font.lineHeight) / 2;
-            UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.label, this.getX(), textY);
+            int textY = (int) (this.getY() + (this.getHeight() - UIBase.getUITextHeight()) / 2);
+            UIBase.renderText(graphics, this.label, this.getX(), textY);
             RenderingUtils.resetShaderColor(graphics);
         }
 
         @Override
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
             super.updateSize(scrollEntry);
-            this.setHeight(Math.max(Minecraft.getInstance().font.lineHeight + 4, 20));
+            this.setHeight((int) Math.max(UIBase.getUITextHeight() + 4, 20));
         }
     }
 

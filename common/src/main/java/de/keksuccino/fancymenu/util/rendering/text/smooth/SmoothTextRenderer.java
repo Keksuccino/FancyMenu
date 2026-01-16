@@ -34,7 +34,7 @@ public final class SmoothTextRenderer {
 
     public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float x, float y, int color, float size, boolean shadow) {
         if (text.isEmpty() || size <= 0.0F) return EMPTY_DIMENSION;
-        TextDimensions dimension = new TextDimensions(getTextWidth(font, text, size), getTextHeight(font, text, size));
+        TextDimensions dimension = measureLegacyText(font, text, size);
         if (shadow) {
             renderTextInternal(graphics, font, text, x + 1.0F, y + 1.0F, darkenColor(color), size);
         }
@@ -43,13 +43,13 @@ public final class SmoothTextRenderer {
     }
 
     public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull Component text, float x, float y, int color, float size, boolean shadow) {
-        if (text.getString().isEmpty() || size <= 0.0F) return EMPTY_DIMENSION;
-        TextDimensions dimension = new TextDimensions(getTextWidth(font, text, size), getTextHeight(font, text, size));
-        if (shadow) {
-            renderFormattedTextInternal(graphics, font, text.getVisualOrderText(), x + 1.0F, y + 1.0F, darkenColor(color), size);
-        }
-        renderFormattedTextInternal(graphics, font, text.getVisualOrderText(), x, y, color, size);
-        return dimension;
+        if (size <= 0.0F || text.getString().isEmpty()) return EMPTY_DIMENSION;
+        return renderFormattedText(graphics, font, text.getVisualOrderText(), x, y, color, size, shadow);
+    }
+
+    public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float x, float y, int color, float size, boolean shadow) {
+        if (size <= 0.0F) return EMPTY_DIMENSION;
+        return renderFormattedText(graphics, font, text, x, y, color, size, shadow);
     }
 
     public static TextDimensions renderTextScreenSpace(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float xPixels, float yPixels, int color, float sizePixels, boolean shadow) {
@@ -69,37 +69,7 @@ public final class SmoothTextRenderer {
     public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull String text, float size) {
         if (text.isEmpty() || size <= 0.0F) return 0.0F;
 
-        // Use the same LOD selection as rendering for accurate metrics.
-        int lod = font.getLodLevel(size);
-        float scale = font.getScaleForLod(lod, size);
-
-        float maxWidth = 0.0F;
-        float lineWidth = 0.0F;
-        StyleState style = new StyleState(0xFFFFFFFF);
-
-        for (int index = 0; index < text.length(); ) {
-            char c = text.charAt(index);
-            if (c == '\n') {
-                maxWidth = Math.max(maxWidth, lineWidth);
-                lineWidth = 0.0F;
-                index++;
-                continue;
-            }
-            if (c == FORMAT_PREFIX && index + 1 < text.length()) {
-                int consumed = applyFormatting(text, index + 1, style, 0xFFFFFFFF);
-                if (consumed > 0) {
-                    index += consumed + 1;
-                    continue;
-                }
-            }
-            int codepoint = text.codePointAt(index);
-            index += Character.charCount(codepoint);
-
-            SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
-            float advance = glyph.advance() * scale;
-            lineWidth += advance;
-        }
-        return Math.max(maxWidth, lineWidth);
+        return measureLegacyText(font, text, size).width();
     }
 
     public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull Component text, float size) {
@@ -108,25 +78,38 @@ public final class SmoothTextRenderer {
         int lod = font.getLodLevel(size);
         float scale = font.getScaleForLod(lod, size);
 
-        ComponentWidthState state = new ComponentWidthState(font, lod, scale);
+        FormattedWidthState state = new FormattedWidthState(font, lod, scale);
         text.getVisualOrderText().accept(state);
+        return state.getMaxWidth();
+    }
+
+    public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float size) {
+        if (size <= 0.0F) return 0.0F;
+        int lod = font.getLodLevel(size);
+        float scale = font.getScaleForLod(lod, size);
+        FormattedWidthState state = new FormattedWidthState(font, lod, scale);
+        text.accept(state);
         return state.getMaxWidth();
     }
 
     public static float getTextHeight(@Nonnull SmoothFont font, @Nonnull String text, float size) {
         if (text.isEmpty() || size <= 0.0F) return 0.0F;
-        int lines = 1;
-        for (int i = 0; i < text.length(); i++) {
-            if (text.charAt(i) == '\n') lines++;
-        }
-        return font.getLineHeight(size) * lines;
+        return measureLegacyText(font, text, size).height();
     }
 
     public static float getTextHeight(@Nonnull SmoothFont font, @Nonnull Component text, float size) {
         if (text.getString().isEmpty() || size <= 0.0F) return 0.0F;
-        ComponentLineCountState state = new ComponentLineCountState();
+        FormattedLineCountState state = new FormattedLineCountState();
         text.getVisualOrderText().accept(state);
-        return font.getLineHeight(size) * state.getLines();
+        return state.getHeight(font.getLineHeight(size));
+    }
+
+    public static float getTextHeight(@Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float size) {
+        if (size <= 0.0F) return 0.0F;
+        float lineHeight = font.getLineHeight(size);
+        FormattedLineCountState state = new FormattedLineCountState();
+        text.accept(state);
+        return state.getHeight(lineHeight);
     }
 
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
@@ -286,6 +269,68 @@ public final class SmoothTextRenderer {
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.disableBlend();
         RenderingUtils.resetShaderColor(graphics);
+    }
+
+    private static TextDimensions renderFormattedText(GuiGraphics graphics, SmoothFont font, FormattedCharSequence text, float x, float y, int color, float size, boolean shadow) {
+        TextDimensions dimension = measureFormattedText(font, text, size);
+        if (dimension.width() <= 0.0F && dimension.height() <= 0.0F) {
+            return dimension;
+        }
+        if (shadow) {
+            renderFormattedTextInternal(graphics, font, text, x + 1.0F, y + 1.0F, darkenColor(color), size);
+        }
+        renderFormattedTextInternal(graphics, font, text, x, y, color, size);
+        return dimension;
+    }
+
+    private static TextDimensions measureFormattedText(SmoothFont font, FormattedCharSequence text, float size) {
+        int lod = font.getLodLevel(size);
+        float scale = font.getScaleForLod(lod, size);
+        float lineHeight = font.getLineHeight(size);
+        FormattedMeasureState state = new FormattedMeasureState(font, lod, scale, lineHeight);
+        text.accept(state);
+        return state.getDimension();
+    }
+
+    private static TextDimensions measureLegacyText(SmoothFont font, String text, float size) {
+        if (text.isEmpty() || size <= 0.0F) {
+            return EMPTY_DIMENSION;
+        }
+
+        int lod = font.getLodLevel(size);
+        float scale = font.getScaleForLod(lod, size);
+        float lineHeight = font.getLineHeight(size);
+
+        float maxWidth = 0.0F;
+        float lineWidth = 0.0F;
+        int lines = 1;
+        StyleState style = new StyleState(0xFFFFFFFF);
+
+        for (int index = 0; index < text.length(); ) {
+            char c = text.charAt(index);
+            if (c == '\n') {
+                maxWidth = Math.max(maxWidth, lineWidth);
+                lineWidth = 0.0F;
+                lines++;
+                index++;
+                continue;
+            }
+            if (c == FORMAT_PREFIX && index + 1 < text.length()) {
+                int consumed = applyFormatting(text, index + 1, style, 0xFFFFFFFF);
+                if (consumed > 0) {
+                    index += consumed + 1;
+                    continue;
+                }
+            }
+            int codepoint = text.codePointAt(index);
+            index += Character.charCount(codepoint);
+
+            SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+            lineWidth += glyph.advance() * scale;
+        }
+
+        maxWidth = Math.max(maxWidth, lineWidth);
+        return new TextDimensions(maxWidth, lineHeight * lines);
     }
 
     private static int flushIfNeeded(BufferBuilder buffer, int quadCount, SmoothFontAtlas atlas, float sdfRange, boolean useTrueSdf) {
@@ -621,16 +666,63 @@ public final class SmoothTextRenderer {
         }
     }
 
-    private static final class ComponentWidthState implements FormattedCharSink {
+    private static final class FormattedMeasureState implements FormattedCharSink {
+        private final SmoothFont font;
+        private final int lod;
+        private final float scale;
+        private final float lineHeight;
+        private float maxWidth;
+        private float lineWidth;
+        private int lines = 1;
+        private boolean sawAny;
+        private final StyleState style;
+        private final StyleState nextStyle;
+
+        private FormattedMeasureState(SmoothFont font, int lod, float scale, float lineHeight) {
+            this.font = font;
+            this.lod = lod;
+            this.scale = scale;
+            this.lineHeight = lineHeight;
+            this.style = new StyleState(0xFFFFFFFF);
+            this.nextStyle = new StyleState(0xFFFFFFFF);
+        }
+
+        @Override
+        public boolean accept(int index, Style styleIn, int codepoint) {
+            sawAny = true;
+            nextStyle.applyFromStyle(styleIn);
+            style.copyFrom(nextStyle);
+            if (codepoint == '\n') {
+                maxWidth = Math.max(maxWidth, lineWidth);
+                lineWidth = 0.0F;
+                lines++;
+                return true;
+            }
+            SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+            lineWidth += glyph.advance() * scale;
+            return true;
+        }
+
+        private TextDimensions getDimension() {
+            if (!sawAny) {
+                return EMPTY_DIMENSION;
+            }
+            float width = Math.max(maxWidth, lineWidth);
+            return new TextDimensions(width, lineHeight * lines);
+        }
+    }
+
+    private static final class FormattedWidthState implements FormattedCharSink {
         private final SmoothFont font;
         private final int lod;
         private final float scale;
         private float maxWidth;
         private float lineWidth;
+        private boolean sawAny;
         private final StyleState style;
         private final StyleState nextStyle;
 
-        private ComponentWidthState(SmoothFont font, int lod, float scale) {
+        private FormattedWidthState(SmoothFont font, int lod, float scale) {
             this.font = font;
             this.lod = lod;
             this.scale = scale;
@@ -640,6 +732,7 @@ public final class SmoothTextRenderer {
 
         @Override
         public boolean accept(int index, Style styleIn, int codepoint) {
+            sawAny = true;
             nextStyle.applyFromStyle(styleIn);
             style.copyFrom(nextStyle);
             if (codepoint == '\n') {
@@ -653,23 +746,31 @@ public final class SmoothTextRenderer {
         }
 
         private float getMaxWidth() {
+            if (!sawAny) {
+                return 0.0F;
+            }
             return Math.max(maxWidth, lineWidth);
         }
     }
 
-    private static final class ComponentLineCountState implements FormattedCharSink {
+    private static final class FormattedLineCountState implements FormattedCharSink {
         private int lines = 1;
+        private boolean sawAny;
 
         @Override
         public boolean accept(int index, Style style, int codepoint) {
+            sawAny = true;
             if (codepoint == '\n') {
                 lines++;
             }
             return true;
         }
 
-        private int getLines() {
-            return lines;
+        private float getHeight(float lineHeight) {
+            if (!sawAny) {
+                return 0.0F;
+            }
+            return lineHeight * lines;
         }
     }
 

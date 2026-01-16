@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.util.rendering.ui;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -12,6 +14,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFont;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFonts;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.TextDimensions;
@@ -22,7 +25,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestio
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -40,6 +42,27 @@ public class UIBase extends RenderingUtils {
     public static final int VERTICAL_SCROLL_BAR_HEIGHT = 40;
     public static final int HORIZONTAL_SCROLL_BAR_WIDTH = 40;
     public static final int HORIZONTAL_SCROLL_BAR_HEIGHT = 5;
+
+    @NotNull
+    public static SmoothFont getUIFont() {
+        return Objects.requireNonNull(SmoothFonts.NOTO_SANS.get());
+    }
+
+    public static float getUITextSize() {
+        return SmoothFonts.DEFAULT_TEXT_SIZE;
+    }
+
+    public static float getUITextHeight() {
+        return getUIFont().getLineHeight(getUITextSize());
+    }
+
+    public static float getUITextWidth(@NotNull Component text) {
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSize());
+    }
+
+    public static float getUITextWidth(@NotNull String text) {
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSize());
+    }
 
     /**
      * Retrieves the currently active UI color theme for FancyMenu.
@@ -490,33 +513,36 @@ public class UIBase extends RenderingUtils {
     /**
      * Draws a default-colored label component at integer coordinates.
      */
-    public static TextDimensions drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y) {
-        return drawElementLabel(graphics, font, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
+    public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y) {
+        return renderText(graphics, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
     }
 
     /**
      * Draws a default-colored label string at integer coordinates.
      */
-    public static TextDimensions drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y) {
-        return drawElementLabel(graphics, font, Component.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
+    public static TextDimensions renderText(GuiGraphics graphics, String text, float x, float y) {
+        return renderText(graphics, Component.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
     }
 
     /**
      * Draws a label string with the given base color.
-     *
-     * @return width of the rendered string
      */
-    public static TextDimensions drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y, int baseColor) {
-        return drawElementLabel(graphics, font, Component.literal(text), x, y, baseColor);
+    public static TextDimensions renderText(GuiGraphics graphics, String text, float x, float y, int baseColor) {
+        return renderText(graphics, Component.literal(text), x, y, baseColor);
     }
 
     /**
      * Draws a label component with the given base color.
-     *
-     * @return width of the rendered string
      */
-    public static TextDimensions drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y, int baseColor) {
-        return SmoothTextRenderer.renderText(graphics, SmoothFonts.NOTO_SANS.get(), text, x, y, baseColor, SmoothFonts.DEFAULT_TEXT_SIZE, false);
+    public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor) {
+        return renderText(graphics, text, x, y, baseColor, FancyMenu.getOptions().enableUiTextShadow.getValue());
+    }
+
+    /**
+     * Draws a label component with the given base color and shadow state.
+     */
+    public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, boolean shadow) {
+        return SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, getUITextSize(), shadow);
     }
 
 }
