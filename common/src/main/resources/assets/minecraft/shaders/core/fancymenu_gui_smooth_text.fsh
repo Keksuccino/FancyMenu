@@ -32,11 +32,16 @@ void main() {
     // Higher sharpness means a smaller transition window (harder edge).
     // Avoid division by zero.
     softness /= max(0.001, SdfSharpness);
+    
+    // Clamp softness to ensure the transition window fits within the [0, 1] distance range.
+    // This prevents the "translucent text" issue at small scales by ensuring the curve
+    // reaches 0.0 at dist=0 and 1.0 at dist=1 (if edge allows).
+    // effectively: softness <= 2 * min(distance_to_0, distance_to_1)
+    float maxSoftness = 2.0 * min(SdfEdge, 1.0 - SdfEdge);
+    softness = min(softness, maxSoftness);
 
     // Center the smoothstep at SdfEdge with the calculated softness.
-    // We clamp the lower bound to 0.0 to ensure that fully transparent pixels (dist=0)
-    // remain transparent, even if the softness is very large (extreme minification).
-    float lowerBound = max(0.0, SdfEdge - softness * 0.5);
+    float lowerBound = SdfEdge - softness * 0.5;
     float upperBound = SdfEdge + softness * 0.5;
     
     float alpha = smoothstep(lowerBound, upperBound, dist);

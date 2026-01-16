@@ -9,7 +9,7 @@ public class SmoothFonts {
 
     private static final float SMOOTH_FONT_BASE_SIZE = 32.0F;
 
-    public static final float DEFAULT_TEXT_SIZE = 10F;
+    public static final float DEFAULT_TEXT_SIZE = 11F;
 
     public static final Supplier<SmoothFont> NOTO_SANS = () -> {
         ResourceLocation folder = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans");
