@@ -3,10 +3,8 @@ package de.keksuccino.fancymenu.util.rendering.text.smooth;
 final class SmoothFontGlyph {
 
     private final SmoothFontAtlas atlas;
-    private final float u0;
-    private final float v0;
-    private final float u1;
-    private final float v1;
+    private final int x;
+    private final int y;
     private final int width;
     private final int height;
     private final float xOffset;
@@ -15,12 +13,10 @@ final class SmoothFontGlyph {
     private final boolean hasTexture;
     private final boolean usesTrueSdf;
 
-    SmoothFontGlyph(SmoothFontAtlas atlas, float u0, float v0, float u1, float v1, int width, int height, float xOffset, float yOffset, float advance, boolean hasTexture, boolean usesTrueSdf) {
+    SmoothFontGlyph(SmoothFontAtlas atlas, int x, int y, int width, int height, float xOffset, float yOffset, float advance, boolean hasTexture, boolean usesTrueSdf) {
         this.atlas = atlas;
-        this.u0 = u0;
-        this.v0 = v0;
-        this.u1 = u1;
-        this.v1 = v1;
+        this.x = x;
+        this.y = y;
         this.width = width;
         this.height = height;
         this.xOffset = xOffset;
@@ -34,20 +30,21 @@ final class SmoothFontGlyph {
         return atlas;
     }
 
+    // Dynamic UV calculation fixes the "broken text" glitch when the atlas resizes.
     float u0() {
-        return u0;
+        return (float) x / (float) atlas.getWidth();
     }
 
     float v0() {
-        return v0;
+        return (float) y / (float) atlas.getHeight();
     }
 
     float u1() {
-        return u1;
+        return (float) (x + width) / (float) atlas.getWidth();
     }
 
     float v1() {
-        return v1;
+        return (float) (y + height) / (float) atlas.getHeight();
     }
 
     int width() {

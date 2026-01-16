@@ -27,8 +27,9 @@ import java.util.Objects;
 
 final class SmoothFontAtlas implements AutoCloseable {
 
+    private static final int DEFAULT_ATLAS_SIZE = 1024;
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int GLYPH_PADDING = 5;
+    private static final int GLYPH_PADDING = 4;
 
     private final String debugName;
     private final Font awtFont;
@@ -52,7 +53,6 @@ final class SmoothFontAtlas implements AutoCloseable {
         this.fontRenderContext = Objects.requireNonNull(fontRenderContext);
         this.sdfRange = Math.max(1.0F, sdfRange);
 
-        // Use custom initial size
         this.atlasWidth = initialSize;
         this.atlasHeight = initialSize;
 
@@ -62,6 +62,14 @@ final class SmoothFontAtlas implements AutoCloseable {
         this.textureLocation = textureManager.register("fancymenu_smooth_font_" + debugName, dynamicTexture);
         this.textureId = dynamicTexture.getId();
         applyLinearFilter();
+    }
+
+    int getWidth() {
+        return atlasWidth;
+    }
+
+    int getHeight() {
+        return atlasHeight;
     }
 
     float getEffectiveSdfRange() {
@@ -98,7 +106,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         Rectangle2D bounds = outline.getBounds2D();
 
         if (bounds == null || bounds.isEmpty() || bounds.getWidth() <= 0.0 || bounds.getHeight() <= 0.0) {
-            return new SmoothFontGlyph(this, 0.0F, 0.0F, 0.0F, 0.0F, 0, 0, 0.0F, 0.0F, advance, false, true);
+            return new SmoothFontGlyph(this, 0, 0, 0, 0, 0.0F, 0.0F, advance, false, true);
         }
 
         int padding = GLYPH_PADDING;
@@ -106,7 +114,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         int glyphHeight = (int)Math.ceil(bounds.getHeight() + (padding * 2.0));
 
         if (glyphWidth <= 0 || glyphHeight <= 0) {
-            return new SmoothFontGlyph(this, 0.0F, 0.0F, 0.0F, 0.0F, 0, 0, 0.0F, 0.0F, advance, false, true);
+            return new SmoothFontGlyph(this, 0, 0, 0, 0, 0.0F, 0.0F, advance, false, true);
         }
 
         BufferedImage image = renderGlyphImage(glyphVector, bounds, glyphWidth, glyphHeight, padding);
@@ -116,17 +124,15 @@ final class SmoothFontAtlas implements AutoCloseable {
         Rect slot = allocate(glyphWidth, glyphHeight);
         blitToAtlas(slot.x, slot.y, glyphWidth, glyphHeight, atlasPixels);
 
-        float u0 = (float)slot.x / (float)atlasWidth;
-        float v0 = (float)slot.y / (float)atlasHeight;
-        float u1 = (float)(slot.x + glyphWidth) / (float)atlasWidth;
-        float v1 = (float)(slot.y + glyphHeight) / (float)atlasHeight;
+        // We store absolute pixel coordinates (slot.x, slot.y) in the glyph.
+        // The UVs are calculated on demand in SmoothFontGlyph.u0()/v0() using the *current* atlas size.
 
         float offsetX = (float)bounds.getX() - padding;
         float offsetY = (float)bounds.getY() - padding;
 
         upload();
 
-        return new SmoothFontGlyph(this, u0, v0, u1, v1, glyphWidth, glyphHeight, offsetX, offsetY, advance, true, usesTrueSdf);
+        return new SmoothFontGlyph(this, slot.x, slot.y, glyphWidth, glyphHeight, offsetX, offsetY, advance, true, usesTrueSdf);
     }
 
     private Rect allocate(int width, int height) {
