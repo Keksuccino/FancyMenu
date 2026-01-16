@@ -1,12 +1,15 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 public class SmoothFonts {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final float SMOOTH_FONT_BASE_SIZE = 32.0F;
 
     public static final float DEFAULT_TEXT_SIZE = 11F;
@@ -29,7 +32,11 @@ public class SmoothFonts {
     };
 
     public static void preloadFonts() {
+
+        LOGGER.info("[FANCYMENU] Loading UI fonts..");
+
         NOTO_SANS.get();
+
     }
 
 }
