@@ -41,8 +41,10 @@ final class SmoothFontAtlas implements AutoCloseable {
     private DynamicTexture dynamicTexture;
     private ResourceLocation textureLocation;
     private int textureId;
-    private int atlasWidth;
-    private int atlasHeight;
+    private int logicalWidth;
+    private int logicalHeight;
+    private volatile int gpuWidth;
+    private volatile int gpuHeight;
     private int cursorX;
     private int cursorY;
     private int rowHeight;
@@ -53,10 +55,12 @@ final class SmoothFontAtlas implements AutoCloseable {
         this.fontRenderContext = Objects.requireNonNull(fontRenderContext);
         this.sdfRange = Math.max(1.0F, sdfRange);
 
-        this.atlasWidth = initialSize;
-        this.atlasHeight = initialSize;
+        this.logicalWidth = initialSize;
+        this.logicalHeight = initialSize;
+        this.gpuWidth = initialSize;
+        this.gpuHeight = initialSize;
 
-        this.atlasImage = new NativeImage(NativeImage.Format.RGBA, atlasWidth, atlasHeight, true);
+        this.atlasImage = new NativeImage(NativeImage.Format.RGBA, logicalWidth, logicalHeight, true);
         this.dynamicTexture = new DynamicTexture(atlasImage);
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
         this.textureLocation = textureManager.register("fancymenu_smooth_font_" + debugName, dynamicTexture);
@@ -65,11 +69,11 @@ final class SmoothFontAtlas implements AutoCloseable {
     }
 
     int getWidth() {
-        return atlasWidth;
+        return gpuWidth;
     }
 
     int getHeight() {
-        return atlasHeight;
+        return gpuHeight;
     }
 
     float getEffectiveSdfRange() {
@@ -140,20 +144,20 @@ final class SmoothFontAtlas implements AutoCloseable {
         int allocWidth = width + spacing;
         int allocHeight = height + spacing;
 
-        if (allocWidth > atlasWidth || allocHeight > atlasHeight) {
-            int targetWidth = Math.max(atlasWidth, allocWidth);
-            int targetHeight = Math.max(atlasHeight, allocHeight);
+        if (allocWidth > logicalWidth || allocHeight > logicalHeight) {
+            int targetWidth = Math.max(logicalWidth, allocWidth);
+            int targetHeight = Math.max(logicalHeight, allocHeight);
             resizeAtlas(targetWidth, targetHeight);
         }
 
-        if (cursorX + allocWidth > atlasWidth) {
+        if (cursorX + allocWidth > logicalWidth) {
             cursorX = 0;
             cursorY += rowHeight;
             rowHeight = 0;
         }
 
-        if (cursorY + allocHeight > atlasHeight) {
-            resizeAtlas(atlasWidth * 2, atlasHeight * 2);
+        if (cursorY + allocHeight > logicalHeight) {
+            resizeAtlas(logicalWidth * 2, logicalHeight * 2);
         }
 
         Rect rect = new Rect(cursorX, cursorY);
@@ -163,12 +167,12 @@ final class SmoothFontAtlas implements AutoCloseable {
     }
 
     private void resizeAtlas(int newWidth, int newHeight) {
-        int targetWidth = Math.max(newWidth, atlasWidth);
-        int targetHeight = Math.max(newHeight, atlasHeight);
+        int targetWidth = Math.max(newWidth, logicalWidth);
+        int targetHeight = Math.max(newHeight, logicalHeight);
         targetWidth = Math.min(targetWidth, 4096);
         targetHeight = Math.min(targetHeight, 4096);
 
-        if (targetWidth == atlasWidth && targetHeight == atlasHeight) {
+        if (targetWidth == logicalWidth && targetHeight == logicalHeight) {
             return;
         }
 
@@ -176,13 +180,18 @@ final class SmoothFontAtlas implements AutoCloseable {
         newImage.copyFrom(atlasImage);
         atlasImage.close();
         atlasImage = newImage;
-        atlasWidth = targetWidth;
-        atlasHeight = targetHeight;
+        logicalWidth = targetWidth;
+        logicalHeight = targetHeight;
         dynamicTexture.setPixels(atlasImage);
 
+        final int finalTargetWidth = targetWidth;
+        final int finalTargetHeight = targetHeight;
+
         Runnable uploadTask = () -> {
-            TextureUtil.prepareImage(dynamicTexture.getId(), atlasWidth, atlasHeight);
+            TextureUtil.prepareImage(dynamicTexture.getId(), finalTargetWidth, finalTargetHeight);
             dynamicTexture.upload();
+            this.gpuWidth = finalTargetWidth;
+            this.gpuHeight = finalTargetHeight;
             applyLinearFilter();
         };
 

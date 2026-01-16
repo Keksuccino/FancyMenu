@@ -16,10 +16,12 @@ import java.util.Objects;
 public final class SmoothFont implements AutoCloseable {
 
     // Thresholds for switching LODs (in pixel size)
-    // <= 18px: Use Small LOD (2x gen)
+    // <= 12px: Use Tiny LOD (1x gen)
+    // <= 24px: Use Small LOD (2x gen)
     // <= 48px: Use Medium LOD (4x gen)
     // > 48px:  Use Large LOD (8x gen)
-    private static final float LOD_SMALL_LIMIT = 18.0F;
+    private static final float LOD_TINY_LIMIT = 12.0F;
+    private static final float LOD_SMALL_LIMIT = 24.0F;
     private static final float LOD_MEDIUM_LIMIT = 48.0F;
 
     private final String debugName;
@@ -70,7 +72,7 @@ public final class SmoothFont implements AutoCloseable {
         this.strikethroughOffset = metrics.getStrikethroughOffset();
         this.strikethroughThickness = metrics.getStrikethroughThickness();
 
-        this.lodGenerationSizes = new float[] {this.baseSize * 1.0F, this.baseSize * 4.0F, this.baseSize * 8.0F};
+        this.lodGenerationSizes = new float[] {this.baseSize * 1.0F, this.baseSize * 2.0F, this.baseSize * 4.0F, this.baseSize * 8.0F};
         this.sources = new FontSource[baseFonts.size()];
         for (int i = 0; i < baseFonts.size(); i++) {
             Font font = Objects.requireNonNull(baseFonts.get(i));
@@ -88,9 +90,10 @@ public final class SmoothFont implements AutoCloseable {
     }
 
     public int getLodLevel(float size) {
-        if (size <= LOD_SMALL_LIMIT) return 0;
-        if (size <= LOD_MEDIUM_LIMIT) return 1;
-        return 2;
+        if (size <= LOD_TINY_LIMIT) return 0;
+        if (size <= LOD_SMALL_LIMIT) return 1;
+        if (size <= LOD_MEDIUM_LIMIT) return 2;
+        return 3;
     }
 
     public float getBaseSize() {
@@ -217,16 +220,19 @@ public final class SmoothFont implements AutoCloseable {
 
         FontSource(SmoothFont parent, Font rawFont, float baseSize, String debugName) {
             this.rawFont = rawFont;
-            this.lodLevels = new LodLevel[3];
+            this.lodLevels = new LodLevel[4];
 
-            // LOD 0: Small (1x scale, starts with 512px atlas)
-            this.lodLevels[0] = new LodLevel(parent, rawFont, baseSize * 1.0F, 512, debugName, "_small");
+            // LOD 0: Tiny (1x scale, starts with 512px atlas)
+            this.lodLevels[0] = new LodLevel(parent, rawFont, baseSize * 1.0F, 512, debugName, "_tiny");
 
-            // LOD 1: Medium (4x scale, starts with 1024px atlas)
-            this.lodLevels[1] = new LodLevel(parent, rawFont, baseSize * 4.0F, 1024, debugName, "_medium");
+            // LOD 1: Small (2x scale, starts with 512px atlas)
+            this.lodLevels[1] = new LodLevel(parent, rawFont, baseSize * 2.0F, 1024, debugName, "_small");
 
-            // LOD 2: Large (8x scale, starts with 2048px atlas)
-            this.lodLevels[2] = new LodLevel(parent, rawFont, baseSize * 8.0F, 2048, debugName, "_large");
+            // LOD 2: Medium (4x scale, starts with 1024px atlas)
+            this.lodLevels[2] = new LodLevel(parent, rawFont, baseSize * 4.0F, 1024, debugName, "_medium");
+
+            // LOD 3: Large (8x scale, starts with 2048px atlas)
+            this.lodLevels[3] = new LodLevel(parent, rawFont, baseSize * 8.0F, 2048, debugName, "_large");
         }
 
         boolean canDisplay(int codepoint) {
