@@ -27,8 +27,8 @@ public final class SmoothFontManager {
     private static final Map<String, SmoothFont> FONT_CACHE = new HashMap<>();
     private static boolean reloadListenerRegistered;
 
-    // Increased to 4.0 for maximum crispness
-    private static final float GENERATION_SCALE = 4.0F;
+    // Increased to 6.0F for ultra-high quality rasterization.
+    private static final float GENERATION_SCALE = 6.0F;
 
     private SmoothFontManager() {
     }
@@ -94,8 +94,7 @@ public final class SmoothFontManager {
             Font baseFont = Font.createFont(Font.TRUETYPE_FONT, new ByteArrayInputStream(fontBytes));
             float generationSize = baseSize * GENERATION_SCALE;
 
-            // Set SDF range to 1.0 (pixel) since we are doing direct rasterization.
-            // This tells the shader that the "gradient" from 0 to 1 happens over 1 texture pixel.
+            // Keep SDF range at 1.0F for raster data (implies ~1px AA blur)
             float sdfRange = 1.0F;
 
             return new SmoothFont(sanitizeKey(key), baseFont, baseSize, generationSize, sdfRange);
