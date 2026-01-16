@@ -149,6 +149,7 @@ public final class SmoothTextRenderer {
         applyShaderState();
         SmoothTextShader.applySdfRange(baseRange);
         SmoothTextShader.applyEdge(edge);
+        SmoothTextShader.applySharpness(SmoothTextShader.getResolvedSharpness());
         SmoothTextShader.applyUseTrueSdf(currentUsesTrueSdf);
 
         float underlineStartX = 0.0F;
@@ -232,6 +233,7 @@ public final class SmoothTextRenderer {
                     RenderSystem.setShaderTexture(0, atlas.getTextureId());
                     SmoothTextShader.applySdfRange(atlas.getEffectiveSdfRange());
                     SmoothTextShader.applyEdge(edge);
+                    SmoothTextShader.applySharpness(SmoothTextShader.getResolvedSharpness());
                     SmoothTextShader.applyUseTrueSdf(glyphUsesTrueSdf);
                     currentUsesTrueSdf = glyphUsesTrueSdf;
                 } else if (glyphUsesTrueSdf != currentUsesTrueSdf) {
@@ -284,6 +286,7 @@ public final class SmoothTextRenderer {
         applyShaderState();
         SmoothTextShader.applySdfRange(baseRange);
         SmoothTextShader.applyEdge(edge);
+        SmoothTextShader.applySharpness(SmoothTextShader.getResolvedSharpness());
         SmoothTextShader.applyUseTrueSdf(true);
 
         ComponentRenderState state = new ComponentRenderState(graphics, font, baseColor, size, lod, scale, baseRange, edge, ascent, lineHeight, x, y);
@@ -364,6 +367,7 @@ public final class SmoothTextRenderer {
             applyShaderState();
             SmoothTextShader.applySdfRange(sdfRange);
             SmoothTextShader.applyEdge(sdfEdge);
+            SmoothTextShader.applySharpness(SmoothTextShader.getResolvedSharpness());
             SmoothTextShader.applyUseTrueSdf(useTrueSdf);
             if (atlas != null) {
                 RenderSystem.setShaderTexture(0, atlas.getTextureId());
@@ -620,6 +624,7 @@ public final class SmoothTextRenderer {
                     RenderSystem.setShaderTexture(0, atlas.getTextureId());
                     SmoothTextShader.applySdfRange(atlas.getEffectiveSdfRange());
                     SmoothTextShader.applyEdge(edge);
+                    SmoothTextShader.applySharpness(SmoothTextShader.getResolvedSharpness());
                     SmoothTextShader.applyUseTrueSdf(glyphUsesTrueSdf);
                     currentUsesTrueSdf = glyphUsesTrueSdf;
                 } else if (glyphUsesTrueSdf != currentUsesTrueSdf) {

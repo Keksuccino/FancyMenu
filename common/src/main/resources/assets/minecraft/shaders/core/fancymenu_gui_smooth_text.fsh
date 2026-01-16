@@ -2,7 +2,9 @@
 
 uniform sampler2D Sampler0;
 uniform vec4 ColorModulator;
-uniform float SdfPixelRange; // e.g. 1.0
+uniform float SdfPixelRange;
+uniform float SdfEdge;
+uniform float SdfSharpness;
 uniform int UseTrueSdf;
 
 in vec4 vertexColor;
@@ -18,36 +20,26 @@ void main() {
     vec4 texColor = texture(Sampler0, texCoord0);
     float dist = UseTrueSdf != 0 ? texColor.a : median(texColor.r, texColor.g, texColor.b);
 
-    // Ratio of texture pixels to screen pixels.
+    // Calculate how many texture pixels fit into one screen pixel.
     vec2 texSize = vec2(textureSize(Sampler0, 0));
-    float texelsPerPixel = length(fwidth(texCoord0) * texSize);
+    float pxPerScreenPx = length(fwidth(texCoord0) * texSize);
 
-    float alpha;
+    // SdfPixelRange is the distance range in texture pixels covered by the 0..1 distance values.
+    // Calculate the softness based on the screen derivative.
+    float softness = pxPerScreenPx / SdfPixelRange;
+    
+    // Apply sharpness modifier. 
+    // Higher sharpness means a smaller transition window (harder edge).
+    // Avoid division by zero.
+    softness /= max(0.001, SdfSharpness);
 
-    if (texelsPerPixel < 1.0) {
-        // Magnification path for large text.
-
-        float distChangePerPixel = texelsPerPixel / (2.0 * SdfPixelRange);
-
-        // Edge softness controls the transition width.
-        float softness = 0.7;
-        float w = distChangePerPixel * softness;
-
-        // Shift the center threshold to adjust thickness.
-        float center = 0.45;
-
-        // Keep the lower bound above zero so fully transparent texels stay transparent.
-        float lowerBound = max(center - w, 0.001);
-        float upperBound = center + w;
-
-        alpha = smoothstep(lowerBound, upperBound, dist);
-
-    } else {
-        // Minification path for normal/small text.
-
-        // Gamma adjust to keep small text legible.
-        alpha = pow(dist, 1.0 / 1.5);
-    }
+    // Center the smoothstep at SdfEdge with the calculated softness.
+    // We clamp the lower bound to 0.0 to ensure that fully transparent pixels (dist=0)
+    // remain transparent, even if the softness is very large (extreme minification).
+    float lowerBound = max(0.0, SdfEdge - softness * 0.5);
+    float upperBound = SdfEdge + softness * 0.5;
+    
+    float alpha = smoothstep(lowerBound, upperBound, dist);
 
     if (alpha <= 0.01) {
         discard;
