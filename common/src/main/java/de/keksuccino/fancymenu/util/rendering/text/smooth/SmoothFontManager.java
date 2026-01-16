@@ -27,8 +27,9 @@ public final class SmoothFontManager {
     private static final Map<String, SmoothFont> FONT_CACHE = new HashMap<>();
     private static boolean reloadListenerRegistered;
 
-    // Increased to 6.0F for ultra-high quality rasterization.
-    private static final float GENERATION_SCALE = 6.0F;
+    // Scale 2.0 aligns perfectly with GPU 2x2 linear filtering for optimal downsampling quality.
+    // Higher values like 6.0 cause aliasing because the GPU skips pixels during sampling.
+    private static final float GENERATION_SCALE = 2.0F;
 
     private SmoothFontManager() {
     }
@@ -93,8 +94,6 @@ public final class SmoothFontManager {
         try {
             Font baseFont = Font.createFont(Font.TRUETYPE_FONT, new ByteArrayInputStream(fontBytes));
             float generationSize = baseSize * GENERATION_SCALE;
-
-            // Keep SDF range at 1.0F for raster data (implies ~1px AA blur)
             float sdfRange = 1.0F;
 
             return new SmoothFont(sanitizeKey(key), baseFont, baseSize, generationSize, sdfRange);
@@ -119,5 +118,4 @@ public final class SmoothFontManager {
             }
         });
     }
-
 }

@@ -27,10 +27,9 @@ import java.util.Objects;
 
 final class SmoothFontAtlas implements AutoCloseable {
 
-    // Increased to 2048 to accommodate larger 6.0x glyphs efficiently
-    private static final int DEFAULT_ATLAS_SIZE = 2048;
+    private static final int DEFAULT_ATLAS_SIZE = 1024;
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int GLYPH_PADDING = 6;
+    private static final int GLYPH_PADDING = 4;
 
     private final String debugName;
     private final Font awtFont;
