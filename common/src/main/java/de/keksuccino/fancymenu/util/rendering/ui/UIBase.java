@@ -12,6 +12,9 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFonts;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.TextDimensions;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -487,24 +490,15 @@ public class UIBase extends RenderingUtils {
     /**
      * Draws a default-colored label component at integer coordinates.
      */
-    public static int drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y) {
+    public static TextDimensions drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y) {
         return drawElementLabel(graphics, font, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
     }
 
     /**
      * Draws a default-colored label string at integer coordinates.
      */
-    public static int drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y) {
+    public static TextDimensions drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y) {
         return drawElementLabel(graphics, font, Component.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
-    }
-
-    /**
-     * Draws a label component with the given base color.
-     *
-     * @return width of the rendered string
-     */
-    public static int drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y, int baseColor) {
-        return graphics.drawString(font, text, x, y, baseColor, FancyMenu.getOptions().enableUiTextShadow.getValue());
     }
 
     /**
@@ -512,8 +506,17 @@ public class UIBase extends RenderingUtils {
      *
      * @return width of the rendered string
      */
-    public static int drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y, int baseColor) {
+    public static TextDimensions drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y, int baseColor) {
         return drawElementLabel(graphics, font, Component.literal(text), x, y, baseColor);
+    }
+
+    /**
+     * Draws a label component with the given base color.
+     *
+     * @return width of the rendered string
+     */
+    public static TextDimensions drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y, int baseColor) {
+        return SmoothTextRenderer.renderText(graphics, SmoothFonts.NOTO_SANS.get(), text, x, y, baseColor, SmoothFonts.DEFAULT_TEXT_SIZE, false);
     }
 
 }

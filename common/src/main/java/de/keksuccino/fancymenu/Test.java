@@ -1,35 +1,27 @@
 package de.keksuccino.fancymenu;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.SmoothCircleRenderer;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFont;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFontManager;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.gui.screens.options.OptionsScreen;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
-
 import java.awt.*;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 public class Test {
 
@@ -43,9 +35,22 @@ public class Test {
     private static final float SAMPLE_SIZE_LARGE = 20.0F;
     private static final float TEXT_SAMPLE_X = 380.0F;
     private static final float TEXT_SAMPLE_Y = 40.0F;
-    private static final String SAMPLE_TEXT = buildSampleText();
     private static final float SHARPNESS_MIN = 0.25F;
     private static final float SHARPNESS_MAX = 3.0F;
+
+    private static final ResourceLocation FOLDER = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans");
+    private static final ResourceLocation BASE = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans.ttf");
+    private static final ResourceLocation JP   = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_jp.ttf");
+    private static final ResourceLocation KR   = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_kr.ttf");
+    private static final ResourceLocation SC   = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_sc.ttf");
+    private static final ResourceLocation TC   = ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_tc.ttf");
+    private static final Map<String, List<ResourceLocation>> OVERRIDES = Map.of(
+            "ja_jp", List.of(BASE, JP, SC, TC, KR),
+            "ko_kr", List.of(BASE, KR, SC, JP, TC),
+            "zh_cn", List.of(BASE, SC, TC, JP, KR),
+            "zh_tw", List.of(BASE, TC, SC, JP, KR),
+            "zh_hk", List.of(BASE, TC, SC, JP, KR)
+    );
 
     private boolean blurFirst = false;
     private boolean blurSecond = false;
@@ -57,7 +62,7 @@ public class Test {
     private boolean textScab = false;
     private boolean textSchizm = false;
     private boolean textSeattleAvenue = false;
-    private boolean textSeverina = false;
+    private boolean textNotoSans = false;
     private boolean textSextonSans = false;
 
     @EventListener(priority = EventPriority.VERY_LOW)
@@ -99,7 +104,7 @@ public class Test {
         currentY = renderFontSamplesIfEnabled(e, currentY, textScab, "scab.ttf", "Scab");
         currentY = renderFontSamplesIfEnabled(e, currentY, textSchizm, "schizm.ttf", "Schizm");
         currentY = renderFontSamplesIfEnabled(e, currentY, textSeattleAvenue, "seattle_avenue.ttf", "Seattle Avenue");
-        currentY = renderFontSamplesIfEnabled(e, currentY, textSeverina, "severina.ttf", "Severina");
+        currentY = renderFontNotoSansIfEnabled(e, currentY, textNotoSans);
         renderFontSamplesIfEnabled(e, currentY, textSextonSans, "sexton_sans.ttf", "Sexton Sans");
 
     }
@@ -137,13 +142,41 @@ public class Test {
         e.addRenderableWidget(new ExtendedButton(20, 200, 100, 20, "Toggle Seattle", button -> {
             textSeattleAvenue = !textSeattleAvenue;
         }));
-        e.addRenderableWidget(new ExtendedButton(20, 220, 100, 20, "Toggle Severina", button -> {
-            textSeverina = !textSeverina;
+        e.addRenderableWidget(new ExtendedButton(20, 220, 100, 20, "Toggle Noto Sans", button -> {
+            textNotoSans = !textNotoSans;
         }));
         e.addRenderableWidget(new ExtendedButton(20, 240, 100, 20, "Toggle Sexton", button -> {
             textSextonSans = !textSextonSans;
         }));
 
+    }
+
+    private static float renderFontNotoSansIfEnabled(@Nonnull RenderScreenEvent.Post e, float startY, boolean enabled) {
+        if (!enabled) {
+            return startY;
+        }
+        SmoothFont font = SmoothFontManager.getFontFromFolder(FOLDER, SMOOTH_FONT_BASE_SIZE, OVERRIDES);
+        if (font == null) {
+            return startY;
+        }
+
+        float x = TEXT_SAMPLE_X;
+        float y = startY;
+        int white = DrawableColor.WHITE.getColorInt();
+
+        SmoothTextRenderer.renderText(e.getGraphics(), font, "Noto Sans", x, y, white, SAMPLE_SIZE_MEDIUM, false);
+        y += font.getLineHeight(SAMPLE_SIZE_MEDIUM) + 2.0F;
+
+        SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_SMALL, false);
+        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_SMALL) + 4.0F;
+
+        SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_MEDIUM, false);
+        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_MEDIUM) + 4.0F;
+
+        SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_LARGE, false);
+        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_LARGE) + 12.0F;
+
+        return y;
     }
 
     private static float renderFontSamplesIfEnabled(@Nonnull RenderScreenEvent.Post e, float startY, boolean enabled, String fontFile, String displayName) {
@@ -163,14 +196,14 @@ public class Test {
         SmoothTextRenderer.renderText(e.getGraphics(), font, displayName, x, y, white, SAMPLE_SIZE_MEDIUM, false);
         y += font.getLineHeight(SAMPLE_SIZE_MEDIUM) + 2.0F;
 
-        SmoothTextRenderer.renderText(e.getGraphics(), font, SAMPLE_TEXT, x, y, white, SAMPLE_SIZE_SMALL, false);
-        y += SmoothTextRenderer.getTextHeight(font, SAMPLE_TEXT, SAMPLE_SIZE_SMALL) + 4.0F;
+        SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_SMALL, false);
+        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_SMALL) + 4.0F;
 
-        SmoothTextRenderer.renderText(e.getGraphics(), font, SAMPLE_TEXT, x, y, white, SAMPLE_SIZE_MEDIUM, false);
-        y += SmoothTextRenderer.getTextHeight(font, SAMPLE_TEXT, SAMPLE_SIZE_MEDIUM) + 4.0F;
+        SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_MEDIUM, false);
+        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_MEDIUM) + 4.0F;
 
-        SmoothTextRenderer.renderText(e.getGraphics(), font, SAMPLE_TEXT, x, y, white, SAMPLE_SIZE_LARGE, false);
-        y += SmoothTextRenderer.getTextHeight(font, SAMPLE_TEXT, SAMPLE_SIZE_LARGE) + 12.0F;
+        SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_LARGE, false);
+        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_LARGE) + 12.0F;
 
         return y;
     }
@@ -178,6 +211,7 @@ public class Test {
     private static String buildSampleText() {
         String prefix = String.valueOf(ChatFormatting.PREFIX_CODE);
         StringBuilder sb = new StringBuilder();
+        sb.append(I18n.get("block.minecraft.cherry_wood")).append(" ");
         sb.append(prefix).append('x').append("Green ");
         sb.append(prefix).append('r');
         sb.append(prefix).append('l').append("Bold ");
