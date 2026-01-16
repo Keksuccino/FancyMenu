@@ -118,7 +118,6 @@ final class SmoothFontAtlas implements AutoCloseable {
             return new SmoothFontGlyph(this, 0.0F, 0.0F, 0.0F, 0.0F, 0, 0, 0.0F, 0.0F, advance, false, true);
         }
 
-        // Ensure padding covers the full SDF range + a bit more for anti-aliasing safety
         int padding = Math.max(4, (int)Math.ceil(sdfRange + 1.0F));
         int glyphWidth = (int)Math.ceil(bounds.getWidth() + (padding * 2.0));
         int glyphHeight = (int)Math.ceil(bounds.getHeight() + (padding * 2.0));
@@ -157,7 +156,6 @@ final class SmoothFontAtlas implements AutoCloseable {
     }
 
     private Rect allocate(int width, int height) {
-        // Safe spacing to avoid any filter bleeding
         int spacing = 2;
         int allocWidth = width + spacing;
         int allocHeight = height + spacing;
@@ -290,8 +288,8 @@ final class SmoothFontAtlas implements AutoCloseable {
                 config.overlap_support(MSDFGen.MSDF_TRUE);
                 config.mode(MSDFGen.MSDF_ERROR_CORRECTION_MODE_EDGE_PRIORITY);
                 config.distance_check_mode(MSDFGen.MSDF_DISTANCE_CHECK_MODE_ALWAYS);
-                config.min_deviation_ratio(0.1);
-                config.min_improve_ratio(0.1);
+                // Removed aggressive manual ratio settings (0.1) which caused blocks in grunge fonts.
+                // Using defaults (approx 1.0+) is much safer for noisy geometry.
 
                 int allocResult;
                 int genResult;
@@ -414,7 +412,9 @@ final class SmoothFontAtlas implements AutoCloseable {
             }
             if (contour != MemoryUtil.NULL) closeContourIfOpen(contour, startX, startY, lastX, lastY);
 
-            MSDFGen.msdf_shape_normalize(shape);
+            // Removed msdf_shape_normalize(shape);
+            // Normalization can distort tiny segments in grunge fonts.
+
             return shape;
         }
     }
@@ -426,6 +426,20 @@ final class SmoothFontAtlas implements AutoCloseable {
     }
 
     private static void addSegment(long contour, int type, double... coords) {
+        // Degenerate segment filter
+        // If the start and end points are effectively the same (and controls for curves),
+        // MSDFGen can divide by zero and produce NaNs which result in visual blocks.
+        if (type == MSDFGen.MSDF_SEGMENT_TYPE_LINEAR) {
+            if (isDegenerate(coords[0], coords[1], coords[2], coords[3])) return;
+        } else if (type == MSDFGen.MSDF_SEGMENT_TYPE_QUADRATIC) {
+            if (isDegenerate(coords[0], coords[1], coords[4], coords[5]) &&
+                    isDegenerate(coords[0], coords[1], coords[2], coords[3])) return;
+        } else if (type == MSDFGen.MSDF_SEGMENT_TYPE_CUBIC) {
+            if (isDegenerate(coords[0], coords[1], coords[6], coords[7]) &&
+                    isDegenerate(coords[0], coords[1], coords[2], coords[3]) &&
+                    isDegenerate(coords[0], coords[1], coords[4], coords[5])) return;
+        }
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
             PointerBuffer segPtr = stack.mallocPointer(1);
             if (MSDFGen.msdf_segment_alloc(type, segPtr) != MSDFGen.MSDF_SUCCESS) return;
@@ -433,11 +447,15 @@ final class SmoothFontAtlas implements AutoCloseable {
             MSDFGenVector2 vec = MSDFGenVector2.calloc(stack);
 
             for (int i = 0; i < coords.length; i += 2) {
-                vec.x(coords[i]).y(coords[i + 1]);
-                MSDFGen.msdf_segment_set_point(segment, i / 2, vec);
+                vec.x(coords[i]).y(coords[i+1]);
+                MSDFGen.msdf_segment_set_point(segment, i/2, vec);
             }
             MSDFGen.msdf_contour_add_edge(contour, segment);
         }
+    }
+
+    private static boolean isDegenerate(double x1, double y1, double x2, double y2) {
+        return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) < 1.0e-9;
     }
 
     private static byte[] expandAlphaToRgba(byte[] alpha) {
