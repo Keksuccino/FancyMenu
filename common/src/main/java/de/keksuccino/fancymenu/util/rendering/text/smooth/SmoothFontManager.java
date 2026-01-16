@@ -27,10 +27,6 @@ public final class SmoothFontManager {
     private static final Map<String, SmoothFont> FONT_CACHE = new HashMap<>();
     private static boolean reloadListenerRegistered;
 
-    // Scale 2.0 aligns perfectly with GPU 2x2 linear filtering for optimal downsampling quality.
-    // Higher values like 6.0 cause aliasing because the GPU skips pixels during sampling.
-    private static final float GENERATION_SCALE = 2.0F;
-
     private SmoothFontManager() {
     }
 
@@ -93,10 +89,9 @@ public final class SmoothFontManager {
     private static SmoothFont buildFont(String key, byte[] fontBytes, float baseSize) {
         try {
             Font baseFont = Font.createFont(Font.TRUETYPE_FONT, new ByteArrayInputStream(fontBytes));
-            float generationSize = baseSize * GENERATION_SCALE;
+            // SDF range is 1.0 for all LODs to ensure consistent raster-like behavior in the shader
             float sdfRange = 1.0F;
-
-            return new SmoothFont(sanitizeKey(key), baseFont, baseSize, generationSize, sdfRange);
+            return new SmoothFont(sanitizeKey(key), baseFont, baseSize, sdfRange);
         } catch (FontFormatException | IOException ex) {
             LOGGER.error("[FANCYMENU] Failed to parse smooth font: {}", key, ex);
             return null;
@@ -118,4 +113,5 @@ public final class SmoothFontManager {
             }
         });
     }
+
 }

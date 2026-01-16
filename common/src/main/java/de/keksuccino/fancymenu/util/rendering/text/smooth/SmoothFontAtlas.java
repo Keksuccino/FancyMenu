@@ -27,9 +27,8 @@ import java.util.Objects;
 
 final class SmoothFontAtlas implements AutoCloseable {
 
-    private static final int DEFAULT_ATLAS_SIZE = 1024;
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int GLYPH_PADDING = 4;
+    private static final int GLYPH_PADDING = 5;
 
     private final String debugName;
     private final Font awtFont;
@@ -47,13 +46,16 @@ final class SmoothFontAtlas implements AutoCloseable {
     private int cursorY;
     private int rowHeight;
 
-    SmoothFontAtlas(@Nonnull SmoothFont parentFont, @Nonnull Font awtFont, @Nonnull FontRenderContext fontRenderContext, float sdfRange, @Nonnull String debugName) {
+    SmoothFontAtlas(@Nonnull SmoothFont parentFont, @Nonnull Font awtFont, @Nonnull FontRenderContext fontRenderContext, float sdfRange, @Nonnull String debugName, int initialSize) {
         this.debugName = Objects.requireNonNull(debugName);
         this.awtFont = Objects.requireNonNull(awtFont);
         this.fontRenderContext = Objects.requireNonNull(fontRenderContext);
         this.sdfRange = Math.max(1.0F, sdfRange);
-        this.atlasWidth = DEFAULT_ATLAS_SIZE;
-        this.atlasHeight = DEFAULT_ATLAS_SIZE;
+
+        // Use custom initial size
+        this.atlasWidth = initialSize;
+        this.atlasHeight = initialSize;
+
         this.atlasImage = new NativeImage(NativeImage.Format.RGBA, atlasWidth, atlasHeight, true);
         this.dynamicTexture = new DynamicTexture(atlasImage);
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();

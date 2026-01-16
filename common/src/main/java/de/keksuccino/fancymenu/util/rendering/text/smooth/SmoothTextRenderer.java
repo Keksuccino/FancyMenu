@@ -43,7 +43,11 @@ public final class SmoothTextRenderer {
 
     public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull String text, float size) {
         if (text.isEmpty() || size <= 0.0F) return 0.0F;
-        float scale = font.scaleForSize(size);
+
+        // Use LOD logic here too for metrics accuracy
+        int lod = font.getLodLevel(size);
+        float scale = font.getScaleForLod(lod, size);
+
         float maxWidth = 0.0F;
         float lineWidth = 0.0F;
         StyleState style = new StyleState(0xFFFFFFFF);
@@ -65,7 +69,8 @@ public final class SmoothTextRenderer {
             }
             int codepoint = text.codePointAt(index);
             index += Character.charCount(codepoint);
-            SmoothFontGlyph glyph = font.getGlyph(codepoint, style.bold, style.italic);
+
+            SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
             float advance = glyph.advance() * scale;
             lineWidth += advance;
         }
@@ -82,7 +87,10 @@ public final class SmoothTextRenderer {
     }
 
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
-        float scale = font.scaleForSize(size);
+        // [Multi-LOD] Determine the best atlas set for this size
+        int lod = font.getLodLevel(size);
+        float scale = font.getScaleForLod(lod, size);
+
         float baseRange = font.getSdfRange();
         float ascent = font.getAscent(size);
         float lineHeight = font.getLineHeight(size);
@@ -172,7 +180,10 @@ public final class SmoothTextRenderer {
             if (style.obfuscated) {
                 codepoint = getObfuscatedCodepoint(codepoint);
             }
-            SmoothFontGlyph glyph = font.getGlyph(codepoint, style.bold, style.italic);
+
+            // [Multi-LOD] Fetch glyph from the specific LOD level
+            SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+
             if (glyph.hasTexture()) {
                 SmoothFontAtlas atlas = glyph.atlas();
                 boolean glyphUsesTrueSdf = glyph.usesTrueSdf();
@@ -193,7 +204,6 @@ public final class SmoothTextRenderer {
                 if (buffer == null) {
                     buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
                 }
-
                 addGlyph(buffer, matrix, glyph, penX, baseline, scale, style.color, style.italic);
                 quadCount++;
             }

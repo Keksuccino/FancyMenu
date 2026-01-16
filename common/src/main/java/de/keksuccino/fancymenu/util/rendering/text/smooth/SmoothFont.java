@@ -8,18 +8,19 @@ import java.util.Objects;
 
 public final class SmoothFont implements AutoCloseable {
 
+    // Thresholds for switching LODs (in pixel size)
+    // <= 18px: Use Small LOD (2x gen)
+    // <= 48px: Use Medium LOD (4x gen)
+    // > 48px:  Use Large LOD (8x gen)
+    private static final float LOD_SMALL_LIMIT = 18.0F;
+    private static final float LOD_MEDIUM_LIMIT = 48.0F;
+
     private final String debugName;
     private final float baseSize;
-    private final float generationSize;
-    private final float renderScale;
     private final float sdfRange;
     private final FontRenderContext fontRenderContext;
-    private final Font plainFont;
-    private final Font boldFont;
-    private final Font italicFont;
-    private final Font boldItalicFont;
 
-    // Metrics are stored relative to baseSize (logical size)
+    // Metrics
     private final float ascent;
     private final float descent;
     private final float lineHeight;
@@ -28,32 +29,18 @@ public final class SmoothFont implements AutoCloseable {
     private final float strikethroughOffset;
     private final float strikethroughThickness;
 
-    private final SmoothFontAtlas plainAtlas;
-    private final SmoothFontAtlas boldAtlas;
-    private final SmoothFontAtlas italicAtlas;
-    private final SmoothFontAtlas boldItalicAtlas;
+    // The 3 LOD levels
+    private final LodLevel[] lodLevels;
 
-    SmoothFont(@Nonnull String debugName, @Nonnull Font rawFont, float baseSize, float generationSize, float sdfRange) {
+    SmoothFont(@Nonnull String debugName, @Nonnull Font baseFont, float baseSize, float sdfRange) {
         this.debugName = Objects.requireNonNull(debugName);
         this.baseSize = Math.max(1.0F, baseSize);
-        this.generationSize = Math.max(1.0F, generationSize);
         this.sdfRange = Math.max(1.0F, sdfRange);
-
-        // The scale factor to bring generated glyphs back to logical size
-        this.renderScale = baseSize / generationSize;
-
         this.fontRenderContext = new FontRenderContext(null, true, true);
 
-        // Create AWT fonts at the high-res generation size
-        this.plainFont = Objects.requireNonNull(rawFont).deriveFont(Font.PLAIN, this.generationSize);
-        this.boldFont = rawFont.deriveFont(Font.BOLD, this.generationSize);
-        this.italicFont = rawFont.deriveFont(Font.ITALIC, this.generationSize);
-        this.boldItalicFont = rawFont.deriveFont(Font.BOLD | Font.ITALIC, this.generationSize);
-
-        // Calculate metrics based on the logical size for consistent layout
-        Font logicalFont = rawFont.deriveFont(Font.PLAIN, this.baseSize);
+        // Calculate metrics using base size
+        Font logicalFont = baseFont.deriveFont(Font.PLAIN, this.baseSize);
         LineMetrics metrics = logicalFont.getLineMetrics("Hg", this.fontRenderContext);
-
         this.ascent = metrics.getAscent();
         this.descent = metrics.getDescent();
         this.lineHeight = metrics.getHeight();
@@ -62,19 +49,34 @@ public final class SmoothFont implements AutoCloseable {
         this.strikethroughOffset = metrics.getStrikethroughOffset();
         this.strikethroughThickness = metrics.getStrikethroughThickness();
 
-        this.plainAtlas = new SmoothFontAtlas(this, this.plainFont, this.fontRenderContext, this.sdfRange, this.debugName + "_plain");
-        this.boldAtlas = new SmoothFontAtlas(this, this.boldFont, this.fontRenderContext, this.sdfRange, this.debugName + "_bold");
-        this.italicAtlas = new SmoothFontAtlas(this, this.italicFont, this.fontRenderContext, this.sdfRange, this.debugName + "_italic");
-        this.boldItalicAtlas = new SmoothFontAtlas(this, this.boldItalicFont, this.fontRenderContext, this.sdfRange, this.debugName + "_bold_italic");
+        // Initialize LODs
+        this.lodLevels = new LodLevel[3];
+
+        // LOD 0: Small (2x scale, starts with 512px atlas)
+        this.lodLevels[0] = new LodLevel(this, baseFont, this.baseSize * 2.0F, 512, "_small");
+
+        // LOD 1: Medium (4x scale, starts with 1024px atlas)
+        this.lodLevels[1] = new LodLevel(this, baseFont, this.baseSize * 4.0F, 1024, "_medium");
+
+        // LOD 2: Large (8x scale, starts with 2048px atlas)
+        this.lodLevels[2] = new LodLevel(this, baseFont, this.baseSize * 8.0F, 2048, "_large");
+    }
+
+    public int getLodLevel(float size) {
+        if (size <= LOD_SMALL_LIMIT) return 0;
+        if (size <= LOD_MEDIUM_LIMIT) return 1;
+        return 2;
     }
 
     public float getBaseSize() {
         return baseSize;
     }
 
-    // Scale calculation includes the internal downscaling from generation size
-    float scaleForSize(float size) {
-        return (size / baseSize) * renderScale;
+    // Calculates the rendering scale factor for a specific LOD level.
+    // This bridges the gap between the requested size and the huge internal texture.
+    float getScaleForLod(int lodIndex, float size) {
+        float genSize = lodLevels[lodIndex].generationSize;
+        return size / genSize;
     }
 
     public float getLineHeight(float size) {
@@ -105,32 +107,68 @@ public final class SmoothFont implements AutoCloseable {
         return Math.max(1.0F, strikethroughThickness * (size / baseSize));
     }
 
-    SmoothFontGlyph getGlyph(int codepoint, boolean bold, boolean italic) {
-        return getAtlas(bold, italic).getGlyph(codepoint);
+    SmoothFontGlyph getGlyph(int lodIndex, int codepoint, boolean bold, boolean italic) {
+        return lodLevels[lodIndex].getAtlas(bold, italic).getGlyph(codepoint);
     }
 
-    SmoothFontAtlas getAtlas(boolean bold, boolean italic) {
-        if (bold && italic) {
-            return boldItalicAtlas;
-        }
-        if (bold) {
-            return boldAtlas;
-        }
-        if (italic) {
-            return italicAtlas;
-        }
-        return plainAtlas;
+    // Internal method to expose Atlas for texture binding
+    SmoothFontAtlas getAtlas(int lodIndex, boolean bold, boolean italic) {
+        return lodLevels[lodIndex].getAtlas(bold, italic);
     }
 
     float getSdfRange() {
         return sdfRange;
     }
 
+    FontRenderContext getFontRenderContext() {
+        return fontRenderContext;
+    }
+
+    String getDebugName() {
+        return debugName;
+    }
+
     @Override
     public void close() {
-        plainAtlas.close();
-        boldAtlas.close();
-        italicAtlas.close();
-        boldItalicAtlas.close();
+        for (LodLevel lod : lodLevels) {
+            lod.close();
+        }
+    }
+
+    private static class LodLevel implements AutoCloseable {
+        final float generationSize;
+        final SmoothFontAtlas plainAtlas;
+        final SmoothFontAtlas boldAtlas;
+        final SmoothFontAtlas italicAtlas;
+        final SmoothFontAtlas boldItalicAtlas;
+
+        LodLevel(SmoothFont parent, Font rawFont, float genSize, int initialAtlasSize, String suffix) {
+            this.generationSize = genSize;
+
+            Font plain = rawFont.deriveFont(Font.PLAIN, genSize);
+            Font bold = rawFont.deriveFont(Font.BOLD, genSize);
+            Font italic = rawFont.deriveFont(Font.ITALIC, genSize);
+            Font boldItalic = rawFont.deriveFont(Font.BOLD | Font.ITALIC, genSize);
+
+            this.plainAtlas = new SmoothFontAtlas(parent, plain, parent.getFontRenderContext(), parent.getSdfRange(), parent.getDebugName() + suffix + "_plain", initialAtlasSize);
+            this.boldAtlas = new SmoothFontAtlas(parent, bold, parent.getFontRenderContext(), parent.getSdfRange(), parent.getDebugName() + suffix + "_bold", initialAtlasSize);
+            this.italicAtlas = new SmoothFontAtlas(parent, italic, parent.getFontRenderContext(), parent.getSdfRange(), parent.getDebugName() + suffix + "_italic", initialAtlasSize);
+            this.boldItalicAtlas = new SmoothFontAtlas(parent, boldItalic, parent.getFontRenderContext(), parent.getSdfRange(), parent.getDebugName() + suffix + "_bold_italic", initialAtlasSize);
+        }
+
+        SmoothFontAtlas getAtlas(boolean bold, boolean italic) {
+            if (bold && italic) return boldItalicAtlas;
+            if (bold) return boldAtlas;
+            if (italic) return italicAtlas;
+            return plainAtlas;
+        }
+
+        @Override
+        public void close() {
+            plainAtlas.close();
+            boldAtlas.close();
+            italicAtlas.close();
+            boldItalicAtlas.close();
+        }
     }
 }
