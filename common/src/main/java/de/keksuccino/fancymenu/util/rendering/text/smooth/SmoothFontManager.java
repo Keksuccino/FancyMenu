@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -285,7 +286,10 @@ public final class SmoothFontManager {
             if (action == MinecraftResourceReloadObserver.ReloadAction.STARTING) {
                 RenderSystem.recordRenderCall(() -> {
                     clear();
-                    SmoothFonts.preloadFonts();
+                    // Only preload fonts if modpack mode is disabled, to save memory for end-users
+                    if (!FancyMenu.getOptions().modpackMode.getValue()) {
+                        SmoothFonts.preloadFonts();
+                    }
                 });
             }
         });
