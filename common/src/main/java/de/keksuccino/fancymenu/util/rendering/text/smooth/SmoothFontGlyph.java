@@ -30,7 +30,7 @@ final class SmoothFontGlyph {
         return atlas;
     }
 
-    // Dynamic UV calculation fixes the "broken text" glitch when the atlas resizes.
+    // UVs are derived from the current atlas size to stay valid after resizes.
     float u0() {
         return (float) x / (float) atlas.getWidth();
     }

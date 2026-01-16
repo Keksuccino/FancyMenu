@@ -6,6 +6,8 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
+import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatterRegistry;
@@ -15,9 +17,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.FastColor;
 import org.joml.Matrix4f;
-
 import javax.annotation.Nonnull;
-import java.util.Objects;
 import java.util.Random;
 
 public final class SmoothTextRenderer {
@@ -37,6 +37,13 @@ public final class SmoothTextRenderer {
         renderTextInternal(graphics, font, text, x, y, color, size);
     }
 
+    public static void renderTextScaled(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float x, float y, int color, float size, boolean shadow) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderText(graphics, font, text, x * additionalScale + translationX, y * additionalScale + translationY, color, size * additionalScale, shadow);
+    }
+
     public static void renderTextScreenSpace(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float xPixels, float yPixels, int color, float sizePixels, boolean shadow) {
         float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
         if (guiScale <= 0.0F) return;
@@ -46,7 +53,7 @@ public final class SmoothTextRenderer {
     public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull String text, float size) {
         if (text.isEmpty() || size <= 0.0F) return 0.0F;
 
-        // Use LOD logic here too for metrics accuracy
+        // Use the same LOD selection as rendering for accurate metrics.
         int lod = font.getLodLevel(size);
         float scale = font.getScaleForLod(lod, size);
 
@@ -89,7 +96,7 @@ public final class SmoothTextRenderer {
     }
 
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
-        // [Multi-LOD] Determine the best atlas set for this size
+        // Select the LOD atlas set for this size.
         int lod = font.getLodLevel(size);
         float scale = font.getScaleForLod(lod, size);
 
@@ -183,7 +190,7 @@ public final class SmoothTextRenderer {
                 codepoint = getObfuscatedCodepoint(codepoint);
             }
 
-            // [Multi-LOD] Fetch glyph from the specific LOD level
+            // Fetch the glyph from the selected LOD.
             SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
 
             if (glyph.hasTexture()) {
@@ -338,6 +345,21 @@ public final class SmoothTextRenderer {
     private static void drawLineIfNeeded(GuiGraphics graphics, boolean enabled, float startX, float endX, float y, int color, float thickness) {
         if (!enabled || endX <= startX) return;
         RenderingUtils.fillF(graphics, startX, y, endX, y + thickness, color);
+    }
+
+    private static float resolveAdditionalRenderScale() {
+        float scale = RenderScaleUtil.getCurrentAdditionalRenderScale();
+        return Float.isFinite(scale) && scale > 0.0F ? scale : 1.0F;
+    }
+
+    private static float resolveAdditionalRenderTranslationX() {
+        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationX();
+        return Float.isFinite(translation) ? translation : 0.0F;
+    }
+
+    private static float resolveAdditionalRenderTranslationY() {
+        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationY();
+        return Float.isFinite(translation) ? translation : 0.0F;
     }
 
     private static final class StyleState {
