@@ -26,16 +26,34 @@ void main() {
 
     if (texelsPerPixel < 1.0) {
         // MAGNIFICATION (Text is large)
-        // Sharpen the blurred edge created by linear interpolation
+
         float distChangePerPixel = texelsPerPixel / (2.0 * SdfPixelRange);
-        float w = clamp(distChangePerPixel * 0.5, 0.0, 0.49);
-        alpha = smoothstep(0.5 - w, 0.5 + w, dist);
+
+        // [Improvement 1] Softer Anti-Aliasing
+        // Increasing softness > 0.5 allows the edge to blur slightly across pixels,
+        // hiding the "stair-step" effect on round edges.
+        float softness = 0.7;
+        float w = distChangePerPixel * softness;
+
+        // [Improvement 2] Dilation (Thickening)
+        // Instead of adding to 'dist' (which causes rectangles), we shift the center threshold down.
+        // 0.5 is neutral. Lower values (e.g. 0.45) make the text bolder/smoother.
+        float center = 0.45;
+
+        // IMPORTANT: Clamp the lower bound to > 0.001.
+        // This ensures that texture alpha 0.0 remains 0.0, preventing the "translucent rectangle" bug.
+        float lowerBound = max(center - w, 0.001);
+        float upperBound = center + w;
+
+        alpha = smoothstep(lowerBound, upperBound, dist);
+
     } else {
         // MINIFICATION (Text is normal/small)
-        // The 2x texture already provides 4-sample anti-aliasing via linear filtering.
-        // We apply gamma correction to fix the "thin" or "step-y" look of linear alpha.
-        // A gamma of ~1.45 broadens the semi-transparent regions slightly.
-        alpha = pow(dist, 1.0 / 1.45);
+
+        // [Improvement 3] Gamma Correction
+        // A gamma of ~1.5 makes the anti-aliased pixels slightly more opaque,
+        // reducing the "bony" or "scratchy" look of small text.
+        alpha = pow(dist, 1.0 / 1.5);
     }
 
     if (alpha <= 0.01) {

@@ -178,7 +178,7 @@ public class Test {
     private static String buildSampleText() {
         String prefix = String.valueOf(ChatFormatting.PREFIX_CODE);
         StringBuilder sb = new StringBuilder();
-        sb.append(prefix).append('a').append("Green ");
+        sb.append(prefix).append('x').append("Green ");
         sb.append(prefix).append('r');
         sb.append(prefix).append('l').append("Bold ");
         sb.append(prefix).append('r');
