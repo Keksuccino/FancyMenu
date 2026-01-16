@@ -276,14 +276,17 @@ public final class SmoothFontManager {
         return key.toLowerCase().replaceAll("[^a-z0-9._-]", "_");
     }
 
-    private static void registerReloadListener() {
+    public static void registerReloadListener() {
         if (reloadListenerRegistered) {
             return;
         }
         reloadListenerRegistered = true;
         MinecraftResourceReloadObserver.addReloadListener(action -> {
             if (action == MinecraftResourceReloadObserver.ReloadAction.STARTING) {
-                RenderSystem.recordRenderCall(SmoothFontManager::clear);
+                RenderSystem.recordRenderCall(() -> {
+                    clear();
+                    SmoothFonts.preloadFonts();
+                });
             }
         });
     }

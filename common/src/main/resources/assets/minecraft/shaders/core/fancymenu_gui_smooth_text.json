@@ -11,7 +11,6 @@
     { "name": "SdfSharpness", "type": "float", "count": 1, "values": [ 1.0 ] },
     { "name": "SdfEdge", "type": "float", "count": 1, "values": [ 0.5 ] },
     { "name": "SdfPixelRange", "type": "float", "count": 1, "values": [ 4.0 ] },
-    { "name": "DebugMode", "type": "int", "count": 1, "values": [ 0 ] },
     { "name": "UseTrueSdf", "type": "int", "count": 1, "values": [ 1 ] }
   ]
 }

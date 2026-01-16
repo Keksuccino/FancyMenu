@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFontManager;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
@@ -62,6 +63,8 @@ public class FancyMenu {
 			}
 
 			TextColorFormatters.registerAll();
+
+            SmoothFontManager.registerReloadListener();
 
 			EventHandler.INSTANCE.registerListenersOf(new Test());
 

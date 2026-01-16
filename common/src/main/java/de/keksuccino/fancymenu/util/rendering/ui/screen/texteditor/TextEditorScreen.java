@@ -331,8 +331,6 @@ public class TextEditorScreen extends PiPScreen {
         //Adjust the scroll wheel speed depending on the amount of lines
         this.verticalScrollBar.setWheelScrollSpeed(1.0F / ((float)this.getTotalScrollHeight() / 500.0F));
 
-        this.renderScreenBackground(graphics);
-
         this.renderLineNumberBackground(graphics, this.borderLeft);
 
         this.renderEditorAreaBackground(graphics);
@@ -665,10 +663,6 @@ public class TextEditorScreen extends PiPScreen {
     protected void renderEditorAreaBackground(GuiGraphics graphics) {
         float editorAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
         UIBase.renderRoundedRect(graphics, this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaWidth(), this.getEditorAreaHeight(), editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.editorAreaBackgroundColor.getRGB());
-    }
-
-    protected void renderScreenBackground(GuiGraphics graphics) {
-        graphics.fill(RenderType.gui(), 0, 0, this.width, this.height, this.screenBackgroundColor.getColorInt());
     }
 
     protected void tickMouseHighlighting() {

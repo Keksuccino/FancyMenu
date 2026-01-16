@@ -22,7 +22,6 @@ float getDist(vec2 uv) {
 }
 
 float getAlpha(float dist, float softness, float edge) {
-    // Clamp softness to ensure the transition window fits within the [0, 1] distance range.
     float maxSoftness = 2.0 * min(edge, 1.0 - edge);
     softness = min(softness, maxSoftness);
 
@@ -33,33 +32,19 @@ float getAlpha(float dist, float softness, float edge) {
 }
 
 void main() {
-    // Calculate how many texture pixels fit into one screen pixel.
     vec2 texSize = vec2(textureSize(Sampler0, 0));
     float pxPerScreenPx = length(fwidth(texCoord0) * texSize);
 
-    // SdfPixelRange is the distance range in texture pixels covered by the 0..1 distance values.
-    // Calculate the softness based on the screen derivative.
     float softness = pxPerScreenPx / SdfPixelRange;
 
-    // Apply sharpness modifier.
-    // Higher sharpness means a smaller transition window (harder edge).
-    // Avoid division by zero.
     softness /= max(0.001, SdfSharpness);
 
-    // Adaptive thickening for small text
-    // If pxPerScreenPx is large (zoomed out), we reduce the edge to thicken the glyph.
-    // Base edge is usually 0.5.
     float edge = SdfEdge;
     if (pxPerScreenPx > 1.0) {
-        // Thicken factor: how much to reduce edge.
-        // Cap thickening to avoid bloat.
         float thicken = clamp((pxPerScreenPx - 1.0) * 0.05, 0.0, 0.2);
         edge -= thicken;
     }
 
-    // Supersampling (2x2 grid)
-    // We can use dFdx/dFdy to find offsets for sub-pixel sampling.
-    // Offsets should be +/- 0.25 of a pixel.
     vec2 dx = dFdx(texCoord0);
     vec2 dy = dFdy(texCoord0);
 

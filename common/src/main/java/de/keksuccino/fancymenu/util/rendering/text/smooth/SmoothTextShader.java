@@ -15,16 +15,13 @@ final class SmoothTextShader {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String SHADER_NAME = "fancymenu_gui_smooth_text";
-    private static final float DEFAULT_SDF_SHARPNESS = getFloatProperty("fancymenu.smoothTextSharpness", 1.0F);
-    private static final float DEFAULT_SDF_EDGE = getFloatProperty("fancymenu.smoothTextEdge", 0.5F);
+    private static final float DEFAULT_SDF_SHARPNESS = 1.0F;
+    private static final float DEFAULT_SDF_EDGE = 0.5F;
     private static final float DEFAULT_SDF_PIXEL_RANGE = 4.0F;
-    private static final boolean DEBUG_LOG = Boolean.getBoolean("fancymenu.debugSmoothTextShader");
-    private static final int DEBUG_MODE = Math.max(0, Integer.getInteger("fancymenu.debugSmoothTextMode", 0));
 
     private static ShaderInstance shader;
     private static boolean shaderFailed;
     private static boolean reloadListenerRegistered;
-    private static boolean debugLogged;
     private static volatile Float runtimeSharpness;
     private static volatile Float runtimeEdge;
 
@@ -40,7 +37,6 @@ final class SmoothTextShader {
         if (shader == null) {
             try {
                 shader = new ShaderInstance(Minecraft.getInstance().getResourceManager(), SHADER_NAME, DefaultVertexFormat.POSITION_TEX_COLOR);
-                debugLogged = false;
             } catch (Exception ex) {
                 shaderFailed = true;
                 LOGGER.error("[FANCYMENU] Failed to load smooth text shader!", ex);
@@ -57,35 +53,9 @@ final class SmoothTextShader {
         }
         float sharpness = runtimeSharpness != null ? runtimeSharpness : DEFAULT_SDF_SHARPNESS;
         float edge = runtimeEdge != null ? runtimeEdge : DEFAULT_SDF_EDGE;
-        if (DEBUG_MODE == 1) {
-            sharpness = -1.0F;
-        } else if (DEBUG_MODE == 2) {
-            edge = -1.0F;
-        }
         current.safeGetUniform("SdfSharpness").set(sharpness);
         current.safeGetUniform("SdfEdge").set(edge);
         current.safeGetUniform("SdfPixelRange").set(DEFAULT_SDF_PIXEL_RANGE);
-        current.safeGetUniform("DebugMode").set(DEBUG_MODE);
-        if (DEBUG_LOG && !debugLogged) {
-            boolean sharpnessPresent = current.getUniform("SdfSharpness") != null;
-            boolean edgePresent = current.getUniform("SdfEdge") != null;
-            boolean pixelRangePresent = current.getUniform("SdfPixelRange") != null;
-            boolean debugPresent = current.getUniform("DebugMode") != null;
-            LOGGER.info("[FANCYMENU] SmoothTextShader active: name={} id={} sharpnessUniform={} edgeUniform={} pixelRangeUniform={} sharpness={} edge={} pixelRange={}",
-                    current.getName(),
-                    current.getId(),
-                    sharpnessPresent,
-                    edgePresent,
-                    pixelRangePresent,
-                    sharpness,
-                    edge,
-                    DEFAULT_SDF_PIXEL_RANGE
-            );
-            if (debugPresent && DEBUG_MODE != 0) {
-                LOGGER.info("[FANCYMENU] SmoothTextShader debug mode active: {}", DEBUG_MODE);
-            }
-            debugLogged = true;
-        }
     }
 
     static void applySdfRange(float sdfRange) {
@@ -151,7 +121,6 @@ final class SmoothTextShader {
             shader = null;
         }
         shaderFailed = false;
-        debugLogged = false;
     }
 
     private static void ensureReloadListener() {
@@ -164,19 +133,6 @@ final class SmoothTextShader {
                 RenderSystem.recordRenderCall(SmoothTextShader::clear);
             }
         });
-    }
-
-    private static float getFloatProperty(String key, float fallback) {
-        String value = System.getProperty(key);
-        if (value == null || value.isBlank()) {
-            return fallback;
-        }
-        try {
-            return Float.parseFloat(value.trim());
-        } catch (NumberFormatException ex) {
-            LOGGER.warn("[FANCYMENU] Invalid float for {}: {}", key, value);
-            return fallback;
-        }
     }
 
 }

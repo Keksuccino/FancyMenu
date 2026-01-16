@@ -88,4 +88,41 @@ Japng is licensed under Apache-2.0.
 Original code by Kevin Weiner on [fmsware.com](http://www.fmsware.com/stuff/gif.html).
 Re-packaged and improved by Roberto Tyley. Improvements licensed under the Apache-2.0 license.
 
+### Fonts
+
+**Noto Sans**
+
+Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
+**Noto Sans Japanese**
+
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
+**Noto Sans Korean**
+
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
+**Noto Sans Traditional Chinese**
+
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
+**Noto Sans Simplified Chinese**
+
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
 ^^^
