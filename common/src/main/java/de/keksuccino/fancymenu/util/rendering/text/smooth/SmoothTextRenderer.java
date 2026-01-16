@@ -7,6 +7,8 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
+import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatterRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -272,9 +274,19 @@ public final class SmoothTextRenderer {
                 style.setColor(hexColor, FastColor.ARGB32.alpha(baseColor));
                 return 13;
             }
+        }
+        if (formatting == null) {
+            TextColorFormatter formatter = TextColorFormatterRegistry.getByCode(code);
+            if (formatter != null) {
+                int formatterColor = formatter.getColor().getColorInt();
+                int rgb = (FastColor.ARGB32.red(formatterColor) << 16)
+                        | (FastColor.ARGB32.green(formatterColor) << 8)
+                        | FastColor.ARGB32.blue(formatterColor);
+                style.setColor(rgb, FastColor.ARGB32.alpha(baseColor));
+                return 1;
+            }
             return 0;
         }
-        if (formatting == null) return 0;
 
         if (formatting == ChatFormatting.RESET) {
             style.resetToBase();
