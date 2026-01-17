@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -89,7 +91,27 @@ public class TextEditorLine extends AdvancedTextField {
 
             if (this.isFocused()) {
                 //Render focused background
-                graphics.fill(0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.get().getColorInt());
+                int lineX = this.parent.getEditorAreaX();
+                int lineY = this.getY();
+                int lineWidth = this.parent.getEditorAreaWidth();
+                int lineHeight = this.height;
+                int lineColor = this.parent.focusedLineColor.get().getColorInt();
+                int areaY = this.parent.getEditorAreaY();
+                int areaBottom = areaY + this.parent.getEditorAreaHeight();
+                boolean roundTop = lineY <= areaY + 5;
+                boolean roundBottom = (lineY + lineHeight) >= areaBottom - 5;
+                if (roundTop || roundBottom) {
+                    float radius = UIBase.getInterfaceCornerRoundingRadius();
+                    if (roundTop && roundBottom) {
+                        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, lineX, lineY, lineWidth, lineHeight, radius, radius, radius, radius, lineColor, partial);
+                    } else if (roundTop) {
+                        SmoothRectangleRenderer.renderSmoothRectRoundTopCornersScaled(graphics, lineX, lineY, lineWidth, lineHeight, radius, lineColor, partial);
+                    } else {
+                        SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, lineX, lineY, lineWidth, lineHeight, radius, lineColor, partial);
+                    }
+                } else {
+                    graphics.fill(lineX, lineY, lineX + lineWidth, lineY + lineHeight, lineColor);
+                }
             }
 
             int textColorInt = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();
@@ -159,7 +181,7 @@ public class TextEditorLine extends AdvancedTextField {
 
     public boolean isHighlightedHovered() {
         if (this.isInEditorArea() && (this.currentHighlightPosXStart != this.currentHighlightPosXEnd) && this.isHovered()) {
-            int mouseX = MouseInput.getMouseX();
+            int mouseX = this.parent.lastMouseX;
             return ((mouseX >= Math.min(this.currentHighlightPosXStart, this.currentHighlightPosXEnd)) && (mouseX <= Math.max(this.currentHighlightPosXStart, this.currentHighlightPosXEnd)));
         }
         return false;

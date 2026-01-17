@@ -78,12 +78,16 @@ public class TextEditorScreen extends PiPScreen {
     protected int borderLeft = 40;
     protected int borderRight = 20;
     protected int lineHeight = 14;
+    protected int lineNumberSidebarGapLeft = 4;
+    protected int lineNumberSidebarGapRight = 4;
+    protected int lastMouseX = 0;
+    protected int lastMouseY = 0;
     protected Supplier<DrawableColor> areaBackgroundColor = () -> {
         if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_color_type_1;
         return UIBase.getUITheme().area_background_color;
     };
     protected Supplier<DrawableColor> areaBorderColor = () -> {
-        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_border_color;
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_border_color;
         return UIBase.getUITheme().element_border_color_normal;
     };
     protected Supplier<DrawableColor> textColor = () -> UIBase.getUITheme().text_editor_text_color;
@@ -328,6 +332,8 @@ public class TextEditorScreen extends PiPScreen {
 
         RenderingUtils.setDepthTestLocked(true);
         RenderSystem.disableDepthTest();
+        this.lastMouseX = mouseX;
+        this.lastMouseY = mouseY;
 
         //Reset scrolls if content fits editor area
         if (this.currentLineWidth <= this.getEditorAreaWidth()) {
@@ -344,7 +350,7 @@ public class TextEditorScreen extends PiPScreen {
         //Adjust the scroll wheel speed depending on the amount of lines
         this.verticalScrollBar.setWheelScrollSpeed(1.0F / ((float)this.getTotalScrollHeight() / 500.0F));
 
-        this.renderLineNumberBackground(graphics, this.borderLeft);
+        this.renderLineNumberBackground(graphics, partial);
 
         this.renderEditorAreaBackground(graphics, partial);
 
@@ -370,8 +376,8 @@ public class TextEditorScreen extends PiPScreen {
         graphics.disableScissor();
 
         //Don't render line numbers outside the line number area
-        int lineNumberMinX = Math.max(0, this.getEditorAreaX() - this.borderLeft);
-        int lineNumberMaxX = this.getEditorAreaX();
+        int lineNumberMinX = this.getLineNumberSidebarX();
+        int lineNumberMaxX = this.getLineNumberSidebarRight();
         graphics.enableScissor(lineNumberMinX, this.getEditorAreaY() - 1, lineNumberMaxX, this.getEditorAreaY() + this.getEditorAreaHeight() + 1);
 
         for (Runnable r : this.lineNumberRenderQueue) {
@@ -438,7 +444,7 @@ public class TextEditorScreen extends PiPScreen {
 
             //Render placeholder menu background
             float placeholderAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
-            UIBase.renderRoundedRect(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.getPlaceholderAreaWidth(), this.getPlaceholderAreaHeight(), placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.areaBackgroundColor.get().getColorInt());
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.getPlaceholderAreaWidth(), this.getPlaceholderAreaHeight(), placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.areaBackgroundColor.get().getColorInt(), partial);
 
             //Don't render parts of placeholder entries outside of placeholder menu area
             graphics.enableScissor(this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight());
@@ -456,7 +462,7 @@ public class TextEditorScreen extends PiPScreen {
             graphics.disableScissor();
 
             //Render placeholder menu border
-            UIBase.renderRoundedBorder(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.headerHeight - 1 + 25, this.width - this.borderRight, this.height - this.footerHeight + 1, 1.0F, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.areaBorderColor.get().getColorInt());
+            SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.getPlaceholderAreaY() - 1, this.getPlaceholderAreaWidth() + 2, this.getPlaceholderAreaHeight() + 2, 1.0F, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.areaBorderColor.get().getColorInt(), partial);
 
             //Render placeholder menu scroll bars
             this.verticalScrollBarPlaceholderMenu.render(graphics, mouseX, mouseY, partial);
@@ -655,19 +661,36 @@ public class TextEditorScreen extends PiPScreen {
         return sortedCategories;
     }
 
-    protected void renderLineNumberBackground(GuiGraphics graphics, int width) {
-        float overlap = UIBase.getInterfaceCornerRoundingRadius() + 1.0F;
-        float xMin = this.getEditorAreaX() - width - 1.0F;
-        float xMax = this.getEditorAreaX() + overlap;
-        float yMin = this.getEditorAreaY() - 1.0F;
-        float yMax = this.getEditorAreaY() + this.getEditorAreaHeight() + 1.0F;
-        UIBase.fillF(graphics, xMin, yMin, xMax, yMax, this.lineNumberSideBarColor.get().getColorInt());
+    protected void renderLineNumberBackground(GuiGraphics graphics, float partial) {
+        int width = this.getLineNumberSidebarWidth();
+        if (width <= 0) {
+            return;
+        }
+        float radius = UIBase.getInterfaceCornerRoundingRadius();
+        float x = this.getLineNumberSidebarX();
+        float y = this.getEditorAreaY();
+        int height = this.getEditorAreaHeight();
+        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, x, y, width, height, radius, radius, radius, radius, this.lineNumberSideBarColor.get().getColorInt(), partial);
+        SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(graphics, x - 1.0F, y - 1.0F, width + 2.0F, height + 2.0F, 1.0F, radius, radius, radius, radius, this.areaBorderColor.get().getColorInt(), partial);
     }
 
     protected void renderLineNumber(GuiGraphics graphics, TextEditorLine line) {
         String lineNumberString = "" + (line.lineIndex+1);
         int lineNumberWidth = this.font.width(lineNumberString);
-        graphics.drawString(this.font, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.get().getColorInt() : this.lineNumberTextColorNormal.get().getColorInt(), false);
+        int lineNumberX = this.getLineNumberSidebarRight() - 3 - lineNumberWidth;
+        graphics.drawString(this.font, lineNumberString, lineNumberX, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.get().getColorInt() : this.lineNumberTextColorNormal.get().getColorInt(), false);
+    }
+
+    protected int getLineNumberSidebarX() {
+        return Math.max(0, this.lineNumberSidebarGapLeft);
+    }
+
+    protected int getLineNumberSidebarWidth() {
+        return Math.max(0, this.borderLeft - this.lineNumberSidebarGapLeft - this.lineNumberSidebarGapRight);
+    }
+
+    protected int getLineNumberSidebarRight() {
+        return this.getLineNumberSidebarX() + this.getLineNumberSidebarWidth();
     }
 
     protected void renderEditorAreaBackground(GuiGraphics graphics, float partial) {
@@ -692,8 +715,8 @@ public class TextEditorScreen extends PiPScreen {
 
         //Auto-scroll if mouse outside editor area and in mouse-highlighting mode
         if (this.isInMouseHighlightingMode()) {
-            int mX = MouseInput.getMouseX();
-            int mY = MouseInput.getMouseY();
+            int mX = this.lastMouseX;
+            int mY = this.lastMouseY;
             float speedMult = 0.008F;
             if (mX < this.borderLeft) {
                 float f = Math.max(0.01F, (float)(this.borderLeft - mX) * speedMult);
@@ -782,7 +805,7 @@ public class TextEditorScreen extends PiPScreen {
                 this.startHighlightLineIndex = this.getLineIndex(focused);
                 this.endHighlightLineIndex = this.startHighlightLineIndex;
             }
-            int i = Mth.floor(MouseInput.getMouseX()) - focused.getX();
+            int i = Mth.floor(this.lastMouseX) - focused.getX();
             if (focused.getAsAccessor().getBorderedFancyMenu()) {
                 i -= 4;
             }
@@ -1508,6 +1531,8 @@ public class TextEditorScreen extends PiPScreen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
+        this.lastMouseX = (int)mouseX;
+        this.lastMouseY = (int)mouseY;
         this.setFocused(null);
 
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
@@ -1534,7 +1559,7 @@ public class TextEditorScreen extends PiPScreen {
                         if (hoveredLine == null) {
                             TextEditorLine focus = this.getLine(this.getLineCount()-1);
                             for (TextEditorLine t : this.textFieldLines) {
-                                if ((MouseInput.getMouseY() >= t.getY()) && (MouseInput.getMouseY() <= t.getY() + t.getHeight())) {
+                                if ((mouseY >= t.getY()) && (mouseY <= t.getY() + t.getHeight())) {
                                     focus = t;
                                     break;
                                 }
@@ -1547,7 +1572,7 @@ public class TextEditorScreen extends PiPScreen {
                             this.setFocusedLine(this.getLineIndex(hoveredLine));
                             //Set cursor in case focusedLineIndex is right-clicked
                             String s = this.font.plainSubstrByWidth(hoveredLine.getValue().substring(hoveredLine.getAsAccessor().getDisplayPosFancyMenu()), hoveredLine.getInnerWidth());
-                            hoveredLine.moveCursorTo(this.font.plainSubstrByWidth(s, MouseInput.getMouseX() - hoveredLine.getX()).length() + hoveredLine.getAsAccessor().getDisplayPosFancyMenu(), false);
+                            hoveredLine.moveCursorTo(this.font.plainSubstrByWidth(s, (int)mouseX - hoveredLine.getX()).length() + hoveredLine.getAsAccessor().getDisplayPosFancyMenu(), false);
                         }
                     }
                     if (button == 1) {
@@ -1763,8 +1788,8 @@ public class TextEditorScreen extends PiPScreen {
         int yStart = this.headerHeight;
         int xEnd = this.getEditorAreaX() + this.getEditorAreaWidth();
         int yEnd = this.height - this.footerHeight;
-        int mX = MouseInput.getMouseX();
-        int mY = MouseInput.getMouseY();
+        int mX = this.lastMouseX;
+        int mY = this.lastMouseY;
         return (mX >= xStart) && (mX <= xEnd) && (mY >= yStart) && (mY <= yEnd);
     }
 

@@ -112,42 +112,42 @@ public class Test {
     @EventListener
     public void onInitScreenPost(InitOrResizeScreenCompletedEvent e) {
 
-        e.addRenderableWidget(new ExtendedButton(20, 20, 100, 20, "Toggle First Blur", button -> {
-            blurFirst = !blurFirst;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 40, 100, 20, "Toggle Second Blur", button -> {
-            blurSecond = !blurSecond;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 60, 100, 20, "Toggle Third Blur", button -> {
-            blurThird = !blurThird;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 80, 100, 20, "Toggle First Circle", button -> {
-            circleFirst = !circleFirst;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 100, 100, 20, "Toggle Second Circle", button -> {
-            circleSecond = !circleSecond;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 120, 100, 20, "Toggle Third Circle", button -> {
-            circleThird = !circleThird;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 140, 100, 20, "Toggle Santa", button -> {
-            textSantaTime = !textSantaTime;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 160, 100, 20, "Toggle Scab", button -> {
-            textScab = !textScab;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 180, 100, 20, "Toggle Schizm", button -> {
-            textSchizm = !textSchizm;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 200, 100, 20, "Toggle Seattle", button -> {
-            textSeattleAvenue = !textSeattleAvenue;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 220, 100, 20, "Toggle Noto Sans", button -> {
-            textNotoSans = !textNotoSans;
-        }));
-        e.addRenderableWidget(new ExtendedButton(20, 240, 100, 20, "Toggle Sexton", button -> {
-            textSextonSans = !textSextonSans;
-        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 20, 100, 20, "Toggle First Blur", button -> {
+//            blurFirst = !blurFirst;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 40, 100, 20, "Toggle Second Blur", button -> {
+//            blurSecond = !blurSecond;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 60, 100, 20, "Toggle Third Blur", button -> {
+//            blurThird = !blurThird;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 80, 100, 20, "Toggle First Circle", button -> {
+//            circleFirst = !circleFirst;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 100, 100, 20, "Toggle Second Circle", button -> {
+//            circleSecond = !circleSecond;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 120, 100, 20, "Toggle Third Circle", button -> {
+//            circleThird = !circleThird;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 140, 100, 20, "Toggle Santa", button -> {
+//            textSantaTime = !textSantaTime;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 160, 100, 20, "Toggle Scab", button -> {
+//            textScab = !textScab;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 180, 100, 20, "Toggle Schizm", button -> {
+//            textSchizm = !textSchizm;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 200, 100, 20, "Toggle Seattle", button -> {
+//            textSeattleAvenue = !textSeattleAvenue;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 220, 100, 20, "Toggle Noto Sans", button -> {
+//            textNotoSans = !textNotoSans;
+//        }));
+//        e.addRenderableWidget(new ExtendedButton(20, 240, 100, 20, "Toggle Sexton", button -> {
+//            textSextonSans = !textSextonSans;
+//        }));
 
     }
 
