@@ -115,5 +115,6 @@
 - Fixed placeholders not working in playername of Player Entity element anymore in MC 1.21.1+ (#1466)
 - Fixed missing localization in "Entity Pose" settings of the "Player Entity" element (#1470)
 - Fixed textures of Checkbox element not showing transparency
+- Fixed line numbers not rendering in Text Editor screen
 
 %changelog:end%
