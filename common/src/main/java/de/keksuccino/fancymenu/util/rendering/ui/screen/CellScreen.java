@@ -167,7 +167,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
-            e.setTextBaseColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt());
+            e.setTextBaseColor(UIBase.getUITheme().description_area_text_color.getColorInt());
             this.descriptionScrollArea.addEntry(e);
         });
     }
@@ -390,11 +390,11 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     protected void renderTitle(@NotNull GuiGraphics graphics) {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
     }
 
     protected void renderCellScreenBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
     }
 
     @Override
@@ -610,7 +610,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     public class SeparatorCell extends RenderCell {
 
-        protected Supplier<DrawableColor> separatorColorSupplier = () -> UIBase.getUIColorTheme().element_border_color_normal;
+        protected Supplier<DrawableColor> separatorColorSupplier = () -> UIBase.getUITheme().element_border_color_normal;
         protected int separatorThickness = 1;
 
         public SeparatorCell() {
@@ -888,7 +888,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         private boolean selectable = false;
         private boolean selected = false;
         protected boolean hovered = false;
-        protected Supplier<DrawableColor> hoverColorSupplier = () -> UIBase.getUIColorTheme().list_entry_color_selected_hovered;
+        protected Supplier<DrawableColor> hoverColorSupplier = () -> UIBase.getUITheme().list_entry_color_selected_hovered;
         @Nullable
         protected Supplier<List<Component>> descriptionSupplier = null;
         @NotNull

@@ -30,9 +30,9 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     protected float width;
     protected float height;
     @Nullable
-    public Supplier<DrawableColor> backgroundColor = () -> getUIColorTheme().area_background_color;
+    public Supplier<DrawableColor> backgroundColor = () -> getUITheme().area_background_color;
     @Nullable
-    public Supplier<DrawableColor> borderColor = () -> getUIColorTheme().element_border_color_normal;
+    public Supplier<DrawableColor> borderColor = () -> getUITheme().element_border_color_normal;
     protected float borderThickness = 1;
     public boolean makeEntriesWidthOfArea = false;
     public boolean minimumEntryWidthIsAreaWidth = true;
@@ -54,9 +54,9 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         this.setY(y, true);
         this.setWidth(width, true);
         this.setHeight(height, true);
-        this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, VERTICAL_SCROLL_BAR_WIDTH, VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> getUIColorTheme().scroll_grabber_color_normal, () -> getUIColorTheme().scroll_grabber_color_hover);
+        this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, VERTICAL_SCROLL_BAR_WIDTH, VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> getUITheme().scroll_grabber_color_normal, () -> getUITheme().scroll_grabber_color_hover);
         this.verticalScrollBar.setScrollWheelAllowed(true);
-        this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, HORIZONTAL_SCROLL_BAR_WIDTH, HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> getUIColorTheme().scroll_grabber_color_normal, () -> getUIColorTheme().scroll_grabber_color_hover);
+        this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, HORIZONTAL_SCROLL_BAR_WIDTH, HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> getUITheme().scroll_grabber_color_normal, () -> getUITheme().scroll_grabber_color_hover);
         this.updateScrollArea();
     }
 

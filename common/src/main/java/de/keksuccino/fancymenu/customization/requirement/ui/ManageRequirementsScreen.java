@@ -180,12 +180,12 @@ public class ManageRequirementsScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
-        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
@@ -273,7 +273,7 @@ public class ManageRequirementsScreen extends Screen {
         public RequirementGroup group;
 
         public RequirementGroupEntry(ScrollArea parent, RequirementGroup group) {
-            super(parent, Component.literal(group.identifier).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(" (" + I18n.get("fancymenu.requirements.screens.manage_screen.group.info", "" + group.getInstances().size()) + ")").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))), UIBase.getUIColorTheme().listing_dot_color_3, (entry) -> {});
+            super(parent, Component.literal(group.identifier).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())).append(Component.literal(" (" + I18n.get("fancymenu.requirements.screens.manage_screen.group.info", "" + group.getInstances().size()) + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()))), UIBase.getUITheme().listing_dot_color_3, (entry) -> {});
             this.group = group;
             this.setHeight(this.getHeight() + (HEADER_FOOTER_HEIGHT * 2));
         }
@@ -298,11 +298,11 @@ public class ManageRequirementsScreen extends Screen {
             this.instance = instance;
             this.lineHeight = lineHeight;
 
-            this.displayNameComponent = Component.literal(this.instance.requirement.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            this.displayNameComponent = Component.literal(this.instance.requirement.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt()));
             String modeString = (this.instance.mode == RequirementInstance.RequirementMode.IF) ? I18n.get("fancymenu.requirements.screens.requirement.info.mode.normal") : I18n.get("fancymenu.requirements.screens.requirement.info.mode.opposite");
-            this.modeComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.mode") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(modeString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
+            this.modeComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.mode") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())).append(Component.literal(modeString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt())));
             String valueString = (this.instance.value != null) ? this.instance.value : I18n.get("fancymenu.requirements.screens.requirement.info.value.none");
-            this.valueComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
+            this.valueComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt())));
 
             this.setWidth(this.calculateWidth());
             this.setHeight((lineHeight * 3) + (HEADER_FOOTER_HEIGHT * 2));
@@ -320,13 +320,13 @@ public class ManageRequirementsScreen extends Screen {
 
             RenderSystem.enableBlend();
 
-            renderListingDot(graphics, baseX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColorInt());
+            renderListingDot(graphics, baseX + 5, centerYLine1 - 2, UIBase.getUITheme().listing_dot_color_2.getColorInt());
             graphics.drawString(this.font, this.displayNameComponent, (baseX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
-            renderListingDot(graphics, baseX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColorInt());
+            renderListingDot(graphics, baseX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUITheme().listing_dot_color_1.getColorInt());
             graphics.drawString(this.font, this.modeComponent, (baseX + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
 
-            renderListingDot(graphics, baseX + 5 + 4 + 3, centerYLine3 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColorInt());
+            renderListingDot(graphics, baseX + 5 + 4 + 3, centerYLine3 - 2, UIBase.getUITheme().listing_dot_color_1.getColorInt());
             graphics.drawString(this.font, this.valueComponent, (baseX + 5 + 4 + 3 + 4 + 3), (centerYLine3 - (this.font.lineHeight / 2)), -1, false);
 
         }

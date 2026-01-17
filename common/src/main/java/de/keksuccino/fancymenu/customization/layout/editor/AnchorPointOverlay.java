@@ -115,14 +115,14 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     public DrawableColor getOverlayColorBase() {
         if (this.invertOverlayColors()) return DrawableColor.WHITE;
         DrawableColor override = this.getOverlayColorBaseOverride();
-        return (override != null) ? override : UIBase.getUIColorTheme().layout_editor_anchor_point_overlay_color_base;
+        return (override != null) ? override : UIBase.getUITheme().layout_editor_anchor_point_overlay_color_base;
     }
 
     @NotNull
     public DrawableColor getOverlayColorBorder() {
         if (this.invertOverlayColors()) return DrawableColor.WHITE;
         DrawableColor override = this.getOverlayColorBorderOverride();
-        return (override != null) ? override : UIBase.getUIColorTheme().layout_editor_anchor_point_overlay_color_border;
+        return (override != null) ? override : UIBase.getUITheme().layout_editor_anchor_point_overlay_color_border;
     }
 
     public boolean isOverlayBusy() {

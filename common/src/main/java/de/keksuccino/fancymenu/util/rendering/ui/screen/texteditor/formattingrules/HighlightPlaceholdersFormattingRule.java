@@ -12,10 +12,10 @@ import java.util.*;
 public class HighlightPlaceholdersFormattingRule extends TextEditorFormattingRule {
 
     // JSON syntax highlighting styles
-    private final Style braceStyle = Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_4.getColorInt());
-    private final Style keyStyle = Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_1.getColorInt());
-    private final Style stringStyle = Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_2.getColorInt());
-    private final Style punctuationStyle = Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_5.getColorInt());
+    private final Style braceStyle = Style.EMPTY.withColor(UIBase.getUITheme().text_editor_text_formatting_nested_text_color_4.getColorInt());
+    private final Style keyStyle = Style.EMPTY.withColor(UIBase.getUITheme().text_editor_text_formatting_nested_text_color_1.getColorInt());
+    private final Style stringStyle = Style.EMPTY.withColor(UIBase.getUITheme().text_editor_text_formatting_nested_text_color_2.getColorInt());
+    private final Style punctuationStyle = Style.EMPTY.withColor(UIBase.getUITheme().text_editor_text_formatting_nested_text_color_5.getColorInt());
 
     // Store character positions with their styles
     private Map<TextEditorLine, SortedMap<Integer, Style>> characterStyles = new HashMap<>();

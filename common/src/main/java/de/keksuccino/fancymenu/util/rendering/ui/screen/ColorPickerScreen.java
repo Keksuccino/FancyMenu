@@ -101,7 +101,7 @@ public class ColorPickerScreen extends PiPScreen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        UIColorTheme theme = UIBase.getUIColorTheme();
+        UIColorTheme theme = UIBase.getUITheme();
         RenderSystem.enableBlend();
 
         this.updateLayout();
@@ -312,7 +312,7 @@ public class ColorPickerScreen extends PiPScreen {
         int hueColor = 0xFF000000 | (hueRgb & 0xFFFFFF);
         this.fillGradientHorizontal(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0xFFFFFFFF, hueColor);
         graphics.fillGradient(this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0x00000000, 0xFF000000);
-        UIBase.renderBorder(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 1, UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
+        UIBase.renderBorder(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 1, UIBase.getUITheme().element_border_color_normal.getColorInt(), true, true, true, true);
     }
 
     private void renderColorAreaSelector(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {

@@ -159,16 +159,16 @@ public class ChooseActionScreen extends Screen implements InitialWidgetFocusScre
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.build_screen.available_actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.build_screen.available_actions"), 20, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
         Component descLabel = Component.translatable("fancymenu.actions.screens.build_screen.action_description");
         int descLabelWidth = this.font.width(descLabel);
-        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
         super.render(graphics, mouseX, mouseY, partial);
 
@@ -211,7 +211,7 @@ public class ChooseActionScreen extends Screen implements InitialWidgetFocusScre
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
-            e.setTextBaseColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt());
+            e.setTextBaseColor(UIBase.getUITheme().description_area_text_color.getColorInt());
             this.descriptionScrollArea.addEntry(e);
         });
     }
@@ -282,17 +282,17 @@ public class ChooseActionScreen extends Screen implements InitialWidgetFocusScre
         protected static final long DOUBLE_CLICK_TIME = 500; // milliseconds
 
         public ActionScrollEntry(ScrollArea parent, @NotNull Action action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, buildLabel(action), UIBase.getUIColorTheme().listing_dot_color_1, onClick);
+            super(parent, buildLabel(action), UIBase.getUITheme().listing_dot_color_1, onClick);
             this.action = action;
         }
 
         @NotNull
         private static Component buildLabel(@NotNull Action action) {
-            MutableComponent c = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+            MutableComponent c = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()));
             if (action.isDeprecated()) {
                 c = c.withStyle(Style.EMPTY.withStrikethrough(true));
                 c = c.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
-                c = c.append(Component.translatable("fancymenu.actions.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()).withStrikethrough(false)));
+                c = c.append(Component.translatable("fancymenu.actions.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()).withStrikethrough(false)));
             }
             return c;
         }

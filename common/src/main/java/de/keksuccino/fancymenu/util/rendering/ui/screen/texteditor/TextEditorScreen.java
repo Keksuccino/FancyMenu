@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
@@ -22,7 +24,6 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -42,10 +43,11 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@SuppressWarnings("all")
+@SuppressWarnings("unused")
 public class TextEditorScreen extends PiPScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -60,10 +62,10 @@ public class TextEditorScreen extends PiPScreen {
     protected final CharacterFilter characterFilter;
     protected final Consumer<String> callback;
     protected List<TextEditorLine> textFieldLines = new ArrayList<>();
-    protected ScrollBar verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUIColorTheme().scroll_grabber_color_normal, () -> UIBase.getUIColorTheme().scroll_grabber_color_hover);
-    protected ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUIColorTheme().scroll_grabber_color_normal, () -> UIBase.getUIColorTheme().scroll_grabber_color_hover);
-    protected ScrollBar verticalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUIColorTheme().scroll_grabber_color_normal, () -> UIBase.getUIColorTheme().scroll_grabber_color_hover);
-    protected ScrollBar horizontalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUIColorTheme().scroll_grabber_color_normal, () -> UIBase.getUIColorTheme().scroll_grabber_color_hover);
+    protected ScrollBar verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
+    protected ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
+    protected ScrollBar verticalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
+    protected ScrollBar horizontalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
     protected ContextMenu rightClickContextMenu;
     protected ExtendedButton cancelButton;
     protected ExtendedButton doneButton;
@@ -76,22 +78,24 @@ public class TextEditorScreen extends PiPScreen {
     protected int borderLeft = 40;
     protected int borderRight = 20;
     protected int lineHeight = 14;
-    protected DrawableColor screenBackgroundColor = UIBase.getUIColorTheme().interface_background_color;
-    protected Color editorAreaBorderColor = UIBase.getUIColorTheme().element_border_color_normal.getColor();
-    protected Color editorAreaBackgroundColor = UIBase.getUIColorTheme().area_background_color.getColor();
-    protected Color textColor = UIBase.getUIColorTheme().text_editor_text_color.getColor();
-    protected Color focusedLineColor = UIBase.getUIColorTheme().list_entry_color_selected_hovered.getColor();
-    protected DrawableColor scrollGrabberIdleColor = UIBase.getUIColorTheme().scroll_grabber_color_normal;
-    protected DrawableColor scrollGrabberHoverColor = UIBase.getUIColorTheme().scroll_grabber_color_hover;
-    protected Color sideBarColor = UIBase.getUIColorTheme().text_editor_sidebar_color.getColor();
-    protected Color lineNumberTextColorNormal = UIBase.getUIColorTheme().text_editor_line_number_text_color_normal.getColor();
-    protected Color lineNumberTextColorFocused = UIBase.getUIColorTheme().text_editor_line_number_text_color_selected.getColor();
-    protected Color placeholderEntryBackgroundColorIdle = UIBase.getUIColorTheme().area_background_color.getColor();
-    protected Color placeholderEntryBackgroundColorHover = UIBase.getUIColorTheme().list_entry_color_selected_hovered.getColor();
-    protected Color placeholderEntryDotColorPlaceholder = UIBase.getUIColorTheme().listing_dot_color_1.getColor();
-    protected Color placeholderEntryDotColorCategory = UIBase.getUIColorTheme().listing_dot_color_2.getColor();
-    protected Color placeholderEntryLabelColor = UIBase.getUIColorTheme().description_area_text_color.getColor();
-    protected Color placeholderEntryBackToCategoriesLabelColor = UIBase.getUIColorTheme().warning_text_color.getColor();
+    protected Supplier<DrawableColor> areaBackgroundColor = () -> {
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_color_type_1;
+        return UIBase.getUITheme().area_background_color;
+    };
+    protected Supplier<DrawableColor> editorAreaBorderColor = () -> UIBase.getUITheme().element_border_color_normal;
+    protected Supplier<DrawableColor> textColor = () -> UIBase.getUITheme().text_editor_text_color;
+    protected Supplier<DrawableColor> focusedLineColor = () -> UIBase.getUITheme().list_entry_color_selected_hovered;
+    protected Supplier<DrawableColor> scrollGrabberIdleColor = () -> UIBase.getUITheme().scroll_grabber_color_normal;
+    protected Supplier<DrawableColor> scrollGrabberHoverColor = () -> UIBase.getUITheme().scroll_grabber_color_hover;
+    protected Supplier<DrawableColor> sideBarColor = () -> UIBase.getUITheme().text_editor_sidebar_color;
+    protected Supplier<DrawableColor> lineNumberTextColorNormal = () -> UIBase.getUITheme().text_editor_line_number_text_color_normal;
+    protected Supplier<DrawableColor> lineNumberTextColorFocused = () -> UIBase.getUITheme().text_editor_line_number_text_color_selected;
+    protected Supplier<DrawableColor> placeholderEntryBackgroundColorIdle = () -> UIBase.getUITheme().area_background_color;
+    protected Supplier<DrawableColor> placeholderEntryBackgroundColorHover = () -> UIBase.getUITheme().list_entry_color_selected_hovered;
+    protected Supplier<DrawableColor> placeholderEntryDotColorPlaceholder = () -> UIBase.getUITheme().listing_dot_color_1;
+    protected Supplier<DrawableColor> placeholderEntryDotColorCategory = () -> UIBase.getUITheme().listing_dot_color_2;
+    protected Supplier<DrawableColor> placeholderEntryLabelColor = () -> UIBase.getUITheme().description_area_text_color;
+    protected Supplier<DrawableColor> placeholderEntryBackToCategoriesLabelColor = () -> UIBase.getUITheme().warning_text_color;
     protected int currentLineWidth;
     protected int lastTickFocusedLineIndex = -1;
     protected TextEditorLine startHighlightLine = null;
@@ -116,7 +120,7 @@ public class TextEditorScreen extends PiPScreen {
     protected ExtendedEditBox searchBar;
 
     private static final Comparator<Placeholder> PLACEHOLDER_DISPLAY_NAME_COMPARATOR = Comparator
-            .comparing((Placeholder placeholder) -> placeholder.getDisplayName(), String.CASE_INSENSITIVE_ORDER)
+            .comparing(Placeholder::getDisplayName, String.CASE_INSENSITIVE_ORDER)
             .thenComparing(Placeholder::getDisplayName)
             .thenComparing(Placeholder::getIdentifier);
     private static final Comparator<String> PLACEHOLDER_CATEGORY_COMPARATOR = Comparator
@@ -177,7 +181,7 @@ public class TextEditorScreen extends PiPScreen {
         this.searchBar.setResponder(s -> this.updatePlaceholdersList());
         this.searchBar.setIsVisibleSupplier(consumes -> extendedPlaceholderMenu && this.allowPlaceholders);
         this.addRenderableWidget(this.searchBar);
-        UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar, UIBase.shouldBlur());
 
         this.verticalScrollBarPlaceholderMenu.scrollAreaStartX = this.getPlaceholderAreaX() + 1;
         this.verticalScrollBarPlaceholderMenu.scrollAreaStartY = this.getPlaceholderAreaY() + 1;
@@ -190,18 +194,18 @@ public class TextEditorScreen extends PiPScreen {
         this.horizontalScrollBarPlaceholderMenu.scrollAreaEndY = this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight() - 1;
 
         //Set scroll grabber colors
-        this.verticalScrollBar.idleBarColor = () -> this.scrollGrabberIdleColor;
-        this.verticalScrollBar.hoverBarColor = () -> this.scrollGrabberHoverColor;
-        this.horizontalScrollBar.idleBarColor = () -> this.scrollGrabberIdleColor;
-        this.horizontalScrollBar.hoverBarColor = () -> this.scrollGrabberHoverColor;
+        this.verticalScrollBar.idleBarColor = this.scrollGrabberIdleColor;
+        this.verticalScrollBar.hoverBarColor = this.scrollGrabberHoverColor;
+        this.horizontalScrollBar.idleBarColor = this.scrollGrabberIdleColor;
+        this.horizontalScrollBar.hoverBarColor = this.scrollGrabberHoverColor;
         this.verticalScrollBar.setRoundedGrabberEnabled(true);
         this.horizontalScrollBar.setRoundedGrabberEnabled(true);
 
         //Set placeholder menu scroll bar colors
-        this.verticalScrollBarPlaceholderMenu.idleBarColor = () -> this.scrollGrabberIdleColor;
-        this.verticalScrollBarPlaceholderMenu.hoverBarColor = () -> this.scrollGrabberHoverColor;
-        this.horizontalScrollBarPlaceholderMenu.idleBarColor = () -> this.scrollGrabberIdleColor;
-        this.horizontalScrollBarPlaceholderMenu.hoverBarColor = () -> this.scrollGrabberHoverColor;
+        this.verticalScrollBarPlaceholderMenu.idleBarColor = this.scrollGrabberIdleColor;
+        this.verticalScrollBarPlaceholderMenu.hoverBarColor = this.scrollGrabberHoverColor;
+        this.horizontalScrollBarPlaceholderMenu.idleBarColor = this.scrollGrabberIdleColor;
+        this.horizontalScrollBarPlaceholderMenu.hoverBarColor = this.scrollGrabberHoverColor;
         this.verticalScrollBarPlaceholderMenu.setRoundedGrabberEnabled(true);
         this.horizontalScrollBarPlaceholderMenu.setRoundedGrabberEnabled(true);
 
@@ -232,11 +236,7 @@ public class TextEditorScreen extends PiPScreen {
                 placeholderButtonLabel = placeholderButtonLabel.withStyle(Style.EMPTY.withUnderlined(true));
             }
             this.placeholderButton = new ExtendedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, placeholderButtonLabel, (button) -> {
-                if (extendedPlaceholderMenu) {
-                    extendedPlaceholderMenu = false;
-                } else {
-                    extendedPlaceholderMenu = true;
-                }
+                extendedPlaceholderMenu = !extendedPlaceholderMenu;
                 this.rebuildWidgets();
             }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.placeholders.desc")));
             this.addWidget(this.placeholderButton);
@@ -312,8 +312,9 @@ public class TextEditorScreen extends PiPScreen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        RenderingUtils.setDepthTestLocked(true);
         RenderSystem.disableDepthTest();
 
         //Reset scrolls if content fits editor area
@@ -333,7 +334,7 @@ public class TextEditorScreen extends PiPScreen {
 
         this.renderLineNumberBackground(graphics, this.borderLeft);
 
-        this.renderEditorAreaBackground(graphics);
+        this.renderEditorAreaBackground(graphics, partial);
 
         // Render indentation guides if enabled
         if (this.showIndentationGuides) {
@@ -370,8 +371,7 @@ public class TextEditorScreen extends PiPScreen {
         this.lastTickFocusedLineIndex = this.getFocusedLineIndex();
         this.triggeredFocusedLineWasTooHighInCursorPosMethod = false;
 
-        float editorAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
-        UIBase.renderRoundedBorder(graphics, this.borderLeft - 1, this.headerHeight - 1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1.0F, editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.editorAreaBorderColor.getRGB());
+        this.renderEditorAreaBorder(graphics, partial);
 
         this.verticalScrollBar.render(graphics, mouseX, mouseY, partial);
         this.horizontalScrollBar.render(graphics, mouseX, mouseY, partial);
@@ -390,25 +390,25 @@ public class TextEditorScreen extends PiPScreen {
 
         this.tickMouseHighlighting();
 
-        RenderSystem.enableDepthTest();
-
         super.render(graphics, mouseX, mouseY, partial);
+
+        RenderingUtils.setDepthTestLocked(false);
 
     }
 
     @Override
-    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     protected void renderMultilineNotSupportedNotification(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (!this.multilineMode) {
-            MutableComponent indicator = Component.translatable("fancymenu.editor.text_editor.single_line_warning.indicator").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())).append(Component.literal(" [?]").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+            MutableComponent indicator = Component.translatable("fancymenu.editor.text_editor.single_line_warning.indicator").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())).append(Component.literal(" [?]").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
             int indicatorX = this.getEditorAreaX();
             int indicatorY = this.getEditorAreaY() - this.font.lineHeight - 5;
             int indicatorWidth = this.font.width(indicator);
             graphics.drawString(this.font, indicator, indicatorX, indicatorY, -1, false);
             if (UIBase.isXYInArea(mouseX, mouseY, indicatorX, indicatorY, indicatorWidth, this.font.lineHeight)) {
-                TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.editor.text_editor.single_line_warning").withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), () -> true);
+                TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.editor.text_editor.single_line_warning").withColor(UIBase.getUITheme().error_text_color.getColorInt())), () -> true);
             }
         }
     }
@@ -426,7 +426,7 @@ public class TextEditorScreen extends PiPScreen {
 
             //Render placeholder menu background
             float placeholderAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
-            UIBase.renderRoundedRect(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.getPlaceholderAreaWidth(), this.getPlaceholderAreaHeight(), placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.editorAreaBackgroundColor.getRGB());
+            UIBase.renderRoundedRect(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.getPlaceholderAreaWidth(), this.getPlaceholderAreaHeight(), placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.areaBackgroundColor.get().getColorInt());
 
             //Don't render parts of placeholder entries outside of placeholder menu area
             graphics.enableScissor(this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight());
@@ -444,7 +444,7 @@ public class TextEditorScreen extends PiPScreen {
             graphics.disableScissor();
 
             //Render placeholder menu border
-            UIBase.renderRoundedBorder(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.headerHeight - 1 + 25, this.width - this.borderRight, this.height - this.footerHeight + 1, 1.0F, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.editorAreaBorderColor.getRGB());
+            UIBase.renderRoundedBorder(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.headerHeight - 1 + 25, this.width - this.borderRight, this.height - this.footerHeight + 1, 1.0F, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.editorAreaBorderColor.get().getColorInt());
 
             //Render placeholder menu scroll bars
             this.verticalScrollBarPlaceholderMenu.render(graphics, mouseX, mouseY, partial);
@@ -536,13 +536,13 @@ public class TextEditorScreen extends PiPScreen {
                 if (desc != null) {
                     entry.setDescription(desc.toArray(new String[0]));
                 }
-                entry.dotColor = this.placeholderEntryDotColorPlaceholder;
-                entry.entryLabelColor = this.placeholderEntryLabelColor;
+                entry.dotColor = this.placeholderEntryDotColorPlaceholder.get().getColor();
+                entry.entryLabelColor = this.placeholderEntryLabelColor.get().getColor();
                 this.placeholderMenuEntries.add(entry);
             }
             for (PlaceholderMenuEntry e : this.placeholderMenuEntries) {
-                e.backgroundColorIdle = this.placeholderEntryBackgroundColorIdle;
-                e.backgroundColorHover = this.placeholderEntryBackgroundColorHover;
+                e.backgroundColorIdle = this.placeholderEntryBackgroundColorIdle.get().getColor();
+                e.backgroundColorHover = this.placeholderEntryBackgroundColorHover.get().getColor();
             }
             this.verticalScrollBarPlaceholderMenu.setScroll(0.0F);
             this.horizontalScrollBarPlaceholderMenu.setScroll(0.0F);
@@ -562,8 +562,8 @@ public class TextEditorScreen extends PiPScreen {
                             PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(m.getKey()), () -> {
                                 this.updatePlaceholderEntries(m.getKey(), true, true);
                             });
-                            entry.dotColor = this.placeholderEntryDotColorCategory;
-                            entry.entryLabelColor = this.placeholderEntryLabelColor;
+                            entry.dotColor = this.placeholderEntryDotColorCategory.get().getColor();
+                            entry.entryLabelColor = this.placeholderEntryLabelColor.get().getColor();
                             this.placeholderMenuEntries.add(entry);
                         }
                     }
@@ -576,8 +576,8 @@ public class TextEditorScreen extends PiPScreen {
                         PlaceholderMenuEntry backToCategoriesEntry = new PlaceholderMenuEntry(this, Component.literal(I18n.get("fancymenu.ui.text_editor.placeholders.back_to_categories")), () -> {
                             this.updatePlaceholderEntries(null, true, true);
                         });
-                        backToCategoriesEntry.dotColor = this.placeholderEntryDotColorCategory;
-                        backToCategoriesEntry.entryLabelColor = this.placeholderEntryBackToCategoriesLabelColor;
+                        backToCategoriesEntry.dotColor = this.placeholderEntryDotColorCategory.get().getColor();
+                        backToCategoriesEntry.entryLabelColor = this.placeholderEntryBackToCategoriesLabelColor.get().getColor();
                         this.placeholderMenuEntries.add(backToCategoriesEntry);
                     }
 
@@ -592,8 +592,8 @@ public class TextEditorScreen extends PiPScreen {
                             if (desc != null) {
                                 entry.setDescription(desc.toArray(new String[0]));
                             }
-                            entry.dotColor = this.placeholderEntryDotColorPlaceholder;
-                            entry.entryLabelColor = this.placeholderEntryLabelColor;
+                            entry.dotColor = this.placeholderEntryDotColorPlaceholder.get().getColor();
+                            entry.entryLabelColor = this.placeholderEntryLabelColor.get().getColor();
                             this.placeholderMenuEntries.add(entry);
                         }
                     }
@@ -601,8 +601,8 @@ public class TextEditorScreen extends PiPScreen {
                 }
 
                 for (PlaceholderMenuEntry e : this.placeholderMenuEntries) {
-                    e.backgroundColorIdle = this.placeholderEntryBackgroundColorIdle;
-                    e.backgroundColorHover = this.placeholderEntryBackgroundColorHover;
+                    e.backgroundColorIdle = this.placeholderEntryBackgroundColorIdle.get().getColor();
+                    e.backgroundColorHover = this.placeholderEntryBackgroundColorHover.get().getColor();
                 }
 
                 this.verticalScrollBarPlaceholderMenu.setScroll(0.0F);
@@ -625,11 +625,7 @@ public class TextEditorScreen extends PiPScreen {
             if (cat == null) {
                 cat = I18n.get("fancymenu.requirements.categories.other");
             }
-            List<Placeholder> l = categories.get(cat);
-            if (l == null) {
-                l = new ArrayList<>();
-                categories.put(cat, l);
-            }
+            List<Placeholder> l = categories.computeIfAbsent(cat, k -> new ArrayList<>());
             l.add(p);
         }
         categories.values().forEach(list -> list.sort(PLACEHOLDER_DISPLAY_NAME_COMPARATOR));
@@ -653,18 +649,23 @@ public class TextEditorScreen extends PiPScreen {
         float xMax = this.getEditorAreaX() + overlap;
         float yMin = this.getEditorAreaY() - 1.0F;
         float yMax = this.getEditorAreaY() + this.getEditorAreaHeight() + 1.0F;
-        UIBase.fillF(graphics, xMin, yMin, xMax, yMax, this.sideBarColor.getRGB());
+        UIBase.fillF(graphics, xMin, yMin, xMax, yMax, this.sideBarColor.get().getColorInt());
     }
 
     protected void renderLineNumber(GuiGraphics graphics, TextEditorLine line) {
         String lineNumberString = "" + (line.lineIndex+1);
         int lineNumberWidth = this.font.width(lineNumberString);
-        graphics.drawString(this.font, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.getRGB() : this.lineNumberTextColorNormal.getRGB(), false);
+        graphics.drawString(this.font, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.get().getColorInt() : this.lineNumberTextColorNormal.get().getColorInt(), false);
     }
 
-    protected void renderEditorAreaBackground(GuiGraphics graphics) {
+    protected void renderEditorAreaBackground(GuiGraphics graphics, float partial) {
         float editorAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
-        UIBase.renderRoundedRect(graphics, this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaWidth(), this.getEditorAreaHeight(), editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.editorAreaBackgroundColor.getRGB());
+        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaWidth(), this.getEditorAreaHeight(), editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.areaBackgroundColor.get().getColorInt(), partial);
+    }
+
+    protected void renderEditorAreaBorder(GuiGraphics graphics, float partial) {
+        float editorAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
+        SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(graphics, this.borderLeft - 1, this.headerHeight - 1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1.0F, editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.editorAreaBorderColor.get().getColorInt(), partial);
     }
 
     protected void tickMouseHighlighting() {
@@ -797,8 +798,8 @@ public class TextEditorScreen extends PiPScreen {
                 }
                 index++;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCMYENU] Failed to update lines!", ex);
         }
     }
 
@@ -931,13 +932,12 @@ public class TextEditorScreen extends PiPScreen {
         return false;
     }
 
-    @Nullable
     /** Returns the lines between two indexes, EXCLUDING start AND end indexes! **/
+    @Nullable
     public List<TextEditorLine> getLinesBetweenIndexes(int startIndex, int endIndex) {
         startIndex = Math.min(Math.max(startIndex, 0), this.textFieldLines.size()-1);
         endIndex = Math.min(Math.max(endIndex, 0), this.textFieldLines.size()-1);
-        List<TextEditorLine> l = new ArrayList<>();
-        l.addAll(this.textFieldLines.subList(startIndex, endIndex));
+        List<TextEditorLine> l = new ArrayList<>(this.textFieldLines.subList(startIndex, endIndex));
         if (!l.isEmpty()) {
             l.remove(0);
         }
@@ -965,7 +965,7 @@ public class TextEditorScreen extends PiPScreen {
                 TextEditorLine currentLine = this.getLine(current);
                 this.setFocusedLine(current - 1);
                 if (currentLine != null) {
-                    this.getFocusedLine().moveCursorTo(this.lastCursorPosSetByUser, false);
+                    Objects.requireNonNull(this.getFocusedLine()).moveCursorTo(this.lastCursorPosSetByUser, false);
                 }
             }
         }
@@ -981,6 +981,7 @@ public class TextEditorScreen extends PiPScreen {
             this.setFocusedLine(current+1);
             if (currentLine != null) {
                 TextEditorLine nextLine = this.getFocusedLine();
+                if (nextLine == null) return;
                 if (isNewLine) {
                     //Split content of currentLine at cursor pos and move text after cursor to next focusedLineIndex if ENTER was pressed
                     String textBeforeCursor = currentLine.getValue().substring(0, currentLine.getCursorPosition());
@@ -1054,7 +1055,7 @@ public class TextEditorScreen extends PiPScreen {
                 List<TextEditorLine> lines = new ArrayList<>();
                 lines.add(this.getLine(this.startHighlightLineIndex));
                 if (this.startHighlightLineIndex != this.endHighlightLineIndex) {
-                    lines.addAll(this.getLinesBetweenIndexes(this.startHighlightLineIndex, this.endHighlightLineIndex));
+                    lines.addAll(Objects.requireNonNull(this.getLinesBetweenIndexes(this.startHighlightLineIndex, this.endHighlightLineIndex)));
                     lines.add(this.getLine(this.endHighlightLineIndex));
                 }
                 StringBuilder s = new StringBuilder();
@@ -1066,11 +1067,10 @@ public class TextEditorScreen extends PiPScreen {
                     s.append(t.getHighlighted());
                     b = true;
                 }
-                String ret = s.toString();
-                return ret;
+                return s.toString();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to highlight text!", ex);
         }
         return "";
     }
@@ -1087,14 +1087,16 @@ public class TextEditorScreen extends PiPScreen {
         try {
             if ((this.startHighlightLineIndex != -1) && (this.endHighlightLineIndex != -1)) {
                 if (this.startHighlightLineIndex == this.endHighlightLineIndex) {
-                    this.getLine(this.startHighlightLineIndex).insertText("");
+                    Objects.requireNonNull(this.getLine(this.startHighlightLineIndex)).insertText("");
                 } else {
                     TextEditorLine start = this.getLine(this.startHighlightLineIndex);
+                    if (start == null) return;
                     start.insertText("");
                     TextEditorLine end = this.getLine(this.endHighlightLineIndex);
+                    if (end == null) return;
                     end.insertText("");
                     if ((this.endHighlightLineIndex - this.startHighlightLineIndex) > 1) {
-                        for (TextEditorLine line : this.getLinesBetweenIndexes(this.startHighlightLineIndex, this.endHighlightLineIndex)) {
+                        for (TextEditorLine line : Objects.requireNonNull(this.getLinesBetweenIndexes(this.startHighlightLineIndex, this.endHighlightLineIndex))) {
                             this.removeLineAtIndex(this.getLineIndex(line));
                             linesRemoved++;
                         }
@@ -1110,8 +1112,8 @@ public class TextEditorScreen extends PiPScreen {
                     this.setFocusedLine(this.startHighlightLineIndex);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to delete highlighted text!", ex);
         }
         this.correctYScroll(-linesRemoved);
         this.resetHighlighting();
@@ -1131,20 +1133,20 @@ public class TextEditorScreen extends PiPScreen {
 
     public void pasteText(String text) {
         try {
-            if ((text != null) && !text.equals("")) {
+            if ((text != null) && !text.isEmpty()) {
                 int addedLinesCount = 0;
                 if (this.isTextHighlighted()) {
                     this.deleteHighlightedText();
                 }
                 if (!this.isLineFocused()) {
                     this.setFocusedLine(this.getLineCount()-1);
-                    this.getFocusedLine().moveCursorToEnd(false);
+                    Objects.requireNonNull(this.getFocusedLine()).moveCursorToEnd(false);
                 }
                 TextEditorLine focusedLine = this.getFocusedLine();
                 //These two strings are for correctly pasting text within a char sequence (if the cursor is not at the end or beginning of the focusedLineIndex)
                 String textBeforeCursor = "";
                 String textAfterCursor = "";
-                if (focusedLine.getValue().length() > 0) {
+                if (!focusedLine.getValue().isEmpty()) {
                     textBeforeCursor = focusedLine.getValue().substring(0, focusedLine.getCursorPosition());
                     if (focusedLine.getCursorPosition() < focusedLine.getValue().length()) {
                         textAfterCursor = this.getFocusedLine().getValue().substring(focusedLine.getCursorPosition(), focusedLine.getValue().length());
@@ -1168,7 +1170,7 @@ public class TextEditorScreen extends PiPScreen {
                             this.addLineAtIndex(index);
                             addedLinesCount++;
                         }
-                        this.getLine(index).insertText(s);
+                        Objects.requireNonNull(this.getLine(index)).insertText(s);
                         index++;
                     }
                     this.setFocusedLine(index - 1);
@@ -1177,8 +1179,8 @@ public class TextEditorScreen extends PiPScreen {
                 }
                 this.correctYScroll(addedLinesCount);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to paste text!", ex);
         }
         if (this.indentGuideRenderer != null) {
             this.indentGuideRenderer.markDirty();
@@ -1189,7 +1191,7 @@ public class TextEditorScreen extends PiPScreen {
     public TextEditorScreen setText(@Nullable String text) {
         if (text == null) text = "";
         text = text.replace(NEWLINE_CODE, "\n").replace(SPACE_CODE, " ");
-        TextEditorLine t = this.getLine(0);
+        TextEditorLine t = Objects.requireNonNull(this.getLine(0));
         this.textFieldLines.clear();
         this.textFieldLines.add(t);
         this.setFocusedLine(0);
@@ -1298,7 +1300,7 @@ public class TextEditorScreen extends PiPScreen {
             if (t != lastLine) {
                 s.append(t.getValue());
             } else {
-                s.append(t.getValue().substring(0, t.getCursorPosition()));
+                s.append(t.getValue(), 0, t.getCursorPosition());
             }
             b = true;
         }
@@ -1330,7 +1332,7 @@ public class TextEditorScreen extends PiPScreen {
             if (t != firstLine) {
                 s.append(t.getValue());
             } else {
-                s.append(t.getValue().substring(t.getCursorPosition(), t.getValue().length()));
+                s.append(t.getValue(), t.getCursorPosition(), t.getValue().length());
             }
             b = true;
         }
@@ -1429,7 +1431,7 @@ public class TextEditorScreen extends PiPScreen {
                 } else {
                     if (this.isLineFocused()) {
                         if (!this.getText().isEmpty()) this.history.saveSnapshot();
-                        TextEditorLine focused = this.getFocusedLine();
+                        TextEditorLine focused = Objects.requireNonNull(this.getFocusedLine());
                         focused.getAsAccessor().invokeDeleteTextFancyMenu(-1);
                     }
                 }
@@ -1526,7 +1528,7 @@ public class TextEditorScreen extends PiPScreen {
                                 }
                             }
                             this.setFocusedLine(this.getLineIndex(focus));
-                            this.getFocusedLine().moveCursorToEnd(false);
+                            Objects.requireNonNull(this.getFocusedLine()).moveCursorToEnd(false);
                             this.correctYScroll(0);
                         } else if ((button == 1) && !isHighlightedHovered) {
                             //Focus focusedLineIndex in case it is right-clicked
@@ -1607,8 +1609,8 @@ public class TextEditorScreen extends PiPScreen {
                 --j1;
             }
             return k1;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to get cursor X position!", ex);
         }
         return 0;
     }
@@ -1655,7 +1657,7 @@ public class TextEditorScreen extends PiPScreen {
 
         int minY = this.getEditorAreaY();
         int maxY = this.getEditorAreaY() + this.getEditorAreaHeight();
-        int currentLineY = this.getFocusedLine().getY();
+        int currentLineY = Objects.requireNonNull(this.getFocusedLine()).getY();
 
         if (currentLineY < minY) {
             this.scrollToLine(this.getFocusedLineIndex(), false);
@@ -1787,11 +1789,7 @@ public class TextEditorScreen extends PiPScreen {
      */
     public static String compileSingleLineString(@Nullable String s) {
         if (s == null) return null;
-        String compiled = COMPILED_SINGLE_LINE_STRINGS.get(s);
-        if (compiled == null) {
-            compiled = s.replace(NEWLINE_CODE, "").replace(SPACE_CODE, "");
-            COMPILED_SINGLE_LINE_STRINGS.put(s, compiled);
-        }
+        String compiled = COMPILED_SINGLE_LINE_STRINGS.computeIfAbsent(s, s1 -> s1.replace(NEWLINE_CODE, "").replace(SPACE_CODE, ""));
         return compiled;
     }
 
@@ -1800,7 +1798,7 @@ public class TextEditorScreen extends PiPScreen {
         COMPILED_SINGLE_LINE_STRINGS.clear();
     }
 
-    public class PlaceholderMenuEntry extends UIBase {
+    public static class PlaceholderMenuEntry extends UIBase {
 
         public TextEditorScreen parent;
         public final Component label;

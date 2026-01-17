@@ -321,26 +321,26 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     @NotNull
     protected DrawableColor getElementHoverColor() {
-        if (UIBase.shouldBlur()) return UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_hover_type_1;
-        return UIBase.getUIColorTheme().element_background_color_hover;
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_widget_background_color_hover_type_1;
+        return UIBase.getUITheme().element_background_color_hover;
     }
 
     @NotNull
     protected DrawableColor getTitleBarColor() {
-        if (UIBase.shouldBlur()) return UIBase.getUIColorTheme().ui_blur_interface_title_bar_tint;
-        return UIBase.getUIColorTheme().interface_title_bar_color;
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_title_bar_tint;
+        return UIBase.getUITheme().interface_title_bar_color;
     }
 
     @NotNull
     protected DrawableColor getBorderColor() {
-        if (UIBase.shouldBlur()) return UIBase.getUIColorTheme().ui_blur_overlay_element_border_color;
-        return UIBase.getUIColorTheme().element_border_color_normal;
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_overlay_element_border_color;
+        return UIBase.getUITheme().element_border_color_normal;
     }
 
     @NotNull
     protected DrawableColor getBackgroundColor() {
-        if (UIBase.shouldBlur()) return UIBase.getUIColorTheme().ui_blur_interface_background_tint;
-        return UIBase.getUIColorTheme().interface_background_color;
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_background_tint;
+        return UIBase.getUITheme().interface_background_color;
     }
 
     protected float getBlurRenderScale() {
@@ -666,7 +666,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             if (icon != null) {
                 ResourceLocation location = icon.getResourceLocation();
                 if (location != null) {
-                    UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
+                    UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
                     RenderSystem.enableBlend();
                     blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getTitleBarHeight(), (int) this.width, (int) this.parent.getTitleBarHeight());
                     RenderingUtils.resetShaderColor(graphics);

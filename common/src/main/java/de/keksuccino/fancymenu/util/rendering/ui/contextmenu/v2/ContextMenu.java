@@ -220,7 +220,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                         smoothCornerTopRight,
                         smoothCornerBottomRight,
                         smoothCornerBottomLeft,
-                        UIBase.getUIColorTheme().ui_blur_overlay_element_background_tint,
+                        UIBase.getUITheme().ui_blur_overlay_element_background_tint,
                         partial
                 );
             }
@@ -236,7 +236,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                     smoothCornerTopRight,
                     smoothCornerBottomRight,
                     smoothCornerBottomLeft,
-                    UIBase.getUIColorTheme().element_background_color_normal.getColorInt(),
+                    UIBase.getUITheme().element_background_color_normal.getColorInt(),
                     partial
             );
         }
@@ -313,7 +313,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float maxScrollPosition = this.rawHeight - (displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
 
             // Create a darker version of the background color (about 10% darker)
-            Color bgColor = UIBase.shouldBlur() ? UIBase.getUIColorTheme().ui_blur_overlay_element_background_tint.getColor() : UIBase.getUIColorTheme().element_background_color_normal.getColor();
+            Color bgColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_element_background_tint.getColor() : UIBase.getUITheme().element_background_color_normal.getColor();
             Color darkerBgColor = new Color(
                     Math.max(0, (int)(bgColor.getRed() * 0.9)),
                     Math.max(0, (int)(bgColor.getGreen() * 0.9)),
@@ -341,7 +341,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
                 // Render arrow centered
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
+                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
                 graphics.blit(
                         SCROLL_UP_ARROW,
                         (int)(scaledX + this.getWidth()/2 - 5),
@@ -370,7 +370,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
                 // Render arrow centered (with fixed position)
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
+                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
                 graphics.blit(
                         SCROLL_DOWN_ARROW,
                         (int)(scaledX + this.getWidth()/2 - 5),
@@ -398,7 +398,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 smoothBorderCornerTopRight,
                 smoothBorderCornerBottomRight,
                 smoothBorderCornerBottomLeft,
-                UIBase.shouldBlur() ? UIBase.getUIColorTheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt(),
+                UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUITheme().element_border_color_normal.getColorInt(),
                 partial
         );
 
@@ -1655,7 +1655,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected void renderIcon(GuiGraphics graphics) {
             if (this.icon != null) {
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
+                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
                 graphics.blit(this.icon, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
                 RenderingUtils.resetShaderColor(graphics);
             }
@@ -1678,7 +1678,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().ui_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
+                UIBase.getUITheme().ui_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
                 graphics.blit(CONTEXT_MENU_TOOLTIP_ICON, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
                 RenderingUtils.resetShaderColor(graphics);
 
@@ -1707,16 +1707,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected void renderBackground(@NotNull GuiGraphics graphics) {
             if (this.isChangeBackgroundColorOnHover() && this.isHovered() && this.isActive()) {
-                int backColor = FancyMenu.getOptions().enableUiBlur.getValue() ? UIBase.getUIColorTheme().ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : UIBase.getUIColorTheme().element_background_color_hover.getColorInt();
+                int backColor = FancyMenu.getOptions().enableUiBlur.getValue() ? UIBase.getUITheme().ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : UIBase.getUITheme().element_background_color_hover.getColorInt();
                 RenderingUtils.fillF(graphics, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), backColor);
             }
         }
 
         protected int getLabelColor() {
             if (FancyMenu.getOptions().enableUiBlur.getValue()) {
-                return this.isActive() ? UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_normal.getColorInt() : UIBase.getUIColorTheme().ui_blur_interface_widget_label_color_inactive.getColorInt();
+                return this.isActive() ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt() : UIBase.getUITheme().ui_blur_interface_widget_label_color_inactive.getColorInt();
             }
-            return this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt();
+            return this.isActive() ? UIBase.getUITheme().element_label_color_normal.getColorInt() : UIBase.getUITheme().element_label_color_inactive.getColorInt();
         }
 
         @Nullable
@@ -1912,7 +1912,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected void renderSubMenuArrow(GuiGraphics graphics) {
             RenderSystem.enableBlend();
-            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
+            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
             graphics.blit(SUB_CONTEXT_MENU_ARROW_ICON, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10);
             RenderingUtils.resetShaderColor(graphics);
         }
@@ -2087,7 +2087,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.shouldBlur() ? UIBase.getUIColorTheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
+            RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUITheme().element_border_color_normal.getColorInt());
         }
 
         @Override

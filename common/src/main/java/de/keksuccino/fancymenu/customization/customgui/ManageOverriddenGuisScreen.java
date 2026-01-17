@@ -42,7 +42,7 @@ public class ManageOverriddenGuisScreen extends CellScreen {
 
                 this.addLabelCell(Component.translatable("fancymenu.custom_guis.manage_overridden.screen", Component.literal(overriddenScreen).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
                 this.addLabelCell(Component.translatable("fancymenu.custom_guis.manage_overridden.overridden_with", Component.literal(overriddenWith).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
-                this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.custom_guis.manage_overridden.remove_override").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), var1 -> {
+                this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.custom_guis.manage_overridden.remove_override").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), var1 -> {
                     Dialogs.openMessageWithCallback(Component.translatable("fancymenu.custom_guis.manage_overridden.remove_override.confirm"), MessageDialogStyle.WARNING, remove -> {
                         if (remove) this.removedOverrides.add(overriddenScreen);
                     });

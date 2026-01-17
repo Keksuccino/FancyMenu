@@ -77,10 +77,10 @@ public class KeyframeManagerScreen extends Screen {
     protected static final long RECORDING_BLINK_INTERVAL = 600; // 600ms blink interval
     protected static final int NOTIFICATION_PADDING = 10;
 
-    protected static final Component KEYFRAME_ADDED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_added").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-    protected static final Component KEYFRAME_DELETED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_deleted").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
-    protected static final Component PLAYING_STARTED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_started").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-    protected static final Component PLAYING_STOPPED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_stopped").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
+    protected static final Component KEYFRAME_ADDED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_added").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+    protected static final Component KEYFRAME_DELETED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_deleted").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+    protected static final Component PLAYING_STARTED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_started").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+    protected static final Component PLAYING_STOPPED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_stopped").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
 
     protected final AnimationControllerElement controller;
     protected final Consumer<AnimationControllerMetadata> resultCallback;
@@ -284,7 +284,7 @@ public class KeyframeManagerScreen extends Screen {
         this.anchorButton = new CycleButton<>(0, 0, buttonBaseWidth + 105, 0,
                 CommonCycles.cycle("fancymenu.elements.animation_controller.keyframe_manager.anchor_point_cycle", anchorPoints, ElementAnchorPoints.TOP_LEFT)
                         .setValueNameSupplier(ElementAnchorPoint::getName)
-                        .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())),
+                        .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())),
                 (value, button) -> this.setAnchorPoint(value));
         this.anchorButton.setIsActiveSupplier(consumes -> ((this.selectedKeyframes.size() == 1) || this.isRecording) && !this.isOffsetMode);
         this.addBottomWidget(2, 0, this.anchorButton);
@@ -320,7 +320,7 @@ public class KeyframeManagerScreen extends Screen {
                 MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.smoothing.input");
                 int cW = Minecraft.getInstance().font.width(c);
                 graphics.drawString(Minecraft.getInstance().font, c,
-                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
                 super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
@@ -339,7 +339,7 @@ public class KeyframeManagerScreen extends Screen {
                 MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.input");
                 int cW = Minecraft.getInstance().font.width(c);
                 graphics.drawString(Minecraft.getInstance().font, c,
-                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
                 super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
@@ -458,7 +458,7 @@ public class KeyframeManagerScreen extends Screen {
         }
 
         // Render screen background
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
 
         LayoutEditorScreen.renderGrid(graphics, this.width, this.height);
 
@@ -705,15 +705,15 @@ public class KeyframeManagerScreen extends Screen {
 
         // Determine current time color
         int currentTimeColor = currentPlayOrRecordPosition > actualEndTime ?
-                UIBase.getUIColorTheme().warning_text_color.getColorInt() :
-                UIBase.getUIColorTheme().generic_text_base_color.getColorInt();
+                UIBase.getUITheme().warning_text_color.getColorInt() :
+                UIBase.getUITheme().generic_text_base_color.getColorInt();
 
         MutableComponent currentTimeComp = Component.literal(currentTimeStr).setStyle(Style.EMPTY.withColor(currentTimeColor));
         MutableComponent totalTimeComp = Component.literal(totalTimeStr);
         MutableComponent baseComp = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.time", currentTimeComp, totalTimeComp);
 
         graphics.drawString(Minecraft.getInstance().font, baseComp, timelineX, timelineY + TIMELINE_HEIGHT + 5,
-                UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+                UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
     }
 
@@ -736,7 +736,7 @@ public class KeyframeManagerScreen extends Screen {
 
             int yOffset = 10 + 20 + 10;
             for (Component line : lines) {
-                graphics.drawString(Minecraft.getInstance().font, line, 10, yOffset, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+                graphics.drawString(Minecraft.getInstance().font, line, 10, yOffset, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
                 yOffset += 10;
             }
 
@@ -806,7 +806,7 @@ public class KeyframeManagerScreen extends Screen {
                 continue;
             }
             notification.updateOpacity();
-            int textColor = UIBase.getUIColorTheme().generic_text_base_color.getColorIntWithAlpha(notification.opacity); // Base color with fade
+            int textColor = UIBase.getUITheme().generic_text_base_color.getColorIntWithAlpha(notification.opacity); // Base color with fade
             graphics.drawString(
                     Minecraft.getInstance().font,
                     notification.message,
@@ -885,7 +885,7 @@ public class KeyframeManagerScreen extends Screen {
         }
         if (isOverProgressLine((int)mouseX, (int)mouseY) && this.isRecording && !this.isRecordingPaused) {
             this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_drag_progress")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), 6000);
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), 6000);
             return true;
         }
 
@@ -898,7 +898,7 @@ public class KeyframeManagerScreen extends Screen {
         }
         if (this.isRecording && !this.isRecordingPaused && (clickedIndex >= 0)) {
             this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_edit_keyframe")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), 6000);
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), 6000);
             return true;
         }
         if (clickedIndex >= 0) {

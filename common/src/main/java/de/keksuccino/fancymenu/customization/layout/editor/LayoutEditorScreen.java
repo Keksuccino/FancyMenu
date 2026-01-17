@@ -299,8 +299,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			int startY = Math.min(this.mouseSelectionStartY, mouseY);
 			int endX = Math.max(this.mouseSelectionStartX, mouseX);
 			int endY = Math.max(this.mouseSelectionStartY, mouseY);
-			graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
-			UIBase.renderBorder(graphics, startX, startY, endX, endY, 1, UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
+			graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUITheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
+			UIBase.renderBorder(graphics, startX, startY, endX, endY, 1, UIBase.getUITheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
 			graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 		}
 	}
@@ -335,7 +335,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+		graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().screen_background_color_darker.getColorInt());
 
 		this.layout.menuBackgrounds.forEach(background -> {
 
@@ -467,7 +467,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			int lineThickness = 1;
 
 			//Draw centered vertical line
-			graphics.fill((scaledWidth / 2) - 1, 0, (scaledWidth / 2) + 1, scaledHeight, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
+			graphics.fill((scaledWidth / 2) - 1, 0, (scaledWidth / 2) + 1, scaledHeight, UIBase.getUITheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw vertical lines center -> left
 			int linesVerticalToLeftPosX = (scaledWidth / 2) - gridSize - 1;
@@ -475,7 +475,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minY = 0;
 				int maxY = scaledHeight;
 				int maxX = linesVerticalToLeftPosX + lineThickness;
-				graphics.fill(linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUITheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToLeftPosX -= gridSize;
 			}
 
@@ -485,12 +485,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minY = 0;
 				int maxY = scaledHeight;
 				int maxX = linesVerticalToRightPosX + lineThickness;
-				graphics.fill(linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUITheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToRightPosX += gridSize;
 			}
 
 			//Draw centered horizontal line
-			graphics.fill(0, (scaledHeight / 2) - 1, scaledWidth, (scaledHeight / 2) + 1, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
+			graphics.fill(0, (scaledHeight / 2) - 1, scaledWidth, (scaledHeight / 2) + 1, UIBase.getUITheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw horizontal lines center -> top
 			int linesHorizontalToTopPosY = (scaledHeight / 2) - gridSize - 1;
@@ -498,7 +498,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minX = 0;
 				int maxX = scaledWidth;
 				int maxY = linesHorizontalToTopPosY + lineThickness;
-				graphics.fill(minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUITheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToTopPosY -= gridSize;
 			}
 
@@ -508,7 +508,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minX = 0;
 				int maxX = scaledWidth;
 				int maxY = linesHorizontalToBottomPosY + lineThickness;
-				graphics.fill(minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUITheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToBottomPosY += gridSize;
 			}
 

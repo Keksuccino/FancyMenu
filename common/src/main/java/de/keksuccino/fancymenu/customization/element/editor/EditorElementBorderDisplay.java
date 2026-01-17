@@ -1,8 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -93,8 +91,8 @@ public class EditorElementBorderDisplay implements Renderable {
 
         float scale = this.getScale();
         int lineY = y;
-        int backgroundColor = UIBase.getUIColorTheme().layout_editor_element_border_display_line_background_color.getColorInt();
-        int textColor = UIBase.getUIColorTheme().layout_editor_element_border_display_line_text_color.getColorInt();
+        int backgroundColor = UIBase.getUITheme().layout_editor_element_border_display_line_background_color.getColorInt();
+        int textColor = UIBase.getUITheme().layout_editor_element_border_display_line_text_color.getColorInt();
         graphics.pose().pushPose();
         graphics.pose().scale(scale, scale, scale);
         for (Component c : this.renderLines) {

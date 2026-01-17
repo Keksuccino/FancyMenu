@@ -42,9 +42,9 @@ public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackgroun
         }, (background, name) -> background.panoramaName.set(name), (menu1, entry, switcherValue) -> {
             Component name;
             if (switcherValue.equals("fancymenu.backgrounds.panorama.name.none")) {
-                name = Component.translatable("fancymenu.backgrounds.panorama.name.none").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                name = Component.translatable("fancymenu.backgrounds.panorama.name.none").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
             } else {
-                name = Component.literal(switcherValue).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
+                name = Component.literal(switcherValue).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
             }
             return Component.translatable("fancymenu.backgrounds.panorama.name", name);
         });

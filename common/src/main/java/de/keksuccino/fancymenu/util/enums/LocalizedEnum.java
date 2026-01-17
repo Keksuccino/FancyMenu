@@ -12,9 +12,9 @@ import java.util.function.Supplier;
  */
 public interface LocalizedEnum<E> extends NamedEnum<E> {
 
-    Supplier<Style> SUCCESS_TEXT_STYLE = () -> Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt());
-    Supplier<Style> WARNING_TEXT_STYLE = () -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt());
-    Supplier<Style> ERROR_TEXT_STYLE = () -> Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt());
+    Supplier<Style> SUCCESS_TEXT_STYLE = () -> Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt());
+    Supplier<Style> WARNING_TEXT_STYLE = () -> Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt());
+    Supplier<Style> ERROR_TEXT_STYLE = () -> Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt());
 
     @NotNull
     String getLocalizationKeyBase();

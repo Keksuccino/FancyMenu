@@ -98,10 +98,10 @@ public class BuildCustomGuiScreen extends CellScreen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.guiTemp.identifier.isEmpty()) {
-            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.invalid").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
+            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.invalid").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())));
             this.allSettingsValid = false;
         } else if (CustomGuiHandler.guiExists(this.guiTemp.identifier) && !Objects.equals(this.guiTemp.identifier, this.identifierOfEdit)) {
-            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.already_in_use").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
+            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.already_in_use").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())));
             this.allSettingsValid = false;
         } else {
             this.settingsFeedbackCell.setText(Component.empty());

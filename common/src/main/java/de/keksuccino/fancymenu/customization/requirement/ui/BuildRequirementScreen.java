@@ -175,16 +175,16 @@ public class BuildRequirementScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.requirements.screens.build_screen.available_requirements"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, Component.translatable("fancymenu.requirements.screens.build_screen.available_requirements"), 20, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
         Component descLabel = Component.translatable("fancymenu.requirements.screens.build_screen.requirement_description");
         int descLabelWidth = this.font.width(descLabel);
-        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
         super.render(graphics, mouseX, mouseY, partial);
 
@@ -225,7 +225,7 @@ public class BuildRequirementScreen extends Screen {
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
-            e.setTextBaseColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt());
+            e.setTextBaseColor(UIBase.getUITheme().description_area_text_color.getColorInt());
             this.descriptionScrollArea.addEntry(e);
         });
     }
@@ -258,8 +258,8 @@ public class BuildRequirementScreen extends Screen {
             for (Requirement r : requirements) {
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
                 if (!this.requirementFitsSearchValue(r, searchValue)) continue;
-                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
-                RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1, (entry) -> {
+                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()));
+                RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().listing_dot_color_1, (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
                 });
@@ -280,8 +280,8 @@ public class BuildRequirementScreen extends Screen {
 
             //Add category entries
             for (Map.Entry<String, List<Requirement>> m : sortedCategories) {
-                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
-                TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_2, (entry) -> {
+                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()));
+                TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().listing_dot_color_2, (entry) -> {
                     BuildRequirementScreen.this.setContentOfRequirementsList(m.getKey());
                     BuildRequirementScreen.this.instance.requirement = null;
                     this.setDescription(null);
@@ -295,8 +295,8 @@ public class BuildRequirementScreen extends Screen {
             uncategorized.sort(REQUIREMENT_DISPLAY_NAME_COMPARATOR);
             for (Requirement r : uncategorized) {
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
-                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
-                RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1, (entry) -> {
+                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()));
+                RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().listing_dot_color_1, (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
                 });
@@ -307,8 +307,8 @@ public class BuildRequirementScreen extends Screen {
         } else {
 
             //Add "Back" button
-            Component backLabel = Component.translatable("fancymenu.requirements.screens.lists.back").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
-            TextListScrollAreaEntry backEntry = new TextListScrollAreaEntry(this.requirementsListScrollArea, backLabel, UIBase.getUIColorTheme().listing_dot_color_2, (entry) -> {
+            Component backLabel = Component.translatable("fancymenu.requirements.screens.lists.back").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+            TextListScrollAreaEntry backEntry = new TextListScrollAreaEntry(this.requirementsListScrollArea, backLabel, UIBase.getUITheme().listing_dot_color_2, (entry) -> {
                 BuildRequirementScreen.this.setContentOfRequirementsList(null);
                 BuildRequirementScreen.this.instance.requirement = null;
                 this.setDescription(null);
@@ -321,8 +321,8 @@ public class BuildRequirementScreen extends Screen {
             if (l != null) {
                 for (Requirement r : l) {
                     if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
-                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
-                    RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1, (entry) -> {
+                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()));
+                    RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().listing_dot_color_1, (entry) -> {
                         this.instance.requirement = r;
                         this.setDescription(this.instance.requirement);
                     });

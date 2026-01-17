@@ -68,7 +68,7 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
                         MCEFVideoEditorElement.class,
                         consumes -> consumes.element.soundSource,
                         (audioEditorElement, soundSource) -> audioEditorElement.element.soundSource = soundSource,
-                        (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.video_mcef.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))))
+                        (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.video_mcef.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))))
                 .setStackable(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 

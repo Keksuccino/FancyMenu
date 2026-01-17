@@ -45,7 +45,7 @@ public class ChooseAnimationScreen extends Screen {
         public String animation;
 
         public AnimationScrollEntry(ScrollArea parent, @NotNull String animation, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1, onClick);
+            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())), UIBase.getUITheme().listing_dot_color_1, onClick);
             this.animation = animation;
         }
 

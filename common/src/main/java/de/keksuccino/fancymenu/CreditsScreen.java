@@ -45,8 +45,8 @@ public class CreditsScreen extends Screen {
         } else {
             this.markdownRenderer.rebuild((float)(centerX - (scrollWidth / 2)), this.headerHeight, scrollWidth, scrollHeight);
         }
-        this.markdownRenderer.getMarkdownRenderer().setHeadlineLineColor(UIBase.getUIColorTheme().screen_background_color_darker);
-        this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUIColorTheme().generic_text_base_color);
+        this.markdownRenderer.getMarkdownRenderer().setHeadlineLineColor(UIBase.getUITheme().screen_background_color_darker);
+        this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUITheme().generic_text_base_color);
         this.markdownRenderer.getMarkdownRenderer().setTextShadow(false);
         this.addRenderableWidget(this.markdownRenderer);
 
@@ -75,11 +75,11 @@ public class CreditsScreen extends Screen {
         RenderSystem.enableBlend();
 
         //Background
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().screen_background_color_darker.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
 
         //Footer
-        graphics.fill(0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        graphics.fill(0, this.height - this.footerHeight, this.width, this.height, UIBase.getUITheme().area_background_color.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
 
         super.render(graphics, mouseX, mouseY, partial);

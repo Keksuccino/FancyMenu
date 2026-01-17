@@ -82,14 +82,14 @@ public class TextEditorLine extends AdvancedTextField {
 
         this.currentCharacterRenderIndex = 0;
 
-        this.setTextColor(this.parent.textColor.getRGB());
-        this.setTextColorUneditable(this.parent.textColor.getRGB());
+        this.setTextColor(this.parent.textColor.get().getColorInt());
+        this.setTextColorUneditable(this.parent.textColor.get().getColorInt());
 
         if (this.isVisible()) {
 
             if (this.isFocused()) {
                 //Render focused background
-                graphics.fill(0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
+                graphics.fill(0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.get().getColorInt());
             }
 
             int textColorInt = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();

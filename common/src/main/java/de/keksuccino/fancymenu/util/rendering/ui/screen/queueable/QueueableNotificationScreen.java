@@ -54,7 +54,7 @@ public class QueueableNotificationScreen extends QueueableScreen {
         int renderY = centerY - (totalTextHeight / 2);
         
         for (FormattedCharSequence s : this.renderText) {
-            graphics.drawCenteredString(this.font, s, centerX, renderY, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+            graphics.drawCenteredString(this.font, s, centerX, renderY, UIBase.getUITheme().generic_text_base_color.getColorInt());
             renderY += lineHeight;
         }
 
@@ -63,7 +63,7 @@ public class QueueableNotificationScreen extends QueueableScreen {
     @Override
     public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
         RenderSystem.enableBlend();
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
     }
 
     @Override

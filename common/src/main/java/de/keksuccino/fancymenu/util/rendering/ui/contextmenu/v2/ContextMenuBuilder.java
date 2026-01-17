@@ -759,7 +759,7 @@ public interface ContextMenuBuilder<O> {
                         ResourceSupplier<R> supplier = targetFieldGetter.get(selectedObjects.get(0));
                         String val = (supplier != null) ? supplier.getSourceWithoutPrefix() : null;
                         if (val == null) {
-                            valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                            valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
                         } else {
                             val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
                             if (Minecraft.getInstance().font.width(val) > 150) {
@@ -768,7 +768,7 @@ public interface ContextMenuBuilder<O> {
                                 val = new StringBuilder(val).reverse().toString();
                                 val = ".." + val;
                             }
-                            valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                            valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
                         }
                         return Component.translatable("fancymenu.ui.resources.current", valueComponent);
                     }
@@ -847,7 +847,7 @@ public interface ContextMenuBuilder<O> {
                         Component valueComponent;
                         Double val = targetFieldGetter.get(selectedObjects.get(0));
                         if (val == null) {
-                            valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                            valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
                         } else {
                             String valString = val.toString();
                             if (Minecraft.getInstance().font.width(valString) > 150) {
@@ -856,7 +856,7 @@ public interface ContextMenuBuilder<O> {
                                 valString = new StringBuilder(valString).reverse().toString();
                                 valString = ".." + valString;
                             }
-                            valueComponent = Component.literal(valString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                            valueComponent = Component.literal(valString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
                         }
                         return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
                     }
@@ -970,7 +970,7 @@ public interface ContextMenuBuilder<O> {
                         Component valueComponent;
                         String val = targetFieldGetter.get(selectedObjects.get(0));
                         if (val == null) {
-                            valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                            valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
                         } else {
                             val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
                             if (Minecraft.getInstance().font.width(val) > 150) {
@@ -979,7 +979,7 @@ public interface ContextMenuBuilder<O> {
                                 val = new StringBuilder(val).reverse().toString();
                                 val = ".." + val;
                             }
-                            valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                            valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
                         }
                         return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
                     }
@@ -1335,10 +1335,10 @@ public interface ContextMenuBuilder<O> {
         BiConsumer<O, Boolean> setter = (BiConsumer<O, Boolean>) targetFieldSetter;
         return buildGenericCycleContextMenuEntry(parentMenu, entryIdentifier, ListUtils.of(false, true), selectedObjectsFilter, getter, setter, (menu, entry, switcherValue) -> {
             if (switcherValue && entry.isActive()) {
-                MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
                 return Component.translatable(labelLocalizationKeyBase, enabled);
             }
-            MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+            MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
             return Component.translatable(labelLocalizationKeyBase, disabled);
         });
     }

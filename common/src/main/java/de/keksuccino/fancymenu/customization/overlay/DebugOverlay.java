@@ -145,7 +145,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         for (AbstractElement e : widgets) {
             if ((e instanceof HideableElement h) && h.isHidden()) continue;
             this.currentScreenElements.add(e);
-            UIBase.renderBorder(graphics, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteX() + e.getAbsoluteWidth(), e.getAbsoluteY() + e.getAbsoluteHeight(), 1, UIBase.getUIColorTheme().layout_editor_element_border_color_normal, true, true, true, true);
+            UIBase.renderBorder(graphics, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteX() + e.getAbsoluteWidth(), e.getAbsoluteY() + e.getAbsoluteHeight(), 1, UIBase.getUITheme().layout_editor_element_border_color_normal, true, true, true, true);
         }
 
         RenderingUtils.resetShaderColor(graphics);

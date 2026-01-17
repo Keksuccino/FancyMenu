@@ -214,8 +214,8 @@ public class ManageListenersScreen extends CellScreen {
             int descW = (int) this.descriptionScrollArea.getWidthWithBorder();
             int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
             int descEndY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder());
-            List<MutableComponent> renameTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_inactive.getColorInt()).withItalic(true)), descW);
-            List<MutableComponent> quickEditTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_inactive.getColorInt()).withItalic(true)), descW);
+            List<MutableComponent> renameTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_inactive.getColorInt()).withItalic(true)), descW);
+            List<MutableComponent> quickEditTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_inactive.getColorInt()).withItalic(true)), descW);
             int lineY = descEndY + 4;
             for (MutableComponent line : renameTip) {
                 int lineWidth = (int)UIBase.getUITextWidth(line);
@@ -279,9 +279,9 @@ public class ManageListenersScreen extends CellScreen {
         if (lines.isEmpty()) {
             String indent = "  ".repeat(Math.max(0, indentLevel));
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().listing_dot_color_1.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().listing_dot_color_1.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.screens.manage_screen.info.value.none")
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt()))));
         }
         
         return lines;
@@ -295,9 +295,9 @@ public class ManageListenersScreen extends CellScreen {
         if (executable instanceof ActionInstance actionInstance) {
             // Action display name
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().listing_dot_color_2.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().listing_dot_color_2.getColorInt()))
                     .append(actionInstance.action.getActionDisplayName().copy()
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()))));
             
             // Action value (indented more)
             String cachedValue = actionInstance.value;
@@ -305,18 +305,18 @@ public class ManageListenersScreen extends CellScreen {
                     ? cachedValue 
                     : I18n.get("fancymenu.actions.screens.manage_screen.info.value.none");
             lines.add(Component.literal(indent + "    ◦ ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().listing_dot_color_1.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().listing_dot_color_1.getColorInt()))
                     .append(Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ")
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())))
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())))
                     .append(Component.literal(valueString)
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()))));
             
         } else if (executable instanceof IfExecutableBlock ifBlock) {
             String requirements = this.buildRequirementsString(ifBlock);
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements))
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()))));
             
             // Add nested executables
             for (Executable nested : ifBlock.getExecutables()) {
@@ -333,9 +333,9 @@ public class ManageListenersScreen extends CellScreen {
         } else if (executable instanceof WhileExecutableBlock whileBlock) {
             String requirements = this.buildRequirementsString(whileBlock);
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements))
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()))));
             
             // Add nested executables
             for (Executable nested : whileBlock.getExecutables()) {
@@ -343,9 +343,9 @@ public class ManageListenersScreen extends CellScreen {
             }
         } else if (executable instanceof DelayExecutableBlock delayBlock) {
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.delay", Component.literal(delayBlock.getDelayMsRaw()))
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()))));
 
             for (Executable nested : delayBlock.getExecutables()) {
                 lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
@@ -353,7 +353,7 @@ public class ManageListenersScreen extends CellScreen {
         } else if (executable instanceof AbstractExecutableBlock) {
             // For any other abstract executable blocks
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.literal("[UNKNOWN BLOCK]")
                             .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))));
         }
@@ -369,9 +369,9 @@ public class ManageListenersScreen extends CellScreen {
         if (block instanceof ElseIfExecutableBlock elseIfBlock) {
             String requirements = this.buildRequirementsString(elseIfBlock);
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements))
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()))));
             
             // Add nested executables
             for (Executable nested : elseIfBlock.getExecutables()) {
@@ -380,9 +380,9 @@ public class ManageListenersScreen extends CellScreen {
             
         } else if (block instanceof ElseExecutableBlock elseBlock) {
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.else")
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()))));
             
             // Add nested executables
             for (Executable nested : elseBlock.getExecutables()) {
@@ -464,11 +464,11 @@ public class ManageListenersScreen extends CellScreen {
             if (this.instance.getDisplayName() != null && !this.instance.getDisplayName().isBlank()) {
                 // Show display name if it exists
                 this.labelComponent = Component.literal(this.instance.getDisplayName())
-                        .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+                        .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()));
             } else {
                 // Show default label (listener type)
                 this.labelComponent = this.instance.parent.getDisplayName().copy()
-                        .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+                        .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()));
             }
         }
         

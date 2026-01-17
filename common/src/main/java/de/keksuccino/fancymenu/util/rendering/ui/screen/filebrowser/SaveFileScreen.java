@@ -102,7 +102,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
         this.fileNameEditBox.setX((int)(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileNameEditBox.getWidth() - 1));
         this.fileNameEditBox.setY((int)(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + 1));
         this.fileNameEditBox.render(graphics, mouseX, mouseY, partial);
-        graphics.drawString(this.font, FILE_NAME_PREFIX_TEXT, this.fileNameEditBox.getX() - 1 - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5, this.fileNameEditBox.getY() - 1 + (this.fileNameEditBox.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().element_label_color_normal.getColorInt(), false);
+        graphics.drawString(this.font, FILE_NAME_PREFIX_TEXT, this.fileNameEditBox.getX() - 1 - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5, this.fileNameEditBox.getY() - 1 + (this.fileNameEditBox.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUITheme().element_label_color_normal.getColorInt(), false);
     }
 
     @Override

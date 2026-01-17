@@ -145,7 +145,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             fillF(graphics, this.scrollArea.getInnerX(), indicatorY - DROP_INDICATOR_THICKNESS/2f,
                     this.scrollArea.getInnerX() + this.scrollArea.getInnerWidth(),
                     indicatorY + DROP_INDICATOR_THICKNESS/2f,
-                    UIBase.getUIColorTheme().element_border_color_hover.getColorInt());
+                    UIBase.getUITheme().element_border_color_hover.getColorInt());
 
         }
 
@@ -690,11 +690,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
             }
 
-            blitF(graphics, MOVE_UP_TEXTURE, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f));
+            blitF(graphics, MOVE_UP_TEXTURE, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUITheme().ui_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f));
 
-            blitF(graphics, MOVE_DOWN_TEXTURE, this.x, this.y + this.getButtonHeight(), 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerDown(this.element) ? 1.0f : 0.3f));
+            blitF(graphics, MOVE_DOWN_TEXTURE, this.x, this.y + this.getButtonHeight(), 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUITheme().ui_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerDown(this.element) ? 1.0f : 0.3f));
 
-            blitF(graphics, EYE_ICON_TEXTURE, this.getEyeButtonX(), this.getEyeButtonY(), 0.0F, 0.0F, this.getEyeButtonWidth(), this.getEyeButtonHeight(), this.getEyeButtonWidth(), this.getEyeButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(!this.element.element.layerHiddenInEditor ? 1.0f : 0.3f));
+            blitF(graphics, EYE_ICON_TEXTURE, this.getEyeButtonX(), this.getEyeButtonY(), 0.0F, 0.0F, this.getEyeButtonWidth(), this.getEyeButtonHeight(), this.getEyeButtonWidth(), this.getEyeButtonHeight(), UIBase.getUITheme().ui_texture_color.getColorIntWithAlpha(!this.element.element.layerHiddenInEditor ? 1.0f : 0.3f));
 
             if (!this.displayEditLayerNameBox) {
                 UIBase.renderText(graphics, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
@@ -963,9 +963,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             RenderSystem.enableBlend();
 
             ResourceLocation loc = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE;
-            blitF(graphics, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
+            blitF(graphics, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUITheme().ui_texture_color.getColorInt());
 
-            UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeight() / 2f)));
+            UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeight() / 2f)));
 
         }
 

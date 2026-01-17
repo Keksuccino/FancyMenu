@@ -35,12 +35,12 @@ public class ManageGlobalMenuMusicTracksScreen extends CellScreen {
 
         if (this.cachedTracks.isEmpty()) {
             this.addLabelCell(Component.translatable("fancymenu.global_customizations.menu_music_tracks.empty")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())));
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())));
         } else {
             for (String source : this.cachedTracks) {
                 String display = ResourceSourceType.getWithoutSourcePrefix(source);
                 this.addLabelCell(Component.literal(display)
-                                .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())))
+                                .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt())))
                         .putMemoryValue("source", source)
                         .setSelectable(true);
             }

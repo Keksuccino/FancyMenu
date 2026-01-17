@@ -24,7 +24,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -851,7 +850,7 @@ public class Property<T> {
                             ColorProperty resolved = (ColorProperty) selectedObjects.get(0).getProperty(key);
                             String val = (resolved != null) ? resolved.get() : property.getDefault();
                             if (val == null) {
-                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
                             } else {
                                 if (Minecraft.getInstance().font.width(val) > 150) {
                                     val = new StringBuilder(val).reverse().toString();
@@ -859,7 +858,7 @@ public class Property<T> {
                                     val = new StringBuilder(val).reverse().toString();
                                     val = ".." + val;
                                 }
-                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
                             }
                             return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
                         }

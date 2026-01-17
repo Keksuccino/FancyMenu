@@ -10,7 +10,7 @@ public class AsyncActionErrorScreen extends QueueableNotificationScreen {
 
     public AsyncActionErrorScreen(@NotNull Component actionName) {
         super(Component.empty());
-        Component actionNameFormatted = actionName.copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+        Component actionNameFormatted = actionName.copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_text_color.getColorInt()));
         this.text = Component.translatable("fancymenu.actions.async.cant_run_async", actionNameFormatted);
     }
 

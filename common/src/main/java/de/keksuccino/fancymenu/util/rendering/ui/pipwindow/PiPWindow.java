@@ -511,7 +511,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         iconSize = Math.min(iconSize, Math.min(width, height));
         float iconX = x + (width - iconSize) * 0.5F;
         float iconY = y + (height - iconSize) * 0.5F;
-        UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
+        UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
         blitScaledIcon(graphics, icon, iconX, iconY, iconSize, DEFAULT_ICON_TEXTURE_SIZE);
         RenderingUtils.resetShaderColor(graphics);
     }
@@ -1691,7 +1691,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private UIColorTheme getTheme() {
-        return UIBase.getUIColorTheme();
+        return UIBase.getUITheme();
     }
 
     private void resizeScreenIfNeeded() {

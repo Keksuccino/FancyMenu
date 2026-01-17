@@ -702,8 +702,8 @@ public class CustomizationOverlayUI {
                 .setLabelSupplier((menu, entry) -> {
                     String value = FancyMenu.getOptions().globalBackgroundPanorama.getValue();
                     Component display = value.isEmpty()
-                            ? Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()))
-                            : Component.literal(value).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                            ? Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()))
+                            : Component.literal(value).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
                     return Component.translatable("fancymenu.global_customizations.background_panorama.current", display);
                 })
                 .setClickSoundEnabled(false)
@@ -796,8 +796,8 @@ public class CustomizationOverlayUI {
                             }
                         })
                 .setLabelSupplier((menu, entry) -> {
-                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
                     File icon = WindowHandler.getCustomWindowIcon16();
                     if ((icon != null) && icon.isFile()) {
                         return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_16", found);
@@ -840,8 +840,8 @@ public class CustomizationOverlayUI {
                             }
                         })
                 .setLabelSupplier((menu, entry) -> {
-                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
                     File icon = WindowHandler.getCustomWindowIcon32();
                     if ((icon != null) && icon.isFile()) {
                         return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_32", found);
@@ -867,8 +867,8 @@ public class CustomizationOverlayUI {
                             forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("global_customizations", "window_icon")));
                         })
                 .setLabelSupplier((menu, entry) -> {
-                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
                     File icon = WindowHandler.getCustomWindowIconMacOS();
                     if ((icon != null) && icon.isFile()) {
                         return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos", found);

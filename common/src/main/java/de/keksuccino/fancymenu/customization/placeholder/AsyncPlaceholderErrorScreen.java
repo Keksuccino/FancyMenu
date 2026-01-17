@@ -23,7 +23,7 @@ public class AsyncPlaceholderErrorScreen extends QueueableScreen {
 
     protected AsyncPlaceholderErrorScreen(@NotNull Component placeholderName) {
         super(Component.empty());
-        this.placeholderName = placeholderName.copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+        this.placeholderName = placeholderName.copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_text_color.getColorInt()));
     }
 
     @Override
@@ -59,7 +59,7 @@ public class AsyncPlaceholderErrorScreen extends QueueableScreen {
         int renderY = centerY - (totalTextHeight / 2);
         
         for (FormattedCharSequence s : this.renderText) {
-            graphics.drawCenteredString(this.font, s, centerX, renderY, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+            graphics.drawCenteredString(this.font, s, centerX, renderY, UIBase.getUITheme().generic_text_base_color.getColorInt());
             renderY += lineHeight;
         }
 
@@ -68,7 +68,7 @@ public class AsyncPlaceholderErrorScreen extends QueueableScreen {
     @Override
     public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
         RenderSystem.enableBlend();
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
     }
 
 }

@@ -84,12 +84,12 @@ public class ChooseSlideshowScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), 20, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
         this.slideshowListScrollArea.setWidth(((float) this.width / 2) - 40, true);
         this.slideshowListScrollArea.setHeight(this.height - 85, true);
@@ -98,7 +98,7 @@ public class ChooseSlideshowScreen extends Screen {
 
         Component previewLabel = Component.translatable("fancymenu.slideshow.choose.preview");
         int previewLabelWidth = this.font.width(previewLabel);
-        graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
 
         if (this.selectedSlideshow != null) {
             int slideW = (this.width / 2) - 40;
@@ -109,13 +109,13 @@ public class ChooseSlideshowScreen extends Screen {
             slideH = size[1];
             int slideX = this.width - 20 - slideW;
             int slideY = 50 + 15;
-            graphics.fill(slideX, slideY, slideX + slideW, slideY + slideH, UIBase.getUIColorTheme().area_background_color.getColorInt());
+            graphics.fill(slideX, slideY, slideX + slideW, slideY + slideH, UIBase.getUITheme().area_background_color.getColorInt());
             this.selectedSlideshow.x = slideX;
             this.selectedSlideshow.y = slideY;
             this.selectedSlideshow.width = slideW;
             this.selectedSlideshow.height = slideH;
             this.selectedSlideshow.render(graphics);
-            UIBase.renderBorder(graphics, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
+            UIBase.renderBorder(graphics, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUITheme().element_border_color_normal.getColor(), true, true, true, true);
         }
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
@@ -185,7 +185,7 @@ public class ChooseSlideshowScreen extends Screen {
         public String slideshow;
 
         public SlideshowScrollEntry(ScrollArea parent, @NotNull String slideshow, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1, onClick);
+            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())), UIBase.getUITheme().listing_dot_color_1, onClick);
             this.slideshow = slideshow;
         }
 

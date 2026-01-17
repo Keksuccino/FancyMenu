@@ -52,9 +52,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     protected static final ResourceLocation DEPRECATED_WARNING_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/warning_20x20.png");
     protected static final ConsumingSupplier<AbstractEditorElement<?, ?>, Integer> BORDER_COLOR = (editorElement) -> {
         if (editorElement.isSelected()) {
-            return UIBase.getUIColorTheme().layout_editor_element_border_color_selected.getColorInt();
+            return UIBase.getUITheme().layout_editor_element_border_color_selected.getColorInt();
         }
-        return UIBase.getUIColorTheme().layout_editor_element_border_color_normal.getColorInt();
+        return UIBase.getUITheme().layout_editor_element_border_color_normal.getColorInt();
     };
     protected static final ConsumingSupplier<AbstractEditorElement<?, ?>, Float> HORIZONTAL_TILT_CONTROLS_ALPHA = consumes -> {
         if (consumes.horizontalTiltGrabber.hovered || consumes.isGettingHorizontalTilted()) {
@@ -172,9 +172,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         this.topLeftDisplay.addLine("width", () -> Component.translatable("fancymenu.element.border_display.width", "" + this.getWidth()));
         if (this.element.builder.isDeprecated()) {
             this.topLeftDisplay.addLine("deprecated_warning_line0", Component::empty);
-            this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Component.translatable("fancymenu.elements.deprecated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
-            this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Component.translatable("fancymenu.elements.deprecated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
-            this.topLeftDisplay.addLine("deprecated_warning_line3", () -> Component.translatable("fancymenu.elements.deprecated_warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+            this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Component.translatable("fancymenu.elements.deprecated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
+            this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Component.translatable("fancymenu.elements.deprecated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
+            this.topLeftDisplay.addLine("deprecated_warning_line3", () -> Component.translatable("fancymenu.elements.deprecated_warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
         }
 
         this.bottomRightDisplay.addLine("pos_y", () -> Component.translatable("fancymenu.element.border_display.pos_y", "" + this.getY()));
@@ -897,7 +897,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     protected void renderDraggingNotAllowedOverlay(GuiGraphics graphics) {
         if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
             RenderSystem.enableBlend();
-            graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
+            graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUITheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
             AspectRatio ratio = new AspectRatio(32, 32);
             int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
             int texW = size[0];
@@ -917,7 +917,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             int texH = size[1];
             int texX = this.getX() + this.getWidth() - texW;
             int texY = this.getY();
-            UIBase.setShaderColor(graphics, UIBase.getUIColorTheme().warning_text_color);
+            UIBase.setShaderColor(graphics, UIBase.getUITheme().warning_text_color);
             graphics.blit(DEPRECATED_WARNING_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
             RenderingUtils.resetShaderColor(graphics);
         }
@@ -979,7 +979,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
         // Use many points to create a smooth circle
         int points = 360; // One point per degree for maximum smoothness
-        int circleColor = UIBase.getUIColorTheme().layout_editor_element_border_rotation_controls_color.getColorIntWithAlpha(ROTATION_CONTROLS_ALPHA.get(this));
+        int circleColor = UIBase.getUITheme().layout_editor_element_border_rotation_controls_color.getColorIntWithAlpha(ROTATION_CONTROLS_ALPHA.get(this));
 
         // Draw the circle by plotting points
         for (int i = 0; i < points; i++) {
@@ -1012,7 +1012,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             int verticalLineX = (int)centerX + 8;
             int verticalLineTop = this.getY() - lineExtension;
             int verticalLineBottom = this.getY() + this.getHeight() + lineExtension;
-            graphics.fill(verticalLineX, verticalLineTop, verticalLineX + 1, verticalLineBottom, UIBase.getUIColorTheme().layout_editor_element_border_vertical_tilting_controls_color.getColorIntWithAlpha(VERTICAL_TILT_CONTROLS_ALPHA.get(this)));
+            graphics.fill(verticalLineX, verticalLineTop, verticalLineX + 1, verticalLineBottom, UIBase.getUITheme().layout_editor_element_border_vertical_tilting_controls_color.getColorIntWithAlpha(VERTICAL_TILT_CONTROLS_ALPHA.get(this)));
         }
 
         if (!this.element.advancedHorizontalTiltMode) {
@@ -1020,7 +1020,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             int horizontalLineY = (int)centerY + 8;
             int horizontalLineLeft = this.getX() - lineExtension;
             int horizontalLineRight = this.getX() + this.getWidth() + lineExtension;
-            graphics.fill(horizontalLineLeft, horizontalLineY, horizontalLineRight, horizontalLineY + 1, UIBase.getUIColorTheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorIntWithAlpha(HORIZONTAL_TILT_CONTROLS_ALPHA.get(this)));
+            graphics.fill(horizontalLineLeft, horizontalLineY, horizontalLineRight, horizontalLineY + 1, UIBase.getUITheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorIntWithAlpha(HORIZONTAL_TILT_CONTROLS_ALPHA.get(this)));
         }
 
         // Render tilt grabbers
@@ -1849,7 +1849,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 // Draw the grabber as a filled circle at the rotation position
                 int x = this.getX();
                 int y = this.getY();
-                int color = UIBase.getUIColorTheme().layout_editor_element_border_rotation_controls_color.getColorIntWithAlpha(ROTATION_CONTROLS_ALPHA.get(AbstractEditorElement.this));
+                int color = UIBase.getUITheme().layout_editor_element_border_rotation_controls_color.getColorIntWithAlpha(ROTATION_CONTROLS_ALPHA.get(AbstractEditorElement.this));
 
                 // Draw a small filled square (approximation of a circle for the grabber)
                 graphics.fill(x - size / 2, y - size / 2, x + size / 2, y + size / 2, color);
@@ -1918,7 +1918,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 int y = this.getY();
 
                 // Draw a small filled square (the grabber)
-                graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUIColorTheme().layout_editor_element_border_vertical_tilting_controls_color.getColorIntWithAlpha(VERTICAL_TILT_CONTROLS_ALPHA.get(AbstractEditorElement.this)));
+                graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUITheme().layout_editor_element_border_vertical_tilting_controls_color.getColorIntWithAlpha(VERTICAL_TILT_CONTROLS_ALPHA.get(AbstractEditorElement.this)));
             }
         }
 
@@ -1975,7 +1975,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 int y = this.getY();
 
                 // Draw a small filled square (the grabber)
-                graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUIColorTheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorIntWithAlpha(HORIZONTAL_TILT_CONTROLS_ALPHA.get(AbstractEditorElement.this)));
+                graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUITheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorIntWithAlpha(HORIZONTAL_TILT_CONTROLS_ALPHA.get(AbstractEditorElement.this)));
             }
         }
 
