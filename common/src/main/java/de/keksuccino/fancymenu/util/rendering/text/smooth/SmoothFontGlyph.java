@@ -11,9 +11,7 @@ final class SmoothFontGlyph {
     private final float yOffset;
     private final float advance;
     private final boolean hasTexture;
-    private final boolean usesTrueSdf;
-
-    SmoothFontGlyph(SmoothFontAtlas atlas, int x, int y, int width, int height, float xOffset, float yOffset, float advance, boolean hasTexture, boolean usesTrueSdf) {
+    SmoothFontGlyph(SmoothFontAtlas atlas, int x, int y, int width, int height, float xOffset, float yOffset, float advance, boolean hasTexture) {
         this.atlas = atlas;
         this.x = x;
         this.y = y;
@@ -23,7 +21,6 @@ final class SmoothFontGlyph {
         this.yOffset = yOffset;
         this.advance = advance;
         this.hasTexture = hasTexture;
-        this.usesTrueSdf = usesTrueSdf;
     }
 
     SmoothFontAtlas atlas() {
@@ -69,10 +66,6 @@ final class SmoothFontGlyph {
 
     boolean hasTexture() {
         return hasTexture;
-    }
-
-    boolean usesTrueSdf() {
-        return usesTrueSdf;
     }
 
 }

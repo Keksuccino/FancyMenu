@@ -357,7 +357,9 @@ public class TextEditorScreen extends PiPScreen {
         graphics.disableScissor();
 
         //Don't render line numbers outside the line number area
-        graphics.enableScissor(this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1);
+        int lineNumberMinX = Math.max(0, this.getEditorAreaX() - this.borderLeft);
+        int lineNumberMaxX = this.getEditorAreaX();
+        graphics.enableScissor(lineNumberMinX, this.getEditorAreaY() - 1, lineNumberMaxX, this.getEditorAreaY() + this.getEditorAreaHeight() + 1);
 
         for (Runnable r : this.lineNumberRenderQueue) {
             r.run();

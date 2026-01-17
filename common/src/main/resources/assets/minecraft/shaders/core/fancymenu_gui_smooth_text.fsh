@@ -5,20 +5,15 @@ uniform vec4 ColorModulator;
 uniform float SdfPixelRange;
 uniform float SdfEdge;
 uniform float SdfSharpness;
-uniform int UseTrueSdf;
 
 in vec4 vertexColor;
 in vec2 texCoord0;
 
 out vec4 fragColor;
 
-float median(float r, float g, float b) {
-    return max(min(r, g), min(max(r, g), b));
-}
-
 float getDist(vec2 uv) {
     vec4 texColor = texture(Sampler0, uv);
-    return UseTrueSdf != 0 ? texColor.a : median(texColor.r, texColor.g, texColor.b);
+    return texColor.a;
 }
 
 float getAlpha(float dist, float softness, float edge) {

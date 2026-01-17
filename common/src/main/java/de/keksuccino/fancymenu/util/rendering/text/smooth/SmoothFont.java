@@ -40,6 +40,7 @@ public final class SmoothFont implements AutoCloseable {
     private final float strikethroughThickness;
 
     private final FontSource[] sources;
+    private final String[] sourceLabels;
     private final int[] defaultOrder;
     @Nullable
     private final Map<String, int[]> languageOrders;
@@ -48,10 +49,10 @@ public final class SmoothFont implements AutoCloseable {
     private final int fallbackSourceIndex;
 
     SmoothFont(@Nonnull String debugName, @Nonnull Font baseFont, float baseSize, float sdfRange) {
-        this(debugName, List.of(baseFont), baseSize, sdfRange, null);
+        this(debugName, List.of(baseFont), baseSize, sdfRange, null, null);
     }
 
-    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float sdfRange, @Nullable Map<String, int[]> languageOrders) {
+    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float sdfRange, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
         this.debugName = Objects.requireNonNull(debugName);
         Objects.requireNonNull(baseFonts);
         if (baseFonts.isEmpty()) {
@@ -74,10 +75,11 @@ public final class SmoothFont implements AutoCloseable {
 
         this.lodGenerationSizes = new float[] {this.baseSize * 1.0F, this.baseSize * 2.0F, this.baseSize * 4.0F, this.baseSize * 8.0F};
         this.sources = new FontSource[baseFonts.size()];
+        this.sourceLabels = normalizeLabels(sourceLabels, baseFonts.size());
         for (int i = 0; i < baseFonts.size(); i++) {
             Font font = Objects.requireNonNull(baseFonts.get(i));
             String sourceDebugName = this.debugName + "_f" + i;
-            this.sources[i] = new FontSource(this, font, this.baseSize, sourceDebugName);
+            this.sources[i] = new FontSource(this, font, this.baseSize, sourceDebugName, this.sourceLabels[i], i);
         }
 
         this.defaultOrder = new int[this.sources.length];
@@ -214,25 +216,38 @@ public final class SmoothFont implements AutoCloseable {
         return minecraft.options.languageCode.toLowerCase(Locale.ROOT);
     }
 
+    private static String[] normalizeLabels(@Nullable List<String> labels, int size) {
+        String[] resolved = new String[size];
+        for (int i = 0; i < size; i++) {
+            String label = null;
+            if (labels != null && i < labels.size()) {
+                label = labels.get(i);
+            }
+            if (label == null || label.isBlank()) {
+                label = "unknown";
+            }
+            resolved[i] = label;
+        }
+        return resolved;
+    }
+
     private static class FontSource implements AutoCloseable {
+        final SmoothFont parent;
         final Font rawFont;
+        final float baseSize;
+        final String debugName;
+        final String sourceLabel;
+        final int sourceIndex;
         final LodLevel[] lodLevels;
 
-        FontSource(SmoothFont parent, Font rawFont, float baseSize, String debugName) {
+        FontSource(SmoothFont parent, Font rawFont, float baseSize, String debugName, String sourceLabel, int sourceIndex) {
+            this.parent = parent;
             this.rawFont = rawFont;
+            this.baseSize = baseSize;
+            this.debugName = debugName;
+            this.sourceLabel = sourceLabel;
+            this.sourceIndex = sourceIndex;
             this.lodLevels = new LodLevel[4];
-
-            // LOD 0: Tiny (1x scale, starts with 512px atlas)
-            this.lodLevels[0] = new LodLevel(parent, rawFont, baseSize * 1.0F, 512, debugName, "_tiny");
-
-            // LOD 1: Small (2x scale, starts with 512px atlas)
-            this.lodLevels[1] = new LodLevel(parent, rawFont, baseSize * 2.0F, 1024, debugName, "_small");
-
-            // LOD 2: Medium (4x scale, starts with 1024px atlas)
-            this.lodLevels[2] = new LodLevel(parent, rawFont, baseSize * 4.0F, 1024, debugName, "_medium");
-
-            // LOD 3: Large (8x scale, starts with 2048px atlas)
-            this.lodLevels[3] = new LodLevel(parent, rawFont, baseSize * 8.0F, 2048, debugName, "_large");
         }
 
         boolean canDisplay(int codepoint) {
@@ -240,60 +255,149 @@ public final class SmoothFont implements AutoCloseable {
         }
 
         SmoothFontGlyph getGlyph(int lodIndex, int codepoint, boolean bold, boolean italic) {
-            return lodLevels[lodIndex].getAtlas(bold, italic).getGlyph(codepoint);
+            return getLodLevel(lodIndex).getAtlas(bold, italic).getGlyph(codepoint);
         }
 
         SmoothFontAtlas getAtlas(int lodIndex, boolean bold, boolean italic) {
-            return lodLevels[lodIndex].getAtlas(bold, italic);
+            return getLodLevel(lodIndex).getAtlas(bold, italic);
         }
 
         @Override
         public void close() {
             for (LodLevel lod : lodLevels) {
-                lod.close();
+                if (lod != null) {
+                    lod.close();
+                }
             }
+        }
+
+        private LodLevel getLodLevel(int lodIndex) {
+            LodLevel lod = lodLevels[lodIndex];
+            if (lod != null) {
+                return lod;
+            }
+            synchronized (this) {
+                lod = lodLevels[lodIndex];
+                if (lod == null) {
+                    lod = createLodLevel(lodIndex);
+                    lodLevels[lodIndex] = lod;
+                }
+                return lod;
+            }
+        }
+
+        private LodLevel createLodLevel(int lodIndex) {
+            return switch (lodIndex) {
+                // LOD 0: Tiny (1x scale, starts with 256px atlas)
+                case 0 -> new LodLevel(parent, rawFont, baseSize * 1.0F, 256, debugName, "_tiny", "tiny", sourceLabel, sourceIndex);
+                // LOD 1: Small (2x scale, starts with 512px atlas)
+                case 1 -> new LodLevel(parent, rawFont, baseSize * 2.0F, 512, debugName, "_small", "small", sourceLabel, sourceIndex);
+                // LOD 2: Medium (4x scale, starts with 512px atlas)
+                case 2 -> new LodLevel(parent, rawFont, baseSize * 4.0F, 512, debugName, "_medium", "medium", sourceLabel, sourceIndex);
+                // LOD 3: Large (8x scale, starts with 1024px atlas)
+                case 3 -> new LodLevel(parent, rawFont, baseSize * 8.0F, 1024, debugName, "_large", "large", sourceLabel, sourceIndex);
+                default -> throw new IllegalArgumentException("Invalid LOD index: " + lodIndex);
+            };
         }
     }
 
     private static class LodLevel implements AutoCloseable {
         final float generationSize;
-        final SmoothFontAtlas plainAtlas;
-        final SmoothFontAtlas boldAtlas;
-        final SmoothFontAtlas italicAtlas;
-        final SmoothFontAtlas boldItalicAtlas;
+        private final SmoothFont parent;
+        private final Font rawFont;
+        private final float lodSdfRange;
+        private final int initialAtlasSize;
+        private final String debugName;
+        private final String suffix;
+        private final String lodLabel;
+        private final String sourceLabel;
+        private final int sourceIndex;
+        private SmoothFontAtlas plainAtlas;
+        private SmoothFontAtlas boldAtlas;
+        private SmoothFontAtlas italicAtlas;
+        private SmoothFontAtlas boldItalicAtlas;
 
-        LodLevel(SmoothFont parent, Font rawFont, float genSize, int initialAtlasSize, String debugName, String suffix) {
+        LodLevel(SmoothFont parent, Font rawFont, float genSize, int initialAtlasSize, String debugName, String suffix, String lodLabel, String sourceLabel, int sourceIndex) {
             this.generationSize = genSize;
-
-            Font plain = rawFont.deriveFont(Font.PLAIN, genSize);
-            Font bold = rawFont.deriveFont(Font.BOLD, genSize);
-            Font italic = rawFont.deriveFont(Font.ITALIC, genSize);
-            Font boldItalic = rawFont.deriveFont(Font.BOLD | Font.ITALIC, genSize);
+            this.parent = parent;
+            this.rawFont = rawFont;
+            this.initialAtlasSize = Math.max(1, initialAtlasSize);
+            this.debugName = debugName;
+            this.suffix = suffix;
+            this.lodLabel = lodLabel;
+            this.sourceLabel = sourceLabel;
+            this.sourceIndex = sourceIndex;
 
             // Scale SDF range based on LOD size.
             // This ensures we have a consistent "relative" softness across all LODs.
             float scale = genSize / parent.getBaseSize();
-            float lodSdfRange = Math.max(1.0F, parent.getSdfRange() * scale);
-
-            this.plainAtlas = new SmoothFontAtlas(parent, plain, parent.getFontRenderContext(), lodSdfRange, debugName + suffix + "_plain", initialAtlasSize);
-            this.boldAtlas = new SmoothFontAtlas(parent, bold, parent.getFontRenderContext(), lodSdfRange, debugName + suffix + "_bold", initialAtlasSize);
-            this.italicAtlas = new SmoothFontAtlas(parent, italic, parent.getFontRenderContext(), lodSdfRange, debugName + suffix + "_italic", initialAtlasSize);
-            this.boldItalicAtlas = new SmoothFontAtlas(parent, boldItalic, parent.getFontRenderContext(), lodSdfRange, debugName + suffix + "_bold_italic", initialAtlasSize);
+            this.lodSdfRange = Math.max(1.0F, parent.getSdfRange() * scale);
         }
 
         SmoothFontAtlas getAtlas(boolean bold, boolean italic) {
-            if (bold && italic) return boldItalicAtlas;
-            if (bold) return boldAtlas;
-            if (italic) return italicAtlas;
-            return plainAtlas;
+            if (bold && italic) {
+                if (boldItalicAtlas != null) {
+                    return boldItalicAtlas;
+                }
+                synchronized (this) {
+                    if (boldItalicAtlas == null) {
+                        boldItalicAtlas = createAtlas(Font.BOLD | Font.ITALIC, "_bold_italic", "bold_italic");
+                    }
+                    return boldItalicAtlas;
+                }
+            }
+            if (bold) {
+                if (boldAtlas != null) {
+                    return boldAtlas;
+                }
+                synchronized (this) {
+                    if (boldAtlas == null) {
+                        boldAtlas = createAtlas(Font.BOLD, "_bold", "bold");
+                    }
+                    return boldAtlas;
+                }
+            }
+            if (italic) {
+                if (italicAtlas != null) {
+                    return italicAtlas;
+                }
+                synchronized (this) {
+                    if (italicAtlas == null) {
+                        italicAtlas = createAtlas(Font.ITALIC, "_italic", "italic");
+                    }
+                    return italicAtlas;
+                }
+            }
+            if (plainAtlas != null) {
+                return plainAtlas;
+            }
+            synchronized (this) {
+                if (plainAtlas == null) {
+                    plainAtlas = createAtlas(Font.PLAIN, "_plain", "plain");
+                }
+                return plainAtlas;
+            }
+        }
+
+        private SmoothFontAtlas createAtlas(int style, String styleSuffix, String styleLabel) {
+            Font derived = rawFont.deriveFont(style, generationSize);
+            return new SmoothFontAtlas(parent, derived, parent.getFontRenderContext(), lodSdfRange, debugName + suffix + styleSuffix, initialAtlasSize, sourceLabel, sourceIndex, lodLabel, styleLabel);
         }
 
         @Override
         public void close() {
-            plainAtlas.close();
-            boldAtlas.close();
-            italicAtlas.close();
-            boldItalicAtlas.close();
+            if (plainAtlas != null) {
+                plainAtlas.close();
+            }
+            if (boldAtlas != null) {
+                boldAtlas.close();
+            }
+            if (italicAtlas != null) {
+                italicAtlas.close();
+            }
+            if (boldItalicAtlas != null) {
+                boldItalicAtlas.close();
+            }
         }
     }
 }

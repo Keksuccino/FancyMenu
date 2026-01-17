@@ -31,10 +31,15 @@ final class SmoothFontAtlas implements AutoCloseable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final String debugName;
+    private final String sourceLabel;
+    private final int sourceIndex;
+    private final String lodLabel;
+    private final String styleLabel;
     private final Font awtFont;
     private final FontRenderContext fontRenderContext;
     private final float sdfRange;
     private final int padding;
+    private final int initialSize;
     private final Int2ObjectOpenHashMap<SmoothFontGlyph> glyphs = new Int2ObjectOpenHashMap<>();
 
     private NativeImage atlasImage;
@@ -49,24 +54,22 @@ final class SmoothFontAtlas implements AutoCloseable {
     private int cursorY;
     private int rowHeight;
 
-    SmoothFontAtlas(@Nonnull SmoothFont parentFont, @Nonnull Font awtFont, @Nonnull FontRenderContext fontRenderContext, float sdfRange, @Nonnull String debugName, int initialSize) {
+    SmoothFontAtlas(@Nonnull SmoothFont parentFont, @Nonnull Font awtFont, @Nonnull FontRenderContext fontRenderContext, float sdfRange, @Nonnull String debugName, int initialSize, @Nonnull String sourceLabel, int sourceIndex, @Nonnull String lodLabel, @Nonnull String styleLabel) {
         this.debugName = Objects.requireNonNull(debugName);
+        this.sourceLabel = Objects.requireNonNull(sourceLabel);
+        this.sourceIndex = sourceIndex;
+        this.lodLabel = Objects.requireNonNull(lodLabel);
+        this.styleLabel = Objects.requireNonNull(styleLabel);
         this.awtFont = Objects.requireNonNull(awtFont);
         this.fontRenderContext = Objects.requireNonNull(fontRenderContext);
         this.sdfRange = Math.max(1.0F, sdfRange);
         this.padding = (int) Math.ceil(this.sdfRange) + 2;
+        this.initialSize = Math.max(1, initialSize);
 
-        this.logicalWidth = initialSize;
-        this.logicalHeight = initialSize;
-        this.gpuWidth = initialSize;
-        this.gpuHeight = initialSize;
-
-        this.atlasImage = new NativeImage(NativeImage.Format.RGBA, logicalWidth, logicalHeight, true);
-        this.dynamicTexture = new DynamicTexture(atlasImage);
-        TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-        this.textureLocation = textureManager.register("fancymenu_smooth_font_" + debugName, dynamicTexture);
-        this.textureId = dynamicTexture.getId();
-        applyLinearFilter();
+        this.logicalWidth = this.initialSize;
+        this.logicalHeight = this.initialSize;
+        this.gpuWidth = this.initialSize;
+        this.gpuHeight = this.initialSize;
     }
 
     int getWidth() {
@@ -82,10 +85,12 @@ final class SmoothFontAtlas implements AutoCloseable {
     }
 
     ResourceLocation getTextureLocation() {
+        ensureInitialized();
         return textureLocation;
     }
 
     int getTextureId() {
+        ensureInitialized();
         return textureId;
     }
 
@@ -111,20 +116,20 @@ final class SmoothFontAtlas implements AutoCloseable {
         Rectangle2D bounds = outline.getBounds2D();
 
         if (bounds == null || bounds.isEmpty() || bounds.getWidth() <= 0.0 || bounds.getHeight() <= 0.0) {
-            return new SmoothFontGlyph(this, 0, 0, 0, 0, 0.0F, 0.0F, advance, false, true);
+            return new SmoothFontGlyph(this, 0, 0, 0, 0, 0.0F, 0.0F, advance, false);
         }
 
         int glyphWidth = (int)Math.ceil(bounds.getWidth() + (padding * 2.0));
         int glyphHeight = (int)Math.ceil(bounds.getHeight() + (padding * 2.0));
 
         if (glyphWidth <= 0 || glyphHeight <= 0) {
-            return new SmoothFontGlyph(this, 0, 0, 0, 0, 0.0F, 0.0F, advance, false, true);
+            return new SmoothFontGlyph(this, 0, 0, 0, 0, 0.0F, 0.0F, advance, false);
         }
+
+        ensureInitialized();
 
         BufferedImage image = renderGlyphImage(glyphVector, bounds, glyphWidth, glyphHeight, padding, sdfRange);
         byte[] atlasPixels = buildRawRgba(image, glyphWidth, glyphHeight);
-        boolean usesTrueSdf = true;
-
         Rect slot = allocate(glyphWidth, glyphHeight);
         blitToAtlas(slot.x, slot.y, glyphWidth, glyphHeight, atlasPixels);
 
@@ -136,7 +141,7 @@ final class SmoothFontAtlas implements AutoCloseable {
 
         upload();
 
-        return new SmoothFontGlyph(this, slot.x, slot.y, glyphWidth, glyphHeight, offsetX, offsetY, advance, true, usesTrueSdf);
+        return new SmoothFontGlyph(this, slot.x, slot.y, glyphWidth, glyphHeight, offsetX, offsetY, advance, true);
     }
 
     private Rect allocate(int width, int height) {
@@ -167,6 +172,9 @@ final class SmoothFontAtlas implements AutoCloseable {
     }
 
     private void resizeAtlas(int newWidth, int newHeight) {
+        if (dynamicTexture == null) {
+            ensureInitialized();
+        }
         int targetWidth = Math.max(newWidth, logicalWidth);
         int targetHeight = Math.max(newHeight, logicalHeight);
         targetWidth = Math.min(targetWidth, RenderSystem.maxSupportedTextureSize());
@@ -318,5 +326,28 @@ final class SmoothFontAtlas implements AutoCloseable {
             dynamicTexture = null;
         }
         atlasImage = null;
+    }
+
+    private void ensureInitialized() {
+        if (dynamicTexture != null) {
+            return;
+        }
+        synchronized (this) {
+            if (dynamicTexture != null) {
+                return;
+            }
+            this.logicalWidth = initialSize;
+            this.logicalHeight = initialSize;
+            this.gpuWidth = initialSize;
+            this.gpuHeight = initialSize;
+
+            this.atlasImage = new NativeImage(NativeImage.Format.RGBA, logicalWidth, logicalHeight, true);
+            this.dynamicTexture = new DynamicTexture(atlasImage);
+            TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+            this.textureLocation = textureManager.register("fancymenu_smooth_font_" + debugName, dynamicTexture);
+            this.textureId = dynamicTexture.getId();
+            applyLinearFilter();
+            LOGGER.info("[FANCYMENU] Smooth font atlas initialized: file='{}', source={}, lod={}, style={}, size={}x{}.", sourceLabel, sourceIndex, lodLabel, styleLabel, logicalWidth, logicalHeight);
+        }
     }
 }
