@@ -23,6 +23,7 @@ public class UIColorTheme {
     public DrawableColor ui_blur_interface_area_color_type_1 = DrawableColor.of(new Color(43, 43, 43, 100));
     public DrawableColor ui_blur_interface_area_color_type_2 = DrawableColor.of(new Color(5, 5, 5, 100));
     public DrawableColor ui_blur_interface_area_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
+    public DrawableColor ui_blur_interface_area_entry_selected_color = DrawableColor.of(new Color(153, 157, 162, 100));
     public DrawableColor ui_blur_interface_widget_background_color_normal_type_1 = DrawableColor.of(new Color(71, 71, 71, 102));
     public DrawableColor ui_blur_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(83, 156, 212, 77));
     public DrawableColor ui_blur_interface_widget_background_color_normal_type_2 = DrawableColor.of(new Color(126, 126, 126, 102));

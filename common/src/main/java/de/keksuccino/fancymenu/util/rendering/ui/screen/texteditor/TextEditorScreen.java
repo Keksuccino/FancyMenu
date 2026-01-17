@@ -82,19 +82,31 @@ public class TextEditorScreen extends PiPScreen {
         if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_color_type_1;
         return UIBase.getUITheme().area_background_color;
     };
-    protected Supplier<DrawableColor> editorAreaBorderColor = () -> UIBase.getUITheme().element_border_color_normal;
+    protected Supplier<DrawableColor> areaBorderColor = () -> {
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_border_color;
+        return UIBase.getUITheme().element_border_color_normal;
+    };
     protected Supplier<DrawableColor> textColor = () -> UIBase.getUITheme().text_editor_text_color;
-    protected Supplier<DrawableColor> focusedLineColor = () -> UIBase.getUITheme().list_entry_color_selected_hovered;
+    protected Supplier<DrawableColor> focusedLineColor = () -> {
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_entry_selected_color;
+        return UIBase.getUITheme().list_entry_color_selected_hovered;
+    };
     protected Supplier<DrawableColor> scrollGrabberIdleColor = () -> UIBase.getUITheme().scroll_grabber_color_normal;
     protected Supplier<DrawableColor> scrollGrabberHoverColor = () -> UIBase.getUITheme().scroll_grabber_color_hover;
-    protected Supplier<DrawableColor> sideBarColor = () -> UIBase.getUITheme().text_editor_sidebar_color;
+    protected Supplier<DrawableColor> lineNumberSideBarColor = () -> {
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_color_type_2;
+        return UIBase.getUITheme().text_editor_sidebar_color;
+    };
     protected Supplier<DrawableColor> lineNumberTextColorNormal = () -> UIBase.getUITheme().text_editor_line_number_text_color_normal;
     protected Supplier<DrawableColor> lineNumberTextColorFocused = () -> UIBase.getUITheme().text_editor_line_number_text_color_selected;
     protected Supplier<DrawableColor> placeholderEntryBackgroundColorIdle = () -> UIBase.getUITheme().area_background_color;
     protected Supplier<DrawableColor> placeholderEntryBackgroundColorHover = () -> UIBase.getUITheme().list_entry_color_selected_hovered;
     protected Supplier<DrawableColor> placeholderEntryDotColorPlaceholder = () -> UIBase.getUITheme().listing_dot_color_1;
     protected Supplier<DrawableColor> placeholderEntryDotColorCategory = () -> UIBase.getUITheme().listing_dot_color_2;
-    protected Supplier<DrawableColor> placeholderEntryLabelColor = () -> UIBase.getUITheme().description_area_text_color;
+    protected Supplier<DrawableColor> placeholderEntryLabelColor = () -> {
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_widget_label_color_normal;
+        return UIBase.getUITheme().element_label_color_normal;
+    };
     protected Supplier<DrawableColor> placeholderEntryBackToCategoriesLabelColor = () -> UIBase.getUITheme().warning_text_color;
     protected int currentLineWidth;
     protected int lastTickFocusedLineIndex = -1;
@@ -444,7 +456,7 @@ public class TextEditorScreen extends PiPScreen {
             graphics.disableScissor();
 
             //Render placeholder menu border
-            UIBase.renderRoundedBorder(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.headerHeight - 1 + 25, this.width - this.borderRight, this.height - this.footerHeight + 1, 1.0F, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.editorAreaBorderColor.get().getColorInt());
+            UIBase.renderRoundedBorder(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.headerHeight - 1 + 25, this.width - this.borderRight, this.height - this.footerHeight + 1, 1.0F, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.areaBorderColor.get().getColorInt());
 
             //Render placeholder menu scroll bars
             this.verticalScrollBarPlaceholderMenu.render(graphics, mouseX, mouseY, partial);
@@ -649,7 +661,7 @@ public class TextEditorScreen extends PiPScreen {
         float xMax = this.getEditorAreaX() + overlap;
         float yMin = this.getEditorAreaY() - 1.0F;
         float yMax = this.getEditorAreaY() + this.getEditorAreaHeight() + 1.0F;
-        UIBase.fillF(graphics, xMin, yMin, xMax, yMax, this.sideBarColor.get().getColorInt());
+        UIBase.fillF(graphics, xMin, yMin, xMax, yMax, this.lineNumberSideBarColor.get().getColorInt());
     }
 
     protected void renderLineNumber(GuiGraphics graphics, TextEditorLine line) {
@@ -665,7 +677,7 @@ public class TextEditorScreen extends PiPScreen {
 
     protected void renderEditorAreaBorder(GuiGraphics graphics, float partial) {
         float editorAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
-        SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(graphics, this.borderLeft - 1, this.headerHeight - 1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1.0F, editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.editorAreaBorderColor.get().getColorInt(), partial);
+        SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(graphics, this.borderLeft - 1, this.headerHeight - 1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1.0F, editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.areaBorderColor.get().getColorInt(), partial);
     }
 
     protected void tickMouseHighlighting() {
