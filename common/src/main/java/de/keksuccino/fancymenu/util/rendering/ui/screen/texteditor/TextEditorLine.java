@@ -98,19 +98,24 @@ public class TextEditorLine extends AdvancedTextField {
                 int lineColor = this.parent.focusedLineColor.get().getColorInt();
                 int areaY = this.parent.getEditorAreaY();
                 int areaBottom = areaY + this.parent.getEditorAreaHeight();
-                boolean roundTop = lineY <= areaY + 5;
-                boolean roundBottom = (lineY + lineHeight) >= areaBottom - 5;
-                if (roundTop || roundBottom) {
-                    float radius = UIBase.getInterfaceCornerRoundingRadius();
-                    if (roundTop && roundBottom) {
-                        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, lineX, lineY, lineWidth, lineHeight, radius, radius, radius, radius, lineColor, partial);
-                    } else if (roundTop) {
-                        SmoothRectangleRenderer.renderSmoothRectRoundTopCornersScaled(graphics, lineX, lineY, lineWidth, lineHeight, radius, lineColor, partial);
+                int visibleTop = Math.max(lineY, areaY);
+                int visibleBottom = Math.min(lineY + lineHeight, areaBottom);
+                int visibleHeight = visibleBottom - visibleTop;
+                if (visibleHeight > 0) {
+                    boolean roundTop = lineY <= areaY + 5;
+                    boolean roundBottom = (lineY + lineHeight) >= areaBottom - 5;
+                    if (roundTop || roundBottom) {
+                        float radius = UIBase.getInterfaceCornerRoundingRadius();
+                        if (roundTop && roundBottom) {
+                            SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, lineX, visibleTop, lineWidth, visibleHeight, radius, radius, radius, radius, lineColor, partial);
+                        } else if (roundTop) {
+                            SmoothRectangleRenderer.renderSmoothRectRoundTopCornersScaled(graphics, lineX, visibleTop, lineWidth, visibleHeight, radius, lineColor, partial);
+                        } else {
+                            SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, lineX, visibleTop, lineWidth, visibleHeight, radius, lineColor, partial);
+                        }
                     } else {
-                        SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, lineX, lineY, lineWidth, lineHeight, radius, lineColor, partial);
+                        graphics.fill(lineX, visibleTop, lineX + lineWidth, visibleTop + visibleHeight, lineColor);
                     }
-                } else {
-                    graphics.fill(lineX, lineY, lineX + lineWidth, lineY + lineHeight, lineColor);
                 }
             }
 

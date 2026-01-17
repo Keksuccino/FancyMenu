@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -101,7 +101,7 @@ public class ColorPickerScreen extends PiPScreen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        UIColorTheme theme = UIBase.getUITheme();
+        UITheme theme = UIBase.getUITheme();
         RenderSystem.enableBlend();
 
         this.updateLayout();
@@ -234,7 +234,7 @@ public class ColorPickerScreen extends PiPScreen {
         }
     }
 
-    private void renderLeftPanel(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
+    private void renderLeftPanel(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
         int panelX = this.pickerX - PANEL_PADDING;
         int panelY = this.pickerY - PANEL_PADDING;
         int panelW = this.pickerSize + (PANEL_PADDING * 2);
@@ -253,7 +253,7 @@ public class ColorPickerScreen extends PiPScreen {
         this.renderAlphaSlider(graphics, theme);
     }
 
-    private void renderInfoPanel(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
+    private void renderInfoPanel(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
         int panelX = this.infoX - PANEL_PADDING;
         int panelY = this.infoY - PANEL_PADDING;
         int panelW = this.infoWidth + (PANEL_PADDING * 2);
@@ -315,7 +315,7 @@ public class ColorPickerScreen extends PiPScreen {
         UIBase.renderBorder(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 1, UIBase.getUITheme().element_border_color_normal.getColorInt(), true, true, true, true);
     }
 
-    private void renderColorAreaSelector(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
+    private void renderColorAreaSelector(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
         int max = Math.max(1, this.pickerSize - 1);
         int selectorX = this.pickerX + Math.round(this.saturation * max);
         int selectorY = this.pickerY + Math.round((1.0F - this.value) * max);
@@ -329,7 +329,7 @@ public class ColorPickerScreen extends PiPScreen {
         graphics.fill(innerX, innerY, innerX + innerSize, innerY + innerSize, theme.generic_text_base_color.getColorInt());
     }
 
-    private void renderHueSlider(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
+    private void renderHueSlider(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
         int segments = 6;
         for (int i = 0; i < segments; i++) {
             float startHue = (float) i / (float) segments;
@@ -352,7 +352,7 @@ public class ColorPickerScreen extends PiPScreen {
         graphics.fill(markerX - 1, this.hueY - 2, markerX + 1, this.hueY + this.hueHeight + 2, theme.generic_text_base_color.getColorInt());
     }
 
-    private void renderAlphaSlider(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
+    private void renderAlphaSlider(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
         this.renderCheckerboard(graphics, this.alphaX, this.alphaY, this.alphaWidth, this.alphaHeight, 4);
         int rgb = this.getCurrentColorInt() & 0xFFFFFF;
         int leftColor = rgb;

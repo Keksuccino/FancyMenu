@@ -41,7 +41,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizerHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
@@ -1068,7 +1068,7 @@ public class CustomizationOverlayUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("edit"));
 
         int i2 = 0;
-        for (UIColorTheme s : UIColorThemeRegistry.getThemes()) {
+        for (UITheme s : UIColorThemeRegistry.getThemes()) {
             windowUiThemeMenu.addClickableEntry("ui_theme_" + i2, s.getDisplayName(), (menu, entry) -> {
                 FancyMenu.getOptions().uiTheme.setValue(s.getIdentifier());
                 UIColorThemeRegistry.setActiveTheme(s.getIdentifier());

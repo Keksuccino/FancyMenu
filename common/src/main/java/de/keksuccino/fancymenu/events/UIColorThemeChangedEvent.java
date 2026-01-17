@@ -1,17 +1,17 @@
 package de.keksuccino.fancymenu.events;
 
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 
 public class UIColorThemeChangedEvent extends EventBase {
 
-    protected final UIColorTheme scheme;
+    protected final UITheme scheme;
 
-    public UIColorThemeChangedEvent(UIColorTheme scheme) {
+    public UIColorThemeChangedEvent(UITheme scheme) {
         this.scheme = scheme;
     }
 
-    public UIColorTheme getScheme() {
+    public UITheme getScheme() {
         return this.scheme;
     }
 

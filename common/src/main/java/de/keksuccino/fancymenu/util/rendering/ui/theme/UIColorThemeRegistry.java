@@ -14,11 +14,11 @@ public class UIColorThemeRegistry {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final Map<String, UIColorTheme> THEMES = new LinkedHashMap<>();
+    private static final Map<String, UITheme> THEMES = new LinkedHashMap<>();
 
-    private static UIColorTheme activeTheme;
+    private static UITheme activeTheme;
 
-    public static void register(@NotNull UIColorTheme theme) {
+    public static void register(@NotNull UITheme theme) {
         Objects.requireNonNull(theme);
         Objects.requireNonNull(theme.getIdentifier());
         if (THEMES.containsKey(theme.identifier)) {
@@ -28,7 +28,7 @@ public class UIColorThemeRegistry {
     }
 
     @NotNull
-    public static UIColorTheme getActiveTheme() {
+    public static UITheme getActiveTheme() {
         if (activeTheme != null) {
             return activeTheme;
         }
@@ -46,13 +46,13 @@ public class UIColorThemeRegistry {
     }
 
     @Nullable
-    public static UIColorTheme getTheme(@NotNull String identifier) {
+    public static UITheme getTheme(@NotNull String identifier) {
         Objects.requireNonNull(identifier);
         return THEMES.get(identifier);
     }
 
     @NotNull
-    public static List<UIColorTheme> getThemes() {
+    public static List<UITheme> getThemes() {
         return new ArrayList<>(THEMES.values());
     }
 

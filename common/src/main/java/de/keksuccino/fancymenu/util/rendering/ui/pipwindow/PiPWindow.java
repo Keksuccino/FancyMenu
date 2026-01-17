@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,7 +18,6 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
@@ -196,7 +196,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return;
         }
         float normalCornerRadius = getFrameCornerRadius();
-        UIColorTheme theme = getTheme();
+        UITheme theme = getTheme();
         if (UIBase.shouldBlur()) {
             if (titleHeight > 0.0F) {
                 GuiBlurRenderer.renderBlurAreaWithIntensityRoundBottomCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), normalCornerRadius, theme.ui_blur_interface_background_tint, partial);
@@ -296,7 +296,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         float titleBarRight = frameX + frameWidth - border;
         float titleCenterY = titleBarY + Math.max(0.0F, (titleBarHeight - font.lineHeight * scale) / 2.0F);
 
-        UIColorTheme theme = getTheme();
+        UITheme theme = getTheme();
         float buttonSlotSize = getTitleBarButtonSlotSize();
         float closeX = getCloseButtonX();
         float buttonY = getButtonY();
@@ -352,7 +352,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         float frameHeight = getHeight();
         float right = frameX + frameWidth;
         float bottom = frameY + frameHeight;
-        UIColorTheme theme = getTheme();
+        UITheme theme = getTheme();
         float border = getRenderBorderThickness();
         float normalCornerRadius = getFrameCornerRadius();
 
@@ -480,7 +480,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme, float x, float y, float width, float height, boolean hovered, @NotNull ResourceLocation icon, boolean rightmost, boolean hasBody, float scale, float partial) {
+    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UITheme theme, float x, float y, float width, float height, boolean hovered, @NotNull ResourceLocation icon, boolean rightmost, boolean hasBody, float scale, float partial) {
         if (hovered) {
             int color = UIBase.shouldBlur() ? theme.ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : theme.element_background_color_hover.getColorInt();
             float radius = getFrameCornerRadius();
@@ -548,12 +548,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         graphics.pose().popPose();
     }
 
-    private int getLabelColor(UIColorTheme theme) {
+    private int getLabelColor(UITheme theme) {
         if (UIBase.shouldBlur()) return theme.ui_blur_interface_widget_label_color_normal.getColorInt();
         return theme.element_label_color_normal.getColorInt();
     }
 
-    private int getBorderColor(UIColorTheme theme) {
+    private int getBorderColor(UITheme theme) {
         if (!UIBase.shouldBlur()) return theme.element_border_color_normal.getColorInt();
         return theme.ui_blur_interface_border_color.getColorInt();
     }
@@ -1690,7 +1690,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return mouseX >= areaX && mouseX < areaX + areaWidth && mouseY >= areaY && mouseY < areaY + areaHeight;
     }
 
-    private UIColorTheme getTheme() {
+    private UITheme getTheme() {
         return UIBase.getUITheme();
     }
 

@@ -31,8 +31,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.ContextMenuEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu.SubMenuContextMenuEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -397,7 +397,7 @@ public class ActionScriptEditorScreen extends Screen {
             return String.CASE_INSENSITIVE_ORDER.compare(leftName, rightName);
         });
 
-        UIColorTheme theme = UIBase.getUITheme();
+        UITheme theme = UIBase.getUITheme();
         MutableComponent openChooserLabel = Component.translatable("fancymenu.actions.open_action_chooser").setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
         subMenu.addClickableEntry("open_action_chooser", openChooserLabel, (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
@@ -428,7 +428,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     @NotNull
     protected MutableComponent buildActionMenuLabel(@NotNull Action action) {
-        UIColorTheme theme = UIBase.getUITheme();
+        UITheme theme = UIBase.getUITheme();
         MutableComponent label = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
         if (action.isDeprecated()) {
             label = label.withStyle(Style.EMPTY.withStrikethrough(true));
@@ -445,7 +445,7 @@ public class ActionScriptEditorScreen extends Screen {
         if ((description != null) && (description.length > 0)) {
             Collections.addAll(lines, description);
         }
-        UIColorTheme theme = UIBase.getUITheme();
+        UITheme theme = UIBase.getUITheme();
         Style hintStyle = Style.EMPTY
                 .withColor(theme.description_area_text_color.getColorInt())
                 .withItalic(true);
@@ -804,7 +804,7 @@ public class ActionScriptEditorScreen extends Screen {
             }
         }
 
-        UIColorTheme theme = UIBase.getUITheme();
+        UITheme theme = UIBase.getUITheme();
         graphics.fill(0, 0, this.width, this.height, theme.interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
@@ -940,7 +940,7 @@ public class ActionScriptEditorScreen extends Screen {
         int iconX = (this.width - iconWidth) / 2;
         int iconY = (this.height - iconHeight) / 2;
 
-        UIBase.setShaderColor(graphics, UIBase.getUITheme().ui_texture_color, alpha);
+        UIBase.setShaderColor(graphics, UIBase.getUITheme().ui_icon_texture_color, alpha);
         graphics.blit(ILLEGAL_ACTION_ICON, iconX, iconY, 0.0F, 0.0F, iconWidth, iconHeight, iconWidth, iconHeight);
         RenderingUtils.resetShaderColor(graphics);
 
@@ -955,7 +955,7 @@ public class ActionScriptEditorScreen extends Screen {
         if (this.minimapHeight <= 0) {
             return;
         }
-        UIColorTheme theme = UIBase.getUITheme();
+        UITheme theme = UIBase.getUITheme();
         RenderSystem.enableBlend();
         graphics.fill(this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, theme.actions_minimap_background_color.getColorInt());
         UIBase.renderBorder(graphics, this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, 1, theme.actions_minimap_border_color, true, true, true, true);
@@ -1008,7 +1008,7 @@ public class ActionScriptEditorScreen extends Screen {
             tooltipY = 0;
         }
 
-        UIColorTheme theme = UIBase.getUITheme();
+        UITheme theme = UIBase.getUITheme();
         Color backgroundColor = withAlpha(theme.interface_background_color.getColor(), 220);
 
         PoseStack poseStack = graphics.pose();
@@ -1052,7 +1052,7 @@ public class ActionScriptEditorScreen extends Screen {
         UIBase.renderBorder(graphics, minX, minY, maxX, maxY, 1, color, true, true, true, true);
     }
 
-    protected void renderMinimapViewport(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
+    protected void renderMinimapViewport(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
         if (this.minimapTotalEntriesHeight <= 0 || this.minimapContentHeight <= 0) {
             return;
         }
@@ -1079,7 +1079,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     @NotNull
     protected Color getMinimapEntryBaseColor(@NotNull ExecutableEntry entry) {
-        UIColorTheme theme = UIBase.getUITheme();
+        UITheme theme = UIBase.getUITheme();
         Color base;
         if (entry.executable instanceof IfExecutableBlock) {
             base = theme.actions_entry_background_color_if.getColor();
@@ -1779,7 +1779,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     @NotNull
     protected Color getChainIndicatorColorFor(@NotNull ExecutableEntry entry) {
-        UIColorTheme theme = UIBase.getUITheme();
+        UITheme theme = UIBase.getUITheme();
         if (!this.selectedStatementChainEntries.isEmpty() && this.isEntryPartOfChain(entry, this.selectedStatementChainEntries)) {
             return theme.actions_chain_indicator_selected_color.getColor();
         }
@@ -2885,7 +2885,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         private void applyThemeBackground(boolean force) {
-            UIColorTheme theme = UIBase.getUITheme();
+            UITheme theme = UIBase.getUITheme();
             String themeIdentifier = theme.getIdentifier();
             if (!force && themeIdentifier.equals(this.cachedThemeIdentifier)) {
                 return;
@@ -2927,7 +2927,7 @@ public class ActionScriptEditorScreen extends Screen {
 
         @SuppressWarnings("all")
         private void rebuildComponents() {
-            UIColorTheme theme = UIBase.getUITheme();
+            UITheme theme = UIBase.getUITheme();
             this.folderLabelComponent = null;
             this.folderNameComponent = null;
             this.folderCollapsedSuffixComponent = null;
@@ -3065,7 +3065,7 @@ public class ActionScriptEditorScreen extends Screen {
 
             int renderX = baseX + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
 
-            UIColorTheme theme = UIBase.getUITheme();
+            UITheme theme = UIBase.getUITheme();
 
             if (this.executable instanceof FolderExecutableBlock folder) {
                 int toggleX = renderX + 5;
@@ -3354,7 +3354,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         private void renderCollapseToggle(@NotNull GuiGraphics graphics, int x, int y, boolean collapsed) {
-            UIColorTheme theme = UIBase.getUITheme();
+            UITheme theme = UIBase.getUITheme();
             int size = COLLAPSE_TOGGLE_SIZE;
             Color background = theme.actions_entry_background_color_generic_block.getColor();
             graphics.fill(x, y, x + size, y + size, background.getRGB());
@@ -3368,7 +3368,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         private void renderStatementBadge(@NotNull GuiGraphics graphics, int x, int y, @NotNull Color fillColor) {
-            UIColorTheme theme = UIBase.getUITheme();
+            UITheme theme = UIBase.getUITheme();
             int size = COLLAPSE_TOGGLE_SIZE;
             Color background = theme.actions_entry_background_color_generic_block.getColor();
             graphics.fill(x, y, x + size, y + size, background.getRGB());
@@ -3377,7 +3377,7 @@ public class ActionScriptEditorScreen extends Screen {
             graphics.fill(x + inset, y + inset, x + size - inset, y + size - inset, fillColor.getRGB());
         }
 
-        private MutableComponent createCollapsedSuffixComponent(@NotNull UIColorTheme theme) {
+        private MutableComponent createCollapsedSuffixComponent(@NotNull UITheme theme) {
             return Component.literal(" ").append(Component.translatable("fancymenu.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.warning_text_color.getColorInt())));
         }
 
@@ -3385,7 +3385,7 @@ public class ActionScriptEditorScreen extends Screen {
             this.valueLabelComponent = null;
             this.valueOnlyComponent = null;
             if (this.executable instanceof ActionInstance i) {
-                UIColorTheme theme = UIBase.getUITheme();
+                UITheme theme = UIBase.getUITheme();
                 String cachedValue = i.value;
                 boolean hasValue = i.action.hasValue();
                 String valueString = ((cachedValue != null) && hasValue) ? cachedValue : I18n.get("fancymenu.actions.screens.manage_screen.info.value.none");

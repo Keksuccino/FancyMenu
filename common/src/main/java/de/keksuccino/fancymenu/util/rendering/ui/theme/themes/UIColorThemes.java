@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.theme.themes;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.FileUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeSerializer;
 import net.minecraft.resources.ResourceLocation;
@@ -20,8 +20,8 @@ public class UIColorThemes {
     public static final File THEME_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "/ui_themes"));
 
     // HARDCODED DEFAULT THEMES
-    public static final DarkUIColorTheme DARK = new DarkUIColorTheme();
-    public static final LightUIColorTheme LIGHT = new LightUIColorTheme();
+    public static final DarkUITheme DARK = new DarkUITheme();
+    public static final LightUITheme LIGHT = new LightUITheme();
 
     // ASSET THEMES
     public static final ResourceLocation OLED_PURPLE_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/oled_purple.json");
@@ -29,7 +29,7 @@ public class UIColorThemes {
     public static final ResourceLocation BUTTER_DARK_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/butter_dark.json");
     public static final ResourceLocation BUTTER_OLED_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/butter_oled.json");
 
-    public static final UIColorTheme[] DEFAULT_THEMES = new UIColorTheme[]{ DARK, LIGHT };
+    public static final UITheme[] DEFAULT_THEMES = new UITheme[]{ DARK, LIGHT };
 
     public static void registerAll() {
 
@@ -63,7 +63,7 @@ public class UIColorThemes {
     }
 
     private static void registerAssetTheme(@NotNull ResourceLocation themeLocation) {
-        UIColorTheme theme = UIColorThemeSerializer.deserializeThemeFromResource(themeLocation);
+        UITheme theme = UIColorThemeSerializer.deserializeThemeFromResource(themeLocation);
         if (theme != null) {
             UIColorThemeRegistry.register(theme);
         } else {
@@ -79,13 +79,13 @@ public class UIColorThemes {
 
     }
 
-    private static void registerDefaultTheme(UIColorTheme theme) {
+    private static void registerDefaultTheme(UITheme theme) {
         UIColorThemeRegistry.register(theme);
         UIColorThemeSerializer.serializeThemeToFile(theme, new File(THEME_DIR, theme.getIdentifier() + ".json"));
     }
 
     private static void registerCustomThemes() {
-        for (UIColorTheme theme : readThemesFromFiles()) {
+        for (UITheme theme : readThemesFromFiles()) {
             if (!isIdentifierOfDefaultTheme(theme.getIdentifier())) {
                 UIColorThemeRegistry.register(theme);
             }
@@ -93,14 +93,14 @@ public class UIColorThemes {
     }
 
     @NotNull
-    private static List<UIColorTheme> readThemesFromFiles() {
-        List<UIColorTheme> themes = new ArrayList<>();
+    private static List<UITheme> readThemesFromFiles() {
+        List<UITheme> themes = new ArrayList<>();
         try {
             File[] files = THEME_DIR.listFiles();
             if (files != null) {
                 for (File f : files) {
                     if (f.getName().toLowerCase().endsWith(".json")) {
-                        UIColorTheme theme = UIColorThemeSerializer.deserializeThemeFromFile(f);
+                        UITheme theme = UIColorThemeSerializer.deserializeThemeFromFile(f);
                         if (theme != null) {
                             themes.add(theme);
                         } else {
@@ -120,7 +120,7 @@ public class UIColorThemes {
     }
 
     private static boolean isIdentifierOfDefaultTheme(@NotNull String identifier) {
-        for (UIColorTheme t : DEFAULT_THEMES) {
+        for (UITheme t : DEFAULT_THEMES) {
             if (t.getIdentifier().equals(identifier)) return true;
         }
         return false;

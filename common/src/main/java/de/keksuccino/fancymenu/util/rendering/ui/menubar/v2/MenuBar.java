@@ -715,7 +715,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         @Nullable
         protected MenuBarEntrySupplier<ITexture> iconTextureSupplier;
         @Nullable
-        protected Supplier<DrawableColor> iconTextureColor = () -> UIBase.getUITheme().ui_texture_color;
+        protected Supplier<DrawableColor> iconTextureColor = () -> UIBase.getUITheme().ui_icon_texture_color;
         @NotNull
         protected ClickAction clickAction;
         protected Font font = Minecraft.getInstance().font;

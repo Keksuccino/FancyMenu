@@ -103,8 +103,14 @@ public class TextEditorScreen extends PiPScreen {
     };
     protected Supplier<DrawableColor> lineNumberTextColorNormal = () -> UIBase.getUITheme().text_editor_line_number_text_color_normal;
     protected Supplier<DrawableColor> lineNumberTextColorFocused = () -> UIBase.getUITheme().text_editor_line_number_text_color_selected;
-    protected Supplier<DrawableColor> placeholderEntryBackgroundColorIdle = () -> UIBase.getUITheme().area_background_color;
-    protected Supplier<DrawableColor> placeholderEntryBackgroundColorHover = () -> UIBase.getUITheme().list_entry_color_selected_hovered;
+    protected Supplier<DrawableColor> placeholderEntryBackgroundColorIdle = () -> {
+        if (UIBase.shouldBlur()) return DrawableColor.FULLY_TRANSPARENT;
+        return UIBase.getUITheme().area_background_color;
+    };
+    protected Supplier<DrawableColor> placeholderEntryBackgroundColorHover = () -> {
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_entry_selected_color;
+        return UIBase.getUITheme().list_entry_color_selected_hovered;
+    };
     protected Supplier<DrawableColor> placeholderEntryDotColorPlaceholder = () -> UIBase.getUITheme().listing_dot_color_1;
     protected Supplier<DrawableColor> placeholderEntryDotColorCategory = () -> UIBase.getUITheme().listing_dot_color_2;
     protected Supplier<DrawableColor> placeholderEntryLabelColor = () -> {
@@ -378,7 +384,7 @@ public class TextEditorScreen extends PiPScreen {
         //Don't render line numbers outside the line number area
         int lineNumberMinX = this.getLineNumberSidebarX();
         int lineNumberMaxX = this.getLineNumberSidebarRight();
-        graphics.enableScissor(lineNumberMinX, this.getEditorAreaY() - 1, lineNumberMaxX, this.getEditorAreaY() + this.getEditorAreaHeight() + 1);
+        graphics.enableScissor(lineNumberMinX, this.getEditorAreaY() + 2, lineNumberMaxX, this.getEditorAreaY() + this.getEditorAreaHeight() - 2);
 
         for (Runnable r : this.lineNumberRenderQueue) {
             r.run();

@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFonts;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.TextDimensions;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -54,10 +54,10 @@ public class UIBase extends RenderingUtils {
     /**
      * Retrieves the currently active UI color theme for FancyMenu.
      *
-     * @return active {@link UIColorTheme}
+     * @return active {@link UITheme}
      */
     @NotNull
-    public static UIColorTheme getUITheme() {
+    public static UITheme getUITheme() {
         return UIColorThemeRegistry.getActiveTheme();
     }
 
@@ -129,7 +129,7 @@ public class UIBase extends RenderingUtils {
      * Applies the default FancyMenu edit box skin, optionally using the blur palette.
      */
     private static ExtendedEditBox applyDefaultEditBoxSkinTo(ExtendedEditBox editBox, boolean forBlur) {
-        UIColorTheme theme = UIBase.getUITheme();
+        UITheme theme = UIBase.getUITheme();
         if (forBlur) {
             editBox.setTextColor(theme.ui_blur_interface_input_field_text_color_normal);
             editBox.setTextColorUneditable(theme.ui_blur_interface_input_field_text_color_uneditable);
@@ -220,14 +220,14 @@ public class UIBase extends RenderingUtils {
     }
 
     public static float getWidgetCornerRoundingRadius() {
-        return 4.0F;
+        return getUITheme().widget_corner_rounding_radius;
     }
 
     /**
      * Default corner radius for UI interfaces.
      */
     public static float getInterfaceCornerRoundingRadius() {
-        return 6.0F;
+        return getUITheme().interface_corner_rounding_radius;
     }
 
     /**
@@ -241,6 +241,7 @@ public class UIBase extends RenderingUtils {
      * Whether UI blur is currently enabled in FancyMenu options.
      */
     public static boolean shouldBlur() {
+        if (!getUITheme().allow_blur) return false;
         return FancyMenu.getOptions().enableUiBlur.getValue();
     }
 

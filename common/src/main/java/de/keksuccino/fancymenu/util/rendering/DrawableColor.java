@@ -14,6 +14,8 @@ public class DrawableColor {
     public static final DrawableColor EMPTY = DrawableColor.of(new Color(255, 255, 255));
     public static final DrawableColor WHITE = DrawableColor.of(new Color(255, 255, 255));
     public static final DrawableColor BLACK = DrawableColor.of(new Color(0, 0, 0));
+    public static final DrawableColor FULLY_TRANSPARENT = DrawableColor.of(0,0,0,0);
+
     private static final Map<String, String> HTML_NAMED_COLORS = createHtmlColorNameMap();
 
     protected Color color;

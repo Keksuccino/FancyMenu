@@ -1678,7 +1678,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
                 RenderSystem.enableBlend();
-                UIBase.getUITheme().ui_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
+                UIBase.getUITheme().ui_icon_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
                 graphics.blit(CONTEXT_MENU_TOOLTIP_ICON, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
                 RenderingUtils.resetShaderColor(graphics);
 
