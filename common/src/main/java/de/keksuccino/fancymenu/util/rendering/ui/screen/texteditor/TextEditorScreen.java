@@ -677,7 +677,7 @@ public class TextEditorScreen extends PiPScreen {
 
     protected void renderEditorAreaBorder(GuiGraphics graphics, float partial) {
         float editorAreaRadius = UIBase.getInterfaceCornerRoundingRadius();
-        SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(graphics, this.borderLeft - 1, this.headerHeight - 1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1.0F, editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.areaBorderColor.get().getColorInt(), partial);
+        SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(graphics, this.getEditorAreaX() - 1, this.getEditorAreaY() - 1, this.getEditorAreaWidth() + 2, this.getEditorAreaHeight() + 2, 1.0F, editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.areaBorderColor.get().getColorInt(), partial);
     }
 
     protected void tickMouseHighlighting() {
