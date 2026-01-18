@@ -111,7 +111,7 @@ public class UITooltip implements Renderable {
             if (this.textAlignment == TooltipTextAlignment.CENTERED) {
                 x2 = x + Math.max(0, (this.getWidth() / 2) - (w / 2));
             }
-            graphics.drawString(this.font, c, x2, y2, UIBase.getUITheme().element_label_color_normal.getColorInt(), this.hasTextShadow());
+            graphics.drawString(this.font, c, x2, y2, UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt() : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt(), this.hasTextShadow());
             yLine += this.font.lineHeight + 2;
         }
     }
@@ -165,12 +165,12 @@ public class UITooltip implements Renderable {
                     smoothCornerRadius,
                     smoothCornerRadius,
                     smoothCornerRadius,
-                    UIBase.getUITheme().area_background_color.getColorInt(),
+                    UIBase.getUITheme().ui_tooltip_background_color.getColorInt(),
                     partial
             );
         }
 
-        int borderColorInt = blurEnabled ? UIBase.getUITheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUITheme().element_border_color_normal.getColorInt();
+        int borderColorInt = blurEnabled ? UIBase.getUITheme().ui_blur_overlay_border_color.getColorInt() : UIBase.getUITheme().ui_overlay_border_color.getColorInt();
         float smoothBorderThickness = borderThickness * renderScale;
         float smoothBorderCorner = normalRoundingRadius > 0.0F ? (normalRoundingRadius + borderThickness) * renderScale : 0.0F;
         SmoothRectangleRenderer.renderSmoothBorderRoundAllCorners(

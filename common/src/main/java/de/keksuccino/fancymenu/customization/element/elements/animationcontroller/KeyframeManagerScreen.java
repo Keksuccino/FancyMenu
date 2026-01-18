@@ -320,7 +320,7 @@ public class KeyframeManagerScreen extends Screen {
                 MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.smoothing.input");
                 int cW = Minecraft.getInstance().font.width(c);
                 graphics.drawString(Minecraft.getInstance().font, c,
-                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
                 super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
@@ -339,7 +339,7 @@ public class KeyframeManagerScreen extends Screen {
                 MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.input");
                 int cW = Minecraft.getInstance().font.width(c);
                 graphics.drawString(Minecraft.getInstance().font, c,
-                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
                 super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
@@ -458,7 +458,7 @@ public class KeyframeManagerScreen extends Screen {
         }
 
         // Render screen background
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
         LayoutEditorScreen.renderGrid(graphics, this.width, this.height);
 
@@ -706,14 +706,14 @@ public class KeyframeManagerScreen extends Screen {
         // Determine current time color
         int currentTimeColor = currentPlayOrRecordPosition > actualEndTime ?
                 UIBase.getUITheme().warning_text_color.getColorInt() :
-                UIBase.getUITheme().generic_text_base_color.getColorInt();
+                UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
 
         MutableComponent currentTimeComp = Component.literal(currentTimeStr).setStyle(Style.EMPTY.withColor(currentTimeColor));
         MutableComponent totalTimeComp = Component.literal(totalTimeStr);
         MutableComponent baseComp = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.time", currentTimeComp, totalTimeComp);
 
         graphics.drawString(Minecraft.getInstance().font, baseComp, timelineX, timelineY + TIMELINE_HEIGHT + 5,
-                UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+                UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
     }
 
@@ -736,7 +736,7 @@ public class KeyframeManagerScreen extends Screen {
 
             int yOffset = 10 + 20 + 10;
             for (Component line : lines) {
-                graphics.drawString(Minecraft.getInstance().font, line, 10, yOffset, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+                graphics.drawString(Minecraft.getInstance().font, line, 10, yOffset, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
                 yOffset += 10;
             }
 
@@ -806,7 +806,7 @@ public class KeyframeManagerScreen extends Screen {
                 continue;
             }
             notification.updateOpacity();
-            int textColor = UIBase.getUITheme().generic_text_base_color.getColorIntWithAlpha(notification.opacity); // Base color with fade
+            int textColor = UIBase.getUITheme().ui_interface_generic_text_color.getColorIntWithAlpha(notification.opacity); // Base color with fade
             graphics.drawString(
                     Minecraft.getInstance().font,
                     notification.message,

@@ -335,7 +335,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().screen_background_color_darker.getColorInt());
+		graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
 		this.layout.menuBackgrounds.forEach(background -> {
 

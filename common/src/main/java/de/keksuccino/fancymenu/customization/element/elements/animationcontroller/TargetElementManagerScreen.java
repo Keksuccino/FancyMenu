@@ -58,8 +58,8 @@ public class TargetElementManagerScreen extends CellScreen {
                 AbstractEditorElement e = this.parentLayoutEditor.getElementByInstanceIdentifier(target.targetElementId);
                 MutableComponent label = (e != null) ? e.element.getDisplayName().copy() : Component.literal("---");
                 label = label.setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
-                label = label.append(Component.literal(" [" + target.targetElementId + "]").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().generic_text_base_color.getColorInt())));
-                label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().generic_text_base_color.getColorInt())));
+                label = label.append(Component.literal(" [" + target.targetElementId + "]").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_generic_text_color.getColorInt())));
+                label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_generic_text_color.getColorInt())));
                 label = label.append(Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.label", target.timingOffsetMs)
                         .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt())));
                 this.addCell(new TargetEntryCell(target, label));

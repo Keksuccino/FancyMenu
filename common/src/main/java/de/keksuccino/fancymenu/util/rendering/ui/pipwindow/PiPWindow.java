@@ -215,7 +215,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                         0.0F,
                         normalCornerRadius,
                         normalCornerRadius,
-                        theme.interface_background_color.getColorInt(),
+                        theme.ui_interface_background_color.getColorInt(),
                         partial
                 );
             } else {
@@ -229,7 +229,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                         normalCornerRadius,
                         normalCornerRadius,
                         normalCornerRadius,
-                        theme.interface_background_color.getColorInt(),
+                        theme.ui_interface_background_color.getColorInt(),
                         partial
                 );
             }
@@ -387,7 +387,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                             normalCornerRadius,
                             0.0F,
                             0.0F,
-                            theme.interface_title_bar_color.getColorInt(),
+                            theme.ui_interface_title_bar_color.getColorInt(),
                             partial
                     );
                 } else {
@@ -401,7 +401,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                             normalCornerRadius,
                             normalCornerRadius,
                             normalCornerRadius,
-                            theme.interface_title_bar_color.getColorInt(),
+                            theme.ui_interface_title_bar_color.getColorInt(),
                             partial
                     );
                 }
@@ -482,7 +482,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private void renderButton(@NotNull GuiGraphics graphics, @NotNull UITheme theme, float x, float y, float width, float height, boolean hovered, @NotNull ResourceLocation icon, boolean rightmost, boolean hasBody, float scale, float partial) {
         if (hovered) {
-            int color = UIBase.shouldBlur() ? theme.ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : theme.element_background_color_hover.getColorInt();
+            int color = UIBase.shouldBlur() ? theme.ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : theme.ui_interface_widget_background_color_hover_type_1.getColorInt();
             float radius = getFrameCornerRadius();
             float topRight = rightmost ? radius : 0.0F;
             float bottomRight = (rightmost && !hasBody) ? radius : 0.0F;
@@ -550,12 +550,12 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private int getLabelColor(UITheme theme) {
         if (UIBase.shouldBlur()) return theme.ui_blur_interface_widget_label_color_normal.getColorInt();
-        return theme.element_label_color_normal.getColorInt();
+        return theme.ui_interface_widget_label_color_normal.getColorInt();
     }
 
     private int getBorderColor(UITheme theme) {
-        if (!UIBase.shouldBlur()) return theme.element_border_color_normal.getColorInt();
-        return theme.ui_blur_interface_border_color.getColorInt();
+        if (UIBase.shouldBlur()) return theme.ui_blur_interface_border_color.getColorInt();
+        return theme.ui_interface_border_color.getColorInt();
     }
 
     private float getFrameCornerRadius() {

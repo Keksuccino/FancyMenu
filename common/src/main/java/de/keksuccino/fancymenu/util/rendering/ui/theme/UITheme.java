@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.theme;
 
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiGraphics;
@@ -20,18 +19,18 @@ public class UITheme {
     public float widget_corner_rounding_radius = 4.0f;
 
     public DrawableColor ui_blur_icon_texture_color = DrawableColor.of(new Color(255, 255, 255));
-    public DrawableColor ui_blur_overlay_element_background_tint = DrawableColor.of(new Color(38, 38, 38, 174));
-    public DrawableColor ui_blur_overlay_element_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
+    public DrawableColor ui_blur_overlay_background_tint = DrawableColor.of(new Color(38, 38, 38, 174));
+    public DrawableColor ui_blur_overlay_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
     public DrawableColor ui_blur_interface_background_tint = DrawableColor.of(new Color(38, 38, 38, 216));
     public DrawableColor ui_blur_interface_border_color = DrawableColor.of(new Color(93, 97, 100, 200));
     public DrawableColor ui_blur_interface_title_bar_tint = DrawableColor.of(new Color(79, 79, 79, 174));
-    public DrawableColor ui_blur_interface_area_color_type_1 = DrawableColor.of(new Color(43, 43, 43, 100));
-    public DrawableColor ui_blur_interface_area_color_type_2 = DrawableColor.of(new Color(5, 5, 5, 73));
+    public DrawableColor ui_blur_interface_area_background_color_type_1 = DrawableColor.of(new Color(43, 43, 43, 100));
+    public DrawableColor ui_blur_interface_area_background_color_type_2 = DrawableColor.of(new Color(5, 5, 5, 73));
     public DrawableColor ui_blur_interface_area_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
     public DrawableColor ui_blur_interface_area_entry_selected_color = DrawableColor.of(new Color(125, 125, 131, 53));
     public DrawableColor ui_blur_interface_widget_background_color_normal_type_1 = DrawableColor.of(new Color(71, 71, 71, 102));
-    public DrawableColor ui_blur_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(83, 156, 212, 77));
     public DrawableColor ui_blur_interface_widget_background_color_normal_type_2 = DrawableColor.of(new Color(126, 126, 126, 102));
+    public DrawableColor ui_blur_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(83, 156, 212, 77));
     public DrawableColor ui_blur_interface_widget_background_color_hover_type_2 = DrawableColor.of(new Color(134, 198, 248, 77));
     public DrawableColor ui_blur_interface_widget_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
     public DrawableColor ui_blur_interface_widget_label_color_normal = DrawableColor.of(new Color(206, 221, 237));
@@ -45,11 +44,34 @@ public class UITheme {
     public DrawableColor ui_blur_interface_generic_text_color = DrawableColor.of(new Color(255, 255, 255));
     public DrawableColor ui_blur_tooltip_background_tint = DrawableColor.of(new Color(19, 19, 19, 169));
 
-    public DrawableColor interface_background_color = DrawableColor.of(new Color(60, 63, 65));
-    public DrawableColor interface_title_bar_color = DrawableColor.of(new Color(58, 58, 58));
+    public DrawableColor ui_icon_texture_color = DrawableColor.of(new Color(255, 255, 255));
+    public DrawableColor ui_overlay_background_color = DrawableColor.of(new Color(40, 40, 40));
+    public DrawableColor ui_overlay_border_color = DrawableColor.of(new Color(62, 64, 66));
+    public DrawableColor ui_interface_background_color = DrawableColor.of(new Color(38, 38, 38));
+    public DrawableColor ui_interface_border_color = DrawableColor.of(new Color(59, 59, 59));
+    public DrawableColor ui_interface_title_bar_color = DrawableColor.of(new Color(87, 87, 87));
+    public DrawableColor ui_interface_area_background_color_type_1 = DrawableColor.of(new Color(43, 43, 43));
+    public DrawableColor ui_interface_area_background_color_type_2 = DrawableColor.of(new Color(38, 38, 38));
+    public DrawableColor ui_interface_area_border_color = DrawableColor.of(new Color(59, 59, 59));
+    public DrawableColor ui_interface_area_entry_selected_color = DrawableColor.of(new Color(50, 50, 50));
+    public DrawableColor ui_interface_widget_background_color_normal_type_1 = DrawableColor.of(new Color(40, 40, 40));
+    public DrawableColor ui_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(20, 127, 208));
+    public DrawableColor ui_interface_widget_background_color_normal_type_2 = DrawableColor.of(new Color(52, 162, 245));
+    public DrawableColor ui_interface_widget_border_color = DrawableColor.of(new Color(59, 59, 59));
+    public DrawableColor ui_interface_input_field_background_color = DrawableColor.of(new Color(43, 43, 43));
+    public DrawableColor ui_interface_input_field_border_color_normal = DrawableColor.of(new Color(59, 59, 59));
+    public DrawableColor ui_interface_input_field_border_color_focused = DrawableColor.of(new Color(59, 59, 59));
+    public DrawableColor ui_interface_widget_label_color_normal = DrawableColor.of(new Color(206, 221, 237));
+    public DrawableColor ui_interface_widget_label_color_inactive = DrawableColor.of(new Color(113, 117, 119));
+    public DrawableColor ui_interface_input_field_text_color_normal = DrawableColor.of(new Color(206, 221, 237));
+    public DrawableColor ui_interface_input_field_text_color_uneditable = DrawableColor.of(new Color(113, 117, 119));
+    public DrawableColor ui_interface_input_field_suggestion_text_color = DrawableColor.of(new Color(-8355712));
+    public DrawableColor ui_interface_generic_text_color = DrawableColor.of(new Color(255, 255, 255));
+    public DrawableColor ui_tooltip_background_color = DrawableColor.of(new Color(43, 43, 43));
 
-    public DrawableColor menu_bar_bottom_line_color = DrawableColor.of(new Color(93, 97, 100));
-    public DrawableColor menu_bar_bottom_line_color_over_hover = DrawableColor.of(new Color(93, 97, 100, 200));
+    public DrawableColor success_text_color = DrawableColor.of(new Color(49, 206, 5));
+    public DrawableColor error_text_color = DrawableColor.of(new Color(237, 69, 69));
+    public DrawableColor warning_text_color = DrawableColor.of(new Color(229, 155, 18));
 
     public DrawableColor layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(3, 148, 252));
     public DrawableColor layout_editor_grid_color_normal = DrawableColor.of(new Color(186, 121, 241, 100));
@@ -65,20 +87,10 @@ public class UITheme {
     public DrawableColor layout_editor_anchor_point_overlay_color_base = DrawableColor.of(new Color(37, 180, 121));
     public DrawableColor layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(17, 79, 52));
     public DrawableColor layout_editor_close_icon_color = DrawableColor.of(new Color(218, 60, 30));
+
     public DrawableColor scroll_grabber_color_normal = DrawableColor.of(new Color(89, 91, 93, 100));
     public DrawableColor scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));
-    public DrawableColor screen_background_color_darker = DrawableColor.of(new Color(38, 38, 38));
-    public DrawableColor element_border_color_normal = DrawableColor.of(new Color(93, 97, 100));
-    public DrawableColor element_border_color_hover = DrawableColor.of(new Color(93, 97, 100));
-    public DrawableColor element_background_color_normal = DrawableColor.of(new Color(71, 71, 71));
-    public DrawableColor element_background_color_hover = DrawableColor.of(new Color(83, 156, 212));
-    public DrawableColor slider_handle_color_normal = DrawableColor.of(new Color(71, 132, 180));
-    public DrawableColor slider_handle_color_hover = DrawableColor.of(new Color(83, 156, 212));
-    public DrawableColor area_background_color = DrawableColor.of(new Color(43, 43, 43));
-    public DrawableColor edit_box_background_color = DrawableColor.of(new Color(43, 43, 43));
-    public DrawableColor edit_box_border_color_normal = DrawableColor.of(new Color(93, 97, 100));
-    public DrawableColor edit_box_border_color_focused = DrawableColor.of(new Color(93, 97, 100));
-    public DrawableColor list_entry_color_selected_hovered = DrawableColor.of(new Color(50, 50, 50));
+
     public DrawableColor actions_entry_background_color_action = DrawableColor.of(new Color(58, 63, 68));
     public DrawableColor actions_entry_background_color_action_hover = DrawableColor.of(new Color(68, 73, 78));
     public DrawableColor actions_entry_background_color_if = DrawableColor.of(new Color(38, 63, 85));
@@ -103,30 +115,18 @@ public class UITheme {
     public DrawableColor actions_minimap_viewport_color = DrawableColor.of(new Color(255, 255, 255, 35));
     public DrawableColor actions_minimap_viewport_border_color = DrawableColor.of(new Color(210, 222, 255, 100));
     public DrawableColor actions_minimap_tooltip_border_color = DrawableColor.of(new Color(120, 170, 220, 220));
-    public DrawableColor text_editor_sidebar_color = DrawableColor.of(new Color(49, 51, 53));
+
+    public DrawableColor bullet_list_dot_color_1 = DrawableColor.of(new Color(62, 134, 160));
+    public DrawableColor bullet_list_dot_color_2 = DrawableColor.of(new Color(173, 108, 121));
+    public DrawableColor bullet_list_dot_color_3 = DrawableColor.of(new Color(170, 130, 63));
+
+    public DrawableColor input_field_suggestions_background_color = DrawableColor.of(new Color(71, 71, 71));
+    public DrawableColor input_field_suggestions_text_color_normal = DrawableColor.of(new Color(206, 221, 237));
+    public DrawableColor input_field_suggestions_text_color_selected = DrawableColor.of(new Color(100, 165, 236));
+
     public DrawableColor text_editor_line_number_text_color_normal = DrawableColor.of(new Color(91, 92, 94));
     public DrawableColor text_editor_line_number_text_color_selected = DrawableColor.of(new Color(137, 147, 150));
-    public DrawableColor listing_dot_color_1 = DrawableColor.of(new Color(62, 134, 160));
-    public DrawableColor listing_dot_color_2 = DrawableColor.of(new Color(173, 108, 121));
-    public DrawableColor listing_dot_color_3 = DrawableColor.of(new Color(170, 130, 63));
-    public DrawableColor suggestions_background_color = DrawableColor.of(new Color(71, 71, 71));
-    public DrawableColor suggestions_text_color_normal = DrawableColor.of(new Color(206, 221, 237));
-    public DrawableColor suggestions_text_color_selected = DrawableColor.of(new Color(100, 165, 236));
-
-    public DrawableColor ui_icon_texture_color = DrawableColor.of(new Color(255, 255, 255));
-
-    public DrawableColor generic_text_base_color = DrawableColor.of(new Color(255, 255, 255));
-    public DrawableColor element_label_color_normal = DrawableColor.of(new Color(206, 221, 237));
-    public DrawableColor element_label_color_inactive = DrawableColor.of(new Color(113, 117, 119));
-    public DrawableColor edit_box_text_color_normal = DrawableColor.of(new Color(206, 221, 237));
-    public DrawableColor edit_box_text_color_uneditable = DrawableColor.of(new Color(113, 117, 119));
-    public DrawableColor edit_box_suggestion_text_color = DrawableColor.of(new Color(-8355712));
-    public DrawableColor description_area_text_color = DrawableColor.of(new Color(206, 221, 237));
     public DrawableColor text_editor_text_color = DrawableColor.of(new Color(158, 170, 184));
-    public DrawableColor success_text_color = DrawableColor.of(new Color(49, 206, 5));
-    public DrawableColor error_text_color = DrawableColor.of(new Color(237, 69, 69));
-    public DrawableColor warning_text_color = DrawableColor.of(new Color(229, 155, 18));
-
     public DrawableColor text_editor_text_formatting_nested_text_color_1 = DrawableColor.of(new Color(235, 127, 127));
     public DrawableColor text_editor_text_formatting_nested_text_color_2 = DrawableColor.of(new Color(235, 201, 127));
     public DrawableColor text_editor_text_formatting_nested_text_color_3 = DrawableColor.of(new Color(190, 235, 127));
@@ -139,7 +139,6 @@ public class UITheme {
     public DrawableColor text_editor_text_formatting_nested_text_color_10 = DrawableColor.of(new Color(245, 229, 54));
     public DrawableColor text_editor_text_formatting_nested_text_color_11 = DrawableColor.of(new Color(105, 245, 54));
     public DrawableColor text_editor_text_formatting_nested_text_color_12 = DrawableColor.of(new Color(54, 137, 245));
-
     public DrawableColor text_editor_text_formatting_brackets_color = DrawableColor.of(new Color(252, 223, 3));
 
     protected UITheme() {
@@ -151,7 +150,7 @@ public class UITheme {
     }
 
     public void setUITextureShaderColor(GuiGraphics graphics, float alpha) {
-        boolean blur = FancyMenu.getOptions().enableUiBlur.getValue();
+        boolean blur = UIBase.shouldBlur();
         UIBase.setShaderColor(graphics, blur ? ui_blur_icon_texture_color : ui_icon_texture_color, alpha);
     }
 

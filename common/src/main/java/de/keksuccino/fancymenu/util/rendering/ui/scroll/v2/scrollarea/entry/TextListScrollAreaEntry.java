@@ -18,7 +18,7 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
     protected int textWidth;
     public Font font = Minecraft.getInstance().font;
     protected Consumer<TextListScrollAreaEntry> onClickCallback;
-    protected int textBaseColor = UIBase.getUITheme().generic_text_base_color.getColorInt();
+    protected int textBaseColor = UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
     protected int labelRenderOffsetY = 1;
 
     public TextListScrollAreaEntry(ScrollArea parent, @NotNull Component text, @NotNull DrawableColor listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {

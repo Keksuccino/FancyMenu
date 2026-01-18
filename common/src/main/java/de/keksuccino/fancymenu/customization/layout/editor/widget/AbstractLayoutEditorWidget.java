@@ -322,25 +322,25 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     @NotNull
     protected DrawableColor getElementHoverColor() {
         if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_widget_background_color_hover_type_1;
-        return UIBase.getUITheme().element_background_color_hover;
+        return UIBase.getUITheme().ui_interface_widget_background_color_hover_type_1;
     }
 
     @NotNull
     protected DrawableColor getTitleBarColor() {
         if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_title_bar_tint;
-        return UIBase.getUITheme().interface_title_bar_color;
+        return UIBase.getUITheme().ui_interface_title_bar_color;
     }
 
     @NotNull
     protected DrawableColor getBorderColor() {
-        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_overlay_element_border_color;
-        return UIBase.getUITheme().element_border_color_normal;
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_overlay_border_color;
+        return UIBase.getUITheme().ui_interface_widget_border_color;
     }
 
     @NotNull
     protected DrawableColor getBackgroundColor() {
         if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_background_tint;
-        return UIBase.getUITheme().interface_background_color;
+        return UIBase.getUITheme().ui_interface_background_color;
     }
 
     protected float getBlurRenderScale() {

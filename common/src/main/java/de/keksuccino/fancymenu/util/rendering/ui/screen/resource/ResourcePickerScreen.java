@@ -194,7 +194,7 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
             if (fileTypeDisplayName == null) fileTypeDisplayName = Component.empty();
             this.currentFileTypesComponent = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types.toString())).append(Component.literal(")"));
         }
-        this.currentFileTypesComponent = this.currentFileTypesComponent.withStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()));
+        this.currentFileTypesComponent = this.currentFileTypesComponent.withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
         TextScrollAreaEntry entry = new TextScrollAreaEntry(this.fileTypeScrollArea, this.currentFileTypesComponent, textScrollAreaEntry -> {});
         entry.setPlayClickSound(false);
         entry.setSelectable(false);
@@ -585,7 +585,7 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
     public class ParentDirScrollAreaEntry extends AbstractIconTextScrollAreaEntry {
 
         public ParentDirScrollAreaEntry(@NotNull ScrollArea parent) {
-            super(parent, Component.translatable("fancymenu.ui.filechooser.go_up").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()).withBold(true)));
+            super(parent, Component.translatable("fancymenu.ui.filechooser.go_up").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()).withBold(true)));
         }
 
         @Override

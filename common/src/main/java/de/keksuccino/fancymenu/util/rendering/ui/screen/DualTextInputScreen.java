@@ -87,7 +87,7 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
         this.addRenderableWidget(new TextWidget(0, firstLabelY, this.width, 20, this.font, this.firstInputLabel)
                 .centerWidget(this)
                 .setTextAlignment(TextWidget.TextAlignment.CENTER)
-                .setBaseColor(UIBase.getUITheme().generic_text_base_color))
+                .setBaseColor(UIBase.getUITheme().ui_interface_generic_text_color))
                 .setShadowEnabled(false);
 
         String oldValueOne = "";
@@ -119,7 +119,7 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
         this.addRenderableWidget(new TextWidget(0, secondLabelY, this.width, 20, this.font, this.secondInputLabel)
                 .centerWidget(this)
                 .setTextAlignment(TextWidget.TextAlignment.CENTER)
-                .setBaseColor(UIBase.getUITheme().generic_text_base_color))
+                .setBaseColor(UIBase.getUITheme().ui_interface_generic_text_color))
                 .setShadowEnabled(false);
 
         String oldValueTwo = "";

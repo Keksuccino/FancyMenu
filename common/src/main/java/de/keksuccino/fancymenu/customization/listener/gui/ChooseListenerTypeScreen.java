@@ -121,18 +121,18 @@ public class ChooseListenerTypeScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
         
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
         
         graphics.drawString(this.font, Component.translatable("fancymenu.listeners.choose_type.available"), 
-                20, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+                20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
         
         Component descLabel = Component.translatable("fancymenu.listeners.choose_type.description");
         int descLabelWidth = this.font.width(descLabel);
         graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, 
-                UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+                UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
         
         super.render(graphics, mouseX, mouseY, partial);
     }
@@ -152,8 +152,8 @@ public class ChooseListenerTypeScreen extends Screen {
             
             ListenerScrollEntry entry = new ListenerScrollEntry(
                     this.listenersScrollArea,
-                    ((MutableComponent)listener.getDisplayName()).withColor(UIBase.getUITheme().element_label_color_normal.getColorInt()),
-                    UIBase.getUITheme().listing_dot_color_1,
+                    ((MutableComponent)listener.getDisplayName()).withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()),
+                    UIBase.getUITheme().bullet_list_dot_color_1,
                     e -> {
                         this.selectedListener = listener;
                         this.setDescription(listener);

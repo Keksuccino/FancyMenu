@@ -102,12 +102,12 @@ public class UIBase extends RenderingUtils {
             slider.setLabelColorNormal(UIBase.getUITheme().ui_blur_interface_widget_label_color_normal);
             slider.setLabelColorInactive(UIBase.getUITheme().ui_blur_interface_widget_label_color_inactive);
         } else {
-            slider.setSliderBackgroundColorNormal(UIBase.getUITheme().element_background_color_normal);
-            slider.setSliderBorderColorNormal(UIBase.getUITheme().element_border_color_normal);
-            slider.setSliderHandleColorNormal(UIBase.getUITheme().slider_handle_color_normal);
-            slider.setSliderHandleColorHover(UIBase.getUITheme().slider_handle_color_hover);
-            slider.setLabelColorNormal(UIBase.getUITheme().element_label_color_normal);
-            slider.setLabelColorInactive(UIBase.getUITheme().element_label_color_inactive);
+            slider.setSliderBackgroundColorNormal(UIBase.getUITheme().ui_interface_widget_background_color_normal_type_1);
+            slider.setSliderBorderColorNormal(UIBase.getUITheme().ui_interface_widget_border_color);
+            slider.setSliderHandleColorNormal(UIBase.getUITheme().ui_interface_widget_background_color_normal_type_2);
+            slider.setSliderHandleColorHover(UIBase.getUITheme().ui_interface_widget_background_color_hover_type_1);
+            slider.setLabelColorNormal(UIBase.getUITheme().ui_interface_widget_label_color_normal);
+            slider.setLabelColorInactive(UIBase.getUITheme().ui_interface_widget_label_color_inactive);
         }
         slider.setLabelShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
         slider.setRoundedColorBackgroundEnabled(true);
@@ -118,9 +118,9 @@ public class UIBase extends RenderingUtils {
      * Applies FancyMenu's default suggestion list colors and shadow settings.
      */
     private static EditBoxSuggestions applyDefaultEditBoxSuggestionsSkinTo(EditBoxSuggestions editBoxSuggestions) {
-        editBoxSuggestions.setBackgroundColor(UIBase.getUITheme().suggestions_background_color);
-        editBoxSuggestions.setNormalTextColor(UIBase.getUITheme().suggestions_text_color_normal);
-        editBoxSuggestions.setSelectedTextColor(UIBase.getUITheme().suggestions_text_color_selected);
+        editBoxSuggestions.setBackgroundColor(UIBase.getUITheme().input_field_suggestions_background_color);
+        editBoxSuggestions.setNormalTextColor(UIBase.getUITheme().input_field_suggestions_text_color_normal);
+        editBoxSuggestions.setSelectedTextColor(UIBase.getUITheme().input_field_suggestions_text_color_selected);
         editBoxSuggestions.setTextShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
         return editBoxSuggestions;
     }
@@ -138,12 +138,12 @@ public class UIBase extends RenderingUtils {
             editBox.setBorderFocusedColor(theme.ui_blur_interface_input_field_border_color_focused);
             editBox.setSuggestionTextColor(theme.ui_blur_interface_input_field_suggestion_text_color);
         } else {
-            editBox.setTextColor(theme.edit_box_text_color_normal);
-            editBox.setTextColorUneditable(theme.edit_box_text_color_uneditable);
-            editBox.setBackgroundColor(theme.edit_box_background_color);
-            editBox.setBorderNormalColor(theme.edit_box_border_color_normal);
-            editBox.setBorderFocusedColor(theme.edit_box_border_color_focused);
-            editBox.setSuggestionTextColor(theme.edit_box_suggestion_text_color);
+            editBox.setTextColor(theme.ui_interface_input_field_text_color_normal);
+            editBox.setTextColorUneditable(theme.ui_interface_input_field_text_color_uneditable);
+            editBox.setBackgroundColor(theme.ui_interface_input_field_background_color);
+            editBox.setBorderNormalColor(theme.ui_interface_input_field_border_color_normal);
+            editBox.setBorderFocusedColor(theme.ui_interface_input_field_border_color_focused);
+            editBox.setSuggestionTextColor(theme.ui_interface_input_field_suggestion_text_color);
         }
         editBox.setTextShadow_FancyMenu(false);
         editBox.setRoundedColorBackgroundEnabled(true);
@@ -164,14 +164,14 @@ public class UIBase extends RenderingUtils {
             button.setLabelBaseColorNormal(UIBase.getUITheme().ui_blur_interface_widget_label_color_normal);
             button.setLabelBaseColorInactive(UIBase.getUITheme().ui_blur_interface_widget_label_color_inactive);
         } else {
-            button.setBackgroundColorNormal(UIBase.getUITheme().element_background_color_normal);
-            button.setBackgroundColorHover(UIBase.getUITheme().element_background_color_hover);
-            button.setBackgroundColorInactive(UIBase.getUITheme().element_background_color_normal);
-            button.setBorderColorNormal(UIBase.getUITheme().element_border_color_normal);
-            button.setBorderColorHover(UIBase.getUITheme().element_border_color_hover);
-            button.setBorderColorInactive(UIBase.getUITheme().element_border_color_normal);
-            button.setLabelBaseColorNormal(UIBase.getUITheme().element_label_color_normal);
-            button.setLabelBaseColorInactive(UIBase.getUITheme().element_label_color_inactive);
+            button.setBackgroundColorNormal(UIBase.getUITheme().ui_interface_widget_background_color_normal_type_1);
+            button.setBackgroundColorHover(UIBase.getUITheme().ui_interface_widget_background_color_hover_type_1);
+            button.setBackgroundColorInactive(UIBase.getUITheme().ui_interface_widget_background_color_normal_type_1);
+            button.setBorderColorNormal(UIBase.getUITheme().ui_interface_widget_border_color);
+            button.setBorderColorHover(UIBase.getUITheme().ui_interface_widget_border_color);
+            button.setBorderColorInactive(UIBase.getUITheme().ui_interface_widget_border_color);
+            button.setLabelBaseColorNormal(UIBase.getUITheme().ui_interface_widget_label_color_normal);
+            button.setLabelBaseColorInactive(UIBase.getUITheme().ui_interface_widget_label_color_inactive);
         }
         button.setLabelShadowEnabled(FancyMenu.getOptions().enableUiTextShadow.getValue());
         button.setRoundedColorBackgroundEnabled(true);
@@ -307,14 +307,14 @@ public class UIBase extends RenderingUtils {
      * Draws a default-colored label component at integer coordinates.
      */
     public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y) {
-        return renderText(graphics, text, x, y, getUITheme().element_label_color_normal.getColorInt());
+        return renderText(graphics, text, x, y, getUITheme().ui_interface_widget_label_color_normal.getColorInt());
     }
 
     /**
      * Draws a default-colored label string at integer coordinates.
      */
     public static TextDimensions renderText(GuiGraphics graphics, String text, float x, float y) {
-        return renderText(graphics, Component.literal(text), x, y, getUITheme().element_label_color_normal.getColorInt());
+        return renderText(graphics, Component.literal(text), x, y, getUITheme().ui_interface_widget_label_color_normal.getColorInt());
     }
 
     /**

@@ -94,7 +94,7 @@ public class MessageDialogBody extends PiPScreen {
 
         int textY = contentY + Math.max(0, (contentBlockHeight - textHeight) / 2);
         int y = textY;
-        int textColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt() : UIBase.getUITheme().generic_text_base_color.getColorInt();
+        int textColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt() : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
         for (Component line : this.renderLines) {
             graphics.drawString(this.font, line, textX, y, textColor, false);
             y += LINE_SPACING;

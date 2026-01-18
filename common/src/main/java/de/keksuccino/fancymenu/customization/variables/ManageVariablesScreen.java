@@ -157,12 +157,12 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
 
         RenderSystem.enableBlend();
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         super.render(graphics, mouseX, mouseY, partial);
 
@@ -242,7 +242,7 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
         public Variable variable;
 
         public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))), UIBase.getUITheme().listing_dot_color_1, onClick);
+            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
             this.variable = variable;
         }
 

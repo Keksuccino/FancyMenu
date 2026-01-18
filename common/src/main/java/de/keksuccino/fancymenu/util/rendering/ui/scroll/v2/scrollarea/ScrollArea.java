@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@SuppressWarnings("all")
-public class ScrollArea extends UIBase implements GuiEventListener, Renderable, NarratableEntry {
+@SuppressWarnings("unused")
+public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -30,9 +30,9 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     protected float width;
     protected float height;
     @Nullable
-    public Supplier<DrawableColor> backgroundColor = () -> getUITheme().area_background_color;
+    public Supplier<DrawableColor> backgroundColor = () -> this.setupForBlurInterface ? UIBase.getUITheme().ui_blur_interface_area_background_color_type_1 : UIBase.getUITheme().ui_interface_area_background_color_type_1;
     @Nullable
-    public Supplier<DrawableColor> borderColor = () -> getUITheme().element_border_color_normal;
+    public Supplier<DrawableColor> borderColor = () -> this.setupForBlurInterface ? UIBase.getUITheme().ui_blur_interface_area_border_color : UIBase.getUITheme().ui_interface_area_border_color;
     protected float borderThickness = 1;
     public boolean makeEntriesWidthOfArea = false;
     public boolean minimumEntryWidthIsAreaWidth = true;
@@ -41,22 +41,19 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     public float overriddenTotalScrollWidth = -1;
     public float overriddenTotalScrollHeight = -1;
     public boolean correctYOnAddingRemovingEntries = true;
-    protected boolean applyScissor = true;
-    /** Set this if the {@link ScrollArea} gets rendered in a custom-scaled render environment. **/
-    @Nullable
-    public Float renderScale = null;
     protected boolean hovered = false;
     protected boolean innerAreaHovered = false;
     protected boolean roundedColorBackground = false;
+    protected boolean setupForBlurInterface = false;
 
     public ScrollArea(float x, float y, float width, float height) {
         this.setX(x, true);
         this.setY(y, true);
         this.setWidth(width, true);
         this.setHeight(height, true);
-        this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, VERTICAL_SCROLL_BAR_WIDTH, VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> getUITheme().scroll_grabber_color_normal, () -> getUITheme().scroll_grabber_color_hover);
+        this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
         this.verticalScrollBar.setScrollWheelAllowed(true);
-        this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, HORIZONTAL_SCROLL_BAR_WIDTH, HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> getUITheme().scroll_grabber_color_normal, () -> getUITheme().scroll_grabber_color_hover);
+        this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
         this.updateScrollArea();
     }
 
@@ -91,9 +88,9 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         if (backColor != null) {
             if (this.roundedColorBackground) {
                 float radius = UIBase.getInterfaceCornerRoundingRadius();
-                renderRoundedRect(graphics, this.getInnerX(), this.getInnerY(), this.getInnerWidth(), this.getInnerHeight(), radius, radius, radius, radius, backColor.getColorInt());
+                UIBase.renderRoundedRect(graphics, this.getInnerX(), this.getInnerY(), this.getInnerWidth(), this.getInnerHeight(), radius, radius, radius, radius, backColor.getColorInt());
             } else {
-                fillF(graphics, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), backColor.getColorInt());
+                UIBase.fillF(graphics, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), backColor.getColorInt());
             }
         }
     }
@@ -104,26 +101,14 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         if (borColor != null) {
             if (this.roundedColorBackground) {
                 float radius = UIBase.getInterfaceCornerRoundingRadius();
-                renderRoundedBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), radius, radius, radius, radius, borColor.getColorInt());
+                UIBase.renderRoundedBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), radius, radius, radius, radius, borColor.getColorInt());
             } else {
-                renderBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), borColor.getColorInt(), true, true, true, true);
+                UIBase.renderBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), borColor.getColorInt(), true, true, true, true);
             }
         }
     }
 
     public void renderEntries(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        
-        if (this.isApplyScissor()) {
-            //TODO this is probably broken if actually used (leftover from old scissor stuff)
-            double scale = (this.renderScale != null) ? this.renderScale : 1;
-//            float sciBottomY = this.getInnerY() + this.getInnerHeight();
-//            RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
-            int xMin = (int)(this.getInnerX() * scale);
-            int yMin = (int)(this.getInnerY() * scale);
-            int xMax = xMin + (int)this.getInnerWidth();
-            int yMax = yMin + (int)this.getInnerHeight();
-            graphics.enableScissor(xMin, yMin, xMax, yMax);
-        }
 
         final float totalWidth = this.makeAllEntriesWidthOfWidestEntry ? this.getTotalEntryWidth() : 0;
         this.updateEntries((entry) -> {
@@ -133,8 +118,6 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
             }
             entry.render(graphics, mouseX, mouseY, partial);
         });
-
-        if (this.isApplyScissor()) graphics.disableScissor();
 
     }
 
@@ -186,8 +169,8 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
                 index++;
                 y += e.getHeight();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to update entries!", ex);
         }
     }
 
@@ -230,7 +213,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
             float oldTotalScrollHeight;
             int totalHeightRemovedAdded = 0;
             for (ScrollAreaEntry e : addedOrRemovedEntries) {
-                totalHeightRemovedAdded += e.getHeight();
+                totalHeightRemovedAdded += (int) e.getHeight();
             }
             if (!removed) {
                 oldTotalScrollHeight = this.getTotalScrollHeight() - totalHeightRemovedAdded;
@@ -356,14 +339,23 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         return this;
     }
 
+    public boolean isSetupForBlurInterface() {
+        return this.setupForBlurInterface;
+    }
+
+    public ScrollArea setSetupForBlurInterface(boolean setupForBlurInterface) {
+        this.setupForBlurInterface = setupForBlurInterface;
+        return this;
+    }
+
     public boolean isMouseOverInnerArea(double mouseX, double mouseY) {
-        return isXYInArea(mouseX, mouseY, this.getInnerX(), this.getInnerY(), this.getInnerWidth(), this.getInnerHeight());
+        return UIBase.isXYInArea(mouseX, mouseY, this.getInnerX(), this.getInnerY(), this.getInnerWidth(), this.getInnerHeight());
     }
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
         if (this.isMouseInteractingWithGrabbers()) return true;
-        return isXYInArea(mouseX, mouseY, this.getXWithBorder(), this.getYWithBorder(), this.getWidthWithBorder(), this.getHeightWithBorder());
+        return UIBase.isXYInArea(mouseX, mouseY, this.getXWithBorder(), this.getYWithBorder(), this.getWidthWithBorder(), this.getHeightWithBorder());
     }
 
     public int getEntryCount() {
@@ -478,14 +470,6 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         for (ScrollAreaEntry e : this.getEntries()) {
             e.setWidth(totalWidth);
         }
-    }
-
-    public boolean isApplyScissor() {
-        return this.applyScissor;
-    }
-
-    public void setApplyScissor(boolean apply) {
-        this.applyScissor = apply;
     }
 
     @Override

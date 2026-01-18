@@ -167,7 +167,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
-            e.setTextBaseColor(UIBase.getUITheme().description_area_text_color.getColorInt());
+            e.setTextBaseColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
             this.descriptionScrollArea.addEntry(e);
         });
     }
@@ -390,11 +390,11 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     protected void renderTitle(@NotNull GuiGraphics graphics) {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
     }
 
     protected void renderCellScreenBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
     }
 
     @Override
@@ -571,11 +571,11 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         return null;
     }
 
-    protected class CellScrollEntry extends de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry {
+    protected class CellScrollEntry extends ScrollAreaEntry {
 
         public final RenderCell cell;
 
-        public CellScrollEntry(@NotNull de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea parent, @NotNull RenderCell cell) {
+        public CellScrollEntry(@NotNull ScrollArea parent, @NotNull RenderCell cell) {
             super(parent, 10, 10);
             this.clickable = false;
             this.selectable = false;
@@ -603,14 +603,14 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         }
 
         @Override
-        public void onClick(de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
+        public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
         }
 
     }
 
     public class SeparatorCell extends RenderCell {
 
-        protected Supplier<DrawableColor> separatorColorSupplier = () -> UIBase.getUITheme().element_border_color_normal;
+        protected Supplier<DrawableColor> separatorColorSupplier = () -> UIBase.getUITheme().ui_interface_widget_border_color;
         protected int separatorThickness = 1;
 
         public SeparatorCell() {
@@ -888,7 +888,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         private boolean selectable = false;
         private boolean selected = false;
         protected boolean hovered = false;
-        protected Supplier<DrawableColor> hoverColorSupplier = () -> UIBase.getUITheme().list_entry_color_selected_hovered;
+        protected Supplier<DrawableColor> hoverColorSupplier = () -> UIBase.getUITheme().ui_interface_area_entry_selected_color;
         @Nullable
         protected Supplier<List<Component>> descriptionSupplier = null;
         @NotNull

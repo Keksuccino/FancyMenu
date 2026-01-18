@@ -398,7 +398,7 @@ public class ActionScriptEditorScreen extends Screen {
         });
 
         UITheme theme = UIBase.getUITheme();
-        MutableComponent openChooserLabel = Component.translatable("fancymenu.actions.open_action_chooser").setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
+        MutableComponent openChooserLabel = Component.translatable("fancymenu.actions.open_action_chooser").setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
         subMenu.addClickableEntry("open_action_chooser", openChooserLabel, (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     ExecutableEntry selectionReference = this.getContextMenuTargetEntry();
@@ -429,7 +429,7 @@ public class ActionScriptEditorScreen extends Screen {
     @NotNull
     protected MutableComponent buildActionMenuLabel(@NotNull Action action) {
         UITheme theme = UIBase.getUITheme();
-        MutableComponent label = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
+        MutableComponent label = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
         if (action.isDeprecated()) {
             label = label.withStyle(Style.EMPTY.withStrikethrough(true));
             label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
@@ -805,11 +805,11 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         UITheme theme = UIBase.getUITheme();
-        graphics.fill(0, 0, this.width, this.height, theme.interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, theme.ui_interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, theme.generic_text_base_color.getColorInt(), false);
-        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, theme.ui_interface_generic_text_color.getColorInt(), false);
+        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.ui_interface_generic_text_color.getColorInt(), false);
 
         int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - MINIMAP_WIDTH - MINIMAP_GAP);
         this.scriptEntriesScrollArea.setWidth(scrollAreaWidth, true);
@@ -848,7 +848,7 @@ public class ActionScriptEditorScreen extends Screen {
             int hintWidth = this.font.width(hint);
             int hintX = (int)(this.scriptEntriesScrollArea.getInnerX() + (this.scriptEntriesScrollArea.getInnerWidth() / 2) - (hintWidth / 2));
             int hintY = (int)(this.scriptEntriesScrollArea.getInnerY() + (this.scriptEntriesScrollArea.getInnerHeight() / 2) - (this.font.lineHeight / 2));
-            graphics.drawString(this.font, hint, hintX, hintY, theme.element_label_color_inactive.getColorInt(), false);
+            graphics.drawString(this.font, hint, hintX, hintY, theme.ui_interface_widget_label_color_inactive.getColorInt(), false);
         }
         this.renderInlineEditors(graphics, mouseX, mouseY, partial);
         this.updateCursor(mouseX, mouseY);
@@ -1009,7 +1009,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         UITheme theme = UIBase.getUITheme();
-        Color backgroundColor = withAlpha(theme.interface_background_color.getColor(), 220);
+        Color backgroundColor = withAlpha(theme.ui_interface_background_color.getColor(), 220);
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
@@ -2992,7 +2992,7 @@ public class ActionScriptEditorScreen extends Screen {
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof FolderExecutableBlock folder) {
                 MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.actions.blocks.folder.display", "")).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
-                MutableComponent nameComponent = Component.literal(folder.getName()).setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
+                MutableComponent nameComponent = Component.literal(folder.getName()).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.folderLabelComponent = labelComponent;
                 this.folderNameComponent = nameComponent;
                 MutableComponent display = labelComponent.copy().append(nameComponent.copy());
@@ -3108,22 +3108,22 @@ public class ActionScriptEditorScreen extends Screen {
             } else if (this.executable instanceof ElseIfExecutableBlock) {
                 int indicatorX = renderX + 5;
                 int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
-                this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.listing_dot_color_2.getColor());
+                this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.bullet_list_dot_color_2.getColor());
                 int textX = indicatorX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
                 graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
             } else if (this.executable instanceof ElseExecutableBlock) {
                 int indicatorX = renderX + 5;
                 int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
-                this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.listing_dot_color_2.getColor());
+                this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.bullet_list_dot_color_2.getColor());
                 int textX = indicatorX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
                 graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
             } else if (this.executable instanceof ActionInstance) {
-                UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, theme.listing_dot_color_2.getColor());
+                UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, theme.bullet_list_dot_color_2.getColor());
                 graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
-                UIBase.renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, theme.listing_dot_color_1.getColor());
+                UIBase.renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, theme.bullet_list_dot_color_1.getColor());
                 int valueTextX = renderX + 5 + 4 + 3 + 4 + 3;
                 int valueTextY = centerYLine2 - (this.font.lineHeight / 2);
                 if (ActionScriptEditorScreen.this.inlineValueEntry != this) {
@@ -3390,7 +3390,7 @@ public class ActionScriptEditorScreen extends Screen {
                 boolean hasValue = i.action.hasValue();
                 String valueString = ((cachedValue != null) && hasValue) ? cachedValue : I18n.get("fancymenu.actions.screens.manage_screen.info.value.none");
                 MutableComponent label = Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
-                MutableComponent value = Component.literal(valueString).setStyle(Style.EMPTY.withColor(theme.element_label_color_normal.getColorInt()));
+                MutableComponent value = Component.literal(valueString).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.valueLabelComponent = label;
                 this.valueOnlyComponent = value;
                 this.valueComponent = label.copy().append(value.copy());

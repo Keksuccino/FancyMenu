@@ -83,39 +83,39 @@ public class TextEditorScreen extends PiPScreen {
     protected int lastMouseX = 0;
     protected int lastMouseY = 0;
     protected Supplier<DrawableColor> areaBackgroundColor = () -> {
-        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_color_type_1;
-        return UIBase.getUITheme().area_background_color;
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_background_color_type_1;
+        return UIBase.getUITheme().ui_interface_area_background_color_type_1;
     };
     protected Supplier<DrawableColor> areaBorderColor = () -> {
         if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_border_color;
-        return UIBase.getUITheme().element_border_color_normal;
+        return UIBase.getUITheme().ui_interface_widget_border_color;
     };
     protected Supplier<DrawableColor> textColor = () -> UIBase.getUITheme().text_editor_text_color;
     protected Supplier<DrawableColor> focusedLineColor = () -> {
         if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_entry_selected_color;
-        return UIBase.getUITheme().list_entry_color_selected_hovered;
+        return UIBase.getUITheme().ui_interface_area_entry_selected_color;
     };
     protected Supplier<DrawableColor> scrollGrabberIdleColor = () -> UIBase.getUITheme().scroll_grabber_color_normal;
     protected Supplier<DrawableColor> scrollGrabberHoverColor = () -> UIBase.getUITheme().scroll_grabber_color_hover;
     protected Supplier<DrawableColor> lineNumberSideBarColor = () -> {
-        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_color_type_2;
-        return UIBase.getUITheme().text_editor_sidebar_color;
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_background_color_type_2;
+        return UIBase.getUITheme().ui_blur_interface_area_background_color_type_2;
     };
     protected Supplier<DrawableColor> lineNumberTextColorNormal = () -> UIBase.getUITheme().text_editor_line_number_text_color_normal;
     protected Supplier<DrawableColor> lineNumberTextColorFocused = () -> UIBase.getUITheme().text_editor_line_number_text_color_selected;
     protected Supplier<DrawableColor> placeholderEntryBackgroundColorIdle = () -> {
         if (UIBase.shouldBlur()) return DrawableColor.FULLY_TRANSPARENT;
-        return UIBase.getUITheme().area_background_color;
+        return UIBase.getUITheme().ui_interface_area_background_color_type_1;
     };
     protected Supplier<DrawableColor> placeholderEntryBackgroundColorHover = () -> {
         if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_area_entry_selected_color;
-        return UIBase.getUITheme().list_entry_color_selected_hovered;
+        return UIBase.getUITheme().ui_interface_area_entry_selected_color;
     };
-    protected Supplier<DrawableColor> placeholderEntryDotColorPlaceholder = () -> UIBase.getUITheme().listing_dot_color_1;
-    protected Supplier<DrawableColor> placeholderEntryDotColorCategory = () -> UIBase.getUITheme().listing_dot_color_2;
+    protected Supplier<DrawableColor> placeholderEntryDotColorPlaceholder = () -> UIBase.getUITheme().bullet_list_dot_color_1;
+    protected Supplier<DrawableColor> placeholderEntryDotColorCategory = () -> UIBase.getUITheme().bullet_list_dot_color_2;
     protected Supplier<DrawableColor> placeholderEntryLabelColor = () -> {
         if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_widget_label_color_normal;
-        return UIBase.getUITheme().element_label_color_normal;
+        return UIBase.getUITheme().ui_interface_widget_label_color_normal;
     };
     protected Supplier<DrawableColor> placeholderEntryBackToCategoriesLabelColor = () -> UIBase.getUITheme().warning_text_color;
     protected int currentLineWidth;

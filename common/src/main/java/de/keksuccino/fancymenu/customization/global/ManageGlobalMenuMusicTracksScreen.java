@@ -40,7 +40,7 @@ public class ManageGlobalMenuMusicTracksScreen extends CellScreen {
             for (String source : this.cachedTracks) {
                 String display = ResourceSourceType.getWithoutSourcePrefix(source);
                 this.addLabelCell(Component.literal(display)
-                                .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt())))
+                                .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())))
                         .putMemoryValue("source", source)
                         .setSelectable(true);
             }

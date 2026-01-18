@@ -202,7 +202,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             );
         }
 
-        if (FancyMenu.getOptions().enableUiBlur.getValue()) {
+        if (UIBase.shouldBlur()) {
             // Render blur background
             float blurX = smoothX;
             float blurY = smoothY;
@@ -220,7 +220,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                         smoothCornerTopRight,
                         smoothCornerBottomRight,
                         smoothCornerBottomLeft,
-                        UIBase.getUITheme().ui_blur_overlay_element_background_tint,
+                        UIBase.getUITheme().ui_blur_overlay_background_tint,
                         partial
                 );
             }
@@ -236,7 +236,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                     smoothCornerTopRight,
                     smoothCornerBottomRight,
                     smoothCornerBottomLeft,
-                    UIBase.getUITheme().element_background_color_normal.getColorInt(),
+                    UIBase.getUITheme().ui_overlay_background_color.getColorInt(),
                     partial
             );
         }
@@ -313,7 +313,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float maxScrollPosition = this.rawHeight - (displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
 
             // Create a darker version of the background color (about 10% darker)
-            Color bgColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_element_background_tint.getColor() : UIBase.getUITheme().element_background_color_normal.getColor();
+            Color bgColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_background_tint.getColor() : UIBase.getUITheme().ui_overlay_border_color.getColor();
             Color darkerBgColor = new Color(
                     Math.max(0, (int)(bgColor.getRed() * 0.9)),
                     Math.max(0, (int)(bgColor.getGreen() * 0.9)),
@@ -398,7 +398,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 smoothBorderCornerTopRight,
                 smoothBorderCornerBottomRight,
                 smoothBorderCornerBottomLeft,
-                UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUITheme().element_border_color_normal.getColorInt(),
+                UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_border_color.getColorInt() : UIBase.getUITheme().ui_overlay_border_color.getColorInt(),
                 partial
         );
 
@@ -1707,16 +1707,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected void renderBackground(@NotNull GuiGraphics graphics) {
             if (this.isChangeBackgroundColorOnHover() && this.isHovered() && this.isActive()) {
-                int backColor = FancyMenu.getOptions().enableUiBlur.getValue() ? UIBase.getUITheme().ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : UIBase.getUITheme().element_background_color_hover.getColorInt();
+                int backColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : UIBase.getUITheme().ui_interface_widget_background_color_hover_type_1.getColorInt();
                 RenderingUtils.fillF(graphics, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), backColor);
             }
         }
 
         protected int getLabelColor() {
-            if (FancyMenu.getOptions().enableUiBlur.getValue()) {
+            if (UIBase.shouldBlur()) {
                 return this.isActive() ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt() : UIBase.getUITheme().ui_blur_interface_widget_label_color_inactive.getColorInt();
             }
-            return this.isActive() ? UIBase.getUITheme().element_label_color_normal.getColorInt() : UIBase.getUITheme().element_label_color_inactive.getColorInt();
+            return this.isActive() ? UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt() : UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt();
         }
 
         @Nullable
@@ -2087,13 +2087,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_element_border_color.getColorInt() : UIBase.getUITheme().element_border_color_normal.getColorInt());
+            RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_border_color.getColorInt() : UIBase.getUITheme().ui_overlay_border_color.getColorInt());
         }
 
         @Override
         public SeparatorContextMenuEntry copy() {
             SeparatorContextMenuEntry copy = new SeparatorContextMenuEntry(this.identifier, this.parent);
             copy.height = this.height;
+            copy.tickAction = this.tickAction;
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);

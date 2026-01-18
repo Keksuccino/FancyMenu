@@ -12,8 +12,8 @@ public class LightUITheme extends UITheme {
 
         allow_blur = true;
 
-        menu_bar_bottom_line_color = DrawableColor.of(new Color(119, 119, 119));
-        menu_bar_bottom_line_color_over_hover = DrawableColor.of(new Color(119, 119, 119, 200));
+        ui_menu_bar_bottom_line_color = DrawableColor.of(new Color(119, 119, 119));
+        ui_blur_menu_bar_bottom_line_color = DrawableColor.of(new Color(119, 119, 119, 200));
 
         layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(3, 148, 252));
         layout_editor_grid_color_normal = DrawableColor.of(new Color(120, 120, 120, 60));
@@ -31,22 +31,21 @@ public class LightUITheme extends UITheme {
         layout_editor_close_icon_color = DrawableColor.of(new Color(147, 40, 19));
         scroll_grabber_color_normal = DrawableColor.of(new Color(89, 91, 93, 100));
         scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));
-        interface_background_color = DrawableColor.of(new Color(178, 178, 178));
+        ui_interface_background_color = DrawableColor.of(new Color(178, 178, 178));
         screen_background_color_darker = DrawableColor.of(new Color(173, 173, 173));
-        element_border_color_normal = DrawableColor.of(new Color(119, 119, 119));
-        ui_blur_overlay_element_border_color = DrawableColor.of(new Color(119, 119, 119, 200));
-        element_border_color_hover = DrawableColor.of(new Color(119, 119, 119));
-        element_background_color_normal = DrawableColor.of(new Color(203, 203, 203));
-        element_background_color_hover = DrawableColor.of(new Color(175, 175, 175));
-        ui_blur_overlay_element_background_tint = DrawableColor.of(new Color(203, 203, 203, 102));
+        ui_interface_widget_border_color = DrawableColor.of(new Color(119, 119, 119));
+        ui_blur_overlay_border_color = DrawableColor.of(new Color(119, 119, 119, 200));
+        ui_interface_widget_background_color_normal_type_1 = DrawableColor.of(new Color(203, 203, 203));
+        ui_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(175, 175, 175));
+        ui_blur_overlay_background_tint = DrawableColor.of(new Color(203, 203, 203, 102));
         ui_blur_interface_widget_background_color_hover_type_1 = DrawableColor.of(new Color(175, 175, 175, 102));
-        slider_handle_color_normal = DrawableColor.of(new Color(133, 132, 132));
+        ui_interface_widget_background_color_normal_type_2 = DrawableColor.of(new Color(133, 132, 132));
         slider_handle_color_hover = DrawableColor.of(new Color(162, 162, 162));
-        area_background_color = DrawableColor.of(new Color(203, 203, 203));
-        edit_box_background_color = DrawableColor.of(new Color(203, 203, 203));
-        edit_box_border_color_normal = DrawableColor.of(new Color(56, 56, 56));
-        edit_box_border_color_focused = DrawableColor.of(new Color(68, 68, 68));
-        list_entry_color_selected_hovered = DrawableColor.of(new Color(175, 175, 175));
+        ui_interface_area_background_color_type_1 = DrawableColor.of(new Color(203, 203, 203));
+        ui_interface_input_field_background_color = DrawableColor.of(new Color(203, 203, 203));
+        ui_interface_input_field_border_color_normal = DrawableColor.of(new Color(56, 56, 56));
+        ui_interface_input_field_border_color_focused = DrawableColor.of(new Color(68, 68, 68));
+        ui_interface_area_entry_selected_color = DrawableColor.of(new Color(175, 175, 175));
         actions_entry_background_color_action = DrawableColor.of(new Color(224, 224, 224));
         actions_entry_background_color_action_hover = DrawableColor.of(new Color(206, 206, 206));
         actions_entry_background_color_if = DrawableColor.of(new Color(201, 219, 239));
@@ -74,24 +73,24 @@ public class LightUITheme extends UITheme {
         text_editor_sidebar_color = DrawableColor.of(new Color(164, 164, 164));
         text_editor_line_number_text_color_normal = DrawableColor.of(new Color(105, 105, 105));
         text_editor_line_number_text_color_selected = DrawableColor.of(new Color(70, 70, 70));
-        listing_dot_color_1 = DrawableColor.of(new Color(67, 141, 208));
-        listing_dot_color_2 = DrawableColor.of(new Color(171, 57, 80));
-        listing_dot_color_3 = DrawableColor.of(new Color(178, 116, 12));
-        suggestions_background_color = DrawableColor.of(new Color(162, 162, 162));
-        suggestions_text_color_normal = DrawableColor.of(new Color(45, 45, 45));
-        suggestions_text_color_selected = DrawableColor.of(new Color(32, 94, 162));
+        bullet_list_dot_color_1 = DrawableColor.of(new Color(67, 141, 208));
+        bullet_list_dot_color_2 = DrawableColor.of(new Color(171, 57, 80));
+        bullet_list_dot_color_3 = DrawableColor.of(new Color(178, 116, 12));
+        input_field_suggestions_background_color = DrawableColor.of(new Color(162, 162, 162));
+        input_field_suggestions_text_color_normal = DrawableColor.of(new Color(45, 45, 45));
+        input_field_suggestions_text_color_selected = DrawableColor.of(new Color(32, 94, 162));
 
         ui_icon_texture_color = DrawableColor.of(new Color(45, 45, 45));
         ui_blur_icon_texture_color = DrawableColor.of(new Color(45, 45, 45));
 
-        generic_text_base_color = DrawableColor.of(new Color(37, 37, 37));
-        element_label_color_normal = DrawableColor.of(new Color(45, 45, 45));
+        ui_interface_generic_text_color = DrawableColor.of(new Color(37, 37, 37));
+        ui_interface_widget_label_color_normal = DrawableColor.of(new Color(45, 45, 45));
         ui_blur_interface_widget_label_color_normal = DrawableColor.of(new Color(206, 221, 237));
-        element_label_color_inactive = DrawableColor.of(new Color(138, 137, 137));
+        ui_interface_widget_label_color_inactive = DrawableColor.of(new Color(138, 137, 137));
         ui_blur_interface_widget_label_color_inactive = DrawableColor.of(new Color(138, 137, 137));
-        edit_box_text_color_normal = DrawableColor.of(new Color(45, 45, 45));
-        edit_box_text_color_uneditable = DrawableColor.of(new Color(138, 137, 137));
-        edit_box_suggestion_text_color = DrawableColor.of(new Color(138, 137, 137));
+        ui_interface_input_field_text_color_normal = DrawableColor.of(new Color(45, 45, 45));
+        ui_interface_input_field_text_color_uneditable = DrawableColor.of(new Color(138, 137, 137));
+        ui_interface_input_field_suggestion_text_color = DrawableColor.of(new Color(138, 137, 137));
         description_area_text_color = DrawableColor.of(new Color(45, 45, 45));
         text_editor_text_color = DrawableColor.of(new Color(72, 78, 83));
         success_text_color = DrawableColor.of(new Color(25, 126, 2));

@@ -127,12 +127,12 @@ public class ManageLayoutsScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.layout.manage.layouts"), 20, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, Component.translatable("fancymenu.layout.manage.layouts"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         this.layoutListScrollArea.setWidth((this.width / 2) - 40, true);
         this.layoutListScrollArea.setHeight(this.height - 85, true);
@@ -206,7 +206,7 @@ public class ManageLayoutsScreen extends Screen {
         public Layout layout;
 
         public LayoutScrollEntry(ScrollArea parent, @NotNull Layout layout, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(""), UIBase.getUITheme().listing_dot_color_1, onClick);
+            super(parent, Component.literal(""), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
             this.layout = layout;
             this.updateName();
         }

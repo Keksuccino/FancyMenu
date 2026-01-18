@@ -210,12 +210,12 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
 
         RenderSystem.enableBlend();
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().interface_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
-        graphics.drawString(this.font, this.getEntriesLabel(), 20, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, this.getEntriesLabel(), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         int leftAreaWidth = this.width - 260 - 20;
         int currentDirFieldY = 50 + 15;
@@ -231,7 +231,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
 
         Component previewLabel = Component.translatable("fancymenu.ui.filechooser.preview");
         int previewLabelWidth = this.font.width(previewLabel);
-        graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUITheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         this.renderConfirmButton(graphics, mouseX, mouseY, partial);
 
@@ -284,7 +284,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         this.fileTypeScrollArea.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileTypeScrollArea.getWidthWithBorder());
         this.fileTypeScrollArea.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + this.fileTypeScrollListYOffset);
         this.fileTypeScrollArea.render(graphics, mouseX, mouseY, partial);
-        graphics.drawString(this.font, FILE_TYPE_PREFIX_TEXT, (int)(this.fileTypeScrollArea.getXWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5), (int)(this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2) - (Minecraft.getInstance().font.lineHeight / 2)), UIBase.getUITheme().element_label_color_normal.getColorInt(), false);
+        graphics.drawString(this.font, FILE_TYPE_PREFIX_TEXT, (int)(this.fileTypeScrollArea.getXWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5), (int)(this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2) - (Minecraft.getInstance().font.lineHeight / 2)), UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt(), false);
     }
 
     protected void renderFileScrollArea(GuiGraphics graphics, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
@@ -322,12 +322,12 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
                 int x = this.width - 20 - w;
                 int y = 50 + 15;
                 UIBase.resetShaderColor(graphics);
-                graphics.fill(x, y, x + w, y + h, UIBase.getUITheme().area_background_color.getColorInt());
+                graphics.fill(x, y, x + w, y + h, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
                 RenderingUtils.resetShaderColor(graphics);
                 RenderSystem.enableBlend();
                 graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
                 UIBase.resetShaderColor(graphics);
-                UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUITheme().element_border_color_normal.getColor(), true, true, true, true);
+                UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);
             }
         } else {
             this.previewTextScrollArea.setWidth(200, true);
@@ -342,8 +342,8 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     protected int renderCurrentDirectoryField(GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
         int xEnd = x + width;
         int yEnd = y + height;
-        graphics.fill(x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUITheme().area_background_color.getColorInt());
-        UIBase.renderBorder(graphics, x, y, xEnd, yEnd, 1, UIBase.getUITheme().element_border_color_normal.getColor(), true, true, true, true);
+        graphics.fill(x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
+        UIBase.renderBorder(graphics, x, y, xEnd, yEnd, 1, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);
         this.currentDirectoryComponent.setX(x + 4);
         this.currentDirectoryComponent.setY(y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2));
         this.currentDirectoryComponent.render(graphics, mouseX, mouseY, partial);
@@ -803,9 +803,9 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         int previewHeight = Math.max(12, basePreviewHeight / 3);
         int x = this.width - 20 - previewWidth;
         int y = topY;
-        graphics.fill(x, y, x + previewWidth, y + previewHeight, UIBase.getUITheme().area_background_color.getColorInt());
+        graphics.fill(x, y, x + previewWidth, y + previewHeight, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
         this.renderAudioVisualizer(graphics, x + 4, y + 4, previewWidth - 8, previewHeight - 8);
-        UIBase.renderBorder(graphics, x, y, x + previewWidth, y + previewHeight, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUITheme().element_border_color_normal.getColor(), true, true, true, true);
+        UIBase.renderBorder(graphics, x, y, x + previewWidth, y + previewHeight, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);
         int progressY = y + previewHeight + AUDIO_PREVIEW_PROGRESS_BAR_SPACING;
         this.renderAudioPreviewProgress(graphics, x, progressY, previewWidth);
         int controlsY = progressY + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT + AUDIO_PREVIEW_TIME_SPACING + this.font.lineHeight + AUDIO_PREVIEW_BUTTON_SPACING;
@@ -864,8 +864,8 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         int barWidth = previewWidth;
         int barY = progressY;
         int barYEnd = barY + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT;
-        graphics.fill(barX, barY, barX + barWidth, barYEnd, UIBase.getUITheme().area_background_color.getColorInt());
-        UIBase.renderBorder(graphics, barX, barY, barX + barWidth, barYEnd, 1, UIBase.getUITheme().element_border_color_normal.getColor(), true, true, true, true);
+        graphics.fill(barX, barY, barX + barWidth, barYEnd, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
+        UIBase.renderBorder(graphics, barX, barY, barX + barWidth, barYEnd, 1, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);
 
         IAudio audio = this.getPreviewAudio();
         float duration = audio != null ? Math.max(0.0F, audio.getDuration()) : 0.0F;
@@ -881,7 +881,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         int timeY = barYEnd + AUDIO_PREVIEW_TIME_SPACING;
         int textWidth = this.font.width(timeText);
         int textX = previewX + (previewWidth / 2) - (textWidth / 2);
-        graphics.drawString(this.font, timeText, textX, timeY, UIBase.getUITheme().element_label_color_inactive.getColorInt(), false);
+        graphics.drawString(this.font, timeText, textX, timeY, UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt(), false);
     }
 
     @NotNull

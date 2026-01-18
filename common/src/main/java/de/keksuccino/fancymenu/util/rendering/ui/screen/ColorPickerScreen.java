@@ -240,8 +240,8 @@ public class ColorPickerScreen extends PiPScreen {
         int panelW = this.pickerSize + (PANEL_PADDING * 2);
         int panelH = (this.alphaY + this.alphaHeight - this.pickerY) + (PANEL_PADDING * 2);
 
-        graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, theme.area_background_color.getColorInt());
-        UIBase.renderBorder(graphics, panelX, panelY, panelX + panelW, panelY + panelH, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
+        graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, theme.ui_interface_area_background_color_type_1.getColorInt());
+        UIBase.renderBorder(graphics, panelX, panelY, panelX + panelW, panelY + panelH, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
         this.renderColorArea(graphics);
         this.renderColorAreaSelector(graphics, theme);
@@ -259,8 +259,8 @@ public class ColorPickerScreen extends PiPScreen {
         int panelW = this.infoWidth + (PANEL_PADDING * 2);
         int panelH = Math.max(this.infoHeight, 140) + (PANEL_PADDING * 2);
 
-        graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, theme.area_background_color.getColorInt());
-        UIBase.renderBorder(graphics, panelX, panelY, panelX + panelW, panelY + panelH, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
+        graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, theme.ui_interface_area_background_color_type_1.getColorInt());
+        UIBase.renderBorder(graphics, panelX, panelY, panelX + panelW, panelY + panelH, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
         int x = this.infoX;
         int y = this.infoY;
@@ -272,21 +272,21 @@ public class ColorPickerScreen extends PiPScreen {
 
         this.renderCheckerboard(graphics, x, previewRectY, PREVIEW_SIZE, PREVIEW_SIZE, 6);
         graphics.fill(x, previewRectY, x + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, this.getCurrentColorInt());
-        UIBase.renderBorder(graphics, x, previewRectY, x + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
+        UIBase.renderBorder(graphics, x, previewRectY, x + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
         if (this.presetColor != null) {
             int presetX = x + PREVIEW_SIZE + 12;
             UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.original"), presetX, previewLabelY);
             this.renderCheckerboard(graphics, presetX, previewRectY, PREVIEW_SIZE, PREVIEW_SIZE, 6);
             graphics.fill(presetX, previewRectY, presetX + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, this.presetColor.getColorInt());
-            UIBase.renderBorder(graphics, presetX, previewRectY, presetX + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
+            UIBase.renderBorder(graphics, presetX, previewRectY, presetX + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
         }
 
         y = previewRectY + PREVIEW_SIZE + 12;
 
         UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hex"), x, y);
         y += labelHeight + 2;
-        UIBase.renderText(graphics, Component.literal(this.getCurrentHex()), x, y, theme.generic_text_base_color.getColorInt(), false);
+        UIBase.renderText(graphics, Component.literal(this.getCurrentHex()), x, y, theme.ui_interface_generic_text_color.getColorInt(), false);
 
         y += labelHeight + 8;
         UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.rgba"), x, y);
@@ -296,7 +296,7 @@ public class ColorPickerScreen extends PiPScreen {
         int g = (rgb >> 8) & 0xFF;
         int b = rgb & 0xFF;
         int a = Math.round(this.alpha * 255.0F);
-        UIBase.renderText(graphics, Component.literal("R: " + r + "  G: " + g + "  B: " + b + "  A: " + a), x, y, theme.generic_text_base_color.getColorInt(), false);
+        UIBase.renderText(graphics, Component.literal("R: " + r + "  G: " + g + "  B: " + b + "  A: " + a), x, y, theme.ui_interface_generic_text_color.getColorInt(), false);
 
         y += labelHeight + 8;
         UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hsv"), x, y);
@@ -304,7 +304,7 @@ public class ColorPickerScreen extends PiPScreen {
         int h = Math.round(this.hue * 360.0F);
         int s = Math.round(this.saturation * 100.0F);
         int v = Math.round(this.value * 100.0F);
-        UIBase.renderText(graphics, Component.literal("H: " + h + "  S: " + s + "%  V: " + v + "%"), x, y, theme.generic_text_base_color.getColorInt(), false);
+        UIBase.renderText(graphics, Component.literal("H: " + h + "  S: " + s + "%  V: " + v + "%"), x, y, theme.ui_interface_generic_text_color.getColorInt(), false);
     }
 
     private void renderColorArea(@NotNull GuiGraphics graphics) {
@@ -312,7 +312,7 @@ public class ColorPickerScreen extends PiPScreen {
         int hueColor = 0xFF000000 | (hueRgb & 0xFFFFFF);
         this.fillGradientHorizontal(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0xFFFFFFFF, hueColor);
         graphics.fillGradient(this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0x00000000, 0xFF000000);
-        UIBase.renderBorder(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 1, UIBase.getUITheme().element_border_color_normal.getColorInt(), true, true, true, true);
+        UIBase.renderBorder(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 1, UIBase.getUITheme().ui_interface_widget_border_color.getColorInt(), true, true, true, true);
     }
 
     private void renderColorAreaSelector(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
@@ -323,10 +323,10 @@ public class ColorPickerScreen extends PiPScreen {
         int innerSize = 5;
         int outerX = selectorX - (outerSize / 2);
         int outerY = selectorY - (outerSize / 2);
-        graphics.fill(outerX, outerY, outerX + outerSize, outerY + outerSize, theme.element_border_color_normal.getColorInt());
+        graphics.fill(outerX, outerY, outerX + outerSize, outerY + outerSize, theme.ui_interface_widget_border_color.getColorInt());
         int innerX = selectorX - (innerSize / 2);
         int innerY = selectorY - (innerSize / 2);
-        graphics.fill(innerX, innerY, innerX + innerSize, innerY + innerSize, theme.generic_text_base_color.getColorInt());
+        graphics.fill(innerX, innerY, innerX + innerSize, innerY + innerSize, theme.ui_interface_generic_text_color.getColorInt());
     }
 
     private void renderHueSlider(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
@@ -345,11 +345,11 @@ public class ColorPickerScreen extends PiPScreen {
             int endColor = 0xFF000000 | (endRgb & 0xFFFFFF);
             this.fillGradientHorizontal(graphics, startX, this.hueY, endX, this.hueY + this.hueHeight, startColor, endColor);
         }
-        UIBase.renderBorder(graphics, this.hueX, this.hueY, this.hueX + this.hueWidth, this.hueY + this.hueHeight, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
+        UIBase.renderBorder(graphics, this.hueX, this.hueY, this.hueX + this.hueWidth, this.hueY + this.hueHeight, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
         int max = Math.max(1, this.hueWidth - 1);
         int markerX = this.hueX + Math.round(this.hue * max);
-        graphics.fill(markerX - 1, this.hueY - 2, markerX + 1, this.hueY + this.hueHeight + 2, theme.generic_text_base_color.getColorInt());
+        graphics.fill(markerX - 1, this.hueY - 2, markerX + 1, this.hueY + this.hueHeight + 2, theme.ui_interface_generic_text_color.getColorInt());
     }
 
     private void renderAlphaSlider(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
@@ -358,11 +358,11 @@ public class ColorPickerScreen extends PiPScreen {
         int leftColor = rgb;
         int rightColor = 0xFF000000 | rgb;
         this.fillGradientHorizontal(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, leftColor, rightColor);
-        UIBase.renderBorder(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, 1, theme.element_border_color_normal.getColorInt(), true, true, true, true);
+        UIBase.renderBorder(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
         int max = Math.max(1, this.alphaWidth - 1);
         int markerX = this.alphaX + Math.round(this.alpha * max);
-        graphics.fill(markerX - 1, this.alphaY - 2, markerX + 1, this.alphaY + this.alphaHeight + 2, theme.generic_text_base_color.getColorInt());
+        graphics.fill(markerX - 1, this.alphaY - 2, markerX + 1, this.alphaY + this.alphaHeight + 2, theme.ui_interface_generic_text_color.getColorInt());
     }
 
     private void renderCheckerboard(@NotNull GuiGraphics graphics, int x, int y, int width, int height, int cellSize) {

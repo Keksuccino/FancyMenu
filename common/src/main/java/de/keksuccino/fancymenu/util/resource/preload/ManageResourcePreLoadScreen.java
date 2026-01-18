@@ -50,7 +50,7 @@ public class ManageResourcePreLoadScreen extends CellScreen {
                 sourceString = ResourceSourceType.getWithoutSourcePrefix(source.getSerializationSource());
             }
 
-            this.addLabelCell(Component.literal(sourceString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().element_label_color_normal.getColorInt())))
+            this.addLabelCell(Component.literal(sourceString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())))
                     .putMemoryValue("source", source.getSerializationSource())
                     .setSelectable(true);
 
