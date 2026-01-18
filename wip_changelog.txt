@@ -94,6 +94,7 @@
 - The "Video" element now has an option to disable its aspect ratio preserving behavior, to make it stretch the video frame to the size of the element (#1453)
 - You can now set an "Unhover Sound" for buttons, sliders and checkboxes, similar to the hover sound, but for unhover (duh) (#1415)
 - The "Input Field" element now has support for setting hover, unhover and click sounds
+- Most of FancyMenu's simple text inputs (input fields) now allow for selecting text by holding down the mouse and moving over the text
 
 ### Breaking Changes
 
