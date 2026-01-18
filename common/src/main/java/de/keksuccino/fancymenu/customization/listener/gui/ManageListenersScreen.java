@@ -220,14 +220,14 @@ public class ManageListenersScreen extends CellScreen {
             for (MutableComponent line : renameTip) {
                 int lineWidth = (int)UIBase.getUITextWidth(line);
                 int lineX = descEndX - lineWidth;
-                UIBase.renderText(graphics, line, lineX, lineY, -1, false);
+                UIBase.renderText(graphics, line, lineX, lineY, -1);
                 lineY += (int) (UIBase.getUITextHeight() + 2);
             }
             lineY += 2;
             for (MutableComponent line : quickEditTip) {
                 int lineWidth = (int)UIBase.getUITextWidth(line);
                 int lineX = descEndX - lineWidth;
-                UIBase.renderText(graphics, line, lineX, lineY, -1, false);
+                UIBase.renderText(graphics, line, lineX, lineY, -1);
                 lineY += (int) (UIBase.getUITextHeight() + 2);
             }
         }

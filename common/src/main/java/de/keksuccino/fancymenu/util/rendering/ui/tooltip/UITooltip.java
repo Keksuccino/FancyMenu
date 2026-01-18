@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
@@ -39,7 +38,7 @@ public class UITooltip implements Renderable {
     protected Integer y = null;
     protected int textBorderSize = 5;
     protected int mouseOffset = 12;
-    protected boolean textShadow = FancyMenu.getOptions().enableUiTextShadow.getValue();
+    protected boolean textShadow = false;
     protected TooltipTextAlignment textAlignment = TooltipTextAlignment.LEFT;
 
     @NotNull

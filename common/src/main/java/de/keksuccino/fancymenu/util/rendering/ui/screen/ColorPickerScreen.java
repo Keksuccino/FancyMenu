@@ -242,9 +242,10 @@ public class ColorPickerScreen extends PiPScreen {
         int panelY = this.pickerY - PANEL_PADDING;
         int panelW = this.pickerSize + (PANEL_PADDING * 2);
         int panelH = (this.alphaY + this.alphaHeight - this.pickerY) + (PANEL_PADDING * 2);
+        float rounding = UIBase.getInterfaceCornerRoundingRadius();
 
-        graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, theme.ui_interface_area_background_color_type_1.getColorInt());
-        UIBase.renderBorder(graphics, panelX, panelY, panelX + panelW, panelY + panelH, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
+        UIBase.renderRoundedRect(graphics, panelX, panelY, panelW, panelH, rounding, rounding, rounding, rounding, UIBase.shouldBlur() ? theme.ui_blur_interface_area_background_color_type_1.getColorInt() : theme.ui_interface_area_background_color_type_1.getColorInt());
+        UIBase.renderRoundedBorder(graphics, panelX, panelY, panelX + panelW, panelY + panelH, 1, rounding, rounding, rounding, rounding, UIBase.shouldBlur() ? theme.ui_blur_interface_area_border_color.getColorInt() : theme.ui_interface_area_border_color.getColorInt());
 
         this.renderColorArea(graphics);
         this.renderColorAreaSelector(graphics, theme);
@@ -261,9 +262,10 @@ public class ColorPickerScreen extends PiPScreen {
         int panelY = this.infoY - PANEL_PADDING;
         int panelW = this.infoWidth + (PANEL_PADDING * 2);
         int panelH = Math.max(this.infoHeight, 140) + (PANEL_PADDING * 2);
+        float rounding = UIBase.getInterfaceCornerRoundingRadius();
 
-        graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, theme.ui_interface_area_background_color_type_1.getColorInt());
-        UIBase.renderBorder(graphics, panelX, panelY, panelX + panelW, panelY + panelH, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
+        UIBase.renderRoundedRect(graphics, panelX, panelY, panelW, panelH, rounding, rounding, rounding, rounding, UIBase.shouldBlur() ? theme.ui_blur_interface_area_background_color_type_1.getColorInt() : theme.ui_interface_area_background_color_type_1.getColorInt());
+        UIBase.renderRoundedBorder(graphics, panelX, panelY, panelX + panelW, panelY + panelH, 1, rounding, rounding, rounding, rounding, UIBase.shouldBlur() ? theme.ui_blur_interface_area_border_color.getColorInt() : theme.ui_interface_area_border_color.getColorInt());
 
         int x = this.infoX;
         int y = this.infoY;
@@ -289,7 +291,7 @@ public class ColorPickerScreen extends PiPScreen {
 
         UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hex"), x, y);
         y += labelHeight + 2;
-        UIBase.renderText(graphics, Component.literal(this.getCurrentHex()), x, y, theme.ui_interface_generic_text_color.getColorInt(), false);
+        UIBase.renderText(graphics, Component.literal(this.getCurrentHex()), x, y, theme.ui_interface_generic_text_color.getColorInt());
 
         y += labelHeight + 8;
         UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.rgba"), x, y);
@@ -299,7 +301,7 @@ public class ColorPickerScreen extends PiPScreen {
         int g = (rgb >> 8) & 0xFF;
         int b = rgb & 0xFF;
         int a = Math.round(this.alpha * 255.0F);
-        UIBase.renderText(graphics, Component.literal("R: " + r + "  G: " + g + "  B: " + b + "  A: " + a), x, y, theme.ui_interface_generic_text_color.getColorInt(), false);
+        UIBase.renderText(graphics, Component.literal("R: " + r + "  G: " + g + "  B: " + b + "  A: " + a), x, y, theme.ui_interface_generic_text_color.getColorInt());
 
         y += labelHeight + 8;
         UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hsv"), x, y);
@@ -307,7 +309,7 @@ public class ColorPickerScreen extends PiPScreen {
         int h = Math.round(this.hue * 360.0F);
         int s = Math.round(this.saturation * 100.0F);
         int v = Math.round(this.value * 100.0F);
-        UIBase.renderText(graphics, Component.literal("H: " + h + "  S: " + s + "%  V: " + v + "%"), x, y, theme.ui_interface_generic_text_color.getColorInt(), false);
+        UIBase.renderText(graphics, Component.literal("H: " + h + "  S: " + s + "%  V: " + v + "%"), x, y, theme.ui_interface_generic_text_color.getColorInt());
     }
 
     private void renderColorArea(@NotNull GuiGraphics graphics) {

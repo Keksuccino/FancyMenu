@@ -179,7 +179,7 @@ public class TextEditorScreen extends PiPScreen {
     @Override
     public void init() {
 
-        this.placeholderMenuWidth = Math.max(120, (int)((double)this.width / 3.5D));
+        this.placeholderMenuWidth = Math.min(300, Math.max(120, (int)((double)this.width / 3.5D)));
 
         this.updateRightClickContextMenu();
         this.addWidget(this.rightClickContextMenu);
@@ -453,7 +453,7 @@ public class TextEditorScreen extends PiPScreen {
             SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.getPlaceholderAreaWidth(), this.getPlaceholderAreaHeight(), placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, placeholderAreaRadius, this.areaBackgroundColor.get().getColorInt(), partial);
 
             //Don't render parts of placeholder entries outside of placeholder menu area
-            graphics.enableScissor(this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight());
+            graphics.enableScissor(this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY() + 2, this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight() - 2);
 
             //Render placeholder entries
             List<PlaceholderMenuEntry> entries = new ArrayList<>(this.placeholderMenuEntries);
@@ -1891,17 +1891,44 @@ public class TextEditorScreen extends PiPScreen {
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             //Update the button colors
             this.buttonBase.setBackgroundColor(
-                    DrawableColor.of(this.backgroundColorIdle),
-                    DrawableColor.of(this.backgroundColorHover),
-                    DrawableColor.of(this.backgroundColorIdle),
-                    DrawableColor.of(this.backgroundColorIdle),
-                    DrawableColor.of(this.backgroundColorHover),
-                    DrawableColor.of(this.backgroundColorIdle)
+                    DrawableColor.FULLY_TRANSPARENT,
+                    DrawableColor.FULLY_TRANSPARENT,
+                    DrawableColor.FULLY_TRANSPARENT,
+                    DrawableColor.FULLY_TRANSPARENT,
+                    DrawableColor.FULLY_TRANSPARENT,
+                    DrawableColor.FULLY_TRANSPARENT
             );
             //Update the button pos
             this.buttonBase.setX(this.x);
             this.buttonBase.setY(this.y);
             int yCenter = this.y + (this.getHeight() / 2);
+            //Render hover effect
+            if (!this.parent.isMouseInteractingWithPlaceholderGrabbers() && this.buttonBase.isMouseOver(mouseX, mouseY)) {
+                int areaY = this.parent.getPlaceholderAreaY() + 2;
+                int areaBottom = this.parent.getPlaceholderAreaY() + this.parent.getPlaceholderAreaHeight() - 2;
+                int entryY = this.y;
+                int entryHeight = this.getHeight();
+                int visibleTop = Math.max(entryY, areaY);
+                int visibleBottom = Math.min(entryY + entryHeight, areaBottom);
+                int visibleHeight = visibleBottom - visibleTop;
+                if (visibleHeight > 0) {
+                    boolean roundTop = entryY <= areaY + 5;
+                    boolean roundBottom = (entryY + entryHeight) >= areaBottom - 5;
+                    int hoverColor = this.backgroundColorHover.getRGB();
+                    if (roundTop || roundBottom) {
+                        float radius = UIBase.getInterfaceCornerRoundingRadius();
+                        if (roundTop && roundBottom) {
+                            SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, this.x, visibleTop, this.getWidth(), visibleHeight, radius, radius, radius, radius, hoverColor, partial);
+                        } else if (roundTop) {
+                            SmoothRectangleRenderer.renderSmoothRectRoundTopCornersScaled(graphics, this.x, visibleTop, this.getWidth(), visibleHeight, radius, hoverColor, partial);
+                        } else {
+                            SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, this.x, visibleTop, this.getWidth(), visibleHeight, radius, hoverColor, partial);
+                        }
+                    } else {
+                        graphics.fill(this.x, visibleTop, this.x + this.getWidth(), visibleTop + visibleHeight, hoverColor);
+                    }
+                }
+            }
             //Render the button
             this.buttonBase.render(graphics, mouseX, mouseY, partial);
             //Render dot
