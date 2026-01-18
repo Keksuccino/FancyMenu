@@ -1015,7 +1015,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     public PiPWindow setBlockMinecraftScreenInputs(boolean blockMinecraftScreenInputs) {
+        if (this.blockMinecraftScreenInputs == blockMinecraftScreenInputs) {
+            return this;
+        }
         this.blockMinecraftScreenInputs = blockMinecraftScreenInputs;
+        PiPWindowHandler.INSTANCE.refreshWindowOrder(this);
         return this;
     }
 

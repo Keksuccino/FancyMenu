@@ -220,7 +220,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        PiPWindow forcedWindow = getTopForceFocusWindow();
+        PiPWindow forcedWindow = getTopInputBlockingWindow();
         if (forcedWindow != null) {
             focusedWindow = forcedWindow;
             if (!forcedWindow.isMouseOver(mouseX, mouseY)) {
@@ -294,7 +294,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        PiPWindow forcedWindow = getTopForceFocusWindow();
+        PiPWindow forcedWindow = getTopInputBlockingWindow();
         if (forcedWindow != null && activePointerWindow != null && activePointerWindow != forcedWindow) {
             if (button == activePointerButton) {
                 activePointerWindow = null;
@@ -320,7 +320,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        PiPWindow forcedWindow = getTopForceFocusWindow();
+        PiPWindow forcedWindow = getTopInputBlockingWindow();
         if (forcedWindow != null && activePointerWindow != null && activePointerWindow != forcedWindow) {
             return true;
         }
@@ -338,7 +338,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
-        PiPWindow forcedWindow = getTopForceFocusWindow();
+        PiPWindow forcedWindow = getTopInputBlockingWindow();
         if (forcedWindow != null) {
             if (forcedWindow.isInputLocked()) {
                 return true;
@@ -364,7 +364,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        PiPWindow forcedWindow = getTopForceFocusWindow();
+        PiPWindow forcedWindow = getTopInputBlockingWindow();
         if (forcedWindow != null && forcedWindow.isVisible()) {
             forcedWindow.keyPressed(keyCode, scanCode, modifiers);
             return true;
@@ -380,7 +380,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        PiPWindow forcedWindow = getTopForceFocusWindow();
+        PiPWindow forcedWindow = getTopInputBlockingWindow();
         if (forcedWindow != null && forcedWindow.isVisible()) {
             forcedWindow.keyReleased(keyCode, scanCode, modifiers);
             return true;
@@ -396,7 +396,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        PiPWindow forcedWindow = getTopForceFocusWindow();
+        PiPWindow forcedWindow = getTopInputBlockingWindow();
         if (forcedWindow != null && forcedWindow.isVisible()) {
             forcedWindow.charTyped(codePoint, modifiers);
             return true;
@@ -421,7 +421,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Nullable
     private PiPWindow getFocusedWindow() {
-        PiPWindow forced = getTopForceFocusWindow();
+        PiPWindow forced = getTopInputBlockingWindow();
         if (forced != null && forced.isVisible() && !forced.isInputLocked()) {
             focusedWindow = forced;
             return forced;
@@ -440,7 +440,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     }
 
     public boolean isWindowFocused(@NotNull PiPWindow window) {
-        PiPWindow forced = getTopForceFocusWindow();
+        PiPWindow forced = getTopInputBlockingWindow();
         if (forced != null && !forced.isInputLocked()) {
             return forced == window;
         }
@@ -474,6 +474,21 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         return null;
     }
 
+    private boolean isInputBlockingWindow(@NotNull PiPWindow window) {
+        return window.isForceFocusEnabled() || window.isBlockingMinecraftScreenInputs();
+    }
+
+    @Nullable
+    private PiPWindow getTopInputBlockingWindow() {
+        for (int i = windows.size() - 1; i >= 0; i--) {
+            PiPWindow window = windows.get(i);
+            if (window.isVisible() && isInputBlockingWindow(window)) {
+                return window;
+            }
+        }
+        return null;
+    }
+
     private int getInsertIndexForFront(@NotNull PiPWindow window) {
         int targetLayer = getWindowLayer(window);
         for (int i = 0; i < windows.size(); i++) {
@@ -485,7 +500,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     }
 
     private int getWindowLayer(@NotNull PiPWindow window) {
-        if (window.isForceFocusEnabled()) {
+        if (window.isForceFocusEnabled() || window.isBlockingMinecraftScreenInputs()) {
             return 2;
         }
         if (window.isAlwaysOnTop()) {
@@ -495,7 +510,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     }
 
     private void enforceForceFocus() {
-        PiPWindow forced = getTopForceFocusWindow();
+        PiPWindow forced = getTopInputBlockingWindow();
         if (forced != null && forced.isVisible() && !forced.isInputLocked()) {
             focusedWindow = forced;
         }
