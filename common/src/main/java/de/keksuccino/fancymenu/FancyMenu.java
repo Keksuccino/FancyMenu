@@ -38,6 +38,9 @@ public class FancyMenu {
 
     //TODO debug log message von scroll mixin in MixinMouseHandler (oder MixinMouseManager??) entfernen
 
+    //TODO font rendering für UI scale 1 optimieren
+
+
 
 
 
