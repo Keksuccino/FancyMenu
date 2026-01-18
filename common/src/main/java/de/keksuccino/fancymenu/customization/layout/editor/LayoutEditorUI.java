@@ -727,9 +727,9 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.layout.openScreenExecutableBlocks.clear();
                             editor.layout.openScreenExecutableBlocks.add(call);
                         }
-                        this.openContextMenuScreen(editor);
                     });
-                    this.openContextMenuScreen(s);
+                    menu1.closeMenuChain();
+                    ActionScriptEditorScreen.openInWindow(s);
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout.editor.edit_open_screen_action_script.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
@@ -741,9 +741,9 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.layout.closeScreenExecutableBlocks.clear();
                             editor.layout.closeScreenExecutableBlocks.add(call);
                         }
-                        this.openContextMenuScreen(editor);
                     });
-                    this.openContextMenuScreen(s);
+                    menu1.closeMenuChain();
+                    ActionScriptEditorScreen.openInWindow(s);
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout.editor.edit_close_screen_action_script.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);

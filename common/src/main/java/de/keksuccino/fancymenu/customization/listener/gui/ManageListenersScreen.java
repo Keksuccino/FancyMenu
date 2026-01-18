@@ -120,9 +120,9 @@ public class ManageListenersScreen extends CellScreen {
                             this.tempInstances.add(newInstance);
                             this.rebuild();
                         }
-                        Minecraft.getInstance().setScreen(this);
                     });
-                    Minecraft.getInstance().setScreen(actionsScreen);
+                    Minecraft.getInstance().setScreen(this);
+                    ActionScriptEditorScreen.openInWindow(actionsScreen);
                 } else {
                     Minecraft.getInstance().setScreen(this);
                 }
@@ -158,9 +158,8 @@ public class ManageListenersScreen extends CellScreen {
                 if (updatedScript != null) {
                     cached.setActionScript(updatedScript);
                 }
-                Minecraft.getInstance().setScreen(this);
             });
-            Minecraft.getInstance().setScreen(actionsScreen);
+            ActionScriptEditorScreen.openInWindow(actionsScreen);
         }
     }
 
@@ -218,17 +217,17 @@ public class ManageListenersScreen extends CellScreen {
             List<MutableComponent> quickEditTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt()).withItalic(true)), descW);
             int lineY = descEndY + 4;
             for (MutableComponent line : renameTip) {
-                int lineWidth = (int)UIBase.getUITextWidth(line);
+                int lineWidth = (int)UIBase.getUITextWidthNormal(line);
                 int lineX = descEndX - lineWidth;
                 UIBase.renderText(graphics, line, lineX, lineY, -1);
-                lineY += (int) (UIBase.getUITextHeight() + 2);
+                lineY += (int) (UIBase.getUITextHeightNormal() + 2);
             }
             lineY += 2;
             for (MutableComponent line : quickEditTip) {
-                int lineWidth = (int)UIBase.getUITextWidth(line);
+                int lineWidth = (int)UIBase.getUITextWidthNormal(line);
                 int lineX = descEndX - lineWidth;
                 UIBase.renderText(graphics, line, lineX, lineY, -1);
-                lineY += (int) (UIBase.getUITextHeight() + 2);
+                lineY += (int) (UIBase.getUITextHeightNormal() + 2);
             }
         }
 
@@ -479,7 +478,7 @@ public class ManageListenersScreen extends CellScreen {
                 this.editBox.setX(this.getX());
                 this.editBox.setY(this.getY() + TOP_DOWN_CELL_BORDER);
                 this.editBox.setWidth(Math.min(this.getWidth(), 200));
-                this.editBox.setHeight((int)(UIBase.getUITextHeight() + 1));
+                this.editBox.setHeight((int)(UIBase.getUITextHeightNormal() + 1));
                 this.editBox.render(graphics, mouseX, mouseY, partial);
                 
                 // Check if user clicked outside or pressed enter
@@ -492,7 +491,7 @@ public class ManageListenersScreen extends CellScreen {
                 UIBase.renderText(graphics, this.labelComponent, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER);
                 RenderingUtils.resetShaderColor(graphics);
                 // Show Writing cursor when the label is hovered
-                if (UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER, UIBase.getUITextWidth(this.labelComponent), UIBase.getUITextHeight())) {
+                if (UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER, UIBase.getUITextWidthNormal(this.labelComponent), UIBase.getUITextHeightNormal())) {
                     CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
                 }
             }
@@ -503,9 +502,9 @@ public class ManageListenersScreen extends CellScreen {
             if (this.editMode && this.editBox != null) {
                 this.setWidth(Math.min((int)(ManageListenersScreen.this.scrollArea.getInnerWidth() - 40), 200));
             } else {
-                this.setWidth((int)UIBase.getUITextWidth(this.labelComponent));
+                this.setWidth((int)UIBase.getUITextWidthNormal(this.labelComponent));
             }
-            this.setHeight((int)(UIBase.getUITextHeight() + (TOP_DOWN_CELL_BORDER * 2)));
+            this.setHeight((int)(UIBase.getUITextHeightNormal() + (TOP_DOWN_CELL_BORDER * 2)));
         }
         
         @Override

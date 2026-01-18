@@ -705,7 +705,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 if (this.editLayerNameBox.getWidth() < this.getMaxLayerNameWidth()) {
                     this.editLayerNameBox.setDisplayPosition(0);
                 }
-                ((IMixinAbstractWidget)this.editLayerNameBox).setHeightFancyMenu((int)(UIBase.getUITextHeight() + 2));
+                ((IMixinAbstractWidget)this.editLayerNameBox).setHeightFancyMenu((int)(UIBase.getUITextHeightNormal() + 2));
                 this.editLayerNameBox.render(graphics, mouseX, mouseY, partial);
             }
 
@@ -742,7 +742,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getLayerNameY() {
-            return this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeight() / 2f);
+            return this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f);
         }
 
         public float getMaxLayerNameWidth() {
@@ -786,7 +786,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public boolean isLayerNameMouseOver(double mouseX, double mouseY) {
             if (this.parent.isMouseInteractingWithGrabbers()) return false;
             if (!this.parent.isInnerAreaHovered()) return false;
-            return isXYInArea(mouseX, mouseY, this.getLayerNameX(), this.getLayerNameY(), this.getMaxLayerNameWidth(), UIBase.getUITextHeight());
+            return isXYInArea(mouseX, mouseY, this.getLayerNameX(), this.getLayerNameY(), this.getMaxLayerNameWidth(), UIBase.getUITextHeightNormal());
         }
 
         public float getEyeButtonWidth() {
@@ -964,7 +964,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             ResourceLocation loc = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE;
             blitF(graphics, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUITheme().ui_icon_texture_color.getColorInt());
 
-            UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeight() / 2f)));
+            UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f)));
 
         }
 

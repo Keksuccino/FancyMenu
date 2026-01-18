@@ -188,7 +188,7 @@ public class ColorPickerScreen extends PiPScreen {
         int bottom = 56;
         int availableWidth = this.width - (padding * 2);
         int availableHeight = this.height - top - bottom;
-        int labelHeight = (int)UIBase.getUITextHeight();
+        int labelHeight = (int)UIBase.getUITextHeightNormal();
         int extraHeight = (labelHeight + SLIDER_HEIGHT + 2) * 2 + (SLIDER_GAP * 3);
 
         this.pickerSize = Math.min(MAX_PICKER_SIZE, Math.max(MIN_PICKER_SIZE, availableHeight - extraHeight));
@@ -269,7 +269,7 @@ public class ColorPickerScreen extends PiPScreen {
 
         int x = this.infoX;
         int y = this.infoY;
-        int labelHeight = (int)UIBase.getUITextHeight();
+        int labelHeight = (int)UIBase.getUITextHeightNormal();
 
         int previewLabelY = y;
         int previewRectY = previewLabelY + labelHeight + 4;

@@ -197,7 +197,7 @@ public class TargetElementManagerScreen extends CellScreen {
         @Override
         public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             RenderingUtils.resetShaderColor(graphics);
-            int textY = (int) (this.getY() + (this.getHeight() - UIBase.getUITextHeight()) / 2);
+            int textY = (int) (this.getY() + (this.getHeight() - UIBase.getUITextHeightNormal()) / 2);
             UIBase.renderText(graphics, this.label, this.getX(), textY);
             RenderingUtils.resetShaderColor(graphics);
         }
@@ -205,7 +205,7 @@ public class TargetElementManagerScreen extends CellScreen {
         @Override
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
             super.updateSize(scrollEntry);
-            this.setHeight((int) Math.max(UIBase.getUITextHeight() + 4, 20));
+            this.setHeight((int) Math.max(UIBase.getUITextHeightNormal() + 4, 20));
         }
     }
 

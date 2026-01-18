@@ -32,9 +32,9 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
                     this.editor.history.saveSnapshot();
                     this.element.actionExecutor = call;
                 }
-                this.openContextMenuScreen(this.editor);
             });
-            this.openContextMenuScreen(s);
+            menu.closeMenuChain();
+            ActionScriptEditorScreen.openInWindow(s);
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);

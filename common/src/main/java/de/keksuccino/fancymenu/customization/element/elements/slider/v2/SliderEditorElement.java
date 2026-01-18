@@ -119,9 +119,9 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                                     this.editor.history.saveSnapshot();
                                     (this.element).executableBlock = call;
                                 }
-                                this.openContextMenuScreen(this.editor);
                             });
-                            this.openContextMenuScreen(s);
+                            menu.closeMenuChain();
+                            ActionScriptEditorScreen.openInWindow(s);
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))

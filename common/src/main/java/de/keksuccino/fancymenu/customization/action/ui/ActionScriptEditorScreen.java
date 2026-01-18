@@ -22,9 +22,13 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementIns
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -47,7 +51,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -70,7 +73,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class ActionScriptEditorScreen extends Screen {
+@SuppressWarnings("all")
+public class ActionScriptEditorScreen extends PiPScreen {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     protected GenericExecutableBlock executableBlock;
     protected Consumer<GenericExecutableBlock> callback;
@@ -93,6 +100,7 @@ public class ActionScriptEditorScreen extends Screen {
     protected boolean pendingSelectionKeepViewAnchor = false;
     protected boolean skipNextContextMenuSelection = false;
     protected boolean contextMenuSelectionOverrideActive = false;
+    protected boolean resultHandled = false;
     protected static final int LEFT_MARGIN = 20;
     protected static final int RIGHT_MARGIN = 20;
     protected static final int MINIMAP_WIDTH = 64;
@@ -153,12 +161,30 @@ public class ActionScriptEditorScreen extends Screen {
     private final Deque<ScriptSnapshot> redoHistory = new ArrayDeque<>();
     private boolean suppressHistoryCapture = false;
     private boolean actionsMenuRightClickConsumedByEntry = false;
+    protected int renderMouseX = 0;
+    protected int renderMouseY = 0;
 
     public ActionScriptEditorScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
         super(Component.translatable("fancymenu.actions.screens.manage_screen.manage"));
+        this.setAllowCloseOnEsc(false);
         this.executableBlock = executableBlock.copy(false);
         this.callback = callback;
         this.updateActionInstanceScrollArea(false);
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ActionScriptEditorScreen screen) {
+        return openInWindow(screen, null);
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ActionScriptEditorScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setBlockMinecraftScreenInputs(false);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
     }
 
     @Override
@@ -166,7 +192,11 @@ public class ActionScriptEditorScreen extends Screen {
 
         this.updateRightClickContextMenu(false, null);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> this.callback.accept(this.executableBlock));
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
+            this.finishInlineNameEditing(true);
+            this.finishInlineValueEditing(true);
+            this.closeWithResult(this.executableBlock);
+        });
         this.doneButton.setNavigatable(false);
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
@@ -174,7 +204,9 @@ public class ActionScriptEditorScreen extends Screen {
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             Dialogs.openMessageWithCallback(Component.translatable("fancymenu.actions.script_editor.cancel_warning"), MessageDialogStyle.WARNING, call -> {
                 if (call) {
-                    this.callback.accept(null);
+                    this.finishInlineNameEditing(true);
+                    this.finishInlineValueEditing(true);
+                    this.closeWithResult(null);
                 }
             });
         });
@@ -189,16 +221,34 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     @Override
-    public boolean shouldCloseOnEsc() {
-        return false;
+    public void onScreenClosed() {
+        if (this.resultHandled) {
+            return;
+        }
+        this.finishInlineNameEditing(true);
+        this.finishInlineValueEditing(true);
+        this.resultHandled = true;
+        this.callback.accept(null);
     }
 
     @Override
-    public void onClose() {
-        this.finishInlineNameEditing(true);
+    public void onWindowClosedExternally() {
+        if (this.resultHandled) {
+            return;
+        }
         this.finishInlineNameEditing(true);
         this.finishInlineValueEditing(true);
+        this.resultHandled = true;
         this.callback.accept(null);
+    }
+
+    private void closeWithResult(@Nullable GenericExecutableBlock result) {
+        if (this.resultHandled) {
+            return;
+        }
+        this.resultHandled = true;
+        this.callback.accept(result);
+        this.closeWindow();
     }
 
     protected void updateRightClickContextMenu(boolean reopen, @Nullable List<String> entryPath) {
@@ -214,11 +264,9 @@ public class ActionScriptEditorScreen extends Screen {
 
         if (this.rightClickContextMenu != null) {
             this.rightClickContextMenu.closeMenu();
-            this.removeWidget(this.rightClickContextMenu);
         }
 
         this.rightClickContextMenu = new ContextMenu();
-        this.addWidget(this.rightClickContextMenu);
 
         this.rightClickContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.actions.screens.edit_action"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
@@ -240,9 +288,9 @@ public class ActionScriptEditorScreen extends Screen {
                 .setIcon(ContextMenu.IconFactory.getIcon("delete"));
 
         if (reopen || wasOpen) {
-            float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)MouseInput.getMouseX();
-            float reopenY = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenY : (float)MouseInput.getMouseY();
-            this.openRightClickContextMenuAt(reopenX, reopenY, resolvedEntryPath);
+            float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)this.renderMouseX;
+            float reopenY = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenY : (float)this.renderMouseY;
+            this.openRightClickContextMenuAtMouse(reopenX, reopenY, resolvedEntryPath);
         }
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_remove");
@@ -533,9 +581,8 @@ public class ActionScriptEditorScreen extends Screen {
                         }
                     }
                 }
-                Minecraft.getInstance().setScreen(this);
             });
-            Minecraft.getInstance().setScreen(s);
+            Dialogs.openGeneric(s, s.getTitle(), null, ChooseActionScreen.PIP_WINDOW_WIDTH, ChooseActionScreen.PIP_WINDOW_HEIGHT);
         } else if (targetExecutable instanceof IfExecutableBlock block) {
             ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
                 if (container != null) {
@@ -620,9 +667,8 @@ public class ActionScriptEditorScreen extends Screen {
                 ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 this.finalizeActionAddition(call, resolvedReference);
             }
-            Minecraft.getInstance().setScreen(this);
         });
-        Minecraft.getInstance().setScreen(screen);
+        Dialogs.openGeneric(screen, screen.getTitle(), null, ChooseActionScreen.PIP_WINDOW_WIDTH, ChooseActionScreen.PIP_WINDOW_HEIGHT);
     }
 
     protected void onAddAction(@NotNull Action action, @Nullable ExecutableEntry selectionReference) {
@@ -787,6 +833,9 @@ public class ActionScriptEditorScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        this.renderMouseX = mouseX;
+        this.renderMouseY = mouseY;
+
         this.renderTickDragHoveredEntry = this.getDragHoveredEntry();
         this.renderTickDraggedEntry = this.getDraggedEntry();
         boolean allowScrollWheel = !this.isUserNavigatingInRightClickContextMenu();
@@ -796,10 +845,10 @@ public class ActionScriptEditorScreen extends Screen {
         //Auto-scroll scroll area vertically if dragged and out-of-area
         if (this.renderTickDraggedEntry != null) {
             float scrollOffset = 0.1F * this.scriptEntriesScrollArea.verticalScrollBar.getWheelScrollSpeed();
-            if (MouseInput.getMouseY() <= this.scriptEntriesScrollArea.getInnerY()) {
+            if (mouseX <= this.scriptEntriesScrollArea.getInnerY()) {
                 this.scriptEntriesScrollArea.verticalScrollBar.setScroll(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() - scrollOffset);
             }
-            if (MouseInput.getMouseY() >= (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) {
+            if (mouseY >= (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) {
                 this.scriptEntriesScrollArea.verticalScrollBar.setScroll(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() + scrollOffset);
             }
         }
@@ -878,9 +927,6 @@ public class ActionScriptEditorScreen extends Screen {
 
         // Needs to render as late as possible
         this.renderMinimapEntryTooltip(graphics, mouseX, mouseY);
-
-        // Needs to render after everything else
-        this.rightClickContextMenu.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -1250,7 +1296,7 @@ public class ActionScriptEditorScreen extends Screen {
                 }
                 this.contextMenuTargetExecutable = (target != null) ? target.executable : null;
                 if (this.rightClickContextMenu != null) {
-                    this.openRightClickContextMenuAt((float)mouseX, (float)mouseY, null);
+                    this.openRightClickContextMenuAtMouse((float)mouseX, (float)mouseY, null);
                 }
                 return true;
             }
@@ -1717,14 +1763,12 @@ public class ActionScriptEditorScreen extends Screen {
     @Nullable
     protected ExecutableEntry getScrollAreaHoveredEntry() {
         if (this.isUserNavigatingInRightClickContextMenu()) return null;
-        if (!this.scriptEntriesScrollArea.isMouseOverInnerArea(MouseInput.getMouseX(), MouseInput.getMouseY())) {
+        if (!this.scriptEntriesScrollArea.isMouseOverInnerArea(this.renderMouseX, this.renderMouseY)) {
             return null;
         }
-        int mouseX = MouseInput.getMouseX();
-        int mouseY = MouseInput.getMouseY();
         for (ScrollAreaEntry entry : this.scriptEntriesScrollArea.getEntries()) {
             if (entry instanceof ExecutableEntry ee) {
-                if (UIBase.isXYInArea(mouseX, mouseY, ee.getX(), ee.getY(), this.scriptEntriesScrollArea.getInnerWidth(), ee.getHeight())) {
+                if (UIBase.isXYInArea(this.renderMouseX, this.renderMouseY, ee.getX(), ee.getY(), this.scriptEntriesScrollArea.getInnerWidth(), ee.getHeight())) {
                     return ee;
                 }
             }
@@ -2018,10 +2062,10 @@ public class ActionScriptEditorScreen extends Screen {
     protected ExecutableEntry getDragHoveredEntry() {
         ExecutableEntry draggedEntry = this.getDraggedEntry();
         if (draggedEntry != null) {
-            if ((MouseInput.getMouseY() <= this.scriptEntriesScrollArea.getInnerY()) && (this.scriptEntriesScrollArea.verticalScrollBar.getScroll() == 0.0F)) {
+            if ((this.renderMouseY <= this.scriptEntriesScrollArea.getInnerY()) && (this.scriptEntriesScrollArea.verticalScrollBar.getScroll() == 0.0F)) {
                 return BEFORE_FIRST;
             }
-            if ((MouseInput.getMouseY() >= (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) && (this.scriptEntriesScrollArea.verticalScrollBar.getScroll() == 1.0F)) {
+            if ((this.renderMouseY >= (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) && (this.scriptEntriesScrollArea.verticalScrollBar.getScroll() == 1.0F)) {
                 return AFTER_LAST;
             }
             for (ScrollAreaEntry e : this.scriptEntriesScrollArea.getEntries()) {
@@ -2029,7 +2073,7 @@ public class ActionScriptEditorScreen extends Screen {
                     if ((e.getY() + e.getHeight()) > (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) {
                         continue;
                     }
-                    if ((ee != draggedEntry) && UIBase.isXYInArea(MouseInput.getMouseX(), MouseInput.getMouseY(), ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight()) && this.scriptEntriesScrollArea.isMouseOverInnerArea(MouseInput.getMouseX(), MouseInput.getMouseY())) {
+                    if ((ee != draggedEntry) && UIBase.isXYInArea(this.renderMouseX, this.renderMouseY, ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight()) && this.scriptEntriesScrollArea.isMouseOverInnerArea(this.renderMouseX, this.renderMouseY)) {
                         List<ExecutableEntry> statementChain = new ArrayList<>();
                         if (draggedEntry.executable instanceof AbstractExecutableBlock) {
                             statementChain = this.getStatementChainOf(draggedEntry);
@@ -2589,14 +2633,14 @@ public class ActionScriptEditorScreen extends Screen {
         return null;
     }
 
-    protected void openRightClickContextMenuAt(float x, float y, @Nullable List<String> entryPath) {
+    protected void openRightClickContextMenuAtMouse(float inScreenX, float inScreenY, @Nullable List<String> entryPath) {
         if (this.rightClickContextMenu == null) {
             return;
         }
-        this.rightClickContextMenuLastOpenX = x;
-        this.rightClickContextMenuLastOpenY = y;
+        this.rightClickContextMenuLastOpenX = inScreenX;
+        this.rightClickContextMenuLastOpenY = inScreenY;
         List<String> path = (entryPath != null && !entryPath.isEmpty()) ? new ArrayList<>(entryPath) : null;
-        this.rightClickContextMenu.openMenuAt(x, y, path);
+        ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.rightClickContextMenu, path);
     }
 
     protected boolean isInsideActionsScrollArea(int mouseX, int mouseY) {
@@ -3159,7 +3203,7 @@ public class ActionScriptEditorScreen extends Screen {
                 this.dragging = false;
             }
             if (this.leftMouseDownDragging) {
-                if ((this.leftMouseDownDraggingPosX != MouseInput.getMouseX()) || (this.leftMouseDownDraggingPosY != MouseInput.getMouseY())) {
+                if ((this.leftMouseDownDraggingPosX != renderMouseX) || (this.leftMouseDownDraggingPosY != renderMouseY)) {
                     // Only allow dragging for specific entries
                     if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof FolderExecutableBlock)) {
                         this.dragging = true;
@@ -3404,8 +3448,8 @@ public class ActionScriptEditorScreen extends Screen {
             if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return;
             if (this.parent.getEntries().contains(this)) {
                 this.leftMouseDownDragging = true;
-                this.leftMouseDownDraggingPosX = MouseInput.getMouseX();
-                this.leftMouseDownDraggingPosY = MouseInput.getMouseY();
+                this.leftMouseDownDraggingPosX = renderMouseX;
+                this.leftMouseDownDraggingPosY = renderMouseY;
             }
         }
 

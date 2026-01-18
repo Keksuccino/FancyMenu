@@ -22,6 +22,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("unused")
 public class UIBase extends RenderingUtils {
 
     public static final int ELEMENT_BORDER_THICKNESS = 1;
@@ -44,19 +45,35 @@ public class UIBase extends RenderingUtils {
     }
 
     public static float getUITextSizeSmall() {
-        return Math.max(3, getUITextSizeNormal() - 3);
+        return Math.max(3, getUITextSizeNormal() - 2);
     }
 
-    public static float getUITextHeight() {
+    public static float getUITextHeightNormal() {
         return getUIFont().getLineHeight(getUITextSizeNormal());
+    }
+
+    public static float getUITextHeightLarge() {
+        return getUIFont().getLineHeight(getUITextSizeLarge());
+    }
+
+    public static float getUITextHeightSmall() {
+        return getUIFont().getLineHeight(getUITextSizeSmall());
     }
 
     public static float getUITextHeight(float textSize) {
         return getUIFont().getLineHeight(textSize);
     }
 
-    public static float getUITextWidth(@NotNull Component text) {
+    public static float getUITextWidthNormal(@NotNull Component text) {
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
+    }
+
+    public static float getUITextWidthLarge(@NotNull Component text) {
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeLarge());
+    }
+
+    public static float getUITextWidthSmall(@NotNull Component text) {
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeSmall());
     }
 
     public static float getUITextWidth(@NotNull String text) {

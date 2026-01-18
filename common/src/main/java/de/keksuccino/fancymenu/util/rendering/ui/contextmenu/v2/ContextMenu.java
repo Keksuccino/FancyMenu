@@ -73,9 +73,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private static final float OPEN_ANIMATION_MIN_SCALE = 0.78F;
     private long openAnimationStartMs = 0L;
     private boolean openAnimationActive = false;
+    protected int renderMouseX = 0;
+    protected int renderMouseY = 0;
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        this.renderMouseX = mouseX;
+        this.renderMouseY = mouseY;
 
         if (!this.isOpen()) return;
 
@@ -1009,7 +1014,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return true;
         }
         // If the menu is scrollable and the mouse is over it, consider it as navigating
-        if (this.needsScrolling && this.isOpen() && this.isMouseOverMenu(MouseInput.getMouseX(), MouseInput.getMouseY())) {
+        if (this.needsScrolling && this.isOpen() && this.isMouseOverMenu(this.renderMouseX, this.renderMouseY)) {
             return true;
         }
         return this.isHovered() || this.isUserNavigatingInSubMenu();
@@ -1112,7 +1117,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
 
+        LOGGER.info("################### context scroll 0");
+
         if (this.isOpen()) {
+
+            LOGGER.info("################### context scroll 1");
 
             if (this.needsScrolling && this.isMouseOverMenu(mouseX, mouseY)) {
                 // Close all sub-menus when scrolling in the parent menu
@@ -1125,6 +1134,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 float maxScrollPosition = this.rawHeight - (this.displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
                 this.scrollPosition = Math.max(0, Math.min(this.scrollPosition, maxScrollPosition));
 
+                LOGGER.info("################### context scroll 2");
+
                 return true; // We handled the scroll
             }
 
@@ -1132,6 +1143,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             for (ContextMenuEntry<?> e : this.entries) {
                 if (e instanceof SubMenuContextMenuEntry s) {
                     if (s.subContextMenu.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
+                        LOGGER.info("################### context scroll 3");
                         return true;
                     }
                 }
@@ -1635,15 +1647,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             int labelX = (int) (this.x + 10);
             if ((this.icon != null) || this.addSpaceForIcon) labelX += 20;
-            int labelY = (int) (this.y + (this.height / 2) - (UIBase.getUITextHeight() / 2));
+            int labelY = (int) (this.y + (this.height / 2) - (UIBase.getUITextHeightNormal() / 2));
             UIBase.renderText(graphics, this.getLabel(), labelX, labelY, this.getLabelColor());
 
             int shortcutTextWidth = 0;
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
-                shortcutTextWidth = (int) UIBase.getUITextWidth(shortcutText);
+                shortcutTextWidth = (int) UIBase.getUITextWidthSmall(shortcutText);
                 int shortcutX = (int) (this.x + this.width - 10 - shortcutTextWidth);
-                UIBase.renderText(graphics, shortcutText, shortcutX, labelY, this.getLabelColor(), UIBase.getUITextSizeSmall());
+                int shortcutY = (int) (this.y + (this.height / 2) - (UIBase.getUITextHeightSmall() / 2));
+                UIBase.renderText(graphics, shortcutText, shortcutX, shortcutY, this.getLabelColor(), UIBase.getUITextSizeSmall());
             }
 
             this.renderIcon(graphics);
@@ -1795,13 +1808,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public float getMinWidth() {
-            int i = (int) (UIBase.getUITextWidth(this.getLabel()) + 20);
+            int i = (int) (UIBase.getUITextWidthNormal(this.getLabel()) + 20);
             if (this.tooltipSupplier != null) {
                 i += 30;
             }
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
-                i += UIBase.getUITextWidth(shortcutText) + 30;
+                i += UIBase.getUITextWidthSmall(shortcutText) + 30;
             }
             if ((this.icon != null) || this.addSpaceForIcon) {
                 i += 20;

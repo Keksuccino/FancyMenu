@@ -73,7 +73,7 @@ public final class SmoothFont implements AutoCloseable {
         this.strikethroughOffset = metrics.getStrikethroughOffset();
         this.strikethroughThickness = metrics.getStrikethroughThickness();
 
-        this.lodGenerationSizes = new float[] {this.baseSize * 1.0F, this.baseSize * 2.0F, this.baseSize * 4.0F, this.baseSize * 8.0F};
+        this.lodGenerationSizes = new float[] {this.baseSize * 2.0F, this.baseSize * 4.0F, this.baseSize * 6.0F, this.baseSize * 8.0F};
         this.sources = new FontSource[baseFonts.size()];
         this.sourceLabels = normalizeLabels(sourceLabels, baseFonts.size());
         for (int i = 0; i < baseFonts.size(); i++) {
@@ -288,12 +288,12 @@ public final class SmoothFont implements AutoCloseable {
 
         private LodLevel createLodLevel(int lodIndex) {
             return switch (lodIndex) {
-                // LOD 0: Tiny (1x scale, starts with 256px atlas)
-                case 0 -> new LodLevel(parent, rawFont, baseSize * 1.0F, 256, debugName, "_tiny", "tiny", sourceLabel, sourceIndex);
-                // LOD 1: Small (2x scale, starts with 512px atlas)
-                case 1 -> new LodLevel(parent, rawFont, baseSize * 2.0F, 512, debugName, "_small", "small", sourceLabel, sourceIndex);
-                // LOD 2: Medium (4x scale, starts with 512px atlas)
-                case 2 -> new LodLevel(parent, rawFont, baseSize * 4.0F, 512, debugName, "_medium", "medium", sourceLabel, sourceIndex);
+                // LOD 0: Tiny (2x scale, starts with 512px atlas)
+                case 0 -> new LodLevel(parent, rawFont, baseSize * 2.0F, 512, debugName, "_tiny", "tiny", sourceLabel, sourceIndex);
+                // LOD 1: Small (4x scale, starts with 1024px atlas)
+                case 1 -> new LodLevel(parent, rawFont, baseSize * 4.0F, 1024, debugName, "_small", "small", sourceLabel, sourceIndex);
+                // LOD 2: Medium (6x scale, starts with 1024px atlas)
+                case 2 -> new LodLevel(parent, rawFont, baseSize * 6.0F, 1024, debugName, "_medium", "medium", sourceLabel, sourceIndex);
                 // LOD 3: Large (8x scale, starts with 1024px atlas)
                 case 3 -> new LodLevel(parent, rawFont, baseSize * 8.0F, 1024, debugName, "_large", "large", sourceLabel, sourceIndex);
                 default -> throw new IllegalArgumentException("Invalid LOD index: " + lodIndex);

@@ -1118,9 +1118,9 @@ public class Property<T> {
                             resolved.set(call);
                         }
                     }
-                    builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                 });
-                builder.openContextMenuScreen(s);
+                contextMenu.closeMenuChain();
+                ActionScriptEditorScreen.openInWindow(s);
             } else if (entry.getStackMeta().isFirstInStack()) {
                 List<GenericExecutableBlock> blocks = ObjectUtils.getOfAll(GenericExecutableBlock.class,
                         builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null),
@@ -1145,14 +1145,15 @@ public class Property<T> {
                             }
                         }
                     }
-                    builder.openContextMenuScreen(builder.getContextMenuCallbackScreen());
                 });
                 if (allEqual) {
-                    builder.openContextMenuScreen(s);
+                    contextMenu.closeMenuChain();
+                    ActionScriptEditorScreen.openInWindow(s);
                 } else {
                     Dialogs.openMessageWithCallback(Component.translatable("fancymenu.actions.multiselect.warning.override"), MessageDialogStyle.WARNING, call -> {
                         if (call) {
-                            builder.openContextMenuScreen(s);
+                            contextMenu.closeMenuChain();
+                            ActionScriptEditorScreen.openInWindow(s);
                         }
                     });
                 }

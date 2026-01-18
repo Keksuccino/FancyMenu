@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.TextEditorFormattingRules;
@@ -182,7 +183,6 @@ public class TextEditorScreen extends PiPScreen {
         this.placeholderMenuWidth = Math.min(300, Math.max(120, (int)((double)this.width / 3.5D)));
 
         this.updateRightClickContextMenu();
-        this.addWidget(this.rightClickContextMenu);
 
         this.verticalScrollBar.scrollAreaStartX = this.getEditorAreaX() + 1;
         this.verticalScrollBar.scrollAreaStartY = this.getEditorAreaY() + 1;
@@ -409,8 +409,6 @@ public class TextEditorScreen extends PiPScreen {
         this.doneButton.render(graphics, mouseX, mouseY, partial);
 
         this.renderMultilineNotSupportedNotification(graphics, mouseX, mouseY, partial);
-
-        this.rightClickContextMenu.render(graphics, mouseX, mouseY, partial);
 
         this.tickMouseHighlighting();
 
@@ -1583,7 +1581,7 @@ public class TextEditorScreen extends PiPScreen {
                     }
                     if (button == 1) {
                         this.selectedHoveredOnRightClickMenuOpen = this.isHighlightedTextHovered();
-                        this.rightClickContextMenu.openMenuAtMouse();
+                        ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.rightClickContextMenu);
                     } else if (this.rightClickContextMenu.isOpen() && !this.rightClickContextMenu.isHovered()) {
                         this.rightClickContextMenu.closeMenu();
                         //Call mouseClicked of lines after closing the menu, so the focused focusedLineIndex and cursor pos gets updated

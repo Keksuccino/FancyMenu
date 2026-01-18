@@ -308,7 +308,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         RenderSystem.enableBlend();
         graphics.pose().pushPose();
         this.enableComponentScissor(graphics, (int) scissorX, (int) scissorY, (int) labelDisplayWidth + 1, (int) this.getTitleBarHeight() + 2, true);
-        UIBase.renderText(graphics, this.displayLabel, (int)(titleBarX + 3), (int)(titleBarY + (this.getTitleBarHeight() / 2f) - (UIBase.getUITextHeight() / 2f)));
+        UIBase.renderText(graphics, this.displayLabel, (int)(titleBarX + 3), (int)(titleBarY + (this.getTitleBarHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f)));
         this.disableComponentScissor(graphics);
         graphics.pose().popPose();
         RenderingUtils.resetShaderColor(graphics);

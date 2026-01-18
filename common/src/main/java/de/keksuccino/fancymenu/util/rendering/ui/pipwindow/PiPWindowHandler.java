@@ -272,12 +272,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
                 enforceForceFocus();
                 return true;
             }
-            boolean allowScreenInput = isWindowFocused(window);
-            if (allowScreenInput) {
-                window.mouseClicked(mouseX, mouseY, button);
-            } else {
-                window.mouseClickedWithoutScreen(mouseX, mouseY, button);
-            }
+            window.mouseClicked(mouseX, mouseY, button);
             if (windows.contains(window)) {
                 PiPWindow topBlocking = getTopInputBlockingWindow();
                 if (topBlocking != null && topBlocking != window) {

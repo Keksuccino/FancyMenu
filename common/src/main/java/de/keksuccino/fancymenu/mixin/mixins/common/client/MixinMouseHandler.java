@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
+import org.apache.logging.log4j.LogManager;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,21 +34,21 @@ public class MixinMouseHandler {
     @Unique private final Minecraft mc_FancyMenu = Minecraft.getInstance();
 
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
-    private void head_onScroll_FancyMenu(long windowPointer, double xOffset, double yOffset, CallbackInfo info) {
+    private void head_onScroll_FancyMenu(long windowPointer, double scrollX, double scrollY, CallbackInfo info) {
         if (windowPointer == Minecraft.getInstance().getWindow().getWindow()) {
-            Minecraft mc = Minecraft.getInstance();
-            boolean bl = mc.options.discreteMouseScroll().get();
-            double d = mc.options.mouseWheelSensitivity().get();
-            double e = (bl ? Math.signum(xOffset) : xOffset) * d;
-            double f = (bl ? Math.signum(yOffset) : yOffset) * d;
-            double g = this.xpos * (double) mc.getWindow().getGuiScaledWidth() / (double) mc.getWindow().getScreenWidth();
-            double h = this.ypos * (double) mc.getWindow().getGuiScaledHeight() / (double) mc.getWindow().getScreenHeight();
-            if (ScreenOverlayHandler.INSTANCE.mouseScrolled(g, h, e, f)) info.cancel();
+            boolean isDiscrete = mc_FancyMenu.options.discreteMouseScroll().get();
+            double wheelSensitivity = mc_FancyMenu.options.mouseWheelSensitivity().get();
+            double scrollDeltaX = (isDiscrete ? Math.signum(scrollX) : scrollX) * wheelSensitivity;
+            double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
+            double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
+            double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
+            LogManager.getLogger().info("##################### SCROLL");
+            if (ScreenOverlayHandler.INSTANCE.mouseScrolled(mX, mY, scrollDeltaX, scrollDeltaY)) info.cancel();
         }
     }
 
     @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDDD)Z"), cancellable = true)
-    private void before_mouseScrolled_in_onScroll_FancyMenu(long $$0, double scrollX, double scrollY, CallbackInfo info) {
+    private void before_mouseScrolled_in_onScroll_FancyMenu(long windowPointer, double scrollX, double scrollY, CallbackInfo info) {
         boolean isDiscrete = mc_FancyMenu.options.discreteMouseScroll().get();
         double wheelSensitivity = mc_FancyMenu.options.mouseWheelSensitivity().get();
         double scrollDeltaX = (isDiscrete ? Math.signum(scrollX) : scrollX) * wheelSensitivity;

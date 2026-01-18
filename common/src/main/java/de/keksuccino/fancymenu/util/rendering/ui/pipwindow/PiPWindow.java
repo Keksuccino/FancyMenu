@@ -577,11 +577,14 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return this;
         }
         if (this.screen != null) {
+            if (screen == Minecraft.getInstance().screen) {
+                return this; // We never open screens as PiP while they are open as actual screens
+            }
             if (this.screen instanceof PipableScreen ps) {
                 ps.setWindow(null);
                 ps.onScreenClosed();
             }
-            this.screen.removed(); // legacy support for non-PiP screens
+            this.screen.removed(); // Legacy support for non-PiP screens
         }
         this.screen = screen;
         if (this.screen != null) {

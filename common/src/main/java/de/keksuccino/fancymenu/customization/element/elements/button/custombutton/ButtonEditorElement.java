@@ -37,9 +37,9 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                             this.editor.history.saveSnapshot();
                             this.element.actionExecutor = call;
                         }
-                        this.openContextMenuScreen(this.editor);
                     });
-                    this.openContextMenuScreen(s);
+                    menu.closeMenuChain();
+                    ActionScriptEditorScreen.openInWindow(s);
                 }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);

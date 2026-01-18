@@ -737,8 +737,8 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         @Override
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
-            this.setWidth((int)UIBase.getUITextWidth(this.text));
-            this.setHeight((int)UIBase.getUITextHeight());
+            this.setWidth((int)UIBase.getUITextWidthNormal(this.text));
+            this.setHeight((int)UIBase.getUITextHeightNormal());
         }
 
         @NotNull

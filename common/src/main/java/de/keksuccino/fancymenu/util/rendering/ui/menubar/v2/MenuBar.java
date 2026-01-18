@@ -750,7 +750,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 ResourceLocation loc = (iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION;
                 graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
             } else {
-                UIBase.renderText(graphics, label, this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + ((float)HEIGHT / 2) - (UIBase.getUITextHeight() / 2), this.getLabelColor());
+                UIBase.renderText(graphics, label, this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + ((float)HEIGHT / 2) - (UIBase.getUITextHeightNormal() / 2), this.getLabelColor());
             }
             UIBase.resetShaderColor(graphics);
         }
@@ -769,7 +769,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             if (iconTexture != null) {
                 return iconTexture.getAspectRatio().getAspectRatioWidth(HEIGHT);
             }
-            return (int) (UIBase.getUITextWidth(label) + (ENTRY_LABEL_SPACE_LEFT_RIGHT * 2));
+            return (int) (UIBase.getUITextWidthNormal(label) + (ENTRY_LABEL_SPACE_LEFT_RIGHT * 2));
         }
 
         @Override

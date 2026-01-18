@@ -6,6 +6,9 @@ import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.LogicExecutorScreen;
@@ -30,7 +33,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class ChooseActionScreen extends Screen implements InitialWidgetFocusScreen {
+public class ChooseActionScreen extends PiPScreen implements InitialWidgetFocusScreen {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     protected final ActionInstance instance;
     protected Consumer<ActionInstance> callback;
@@ -99,6 +105,7 @@ public class ChooseActionScreen extends Screen implements InitialWidgetFocusScre
 
         ExtendedButton cancelButton = new ExtendedButton(cancelButtonX, cancelButtonY, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(null);
+            this.closeWindow();
         });
         this.addRenderableWidget(cancelButton);
         UIBase.applyDefaultWidgetSkinTo(cancelButton);
@@ -117,13 +124,22 @@ public class ChooseActionScreen extends Screen implements InitialWidgetFocusScre
         if (this.instance.action == Action.EMPTY) return;
         this.originalAction = null;
         this.originalActionValue = null;
+        Screen baseScreen = Minecraft.getInstance().screen;
+        PiPWindow window = this.getWindow();
         this.instance.action.editValue(LogicExecutorScreen.build(() -> {
             if (this.canClickDone()) {
                 this.onDone();
             } else {
-                Minecraft.getInstance().setScreen(this);
+                this.restoreWindowAfterValueEdit();
+            }
+            if ((baseScreen != null) && (Minecraft.getInstance().screen != baseScreen)) {
+                Minecraft.getInstance().setScreen(baseScreen);
             }
         }), this.instance);
+        Screen newScreen = Minecraft.getInstance().screen;
+        if (window != null && baseScreen != null && baseScreen != newScreen) {
+            window.setVisible(false);
+        }
     }
 
     protected boolean hasValue() {
@@ -132,6 +148,7 @@ public class ChooseActionScreen extends Screen implements InitialWidgetFocusScre
 
     protected void onDone() {
         this.callback.accept((this.instance.action != Action.EMPTY) ? this.instance : null);
+        this.closeWindow();
     }
 
     protected boolean canClickDone() {
@@ -152,7 +169,7 @@ public class ChooseActionScreen extends Screen implements InitialWidgetFocusScre
     }
 
     @Override
-    public void onClose() {
+    public void onWindowClosedExternally() {
         this.callback.accept(null);
     }
 
@@ -178,6 +195,14 @@ public class ChooseActionScreen extends Screen implements InitialWidgetFocusScre
 
     @Override
     public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
+    private void restoreWindowAfterValueEdit() {
+        PiPWindow window = this.getWindow();
+        if (window != null && !window.isVisible()) {
+            window.setVisible(true);
+            PiPWindowHandler.INSTANCE.bringToFront(window);
+        }
     }
 
     protected void setDescription(@Nullable Action action) {
