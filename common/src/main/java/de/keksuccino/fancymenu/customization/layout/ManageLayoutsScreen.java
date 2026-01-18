@@ -213,7 +213,7 @@ public class ManageLayoutsScreen extends Screen {
 
         protected void updateName() {
             Style style = this.layout.getStatus().getValueComponentStyle();
-            MutableComponent c = Component.literal(layout.getLayoutName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt()));
+            MutableComponent c = Component.literal(layout.getLayoutName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
             c.append(Component.literal(" (").setStyle(style));
             c.append(this.layout.getStatus().getValueComponent());
             c.append(Component.literal(")").setStyle(style));

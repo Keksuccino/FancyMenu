@@ -330,7 +330,7 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
             }
 
             this.currentDirectoryComponent.setShadow(false);
-            this.currentDirectoryComponent.setBaseColorSupplier(consumes -> UIBase.getUITheme().description_area_text_color);
+            this.currentDirectoryComponent.setBaseColorSupplier(consumes -> UIBase.getUITheme().ui_interface_widget_label_color_normal);
             this.addWidget(this.currentDirectoryComponent);
 
         } catch (Exception ex) {

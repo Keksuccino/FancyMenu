@@ -20,6 +20,9 @@ import java.util.function.Consumer;
 
 public class ColorPickerScreen extends PiPScreen {
 
+    public static final int PIP_WINDOW_WIDTH = 391;
+    public static final int PIP_WINDOW_HEIGHT = 328;
+
     private static final int MIN_PICKER_SIZE = 80;
     private static final int MAX_PICKER_SIZE = 260;
     private static final int SLIDER_HEIGHT = 12;

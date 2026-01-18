@@ -521,18 +521,18 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
                         for (String s : lines) {
                             line++;
                             if (line < 70) {
-                                TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())), (entry) -> {});
+                                TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())), (entry) -> {});
                                 e.setSelectable(false);
                                 e.setBackgroundColorHover(e.getBackgroundColorNormal());
                                 e.setPlayClickSound(false);
                                 this.previewTextScrollArea.addEntry(e);
                             } else {
-                                TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal("......").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())), (entry) -> {});
+                                TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal("......").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())), (entry) -> {});
                                 e.setSelectable(false);
                                 e.setBackgroundColorHover(e.getBackgroundColorNormal());
                                 e.setPlayClickSound(false);
                                 this.previewTextScrollArea.addEntry(e);
-                                TextScrollAreaEntry e2 = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal("  ").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())), (entry) -> {});
+                                TextScrollAreaEntry e2 = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal("  ").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())), (entry) -> {});
                                 e2.setSelectable(false);
                                 e2.setBackgroundColorHover(e2.getBackgroundColorNormal());
                                 e2.setPlayClickSound(false);
@@ -560,7 +560,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         if (this.previewAudioSupplier != null) return;
         if (this.previewTextScrollArea == null) return;
         this.previewTextScrollArea.clearEntries();
-        TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())), (entry) -> {});
+        TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())), (entry) -> {});
         e.setSelectable(false);
         e.setBackgroundColorHover(e.getBackgroundColorNormal());
         e.setPlayClickSound(false);
@@ -999,7 +999,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
             if (this.isResourceUnfriendly()) {
                 return UIBase.getUITheme().error_text_color.getColorInt();
             }
-            return UIBase.getUITheme().description_area_text_color.getColorInt();
+            return UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
         }
 
         @Override

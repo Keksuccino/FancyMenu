@@ -1007,12 +1007,6 @@ public class CustomizationOverlayUI {
                 }))
                 .setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
-        userInterfaceMenu.addValueCycleEntry("ui_text_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_text_shadow", FancyMenu.getOptions().enableUiTextShadow.getValue())
-                .addCycleListener(cycle -> {
-                    FancyMenu.getOptions().enableUiTextShadow.setValue(cycle.getAsBoolean());
-                }))
-                .setIcon(ContextMenu.IconFactory.getIcon("shadow"));
-
         userInterfaceMenu.addValueCycleEntry("ui_click_sounds", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_click_sounds", FancyMenu.getOptions().playUiClickSounds.getValue())
                 .addCycleListener(cycle -> {
                     if (cycle.getAsBoolean()) {

@@ -447,7 +447,7 @@ public class ActionScriptEditorScreen extends Screen {
         }
         UITheme theme = UIBase.getUITheme();
         Style hintStyle = Style.EMPTY
-                .withColor(theme.description_area_text_color.getColorInt())
+                .withColor(theme.ui_interface_widget_label_color_normal.getColorInt())
                 .withItalic(true);
         Component hint = Component.translatable(isFavorite ? "fancymenu.actions.favorite.remove" : "fancymenu.actions.favorite.add").setStyle(hintStyle);
         if (!lines.isEmpty()) {
@@ -864,7 +864,7 @@ public class ActionScriptEditorScreen extends Screen {
                 dY = (int)(this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight() - 1);
                 dH = 1;
             }
-            graphics.fill((int)this.scriptEntriesScrollArea.getInnerX(), dY + dH - 1, (int)(this.scriptEntriesScrollArea.getInnerX() + this.scriptEntriesScrollArea.getInnerWidth()), dY + dH, theme.description_area_text_color.getColorInt());
+            graphics.fill((int)this.scriptEntriesScrollArea.getInnerX(), dY + dH - 1, (int)(this.scriptEntriesScrollArea.getInnerX() + this.scriptEntriesScrollArea.getInnerWidth()), dY + dH, theme.ui_interface_widget_label_color_normal.getColorInt());
         }
 
         this.renderChainMinimap(graphics);
@@ -969,7 +969,7 @@ public class ActionScriptEditorScreen extends Screen {
             if (this.selectedEntry == entry) {
                 UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_selected_color, true, true, true, true);
             } else if (activeHoverEntry == entry) {
-                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.description_area_text_color, true, true, true, true);
+                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.ui_interface_widget_label_color_normal, true, true, true, true);
             }
         }
         if (!hoverChain.isEmpty()) {
@@ -2934,7 +2934,7 @@ public class ActionScriptEditorScreen extends Screen {
             this.valueLabelComponent = null;
             this.valueOnlyComponent = null;
             if (this.executable instanceof ActionInstance i) {
-                this.displayNameComponent = i.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.displayNameComponent = i.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.updateValueComponent();
             } else if (this.executable instanceof IfExecutableBlock b) {
                 String requirements = "";
@@ -2946,7 +2946,7 @@ public class ActionScriptEditorScreen extends Screen {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
-                MutableComponent display = Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent display = Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
                 }
@@ -2962,10 +2962,10 @@ public class ActionScriptEditorScreen extends Screen {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
-                this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof ElseExecutableBlock) {
-                this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else").setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof WhileExecutableBlock b) {
                 String requirements = "";
@@ -2977,21 +2977,21 @@ public class ActionScriptEditorScreen extends Screen {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
-                MutableComponent display = Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent display = Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
                 }
                 this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof DelayExecutableBlock b) {
-                MutableComponent display = Component.translatable("fancymenu.actions.blocks.delay", Component.literal(b.getDelayMsRaw())).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent display = Component.translatable("fancymenu.actions.blocks.delay", Component.literal(b.getDelayMsRaw())).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
                 }
                 this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof FolderExecutableBlock folder) {
-                MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.actions.blocks.folder.display", "")).setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.actions.blocks.folder.display", "")).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 MutableComponent nameComponent = Component.literal(folder.getName()).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.folderLabelComponent = labelComponent;
                 this.folderNameComponent = nameComponent;
@@ -3360,10 +3360,10 @@ public class ActionScriptEditorScreen extends Screen {
             graphics.fill(x, y, x + size, y + size, background.getRGB());
             UIBase.renderBorder(graphics, x, y, x + size, y + size, 1, theme.actions_chain_indicator_color, true, true, true, true);
             int midY = y + (size / 2);
-            graphics.fill(x + 2, midY - 1, x + size - 2, midY + 1, theme.description_area_text_color.getColorInt());
+            graphics.fill(x + 2, midY - 1, x + size - 2, midY + 1, theme.ui_interface_widget_label_color_normal.getColorInt());
             if (collapsed) {
                 int midX = x + (size / 2);
-                graphics.fill(midX - 1, y + 2, midX + 1, y + size - 2, theme.description_area_text_color.getColorInt());
+                graphics.fill(midX - 1, y + 2, midX + 1, y + size - 2, theme.ui_interface_widget_label_color_normal.getColorInt());
             }
         }
 
@@ -3389,7 +3389,7 @@ public class ActionScriptEditorScreen extends Screen {
                 String cachedValue = i.value;
                 boolean hasValue = i.action.hasValue();
                 String valueString = ((cachedValue != null) && hasValue) ? cachedValue : I18n.get("fancymenu.actions.screens.manage_screen.info.value.none");
-                MutableComponent label = Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(theme.description_area_text_color.getColorInt()));
+                MutableComponent label = Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 MutableComponent value = Component.literal(valueString).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.valueLabelComponent = label;
                 this.valueOnlyComponent = value;

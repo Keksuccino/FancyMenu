@@ -273,7 +273,7 @@ public class ManageRequirementsScreen extends Screen {
         public RequirementGroup group;
 
         public RequirementGroupEntry(ScrollArea parent, RequirementGroup group) {
-            super(parent, Component.literal(group.identifier).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())).append(Component.literal(" (" + I18n.get("fancymenu.requirements.screens.manage_screen.group.info", "" + group.getInstances().size()) + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))), UIBase.getUITheme().bullet_list_dot_color_3, (entry) -> {});
+            super(parent, Component.literal(group.identifier).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())).append(Component.literal(" (" + I18n.get("fancymenu.requirements.screens.manage_screen.group.info", "" + group.getInstances().size()) + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))), UIBase.getUITheme().bullet_list_dot_color_3, (entry) -> {});
             this.group = group;
             this.setHeight(this.getHeight() + (HEADER_FOOTER_HEIGHT * 2));
         }
@@ -298,11 +298,11 @@ public class ManageRequirementsScreen extends Screen {
             this.instance = instance;
             this.lineHeight = lineHeight;
 
-            this.displayNameComponent = Component.literal(this.instance.requirement.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt()));
+            this.displayNameComponent = Component.literal(this.instance.requirement.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
             String modeString = (this.instance.mode == RequirementInstance.RequirementMode.IF) ? I18n.get("fancymenu.requirements.screens.requirement.info.mode.normal") : I18n.get("fancymenu.requirements.screens.requirement.info.mode.opposite");
-            this.modeComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.mode") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())).append(Component.literal(modeString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())));
+            this.modeComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.mode") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())).append(Component.literal(modeString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())));
             String valueString = (this.instance.value != null) ? this.instance.value : I18n.get("fancymenu.requirements.screens.requirement.info.value.none");
-            this.valueComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())));
+            this.valueComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())));
 
             this.setWidth(this.calculateWidth());
             this.setHeight((lineHeight * 3) + (HEADER_FOOTER_HEIGHT * 2));

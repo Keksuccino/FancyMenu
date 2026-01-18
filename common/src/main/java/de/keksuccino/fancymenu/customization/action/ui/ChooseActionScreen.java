@@ -211,7 +211,7 @@ public class ChooseActionScreen extends Screen implements InitialWidgetFocusScre
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
-            e.setTextBaseColor(UIBase.getUITheme().description_area_text_color.getColorInt());
+            e.setTextBaseColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
             this.descriptionScrollArea.addEntry(e);
         });
     }

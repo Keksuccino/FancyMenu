@@ -281,7 +281,7 @@ public class ManageListenersScreen extends CellScreen {
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_1.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.screens.manage_screen.info.value.none")
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
         }
         
         return lines;
@@ -307,7 +307,7 @@ public class ManageListenersScreen extends CellScreen {
             lines.add(Component.literal(indent + "    ◦ ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_1.getColorInt()))
                     .append(Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ")
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())))
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())))
                     .append(Component.literal(valueString)
                             .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
             

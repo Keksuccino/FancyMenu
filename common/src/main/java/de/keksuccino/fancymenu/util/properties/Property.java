@@ -802,8 +802,8 @@ public class Property<T> {
                                 PiPWindow window = new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"))
                                         .setScreen(picker)
                                         .setForceFancyMenuUiScale(true)
-                                        .setMinSize(375, 300)
-                                        .setSize(375, 300);
+                                        .setMinSize(ColorPickerScreen.PIP_WINDOW_WIDTH, ColorPickerScreen.PIP_WINDOW_HEIGHT)
+                                        .setSize(ColorPickerScreen.PIP_WINDOW_WIDTH, ColorPickerScreen.PIP_WINDOW_HEIGHT);
                                 PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
                             })
                     .setStackable(true)

@@ -242,7 +242,7 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
         public Variable variable;
 
         public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
+            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
             this.variable = variable;
         }
 

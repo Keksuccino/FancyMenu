@@ -110,7 +110,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.scrollArea.setY(this.getRealBodyY());
         this.scrollArea.setWidth(this.getBodyWidth());
         this.scrollArea.setHeight(this.getBodyHeight());
-        this.scrollArea.setApplyScissor(false);
         this.scrollArea.horizontalScrollBar.active = false;
         this.scrollArea.makeEntriesWidthOfArea = true;
         this.scrollArea.makeAllEntriesWidthOfWidestEntry = false;
@@ -145,7 +144,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             fillF(graphics, this.scrollArea.getInnerX(), indicatorY - DROP_INDICATOR_THICKNESS/2f,
                     this.scrollArea.getInnerX() + this.scrollArea.getInnerWidth(),
                     indicatorY + DROP_INDICATOR_THICKNESS/2f,
-                    UIBase.getUITheme().element_border_color_hover.getColorInt());
+                    UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_border_color.getColorInt() : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt());
 
         }
 

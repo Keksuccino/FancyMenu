@@ -155,7 +155,7 @@ public class ChoosePanoramaScreen extends Screen {
         public String panorama;
 
         public PanoramaScrollEntry(ScrollArea parent, @NotNull String panorama, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(panorama).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
+            super(parent, Component.literal(panorama).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
             this.panorama = panorama;
         }
 

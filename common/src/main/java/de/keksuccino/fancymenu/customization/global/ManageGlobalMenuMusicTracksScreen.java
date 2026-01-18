@@ -35,7 +35,7 @@ public class ManageGlobalMenuMusicTracksScreen extends CellScreen {
 
         if (this.cachedTracks.isEmpty()) {
             this.addLabelCell(Component.translatable("fancymenu.global_customizations.menu_music_tracks.empty")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().description_area_text_color.getColorInt())));
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())));
         } else {
             for (String source : this.cachedTracks) {
                 String display = ResourceSourceType.getWithoutSourcePrefix(source);

@@ -173,7 +173,6 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         updateResizeCursor(mouseX, mouseY);
 
         RenderingUtils.setDepthTestLocked(false);
-        RenderSystem.enableDepthTest();
 
     }
 

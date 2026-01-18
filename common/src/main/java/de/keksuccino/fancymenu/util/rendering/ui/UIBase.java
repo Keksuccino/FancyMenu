@@ -35,20 +35,28 @@ public class UIBase extends RenderingUtils {
         return Objects.requireNonNull(SmoothFonts.NOTO_SANS.get());
     }
 
-    public static float getUITextSize() {
+    public static float getUITextSizeNormal() {
         return SmoothFonts.DEFAULT_TEXT_SIZE;
     }
 
+    public static float getUITextSizeLarge() {
+        return getUITextSizeNormal() + 5;
+    }
+
+    public static float getUITextSizeSmall() {
+        return Math.max(3, getUITextSizeNormal() - 3);
+    }
+
     public static float getUITextHeight() {
-        return getUIFont().getLineHeight(getUITextSize());
+        return getUIFont().getLineHeight(getUITextSizeNormal());
     }
 
     public static float getUITextWidth(@NotNull Component text) {
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSize());
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
     }
 
     public static float getUITextWidth(@NotNull String text) {
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSize());
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
     }
 
     /**
@@ -109,7 +117,7 @@ public class UIBase extends RenderingUtils {
             slider.setLabelColorNormal(UIBase.getUITheme().ui_interface_widget_label_color_normal);
             slider.setLabelColorInactive(UIBase.getUITheme().ui_interface_widget_label_color_inactive);
         }
-        slider.setLabelShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
+        slider.setLabelShadow(false);
         slider.setRoundedColorBackgroundEnabled(true);
         return slider;
     }
@@ -121,7 +129,7 @@ public class UIBase extends RenderingUtils {
         editBoxSuggestions.setBackgroundColor(UIBase.getUITheme().input_field_suggestions_background_color);
         editBoxSuggestions.setNormalTextColor(UIBase.getUITheme().input_field_suggestions_text_color_normal);
         editBoxSuggestions.setSelectedTextColor(UIBase.getUITheme().input_field_suggestions_text_color_selected);
-        editBoxSuggestions.setTextShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
+        editBoxSuggestions.setTextShadow(false);
         return editBoxSuggestions;
     }
 
@@ -173,7 +181,7 @@ public class UIBase extends RenderingUtils {
             button.setLabelBaseColorNormal(UIBase.getUITheme().ui_interface_widget_label_color_normal);
             button.setLabelBaseColorInactive(UIBase.getUITheme().ui_interface_widget_label_color_inactive);
         }
-        button.setLabelShadowEnabled(FancyMenu.getOptions().enableUiTextShadow.getValue());
+        button.setLabelShadowEnabled(false);
         button.setRoundedColorBackgroundEnabled(true);
         return button;
     }
@@ -328,14 +336,14 @@ public class UIBase extends RenderingUtils {
      * Draws a label component with the given base color.
      */
     public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor) {
-        return renderText(graphics, text, x, y, baseColor, FancyMenu.getOptions().enableUiTextShadow.getValue());
+        return renderText(graphics, text, x, y, baseColor, getUITextSizeNormal());
     }
 
     /**
-     * Draws a label component with the given base color and shadow state.
+     * Draws a label component with the given base color, text size, and shadow state.
      */
-    public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, boolean shadow) {
-        return SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, getUITextSize(), shadow);
+    public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, float textSize) {
+        return SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, false);
     }
 
 }
