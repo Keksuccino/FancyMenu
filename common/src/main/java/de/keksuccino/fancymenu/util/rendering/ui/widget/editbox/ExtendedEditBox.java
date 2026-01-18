@@ -22,6 +22,7 @@ import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -55,6 +56,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     @Nullable
     protected String inputSuffix;
     protected boolean deleteAllAllowed = true;
+    protected boolean leftMouseDown = false;
     @Nullable
     protected ConsumingSupplier<ExtendedEditBox, Boolean> isActiveSupplier = null;
     @Nullable
@@ -523,13 +525,30 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!this.canConsumeUserInput) return false;
-        return super.mouseClicked(mouseX, mouseY, button);
+        boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        if (handled && button == 0) this.leftMouseDown = true;
+        return handled;
     }
 
     //This is to make the edit box work in FocuslessEventHandlers
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        this.leftMouseDown = false;
         return false;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (!this.canConsumeUserInput) return false;
+        if (!this.leftMouseDown || (button != 0)) return false;
+        int localX = Mth.floor(mouseX) - this.getX();
+        if (((IMixinEditBox)this).getBorderedFancyMenu()) {
+            localX -= 4;
+        }
+        String visibleText = this.font.plainSubstrByWidth(this.getValue().substring(this.getDisplayPosition()), this.getInnerWidth());
+        int targetPos = this.font.plainSubstrByWidth(visibleText, localX).length() + this.getDisplayPosition();
+        this.moveCursorTo(targetPos, true);
+        return true;
     }
 
     @Override

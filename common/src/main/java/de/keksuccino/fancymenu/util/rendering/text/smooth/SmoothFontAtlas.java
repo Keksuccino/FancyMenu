@@ -46,10 +46,8 @@ final class SmoothFontAtlas implements AutoCloseable {
     private DynamicTexture dynamicTexture;
     private ResourceLocation textureLocation;
     private int textureId;
-    private int logicalWidth;
-    private int logicalHeight;
-    private volatile int gpuWidth;
-    private volatile int gpuHeight;
+    private volatile int logicalWidth;
+    private volatile int logicalHeight;
     private int cursorX;
     private int cursorY;
     private int rowHeight;
@@ -68,16 +66,14 @@ final class SmoothFontAtlas implements AutoCloseable {
 
         this.logicalWidth = this.initialSize;
         this.logicalHeight = this.initialSize;
-        this.gpuWidth = this.initialSize;
-        this.gpuHeight = this.initialSize;
     }
 
     int getWidth() {
-        return gpuWidth;
+        return logicalWidth;
     }
 
     int getHeight() {
-        return gpuHeight;
+        return logicalHeight;
     }
 
     float getEffectiveSdfRange() {
@@ -184,8 +180,19 @@ final class SmoothFontAtlas implements AutoCloseable {
             return;
         }
 
+        LOGGER.info("[FANCYMENU] Resizing smooth font atlas '{}' ({}): {}x{} -> {}x{}", debugName, lodLabel, logicalWidth, logicalHeight, targetWidth, targetHeight);
+
         NativeImage newImage = new NativeImage(NativeImage.Format.RGBA, targetWidth, targetHeight, true);
-        newImage.copyFrom(atlasImage);
+        
+        // Manual copy to avoid potential issues with NativeImage.copyFrom
+        int oldWidth = atlasImage.getWidth();
+        int oldHeight = atlasImage.getHeight();
+        for (int y = 0; y < oldHeight; y++) {
+            for (int x = 0; x < oldWidth; x++) {
+                newImage.setPixelRGBA(x, y, atlasImage.getPixelRGBA(x, y));
+            }
+        }
+        
         atlasImage.close();
         atlasImage = newImage;
         logicalWidth = targetWidth;
@@ -198,8 +205,6 @@ final class SmoothFontAtlas implements AutoCloseable {
         Runnable uploadTask = () -> {
             TextureUtil.prepareImage(dynamicTexture.getId(), finalTargetWidth, finalTargetHeight);
             dynamicTexture.upload();
-            this.gpuWidth = finalTargetWidth;
-            this.gpuHeight = finalTargetHeight;
             applyLinearFilter();
         };
 
@@ -338,8 +343,6 @@ final class SmoothFontAtlas implements AutoCloseable {
             }
             this.logicalWidth = initialSize;
             this.logicalHeight = initialSize;
-            this.gpuWidth = initialSize;
-            this.gpuHeight = initialSize;
 
             this.atlasImage = new NativeImage(NativeImage.Format.RGBA, logicalWidth, logicalHeight, true);
             this.dynamicTexture = new DynamicTexture(atlasImage);

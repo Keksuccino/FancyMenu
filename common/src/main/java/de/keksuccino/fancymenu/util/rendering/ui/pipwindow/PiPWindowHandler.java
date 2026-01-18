@@ -235,6 +235,13 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             if (forcedWindow.isMouseOver(mouseX, mouseY)) {
                 forcedWindow.mouseClicked(mouseX, mouseY, button);
                 if (windows.contains(forcedWindow)) {
+                    PiPWindow topBlocking = getTopInputBlockingWindow();
+                    if (topBlocking != null && topBlocking != forcedWindow) {
+                        activePointerWindow = forcedWindow;
+                        activePointerButton = button;
+                        enforceForceFocus();
+                        return true;
+                    }
                     bringToFront(forcedWindow);
                     activePointerWindow = forcedWindow;
                     activePointerButton = button;
@@ -272,6 +279,13 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
                 window.mouseClickedWithoutScreen(mouseX, mouseY, button);
             }
             if (windows.contains(window)) {
+                PiPWindow topBlocking = getTopInputBlockingWindow();
+                if (topBlocking != null && topBlocking != window) {
+                    activePointerWindow = window;
+                    activePointerButton = button;
+                    enforceForceFocus();
+                    return true;
+                }
                 bringToFront(window);
                 focusedWindow = window;
                 activePointerWindow = window;

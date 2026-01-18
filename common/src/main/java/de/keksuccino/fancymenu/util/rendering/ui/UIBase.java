@@ -51,12 +51,24 @@ public class UIBase extends RenderingUtils {
         return getUIFont().getLineHeight(getUITextSizeNormal());
     }
 
+    public static float getUITextHeight(float textSize) {
+        return getUIFont().getLineHeight(textSize);
+    }
+
     public static float getUITextWidth(@NotNull Component text) {
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
     }
 
     public static float getUITextWidth(@NotNull String text) {
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
+    }
+
+    public static float getUITextWidth(@NotNull Component text, float textSize) {
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
+    }
+
+    public static float getUITextWidth(@NotNull String text, float textSize) {
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
     }
 
     /**

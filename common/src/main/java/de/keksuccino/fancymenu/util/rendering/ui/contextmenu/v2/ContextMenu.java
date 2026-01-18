@@ -1643,7 +1643,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             if (shortcutText != null) {
                 shortcutTextWidth = (int) UIBase.getUITextWidth(shortcutText);
                 int shortcutX = (int) (this.x + this.width - 10 - shortcutTextWidth);
-                UIBase.renderText(graphics, shortcutText, shortcutX, labelY, this.getLabelColor());
+                UIBase.renderText(graphics, shortcutText, shortcutX, labelY, this.getLabelColor(), UIBase.getUITextSizeSmall());
             }
 
             this.renderIcon(graphics);
