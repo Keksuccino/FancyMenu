@@ -137,6 +137,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
     protected boolean selectedHoveredOnRightClickMenuOpen = false;
     protected final TextEditorHistory history = new TextEditorHistory(this);
     protected ExtendedEditBox searchBar;
+    protected ExtendedEditBox goToLineField;
+    protected boolean isGoToLineOpen = false;
 
     private static final Comparator<Placeholder> PLACEHOLDER_DISPLAY_NAME_COMPARATOR = Comparator
             .comparing(Placeholder::getDisplayName, String.CASE_INSENSITIVE_ORDER)
@@ -200,6 +202,13 @@ public class TextEditorWindowBody extends PiPWindowBody {
         this.searchBar.setIsVisibleSupplier(consumes -> extendedPlaceholderMenu && this.allowPlaceholders);
         this.addRenderableWidget(this.searchBar);
         UIBase.applyDefaultWidgetSkinTo(this.searchBar, UIBase.shouldBlur());
+
+        this.goToLineField = new ExtendedEditBox(Minecraft.getInstance().font, this.getEditorAreaX() + this.getEditorAreaWidth() - 150 - 20, this.getEditorAreaY() + 5, 150, 20, Component.literal(""));
+        this.goToLineField.setHintFancyMenu(consumes -> Component.translatable("fancymenu.editor.shortcuts.go_to_line"));
+        this.goToLineField.setIsVisibleSupplier(consumes -> this.isGoToLineOpen);
+        this.goToLineField.setCharacterFilter(de.keksuccino.fancymenu.util.input.CharacterFilter.buildIntegerFilter());
+        this.addRenderableWidget(this.goToLineField);
+        UIBase.applyDefaultWidgetSkinTo(this.goToLineField, UIBase.shouldBlur());
 
         this.verticalScrollBarPlaceholderMenu.scrollAreaStartX = this.getPlaceholderAreaX() + 1;
         this.verticalScrollBarPlaceholderMenu.scrollAreaStartY = this.getPlaceholderAreaY() + 1;
@@ -1015,18 +1024,13 @@ public class TextEditorWindowBody extends PiPWindowBody {
                     currentLine.setValue(textBeforeCursor);
                     nextLine.setValue(textAfterCursor);
                     nextLine.moveCursorTo(0, false);
-                    //Add amount of spaces of the beginning of the old focusedLineIndex to the beginning of the new focusedLineIndex
-                    if (textBeforeCursor.startsWith(" ")) {
-                        int spaces = 0;
-                        for (char c : textBeforeCursor.toCharArray()) {
-                            if (String.valueOf(c).equals(" ")) {
-                                spaces++;
-                            } else {
-                                break;
-                            }
-                        }
-                        nextLine.setValue(textBeforeCursor.substring(0, spaces) + nextLine.getValue());
-                        nextLine.moveCursorTo(spaces, false);
+                    
+                    //Add indentation of the old line to the new line
+                    Matcher matcher = Pattern.compile("^(\\s+)").matcher(textBeforeCursor);
+                    if (matcher.find()) {
+                        String whitespace = matcher.group(1);
+                        nextLine.setValue(whitespace + nextLine.getValue());
+                        nextLine.moveCursorTo(whitespace.length(), false);
                     }
                 } else {
                     nextLine.moveCursorTo(this.lastCursorPosSetByUser, false);
@@ -1372,6 +1376,10 @@ public class TextEditorWindowBody extends PiPWindowBody {
             this.indentGuideRenderer.markDirty();
         }
 
+        if (this.isGoToLineOpen && (this.goToLineField != null) && this.goToLineField.isFocused()) {
+            return this.goToLineField.charTyped(character, modifiers);
+        }
+
         if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
             return this.searchBar.charTyped(character, modifiers);
         }
@@ -1394,6 +1402,42 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
         if (this.indentGuideRenderer != null) {
             this.indentGuideRenderer.markDirty();
+        }
+
+        if (this.isGoToLineOpen && (this.goToLineField != null)) {
+            if (keycode == InputConstants.KEY_ESCAPE) {
+                this.isGoToLineOpen = false;
+                this.goToLineField.setFocused(false);
+                return true;
+            }
+            if (keycode == InputConstants.KEY_ENTER) {
+                try {
+                    String val = this.goToLineField.getValue();
+                    if (!val.isEmpty()) {
+                        int line = Integer.parseInt(val);
+                        line = Math.max(1, Math.min(line, this.getLineCount()));
+                        this.setFocusedLine(line - 1);
+                        this.correctYScroll(0);
+                        TextEditorLine l = this.getFocusedLine();
+                        if (l != null) l.moveCursorTo(0, false);
+                    }
+                } catch (Exception ignored) {}
+                this.isGoToLineOpen = false;
+                this.goToLineField.setFocused(false);
+                return true;
+            }
+            if (this.goToLineField.keyPressed(keycode, scancode, modifiers)) return true;
+        }
+
+        //CTRL + G | GO TO LINE
+        if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_G)) {
+            this.isGoToLineOpen = !this.isGoToLineOpen;
+            if (this.isGoToLineOpen) {
+                this.goToLineField.setValue("");
+                this.goToLineField.setFocused(true);
+                this.setFocused(this.goToLineField);
+            }
+            return true;
         }
 
         if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
@@ -1500,12 +1544,104 @@ public class TextEditorWindowBody extends PiPWindowBody {
             return true;
         }
 
+        //CTRL + D | DUPLICATE LINE
+        if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_D)) {
+            if (this.isLineFocused()) {
+                this.history.saveSnapshot();
+                int index = this.getFocusedLineIndex();
+                TextEditorLine current = this.getLine(index);
+                if (current != null) {
+                    TextEditorLine newLine = this.addLineAtIndex(index + 1);
+                    if (newLine != null) {
+                        newLine.setValue(current.getValue());
+                        this.setFocusedLine(index + 1);
+                        newLine.moveCursorTo(current.getCursorPosition(), false);
+                        this.correctYScroll(1);
+                    }
+                }
+            }
+            return true;
+        }
+
+        //ALT + UP | MOVE LINE UP
+        if (Screen.hasAltDown() && (keycode == InputConstants.KEY_UP)) {
+            if (this.isLineFocused()) {
+                int index = this.getFocusedLineIndex();
+                if (index > 0) {
+                    this.history.saveSnapshot();
+                    TextEditorLine current = this.getLine(index);
+                    TextEditorLine above = this.getLine(index - 1);
+                    if ((current != null) && (above != null)) {
+                        String currentVal = current.getValue();
+                        String aboveVal = above.getValue();
+                        current.setValue(aboveVal);
+                        above.setValue(currentVal);
+                        this.setFocusedLine(index - 1);
+                        above.moveCursorTo(current.getCursorPosition(), false);
+                        this.resetHighlighting();
+                    }
+                }
+            }
+            return true;
+        }
+
+        //ALT + DOWN | MOVE LINE DOWN
+        if (Screen.hasAltDown() && (keycode == InputConstants.KEY_DOWN)) {
+            if (this.isLineFocused()) {
+                int index = this.getFocusedLineIndex();
+                if (index < this.getLineCount() - 1) {
+                    this.history.saveSnapshot();
+                    TextEditorLine current = this.getLine(index);
+                    TextEditorLine below = this.getLine(index + 1);
+                    if ((current != null) && (below != null)) {
+                        String currentVal = current.getValue();
+                        String belowVal = below.getValue();
+                        current.setValue(belowVal);
+                        below.setValue(currentVal);
+                        this.setFocusedLine(index + 1);
+                        below.moveCursorTo(current.getCursorPosition(), false);
+                        this.resetHighlighting();
+                    }
+                }
+            }
+            return true;
+        }
+
+        //CTRL + HOME | GO TO START
+        if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_HOME)) {
+            this.resetHighlighting();
+            if (this.getLineCount() > 0) {
+                this.setFocusedLine(0);
+                TextEditorLine line = this.getLine(0);
+                if (line != null) line.moveCursorTo(0, false);
+                this.correctYScroll(-this.getTotalLineHeight()); 
+            }
+            return true;
+        }
+
+        //CTRL + END | GO TO END
+        if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_END)) {
+            this.resetHighlighting();
+            if (this.getLineCount() > 0) {
+                int lastIndex = this.getLineCount() - 1;
+                this.setFocusedLine(lastIndex);
+                TextEditorLine line = this.getLine(lastIndex);
+                if (line != null) line.moveCursorToEnd(false);
+                this.correctYScroll(this.getTotalLineHeight());
+            }
+            return true;
+        }
+
         return super.keyPressed(keycode, scancode, modifiers);
 
     }
 
     @Override
     public boolean keyReleased(int i1, int i2, int i3) {
+
+        if (this.isGoToLineOpen && (this.goToLineField != null) && this.goToLineField.isFocused()) {
+            return this.goToLineField.keyReleased(i1, i2, i3);
+        }
 
         if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
             return this.searchBar.keyReleased(i1, i2, i3);
@@ -1525,6 +1661,13 @@ public class TextEditorWindowBody extends PiPWindowBody {
         this.setFocused(null);
 
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
+
+        if (this.isGoToLineOpen && (this.goToLineField != null)) {
+            if (!this.goToLineField.isMouseOver(mouseX, mouseY)) {
+                this.isGoToLineOpen = false;
+                this.goToLineField.setFocused(false);
+            }
+        }
 
         this.selectedHoveredOnRightClickMenuOpen = false;
 

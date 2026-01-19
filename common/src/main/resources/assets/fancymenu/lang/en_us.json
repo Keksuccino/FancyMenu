@@ -2526,5 +2526,6 @@
   "fancymenu.buddy.status_bar.energy": "Energy: %s%%",
   "fancymenu.buddy.status_bar.fun": "Fun: %s%%",
   "fancymenu.buddy.status_bar.experience": "Experience: %s / %s XP",
-  "fancymenu.buddy.status_bar.experience_max": "Experience: %s XP (Max Level)"
+  "fancymenu.buddy.status_bar.experience_max": "Experience: %s XP (Max Level)",
+  "fancymenu.editor.shortcuts.go_to_line": "Go To Line (Enter)"
 }
