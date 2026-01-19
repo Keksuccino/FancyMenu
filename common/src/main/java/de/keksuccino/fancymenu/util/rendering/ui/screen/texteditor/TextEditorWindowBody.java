@@ -1461,6 +1461,51 @@ public class TextEditorWindowBody extends PiPWindowBody {
             this.history.stepForward();
             return true;
         }
+        //ALT + UP | MOVE LINE UP
+        boolean altDown = InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_ALT) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_ALT);
+        if (altDown && ((keycode == InputConstants.KEY_UP) || (keycode == GLFW.GLFW_KEY_PAGE_UP))) {
+            if (this.isLineFocused()) {
+                int index = this.getFocusedLineIndex();
+                if (index > 0) {
+                    this.history.saveSnapshot();
+                    TextEditorLine current = this.getLine(index);
+                    TextEditorLine above = this.getLine(index - 1);
+                    if ((current != null) && (above != null)) {
+                        String currentVal = current.getValue();
+                        String aboveVal = above.getValue();
+                        current.setValue(aboveVal);
+                        above.setValue(currentVal);
+                        this.setFocusedLine(index - 1);
+                        above.moveCursorTo(current.getCursorPosition(), false);
+                        this.resetHighlighting();
+                    }
+                }
+            }
+            return true;
+        }
+
+        //ALT + DOWN | MOVE LINE DOWN
+        if (altDown && ((keycode == InputConstants.KEY_DOWN) || (keycode == GLFW.GLFW_KEY_PAGE_DOWN))) {
+            if (this.isLineFocused()) {
+                int index = this.getFocusedLineIndex();
+                if (index < this.getLineCount() - 1) {
+                    this.history.saveSnapshot();
+                    TextEditorLine current = this.getLine(index);
+                    TextEditorLine below = this.getLine(index + 1);
+                    if ((current != null) && (below != null)) {
+                        String currentVal = current.getValue();
+                        String belowVal = below.getValue();
+                        current.setValue(belowVal);
+                        below.setValue(currentVal);
+                        this.setFocusedLine(index + 1);
+                        below.moveCursorTo(current.getCursorPosition(), false);
+                        this.resetHighlighting();
+                    }
+                }
+            }
+            return true;
+        }
+
         //ENTER
         if (keycode == InputConstants.KEY_ENTER) {
             if (!this.isInMouseHighlightingMode()) {
@@ -1563,49 +1608,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
             return true;
         }
 
-        //ALT + UP | MOVE LINE UP
-        if (Screen.hasAltDown() && (keycode == InputConstants.KEY_UP)) {
-            if (this.isLineFocused()) {
-                int index = this.getFocusedLineIndex();
-                if (index > 0) {
-                    this.history.saveSnapshot();
-                    TextEditorLine current = this.getLine(index);
-                    TextEditorLine above = this.getLine(index - 1);
-                    if ((current != null) && (above != null)) {
-                        String currentVal = current.getValue();
-                        String aboveVal = above.getValue();
-                        current.setValue(aboveVal);
-                        above.setValue(currentVal);
-                        this.setFocusedLine(index - 1);
-                        above.moveCursorTo(current.getCursorPosition(), false);
-                        this.resetHighlighting();
-                    }
-                }
-            }
-            return true;
-        }
 
-        //ALT + DOWN | MOVE LINE DOWN
-        if (Screen.hasAltDown() && (keycode == InputConstants.KEY_DOWN)) {
-            if (this.isLineFocused()) {
-                int index = this.getFocusedLineIndex();
-                if (index < this.getLineCount() - 1) {
-                    this.history.saveSnapshot();
-                    TextEditorLine current = this.getLine(index);
-                    TextEditorLine below = this.getLine(index + 1);
-                    if ((current != null) && (below != null)) {
-                        String currentVal = current.getValue();
-                        String belowVal = below.getValue();
-                        current.setValue(belowVal);
-                        below.setValue(currentVal);
-                        this.setFocusedLine(index + 1);
-                        below.moveCursorTo(current.getCursorPosition(), false);
-                        this.resetHighlighting();
-                    }
-                }
-            }
-            return true;
-        }
 
         //CTRL + HOME | GO TO START
         if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_HOME)) {
