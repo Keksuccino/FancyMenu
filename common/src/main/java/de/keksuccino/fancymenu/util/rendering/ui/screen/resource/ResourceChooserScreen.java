@@ -16,7 +16,9 @@ import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -48,10 +50,12 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends CellScreen {
+public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends PiPCellWindowBody {
 
     private static final Logger LOGGER = LogManager.getLogger();
     protected static final PngTexture WARNING_TEXTURE = PngTexture.location(ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/warning_framed_24x24.png"));
+    public static final int PIP_WINDOW_WIDTH = 600;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     @Nullable
     protected FileTypeGroup<F> allowedFileTypes;
@@ -130,6 +134,19 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.resourceSourceCallback = resourceSourceCallback;
     }
 
+    public @NotNull PiPWindow openInWindow(@Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(this.getTitle())
+                .setScreen(this)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
 
     @Override
     protected void initCells() {
@@ -199,10 +216,13 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.editBox.setDeleteAllAllowed(false);
         this.editBox.setResponder(s -> this.resourceSource = s);
         sourceInputCell.setEditorCallback((s, textInputCell) -> {
-            if (isLocal && !isLegacyLocal && !s.startsWith("/config/fancymenu/assets/")) {
-                s = "/config/fancymenu/assets/" + s;
+            String value = (s != null) ? s : "";
+            if (isLocal && !isLegacyLocal && !value.startsWith("/config/fancymenu/assets/")) {
+                value = "/config/fancymenu/assets/" + value;
             }
-            this.resourceSource = s;
+            value = value.replace("\n", "\\n");
+            this.resourceSource = value;
+            textInputCell.editBox.setValue(value);
         });
         sourceInputCell.setEditorPresetTextSupplier(consumes -> consumes.editBox.getValueWithoutPrefixSuffix());
 
@@ -219,9 +239,17 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                         this.setSource(s, false);
                     }
                     this.rebuild();
-                    Minecraft.getInstance().setScreen(this);
+                    PiPWindow window = this.getWindow();
+                    if (window != null) {
+                        window.setScreen(this);
+                    }
                 });
-                Minecraft.getInstance().setScreen(picker);
+                PiPWindow window = this.getWindow();
+                if (window != null) {
+                    window.setScreen(picker);
+                } else {
+                    Minecraft.getInstance().setScreen(picker);
+                }
             }), true);
         }
 
@@ -241,12 +269,20 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                         this.setSource(s, false);
                     }
                     this.rebuild();
-                    Minecraft.getInstance().setScreen(this);
+                    PiPWindow window = this.getWindow();
+                    if (window != null) {
+                        window.setScreen(this);
+                    }
                 });
                 fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
                 fileChooser.setFileTypes(this.allowedFileTypes);
                 fileChooser.setFileFilter(this.fileFilter);
-                Minecraft.getInstance().setScreen(fileChooser);
+                PiPWindow window = this.getWindow();
+                if (window != null) {
+                    window.setScreen(fileChooser);
+                } else {
+                    Minecraft.getInstance().setScreen(fileChooser);
+                }
             }), true);
         }
 
@@ -286,17 +322,15 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.updateLegacyLocalWarning();
         this.updateNoExtensionWarning();
+    }
 
-        super.render(graphics, mouseX, mouseY, partial);
-
+    @Override
+    public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.renderWarning(graphics, mouseX, mouseY, partial);
-
         this.updateInputFieldTooltips();
-
     }
 
     protected void updateInputFieldTooltips() {
@@ -433,6 +467,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     @Override
     protected void onCancel() {
         this.resourceSourceCallback.accept(null);
+        this.closeWindow();
     }
 
     @Override
@@ -443,6 +478,12 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
             //Return the resource source with prefix
             this.resourceSourceCallback.accept(this.resourceSourceType.getSourcePrefix() + this.resourceSource);
         }
+        this.closeWindow();
+    }
+
+    @Override
+    public void onWindowClosedExternally() {
+        this.resourceSourceCallback.accept(null);
     }
 
 }

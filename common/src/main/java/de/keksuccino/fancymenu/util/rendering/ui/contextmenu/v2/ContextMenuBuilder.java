@@ -699,6 +699,7 @@ public interface ContextMenuBuilder<O> {
                             if (!stack.isPrimary() || stack.isEmpty()) {
                                 return;
                             }
+                            menu.closeMenuChain();
                             List<O> selectedObjects = stack.getObjects();
                             String preSelectedSource = null;
                             List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedObjects, consumes -> {
@@ -721,9 +722,11 @@ public interface ContextMenuBuilder<O> {
                                     this.saveSnapshot();
                                     this.applyStackAppliers(entry, source);
                                 }
-                                this.openContextMenuScreen(this.getContextMenuCallbackScreen());
                             });
-                            this.openContextMenuScreen(chooserScreen);
+                            for (ContextMenuScreenOpenProcessor processor : this.getContextMenuScreenOpenProcessors()) {
+                                processor.beforeOpen(chooserScreen);
+                            }
+                            chooserScreen.openInWindow(null);
                         }).setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("file"))
                 .setStackApplier((stackEntry, value) -> {

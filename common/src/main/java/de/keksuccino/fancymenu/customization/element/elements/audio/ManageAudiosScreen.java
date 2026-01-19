@@ -80,12 +80,9 @@ public class ManageAudiosScreen extends CellScreen {
     protected void initRightSideWidgets() {
 
         this.addRightSideButton(20, Component.translatable("fancymenu.elements.audio.manage_audios.add_audio"), button -> {
-            Minecraft.getInstance().setScreen(
-                    ResourceChooserScreen.audio(null, s -> {
-                        if (s != null) this.addAudio(s);
-                        Minecraft.getInstance().setScreen(this);
-                    })
-            );
+            ResourceChooserScreen.audio(null, s -> {
+                if (s != null) this.addAudio(s);
+            }).openInWindow(null);
         });
 
         this.addRightSideDefaultSpacer();

@@ -26,13 +26,14 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
         super.init();
 
         this.rightClickMenu.addClickableEntry("set_source", Component.translatable("fancymenu.elements.video_mcef.set_source"), (menu, entry) -> {
-                    this.openContextMenuScreen(ResourceChooserScreen.video(null, source -> {
+                    menu.closeMenuChain();
+                    ResourceChooserScreen.video(null, source -> {
                         if (source != null) {
                             this.editor.history.saveSnapshot();
                             this.element.rawVideoUrlSource = ResourceSource.of(source);
                         }
-                        this.openContextMenuScreen(this.editor);
-                    }).setSource((this.element.rawVideoUrlSource != null) ? this.element.rawVideoUrlSource.getSerializationSource() : null, false));
+                    }).setSource((this.element.rawVideoUrlSource != null) ? this.element.rawVideoUrlSource.getSerializationSource() : null, false)
+                            .openInWindow(null);
                 }).setIcon(ContextMenu.IconFactory.getIcon("image"))
                 .setStackable(false);
 

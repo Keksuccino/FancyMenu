@@ -68,9 +68,9 @@ public class ManageResourcePreLoadScreen extends CellScreen {
                 if (source != null) {
                     this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(source), this.cachedSerialized, false);
                 }
-                Minecraft.getInstance().setScreen(this);
+                this.rebuild();
             });
-            Minecraft.getInstance().setScreen(s);
+            s.openInWindow(null);
         });
 
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add.panorama"), extendedButton -> {

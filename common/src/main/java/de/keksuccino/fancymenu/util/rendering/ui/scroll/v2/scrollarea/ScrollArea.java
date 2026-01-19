@@ -23,8 +23,8 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public ScrollBar verticalScrollBar;
-    public ScrollBar horizontalScrollBar;
+    public final ScrollBar verticalScrollBar;
+    public final ScrollBar horizontalScrollBar;
     protected float x;
     protected float y;
     protected float width;
@@ -43,7 +43,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
     public boolean correctYOnAddingRemovingEntries = true;
     protected boolean hovered = false;
     protected boolean innerAreaHovered = false;
-    protected boolean roundedColorBackground = false;
+    protected boolean roundedStyle = true;
     protected boolean setupForBlurInterface = false;
     protected boolean scissorEnabled = true;
 
@@ -54,7 +54,9 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
         this.setHeight(height, true);
         this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
         this.verticalScrollBar.setScrollWheelAllowed(true);
+        this.verticalScrollBar.setRoundedGrabberEnabled(true);
         this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
+        this.horizontalScrollBar.setRoundedGrabberEnabled(true);
         this.updateScrollArea();
     }
 
@@ -87,7 +89,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
         if (this.backgroundColor == null) return;
         DrawableColor backColor = this.backgroundColor.get();
         if (backColor != null) {
-            if (this.roundedColorBackground) {
+            if (this.roundedStyle) {
                 float radius = UIBase.getInterfaceCornerRoundingRadius();
                 UIBase.renderRoundedRect(graphics, this.getInnerX(), this.getInnerY(), this.getInnerWidth(), this.getInnerHeight(), radius, radius, radius, radius, backColor.getColorInt());
             } else {
@@ -100,7 +102,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
         if (this.borderColor == null) return;
         DrawableColor borColor = this.borderColor.get();
         if (borColor != null) {
-            if (this.roundedColorBackground) {
+            if (this.roundedStyle) {
                 float radius = UIBase.getInterfaceCornerRoundingRadius();
                 UIBase.renderRoundedBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), radius, radius, radius, radius, borColor.getColorInt());
             } else {
@@ -341,12 +343,14 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
         return this.hovered;
     }
 
-    public boolean isRoundedColorBackgroundEnabled() {
-        return this.roundedColorBackground;
+    public boolean isRoundedStyle() {
+        return this.roundedStyle;
     }
 
-    public ScrollArea setRoundedColorBackgroundEnabled(boolean roundedColorBackground) {
-        this.roundedColorBackground = roundedColorBackground;
+    public ScrollArea setRoundedStyleEnabled(boolean rounded) {
+        this.roundedStyle = rounded;
+        this.verticalScrollBar.setRoundedGrabberEnabled(rounded);
+        this.horizontalScrollBar.setRoundedGrabberEnabled(rounded);
         return this;
     }
 

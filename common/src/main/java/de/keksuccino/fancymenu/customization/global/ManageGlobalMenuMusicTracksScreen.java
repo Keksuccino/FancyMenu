@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
@@ -54,12 +53,11 @@ public class ManageGlobalMenuMusicTracksScreen extends CellScreen {
     protected void initRightSideWidgets() {
 
         this.addRightSideButton(20, Component.translatable("fancymenu.global_customizations.menu_music_tracks.add"), button -> {
-            Minecraft.getInstance().setScreen(ResourceChooserScreen.audio(null, source -> {
+            ResourceChooserScreen.audio(null, source -> {
                 if (source != null) {
                     addTrack(source);
                 }
-                Minecraft.getInstance().setScreen(this);
-            }));
+            }).openInWindow(null);
         });
 
         this.addRightSideDefaultSpacer();

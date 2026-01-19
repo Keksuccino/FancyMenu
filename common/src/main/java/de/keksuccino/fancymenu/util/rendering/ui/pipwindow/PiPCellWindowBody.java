@@ -35,6 +35,8 @@ public abstract class PiPCellWindowBody extends CellScreen implements PipableScr
         UIBase.applyDefaultWidgetSkinTo(this.doneButton, UIBase.shouldBlur());
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
 
+        this.scrollArea.setSetupForBlurInterface(true);
+
     }
 
     @Override
@@ -47,6 +49,15 @@ public abstract class PiPCellWindowBody extends CellScreen implements PipableScr
         WidgetCell c = super.addWidgetCell(widget, applyDefaultButtonSkin);
         if (applyDefaultButtonSkin) UIBase.applyDefaultWidgetSkinTo(widget, UIBase.shouldBlur());
         return c;
+    }
+
+    @Override
+    protected <T extends RenderCell> @NotNull T addCell(@NotNull T cell) {
+        if (cell instanceof TextInputCell tc) {
+            UIBase.applyDefaultWidgetSkinTo(tc.editBox, UIBase.shouldBlur());
+            UIBase.applyDefaultWidgetSkinTo(tc.openEditorButton, UIBase.shouldBlur());
+        }
+        return super.addCell(cell);
     }
 
     public void closeWindow() {

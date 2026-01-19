@@ -63,7 +63,7 @@ public class ContextMenuUtils {
 
         subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.resources.choose"),
                 (menu, entry) -> {
-                    Screen current = Minecraft.getInstance().screen;
+                    menu.closeMenuChain();
                     ResourceSupplier<R> supplier = targetFieldGetter.get();
                     String preSelectedSource = (supplier != null) ? supplier.getSourceWithPrefix() : null;
                     ResourceChooserScreen<R,F> chooserScreen = resourceChooserScreenBuilder.get();
@@ -77,9 +77,8 @@ public class ContextMenuUtils {
                         if (source != null) {
                             targetFieldSetter.accept(resourceSupplierBuilder.get(source));
                         }
-                        Minecraft.getInstance().setScreen(current);
                     });
-                    Minecraft.getInstance().setScreen(chooserScreen);
+                    chooserScreen.openInWindow(null);
                 }).setStackable(false);
 
         if (addResetOption) {

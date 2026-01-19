@@ -315,15 +315,10 @@ public class PlayAudioAction extends Action {
             this.audioSourceCell.editBox.setUITooltip(() -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.audio_source.desc")));
 
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.play_audio.edit.choose_audio"), button -> {
-                final PiPWindow[] chooserWindow = new PiPWindow[1];
                 ResourceChooserScreen<IAudio, ?> chooser = ResourceChooserScreen.audio(null, source -> {
                     if (source != null) {
                         this.config.audioSource = source;
                         this.audioSourceCell.setText(source);
-                    }
-                    PiPWindow window = chooserWindow[0];
-                    if (window != null) {
-                        window.close();
                     }
                 });
                 String chooserPreset = this.config.audioSource;
@@ -331,14 +326,7 @@ public class PlayAudioAction extends Action {
                     chooserPreset = ResourceSourceType.LOCAL.getSourcePrefix() + "/config/fancymenu/assets/";
                 }
                 chooser.setSource(chooserPreset, false);
-                PiPWindow window = new PiPWindow(chooser.getTitle())
-                        .setScreen(chooser)
-                        .setForceFancyMenuUiScale(true)
-                        .setAlwaysOnTop(true)
-                        .setBlockMinecraftScreenInputs(true)
-                        .setForceFocus(true);
-                chooserWindow[0] = window;
-                PiPWindowHandler.INSTANCE.openWindowWithDefaultSizeAndPosition(window, null);
+                chooser.openInWindow(null);
             }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.choose_audio.desc"))), true);
 
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.play_audio.edit.clear_audio"), button -> {
