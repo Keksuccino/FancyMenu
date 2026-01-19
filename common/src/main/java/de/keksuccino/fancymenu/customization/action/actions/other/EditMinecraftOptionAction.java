@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWin
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -220,6 +221,10 @@ public class EditMinecraftOptionAction extends Action {
         @Override
         public @NotNull String buildString() {
             return this.name + ":" + this.setTo;
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
     }

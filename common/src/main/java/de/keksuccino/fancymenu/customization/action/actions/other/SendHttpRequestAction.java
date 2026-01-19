@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWin
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -600,6 +601,10 @@ public class SendHttpRequestAction extends Action {
             }
             
             this.callback.accept(this.config.serialize());
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
         protected static class HeaderEditRow {

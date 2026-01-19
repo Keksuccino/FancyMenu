@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWin
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -253,6 +254,10 @@ public class SetTextInputFieldValueAction extends Action {
         @Override
         protected void onDone() {
             this.callback.accept(this.config.serialize());
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
     }
 }

@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWin
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -318,6 +319,10 @@ public class ManageResourcePackAction extends Action {
         public @NotNull String buildString() {
             this.config.packName = this.config.packName.trim();
             return this.config.serialize();
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
     }

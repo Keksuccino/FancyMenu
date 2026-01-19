@@ -23,6 +23,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.toast.SimpleToast;
 import de.keksuccino.fancymenu.util.rendering.ui.toast.ToastHandler;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
@@ -283,6 +284,10 @@ public class ShowToastAction extends Action {
         @Override
         public boolean allowDone() {
             return true;
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
         private static int parseInteger(@Nullable String raw, int fallback, int min, int max) {
