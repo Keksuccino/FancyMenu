@@ -36,14 +36,16 @@ public class MixinLevelRenderer {
 
     @WrapOperation(method = "renderLevel(Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderEntity(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V"))
     private void wrap_renderEntity_FancyMenu(LevelRenderer levelRenderer, Entity entity, double cameraX, double cameraY, double cameraZ, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, Operation<Void> original) {
-        double interpolatedX = Mth.lerp(partialTicks, entity.xo, entity.getX());
-        double interpolatedY = Mth.lerp(partialTicks, entity.yo, entity.getY());
-        double interpolatedZ = Mth.lerp(partialTicks, entity.zo, entity.getZ());
-        Vec3 entityPosition = new Vec3(interpolatedX, interpolatedY, interpolatedZ);
-        Vec3 cameraPosition = new Vec3(cameraX, cameraY, cameraZ);
-        if (isEntityVisibleForListener_FancyMenu(entity, cameraPosition, entityPosition)) {
-            double distance = entityPosition.distanceTo(cameraPosition);
-            Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onEntityVisible(entity, distance);
+        if (Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.shouldCheckVisibility()) {
+            double interpolatedX = Mth.lerp(partialTicks, entity.xo, entity.getX());
+            double interpolatedY = Mth.lerp(partialTicks, entity.yo, entity.getY());
+            double interpolatedZ = Mth.lerp(partialTicks, entity.zo, entity.getZ());
+            Vec3 entityPosition = new Vec3(interpolatedX, interpolatedY, interpolatedZ);
+            Vec3 cameraPosition = new Vec3(cameraX, cameraY, cameraZ);
+            if (isEntityVisibleForListener_FancyMenu(entity, cameraPosition, entityPosition)) {
+                double distance = entityPosition.distanceTo(cameraPosition);
+                Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onEntityVisible(entity, distance);
+            }
         }
         original.call(levelRenderer, entity, cameraX, cameraY, cameraZ, partialTicks, poseStack, bufferSource);
     }
@@ -55,10 +57,11 @@ public class MixinLevelRenderer {
 
     @Unique
     private static boolean isEntityVisibleForListener_FancyMenu(Entity entity, Vec3 cameraPosition, Vec3 entityPosition) {
-        double distanceToEntity = entityPosition.distanceTo(cameraPosition);
-        if (distanceToEntity > 200.0D) {
+        double distanceToEntitySqr = entityPosition.distanceToSqr(cameraPosition);
+        if (distanceToEntitySqr > 40000.0D) {
             return false;
         }
+        double distanceToEntity = Math.sqrt(distanceToEntitySqr);
 
         Minecraft minecraft = Minecraft.getInstance();
         Entity cameraEntity = minecraft.getCameraEntity();
@@ -95,4 +98,5 @@ public class MixinLevelRenderer {
         BlockState blockState = entity.level().getBlockState(hitResult.getBlockPos());
         return !blockState.canOcclude();
     }
+
 }
