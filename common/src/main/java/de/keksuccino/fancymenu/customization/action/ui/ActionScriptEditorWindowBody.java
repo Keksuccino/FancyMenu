@@ -3476,7 +3476,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             super("action_" + action.getIdentifier(), parent, ActionScriptEditorWindowBody.this.buildActionMenuLabel(action), (menu, entry) -> {
                 ActionScriptEditorWindowBody.this.markContextMenuActionSelectionSuppressed();
                 ExecutableEntry selectionReference = ActionScriptEditorWindowBody.this.getContextMenuTargetEntry();
-                menu.closeMenu();
+                menu.closeMenuChain();
                 ActionScriptEditorWindowBody.this.onAddAction(action, selectionReference);
             });
             this.action = action;
