@@ -202,8 +202,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (!this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 
         this.layout.decorationOverlays.forEach(pair -> {
-            pair.getValue().onScreenInitializedOrResized(this, List.of());
-            this.addWidget(pair.getValue());
+            pair.getSecond().onScreenInitializedOrResized(this, List.of());
+            this.addWidget(pair.getSecond());
         });
 
 		this.layout.menuBackgrounds.forEach(MenuBackground::onAfterEnable);
@@ -276,7 +276,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.renderElements(graphics, mouseX, mouseY, partial);
 
         this.layout.decorationOverlays.forEach(pair -> {
-            if (pair.getValue().showOverlay.tryGetNonNullElse(false)) pair.getValue()._render(graphics, mouseX, mouseY, partial);
+            if (pair.getSecond().showOverlay.tryGetNonNullElse(false)) pair.getSecond()._render(graphics, mouseX, mouseY, partial);
         });
 
 		this.renderMouseSelectionRectangle(graphics, mouseX, mouseY);
@@ -1377,7 +1377,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		});
 		this.layout.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(null, null));
 		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
-		this.layout.decorationOverlays.forEach(pair -> pair.getValue().onCloseScreen(null, null));
+		this.layout.decorationOverlays.forEach(pair -> pair.getSecond().onCloseScreen(null, null));
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
 			if (!((IMixinScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {

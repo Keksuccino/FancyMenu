@@ -113,7 +113,7 @@ public class LayoutBase {
                     stacked.closeScreenExecutableBlocks.addAll(layout.closeScreenExecutableBlocks);
                 }
                 layout.decorationOverlays.forEach(pair -> {
-                    if (pair.getValue().showOverlay.tryGetNonNullElse(false)) stacked.decorationOverlays.add(pair);
+                    if (pair.getSecond().showOverlay.tryGetNonNullElse(false)) stacked.decorationOverlays.add(pair);
                 });
 
             }

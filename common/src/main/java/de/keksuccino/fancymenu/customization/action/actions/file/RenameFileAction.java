@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputWindowBody;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -88,14 +87,24 @@ public class RenameFileAction extends Action {
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        String oldValue = instance.value;
+        boolean[] handled = {false};
 
         DualTextInputWindowBody s = DualTextInputWindowBody.build(
                 this.getActionDisplayName(),
                 Component.translatable("fancymenu.actions.rename_file.value.filepath"),
                 Component.translatable("fancymenu.actions.rename_file.value.new_name"), null, callback -> {
+                    if (handled[0]) {
+                        return;
+                    }
+                    handled[0] = true;
                     if (callback != null) {
-                        instance.value = callback.getKey() + "||" + callback.getValue();
+                        String newValue = callback.getFirst() + "||" + callback.getSecond();
+                        instance.value = newValue;
+                        onEditingCompleted.accept(instance, oldValue, newValue);
+                    } else {
+                        onEditingCanceled.accept(instance);
                     }
                 });
 
@@ -106,7 +115,14 @@ public class RenameFileAction extends Action {
             s.setSecondText(array[1]);
         }
 
-        Dialogs.openGeneric(s, this.getActionDisplayName(), null, DualTextInputWindowBody.PIP_WINDOW_WIDTH, DualTextInputWindowBody.PIP_WINDOW_HEIGHT);
+        var opened = Dialogs.openGeneric(s, this.getActionDisplayName(), null, DualTextInputWindowBody.PIP_WINDOW_WIDTH, DualTextInputWindowBody.PIP_WINDOW_HEIGHT);
+        opened.getSecond().addCloseCallback(() -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+            onEditingCanceled.accept(instance);
+        });
 
     }
 

@@ -166,7 +166,7 @@ public class Layout extends LayoutBase {
 
         // Decoration Overlays
         this.decorationOverlays.forEach(pair -> {
-            set.putContainer(pair.getKey()._serialize(pair.getValue()));
+            set.putContainer(pair.getFirst()._serialize(pair.getSecond()));
         });
 
         if (this.openAudio != null) {

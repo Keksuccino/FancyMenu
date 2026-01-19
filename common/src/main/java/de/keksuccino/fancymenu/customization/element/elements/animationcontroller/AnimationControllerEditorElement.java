@@ -91,8 +91,8 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                                     CharacterFilter.buildIntegerFilter(),
                                     callback -> {
                                         if (callback != null) {
-                                            int min = parseOffsetValue(callback.getKey(), this.element.randomTimingOffsetMinMs);
-                                            int max = parseOffsetValue(callback.getValue(), this.element.randomTimingOffsetMaxMs);
+                                            int min = parseOffsetValue(callback.getFirst(), this.element.randomTimingOffsetMinMs);
+                                            int max = parseOffsetValue(callback.getSecond(), this.element.randomTimingOffsetMaxMs);
                                             if (min > max) {
                                                 int temp = min;
                                                 min = max;

@@ -46,8 +46,8 @@ public class RequirementContainer implements ValuePlaceholderHolder {
         long now = System.currentTimeMillis();
         if (isCachingRequirements()) {
             // Use cache if last value update was less than 150ms ago for performance
-            if (COOLDOWN_CACHE.containsKey(this.cachingIdentifier) && ((COOLDOWN_CACHE.get(this.cachingIdentifier).getKey() + getRequirementCachingDurationMs()) > now)) {
-                return COOLDOWN_CACHE.get(this.cachingIdentifier).getValue();
+            if (COOLDOWN_CACHE.containsKey(this.cachingIdentifier) && ((COOLDOWN_CACHE.get(this.cachingIdentifier).getFirst() + getRequirementCachingDurationMs()) > now)) {
+                return COOLDOWN_CACHE.get(this.cachingIdentifier).getSecond();
             }
         }
         boolean b = this._requirementsMet();

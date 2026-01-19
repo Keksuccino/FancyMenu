@@ -803,8 +803,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
         // Normal layouts always have one instance of each overlay type, so doing this is fine
         editor.layout.decorationOverlays.forEach(pair -> {
-            var entry = menu.addSubMenuEntry("overlay_" + pair.getKey().getIdentifier(), pair.getKey().getDisplayName(), pair.getValue()._initConfigMenu(editor));
-            var desc = pair.getKey().getDescription();
+            var entry = menu.addSubMenuEntry("overlay_" + pair.getFirst().getIdentifier(), pair.getFirst().getDisplayName(), pair.getSecond()._initConfigMenu(editor));
+            var desc = pair.getFirst().getDescription();
             if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> UITooltip.of(desc));
         });
 
@@ -973,7 +973,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     displayUnsavedWarning(call -> {
 						if (call) {
 							editor.saveWidgetSettings();
-							editor.layout.decorationOverlays.forEach(pair -> pair.getValue().onCloseScreen(null, null));
+							editor.layout.decorationOverlays.forEach(pair -> pair.getSecond().onCloseScreen(null, null));
 							this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
 								this.openContextMenuScreen(editor);
 							}));

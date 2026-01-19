@@ -145,7 +145,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		this.layoutBase.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
-		this.layoutBase.decorationOverlays.forEach(pair -> pair.getValue().onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
+		this.layoutBase.decorationOverlays.forEach(pair -> pair.getSecond().onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
 
 		if (this.layoutBase.closeAudio != null) {
 			final ResourceSupplier<IAudio> closeAudioSupplier = this.layoutBase.closeAudio;
@@ -370,8 +370,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		}
 
         this.layoutBase.decorationOverlays.forEach(pair -> {
-            pair.getValue().onScreenInitializedOrResized(e.getScreen(), this.allElements);
-            ((IMixinScreen)e.getScreen()).getChildrenFancyMenu().addFirst(pair.getValue());
+            pair.getSecond().onScreenInitializedOrResized(e.getScreen(), this.allElements);
+            ((IMixinScreen)e.getScreen()).getChildrenFancyMenu().addFirst(pair.getSecond());
         });
 
 	}
@@ -431,7 +431,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		}
 
         this.layoutBase.decorationOverlays.forEach(pair -> {
-            if (pair.getValue().showOverlay.tryGetNonNullElse(false)) pair.getValue()._render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+            if (pair.getSecond().showOverlay.tryGetNonNullElse(false)) pair.getSecond()._render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
         });
 
 	}

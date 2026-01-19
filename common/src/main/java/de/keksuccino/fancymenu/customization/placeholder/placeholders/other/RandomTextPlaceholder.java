@@ -91,12 +91,12 @@ public class RandomTextPlaceholder extends Placeholder {
         if (cached != null) {
             // For plain text, never expire the cache since it doesn't change
             if (isPlainText(pathOrUrl)) {
-                return cached.getValue();
+                return cached.getSecond();
             }
             
             // If cache is still valid, return it
-            if ((currentTime - cached.getKey()) < CONTENT_RELOAD_COOLDOWN_MS) {
-                return cached.getValue();
+            if ((currentTime - cached.getFirst()) < CONTENT_RELOAD_COOLDOWN_MS) {
+                return cached.getSecond();
             }
             
             // Cache expired, trigger async reload if not already loading
@@ -105,7 +105,7 @@ public class RandomTextPlaceholder extends Placeholder {
             }
             
             // Return existing cached content while reloading
-            return cached.getValue();
+            return cached.getSecond();
         }
         
         // No cache exists, trigger async load if not already loading

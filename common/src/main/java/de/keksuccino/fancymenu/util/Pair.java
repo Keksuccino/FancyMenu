@@ -2,34 +2,34 @@ package de.keksuccino.fancymenu.util;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Pair<L, R> {
+public class Pair<F, S> {
 
-    protected L key;
-    protected R value;
+    protected F key;
+    protected S value;
 
     @NotNull
     public static <L, R> Pair<L, R> of(L key, R value) {
         return new Pair<>(key, value);
     }
 
-    protected Pair(L key, R value) {
+    protected Pair(F key, S value) {
         this.key = key;
         this.value = value;
     }
 
-    public L getKey() {
+    public F getFirst() {
         return this.key;
     }
 
-    public void setKey(L key) {
+    public void setFirst(F key) {
         this.key = key;
     }
 
-    public R getValue() {
+    public S getSecond() {
         return this.value;
     }
 
-    public void setValue(R value) {
+    public void setSecond(S value) {
         this.value = value;
     }
 
