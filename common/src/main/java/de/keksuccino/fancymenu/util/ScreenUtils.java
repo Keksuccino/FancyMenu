@@ -7,6 +7,20 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class ScreenUtils {
 
+    private static int setScreenBlockDepth = 0;
+
+    public static void blockSetScreenCalls(boolean blocked) {
+        if (blocked) {
+            setScreenBlockDepth++;
+        } else if (setScreenBlockDepth > 0) {
+            setScreenBlockDepth--;
+        }
+    }
+
+    public static boolean areSetScreenCallsBlocked() {
+        return setScreenBlockDepth > 0;
+    }
+
     @Nullable
     public static Screen getScreen() {
         return Minecraft.getInstance().screen;

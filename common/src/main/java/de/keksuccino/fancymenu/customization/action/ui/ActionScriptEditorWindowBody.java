@@ -449,7 +449,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     this.markContextMenuActionSelectionSuppressed();
                     ExecutableEntry selectionReference = this.getContextMenuTargetEntry();
                     this.rightClickContextMenu.closeMenu();
-                    this.onOpenActionChooser(selectionReference);
+                    this.onOpenChooserToAddAction(selectionReference);
                 }).setIcon(ContextMenu.IconFactory.getIcon("pick"))
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.a"))
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_action_chooser.desc")));
@@ -558,29 +558,31 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if (!instance.action.hasValue()) {
                 return;
             }
-            ChooseActionWindowBody s = new ChooseActionWindowBody(instance.copy(false), call -> {
-                if (call != null) {
-                    ExecutableEntry currentEntry = this.findEntryForExecutable(targetExecutable);
-                    if (currentEntry != null) {
-                        currentEntry.getParentBlock();
-                        AbstractExecutableBlock parentBlock = currentEntry.getParentBlock();
-                        boolean changed = (call.action != instance.action) || !Objects.equals(call.value, instance.value);
-                        if (changed) {
-                            this.createUndoPoint();
-                            int index = parentBlock.getExecutables().indexOf(currentEntry.executable);
-                            parentBlock.getExecutables().remove(currentEntry.executable);
-                            if (index != -1) {
-                                parentBlock.getExecutables().add(index, call);
-                            } else {
-                                parentBlock.getExecutables().add(call);
+            instance.action.editValueInternal(instance,
+                    (instance1, oldValue, newValue) -> { // onEditingCompleted
+                        if (!Objects.equals(oldValue, newValue)) {
+                            ExecutableEntry currentEntry = this.findEntryForExecutable(targetExecutable);
+                            if (currentEntry != null) {
+                                currentEntry.getParentBlock();
+                                AbstractExecutableBlock parentBlock = currentEntry.getParentBlock();
+                                if (!Objects.equals(oldValue, newValue)) {
+                                    this.createUndoPoint();
+                                    int index = parentBlock.getExecutables().indexOf(currentEntry.executable);
+                                    parentBlock.getExecutables().remove(currentEntry.executable);
+                                    if (index != -1) {
+                                        parentBlock.getExecutables().add(index, instance1);
+                                    } else {
+                                        parentBlock.getExecutables().add(instance1);
+                                    }
+                                    this.updateActionInstanceScrollArea(false);
+                                    this.focusEntryForExecutable(instance1, true, true);
+                                }
                             }
-                            this.updateActionInstanceScrollArea(false);
-                            this.focusEntryForExecutable(call, true, true);
                         }
-                    }
-                }
-            });
-            Dialogs.openGeneric(s, s.getTitle(), null, ChooseActionWindowBody.PIP_WINDOW_WIDTH, ChooseActionWindowBody.PIP_WINDOW_HEIGHT);
+                    },
+                    instance1 -> { // onEditingCanceled
+                        // do nothing on cancel
+                    });
         } else if (targetExecutable instanceof IfExecutableBlock block) {
             ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
                 if (container != null) {
@@ -658,7 +660,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
     }
 
-    protected void onOpenActionChooser(@Nullable ExecutableEntry selectionReference) {
+    protected void onOpenChooserToAddAction(@Nullable ExecutableEntry selectionReference) {
         final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
         ChooseActionWindowBody screen = new ChooseActionWindowBody(null, call -> {
             if (call != null) {
@@ -1457,7 +1459,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             }
 
             if ("a".equals(keyName)) {
-                this.onOpenActionChooser(this.selectedEntry);
+                this.onOpenChooserToAddAction(this.selectedEntry);
                 return true;
             }
 

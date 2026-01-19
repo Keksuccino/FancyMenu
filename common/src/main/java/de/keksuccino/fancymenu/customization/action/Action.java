@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.customization.action;
 
 import de.keksuccino.fancymenu.customization.action.ui.AsyncActionErrorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
@@ -9,10 +11,12 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWin
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
+
 
 /**
  * An action to use with buttons, tickers, etc.<br>
@@ -78,12 +82,26 @@ public abstract class Action {
         return null;
     }
 
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
+    /**
+     * Called when editing the value of an {@link ActionInstance}.<br>
+     * The value of the given {@code instance} needs to get updated during the editing process.<br><br>
+     *
+     * This method should only open {@link PiPWindow}s and NEVER real {@link Screen}s!
+     *
+     * @param instance The {@link ActionInstance} to edit.
+     * @param onEditingCompleted Always needs to get called when the editing was completed without canceling it. Should get called AFTER updating the instance's value.
+     * @param onEditingCanceled Always needs to get called when the editing got canceled without completing it.
+     */
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
         if (this.hasValue()) {
             Component title = (this.getValueDisplayName() != null) ? this.getValueDisplayName() : Component.empty();
-            TextEditorWindowBody s = new TextEditorWindowBody(title, null, (call) -> {
-                if (call != null) {
-                    instance.value = call;
+            TextEditorWindowBody s = new TextEditorWindowBody(title, null, editedValue -> {
+                if (editedValue != null) {
+                    String old = instance.value;
+                    instance.value = editedValue;
+                    onEditingCompleted.accept(instance, old, editedValue);
+                } else {
+                    onEditingCanceled.accept(instance);
                 }
             });
             List<TextEditorFormattingRule> formattingRules = this.getValueFormattingRules();
@@ -98,6 +116,39 @@ public abstract class Action {
         }
     }
 
+    @ApiStatus.Internal
+    public void editValueInternal(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        ScreenUtils.blockSetScreenCalls(true);
+        this.editValue(instance, onEditingCompleted, onEditingCanceled);
+        ScreenUtils.blockSetScreenCalls(false);
+    }
+
+//    /**
+//     * @param parentScreen Not used anymore and will always be {@link Action#DUMMY_PARENT_SCREEN}.
+//     *
+//     * @deprecated Use {@link Action#editValue(ActionInstance)} instead.
+//     */
+//    @Deprecated(forRemoval = true)
+//    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
+//        if (this.hasValue()) {
+//            Component title = (this.getValueDisplayName() != null) ? this.getValueDisplayName() : Component.empty();
+//            TextEditorWindowBody s = new TextEditorWindowBody(title, null, (call) -> {
+//                if (call != null) {
+//                    instance.value = call;
+//                }
+//            });
+//            List<TextEditorFormattingRule> formattingRules = this.getValueFormattingRules();
+//            if (formattingRules != null) s.formattingRules.addAll(formattingRules);
+//            s.setMultilineMode(false);
+//            if (instance.value != null) {
+//                s.setText(instance.value);
+//            } else {
+//                s.setText(this.getValueExample());
+//            }
+//            Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+//        }
+//    }
+
     public boolean canRunAsync() {
         return true;
     }
@@ -109,6 +160,16 @@ public abstract class Action {
             QueueableScreenHandler.addToQueue(new AsyncActionErrorScreen(this.getActionDisplayName()));
         }
         return this.canRunAsync() || sameThread; // should run action
+    }
+
+    @FunctionalInterface
+    public interface ActionEditingCompletedFeedback {
+        void accept(@NotNull ActionInstance instance, @Nullable String oldValue, @NotNull String newValue);
+    }
+
+    @FunctionalInterface
+    public interface ActionEditingCanceledFeedback {
+        void accept(@NotNull ActionInstance instance);
     }
 
 }

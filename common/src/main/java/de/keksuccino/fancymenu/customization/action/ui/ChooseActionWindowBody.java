@@ -11,7 +11,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.LogicExecutorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
@@ -20,13 +19,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -113,33 +110,17 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
         this.updateActionsList();
         this.setDescription(this.instance.action);
 
-        if (this.isEdit) {
-            // Skip this screen and go directly to value configuration it's an edit
-            this.onNextStep();
-        }
-
     }
 
     protected void onEditValue() {
         if (this.instance.action == Action.EMPTY) return;
         this.originalAction = null;
         this.originalActionValue = null;
-        Screen baseScreen = Minecraft.getInstance().screen;
         PiPWindow window = this.getWindow();
-        this.instance.action.editValue(LogicExecutorScreen.build(() -> {
-            if (this.canClickDone()) {
-                this.onDone();
-            } else {
-                this.restoreWindowAfterValueEdit();
-            }
-            if ((baseScreen != null) && (Minecraft.getInstance().screen != baseScreen)) {
-                Minecraft.getInstance().setScreen(baseScreen);
-            }
-        }), this.instance);
-        Screen newScreen = Minecraft.getInstance().screen;
-        if (window != null && baseScreen != null && baseScreen != newScreen) {
-            window.setVisible(false);
+        if ((window != null) && window.isClosable()) {
+            window.close();
         }
+        this.instance.action.editValueInternal(this.instance, (instance1, oldValue, newValue) -> {}, instance1 -> {});
     }
 
     protected boolean hasValue() {

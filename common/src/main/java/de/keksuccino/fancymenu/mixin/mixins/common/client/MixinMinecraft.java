@@ -3,11 +3,13 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeScreen;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.helpers.WorldSessionTracker;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
@@ -189,6 +191,11 @@ public class MixinMinecraft {
 
 	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
 	private void before_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
+
+        if (ScreenUtils.areSetScreenCallsBlocked()) {
+            info.cancel();
+            return;
+        }
 
         // This routes setScreen() calls inside PipWindows through the actual window instead of normal MC
         PiPWindow pip = PiPWindowHandler.INSTANCE.getLastClickedWindowThisTick();
