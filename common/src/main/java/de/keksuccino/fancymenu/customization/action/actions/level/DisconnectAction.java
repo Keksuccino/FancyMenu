@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -59,7 +60,7 @@ public class DisconnectAction extends Action {
                         } else {
                             mc.disconnect();
                         }
-                        mc.setScreen(openAfter);
+                        ScreenUtils.setScreen(openAfter);
                     }
                 }, true);
             } catch (Exception ex) {

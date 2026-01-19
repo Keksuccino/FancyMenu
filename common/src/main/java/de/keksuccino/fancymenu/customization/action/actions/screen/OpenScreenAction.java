@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -47,13 +48,13 @@ public class OpenScreenAction extends Action {
                 if (value.equals(CreateWorldScreen.class.getName())) {
                     CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
                 } else {
-                    if (CustomGuiHandler.guiExists(value)) {
-                        Screen custom = CustomGuiHandler.constructInstance(value, Minecraft.getInstance().screen, null);
-                        if (custom != null) Minecraft.getInstance().setScreen(custom);
+                        if (CustomGuiHandler.guiExists(value)) {
+                            Screen custom = CustomGuiHandler.constructInstance(value, Minecraft.getInstance().screen, null);
+                        if (custom != null) ScreenUtils.setScreen(custom);
                     } else {
                         Screen s = ScreenInstanceFactory.tryConstruct(value);
                         if (s != null) {
-                            Minecraft.getInstance().setScreen(s);
+                            ScreenUtils.setScreen(s);
                         } else {
                             LOGGER.error("[FANCYMENU] Unable to construct screen instance for '" + value + "'!", new Exception());
                             Dialogs.openMessage(Component.translatable("fancymenu.actions.open_screen.error"), MessageDialogStyle.ERROR);
@@ -65,7 +66,7 @@ public class OpenScreenAction extends Action {
                 if ((lastErrorTriggered + 60000) < now) {
                     lastErrorTriggered = now;
                     MainThreadTaskExecutor.executeInMainThread(
-                            () -> Minecraft.getInstance().setScreen(new GenericMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getActionDisplayName()))),
+                            () -> ScreenUtils.setScreen(new GenericMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getActionDisplayName()))),
                             MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
             }

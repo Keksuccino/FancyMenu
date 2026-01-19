@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -51,14 +52,14 @@ public class JoinServerAction extends Action {
         }
         if (value != null) {
             if (Minecraft.getInstance().screen instanceof DisconnectedScreen) {
-                Minecraft.getInstance().setScreen(new TitleScreen());
+                ScreenUtils.setScreen(new TitleScreen());
             }
             if (!(Minecraft.getInstance().screen instanceof JoinServerBridgeScreen) && !(Minecraft.getInstance().screen instanceof ConnectScreen)) {
                 try {
 
                     Screen current = Minecraft.getInstance().screen;
 
-                    Minecraft.getInstance().setScreen(new JoinServerBridgeScreen());
+                    ScreenUtils.setScreen(new JoinServerBridgeScreen());
 
                     String ip = value.replace(" ", "");
                     int port = 25565;

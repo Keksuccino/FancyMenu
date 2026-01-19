@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import net.minecraft.client.Minecraft;
@@ -45,7 +46,7 @@ public class EnterWorldAction extends Action {
                 Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
                 Minecraft.getInstance().forceSetScreen(new GenericMessageScreen(Component.translatable("selectWorld.data_read")));
                 Minecraft.getInstance().createWorldOpenFlows().openWorld(value, () -> {
-                    Minecraft.getInstance().setScreen(current);
+                    ScreenUtils.setScreen(current);
                 });
             }
         }

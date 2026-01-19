@@ -26,6 +26,10 @@ public class ScreenUtils {
         return Minecraft.getInstance().screen;
     }
 
+    public static void setScreen(@Nullable Screen screen) {
+        Minecraft.getInstance().setScreen(screen);
+    }
+
     public static int getScreenWidth() {
         Screen s = getScreen();
         return (s != null) ? s.width : 0;

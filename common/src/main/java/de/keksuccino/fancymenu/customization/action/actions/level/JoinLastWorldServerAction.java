@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -55,7 +56,7 @@ public class JoinLastWorldServerAction extends Action {
                     Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
                     Minecraft.getInstance().forceSetScreen(new GenericMessageScreen(Component.translatable("selectWorld.data_read")));
                     Minecraft.getInstance().createWorldOpenFlows().openWorld(f.getName(), () -> {
-                        Minecraft.getInstance().setScreen(current);
+                        ScreenUtils.setScreen(current);
                     });
                 }
             } else { //CASE: SERVER

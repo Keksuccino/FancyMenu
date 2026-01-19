@@ -229,15 +229,26 @@ public class ShowToastAction extends Action {
                     .setEditListener(s -> this.config.iconSource = s.trim())
                     .setText(this.config.iconSource);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.choose_icon"), button -> {
+                final PiPWindow[] chooserWindow = new PiPWindow[1];
                 ResourceChooserScreen<ITexture, ImageFileType> chooser = ResourceChooserScreen.image(null, source -> {
                     if (source != null) {
                         this.config.iconSource = source;
                         this.iconSourceCell.setText(source);
                     }
-                    Minecraft.getInstance().setScreen(this);
+                    PiPWindow window = chooserWindow[0];
+                    if (window != null) {
+                        window.close();
+                    }
                 });
                 chooser.setSource(this.config.iconSource.isBlank() ? null : this.config.iconSource, false);
-                Minecraft.getInstance().setScreen(chooser);
+                PiPWindow window = new PiPWindow(chooser.getTitle())
+                        .setScreen(chooser)
+                        .setForceFancyMenuUiScale(true)
+                        .setAlwaysOnTop(true)
+                        .setBlockMinecraftScreenInputs(true)
+                        .setForceFocus(true);
+                chooserWindow[0] = window;
+                PiPWindowHandler.INSTANCE.openWindowWithDefaultSizeAndPosition(window, null);
             }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_icon.desc"))), true);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.clear_icon"), button -> {
                 this.config.iconSource = "";
@@ -251,15 +262,26 @@ public class ShowToastAction extends Action {
                     .setEditListener(s -> this.config.backgroundSource = s.trim())
                     .setText(this.config.backgroundSource);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.choose_background"), button -> {
+                final PiPWindow[] chooserWindow = new PiPWindow[1];
                 ResourceChooserScreen<ITexture, ImageFileType> chooser = ResourceChooserScreen.image(null, source -> {
                     if (source != null) {
                         this.config.backgroundSource = source;
                         this.backgroundSourceCell.setText(source);
                     }
-                    Minecraft.getInstance().setScreen(this);
+                    PiPWindow window = chooserWindow[0];
+                    if (window != null) {
+                        window.close();
+                    }
                 });
                 chooser.setSource(this.config.backgroundSource.isBlank() ? null : this.config.backgroundSource, false);
-                Minecraft.getInstance().setScreen(chooser);
+                PiPWindow window = new PiPWindow(chooser.getTitle())
+                        .setScreen(chooser)
+                        .setForceFancyMenuUiScale(true)
+                        .setAlwaysOnTop(true)
+                        .setBlockMinecraftScreenInputs(true)
+                        .setForceFocus(true);
+                chooserWindow[0] = window;
+                PiPWindowHandler.INSTANCE.openWindowWithDefaultSizeAndPosition(window, null);
             }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_background.desc"))), true);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.clear_background"), button -> {
                 this.config.backgroundSource = "";

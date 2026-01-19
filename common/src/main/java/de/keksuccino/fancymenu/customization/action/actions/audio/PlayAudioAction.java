@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
@@ -109,7 +110,7 @@ public class PlayAudioAction extends Action {
             if ((lastErrorTriggered + 60000L) < now) {
                 lastErrorTriggered = now;
                 MainThreadTaskExecutor.executeInMainThread(
-                        () -> Minecraft.getInstance().setScreen(new GenericMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getActionDisplayName()))),
+                        () -> ScreenUtils.setScreen(new GenericMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getActionDisplayName()))),
                         MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
             }
             return;
@@ -314,19 +315,30 @@ public class PlayAudioAction extends Action {
             this.audioSourceCell.editBox.setUITooltip(() -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.audio_source.desc")));
 
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.play_audio.edit.choose_audio"), button -> {
+                final PiPWindow[] chooserWindow = new PiPWindow[1];
                 ResourceChooserScreen<IAudio, ?> chooser = ResourceChooserScreen.audio(null, source -> {
                     if (source != null) {
                         this.config.audioSource = source;
                         this.audioSourceCell.setText(source);
                     }
-                    Minecraft.getInstance().setScreen(this);
+                    PiPWindow window = chooserWindow[0];
+                    if (window != null) {
+                        window.close();
+                    }
                 });
                 String chooserPreset = this.config.audioSource;
                 if (chooserPreset.isBlank()) {
                     chooserPreset = ResourceSourceType.LOCAL.getSourcePrefix() + "/config/fancymenu/assets/";
                 }
                 chooser.setSource(chooserPreset, false);
-                Minecraft.getInstance().setScreen(chooser);
+                PiPWindow window = new PiPWindow(chooser.getTitle())
+                        .setScreen(chooser)
+                        .setForceFancyMenuUiScale(true)
+                        .setAlwaysOnTop(true)
+                        .setBlockMinecraftScreenInputs(true)
+                        .setForceFocus(true);
+                chooserWindow[0] = window;
+                PiPWindowHandler.INSTANCE.openWindowWithDefaultSizeAndPosition(window, null);
             }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.choose_audio.desc"))), true);
 
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.play_audio.edit.clear_audio"), button -> {
