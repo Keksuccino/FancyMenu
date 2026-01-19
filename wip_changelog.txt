@@ -95,6 +95,11 @@
 - You can now set an "Unhover Sound" for buttons, sliders and checkboxes, similar to the hover sound, but for unhover (duh) (#1415)
 - The "Input Field" element now has support for setting hover, unhover and click sounds
 - Most of FancyMenu's simple text inputs (input fields) now allow for selecting text by holding down the mouse and moving over the text
+- The text editor got some QoL additions
+  - Duplicate Line: Ctrl + D
+  - Move Line Up/Down: Alt + Up/Down
+  - Go To Start/End: Ctrl + Home / Ctrl + End
+  - Go To Line: Ctrl + G (opens input box -> enter number)
 
 ### Breaking Changes
 
