@@ -10,17 +10,19 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class PiPCellScreen extends CellScreen implements PipableScreen {
+public abstract class PiPCellWindowBody extends CellScreen implements PipableScreen {
 
     @Nullable
     private PiPWindow window;
     protected boolean allowCloseOnEsc = true;
+    private int renderMouseX = 0;
+    private int renderMouseY = 0;
 
-    public PiPCellScreen(Component title) {
+    public PiPCellWindowBody(Component title) {
         super(title);
     }
 
-    public PiPCellScreen() {
+    public PiPCellWindowBody() {
         super(Component.empty());
     }
 
@@ -84,9 +86,26 @@ public abstract class PiPCellScreen extends CellScreen implements PipableScreen 
         return allowCloseOnEsc;
     }
 
-    public PiPCellScreen setAllowCloseOnEsc(boolean allowCloseOnEsc) {
+    public PiPCellWindowBody setAllowCloseOnEsc(boolean allowCloseOnEsc) {
         this.allowCloseOnEsc = allowCloseOnEsc;
         return this;
+    }
+
+    public int getRenderMouseX() {
+        return renderMouseX;
+    }
+
+    public int getRenderMouseY() {
+        return renderMouseY;
+    }
+
+    @Override
+    public final void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.renderMouseX = mouseX;
+        this.renderMouseY = mouseY;
+        this.renderBody(graphics, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
+        this.renderLateBody(graphics, mouseX, mouseY, partial);
     }
 
     @Override

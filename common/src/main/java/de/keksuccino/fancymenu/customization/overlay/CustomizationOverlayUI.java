@@ -37,7 +37,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizerHandler;
@@ -1107,7 +1107,7 @@ public class CustomizationOverlayUI {
 
         menu.addClickableEntry("rename_layout", Component.translatable("fancymenu.layout.manage.rename"), (menu1, entry) -> {
             if (layout.layoutFile == null) return;
-            TextInputScreen inputScreen = new TextInputScreen(CharacterFilter.buildLowercaseAndUppercaseFileNameFilter(), s -> {
+            TextInputWindowBody inputScreen = new TextInputWindowBody(CharacterFilter.buildLowercaseAndUppercaseFileNameFilter(), s -> {
                 if ((s != null) && !s.isBlank()) {
                     String newName = s + ".txt";
                     String newPath = layout.layoutFile.getParent();
@@ -1130,7 +1130,7 @@ public class CustomizationOverlayUI {
             });
             Dialogs.openGeneric(inputScreen,
                     Component.translatable("fancymenu.layout.manage.rename"),
-                    ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                    ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
             inputScreen.setText(layout.getLayoutName());
             menu1.closeMenuChain();
         });

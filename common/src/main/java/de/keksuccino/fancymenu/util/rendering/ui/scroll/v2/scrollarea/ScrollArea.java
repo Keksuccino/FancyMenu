@@ -45,6 +45,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
     protected boolean innerAreaHovered = false;
     protected boolean roundedColorBackground = false;
     protected boolean setupForBlurInterface = false;
+    protected boolean scissorEnabled = true;
 
     public ScrollArea(float x, float y, float width, float height) {
         this.setX(x, true);
@@ -111,6 +112,13 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
     public void renderEntries(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         final float totalWidth = this.makeAllEntriesWidthOfWidestEntry ? this.getTotalEntryWidth() : 0;
+        if (this.scissorEnabled) {
+            int scissorMinX = (int) (this.getInnerX() + 2);
+            int scissorMinY = (int) (this.getInnerY() + 2);
+            int scissorMaxX = (int) (this.getInnerX() + this.getInnerWidth() - 2);
+            int scissorMaxY = (int) (this.getInnerY() + this.getInnerHeight() - 2);
+            graphics.enableScissor(scissorMinX, scissorMinY, scissorMaxX, scissorMaxY);
+        }
         this.updateEntries((entry) -> {
             if (this.makeAllEntriesWidthOfWidestEntry) entry.setWidth(totalWidth);
             if (this.minimumEntryWidthIsAreaWidth && (entry.getWidth() < this.getInnerWidth())) {
@@ -118,6 +126,9 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
             }
             entry.render(graphics, mouseX, mouseY, partial);
         });
+        if (this.scissorEnabled) {
+            graphics.disableScissor();
+        }
 
     }
 
@@ -346,6 +357,15 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
     public ScrollArea setSetupForBlurInterface(boolean setupForBlurInterface) {
         this.setupForBlurInterface = setupForBlurInterface;
         return this;
+    }
+
+    public ScrollArea setScissorEnabled(boolean scissorEnabled) {
+        this.scissorEnabled = scissorEnabled;
+        return this;
+    }
+
+    public boolean isScissorEnabled() {
+        return this.scissorEnabled;
     }
 
     public boolean isMouseOverInnerArea(double mouseX, double mouseY) {

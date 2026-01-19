@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
-import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -27,14 +27,14 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
         super.init();
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.actions.screens.manage_screen.manage"), (menu, entry) -> {
-            ActionScriptEditorScreen s = new ActionScriptEditorScreen(this.element.actionExecutor, (call) -> {
+            ActionScriptEditorWindowBody s = new ActionScriptEditorWindowBody(this.element.actionExecutor, (call) -> {
                 if (call != null) {
                     this.editor.history.saveSnapshot();
                     this.element.actionExecutor = call;
                 }
             });
             menu.closeMenuChain();
-            ActionScriptEditorScreen.openInWindow(s);
+            ActionScriptEditorWindowBody.openInWindow(s);
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);

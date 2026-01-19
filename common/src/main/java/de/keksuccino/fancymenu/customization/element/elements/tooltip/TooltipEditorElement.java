@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -58,7 +58,7 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                             if (entry.getStackMeta().isFirstInStack()) {
                                 List<TooltipEditorElement> selectedElements = this.getFilteredSelectedElementList(e -> e instanceof TooltipEditorElement);
                                 String defaultText = tooltipElement.source;
-                                TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.elements.text.v2.source.input"), null, (call) -> {
+                                TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.elements.text.v2.source.input"), null, (call) -> {
                                     if (call != null) {
                                         this.editor.history.saveSnapshot();
                                         for (AbstractEditorElement<?, ?> e : selectedElements) {
@@ -70,7 +70,7 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                                 s.setMultilineMode(true);
                                 s.setPlaceholdersAllowed(true);
                                 menu.closeMenuChain();
-                                Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.text.v2.source.input"), ContextMenu.IconFactory.getIcon("text"), TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+                                Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.text.v2.source.input"), ContextMenu.IconFactory.getIcon("text"), TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
                             }
                         })
                 .setStackable(true)

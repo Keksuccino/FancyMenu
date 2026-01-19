@@ -7,8 +7,8 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocusScreen {
+public class DualTextInputWindowBody extends PiPWindowBody implements InitialWidgetFocusScreen {
 
     public static final int PIP_WINDOW_WIDTH = 420;
     public static final int PIP_WINDOW_HEIGHT = 220;
@@ -32,7 +32,7 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
     protected ExtendedEditBox input_two;
     protected ExtendedButton cancelButton;
     protected ExtendedButton doneButton;
-    protected ConsumingSupplier<DualTextInputScreen, Boolean> textValidator = null;
+    protected ConsumingSupplier<DualTextInputWindowBody, Boolean> textValidator = null;
     protected UITooltip textValidatorFeedbackUITooltip = null;
     @NotNull
     protected MutableComponent firstInputLabel;
@@ -47,11 +47,11 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
     protected boolean allowPlaceholders = true;
 
     @NotNull
-    public static DualTextInputScreen build(@NotNull Component title, @NotNull Component firstInputLabel, @NotNull Component secondInputLabel, @Nullable CharacterFilter filter, @NotNull Consumer<Pair<String, String>> callback) {
-        return new DualTextInputScreen(title, firstInputLabel, secondInputLabel, filter, callback);
+    public static DualTextInputWindowBody build(@NotNull Component title, @NotNull Component firstInputLabel, @NotNull Component secondInputLabel, @Nullable CharacterFilter filter, @NotNull Consumer<Pair<String, String>> callback) {
+        return new DualTextInputWindowBody(title, firstInputLabel, secondInputLabel, filter, callback);
     }
 
-    public DualTextInputScreen(@NotNull Component title, @NotNull Component firstInputLabel, @NotNull Component secondInputLabel, @Nullable CharacterFilter filter, @NotNull Consumer<Pair<String, String>> callback) {
+    public DualTextInputWindowBody(@NotNull Component title, @NotNull Component firstInputLabel, @NotNull Component secondInputLabel, @Nullable CharacterFilter filter, @NotNull Consumer<Pair<String, String>> callback) {
         super(Component.empty());
         this.callback = callback;
         this.firstInputLabel = (firstInputLabel instanceof MutableComponent l) ? l : Component.empty();
@@ -106,13 +106,13 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
 
         if (this.allowPlaceholders) {
             UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(editorButtonX, this.input_one.getY(), editorButtonWidth, inputHeight, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
-                TextEditorScreen s = new TextEditorScreen(this.firstInputLabel, (this.filter != null) ? this.filter.convertToLegacyFilter() : null, callback -> {
+                TextEditorWindowBody s = new TextEditorWindowBody(this.firstInputLabel, (this.filter != null) ? this.filter.convertToLegacyFilter() : null, callback -> {
                     if (callback != null) {
                         this.setFirstText(callback);
                     }
                 });
                 s.setText(this.getFirstText());
-                Dialogs.openGeneric(s, this.firstInputLabel, null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+                Dialogs.openGeneric(s, this.firstInputLabel, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
             })), UIBase.shouldBlur());
         }
 
@@ -137,13 +137,13 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
 
         if (this.allowPlaceholders) {
             UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(editorButtonX, this.input_two.getY(), editorButtonWidth, inputHeight, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
-                TextEditorScreen s = new TextEditorScreen(this.secondInputLabel, (this.filter != null) ? this.filter.convertToLegacyFilter() : null, callback -> {
+                TextEditorWindowBody s = new TextEditorWindowBody(this.secondInputLabel, (this.filter != null) ? this.filter.convertToLegacyFilter() : null, callback -> {
                     if (callback != null) {
                         this.setSecondText(callback);
                     }
                 });
                 s.setText(this.getSecondText());
-                Dialogs.openGeneric(s, this.secondInputLabel, null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+                Dialogs.openGeneric(s, this.secondInputLabel, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
             })), UIBase.shouldBlur());
         }
 
@@ -192,7 +192,7 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
         this.callback.accept(null);
     }
 
-    public DualTextInputScreen setFirstText(@Nullable String text) {
+    public DualTextInputWindowBody setFirstText(@Nullable String text) {
         if (text == null) text = "";
         if (this.input_one != null) {
             this.input_one.setValue(text);
@@ -202,7 +202,7 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
         return this;
     }
 
-    public DualTextInputScreen setSecondText(@Nullable String text) {
+    public DualTextInputWindowBody setSecondText(@Nullable String text) {
         if (text == null) text = "";
         if (this.input_two != null) {
             this.input_two.setValue(text);
@@ -231,12 +231,12 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
         return true;
     }
 
-    public DualTextInputScreen setTextValidator(@Nullable ConsumingSupplier<DualTextInputScreen, Boolean> textValidator) {
+    public DualTextInputWindowBody setTextValidator(@Nullable ConsumingSupplier<DualTextInputWindowBody, Boolean> textValidator) {
         this.textValidator = textValidator;
         return this;
     }
 
-    public DualTextInputScreen setTextValidatorUserFeedback(@Nullable UITooltip feedback) {
+    public DualTextInputWindowBody setTextValidatorUserFeedback(@Nullable UITooltip feedback) {
         this.textValidatorFeedbackUITooltip = feedback;
         return this;
     }
@@ -245,7 +245,7 @@ public class DualTextInputScreen extends PiPScreen implements InitialWidgetFocus
         return allowPlaceholders;
     }
 
-    public DualTextInputScreen setAllowPlaceholders(boolean allowPlaceholders) {
+    public DualTextInputWindowBody setAllowPlaceholders(boolean allowPlaceholders) {
         this.allowPlaceholders = allowPlaceholders;
         return this;
     }

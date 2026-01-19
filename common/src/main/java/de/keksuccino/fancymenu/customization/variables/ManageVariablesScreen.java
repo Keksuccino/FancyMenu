@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
@@ -78,7 +78,7 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
 
         // Create buttons with positions in constructors
         ExtendedButton addVariableButton = new ExtendedButton(addButtonX, addButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable"), (button) -> {
-            TextInputScreen s = new TextInputScreen(CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
+            TextInputWindowBody s = new TextInputWindowBody(CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
                 if (call != null) {
                     if (!VariableHandler.variableExists(call)) {
                         VariableHandler.setVariable(call, "");
@@ -88,7 +88,7 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
             });
             Dialogs.openGeneric(s,
                     Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name"),
-                    ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                    ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
         });
         this.addRenderableWidget(addVariableButton);
         UIBase.applyDefaultWidgetSkinTo(addVariableButton);
@@ -96,14 +96,14 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
         ExtendedButton setValueButton = new ExtendedButton(setValueButtonX, setValueButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
-                TextInputScreen s = new TextInputScreen(null, (call) -> {
+                TextInputWindowBody s = new TextInputWindowBody(null, (call) -> {
                     if (call != null) {
                         e.variable.setValue(call);
                     }
                 });
                 Dialogs.openGeneric(s,
                         Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"),
-                        ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                        ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
                 s.setText(e.variable.getValue());
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));

@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
@@ -31,7 +31,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogSty
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -447,7 +447,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             menu.addSubMenuEntry("universal_layout_settings", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options"), universalLayoutMenu);
 
             universalLayoutMenu.addClickableEntry("add_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist"), (menu1, entry) -> {
-                TextInputScreen s = new TextInputScreen(null, call -> {
+                TextInputWindowBody s = new TextInputWindowBody(null, call -> {
                     if (call != null) {
                         editor.history.saveSnapshot();
                         if (!editor.layout.universalLayoutMenuBlacklist.contains(call)) {
@@ -457,7 +457,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 });
                 Dialogs.openGeneric(s,
                         Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"),
-                        ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                        ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
                 menu1.closeMenuChain();
             }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")));
 
@@ -489,7 +489,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             universalLayoutMenu.addSeparatorEntry("separator_after_clear_blacklist");
 
             universalLayoutMenu.addClickableEntry("add_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist"), (menu1, entry) -> {
-                TextInputScreen s = new TextInputScreen(null, call -> {
+                TextInputWindowBody s = new TextInputWindowBody(null, call -> {
                     if (call != null) {
                         editor.history.saveSnapshot();
                         if (!editor.layout.universalLayoutMenuWhitelist.contains(call)) {
@@ -499,7 +499,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 });
                 Dialogs.openGeneric(s,
                         Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"),
-                        ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                        ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
                 menu1.closeMenuChain();
             }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")));
 
@@ -569,7 +569,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         menu.addSeparatorEntry("separator_after_scroll_list_customizations");
 
         menu.addClickableEntry("layout_index", Component.translatable("fancymenu.editor.layout.index"), (menu1, entry) -> {
-                    TextInputScreen s = new TextInputScreen(CharacterFilter.buildIntegerFilter(), s1 -> {
+                    TextInputWindowBody s = new TextInputWindowBody(CharacterFilter.buildIntegerFilter(), s1 -> {
                         if ((s1 != null) && MathUtils.isInteger(s1)) {
                             editor.history.saveSnapshot();
                             editor.layout.layoutIndex = Integer.parseInt(s1);
@@ -578,7 +578,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     s.setTextValidator(consumes -> TextValidators.INTEGER_TEXT_VALIDATOR.get(consumes.getText()));
                     Dialogs.openGeneric(s,
                             Component.translatable("fancymenu.editor.layout.index"),
-                            ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                            ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
                     s.setText("" + editor.layout.layoutIndex);
                     menu1.closeMenuChain();
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.layout.index.desc")))
@@ -593,7 +593,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 .setIcon(ContextMenu.IconFactory.getIcon("random"));
 
         menu.addClickableEntry("random_mode_group", Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), (menu1, entry) -> {
-                    TextInputScreen s = new TextInputScreen(CharacterFilter.buildIntegerFilter(), call -> {
+                    TextInputWindowBody s = new TextInputWindowBody(CharacterFilter.buildIntegerFilter(), call -> {
                         if (call != null) {
                             if (!MathUtils.isInteger(call)) {
                                 call = "1";
@@ -604,7 +604,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     });
                     Dialogs.openGeneric(s,
                             Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"),
-                            ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                            ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
                     s.setText(editor.layout.randomGroup);
                     menu1.closeMenuChain();
                 }).addIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
@@ -721,7 +721,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         menu.addSeparatorEntry("separator_after_layout_wide_requirements");
 
         menu.addClickableEntry("manage_open_screen_actions", Component.translatable("fancymenu.layout.editor.edit_open_screen_action_script"), (menu1, entry) -> {
-                    ActionScriptEditorScreen s = new ActionScriptEditorScreen(editor.layout.openScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.openScreenExecutableBlocks.getFirst().copy(false), (call) -> {
+                    ActionScriptEditorWindowBody s = new ActionScriptEditorWindowBody(editor.layout.openScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.openScreenExecutableBlocks.getFirst().copy(false), (call) -> {
                         if (call != null) {
                             editor.history.saveSnapshot();
                             editor.layout.openScreenExecutableBlocks.clear();
@@ -729,13 +729,13 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         }
                     });
                     menu1.closeMenuChain();
-                    ActionScriptEditorScreen.openInWindow(s);
+                    ActionScriptEditorWindowBody.openInWindow(s);
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout.editor.edit_open_screen_action_script.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
 
         menu.addClickableEntry("manage_close_screen_actions", Component.translatable("fancymenu.layout.editor.edit_close_screen_action_script"), (menu1, entry) -> {
-                    ActionScriptEditorScreen s = new ActionScriptEditorScreen(editor.layout.closeScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.closeScreenExecutableBlocks.getFirst().copy(false), (call) -> {
+                    ActionScriptEditorWindowBody s = new ActionScriptEditorWindowBody(editor.layout.closeScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.closeScreenExecutableBlocks.getFirst().copy(false), (call) -> {
                         if (call != null) {
                             editor.history.saveSnapshot();
                             editor.layout.closeScreenExecutableBlocks.clear();
@@ -743,7 +743,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         }
                     });
                     menu1.closeMenuChain();
-                    ActionScriptEditorScreen.openInWindow(s);
+                    ActionScriptEditorWindowBody.openInWindow(s);
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout.editor.edit_close_screen_action_script.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);

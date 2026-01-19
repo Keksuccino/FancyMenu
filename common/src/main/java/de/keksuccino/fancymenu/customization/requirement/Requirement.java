@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.requirement.ui.AsyncRequirementErro
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -102,12 +102,12 @@ public abstract class Requirement {
     public abstract String getValuePreset();
 
     /**
-     * This returns a list with NEW instances of formatting rules used to format the value string in the {@link TextEditorScreen}.<br><br>
+     * This returns a list with NEW instances of formatting rules used to format the value string in the {@link TextEditorWindowBody}.<br><br>
      *
      * Formatting rules are not mandatory, so if you don't want to use them, return NULL here.<br>
      * Same applies for when the requirement has no value.
      *
-     * @return A list with formatting rules used for editing the requirement value in the {@link TextEditorScreen}.
+     * @return A list with formatting rules used for editing the requirement value in the {@link TextEditorWindowBody}.
      */
     @Nullable
     public abstract List<TextEditorFormattingRule> getValueFormattingRules();
@@ -116,7 +116,7 @@ public abstract class Requirement {
         if (this.hasValue()) {
             String displayName = this.getValueDisplayName();
             Component title = (displayName != null) ? Component.literal(displayName) : Component.translatable("fancymenu.elements.requirements.edit_value");
-            TextEditorScreen s = new TextEditorScreen(title, null, (call) -> {
+            TextEditorWindowBody s = new TextEditorWindowBody(title, null, (call) -> {
                 if (call != null) {
                     requirementInstance.value = call;
                 }
@@ -130,7 +130,7 @@ public abstract class Requirement {
             } else {
                 s.setText(this.getValuePreset());
             }
-            Dialogs.openGeneric(s, title, null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+            Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
         }
     }
 

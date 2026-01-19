@@ -5,8 +5,8 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputScreen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
@@ -84,7 +84,7 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
         this.rightClickMenu.addClickableEntry("random_timing_offsets_range", Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"),
                         (menu, entry) -> {
                             menu.closeMenuChain();
-                            DualTextInputScreen s = DualTextInputScreen.build(
+                            DualTextInputWindowBody s = DualTextInputWindowBody.build(
                                     Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"),
                                     Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range.min"),
                                     Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range.max"),
@@ -106,7 +106,7 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                             s.setFirstText("" + this.element.randomTimingOffsetMinMs);
                             s.setSecondText("" + this.element.randomTimingOffsetMaxMs);
                             s.setAllowPlaceholders(false);
-                            Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"), null, DualTextInputScreen.PIP_WINDOW_WIDTH, DualTextInputScreen.PIP_WINDOW_HEIGHT);
+                            Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"), null, DualTextInputWindowBody.PIP_WINDOW_WIDTH, DualTextInputWindowBody.PIP_WINDOW_HEIGHT);
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.range.desc")))
                 .setStackable(false);

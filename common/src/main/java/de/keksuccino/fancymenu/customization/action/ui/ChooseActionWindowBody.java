@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class ChooseActionScreen extends PiPScreen implements InitialWidgetFocusScreen {
+public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidgetFocusScreen {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
@@ -49,7 +49,7 @@ public class ChooseActionScreen extends PiPScreen implements InitialWidgetFocusS
 
     public boolean isEdit;
 
-    public ChooseActionScreen(@Nullable ActionInstance instanceToEdit, @NotNull Consumer<ActionInstance> callback) {
+    public ChooseActionWindowBody(@Nullable ActionInstance instanceToEdit, @NotNull Consumer<ActionInstance> callback) {
 
         super((instanceToEdit != null) ? Component.translatable("fancymenu.actions.screens.edit_action") : Component.translatable("fancymenu.actions.screens.add_action"));
 
@@ -77,13 +77,13 @@ public class ChooseActionScreen extends PiPScreen implements InitialWidgetFocusS
         this.setupInitialFocusWidget(this, this.searchBar);
 
         // Set positions for scroll areas
-        this.actionsListScrollArea.setWidth((this.width / 2) - 40, true);
+        this.actionsListScrollArea.setWidth(((float) this.width / 2) - 40, true);
         this.actionsListScrollArea.setHeight(this.height - 85 - 25, true);
         this.actionsListScrollArea.setX(20, true);
         this.actionsListScrollArea.setY(50 + 15 + 25, true);
         this.addRenderableWidget(this.actionsListScrollArea);
 
-        this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
+        this.descriptionScrollArea.setWidth(((float) this.width / 2) - 40, true);
         this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
         this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
         this.descriptionScrollArea.setY(50 + 15, true);
@@ -174,20 +174,15 @@ public class ChooseActionScreen extends PiPScreen implements InitialWidgetFocusS
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
-
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.build_screen.available_actions"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         Component descLabel = Component.translatable("fancymenu.actions.screens.build_screen.action_description");
         int descLabelWidth = this.font.width(descLabel);
         graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
-
-        super.render(graphics, mouseX, mouseY, partial);
 
         this.performInitialWidgetFocusActionInRender();
 
@@ -329,8 +324,8 @@ public class ChooseActionScreen extends PiPScreen implements InitialWidgetFocusS
             // Check if this is a double-click
             if (currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) {
                 // Double-click detected
-                if (ChooseActionScreen.this.instance.action == this.action) {
-                    ChooseActionScreen.this.onNextStep();
+                if (ChooseActionWindowBody.this.instance.action == this.action) {
+                    ChooseActionWindowBody.this.onNextStep();
                     this.lastClickTime = 0; // Reset to prevent triple clicks
                     return;
                 }

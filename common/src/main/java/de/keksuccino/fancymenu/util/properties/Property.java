@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.util.properties;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
@@ -20,11 +20,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -722,7 +722,7 @@ public class Property<T> {
                                         ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
                                         defaultText = (resolved != null) ? resolved.get() : property.getDefault();
                                     }
-                                    TextEditorScreen s = new TextEditorScreen(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null, call -> {
+                                    TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null, call -> {
                                         if (call != null) {
                                             builder.saveSnapshot();
                                             builder.applyStackAppliers(entry, call);
@@ -732,7 +732,7 @@ public class Property<T> {
                                     s.setMultilineMode(false);
                                     s.setPlaceholdersAllowed(true);
                                     contextMenu.closeMenuChain();
-                                    Dialogs.openGeneric(s, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), ContextMenu.IconFactory.getIcon("text"), TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+                                    Dialogs.openGeneric(s, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), ContextMenu.IconFactory.getIcon("text"), TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
                                 })
                         .setStackable(true)
                         .setStackApplier((stackEntry, value) -> {
@@ -779,7 +779,7 @@ public class Property<T> {
                                         preset = parsed;
                                     }
                                 }
-                                ColorPickerScreen picker = new ColorPickerScreen(preset,
+                                ColorPickerWindowBody picker = new ColorPickerWindowBody(preset,
                                         drawable -> { // onColorUpdate
                                             if (drawable != null) {
                                                 builder.applyStackAppliers(entry, drawable);
@@ -802,8 +802,8 @@ public class Property<T> {
                                 PiPWindow window = new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"))
                                         .setScreen(picker)
                                         .setForceFancyMenuUiScale(true)
-                                        .setMinSize(ColorPickerScreen.PIP_WINDOW_WIDTH, ColorPickerScreen.PIP_WINDOW_HEIGHT)
-                                        .setSize(ColorPickerScreen.PIP_WINDOW_WIDTH, ColorPickerScreen.PIP_WINDOW_HEIGHT);
+                                        .setMinSize(ColorPickerWindowBody.PIP_WINDOW_WIDTH, ColorPickerWindowBody.PIP_WINDOW_HEIGHT)
+                                        .setSize(ColorPickerWindowBody.PIP_WINDOW_WIDTH, ColorPickerWindowBody.PIP_WINDOW_HEIGHT);
                                 PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
                             })
                     .setStackable(true)
@@ -1028,7 +1028,7 @@ public class Property<T> {
      * Creates a {@link GenericExecutableBlock} property with custom serialization and a specialized
      * editor UI entry.
      * <p>
-     * The context menu entry opens {@link ActionScriptEditorScreen}. When used in stacked context
+     * The context menu entry opens {@link ActionScriptEditorWindowBody}. When used in stacked context
      * menus, it can optionally prompt the user before overwriting differing values and then applies
      * the edited block to all selected objects.
      * </p>
@@ -1111,7 +1111,7 @@ public class Property<T> {
                 if (block == null) {
                     block = new GenericExecutableBlock();
                 }
-                ActionScriptEditorScreen s = new ActionScriptEditorScreen(block, (call) -> {
+                ActionScriptEditorWindowBody s = new ActionScriptEditorWindowBody(block, (call) -> {
                     if (call != null) {
                         builder.saveSnapshot();
                         if (resolved != null) {
@@ -1120,7 +1120,7 @@ public class Property<T> {
                     }
                 });
                 contextMenu.closeMenuChain();
-                ActionScriptEditorScreen.openInWindow(s);
+                ActionScriptEditorWindowBody.openInWindow(s);
             } else if (entry.getStackMeta().isFirstInStack()) {
                 List<GenericExecutableBlock> blocks = ObjectUtils.getOfAll(GenericExecutableBlock.class,
                         builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null),
@@ -1135,7 +1135,7 @@ public class Property<T> {
                 if (allEqual && !blocks.isEmpty() && blocks.getFirst() != null) {
                     blockToUseInManager = blocks.getFirst().copy(true);
                 }
-                ActionScriptEditorScreen s = new ActionScriptEditorScreen(blockToUseInManager, (call) -> {
+                ActionScriptEditorWindowBody s = new ActionScriptEditorWindowBody(blockToUseInManager, (call) -> {
                     if (call != null) {
                         builder.saveSnapshot();
                         for (PropertyHolder holder : builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null)) {
@@ -1148,12 +1148,12 @@ public class Property<T> {
                 });
                 if (allEqual) {
                     contextMenu.closeMenuChain();
-                    ActionScriptEditorScreen.openInWindow(s);
+                    ActionScriptEditorWindowBody.openInWindow(s);
                 } else {
                     Dialogs.openMessageWithCallback(Component.translatable("fancymenu.actions.multiselect.warning.override"), MessageDialogStyle.WARNING, call -> {
                         if (call) {
                             contextMenu.closeMenuChain();
-                            ActionScriptEditorScreen.openInWindow(s);
+                            ActionScriptEditorWindowBody.openInWindow(s);
                         }
                     });
                 }

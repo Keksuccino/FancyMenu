@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.customization.variables.Variable;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -74,7 +74,7 @@ public class PlaceholderParser {
 
         // Text editor multi-line placeholder compression
         // Can be done for multi-line strings too, because the method only replaces codes instead of actual spaces or newlines
-        addParsingProcessor(ParsingProcessorTiming.BEFORE_REPLACING_PLACEHOLDERS, TextEditorScreen::compileSingleLineString);
+        addParsingProcessor(ParsingProcessorTiming.BEFORE_REPLACING_PLACEHOLDERS, TextEditorWindowBody::compileSingleLineString);
 
         // Minecraft Formatting Codes
         addParsingProcessor(ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS, in -> {

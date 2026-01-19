@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.file.type.types.*;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
@@ -221,11 +221,11 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
     }
 
     protected void openCreateFolderDialog() {
-        TextInputScreen inputScreen = new TextInputScreen(CharacterFilter.buildResourceNameFilter(), (call) -> {
+        TextInputWindowBody inputScreen = new TextInputWindowBody(CharacterFilter.buildResourceNameFilter(), (call) -> {
             if (call == null) return;
             this.createFolder(call);
         });
-        Dialogs.openGeneric(inputScreen, Component.translatable("fancymenu.ui.filechooser.create_folder"), null, TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+        Dialogs.openGeneric(inputScreen, Component.translatable("fancymenu.ui.filechooser.create_folder"), null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
         inputScreen.setText(Component.translatable("fancymenu.ui.filechooser.create_folder.default_name").getString());
     }
 

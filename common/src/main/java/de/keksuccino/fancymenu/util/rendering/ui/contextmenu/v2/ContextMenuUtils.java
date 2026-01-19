@@ -12,11 +12,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -255,15 +255,15 @@ public class ContextMenuUtils {
     public static ContextMenu.ClickableContextMenuEntry<?> addRangeSliderInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Double> getter, @NotNull Consumer<Double> setter, boolean addResetOption, double defaultValue, double minSliderValue, double maxSliderValue, @NotNull ConsumingSupplier<Double, Component> sliderLabelSupplier) {
         return addGenericInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, valueSetter -> {
             double presetValue = Objects.requireNonNullElse(getter.get(), 0.0D);
-            RangeSliderScreen sliderScreen = new RangeSliderScreen(minSliderValue, maxSliderValue, presetValue, sliderLabelSupplier,
+            RangeSliderWindowBody sliderScreen = new RangeSliderWindowBody(minSliderValue, maxSliderValue, presetValue, sliderLabelSupplier,
                     valueSetter::accept,
                     valueSetter::accept,
                     valueSetter::accept);
             PiPWindow window = new PiPWindow(label)
                     .setScreen(sliderScreen)
                     .setForceFancyMenuUiScale(true)
-                    .setMinSize(RangeSliderScreen.PIP_WINDOW_WIDTH, RangeSliderScreen.PIP_WINDOW_HEIGHT)
-                    .setSize(RangeSliderScreen.PIP_WINDOW_WIDTH, RangeSliderScreen.PIP_WINDOW_HEIGHT);
+                    .setMinSize(RangeSliderWindowBody.PIP_WINDOW_WIDTH, RangeSliderWindowBody.PIP_WINDOW_HEIGHT)
+                    .setSize(RangeSliderWindowBody.PIP_WINDOW_WIDTH, RangeSliderWindowBody.PIP_WINDOW_HEIGHT);
             PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
         });
     }
@@ -279,7 +279,7 @@ public class ContextMenuUtils {
             Screen current = Minecraft.getInstance().screen;
             Screen inputScreen;
             if (!multiLineInput && !allowPlaceholders) {
-                TextInputScreen s = new TextInputScreen(inputCharacterFilter, call -> {
+                TextInputWindowBody s = new TextInputWindowBody(inputCharacterFilter, call -> {
                     if (call != null) {
                         valueSetter.accept(call);
                     }
@@ -293,11 +293,11 @@ public class ContextMenuUtils {
                         return textValidator.get(consumes.getText());
                     });
                 }
-                Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
                 s.setText(getter.get());
                 inputScreen = null;
             } else {
-                TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
+                TextEditorWindowBody s = new TextEditorWindowBody(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
                     if (call != null) {
                         valueSetter.accept(call);
                     }
@@ -314,7 +314,7 @@ public class ContextMenuUtils {
                 s.setMultilineMode(multiLineInput);
                 s.setPlaceholdersAllowed(allowPlaceholders);
                 s.setText(getter.get());
-                Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+                Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
                 inputScreen = null;
             }
             if (inputScreen != null) {

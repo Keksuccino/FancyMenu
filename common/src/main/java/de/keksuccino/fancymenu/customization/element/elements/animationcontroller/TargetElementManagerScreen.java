@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -100,7 +100,7 @@ public class TargetElementManagerScreen extends CellScreen {
         this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.edit"), button -> {
             AnimationControllerElement.TargetElement target = this.getSelectedTarget();
             if (target == null) return;
-            TextInputScreen inputScreen = new TextInputScreen(CharacterFilter.buildIntegerFilter(), result -> {
+            TextInputWindowBody inputScreen = new TextInputWindowBody(CharacterFilter.buildIntegerFilter(), result -> {
                 if (result != null) {
                     String trimmed = result.trim();
                     int offsetMs = 0;
@@ -117,7 +117,7 @@ public class TargetElementManagerScreen extends CellScreen {
             });
             Dialogs.openGeneric(inputScreen,
                     Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.input"),
-                    ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                    ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
             inputScreen.setText("" + target.timingOffsetMs);
         }).setIsActiveSupplier(consumes -> (this.getSelectedTarget() != null));
         this.addRightSideDefaultSpacer();
@@ -131,7 +131,7 @@ public class TargetElementManagerScreen extends CellScreen {
         this.addRightSideDefaultSpacer();
 
         this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id"), button -> {
-            TextInputScreen inputScreen = new TextInputScreen(null, result -> {
+            TextInputWindowBody inputScreen = new TextInputWindowBody(null, result -> {
                 boolean removed = false;
                 if (result != null) {
                     String trimmed = result.trim();
@@ -145,7 +145,7 @@ public class TargetElementManagerScreen extends CellScreen {
             });
             Dialogs.openGeneric(inputScreen,
                     Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id.input"),
-                    ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                    ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
         });
         this.addRightSideDefaultSpacer();
     }

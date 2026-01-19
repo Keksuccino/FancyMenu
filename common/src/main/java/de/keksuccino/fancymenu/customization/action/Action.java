@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -81,7 +81,7 @@ public abstract class Action {
     public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
         if (this.hasValue()) {
             Component title = (this.getValueDisplayName() != null) ? this.getValueDisplayName() : Component.empty();
-            TextEditorScreen s = new TextEditorScreen(title, null, (call) -> {
+            TextEditorWindowBody s = new TextEditorWindowBody(title, null, (call) -> {
                 if (call != null) {
                     instance.value = call;
                 }
@@ -94,7 +94,7 @@ public abstract class Action {
             } else {
                 s.setText(this.getValueExample());
             }
-            Dialogs.openGeneric(s, title, null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+            Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
         }
     }
 

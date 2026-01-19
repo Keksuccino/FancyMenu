@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecu
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
 import de.keksuccino.fancymenu.customization.listener.ListenerInstance;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
@@ -114,7 +114,7 @@ public class ManageListenersScreen extends CellScreen {
                 if (listener != null) {
                     // Create new instance and open action editor
                     ListenerInstance newInstance = listener.createFreshInstance();
-                    ActionScriptEditorScreen actionsScreen = new ActionScriptEditorScreen(newInstance.getActionScript(), updatedScript -> {
+                    ActionScriptEditorWindowBody actionsScreen = new ActionScriptEditorWindowBody(newInstance.getActionScript(), updatedScript -> {
                         if (updatedScript != null) {
                             newInstance.setActionScript(updatedScript);
                             this.tempInstances.add(newInstance);
@@ -122,7 +122,7 @@ public class ManageListenersScreen extends CellScreen {
                         }
                     });
                     Minecraft.getInstance().setScreen(this);
-                    ActionScriptEditorScreen.openInWindow(actionsScreen);
+                    ActionScriptEditorWindowBody.openInWindow(actionsScreen);
                 } else {
                     Minecraft.getInstance().setScreen(this);
                 }
@@ -154,12 +154,12 @@ public class ManageListenersScreen extends CellScreen {
     protected void onEditActionsOfSelected() {
         if (this.selectedInstance != null) {
             ListenerInstance cached = this.selectedInstance;
-            ActionScriptEditorScreen actionsScreen = new ActionScriptEditorScreen(cached.getActionScript(), updatedScript -> {
+            ActionScriptEditorWindowBody actionsScreen = new ActionScriptEditorWindowBody(cached.getActionScript(), updatedScript -> {
                 if (updatedScript != null) {
                     cached.setActionScript(updatedScript);
                 }
             });
-            ActionScriptEditorScreen.openInWindow(actionsScreen);
+            ActionScriptEditorWindowBody.openInWindow(actionsScreen);
         }
     }
 

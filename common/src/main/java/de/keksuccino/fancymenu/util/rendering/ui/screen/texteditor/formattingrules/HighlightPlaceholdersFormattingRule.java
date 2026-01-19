@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingru
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorLine;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,7 +25,7 @@ public class HighlightPlaceholdersFormattingRule extends TextEditorFormattingRul
     private String fullText;
 
     @Override
-    public void resetRule(TextEditorScreen editor) {
+    public void resetRule(TextEditorWindowBody editor) {
         characterStyles.clear();
         allLines.clear();
         allLines.addAll(editor.getLines());
@@ -282,7 +282,7 @@ public class HighlightPlaceholdersFormattingRule extends TextEditorFormattingRul
 
     @Override
     public @Nullable Style getStyle(char atCharacterInLine, int atCharacterIndexInLine, int cursorPosInLine,
-                                    TextEditorLine inLine, int atCharacterIndexTotal, TextEditorScreen editor) {
+                                    TextEditorLine inLine, int atCharacterIndexTotal, TextEditorWindowBody editor) {
         SortedMap<Integer, Style> lineStyles = characterStyles.get(inLine);
         if (lineStyles != null && lineStyles.containsKey(atCharacterIndexInLine)) {
             return lineStyles.get(atCharacterIndexInLine);

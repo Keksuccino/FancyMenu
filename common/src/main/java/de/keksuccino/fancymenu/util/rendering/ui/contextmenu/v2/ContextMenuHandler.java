@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ContextMenuHandler extends AbstractContainerEventHandler implements Renderable, Tickable {
 
@@ -61,6 +62,33 @@ public class ContextMenuHandler extends AbstractContainerEventHandler implements
         if (current != null) {
             current.render(graphics, mouseX, mouseY, partial);
         }
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        ContextMenu current = this.getCurrent();
+        if (current != null) {
+            return current.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        ContextMenu current = this.getCurrent();
+        if (current != null) {
+            return current.mouseReleased(mouseX, mouseY, button);
+        }
+        return false;
+    }
+
+    @Override
+    public Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
+        ContextMenu current = this.getCurrent();
+        if (current != null && current.isMouseOverMenu(mouseX, mouseY)) {
+            return Optional.of(current);
+        }
+        return Optional.empty();
     }
 
     @Override

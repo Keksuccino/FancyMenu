@@ -14,8 +14,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -23,9 +21,7 @@ import java.util.List;
 
 public class TextEditorLine extends AdvancedTextField {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    public TextEditorScreen parent;
+    public TextEditorWindowBody parent;
     protected String lastTickValue = "";
     public boolean isInMouseHighlightingMode = false;
     protected final Font font2;
@@ -38,7 +34,7 @@ public class TextEditorLine extends AdvancedTextField {
 
     protected static boolean leftRightArrowWasDown = false;
 
-    public TextEditorLine(Font font, int x, int y, int width, int height, boolean handleSelf, @Nullable CharacterFilter characterFilter, TextEditorScreen parent) {
+    public TextEditorLine(Font font, int x, int y, int width, int height, boolean handleSelf, @Nullable CharacterFilter characterFilter, TextEditorWindowBody parent) {
         super(font, x, y, width, height, handleSelf, characterFilter);
         this.parent = parent;
         this.font2 = font;
@@ -186,7 +182,7 @@ public class TextEditorLine extends AdvancedTextField {
 
     public boolean isHighlightedHovered() {
         if (this.isInEditorArea() && (this.currentHighlightPosXStart != this.currentHighlightPosXEnd) && this.isHovered()) {
-            int mouseX = this.parent.lastMouseX;
+            int mouseX = this.parent.getRenderMouseX();
             return ((mouseX >= Math.min(this.currentHighlightPosXStart, this.currentHighlightPosXEnd)) && (mouseX <= Math.max(this.currentHighlightPosXStart, this.currentHighlightPosXEnd)));
         }
         return false;

@@ -14,10 +14,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -791,7 +791,7 @@ public interface ContextMenuBuilder<O> {
     }
 
     /**
-     * Builds a range slider input entry that opens {@link RangeSliderScreen}.
+     * Builds a range slider input entry that opens {@link RangeSliderWindowBody}.
      * <p>
      * This entry is stack-aware and applies the slider value to all selected objects.
      */
@@ -804,7 +804,7 @@ public interface ContextMenuBuilder<O> {
                     }
                     Double presetValue = targetFieldGetter.get(this.self());
                     menu.closeMenuChain();
-                    RangeSliderScreen sliderScreen = new RangeSliderScreen(minSliderValue, maxSliderValue, Objects.requireNonNullElse(presetValue, 0.0D), sliderLabelSupplier,
+                    RangeSliderWindowBody sliderScreen = new RangeSliderWindowBody(minSliderValue, maxSliderValue, Objects.requireNonNullElse(presetValue, 0.0D), sliderLabelSupplier,
                             value -> this.applyStackAppliers(entry, value),
                             value -> {
                                 this.saveSnapshot();
@@ -814,8 +814,8 @@ public interface ContextMenuBuilder<O> {
                     PiPWindow window = new PiPWindow(label)
                             .setScreen(sliderScreen)
                             .setForceFancyMenuUiScale(true)
-                            .setMinSize(RangeSliderScreen.PIP_WINDOW_WIDTH, RangeSliderScreen.PIP_WINDOW_HEIGHT)
-                            .setSize(RangeSliderScreen.PIP_WINDOW_WIDTH, RangeSliderScreen.PIP_WINDOW_HEIGHT);
+                            .setMinSize(RangeSliderWindowBody.PIP_WINDOW_WIDTH, RangeSliderWindowBody.PIP_WINDOW_HEIGHT)
+                            .setSize(RangeSliderWindowBody.PIP_WINDOW_WIDTH, RangeSliderWindowBody.PIP_WINDOW_HEIGHT);
                     PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
                 }).setStackable(true)
                 .setStackApplier((stackEntry, value) -> {
@@ -878,7 +878,7 @@ public interface ContextMenuBuilder<O> {
     }
 
     /**
-     * Builds a text input entry that opens {@link TextInputScreen} or {@link TextEditorScreen}.
+     * Builds a text input entry that opens {@link TextInputWindowBody} or {@link TextEditorWindowBody}.
      * <p>
      * This entry is stack-aware: it uses {@link #applyStackAppliers(ContextMenu.ContextMenuEntry, Object)}
      * to apply the resulting text to all selected objects.
@@ -906,7 +906,7 @@ public interface ContextMenuBuilder<O> {
                     }
                     if (!multiLineInput && !allowPlaceholders) {
                         menu.closeMenuChain();
-                        TextInputScreen s = new TextInputScreen(inputCharacterFilter, call -> {
+                        TextInputWindowBody s = new TextInputWindowBody(inputCharacterFilter, call -> {
                             if (call != null) {
                                 this.saveSnapshot();
                                 this.applyStackAppliers(entry, call);
@@ -918,10 +918,10 @@ public interface ContextMenuBuilder<O> {
                                 return textValidator.get(consumes.getText());
                             });
                         }
-                        Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                        Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
                     } else {
                         menu.closeMenuChain();
-                        TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
+                        TextEditorWindowBody s = new TextEditorWindowBody(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
                             if (call != null) {
                                 this.saveSnapshot();
                                 this.applyStackAppliers(entry, call);
@@ -935,7 +935,7 @@ public interface ContextMenuBuilder<O> {
                                 return textValidator.get(consumes.getText());
                             });
                         }
-                        Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+                        Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
                     }
                 }).setStackable(true)
                 .setStackApplier((stackEntry, value) -> {

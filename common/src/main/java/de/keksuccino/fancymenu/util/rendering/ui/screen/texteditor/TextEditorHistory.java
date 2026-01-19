@@ -10,11 +10,11 @@ public class TextEditorHistory {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected TextEditorScreen parent;
+    protected TextEditorWindowBody parent;
     protected List<Snapshot> snapshots = new ArrayList<>();
     protected int index = 0;
 
-    protected TextEditorHistory(@NotNull TextEditorScreen parent) {
+    protected TextEditorHistory(@NotNull TextEditorWindowBody parent) {
         this.parent = parent;
     }
 

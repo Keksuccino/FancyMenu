@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
@@ -18,7 +18,7 @@ import org.joml.Matrix4f;
 import java.awt.Color;
 import java.util.function.Consumer;
 
-public class ColorPickerScreen extends PiPScreen {
+public class ColorPickerWindowBody extends PiPWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 391;
     public static final int PIP_WINDOW_HEIGHT = 328;
@@ -70,7 +70,7 @@ public class ColorPickerScreen extends PiPScreen {
     private int infoWidth;
     private int infoHeight;
 
-    public ColorPickerScreen(@Nullable DrawableColor presetColor, @NotNull Consumer<DrawableColor> onColorUpdate, @NotNull Consumer<DrawableColor> onDone, @NotNull Consumer<DrawableColor> onCancel) {
+    public ColorPickerWindowBody(@Nullable DrawableColor presetColor, @NotNull Consumer<DrawableColor> onColorUpdate, @NotNull Consumer<DrawableColor> onDone, @NotNull Consumer<DrawableColor> onCancel) {
         super(Component.translatable("fancymenu.ui.color_picker.title"));
         this.onColorUpdate = onColorUpdate;
         this.onDone = onDone;
@@ -102,7 +102,7 @@ public class ColorPickerScreen extends PiPScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         UITheme theme = UIBase.getUITheme();
         RenderSystem.enableBlend();

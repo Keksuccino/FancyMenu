@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputWindowBody;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -90,7 +90,7 @@ public class RenameFileAction extends Action {
     @Override
     public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
 
-        DualTextInputScreen s = DualTextInputScreen.build(
+        DualTextInputWindowBody s = DualTextInputWindowBody.build(
                 this.getActionDisplayName(),
                 Component.translatable("fancymenu.actions.rename_file.value.filepath"),
                 Component.translatable("fancymenu.actions.rename_file.value.new_name"), null, callback -> {
@@ -106,7 +106,7 @@ public class RenameFileAction extends Action {
             s.setSecondText(array[1]);
         }
 
-        Dialogs.openGeneric(s, this.getActionDisplayName(), null, DualTextInputScreen.PIP_WINDOW_WIDTH, DualTextInputScreen.PIP_WINDOW_HEIGHT);
+        Dialogs.openGeneric(s, this.getActionDisplayName(), null, DualTextInputWindowBody.PIP_WINDOW_WIDTH, DualTextInputWindowBody.PIP_WINDOW_HEIGHT);
 
     }
 

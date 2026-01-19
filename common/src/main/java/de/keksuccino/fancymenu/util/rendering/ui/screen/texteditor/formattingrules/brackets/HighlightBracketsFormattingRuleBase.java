@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingru
 
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorLine;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public abstract class HighlightBracketsFormattingRuleBase extends TextEditorForm
     protected abstract Style getHighlightStyle();
     
     @Override
-    public void resetRule(TextEditorScreen editor) {
+    public void resetRule(TextEditorWindowBody editor) {
         this.openBracketLine = null;
         this.openBracketInLineIndex = -1;
         this.closeBracketLine = null;
@@ -110,7 +110,7 @@ public abstract class HighlightBracketsFormattingRuleBase extends TextEditorForm
     }
 
     @Override
-    public @Nullable Style getStyle(char atCharacterInLine, int atCharacterIndexInLine, int cursorPosInLine, TextEditorLine inLine, int atCharacterIndexTotal, TextEditorScreen editor) {
+    public @Nullable Style getStyle(char atCharacterInLine, int atCharacterIndexInLine, int cursorPosInLine, TextEditorLine inLine, int atCharacterIndexTotal, TextEditorWindowBody editor) {
         if ((this.openBracketLine != null) && (this.closeBracketLine != null)) {
             String s = String.valueOf(atCharacterInLine);
             if (s.equals(this.getOpenBracketChar()) && (inLine == this.openBracketLine) && (atCharacterIndexInLine == this.openBracketInLineIndex)) {

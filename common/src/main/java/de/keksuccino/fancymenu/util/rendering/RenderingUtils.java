@@ -33,9 +33,9 @@ public class RenderingUtils {
     private static final List<RenderingTask> PRE_RENDER_CONTEXTS = new ArrayList<>();
     private static final List<RenderingTask> POST_RENDER_CONTEXTS = new ArrayList<>();
     private static final List<RenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
-    private static boolean lockDepthTest = false;
-    private static boolean blurBlocked = false;
-    private static boolean tooltipRenderingBlocked = false;
+    private static int depthTestLockDepth = 0;
+    private static int blurBlockDepth = 0;
+    private static int tooltipRenderingBlockDepth = 0;
     private static int overrideBackgroundBlurRadius = -1000;
 
     public static void postPreRenderTask(@NotNull RenderingTask context) {
@@ -104,27 +104,45 @@ public class RenderingUtils {
     }
 
     public static void setDepthTestLocked(boolean locked) {
-        lockDepthTest = locked;
+        if (locked) {
+            depthTestLockDepth++;
+            return;
+        }
+        if (depthTestLockDepth > 0) {
+            depthTestLockDepth--;
+        }
     }
 
     public static boolean isDepthTestLocked() {
-        return lockDepthTest;
+        return depthTestLockDepth > 0;
     }
 
     public static void setVanillaMenuBlurringBlocked(boolean blocked) {
-        blurBlocked = blocked;
+        if (blocked) {
+            blurBlockDepth++;
+            return;
+        }
+        if (blurBlockDepth > 0) {
+            blurBlockDepth--;
+        }
     }
 
     public static boolean isVanillaMenuBlurringBlocked() {
-        return blurBlocked;
+        return blurBlockDepth > 0;
     }
 
     public static void setTooltipRenderingBlocked(boolean blocked) {
-        tooltipRenderingBlocked = blocked;
+        if (blocked) {
+            tooltipRenderingBlockDepth++;
+            return;
+        }
+        if (tooltipRenderingBlockDepth > 0) {
+            tooltipRenderingBlockDepth--;
+        }
     }
 
     public static boolean isTooltipRenderingBlocked() {
-        return tooltipRenderingBlocked;
+        return tooltipRenderingBlockDepth > 0;
     }
 
     public static void addDeferredScreenRenderingTask(@NotNull RenderingUtils.RenderingTask task) {

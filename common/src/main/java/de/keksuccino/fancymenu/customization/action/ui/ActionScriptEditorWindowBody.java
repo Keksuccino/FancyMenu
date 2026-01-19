@@ -28,8 +28,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogSty
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -74,7 +74,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @SuppressWarnings("all")
-public class ActionScriptEditorScreen extends PiPScreen {
+public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
@@ -161,10 +161,8 @@ public class ActionScriptEditorScreen extends PiPScreen {
     private final Deque<ScriptSnapshot> redoHistory = new ArrayDeque<>();
     private boolean suppressHistoryCapture = false;
     private boolean actionsMenuRightClickConsumedByEntry = false;
-    protected int renderMouseX = 0;
-    protected int renderMouseY = 0;
 
-    public ActionScriptEditorScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
+    public ActionScriptEditorWindowBody(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
         super(Component.translatable("fancymenu.actions.screens.manage_screen.manage"));
         this.setAllowCloseOnEsc(false);
         this.executableBlock = executableBlock.copy(false);
@@ -172,11 +170,11 @@ public class ActionScriptEditorScreen extends PiPScreen {
         this.updateActionInstanceScrollArea(false);
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ActionScriptEditorScreen screen) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ActionScriptEditorWindowBody screen) {
         return openInWindow(screen, null);
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ActionScriptEditorScreen screen, @Nullable PiPWindow parentWindow) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ActionScriptEditorWindowBody screen, @Nullable PiPWindow parentWindow) {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
@@ -288,8 +286,8 @@ public class ActionScriptEditorScreen extends PiPScreen {
                 .setIcon(ContextMenu.IconFactory.getIcon("delete"));
 
         if (reopen || wasOpen) {
-            float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)this.renderMouseX;
-            float reopenY = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenY : (float)this.renderMouseY;
+            float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)this.getRenderMouseX();
+            float reopenY = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenY : (float)this.getRenderMouseY();
             this.openRightClickContextMenuAtMouse(reopenX, reopenY, resolvedEntryPath);
         }
 
@@ -560,7 +558,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
             if (!instance.action.hasValue()) {
                 return;
             }
-            ChooseActionScreen s = new ChooseActionScreen(instance.copy(false), call -> {
+            ChooseActionWindowBody s = new ChooseActionWindowBody(instance.copy(false), call -> {
                 if (call != null) {
                     ExecutableEntry currentEntry = this.findEntryForExecutable(targetExecutable);
                     if (currentEntry != null) {
@@ -582,7 +580,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
                     }
                 }
             });
-            Dialogs.openGeneric(s, s.getTitle(), null, ChooseActionScreen.PIP_WINDOW_WIDTH, ChooseActionScreen.PIP_WINDOW_HEIGHT);
+            Dialogs.openGeneric(s, s.getTitle(), null, ChooseActionWindowBody.PIP_WINDOW_WIDTH, ChooseActionWindowBody.PIP_WINDOW_HEIGHT);
         } else if (targetExecutable instanceof IfExecutableBlock block) {
             ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
                 if (container != null) {
@@ -632,7 +630,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
             });
             Minecraft.getInstance().setScreen(s);
         } else if (targetExecutable instanceof DelayExecutableBlock block) {
-            TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFilter().convertToLegacyFilter(), call -> {
+            TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFilter().convertToLegacyFilter(), call -> {
                 if (call != null) {
                     ExecutableEntry currentEntry = this.findEntryForExecutable(block);
                     if ((currentEntry != null) && (currentEntry.executable instanceof DelayExecutableBlock currentBlock)) {
@@ -656,19 +654,19 @@ public class ActionScriptEditorScreen extends PiPScreen {
                 String text = Objects.requireNonNullElse(editor.getText(), "").trim();
                 return !text.isEmpty() && de.keksuccino.konkrete.math.MathUtils.isLong(text) && Long.parseLong(text) >= 0L;
             });
-            Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.delay.edit"), null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+            Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.delay.edit"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
         }
     }
 
     protected void onOpenActionChooser(@Nullable ExecutableEntry selectionReference) {
         final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
-        ChooseActionScreen screen = new ChooseActionScreen(null, call -> {
+        ChooseActionWindowBody screen = new ChooseActionWindowBody(null, call -> {
             if (call != null) {
                 ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 this.finalizeActionAddition(call, resolvedReference);
             }
         });
-        Dialogs.openGeneric(screen, screen.getTitle(), null, ChooseActionScreen.PIP_WINDOW_WIDTH, ChooseActionScreen.PIP_WINDOW_HEIGHT);
+        Dialogs.openGeneric(screen, screen.getTitle(), null, ChooseActionWindowBody.PIP_WINDOW_WIDTH, ChooseActionWindowBody.PIP_WINDOW_HEIGHT);
     }
 
     protected void onAddAction(@NotNull Action action, @Nullable ExecutableEntry selectionReference) {
@@ -746,7 +744,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
 
     protected void onAddDelay(@Nullable ExecutableEntry selectionReference) {
         final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
-        TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFilter().convertToLegacyFilter(), call -> {
+        TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFilter().convertToLegacyFilter(), call -> {
             if (call != null) {
                 ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 DelayExecutableBlock block = new DelayExecutableBlock();
@@ -761,7 +759,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
             String text = Objects.requireNonNullElse(editor.getText(), "").trim();
             return !text.isEmpty() && de.keksuccino.konkrete.math.MathUtils.isLong(text) && Long.parseLong(text) >= 0L;
         });
-        Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.delay.edit"), null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+        Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.delay.edit"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
     }
 
     protected void onAppendElseIf(@Nullable ExecutableEntry targetEntry) {
@@ -831,10 +829,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        this.renderMouseX = mouseX;
-        this.renderMouseY = mouseY;
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.renderTickDragHoveredEntry = this.getDragHoveredEntry();
         this.renderTickDraggedEntry = this.getDraggedEntry();
@@ -856,8 +851,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
         UITheme theme = UIBase.getUITheme();
         graphics.fill(0, 0, this.width, this.height, theme.ui_interface_background_color.getColorInt());
 
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, theme.ui_interface_generic_text_color.getColorInt(), false);
+        // "Script Body" label
         graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.ui_interface_generic_text_color.getColorInt(), false);
 
         int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - MINIMAP_WIDTH - MINIMAP_GAP);
@@ -920,8 +914,6 @@ public class ActionScriptEditorScreen extends PiPScreen {
 
         this.doneButton.render(graphics, mouseX, mouseY, partial);
         this.cancelButton.render(graphics, mouseX, mouseY, partial);
-
-        super.render(graphics, mouseX, mouseY, partial);
 
         this.renderIllegalActionIndicator(graphics);
 
@@ -1763,12 +1755,12 @@ public class ActionScriptEditorScreen extends PiPScreen {
     @Nullable
     protected ExecutableEntry getScrollAreaHoveredEntry() {
         if (this.isUserNavigatingInRightClickContextMenu()) return null;
-        if (!this.scriptEntriesScrollArea.isMouseOverInnerArea(this.renderMouseX, this.renderMouseY)) {
+        if (!this.scriptEntriesScrollArea.isMouseOverInnerArea(this.getRenderMouseX(), this.getRenderMouseY())) {
             return null;
         }
         for (ScrollAreaEntry entry : this.scriptEntriesScrollArea.getEntries()) {
             if (entry instanceof ExecutableEntry ee) {
-                if (UIBase.isXYInArea(this.renderMouseX, this.renderMouseY, ee.getX(), ee.getY(), this.scriptEntriesScrollArea.getInnerWidth(), ee.getHeight())) {
+                if (UIBase.isXYInArea(this.getRenderMouseX(), this.getRenderMouseY(), ee.getX(), ee.getY(), this.scriptEntriesScrollArea.getInnerWidth(), ee.getHeight())) {
                     return ee;
                 }
             }
@@ -2062,10 +2054,10 @@ public class ActionScriptEditorScreen extends PiPScreen {
     protected ExecutableEntry getDragHoveredEntry() {
         ExecutableEntry draggedEntry = this.getDraggedEntry();
         if (draggedEntry != null) {
-            if ((this.renderMouseY <= this.scriptEntriesScrollArea.getInnerY()) && (this.scriptEntriesScrollArea.verticalScrollBar.getScroll() == 0.0F)) {
+            if ((this.getRenderMouseY() <= this.scriptEntriesScrollArea.getInnerY()) && (this.scriptEntriesScrollArea.verticalScrollBar.getScroll() == 0.0F)) {
                 return BEFORE_FIRST;
             }
-            if ((this.renderMouseY >= (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) && (this.scriptEntriesScrollArea.verticalScrollBar.getScroll() == 1.0F)) {
+            if ((this.getRenderMouseY() >= (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) && (this.scriptEntriesScrollArea.verticalScrollBar.getScroll() == 1.0F)) {
                 return AFTER_LAST;
             }
             for (ScrollAreaEntry e : this.scriptEntriesScrollArea.getEntries()) {
@@ -2073,7 +2065,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
                     if ((e.getY() + e.getHeight()) > (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) {
                         continue;
                     }
-                    if ((ee != draggedEntry) && UIBase.isXYInArea(this.renderMouseX, this.renderMouseY, ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight()) && this.scriptEntriesScrollArea.isMouseOverInnerArea(this.renderMouseX, this.renderMouseY)) {
+                    if ((ee != draggedEntry) && UIBase.isXYInArea(this.getRenderMouseX(), this.getRenderMouseY(), ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight()) && this.scriptEntriesScrollArea.isMouseOverInnerArea(this.getRenderMouseX(), this.getRenderMouseY())) {
                         List<ExecutableEntry> statementChain = new ArrayList<>();
                         if (draggedEntry.executable instanceof AbstractExecutableBlock) {
                             statementChain = this.getStatementChainOf(draggedEntry);
@@ -3055,7 +3047,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
 
         @Override
         public void setSelected(boolean selected) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu() && !ActionScriptEditorScreen.this.contextMenuSelectionOverrideActive) return;
+            if (ActionScriptEditorWindowBody.this.isUserNavigatingInRightClickContextMenu() && !ActionScriptEditorWindowBody.this.contextMenuSelectionOverrideActive) return;
             super.setSelected(selected);
         }
 
@@ -3065,7 +3057,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
 
         @Override
         public boolean isHovered() {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return false;
+            if (ActionScriptEditorWindowBody.this.isUserNavigatingInRightClickContextMenu()) return false;
             return super.isHovered();
         }
 
@@ -3093,11 +3085,11 @@ public class ActionScriptEditorScreen extends PiPScreen {
 
         private void renderEntryDecorations(@NotNull GuiGraphics graphics) {
             RenderSystem.enableBlend();
-            List<ExecutableEntry> chainAnchors = ActionScriptEditorScreen.this.getChainAnchorsFor(this);
+            List<ExecutableEntry> chainAnchors = ActionScriptEditorWindowBody.this.getChainAnchorsFor(this);
             for (ExecutableEntry anchorEntry : chainAnchors) {
-                List<ExecutableEntry> chainEntries = ActionScriptEditorScreen.this.getStatementChainOf(anchorEntry);
+                List<ExecutableEntry> chainEntries = ActionScriptEditorWindowBody.this.getStatementChainOf(anchorEntry);
                 if (chainEntries.size() > 1) {
-                    Color chainColor = ActionScriptEditorScreen.this.getChainIndicatorColorFor(anchorEntry);
+                    Color chainColor = ActionScriptEditorWindowBody.this.getChainIndicatorColorFor(anchorEntry);
                     this.renderChainColumn(graphics, chainColor, anchorEntry);
                 }
             }
@@ -3117,14 +3109,14 @@ public class ActionScriptEditorScreen extends PiPScreen {
                 this.renderCollapseToggle(graphics, toggleX, toggleY, folder.isCollapsed());
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
-                if (ActionScriptEditorScreen.this.inlineNameEntry != this) {
+                if (ActionScriptEditorWindowBody.this.inlineNameEntry != this) {
                     graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
                 } else {
                     if (this.folderLabelComponent != null) {
                         graphics.drawString(this.font, this.folderLabelComponent, textX, textY, -1, false);
                     }
-                    if ((ActionScriptEditorScreen.this.inlineNameEditBox != null) && (this.folderCollapsedSuffixComponent != null)) {
-                        int suffixX = ActionScriptEditorScreen.this.inlineNameEditBox.getX() + ActionScriptEditorScreen.this.inlineNameEditBox.getWidth() + 2;
+                    if ((ActionScriptEditorWindowBody.this.inlineNameEditBox != null) && (this.folderCollapsedSuffixComponent != null)) {
+                        int suffixX = ActionScriptEditorWindowBody.this.inlineNameEditBox.getX() + ActionScriptEditorWindowBody.this.inlineNameEditBox.getWidth() + 2;
                         graphics.drawString(this.font, this.folderCollapsedSuffixComponent, suffixX, textY, -1, false);
                     }
                 }
@@ -3170,7 +3162,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
                 UIBase.renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, theme.bullet_list_dot_color_1.getColor());
                 int valueTextX = renderX + 5 + 4 + 3 + 4 + 3;
                 int valueTextY = centerYLine2 - (this.font.lineHeight / 2);
-                if (ActionScriptEditorScreen.this.inlineValueEntry != this) {
+                if (ActionScriptEditorWindowBody.this.inlineValueEntry != this) {
                     graphics.drawString(this.font, this.valueComponent, valueTextX, valueTextY, -1, false);
                 } else if (this.valueLabelComponent != null) {
                     graphics.drawString(this.font, this.valueLabelComponent, valueTextX, valueTextY, -1, false);
@@ -3181,7 +3173,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
             }
         }
         private void renderChainColumn(@NotNull GuiGraphics graphics, @NotNull Color color, @NotNull ExecutableEntry anchorEntry) {
-            int barX = ActionScriptEditorScreen.this.getChainBarX(anchorEntry);
+            int barX = ActionScriptEditorWindowBody.this.getChainBarX(anchorEntry);
             int barTop = (int)this.getY() + 1;
             int barBottom = (int)(this.getY() + this.getHeight() - 1);
             if (barBottom <= barTop) {
@@ -3191,19 +3183,19 @@ public class ActionScriptEditorScreen extends PiPScreen {
         }
 
         protected void handleDragging() {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return;
+            if (ActionScriptEditorWindowBody.this.isUserNavigatingInRightClickContextMenu()) return;
             if (!MouseInput.isLeftMouseDown()) {
                 if (this.dragging) {
-                    ExecutableEntry hover = ActionScriptEditorScreen.this.renderTickDragHoveredEntry;
-                    if ((hover != null) && (ActionScriptEditorScreen.this.renderTickDraggedEntry == this)) {
-                        ActionScriptEditorScreen.this.moveAfter(this, hover);
+                    ExecutableEntry hover = ActionScriptEditorWindowBody.this.renderTickDragHoveredEntry;
+                    if ((hover != null) && (ActionScriptEditorWindowBody.this.renderTickDraggedEntry == this)) {
+                        ActionScriptEditorWindowBody.this.moveAfter(this, hover);
                     }
                 }
                 this.leftMouseDownDragging = false;
                 this.dragging = false;
             }
             if (this.leftMouseDownDragging) {
-                if ((this.leftMouseDownDraggingPosX != renderMouseX) || (this.leftMouseDownDraggingPosY != renderMouseY)) {
+                if ((this.leftMouseDownDraggingPosX != getRenderMouseX()) || (this.leftMouseDownDraggingPosY != getRenderMouseY())) {
                     // Only allow dragging for specific entries
                     if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof FolderExecutableBlock)) {
                         this.dragging = true;
@@ -3222,7 +3214,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
         @NotNull
         public AbstractExecutableBlock getParentBlock() {
             if (this.parentBlock == null) {
-                return ActionScriptEditorScreen.this.executableBlock;
+                return ActionScriptEditorWindowBody.this.executableBlock;
             }
             return this.parentBlock;
         }
@@ -3247,7 +3239,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
         }
 
         protected boolean isMouseOverValue(int mouseX, int mouseY) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return false;
+            if (ActionScriptEditorWindowBody.this.isUserNavigatingInRightClickContextMenu()) return false;
             if (!this.canInlineEditValue()) {
                 return false;
             }
@@ -3281,7 +3273,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
         }
 
         protected boolean isMouseOverName(int mouseX, int mouseY) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return false;
+            if (ActionScriptEditorWindowBody.this.isUserNavigatingInRightClickContextMenu()) return false;
             if (!this.canInlineEditName()) {
                 return false;
             }
@@ -3298,7 +3290,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
                 return false;
             }
             long now = System.currentTimeMillis();
-            if ((now - this.lastNameClickTime) <= ActionScriptEditorScreen.NAME_DOUBLE_CLICK_TIME_MS) {
+            if ((now - this.lastNameClickTime) <= ActionScriptEditorWindowBody.NAME_DOUBLE_CLICK_TIME_MS) {
                 this.lastNameClickTime = 0L;
                 return true;
             }
@@ -3325,7 +3317,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
         }
 
         protected int getNameFieldAvailableWidth() {
-            ScrollArea scrollArea = ActionScriptEditorScreen.this.scriptEntriesScrollArea;
+            ScrollArea scrollArea = ActionScriptEditorWindowBody.this.scriptEntriesScrollArea;
             int visibleRight = (int)(scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN);
             return Math.max(1, visibleRight - this.getNameFieldX());
         }
@@ -3346,7 +3338,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
 
         protected int getValueFieldAvailableWidth() {
             int valueX = this.getValueFieldX();
-            ScrollArea scrollArea = ActionScriptEditorScreen.this.scriptEntriesScrollArea;
+            ScrollArea scrollArea = ActionScriptEditorWindowBody.this.scriptEntriesScrollArea;
             int visibleRight = (int)(scrollArea.getInnerX() + scrollArea.getInnerWidth() - INLINE_EDIT_RIGHT_MARGIN);
             int available = visibleRight - valueX;
             return Math.max(1, available);
@@ -3357,7 +3349,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
         }
 
         protected boolean isMouseOverCollapseToggle(int mouseX, int mouseY) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return false;
+            if (ActionScriptEditorWindowBody.this.isUserNavigatingInRightClickContextMenu()) return false;
             if (!this.canToggleCollapse()) {
                 return false;
             }
@@ -3445,11 +3437,11 @@ public class ActionScriptEditorScreen extends PiPScreen {
 
         @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
-            if (ActionScriptEditorScreen.this.isUserNavigatingInRightClickContextMenu()) return;
+            if (ActionScriptEditorWindowBody.this.isUserNavigatingInRightClickContextMenu()) return;
             if (this.parent.getEntries().contains(this)) {
                 this.leftMouseDownDragging = true;
-                this.leftMouseDownDraggingPosX = renderMouseX;
-                this.leftMouseDownDraggingPosY = renderMouseY;
+                this.leftMouseDownDraggingPosX = getRenderMouseX();
+                this.leftMouseDownDraggingPosY = getRenderMouseY();
             }
         }
 
@@ -3479,20 +3471,20 @@ public class ActionScriptEditorScreen extends PiPScreen {
         private final Action action;
 
         protected FavoriteAwareActionEntry(@NotNull ContextMenu parent, @NotNull Action action) {
-            super("action_" + action.getIdentifier(), parent, ActionScriptEditorScreen.this.buildActionMenuLabel(action), (menu, entry) -> {
-                ActionScriptEditorScreen.this.markContextMenuActionSelectionSuppressed();
-                ExecutableEntry selectionReference = ActionScriptEditorScreen.this.getContextMenuTargetEntry();
+            super("action_" + action.getIdentifier(), parent, ActionScriptEditorWindowBody.this.buildActionMenuLabel(action), (menu, entry) -> {
+                ActionScriptEditorWindowBody.this.markContextMenuActionSelectionSuppressed();
+                ExecutableEntry selectionReference = ActionScriptEditorWindowBody.this.getContextMenuTargetEntry();
                 menu.closeMenu();
-                ActionScriptEditorScreen.this.onAddAction(action, selectionReference);
+                ActionScriptEditorWindowBody.this.onAddAction(action, selectionReference);
             });
             this.action = action;
-            this.setLabelSupplier((menu, entry) -> ActionScriptEditorScreen.this.buildActionMenuLabel(action));
-            this.setTooltipSupplier((menu, entry) -> ActionScriptEditorScreen.this.createActionTooltip(action, ActionScriptEditorScreen.this.isFavorite(action)));
+            this.setLabelSupplier((menu, entry) -> ActionScriptEditorWindowBody.this.buildActionMenuLabel(action));
+            this.setTooltipSupplier((menu, entry) -> ActionScriptEditorWindowBody.this.createActionTooltip(action, ActionScriptEditorWindowBody.this.isFavorite(action)));
             this.updateFavoriteIcon();
         }
 
         private void updateFavoriteIcon() {
-            if (ActionScriptEditorScreen.this.isFavorite(this.action)) {
+            if (ActionScriptEditorWindowBody.this.isFavorite(this.action)) {
                 this.setIcon(ContextMenu.IconFactory.getIcon("favorite"));
             } else {
                 this.setIcon(null);
@@ -3502,7 +3494,7 @@ public class ActionScriptEditorScreen extends PiPScreen {
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if ((button == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered && !actionsMenuRightClickConsumedByEntry) {
-                ActionScriptEditorScreen.this.toggleFavorite(this.action);
+                ActionScriptEditorWindowBody.this.toggleFavorite(this.action);
                 actionsMenuRightClickConsumedByEntry = true;
                 return true;
             }

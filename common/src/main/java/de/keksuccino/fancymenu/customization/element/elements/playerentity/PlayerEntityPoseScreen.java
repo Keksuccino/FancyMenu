@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
@@ -462,13 +462,13 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
             this.rotationStringButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.elements.player_entity.pose.advanced." + localizationKeySuffix), button -> {
                 Component title = Component.translatable("fancymenu.elements.player_entity.pose.advanced." + localizationKeySuffix);
-                TextEditorScreen s = new TextEditorScreen(title, null, call -> {
+                TextEditorWindowBody s = new TextEditorWindowBody(title, null, call -> {
                     if (call != null) {
                         rotationValueSetter.accept(call);
                     }
                 });
                 s.setText(rotationValueGetter.get());
-                Dialogs.openGeneric(s, title, null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+                Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
             });
             UIBase.applyDefaultWidgetSkinTo(this.rotationStringButton);
 

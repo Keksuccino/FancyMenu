@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custombutton;
 
-import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -32,14 +32,14 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
         boolean isSlider = (this.element.getWidget() instanceof CustomizableSlider);
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.actions.screens.manage_screen.manage"), (menu, entry) -> {
-                    ActionScriptEditorScreen s = new ActionScriptEditorScreen(this.element.getExecutableBlock(), (call) -> {
+                    ActionScriptEditorWindowBody s = new ActionScriptEditorWindowBody(this.element.getExecutableBlock(), (call) -> {
                         if (call != null) {
                             this.editor.history.saveSnapshot();
                             this.element.actionExecutor = call;
                         }
                     });
                     menu.closeMenuChain();
-                    ActionScriptEditorScreen.openInWindow(s);
+                    ActionScriptEditorWindowBody.openInWindow(s);
                 }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);

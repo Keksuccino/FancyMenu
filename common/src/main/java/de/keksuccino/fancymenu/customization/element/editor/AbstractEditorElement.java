@@ -23,7 +23,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuild
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -248,7 +248,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 anchorPointMenu.addClickableEntry("anchor_point_element", ElementAnchorPoints.ELEMENT.getDisplayName(),
                                 (menu, entry) -> {
                                     if (entry.getStackMeta().isFirstInStack()) {
-                                        TextInputScreen s = new TextInputScreen(null, call -> {
+                                        TextInputWindowBody s = new TextInputWindowBody(null, call -> {
                                             if (call != null) {
                                                 AbstractEditorElement<?, ?> editorElement = this.editor.getElementByInstanceIdentifier(call);
                                                 if (editorElement != null) {
@@ -270,7 +270,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                         }
                                         Dialogs.openGeneric(s,
                                                 Component.translatable("fancymenu.elements.anchor_points.element.setidentifier"),
-                                                ContextMenu.IconFactory.getIcon("text"), TextInputScreen.PIP_WINDOW_WIDTH, TextInputScreen.PIP_WINDOW_HEIGHT);
+                                                ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
                                         menu.closeMenuChain();
                                     }
                                 })

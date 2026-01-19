@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
@@ -781,7 +781,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             if (this.allowEditor) {
                 this.openEditorButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
                     if (allowEditor) {
-                        TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), (characterFilter != null) ? characterFilter.convertToLegacyFilter() : null, callback -> {
+                        TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), (characterFilter != null) ? characterFilter.convertToLegacyFilter() : null, callback -> {
                             if (callback != null) {
                                 this.editorCallback.accept(callback, this);
                             }
@@ -789,7 +789,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
                         s.setMultilineMode(this.editorMultiLineMode);
                         s.setPlaceholdersAllowed(allowEditorPlaceholders);
                         s.setText(this.editorSetTextSupplier.get(this));
-                        Dialogs.openGeneric(s, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), null, TextEditorScreen.PIP_WINDOW_WIDTH, TextEditorScreen.PIP_WINDOW_HEIGHT);
+                        Dialogs.openGeneric(s, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
                     }
                 });
                 UIBase.applyDefaultWidgetSkinTo(this.openEditorButton);

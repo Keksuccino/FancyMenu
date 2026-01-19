@@ -2,14 +2,14 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
-public class RangeSliderScreen extends PiPScreen {
+public class RangeSliderWindowBody extends PiPWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 420;
     public static final int PIP_WINDOW_HEIGHT = 220;
@@ -30,7 +30,7 @@ public class RangeSliderScreen extends PiPScreen {
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
 
-    public RangeSliderScreen(double minValue, double maxValue, double valuePreset, @NotNull ConsumingSupplier<Double, Component> labelSupplier, @NotNull Consumer<Double> onValueUpdate, @NotNull Consumer<Double> onDone, @NotNull Consumer<Double> onCancel) {
+    public RangeSliderWindowBody(double minValue, double maxValue, double valuePreset, @NotNull ConsumingSupplier<Double, Component> labelSupplier, @NotNull Consumer<Double> onValueUpdate, @NotNull Consumer<Double> onDone, @NotNull Consumer<Double> onCancel) {
         super(Component.empty());
         this.minValue = minValue;
         this.maxValue = maxValue;

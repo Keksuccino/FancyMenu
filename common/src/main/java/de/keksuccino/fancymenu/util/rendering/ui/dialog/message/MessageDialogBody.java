@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class MessageDialogBody extends PiPScreen {
+public class MessageDialogBody extends PiPWindowBody {
 
     private static final int ICON_SIZE = 32;
     private static final int ICON_GAP = 12;
@@ -70,7 +70,7 @@ public class MessageDialogBody extends PiPScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateRenderLinesIfNeeded();
 
@@ -101,7 +101,7 @@ public class MessageDialogBody extends PiPScreen {
         }
 
         updateButtonPositions();
-        super.render(graphics, mouseX, mouseY, partial);
+
     }
 
     @Override

@@ -1,9 +1,17 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
+import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface PipableScreen {
+
+    default void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
+     default void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+     }
 
     /**
      * Closes this screen's parent {@link PiPWindow} and itself.
@@ -30,5 +38,9 @@ public interface PipableScreen {
      * Gets called when the parent {@link PiPWindow} gets closed by anything but the screen itself.
      */
     void onWindowClosedExternally();
+
+    int getRenderMouseX();
+
+    int getRenderMouseY();
 
 }
