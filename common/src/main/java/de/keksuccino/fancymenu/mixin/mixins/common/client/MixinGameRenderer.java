@@ -75,59 +75,75 @@ public class MixinGameRenderer {
             return;
         }
 
+        boolean checkEntity = startLookingListener.shouldCheckLookingAt();
+        boolean checkBlock = startBlockListener.shouldCheckLookingAt();
+
+        if (!checkEntity && !checkBlock) {
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+            stopLooking_FancyMenu(startLookingListener, stopLookingListener);
+            return;
+        }
+
         Vec3 eyePosition = cameraEntity.getEyePosition(partialTicks);
 
-        EntityHitResult extendedEntityHit = findExtendedEntityHit_FancyMenu(cameraEntity, partialTicks);
+        if (checkEntity) {
+            EntityHitResult extendedEntityHit = findExtendedEntityHit_FancyMenu(cameraEntity, partialTicks);
 
-        if (extendedEntityHit == null && hitResult instanceof EntityHitResult vanillaEntityHit) {
-            extendedEntityHit = vanillaEntityHit;
-        }
-
-        if (extendedEntityHit != null) {
-            Entity targetEntity = extendedEntityHit.getEntity();
-            double distance = extendedEntityHit.getLocation().distanceTo(eyePosition);
-            startLookingListener.onLookAtEntity(targetEntity, distance);
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            return;
-        }
-
-        stopLooking_FancyMenu(startLookingListener, stopLookingListener);
-
-        if (!(this.minecraft.level instanceof ClientLevel clientLevel)) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            return;
-        }
-
-        HitResult blockPickResult = cameraEntity.pick(BLOCK_LOOK_DISTANCE_FANCYMENU, partialTicks, false);
-        if (!(blockPickResult instanceof BlockHitResult blockHitResult) || blockHitResult.getType() != HitResult.Type.BLOCK) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            return;
-        }
-
-        BlockPos blockPos = blockHitResult.getBlockPos();
-        BlockState blockState = clientLevel.getBlockState(blockPos);
-        if (blockState.isAir()) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            return;
-        }
-
-        double distance = blockHitResult.getLocation().distanceTo(eyePosition);
-        if (distance > BLOCK_LOOK_DISTANCE_FANCYMENU) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            return;
-        }
-
-        OnStartLookingAtBlockListener.LookedBlockData previousBlock = startBlockListener.getCurrentBlockData();
-        if (previousBlock != null) {
-            boolean sameBlock = previousBlock.blockPos().equals(blockPos)
-                && previousBlock.blockState().equals(blockState)
-                && previousBlock.levelKey().equals(clientLevel.dimension());
-            if (!sameBlock) {
-                stopBlockListener.onStopLooking(previousBlock);
+            if (extendedEntityHit == null && hitResult instanceof EntityHitResult vanillaEntityHit) {
+                extendedEntityHit = vanillaEntityHit;
             }
+
+            if (extendedEntityHit != null) {
+                Entity targetEntity = extendedEntityHit.getEntity();
+                double distance = extendedEntityHit.getLocation().distanceTo(eyePosition);
+                startLookingListener.onLookAtEntity(targetEntity, distance);
+                stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+                return;
+            }
+            stopLooking_FancyMenu(startLookingListener, stopLookingListener);
+        } else {
+            stopLooking_FancyMenu(startLookingListener, stopLookingListener);
         }
 
-        startBlockListener.onLookAtBlock(clientLevel, blockHitResult, distance);
+        if (checkBlock) {
+            if (!(this.minecraft.level instanceof ClientLevel clientLevel)) {
+                stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+                return;
+            }
+
+            HitResult blockPickResult = cameraEntity.pick(BLOCK_LOOK_DISTANCE_FANCYMENU, partialTicks, false);
+            if (!(blockPickResult instanceof BlockHitResult blockHitResult) || blockHitResult.getType() != HitResult.Type.BLOCK) {
+                stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+                return;
+            }
+
+            BlockPos blockPos = blockHitResult.getBlockPos();
+            BlockState blockState = clientLevel.getBlockState(blockPos);
+            if (blockState.isAir()) {
+                stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+                return;
+            }
+
+            double distanceSqr = blockHitResult.getLocation().distanceToSqr(eyePosition);
+            if (distanceSqr > BLOCK_LOOK_DISTANCE_FANCYMENU * BLOCK_LOOK_DISTANCE_FANCYMENU) {
+                stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+                return;
+            }
+
+            OnStartLookingAtBlockListener.LookedBlockData previousBlock = startBlockListener.getCurrentBlockData();
+            if (previousBlock != null) {
+                boolean sameBlock = previousBlock.blockPos().equals(blockPos)
+                        && previousBlock.blockState().equals(blockState)
+                        && previousBlock.levelKey().equals(clientLevel.dimension());
+                if (!sameBlock) {
+                    stopBlockListener.onStopLooking(previousBlock);
+                }
+            }
+
+            startBlockListener.onLookAtBlock(clientLevel, blockHitResult, Math.sqrt(distanceSqr));
+        } else {
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+        }
 
     }
 

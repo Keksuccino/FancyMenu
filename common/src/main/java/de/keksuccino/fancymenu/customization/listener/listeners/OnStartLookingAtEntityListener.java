@@ -21,6 +21,10 @@ public class OnStartLookingAtEntityListener extends AbstractListener {
         super("start_looking_at_entity");
     }
 
+    public boolean shouldCheckLookingAt() {
+        return this.hasInstancesListening() || Listeners.ON_STOP_LOOKING_AT_ENTITY.hasInstancesListening();
+    }
+
     /**
      * @return {@code true} when a new entity was detected and the listener notified its instances.
      */
