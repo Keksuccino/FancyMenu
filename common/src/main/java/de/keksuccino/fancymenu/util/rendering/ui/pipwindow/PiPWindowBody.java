@@ -35,6 +35,11 @@ public abstract class PiPWindowBody extends Screen implements PipableScreen {
         resolvedWindow.close();
     }
 
+    public void setWindowVisible(boolean visible) {
+        PiPWindow resolvedWindow = resolveWindow();
+        if (resolvedWindow != null) resolvedWindow.setVisible(visible);
+    }
+
     public @Nullable PiPWindow getWindow() {
         return window;
     }

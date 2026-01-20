@@ -116,11 +116,12 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
         if (this.instance.action == Action.EMPTY) return;
         this.originalAction = null;
         this.originalActionValue = null;
-        PiPWindow window = this.getWindow();
-        if ((window != null) && window.isClosable()) {
-            window.close();
-        }
-        this.instance.action.editValueInternal(this.instance, (instance1, oldValue, newValue) -> {}, instance1 -> {});
+        this.setWindowVisible(false);
+        this.instance.action.editValueInternal(this.instance, (instance1, oldValue, newValue) -> {
+            this.closeWindow();
+        }, instance1 -> {
+            this.setWindowVisible(true);
+        });
     }
 
     protected boolean hasValue() {
