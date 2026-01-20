@@ -332,6 +332,12 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
             ITexture t = this.previewTextureSupplier.get();
             ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
             if (loc != null) {
+                int previewBackgroundColor = UIBase.shouldBlur()
+                        ? UIBase.getUITheme().ui_blur_interface_area_background_color_type_1.getColorInt()
+                        : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();
+                int previewBorderColor = UIBase.shouldBlur()
+                        ? UIBase.getUITheme().ui_blur_interface_area_border_color.getColorInt()
+                        : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt();
                 AspectRatio ratio = t.getAspectRatio();
                 int[] size = ratio.getAspectRatioSizeByMaximumSize(200, (this.cancelButton.getY() - 50) - (50 + 15));
                 int w = size[0];
@@ -339,12 +345,12 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
                 int x = this.width - 20 - w;
                 int y = 50 + 15;
                 UIBase.resetShaderColor(graphics);
-                graphics.fill(x, y, x + w, y + h, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
+                graphics.fill(x, y, x + w, y + h, previewBackgroundColor);
                 RenderingUtils.resetShaderColor(graphics);
                 RenderSystem.enableBlend();
                 graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
                 UIBase.resetShaderColor(graphics);
-                UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);
+                UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, previewBorderColor, true, true, true, true);
             }
         } else {
             this.previewTextScrollArea.setWidth(200, true);
@@ -719,6 +725,7 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
         this.audioPreviewToggleButton = new AudioPreviewToggleButton(0, 0, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, button -> {
             this.togglePreviewAudio();
         });
+        UIBase.applyDefaultWidgetSkinTo(this.audioPreviewToggleButton, UIBase.shouldBlur());
         DrawableColor transparent = DrawableColor.of(new Color(0,0,0,0));
         this.audioPreviewToggleButton.setBackgroundColor(transparent, transparent, transparent, transparent, transparent, transparent);
         this.audioPreviewToggleButton.setLabelEnabled(false);
@@ -827,9 +834,15 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
         int previewHeight = Math.max(12, basePreviewHeight / 3);
         int x = this.width - 20 - previewWidth;
         int y = topY;
-        graphics.fill(x, y, x + previewWidth, y + previewHeight, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
+        int previewBackgroundColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_area_background_color_type_1.getColorInt()
+                : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();
+        int previewBorderColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_area_border_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt();
+        graphics.fill(x, y, x + previewWidth, y + previewHeight, previewBackgroundColor);
         this.renderAudioVisualizer(graphics, x + 4, y + 4, previewWidth - 8, previewHeight - 8);
-        UIBase.renderBorder(graphics, x, y, x + previewWidth, y + previewHeight, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);
+        UIBase.renderBorder(graphics, x, y, x + previewWidth, y + previewHeight, UIBase.ELEMENT_BORDER_THICKNESS, previewBorderColor, true, true, true, true);
         int progressY = y + previewHeight + AUDIO_PREVIEW_PROGRESS_BAR_SPACING;
         this.renderAudioPreviewProgress(graphics, x, progressY, previewWidth);
         int controlsY = progressY + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT + AUDIO_PREVIEW_TIME_SPACING + this.font.lineHeight + AUDIO_PREVIEW_BUTTON_SPACING;
@@ -888,8 +901,14 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
         int barWidth = previewWidth;
         int barY = progressY;
         int barYEnd = barY + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT;
-        graphics.fill(barX, barY, barX + barWidth, barYEnd, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
-        UIBase.renderBorder(graphics, barX, barY, barX + barWidth, barYEnd, 1, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);
+        int progressBackgroundColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_area_background_color_type_1.getColorInt()
+                : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();
+        int progressBorderColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_area_border_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt();
+        graphics.fill(barX, barY, barX + barWidth, barYEnd, progressBackgroundColor);
+        UIBase.renderBorder(graphics, barX, barY, barX + barWidth, barYEnd, 1, progressBorderColor, true, true, true, true);
 
         IAudio audio = this.getPreviewAudio();
         float duration = audio != null ? Math.max(0.0F, audio.getDuration()) : 0.0F;

@@ -50,7 +50,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
             this.fileNameEditBox.applyInputPrefixSuffixCharacterRenderFormatter();
         }
         this.fileNameEditBox.setMaxLength(10000);
-        UIBase.applyDefaultWidgetSkinTo(this.fileNameEditBox);
+        UIBase.applyDefaultWidgetSkinTo(this.fileNameEditBox, UIBase.shouldBlur());
 
         String editBoxPresetValue = "new_file";
         if (fileNamePreset != null) {
