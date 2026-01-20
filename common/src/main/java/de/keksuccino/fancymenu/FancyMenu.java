@@ -31,6 +31,20 @@ public class FancyMenu {
 
     //TODO font rendering für UI scale 1 optimieren
 
+    //TODO font rendering performance verbessern (CPU dreht zu hoch beim rendern)
+
+    //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren
+
+    //TODO Requirement Manage screens zu PiPs machen
+
+    //TODO Listener Manage screens zu PiPs machen
+
+    //TODO Variable Manage screens zu PiPs machen
+
+    //TODO Action Editor zu blur screen machen
+
+    //TODO Rotation controls für editor elemente mit SmoothCircleRenderer rendern
+
 
 
 
