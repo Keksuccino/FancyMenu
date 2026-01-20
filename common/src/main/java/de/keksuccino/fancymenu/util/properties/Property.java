@@ -23,7 +23,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -502,7 +502,7 @@ public class Property<T> {
                 defaultSupplier = new ResourceSupplier<>(Resource.class, fileMediaType, defaultSource.getSourceWithPrefix());
             }
             return builder.buildGenericResourceChooserContextMenuEntry(menu, "menu_entry_" + key, consumes -> consumes.getProperty(key) != null,
-                    () -> ResourceChooserScreen.generic(null, null, file -> {}),
+                    () -> ResourceChooserWindowBody.generic(null, null, file -> {}),
                     source -> new ResourceSupplier<>(Resource.class, fileMediaType, source),
                     defaultSupplier,
                     consumes -> {

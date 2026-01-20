@@ -38,7 +38,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogSty
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizerHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
@@ -893,7 +893,7 @@ public class CustomizationOverlayUI {
         FileTypeGroup<ImageFileType> introFileTypeGroup = FileTypeGroup.of(FileTypes.APNG_IMAGE, FileTypes.GIF_IMAGE, FileTypes.FMA_IMAGE);
 
         ContextMenuUtils.addGenericResourceChooserContextMenuEntryTo(gameIntroMenu, "set_game_intro",
-                () -> new ResourceChooserScreen<>(Component.empty(), introFileTypeGroup, null, s -> {}),
+                () -> new ResourceChooserWindowBody<>(Component.empty(), introFileTypeGroup, null, s -> {}),
                 ResourceSupplier::image, emptyImageSupplier,
                 () -> {
                     if (FancyMenu.getOptions().gameIntroAnimation.getValue().trim().isEmpty()) return emptyImageSupplier;

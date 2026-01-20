@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public abstract class AbstractBrowserScreen extends PiPWindowBody implements InitialWidgetFocusScreen {
+public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements InitialWidgetFocusScreen {
 
     protected static final int ICON_PIXEL_SIZE = 32;
     public static final int PIP_WINDOW_WIDTH = 600;
@@ -109,7 +109,7 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
     @Nullable
     protected MutableComponent currentFileTypesComponent;
 
-    protected AbstractBrowserScreen(@NotNull Component title) {
+    protected AbstractBrowserWindowBody(@NotNull Component title) {
         super(title);
     }
 
@@ -140,9 +140,9 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
         if (this.searchBarEnabled) {
             String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
             this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 0, 20 - 2, Component.empty());
-            this.searchBar.setHintFancyMenu(consumes -> AbstractBrowserScreen.this.searchBarPlaceholder);
+            this.searchBar.setHintFancyMenu(consumes -> AbstractBrowserWindowBody.this.searchBarPlaceholder);
             this.searchBar.setValue(oldSearchValue);
-            this.searchBar.setResponder(s -> AbstractBrowserScreen.this.updateEntryList());
+            this.searchBar.setResponder(s -> AbstractBrowserWindowBody.this.updateEntryList());
             UIBase.applyDefaultWidgetSkinTo(this.searchBar, UIBase.shouldBlur());
             this.searchBar.setMaxLength(100000);
             this.addWidget(this.searchBar);
@@ -998,9 +998,9 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
 
         protected ResourceLocation getButtonTexture() {
             if (this.isHoveredOrFocused()) {
-                return AbstractBrowserScreen.this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE_HOVER : AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE_HOVER;
+                return AbstractBrowserWindowBody.this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE_HOVER : AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE_HOVER;
             }
-            return AbstractBrowserScreen.this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE : AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE;
+            return AbstractBrowserWindowBody.this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE : AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE;
         }
 
     }

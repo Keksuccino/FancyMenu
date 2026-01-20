@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -25,7 +25,7 @@ public class CursorEditorElement extends AbstractEditorElement<CursorEditorEleme
         super.init();
 
         this.addGenericResourceChooserContextMenuEntryTo(this.rightClickMenu, "cursor_texture", CursorEditorElement.class,
-                        () -> ResourceChooserScreen.image(null, file -> {}),
+                        () -> ResourceChooserWindowBody.image(null, file -> {}),
                         ResourceSupplier::image,
                         null,
                         consumes -> consumes.element.textureSupplier,

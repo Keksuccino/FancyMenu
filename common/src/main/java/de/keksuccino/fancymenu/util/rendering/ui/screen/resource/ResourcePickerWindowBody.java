@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.*;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.AbstractBrowserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.AbstractBrowserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
@@ -33,7 +33,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public class ResourcePickerScreen extends AbstractBrowserScreen {
+public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -52,7 +52,7 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
     protected boolean blockResourceUnfriendlyNames = true;
     protected boolean showBlockedResourceUnfriendlyNames = true;
 
-    public ResourcePickerScreen(@Nullable ResourceLocation startLocation, @Nullable FileTypeGroup<?> allowedFileTypes, @NotNull Consumer<ResourceLocation> callback) {
+    public ResourcePickerWindowBody(@Nullable ResourceLocation startLocation, @Nullable FileTypeGroup<?> allowedFileTypes, @NotNull Consumer<ResourceLocation> callback) {
         super(Component.translatable("fancymenu.ui.resourcepicker.choose.resource"));
         this.allowedFileTypes = allowedFileTypes;
         this.callback = Objects.requireNonNull(callback);
@@ -87,7 +87,7 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
         }) {
             @Override
             public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                ResourceScrollAreaEntry selected = ResourcePickerScreen.this.getSelectedEntry();
+                ResourceScrollAreaEntry selected = ResourcePickerWindowBody.this.getSelectedEntry();
                 this.active = (selected != null) && !selected.resourceUnfriendlyName;
                 super.render(graphics, mouseX, mouseY, partial);
             }
@@ -539,9 +539,9 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
             if (this.resourceUnfriendlyName) return;
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {
-                ResourcePickerScreen.this.setDirectory(this.namespace, this.path, true);
+                ResourcePickerWindowBody.this.setDirectory(this.namespace, this.path, true);
             }
-            ResourcePickerScreen.this.updatePreview(null);
+            ResourcePickerWindowBody.this.updatePreview(null);
             this.lastClick = now;
         }
 
@@ -554,7 +554,7 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
         protected final FileType<?> fileType;
 
         public ResourceScrollAreaEntry(@NotNull ScrollArea parent, @NotNull ResourceLocation location) {
-            super(parent, ResourcePickerScreen.this.getDisplayNameForLocation(location));
+            super(parent, ResourcePickerWindowBody.this.getDisplayNameForLocation(location));
             this.location = location;
             this.fileType = FileTypes.getLocationType(this.location);
         }
@@ -575,10 +575,10 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
             if (this.resourceUnfriendlyName) return;
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {
-                ResourcePickerScreen.this.callback.accept(this.location);
-                ResourcePickerScreen.this.closeWindow();
+                ResourcePickerWindowBody.this.callback.accept(this.location);
+                ResourcePickerWindowBody.this.closeWindow();
             }
-            ResourcePickerScreen.this.updatePreview(this.location);
+            ResourcePickerWindowBody.this.updatePreview(this.location);
             this.lastClick = now;
         }
 
@@ -599,9 +599,9 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {
-                ResourcePickerScreen.this.goUpDirectory();
+                ResourcePickerWindowBody.this.goUpDirectory();
             }
-            ResourcePickerScreen.this.updatePreview(null);
+            ResourcePickerWindowBody.this.updatePreview(null);
             this.lastClick = now;
         }
 

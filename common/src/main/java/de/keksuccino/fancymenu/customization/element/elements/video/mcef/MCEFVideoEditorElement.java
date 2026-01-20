@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -27,7 +27,7 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
 
         this.rightClickMenu.addClickableEntry("set_source", Component.translatable("fancymenu.elements.video_mcef.set_source"), (menu, entry) -> {
                     menu.closeMenuChain();
-                    ResourceChooserScreen.video(null, source -> {
+                    ResourceChooserWindowBody.video(null, source -> {
                         if (source != null) {
                             this.editor.history.saveSnapshot();
                             this.element.rawVideoUrlSource = ResourceSource.of(source);

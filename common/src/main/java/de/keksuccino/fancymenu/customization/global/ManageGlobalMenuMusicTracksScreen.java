@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -53,7 +53,7 @@ public class ManageGlobalMenuMusicTracksScreen extends CellScreen {
     protected void initRightSideWidgets() {
 
         this.addRightSideButton(20, Component.translatable("fancymenu.global_customizations.menu_music_tracks.add"), button -> {
-            ResourceChooserScreen.audio(null, source -> {
+            ResourceChooserWindowBody.audio(null, source -> {
                 if (source != null) {
                     addTrack(source);
                 }

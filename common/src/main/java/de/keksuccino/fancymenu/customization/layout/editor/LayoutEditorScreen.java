@@ -41,7 +41,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogSty
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
@@ -896,7 +896,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (this.layout.layoutFile != null) {
 			fileNamePreset = this.layout.layoutFile.getName();
 		}
-		SaveFileScreen s = (SaveFileScreen) SaveFileScreen.build(LayoutHandler.LAYOUT_DIR, fileNamePreset, "txt", (call) -> {
+		SaveFileWindowBody s = (SaveFileWindowBody) SaveFileWindowBody.build(LayoutHandler.LAYOUT_DIR, fileNamePreset, "txt", (call) -> {
 			if (call != null) {
 				try {
 					this.layout.updateLastEditedTime();

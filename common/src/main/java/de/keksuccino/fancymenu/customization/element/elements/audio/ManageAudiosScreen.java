@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -80,7 +80,7 @@ public class ManageAudiosScreen extends CellScreen {
     protected void initRightSideWidgets() {
 
         this.addRightSideButton(20, Component.translatable("fancymenu.elements.audio.manage_audios.add_audio"), button -> {
-            ResourceChooserScreen.audio(null, s -> {
+            ResourceChooserWindowBody.audio(null, s -> {
                 if (s != null) this.addAudio(s);
             }).openInWindow(null);
         });

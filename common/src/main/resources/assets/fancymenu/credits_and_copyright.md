@@ -75,10 +75,10 @@ SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
 ## BUDDY'S ASSETS
 
 ### Skin & Items
-Buddy's super cute default skin and items are made by **masocarai** _(@masocarai on Discord)_!
+Buddy's super cute default skin and items are made by **masocarai** *(@masocarai on Discord)*!
 
 ### GUI
-Buddy's beautiful looking default GUI is made by **Kumo** _(@kumoooo00 on Discord)_!
+Buddy's beautiful looking default GUI is made by **Kumo** *(@kumoooo00 on Discord)*!
 
 
 ## SPECIAL THANKS

@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -229,7 +229,7 @@ public class ShowToastAction extends Action {
                     .setEditListener(s -> this.config.iconSource = s.trim())
                     .setText(this.config.iconSource);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.choose_icon"), button -> {
-                ResourceChooserScreen<ITexture, ImageFileType> chooser = ResourceChooserScreen.image(null, source -> {
+                ResourceChooserWindowBody<ITexture, ImageFileType> chooser = ResourceChooserWindowBody.image(null, source -> {
                     if (source != null) {
                         this.config.iconSource = source;
                         this.iconSourceCell.setText(source);
@@ -250,7 +250,7 @@ public class ShowToastAction extends Action {
                     .setEditListener(s -> this.config.backgroundSource = s.trim())
                     .setText(this.config.backgroundSource);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.choose_background"), button -> {
-                ResourceChooserScreen<ITexture, ImageFileType> chooser = ResourceChooserScreen.image(null, source -> {
+                ResourceChooserWindowBody<ITexture, ImageFileType> chooser = ResourceChooserWindowBody.image(null, source -> {
                     if (source != null) {
                         this.config.backgroundSource = source;
                         this.backgroundSourceCell.setText(source);

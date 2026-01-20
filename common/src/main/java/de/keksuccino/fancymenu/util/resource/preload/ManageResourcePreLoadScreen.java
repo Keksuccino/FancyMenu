@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import net.minecraft.client.Minecraft;
@@ -64,7 +64,7 @@ public class ManageResourcePreLoadScreen extends CellScreen {
     protected void initRightSideWidgets() {
 
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add"), extendedButton -> {
-            ResourceChooserScreen<?,?> s = ResourceChooserScreen.generic(FileTypeGroup.allSupported(), null, source -> {
+            ResourceChooserWindowBody<?,?> s = ResourceChooserWindowBody.generic(FileTypeGroup.allSupported(), null, source -> {
                 if (source != null) {
                     this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(source), this.cachedSerialized, false);
                 }

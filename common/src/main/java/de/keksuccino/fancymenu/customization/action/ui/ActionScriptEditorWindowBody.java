@@ -219,6 +219,18 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     }
 
     @Override
+    public void setWindow(@Nullable PiPWindow window) {
+        if (window != null) {
+            window.setCloseWindowCheck((window1, decision) -> {
+                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.actions.script_editor.cancel_warning"), MessageDialogStyle.WARNING, close -> {
+                    decision.supply(close);
+                });
+            });
+        }
+        super.setWindow(window);
+    }
+
+    @Override
     public void onScreenClosed() {
         if (this.resultHandled) {
             return;

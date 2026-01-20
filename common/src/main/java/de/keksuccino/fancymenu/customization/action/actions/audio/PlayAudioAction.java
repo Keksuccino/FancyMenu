@@ -12,8 +12,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -22,7 +22,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.network.chat.Component;
@@ -315,7 +314,7 @@ public class PlayAudioAction extends Action {
             this.audioSourceCell.editBox.setUITooltip(() -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.audio_source.desc")));
 
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.play_audio.edit.choose_audio"), button -> {
-                ResourceChooserScreen<IAudio, ?> chooser = ResourceChooserScreen.audio(null, source -> {
+                ResourceChooserWindowBody<IAudio, ?> chooser = ResourceChooserWindowBody.audio(null, source -> {
                     if (source != null) {
                         this.config.audioSource = source;
                         this.audioSourceCell.setText(source);

@@ -16,7 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.Resource;
@@ -530,14 +530,14 @@ public interface ContextMenuBuilder<O> {
     /**
      * Builds a resource chooser entry for image resources.
      * <p>
-     * The entry opens a {@link ResourceChooserScreen} and applies the selected resource
+     * The entry opens a {@link ResourceChooserWindowBody} and applies the selected resource
      * to the current selection using stack appliers.
      */
     @SuppressWarnings("all")
     default ContextMenu.ClickableContextMenuEntry<?> buildImageResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<ITexture>> getter = (ConsumingSupplier<O, ResourceSupplier<ITexture>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<ITexture>> setter = (BiConsumer<O, ResourceSupplier<ITexture>>) targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserScreen.image(null, file -> {}), ResourceSupplier::image, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserWindowBody.image(null, file -> {}), ResourceSupplier::image, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
     /**
@@ -570,7 +570,7 @@ public interface ContextMenuBuilder<O> {
     default ContextMenu.ClickableContextMenuEntry<?> buildAudioResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<IAudio>> getter = (ConsumingSupplier<O, ResourceSupplier<IAudio>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<IAudio>> setter = (BiConsumer<O, ResourceSupplier<IAudio>>) targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserScreen.audio(null, file -> {}), ResourceSupplier::audio, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.AUDIO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserWindowBody.audio(null, file -> {}), ResourceSupplier::audio, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.AUDIO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
     /**
@@ -603,7 +603,7 @@ public interface ContextMenuBuilder<O> {
     default ContextMenu.ClickableContextMenuEntry<?> buildVideoResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<IVideo>> getter = (ConsumingSupplier<O, ResourceSupplier<IVideo>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<IVideo>> setter = (BiConsumer<O, ResourceSupplier<IVideo>>) targetFieldSetter;
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserScreen.video(null, file -> {}), ResourceSupplier::video, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.VIDEO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserWindowBody.video(null, file -> {}), ResourceSupplier::video, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.VIDEO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
     /**
@@ -633,7 +633,7 @@ public interface ContextMenuBuilder<O> {
      * Builds a resource chooser entry for text resources.
      */
     default ContextMenu.ClickableContextMenuEntry<?> buildTextResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
-        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
+        return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, () -> ResourceChooserWindowBody.text(null, file -> {}), ResourceSupplier::text, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
 
     /**
@@ -663,7 +663,7 @@ public interface ContextMenuBuilder<O> {
      * @see #buildGenericResourceChooserContextMenuEntry(ContextMenu, String, ConsumingSupplier, Supplier, ConsumingSupplier, ResourceSupplier, ConsumingSupplier, BiConsumer, Component, boolean, FileTypeGroup, FileFilter, boolean, boolean, boolean)
      */
     @SuppressWarnings("all")
-    default <R extends Resource, F extends FileType<R>, E extends O> ContextMenu.ClickableContextMenuEntry<?> buildGenericResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default <R extends Resource, F extends FileType<R>, E extends O> ContextMenu.ClickableContextMenuEntry<?> buildGenericResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull Supplier<ResourceChooserWindowBody<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         ConsumingSupplier<O, ResourceSupplier<R>> getter = (ConsumingSupplier<O, ResourceSupplier<R>>) targetFieldGetter;
         BiConsumer<O, ResourceSupplier<R>> setter = (BiConsumer<O, ResourceSupplier<R>>) targetFieldSetter;
         return buildGenericResourceChooserContextMenuEntry(parentMenu, entryIdentifier, (consumes) -> objectType.isAssignableFrom(consumes.getClass()), resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, getter, setter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb);
@@ -672,14 +672,14 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a generic resource chooser entry for a specific object type.
      */
-    default <R extends Resource, F extends FileType<R>, E extends O> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default <R extends Resource, F extends FileType<R>, E extends O> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull Supplier<ResourceChooserWindowBody<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier <O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer <O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         return addTo.addEntry(buildGenericResourceChooserContextMenuEntry(addTo, entryIdentifier, objectType, resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
     /**
      * Builds a generic resource chooser entry for any resource type.
      * <p>
-     * The entry spawns a {@link ResourceChooserScreen}, applies the selected resource to the
+     * The entry spawns a {@link ResourceChooserWindowBody}, applies the selected resource to the
      * stack via {@link #applyStackAppliers(ContextMenu.ContextMenuEntry, Object)}, and optionally
      * adds a "reset to default" action.
      *
@@ -689,7 +689,7 @@ public interface ContextMenuBuilder<O> {
      * @param targetFieldGetter getter for the field on a single object
      * @param targetFieldSetter setter for the field on a single object
      */
-    default <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> buildGenericResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> buildGenericResourceChooserContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull Supplier<ResourceChooserWindowBody<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
 
         ContextMenu subMenu = new ContextMenu();
 
@@ -710,7 +710,7 @@ public interface ContextMenuBuilder<O> {
                             if (!allPaths.isEmpty() && ListUtils.allInListEqual(allPaths)) {
                                 preSelectedSource = allPaths.get(0);
                             }
-                            ResourceChooserScreen<R,F> chooserScreen = resourceChooserScreenBuilder.get();
+                            ResourceChooserWindowBody<R,F> chooserScreen = resourceChooserScreenBuilder.get();
                             chooserScreen.setFileFilter(fileFilter);
                             chooserScreen.setAllowedFileTypes(fileTypes);
                             chooserScreen.setSource(preSelectedSource, false);
@@ -789,7 +789,7 @@ public interface ContextMenuBuilder<O> {
     /**
      * Adds a generic resource chooser entry to the given menu.
      */
-    default <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+    default <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull Supplier<ResourceChooserWindowBody<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         return addTo.addEntry(buildGenericResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb));
     }
 
