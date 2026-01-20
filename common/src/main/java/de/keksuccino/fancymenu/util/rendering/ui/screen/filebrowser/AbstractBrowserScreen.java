@@ -129,6 +129,11 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
     @Override
     protected void init() {
 
+        boolean blur = UIBase.shouldBlur();
+        this.fileListScrollArea.setSetupForBlurInterface(blur);
+        this.fileTypeScrollArea.setSetupForBlurInterface(blur);
+        this.previewTextScrollArea.setSetupForBlurInterface(blur);
+
         if (this.searchBar != null) {
             this.removeWidget(this.searchBar);
         }
@@ -232,9 +237,6 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
         }
 
         RenderSystem.enableBlend();
-
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         graphics.drawString(this.font, this.getEntriesLabel(), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
@@ -357,9 +359,15 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
     protected int renderCurrentDirectoryField(GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
         int xEnd = x + width;
         int yEnd = y + height;
+        int backgroundColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_area_background_color_type_1.getColorInt()
+                : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();
+        int borderColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_area_border_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt();
         float radius = UIBase.getInterfaceCornerRoundingRadius();
-        UIBase.renderRoundedRect(graphics, x + 1, y + 1, width - 2, height - 2, radius, radius, radius, radius, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
-        UIBase.renderRoundedBorder(graphics, x, y, xEnd, yEnd, 1, radius, radius, radius, radius, UIBase.getUITheme().ui_interface_widget_border_color.getColorInt());
+        UIBase.renderRoundedRect(graphics, x + 1, y + 1, width - 2, height - 2, radius, radius, radius, radius, backgroundColor);
+        UIBase.renderRoundedBorder(graphics, x, y, xEnd, yEnd, 1, radius, radius, radius, radius, borderColor);
         this.currentDirectoryComponent.setX(x + 4);
         this.currentDirectoryComponent.setY(y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2));
         this.currentDirectoryComponent.render(graphics, mouseX, mouseY, partial);
