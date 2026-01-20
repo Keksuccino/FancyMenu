@@ -908,22 +908,21 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						if (old != null) old.delete(false);
 					}
 					if (!this.layout.saveToFileIfPossible()) {
-                        Dialogs.openMessage(Component.translatable("fancymenu.editor.saving_failed.generic"), MessageDialogStyle.ERROR);
+						Dialogs.openMessage(Component.translatable("fancymenu.editor.saving_failed.generic"), MessageDialogStyle.ERROR);
 					} else {
 						this.unsavedChanges = false;
 						LayoutHandler.reloadLayouts();
 					}
 				} catch (Exception ex) {
 					LOGGER.error("[FANCYMENU] Error while saving layout in editor!", ex);
-                    Dialogs.openMessage(Component.translatable("fancymenu.editor.saving_failed.generic"), MessageDialogStyle.ERROR);
+					Dialogs.openMessage(Component.translatable("fancymenu.editor.saving_failed.generic"), MessageDialogStyle.ERROR);
 				}
 			}
-			Minecraft.getInstance().setScreen(this);
 		}).setVisibleDirectoryLevelsAboveRoot(2).setShowSubDirectories(true);
 		FileTypeGroup<?> fileTypeGroup = FileTypeGroup.of(FileTypes.TXT_TEXT);
 		fileTypeGroup.setDisplayName(Component.translatable("fancymenu.file_types.groups.text"));
 		s.setFileTypes(fileTypeGroup);
-        this.openChildScreen(s);
+		s.openInWindow(null);
 	}
 
 	public void onUpdateSelectedElements() {

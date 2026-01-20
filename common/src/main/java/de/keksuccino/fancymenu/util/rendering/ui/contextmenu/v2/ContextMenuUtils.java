@@ -132,6 +132,7 @@ public class ContextMenuUtils {
         ContextMenu subMenu = new ContextMenu();
 
         subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.filechooser.choose.file"), (menu, entry) -> {
+            menu.closeMenuChain();
             File startDir = LayoutHandler.ASSETS_DIR;
             String path = getter.get();
             if (path != null) {
@@ -146,14 +147,12 @@ public class ContextMenuUtils {
                 menu.closeMenu();
                 if (onCloseFileChooser != null) {
                     onCloseFileChooser.accept(current, call);
-                } else {
-                    Minecraft.getInstance().setScreen(current);
                 }
             });
             fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
             fileChooser.setFileFilter(fileFilter);
             fileChooser.setFileTypes(fileTypes);
-            Minecraft.getInstance().setScreen(fileChooser);
+            fileChooser.openInWindow(null);
         });
 
         if (addResetOption) {

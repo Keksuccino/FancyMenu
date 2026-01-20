@@ -7,6 +7,9 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
@@ -26,7 +29,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -40,9 +42,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public abstract class AbstractBrowserScreen extends Screen implements InitialWidgetFocusScreen {
+public abstract class AbstractBrowserScreen extends PiPWindowBody implements InitialWidgetFocusScreen {
 
     protected static final int ICON_PIXEL_SIZE = 32;
+    public static final int PIP_WINDOW_WIDTH = 600;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     // All icon textures are 32x32 pixels
     protected static final ResourceLocation GO_UP_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/go_up_icon.png");
@@ -109,6 +113,19 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         super(title);
     }
 
+    public @NotNull PiPWindow openInWindow(@Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(this.getTitle())
+                .setScreen(this)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
     @Override
     protected void init() {
 
@@ -143,6 +160,7 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.stopPreviewAudio();
             this.onCancel();
+            this.closeWindow();
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
@@ -194,13 +212,18 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     }
 
     @Override
-    public void onClose() {
+    public void onScreenClosed() {
+        this.stopPreviewAudio();
+    }
+
+    @Override
+    public void onWindowClosedExternally() {
         this.stopPreviewAudio();
         this.onCancel();
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.performInitialWidgetFocusActionInRender();
 
@@ -209,8 +232,6 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
         }
 
         RenderSystem.enableBlend();
-
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
@@ -241,12 +262,6 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
 
         this.renderPreview(graphics, mouseX, mouseY, partial);
 
-        super.render(graphics, mouseX, mouseY, partial);
-
-    }
-
-    @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override
@@ -342,8 +357,9 @@ public abstract class AbstractBrowserScreen extends Screen implements InitialWid
     protected int renderCurrentDirectoryField(GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
         int xEnd = x + width;
         int yEnd = y + height;
-        graphics.fill(x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
-        UIBase.renderBorder(graphics, x, y, xEnd, yEnd, 1, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);
+        float radius = UIBase.getInterfaceCornerRoundingRadius();
+        UIBase.renderRoundedRect(graphics, x + 1, y + 1, width - 2, height - 2, radius, radius, radius, radius, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
+        UIBase.renderRoundedBorder(graphics, x, y, xEnd, yEnd, 1, radius, radius, radius, radius, UIBase.getUITheme().ui_interface_widget_border_color.getColorInt());
         this.currentDirectoryComponent.setX(x + 4);
         this.currentDirectoryComponent.setY(y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2));
         this.currentDirectoryComponent.render(graphics, mouseX, mouseY, partial);

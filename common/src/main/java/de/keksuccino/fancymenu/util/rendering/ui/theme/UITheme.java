@@ -16,7 +16,7 @@ public class UITheme {
 
     public boolean allow_blur = false;
     public float interface_corner_rounding_radius = 6.0f;
-    public float widget_corner_rounding_radius = 4.0f;
+    public float widget_corner_rounding_radius = 6.0f; // old was 4.0f
 
     public DrawableColor ui_blur_icon_texture_color = DrawableColor.of(new Color(255, 255, 255));
     public DrawableColor ui_blur_overlay_background_tint = DrawableColor.of(new Color(38, 38, 38, 174));

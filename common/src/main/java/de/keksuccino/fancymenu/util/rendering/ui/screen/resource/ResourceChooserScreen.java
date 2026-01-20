@@ -32,7 +32,6 @@ import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -239,17 +238,8 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                         this.setSource(s, false);
                     }
                     this.rebuild();
-                    PiPWindow window = this.getWindow();
-                    if (window != null) {
-                        window.setScreen(this);
-                    }
                 });
-                PiPWindow window = this.getWindow();
-                if (window != null) {
-                    window.setScreen(picker);
-                } else {
-                    Minecraft.getInstance().setScreen(picker);
-                }
+                picker.openInWindow(this.getWindow());
             }), true);
         }
 
@@ -269,20 +259,11 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                         this.setSource(s, false);
                     }
                     this.rebuild();
-                    PiPWindow window = this.getWindow();
-                    if (window != null) {
-                        window.setScreen(this);
-                    }
                 });
                 fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
                 fileChooser.setFileTypes(this.allowedFileTypes);
                 fileChooser.setFileFilter(this.fileFilter);
-                PiPWindow window = this.getWindow();
-                if (window != null) {
-                    window.setScreen(fileChooser);
-                } else {
-                    Minecraft.getInstance().setScreen(fileChooser);
-                }
+                fileChooser.openInWindow(this.getWindow());
             }), true);
         }
 

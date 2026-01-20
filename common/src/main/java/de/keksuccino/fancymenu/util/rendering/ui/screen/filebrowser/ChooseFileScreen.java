@@ -28,6 +28,7 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
             AbstractFileScrollAreaEntry selected = this.getSelectedEntry();
             if ((selected != null) && !selected.resourceUnfriendlyFileName) {
                 this.callback.accept(new File(selected.file.getPath().replace("\\", "/")));
+                this.closeWindow();
             }
         }) {
             @Override
@@ -57,6 +58,7 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
             if ((now - this.lastClick) < 400) {
                 if (this.file.isFile()) {
                     ChooseFileScreen.this.callback.accept(new File(this.file.getPath().replace("\\", "/")));
+                    ChooseFileScreen.this.closeWindow();
                 } else if (this.file.isDirectory()) {
                     ChooseFileScreen.this.setDirectory(this.file, true);
                 }

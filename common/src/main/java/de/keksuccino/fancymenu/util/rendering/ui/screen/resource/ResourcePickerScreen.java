@@ -82,6 +82,7 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
             ResourceScrollAreaEntry selected = this.getSelectedEntry();
             if ((selected != null) && !selected.resourceUnfriendlyName) {
                 this.callback.accept(selected.location);
+                this.closeWindow();
             }
         }) {
             @Override
@@ -575,6 +576,7 @@ public class ResourcePickerScreen extends AbstractBrowserScreen {
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {
                 ResourcePickerScreen.this.callback.accept(this.location);
+                ResourcePickerScreen.this.closeWindow();
             }
             ResourcePickerScreen.this.updatePreview(this.location);
             this.lastClick = now;

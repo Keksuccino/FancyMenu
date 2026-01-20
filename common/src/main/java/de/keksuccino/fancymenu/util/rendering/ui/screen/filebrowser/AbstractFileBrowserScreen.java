@@ -111,6 +111,12 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
     }
 
     @Override
+    public void onScreenClosed() {
+        super.onScreenClosed();
+        this.stopDirectoryWatcher();
+    }
+
+    @Override
     protected void initExtraButtons() {
         this.createFolderButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.ui.filechooser.create_folder"), (button) -> {
             this.openCreateFolderDialog();
@@ -493,12 +499,6 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
 
     public void updatePreview(@Nullable File file) {
         this.updatePreviewForKey(file);
-    }
-
-    @Override
-    public void removed() {
-        this.stopDirectoryWatcher();
-        super.removed();
     }
 
     @Override

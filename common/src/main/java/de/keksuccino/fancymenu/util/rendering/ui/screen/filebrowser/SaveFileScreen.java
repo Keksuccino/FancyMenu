@@ -85,16 +85,19 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if ((this.forcedFileExtension != null) && !this.fileNameEditBox.getValue().toLowerCase().endsWith("." + this.forcedFileExtension.toLowerCase())) {
             this.fileNameEditBox.setValue(this.defaultFileName);
         }
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.renderBody(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.renderFileNameEditBox(graphics, mouseX, mouseY, partial);
-
     }
 
     protected void renderFileNameEditBox(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -179,11 +182,13 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
         if (f != null) {
             if (!f.isFile()) {
                 this.callback.accept(new File(f.getPath().replace("\\", "/")));
+                this.closeWindow();
             } else {
                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.ui.save_file.save.override_warning"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         try {
                             this.callback.accept(new File(f.getPath().replace("\\", "/")));
+                            this.closeWindow();
                         } catch (Exception ex) {
                             ex.printStackTrace();
                         }
