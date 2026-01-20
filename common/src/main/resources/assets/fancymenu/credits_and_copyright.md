@@ -26,20 +26,6 @@ Mavontay Hamilton
 생이 남
 
 
-## LOCALIZATION
-
-### ENGLISH (US)
-Keksuccino
-
-### FRENCH
-Mozork01
-
-### CHINESE (SIMPLIFIED)
-BredyAK
-ddaodan
-nageih
-
-
 ## ALPHA & BETA TESTERS
 ankiolyne (rainyatrium)
 ༄ᵘˢ᭄✿ᴋᴀɪ＿カイ࿐ (Kai＿カイ#9782)
