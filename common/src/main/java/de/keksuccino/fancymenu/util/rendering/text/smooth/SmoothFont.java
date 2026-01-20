@@ -16,11 +16,10 @@ import java.util.Objects;
 public final class SmoothFont implements AutoCloseable {
 
     // Thresholds for switching LODs (in pixel size)
-    // <= 12px: Use Tiny LOD (1x gen)
+    // <= 13px: Use Tiny LOD (1x gen)
     // <= 24px: Use Small LOD (2x gen)
     // <= 48px: Use Medium LOD (4x gen)
-    // > 48px:  Use Large LOD (8x gen)
-    private static final float LOD_TINY_LIMIT = 12.0F;
+    private static final float LOD_TINY_LIMIT = 13.0F;
     private static final float LOD_SMALL_LIMIT = 24.0F;
     private static final float LOD_MEDIUM_LIMIT = 48.0F;
 

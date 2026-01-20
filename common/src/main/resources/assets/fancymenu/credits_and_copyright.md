@@ -53,6 +53,53 @@ UwUCookies (cookiesred_29)
 хлифи (xllifi)
 
 
+## FONTS USED IN FANCYMENU
+
+### Noto Sans
+
+Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
+### Noto Sans Japanese
+
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
+### Noto Sans Korean
+
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
+### Noto Sans Traditional Chinese
+
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
+### Noto Sans Simplified Chinese
+
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
+
+## BUDDY'S ASSETS
+
+### Skin & Items
+Buddy's super cute default skin and items are made by **masocarai** _(@masocarai on Discord)_!
+
+### GUI
+Buddy's beautiful looking default GUI is made by **Kumo** _(@kumoooo00 on Discord)_!
+
+
 ## SPECIAL THANKS
 
 ### xllifi
@@ -78,7 +125,7 @@ You are what keeps me motivated to do this. Thank you!
 
 ## COPYRIGHT
 FancyMenu © Copyright 2020-2026 Keksuccino.
-FancyMenu is licensed under DSMSLv2 (DON'T SNATCH MA STUFF LICENSE v2).
+FancyMenu is licensed under DSMSLv3 (DON'T SNATCH MA STUFF LICENSE V3).
 See [LICENSE.md](https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md) for more information about this license.
 
 Japng © Copyright A. Ellerton.
@@ -87,42 +134,5 @@ Japng is licensed under Apache-2.0.
 [Animated GIF library for Java](https://github.com/rtyley/animated-gif-lib-for-java) © Copyright Roberto Tyley, Kevin Weiner.
 Original code by Kevin Weiner on [fmsware.com](http://www.fmsware.com/stuff/gif.html).
 Re-packaged and improved by Roberto Tyley. Improvements licensed under the Apache-2.0 license.
-
-### Fonts
-
-**Noto Sans**
-
-Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
-This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
-
-SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
-
-**Noto Sans Japanese**
-
-Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
-This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
-
-SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
-
-**Noto Sans Korean**
-
-Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
-This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
-
-SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
-
-**Noto Sans Traditional Chinese**
-
-Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
-This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
-
-SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
-
-**Noto Sans Simplified Chinese**
-
-Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
-This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
-
-SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
 
 ^^^
