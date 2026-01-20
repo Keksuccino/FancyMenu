@@ -13,7 +13,6 @@ import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
-import org.apache.logging.log4j.LogManager;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -42,7 +41,6 @@ public class MixinMouseHandler {
             double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
             double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
             double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
-            LogManager.getLogger().info("##################### SCROLL");
             if (ScreenOverlayHandler.INSTANCE.mouseScrolled(mX, mY, scrollDeltaX, scrollDeltaY)) info.cancel();
         }
     }

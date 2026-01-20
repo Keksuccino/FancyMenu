@@ -1117,11 +1117,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
 
-        LOGGER.info("################### context scroll 0");
-
         if (this.isOpen()) {
-
-            LOGGER.info("################### context scroll 1");
 
             if (this.needsScrolling && this.isMouseOverMenu(mouseX, mouseY)) {
                 // Close all sub-menus when scrolling in the parent menu
@@ -1134,8 +1130,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 float maxScrollPosition = this.rawHeight - (this.displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
                 this.scrollPosition = Math.max(0, Math.min(this.scrollPosition, maxScrollPosition));
 
-                LOGGER.info("################### context scroll 2");
-
                 return true; // We handled the scroll
             }
 
@@ -1143,7 +1137,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             for (ContextMenuEntry<?> e : this.entries) {
                 if (e instanceof SubMenuContextMenuEntry s) {
                     if (s.subContextMenu.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
-                        LOGGER.info("################### context scroll 3");
                         return true;
                     }
                 }

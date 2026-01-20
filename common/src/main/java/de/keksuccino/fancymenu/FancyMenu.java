@@ -29,13 +29,6 @@ public class FancyMenu {
 
 
 
-
-    //TODO FIXEN: Scrollen geht nicht in context menu von action script editor (actions sub menu)
-
-    //TODO debug spam von ContextMenu entfernen
-
-    //TODO debug log message von scroll mixin in MixinMouseHandler (oder MixinMouseManager??) entfernen
-
     //TODO font rendering für UI scale 1 optimieren
 
 
