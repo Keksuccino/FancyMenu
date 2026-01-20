@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.leveling;
 
+import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +13,7 @@ import java.util.function.Consumer;
 public class BuddyAchievement {
     
     private final AchievementType type;
-    private final String description;
+    private final String descriptionKey;
     private final int experienceReward;
     private final Consumer<LevelingManager> customRewardAction;
     private boolean unlocked;
@@ -22,14 +23,14 @@ public class BuddyAchievement {
      * Creates a new buddy achievement.
      *
      * @param type The achievement type
-     * @param description A description of the achievement
+     * @param descriptionKey A translation key for the achievement description
      * @param experienceReward The experience points awarded for completing this achievement
      * @param customRewardAction A custom action to perform when the achievement is completed (can be null)
      */
-    public BuddyAchievement(@NotNull AchievementType type, @NotNull String description, int experienceReward,
+    public BuddyAchievement(@NotNull AchievementType type, @NotNull String descriptionKey, int experienceReward,
                            @Nullable Consumer<LevelingManager> customRewardAction) {
         this.type = type;
-        this.description = description;
+        this.descriptionKey = descriptionKey;
         this.experienceReward = Math.max(0, experienceReward);
         this.customRewardAction = customRewardAction;
         this.unlocked = false;
@@ -44,10 +45,17 @@ public class BuddyAchievement {
     }
     
     /**
-     * @return A description of the achievement
+     * @return A localized description of the achievement
      */
     public String getDescription() {
-        return description;
+        return I18n.get(descriptionKey);
+    }
+
+    /**
+     * @return The translation key for this achievement's description
+     */
+    public String getDescriptionKey() {
+        return descriptionKey;
     }
     
     /**
@@ -112,48 +120,56 @@ public class BuddyAchievement {
     public enum AchievementType {
 
         // Basic achievements
-        FIRST_STEPS("First Steps", "First interaction with your buddy", 1),
-        FRIENDLY_TOUCH("Friendly Touch", "Pet your buddy 10 times", 1),
-        CARETAKER("Caretaker", "Feed your buddy 5 times", 1),
-        PLAYFUL_FRIEND("Playful Friend", "Play with your buddy for the first time", 1),
-        CLEANUP_CREW("Cleanup Crew", "Clean up 5 poops", 1),
+        FIRST_STEPS("fancymenu.buddy.achievement.first_steps.name", "fancymenu.buddy.achievement.first_steps.desc", 1),
+        FRIENDLY_TOUCH("fancymenu.buddy.achievement.friendly_touch.name", "fancymenu.buddy.achievement.friendly_touch.desc", 1),
+        CARETAKER("fancymenu.buddy.achievement.caretaker.name", "fancymenu.buddy.achievement.caretaker.desc", 1),
+        PLAYFUL_FRIEND("fancymenu.buddy.achievement.playful_friend.name", "fancymenu.buddy.achievement.playful_friend.desc", 1),
+        CLEANUP_CREW("fancymenu.buddy.achievement.cleanup_crew.name", "fancymenu.buddy.achievement.cleanup_crew.desc", 1),
         
         // Intermediate achievements
-        BEST_BUDDIES("Best Buddies", "Reach maximum happiness with your buddy", 2),
-        WELL_FED("Well Fed", "Keep your buddy perfectly fed for a full session", 2),
-        ENERGIZER("Energizer", "Keep your buddy's energy above 80% for an entire session", 2),
-        FUN_TIMES("Fun Times", "Reach maximum fun level with your buddy", 2),
-        MARATHON_SESSION("Marathon Session", "Use the layout editor with your buddy for over an hour", 2),
+        BEST_BUDDIES("fancymenu.buddy.achievement.best_buddies.name", "fancymenu.buddy.achievement.best_buddies.desc", 2),
+        WELL_FED("fancymenu.buddy.achievement.well_fed.name", "fancymenu.buddy.achievement.well_fed.desc", 2),
+        ENERGIZER("fancymenu.buddy.achievement.energizer.name", "fancymenu.buddy.achievement.energizer.desc", 2),
+        FUN_TIMES("fancymenu.buddy.achievement.fun_times.name", "fancymenu.buddy.achievement.fun_times.desc", 2),
+        MARATHON_SESSION("fancymenu.buddy.achievement.marathon_session.name", "fancymenu.buddy.achievement.marathon_session.desc", 2),
         
         // Advanced achievements
-        MASTER_TRAINER("Master Trainer", "Reach level 10 with your buddy", 3),
-        COMPLETION_COLLECTOR("Completion Collector", "Unlock all basic achievements", 3),
+        MASTER_TRAINER("fancymenu.buddy.achievement.master_trainer.name", "fancymenu.buddy.achievement.master_trainer.desc", 3),
+        COMPLETION_COLLECTOR("fancymenu.buddy.achievement.completion_collector.name", "fancymenu.buddy.achievement.completion_collector.desc", 3),
         
         // Special achievements
-        MIDNIGHT_COMPANION("Midnight Companion", "Work with your buddy after midnight", 4),
-        DESIGN_MARATHON("Design Marathon", "Create 10 layouts with your buddy present", 4),
-        LOYAL_FRIEND("Loyal Friend", "Interact with your buddy every day for a week", 4),
+        MIDNIGHT_COMPANION("fancymenu.buddy.achievement.midnight_companion.name", "fancymenu.buddy.achievement.midnight_companion.desc", 4),
+        DESIGN_MARATHON("fancymenu.buddy.achievement.design_marathon.name", "fancymenu.buddy.achievement.design_marathon.desc", 4),
+        LOYAL_FRIEND("fancymenu.buddy.achievement.loyal_friend.name", "fancymenu.buddy.achievement.loyal_friend.desc", 4),
         
         // Master achievements
-        PERFECT_HARMONY("Perfect Harmony", "Keep all buddy stats above 90% for an entire session", 5),
-        ACHIEVEMENT_HUNTER("Achievement Hunter", "Unlock all other achievements", 5);
+        PERFECT_HARMONY("fancymenu.buddy.achievement.perfect_harmony.name", "fancymenu.buddy.achievement.perfect_harmony.desc", 5),
+        ACHIEVEMENT_HUNTER("fancymenu.buddy.achievement.achievement_hunter.name", "fancymenu.buddy.achievement.achievement_hunter.desc", 5);
         
-        private final String name;
-        private final String defaultDescription;
+        private final String nameKey;
+        private final String descriptionKey;
         private final int tier; // 1-5, with 5 being the hardest/rarest
         
-        AchievementType(String name, String defaultDescription, int tier) {
-            this.name = name;
-            this.defaultDescription = defaultDescription;
+        AchievementType(String nameKey, String descriptionKey, int tier) {
+            this.nameKey = nameKey;
+            this.descriptionKey = descriptionKey;
             this.tier = tier;
         }
         
         public String getName() {
-            return name;
+            return I18n.get(nameKey);
+        }
+
+        public String getNameKey() {
+            return nameKey;
         }
         
         public String getDefaultDescription() {
-            return defaultDescription;
+            return I18n.get(descriptionKey);
+        }
+
+        public String getDescriptionKey() {
+            return descriptionKey;
         }
         
         public int getTier() {

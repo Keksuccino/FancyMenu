@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class PiPWindow extends AbstractContainerEventHandler implements Renderable {
@@ -113,7 +114,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     @Nullable
     private Runnable closeCallback;
+    @Nullable
+    private CloseWindowCheck closeWindowCheck;
+    private boolean closeCheckInProgress = false;
     private boolean closingFromScreen = false;
+    private boolean closingViaCallback = false;
 
     private int lastScreenWidth = -1;
     private int lastScreenHeight = -1;
@@ -806,6 +811,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         return this;
     }
 
+    public PiPWindow setCloseWindowCheck(@Nullable CloseWindowCheck closeWindowCheck) {
+        this.closeWindowCheck = closeWindowCheck;
+        return this;
+    }
+
     public void addCloseCallback(@NotNull Runnable closeCallback) {
         Objects.requireNonNull(closeCallback, "closeCallback");
         if (this.closeCallback == null) {
@@ -820,13 +830,23 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     public void close() {
-        if (this.closeCallback != null) {
-            this.closeCallback.run();
+        if (this.closeWindowCheck != null) {
+            if (this.closeCheckInProgress) {
+                return;
+            }
+            this.closeCheckInProgress = true;
+            this.closeWindowCheck.check(this, new CloseWindowDecisionImpl());
+            return;
         }
+        runCloseCallback();
     }
 
     void markClosingFromScreen() {
         this.closingFromScreen = true;
+    }
+
+    void clearClosingFromScreen() {
+        this.closingFromScreen = false;
     }
 
     boolean consumeClosingFromScreen() {
@@ -854,6 +874,57 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         this.y = y;
         clampTitleBarToScreen();
         return this;
+    }
+
+    boolean isClosingViaCallback() {
+        return this.closingViaCallback;
+    }
+
+    private void runCloseCallback() {
+        if (this.closeCallback == null) {
+            return;
+        }
+        this.closingViaCallback = true;
+        try {
+            this.closeCallback.run();
+        } finally {
+            this.closingViaCallback = false;
+        }
+    }
+
+    public interface CloseWindowDecision extends Supplier<Boolean> {
+        void supply(boolean shouldClose);
+    }
+
+    @FunctionalInterface
+    public interface CloseWindowCheck {
+        void check(@NotNull PiPWindow window, @NotNull CloseWindowDecision decision);
+    }
+
+    private final class CloseWindowDecisionImpl implements CloseWindowDecision {
+        @Nullable
+        private Boolean result;
+        private boolean supplied = false;
+
+        @Override
+        public void supply(boolean shouldClose) {
+            if (this.supplied) {
+                return;
+            }
+            this.supplied = true;
+            this.result = shouldClose;
+            PiPWindow.this.closeCheckInProgress = false;
+            if (!shouldClose) {
+                PiPWindow.this.clearClosingFromScreen();
+                return;
+            }
+            PiPWindow.this.runCloseCallback();
+        }
+
+        @Override
+        public Boolean get() {
+            return this.result;
+        }
     }
 
     /**

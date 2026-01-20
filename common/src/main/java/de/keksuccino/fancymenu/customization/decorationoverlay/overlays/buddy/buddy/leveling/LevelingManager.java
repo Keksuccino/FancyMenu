@@ -91,90 +91,90 @@ public class LevelingManager {
         // Basic achievements
         achievements.put(BuddyAchievement.AchievementType.FIRST_STEPS, new BuddyAchievement(
                 BuddyAchievement.AchievementType.FIRST_STEPS,
-                "Interact with your buddy for the first time",
+                BuddyAchievement.AchievementType.FIRST_STEPS.getDescriptionKey(),
                 50, null));
                 
         achievements.put(BuddyAchievement.AchievementType.FRIENDLY_TOUCH, new BuddyAchievement(
                 BuddyAchievement.AchievementType.FRIENDLY_TOUCH,
-                "Pet your buddy 10 times",
+                BuddyAchievement.AchievementType.FRIENDLY_TOUCH.getDescriptionKey(),
                 100, null));
                 
         achievements.put(BuddyAchievement.AchievementType.CARETAKER, new BuddyAchievement(
                 BuddyAchievement.AchievementType.CARETAKER,
-                "Feed your buddy 5 times",
+                BuddyAchievement.AchievementType.CARETAKER.getDescriptionKey(),
                 100, null));
                 
         achievements.put(BuddyAchievement.AchievementType.PLAYFUL_FRIEND, new BuddyAchievement(
                 BuddyAchievement.AchievementType.PLAYFUL_FRIEND,
-                "Play with your buddy for the first time",
+                BuddyAchievement.AchievementType.PLAYFUL_FRIEND.getDescriptionKey(),
                 75, null));
                 
         achievements.put(BuddyAchievement.AchievementType.CLEANUP_CREW, new BuddyAchievement(
                 BuddyAchievement.AchievementType.CLEANUP_CREW,
-                "Clean up 5 poops",
+                BuddyAchievement.AchievementType.CLEANUP_CREW.getDescriptionKey(),
                 75, null));
                 
         // Intermediate achievements
         achievements.put(BuddyAchievement.AchievementType.BEST_BUDDIES, new BuddyAchievement(
                 BuddyAchievement.AchievementType.BEST_BUDDIES,
-                "Reach maximum happiness with your buddy",
+                BuddyAchievement.AchievementType.BEST_BUDDIES.getDescriptionKey(),
                 200, null));
                 
         achievements.put(BuddyAchievement.AchievementType.WELL_FED, new BuddyAchievement(
                 BuddyAchievement.AchievementType.WELL_FED,
-                "Keep your buddy perfectly fed for a full session",
+                BuddyAchievement.AchievementType.WELL_FED.getDescriptionKey(),
                 200, null));
                 
         achievements.put(BuddyAchievement.AchievementType.ENERGIZER, new BuddyAchievement(
                 BuddyAchievement.AchievementType.ENERGIZER,
-                "Keep your buddy's energy above 80% for an entire session",
+                BuddyAchievement.AchievementType.ENERGIZER.getDescriptionKey(),
                 200, null));
                 
         achievements.put(BuddyAchievement.AchievementType.FUN_TIMES, new BuddyAchievement(
                 BuddyAchievement.AchievementType.FUN_TIMES,
-                "Reach maximum fun level with your buddy",
+                BuddyAchievement.AchievementType.FUN_TIMES.getDescriptionKey(),
                 200, null));
                 
         achievements.put(BuddyAchievement.AchievementType.MARATHON_SESSION, new BuddyAchievement(
                 BuddyAchievement.AchievementType.MARATHON_SESSION,
-                "Spend over an hour with your buddy in a single session",
+                BuddyAchievement.AchievementType.MARATHON_SESSION.getDescriptionKey(),
                 300, null));
                 
         // Advanced achievements
         achievements.put(BuddyAchievement.AchievementType.MASTER_TRAINER, new BuddyAchievement(
                 BuddyAchievement.AchievementType.MASTER_TRAINER,
-                "Reach level 10 with your buddy",
+                BuddyAchievement.AchievementType.MASTER_TRAINER.getDescriptionKey(),
                 500, null));
                 
         achievements.put(BuddyAchievement.AchievementType.COMPLETION_COLLECTOR, new BuddyAchievement(
                 BuddyAchievement.AchievementType.COMPLETION_COLLECTOR,
-                "Unlock all basic achievements",
+                BuddyAchievement.AchievementType.COMPLETION_COLLECTOR.getDescriptionKey(),
                 750, null));
                 
         // Special achievements
         achievements.put(BuddyAchievement.AchievementType.MIDNIGHT_COMPANION, new BuddyAchievement(
                 BuddyAchievement.AchievementType.MIDNIGHT_COMPANION,
-                "Spend time with your buddy after midnight",
+                BuddyAchievement.AchievementType.MIDNIGHT_COMPANION.getDescriptionKey(),
                 250, null));
                 
         achievements.put(BuddyAchievement.AchievementType.DESIGN_MARATHON, new BuddyAchievement(
                 BuddyAchievement.AchievementType.DESIGN_MARATHON,
-                "Spend extended time with your buddy",
+                BuddyAchievement.AchievementType.DESIGN_MARATHON.getDescriptionKey(),
                 500, null));
                 
         achievements.put(BuddyAchievement.AchievementType.LOYAL_FRIEND, new BuddyAchievement(
                 BuddyAchievement.AchievementType.LOYAL_FRIEND,
-                "Interact with your buddy every day for a week",
+                BuddyAchievement.AchievementType.LOYAL_FRIEND.getDescriptionKey(),
                 1000, null));
                 
         achievements.put(BuddyAchievement.AchievementType.PERFECT_HARMONY, new BuddyAchievement(
                 BuddyAchievement.AchievementType.PERFECT_HARMONY,
-                "Keep all buddy stats above 90% for an entire session",
+                BuddyAchievement.AchievementType.PERFECT_HARMONY.getDescriptionKey(),
                 1500, null));
                 
         achievements.put(BuddyAchievement.AchievementType.ACHIEVEMENT_HUNTER, new BuddyAchievement(
                 BuddyAchievement.AchievementType.ACHIEVEMENT_HUNTER,
-                "Unlock all other achievements",
+                BuddyAchievement.AchievementType.ACHIEVEMENT_HUNTER.getDescriptionKey(),
                 5000, null));
     }
     

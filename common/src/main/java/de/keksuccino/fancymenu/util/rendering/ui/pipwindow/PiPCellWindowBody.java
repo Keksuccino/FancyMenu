@@ -67,7 +67,6 @@ public abstract class PiPCellWindowBody extends CellScreen implements PipableScr
             return;
         }
         resolvedWindow.markClosingFromScreen();
-        resolvedWindow.setScreen(null);
         resolvedWindow.close();
     }
 

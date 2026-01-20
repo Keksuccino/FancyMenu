@@ -79,6 +79,14 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     }
 
     public void closeWindow(@NotNull PiPWindow window) {
+        if (!window.isClosingViaCallback()) {
+            window.close();
+            return;
+        }
+        closeWindowInternal(window);
+    }
+
+    private void closeWindowInternal(@NotNull PiPWindow window) {
         boolean closedByScreen = window.consumeClosingFromScreen();
         if (!closedByScreen) {
             var screen = window.getScreen();

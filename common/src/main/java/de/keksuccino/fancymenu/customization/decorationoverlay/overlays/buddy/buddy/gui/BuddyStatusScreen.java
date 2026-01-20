@@ -12,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -111,7 +112,7 @@ public class BuddyStatusScreen implements Renderable {
         // Create feed button
         actionButtons.add(new BuddyGuiButton(
                 this.buddy,
-                buddy -> "Feed",
+                buddy -> I18n.get("fancymenu.buddy.button.feed"),
                 () -> {
                     int mouseX = MouseInput.getMouseX();
                     int mouseY = MouseInput.getMouseY();
@@ -133,7 +134,7 @@ public class BuddyStatusScreen implements Renderable {
         // Create play button
         actionButtons.add(new BuddyGuiButton(
                 this.buddy,
-                buddy -> "Play",
+                buddy -> I18n.get("fancymenu.buddy.button.play"),
                 () -> {
                     int mouseX = MouseInput.getMouseX();
                     int mouseY = MouseInput.getMouseY();
@@ -160,9 +161,9 @@ public class BuddyStatusScreen implements Renderable {
                     // Show cooldown time if on cooldown
                     if (System.currentTimeMillis() < sleepButtonCooldownEnd) {
                         long secondsLeft = (sleepButtonCooldownEnd - System.currentTimeMillis()) / 1000;
-                        return "Sleep (" + secondsLeft + "s)";
+                        return I18n.get("fancymenu.buddy.button.sleep_cooldown", secondsLeft);
                     }
-                    return "Sleep";
+                    return I18n.get("fancymenu.buddy.button.sleep");
                 },
                 () -> {
                     // Check if buddy refuses to sleep (8% chance)
@@ -309,7 +310,10 @@ public class BuddyStatusScreen implements Renderable {
         int tabStartX = guiX + 5;
         int tabY = guiY - 8; // Positioned 40% outside the GUI (8 pixels out of 20)
 
-        String[] tabNames = {"Stats", "Achievements"};
+        String[] tabNames = {
+                I18n.get("fancymenu.buddy.tab.stats"),
+                I18n.get("fancymenu.buddy.tab.achievements")
+        };
 
         BuddyTextures textures = buddy.getTextures();
         for (int i = 0; i < tabNames.length; i++) {
@@ -340,7 +344,7 @@ public class BuddyStatusScreen implements Renderable {
         Component tooltip = null;
 
         // Draw title
-        String title = "Status & Stats";
+        String title = I18n.get("fancymenu.buddy.title.stats");
         graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
 
         // Draw status bars (moved from BuddyGui)
@@ -362,7 +366,7 @@ public class BuddyStatusScreen implements Renderable {
         graphics.fill(contentStartX, contentStartY + 130, contentStartX + SCREEN_WIDTH - 40, contentStartY + 131, 0x80FFFFFF);
 
         // Draw level and XP - moved further down
-        String levelText = "Level: " + levelingManager.getCurrentLevel();
+        String levelText = I18n.get("fancymenu.buddy.level", levelingManager.getCurrentLevel());
         graphics.drawString(font, levelText, contentStartX, contentStartY + 140, 0xFFFFFF);
 
         // Draw XP bar - moved further down
@@ -383,14 +387,6 @@ public class BuddyStatusScreen implements Renderable {
             }
         }
 
-        // XP text - moved further down
-        String xpText = levelingManager.getExperience() + " XP";
-        if (levelingManager.getCurrentLevel() < 30) {
-            xpText += " / Next Level: " + levelingManager.getExperienceForNextLevel() + " XP";
-        } else {
-            xpText += " (Max Level)";
-        }
-        graphics.drawString(font, xpText, contentStartX, contentStartY + 155, 0xFFFFFF);
 
         // Removed attribute points, titles and buttons
 
@@ -408,7 +404,7 @@ public class BuddyStatusScreen implements Renderable {
         int contentStartY = guiY + 30;
 
         // Draw title
-        String title = "Achievements";
+        String title = I18n.get("fancymenu.buddy.title.achievements");
         graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
 
         // Create a scrollable list of achievements
@@ -471,13 +467,17 @@ public class BuddyStatusScreen implements Renderable {
             // Draw achievement description with scrolling if needed
             String description = achievement.getDescription();
             if (!isUnlocked) {
-                description = "???" + (achievement.getType().getTier() > 2 ? " (Tier " + achievement.getType().getTier() + ")" : "");
+                if (achievement.getType().getTier() > 2) {
+                    description = I18n.get("fancymenu.buddy.achievement.locked_tier", achievement.getType().getTier());
+                } else {
+                    description = I18n.get("fancymenu.buddy.achievement.locked");
+                }
             }
             
             // Calculate available width for description (leave space for reward text)
             int descriptionMaxX = contentStartX + listWidth - 5;
             if (isUnlocked && achievement.getExperienceReward() > 0) {
-                String rewardText = "+" + achievement.getExperienceReward() + " XP";
+                String rewardText = I18n.get("fancymenu.buddy.achievement.reward", achievement.getExperienceReward());
                 descriptionMaxX -= font.width(rewardText) + 10; // Leave space for reward text
             }
             
@@ -486,7 +486,7 @@ public class BuddyStatusScreen implements Renderable {
             
             // Draw reward info if unlocked
             if (isUnlocked && achievement.getExperienceReward() > 0) {
-                String rewardText = "+" + achievement.getExperienceReward() + " XP";
+                String rewardText = I18n.get("fancymenu.buddy.achievement.reward", achievement.getExperienceReward());
                 graphics.drawString(font, rewardText, contentStartX + listWidth - font.width(rewardText) - 5, itemY + 5, 0xFFFF00);
             }
         }

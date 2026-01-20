@@ -31,7 +31,6 @@ public abstract class PiPWindowBody extends Screen implements PipableScreen {
             return;
         }
         resolvedWindow.markClosingFromScreen();
-        resolvedWindow.setScreen(null);
         resolvedWindow.close();
     }
 
