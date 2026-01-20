@@ -238,8 +238,16 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                         this.setSource(s, false);
                     }
                     this.rebuild();
+                    PiPWindow window = this.getWindow();
+                    if (window != null) {
+                        window.setVisible(true);
+                    }
                 });
-                picker.openInWindow(this.getWindow());
+                PiPWindow window = this.getWindow();
+                if (window != null) {
+                    window.setVisible(false);
+                }
+                picker.openInWindow(window);
             }), true);
         }
 
@@ -259,11 +267,19 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                         this.setSource(s, false);
                     }
                     this.rebuild();
+                    PiPWindow window = this.getWindow();
+                    if (window != null) {
+                        window.setVisible(true);
+                    }
                 });
                 fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
                 fileChooser.setFileTypes(this.allowedFileTypes);
                 fileChooser.setFileFilter(this.fileFilter);
-                fileChooser.openInWindow(this.getWindow());
+                PiPWindow window = this.getWindow();
+                if (window != null) {
+                    window.setVisible(false);
+                }
+                fileChooser.openInWindow(window);
             }), true);
         }
 

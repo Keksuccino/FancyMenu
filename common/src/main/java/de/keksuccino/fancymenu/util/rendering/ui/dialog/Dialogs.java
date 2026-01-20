@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 public class Dialogs {
 
     public static <D extends Screen & PipableScreen> Pair<D, PiPWindow> openGeneric(@NotNull D dialog, @Nullable Component title, @Nullable ResourceLocation icon, int width, int height) {
-        PiPWindow window = PiPWindowHandler.INSTANCE.openWindowCentered(new PiPWindow((title != null) ? title : Component.empty()), null)
+        PiPWindow window = new PiPWindow((title != null) ? title : Component.empty())
                 .setScreen(dialog)
                 .setIcon(icon)
                 .setSize(width, height)
@@ -27,6 +27,7 @@ public class Dialogs {
                 .setForceFocus(true)
                 .setBlockMinecraftScreenInputs(true)
                 .setForceFancyMenuUiScale(true);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
         return Pair.of(dialog, window);
     }
 
