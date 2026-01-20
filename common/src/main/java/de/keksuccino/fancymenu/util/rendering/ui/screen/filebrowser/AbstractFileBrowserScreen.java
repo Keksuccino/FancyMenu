@@ -123,7 +123,7 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
             MainThreadTaskExecutor.executeInMainThread(() -> button.setFocused(false), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         });
         this.addWidget(this.createFolderButton);
-        UIBase.applyDefaultWidgetSkinTo(this.createFolderButton);
+        UIBase.applyDefaultWidgetSkinTo(this.createFolderButton, UIBase.shouldBlur());
 
         this.openInExplorerButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.ui.filechooser.open_in_explorer"), (button) -> {
             File selected = this.getSelectedFile();
@@ -135,7 +135,7 @@ public abstract class AbstractFileBrowserScreen extends AbstractBrowserScreen {
             MainThreadTaskExecutor.executeInMainThread(() -> button.setFocused(false), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         });
         this.addWidget(this.openInExplorerButton);
-        UIBase.applyDefaultWidgetSkinTo(this.openInExplorerButton);
+        UIBase.applyDefaultWidgetSkinTo(this.openInExplorerButton, UIBase.shouldBlur());
     }
 
     @Override

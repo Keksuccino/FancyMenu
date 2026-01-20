@@ -138,7 +138,7 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
             this.searchBar.setHintFancyMenu(consumes -> AbstractBrowserScreen.this.searchBarPlaceholder);
             this.searchBar.setValue(oldSearchValue);
             this.searchBar.setResponder(s -> AbstractBrowserScreen.this.updateEntryList());
-            UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+            UIBase.applyDefaultWidgetSkinTo(this.searchBar, UIBase.shouldBlur());
             this.searchBar.setMaxLength(100000);
             this.addWidget(this.searchBar);
             this.setupInitialFocusWidget(this, this.searchBar);
@@ -155,7 +155,7 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
             });
         }
         this.addWidget(this.confirmButton);
-        UIBase.applyDefaultWidgetSkinTo(this.confirmButton);
+        UIBase.applyDefaultWidgetSkinTo(this.confirmButton, UIBase.shouldBlur());
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.stopPreviewAudio();
@@ -163,7 +163,7 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
             this.closeWindow();
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
 
         this.initAudioPreviewButton();
         this.initAudioPreviewVolumeSlider();
@@ -738,7 +738,7 @@ public abstract class AbstractBrowserScreen extends PiPWindowBody implements Ini
         this.audioPreviewVolumeSlider.visible = false;
         this.audioPreviewVolumeSlider.active = false;
         this.addWidget(this.audioPreviewVolumeSlider);
-        UIBase.applyDefaultWidgetSkinTo(this.audioPreviewVolumeSlider);
+        UIBase.applyDefaultWidgetSkinTo(this.audioPreviewVolumeSlider, UIBase.shouldBlur());
     }
 
     protected void togglePreviewAudio() {
