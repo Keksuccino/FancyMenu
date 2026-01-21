@@ -87,7 +87,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
                 if (call != null) {
                     if (!VariableHandler.variableExists(call)) {
                         VariableHandler.setVariable(call, "");
-                        updateVariablesList();
+                        this.refreshVariablesList();
                     }
                 }
             });
@@ -104,6 +104,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
                 TextInputWindowBody s = new TextInputWindowBody(null, (call) -> {
                     if (call != null) {
                         e.variable.setValue(call);
+                        this.refreshVariablesList();
                     }
                 });
                 Dialogs.openGeneric(s,
@@ -147,7 +148,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
         this.addRenderableWidget(doneButton);
         UIBase.applyDefaultWidgetSkinTo(doneButton);
 
-        this.updateVariablesList();
+        this.refreshVariablesList();
 
     }
 
@@ -226,14 +227,18 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
 
     }
 
+    protected void refreshVariablesList() {
+        this.updateVariablesList();
+        this.resize(Minecraft.getInstance(), this.width, this.height);
+    }
+
     protected void requestDeleteSelectedVariable() {
         VariableScrollEntry e = this.getSelectedEntry();
         if (e == null) return;
         Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm"), MessageDialogStyle.WARNING, call -> {
             if (call) {
                 VariableHandler.removeVariable(e.variable.getName());
-                this.updateVariablesList();
-                this.resize(Minecraft.getInstance(), this.width, this.height);
+                this.refreshVariablesList();
             }
         });
     }

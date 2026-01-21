@@ -373,6 +373,7 @@ public class CustomizationOverlayUI {
         customizationMenu.addClickableEntry("variables", Component.translatable("fancymenu.overlay.menu_bar.variables.manage"), (menu, entry) -> {
                     ManageVariablesScreen s = new ManageVariablesScreen(call -> {});
                     ManageVariablesScreen.openInWindow(s);
+                    menu.closeMenuChain();
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.variables.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
@@ -381,6 +382,7 @@ public class CustomizationOverlayUI {
                     ManageListenersScreen s = new ManageListenersScreen(call -> {
                     });
                     ManageListenersScreen.openInWindow(s);
+                    menu.closeMenuChain();
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.listeners.manage.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("ear"));

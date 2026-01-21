@@ -127,13 +127,10 @@ public class ManageListenersScreen extends PiPCellWindowBody {
                             this.rebuild();
                         }
                     });
-                    Minecraft.getInstance().setScreen(this);
                     ActionScriptEditorWindowBody.openInWindow(actionsScreen);
-                } else {
-                    Minecraft.getInstance().setScreen(this);
                 }
             });
-            Minecraft.getInstance().setScreen(chooseScreen);
+            ChooseListenerTypeScreen.openInWindow(chooseScreen, this.getWindow());
         });
         
         // Edit listener button

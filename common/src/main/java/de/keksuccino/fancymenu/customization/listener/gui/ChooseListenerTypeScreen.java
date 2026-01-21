@@ -1,11 +1,16 @@
 package de.keksuccino.fancymenu.customization.listener.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
@@ -14,7 +19,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -24,7 +28,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ChooseListenerTypeScreen extends Screen {
+public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWidgetFocusScreen {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     @NotNull
     protected final Consumer<AbstractListener> callback;
@@ -43,7 +50,8 @@ public class ChooseListenerTypeScreen extends Screen {
 
     @Override
     protected void init() {
-        
+        boolean blur = UIBase.shouldBlur();
+
         // Initialize search bar
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
         this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
@@ -51,16 +59,18 @@ public class ChooseListenerTypeScreen extends Screen {
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateListenersList());
         this.addRenderableWidget(this.searchBar);
-        UIBase.applyDefaultWidgetSkinTo(this.searchBar);
-        this.setInitialFocus(this.searchBar);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar, blur);
+        this.setupInitialFocusWidget(this, this.searchBar);
         
         // Set positions for scroll areas
+        this.listenersScrollArea.setSetupForBlurInterface(blur);
         this.listenersScrollArea.setWidth((this.width / 2) - 40, true);
         this.listenersScrollArea.setHeight(this.height - 85 - 25, true);
         this.listenersScrollArea.setX(20, true);
         this.listenersScrollArea.setY(50 + 15 + 25, true);
         this.addRenderableWidget(this.listenersScrollArea);
         
+        this.descriptionScrollArea.setSetupForBlurInterface(blur);
         this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
         this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
@@ -80,7 +90,7 @@ public class ChooseListenerTypeScreen extends Screen {
                 button -> this.copyVariablesToClipboard()
         ).setIsActiveSupplier(consumes -> this.selectedListener != null);
         this.addRenderableWidget(this.copyVariablesButton);
-        UIBase.applyDefaultWidgetSkinTo(this.copyVariablesButton);
+        UIBase.applyDefaultWidgetSkinTo(this.copyVariablesButton, blur);
         
         // Done button
         ExtendedButton doneButton = new ExtendedButton(
@@ -88,12 +98,10 @@ public class ChooseListenerTypeScreen extends Screen {
                 this.height - 20 - 20, 
                 150, 20, 
                 Component.translatable("fancymenu.common_components.done"), 
-                button -> {
-                    this.callback.accept(this.selectedListener);
-                }
+                button -> this.closeWithResult(this.selectedListener)
         ).setIsActiveSupplier(consumes -> this.selectedListener != null);
         this.addRenderableWidget(doneButton);
-        UIBase.applyDefaultWidgetSkinTo(doneButton);
+        UIBase.applyDefaultWidgetSkinTo(doneButton, blur);
         
         // Cancel button
         ExtendedButton cancelButton = new ExtendedButton(
@@ -101,12 +109,10 @@ public class ChooseListenerTypeScreen extends Screen {
                 this.height - 20 - 20 - 5 - 20,
                 150, 20,
                 Component.translatable("fancymenu.common_components.cancel"),
-                button -> {
-                    this.callback.accept(null);
-                }
+                button -> this.closeWithResult(null)
         );
         this.addRenderableWidget(cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(cancelButton, blur);
         
         this.updateListenersList();
         this.setDescription(this.selectedListener);
@@ -114,27 +120,28 @@ public class ChooseListenerTypeScreen extends Screen {
     }
 
     @Override
-    public void onClose() {
+    public void onWindowClosedExternally() {
         this.callback.accept(null);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        RenderSystem.enableBlend();
+
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
         
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        graphics.drawString(this.font, titleComp, 20, 20, this.getGenericTextColor(), false);
         
         graphics.drawString(this.font, Component.translatable("fancymenu.listeners.choose_type.available"), 
-                20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+                20, 50, this.getGenericTextColor(), false);
         
         Component descLabel = Component.translatable("fancymenu.listeners.choose_type.description");
         int descLabelWidth = this.font.width(descLabel);
         graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, 
-                UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
-        
-        super.render(graphics, mouseX, mouseY, partial);
+                this.getGenericTextColor(), false);
+
+        this.performInitialWidgetFocusActionInRender();
     }
 
     @Override
@@ -152,7 +159,7 @@ public class ChooseListenerTypeScreen extends Screen {
             
             ListenerScrollEntry entry = new ListenerScrollEntry(
                     this.listenersScrollArea,
-                    ((MutableComponent)listener.getDisplayName()).withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()),
+                    ((MutableComponent)listener.getDisplayName()).withColor(this.getLabelTextColor()),
                     UIBase.getUITheme().bullet_list_dot_color_1,
                     e -> {
                         this.selectedListener = listener;
@@ -162,7 +169,7 @@ public class ChooseListenerTypeScreen extends Screen {
             entry.listener = listener;
             entry.setDoubleClickAction(() -> {
                 if (this.selectedListener == listener) {
-                    this.callback.accept(this.selectedListener);
+                    this.closeWithResult(this.selectedListener);
                 }
             });
             this.listenersScrollArea.addEntry(entry);
@@ -210,7 +217,7 @@ public class ChooseListenerTypeScreen extends Screen {
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
-            e.setTextBaseColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
+            e.setTextBaseColor(this.getLabelTextColor());
             this.descriptionScrollArea.addEntry(e);
         });
     }
@@ -248,6 +255,40 @@ public class ChooseListenerTypeScreen extends Screen {
             }
         }
         return false;
+    }
+
+    protected void closeWithResult(@Nullable AbstractListener listener) {
+        this.callback.accept(listener);
+        this.closeWindow();
+    }
+
+    private int getGenericTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
+    }
+
+    private int getLabelTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ChooseListenerTypeScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ChooseListenerTypeScreen screen) {
+        return openInWindow(screen, null);
     }
 
     public class ListenerScrollEntry extends TextListScrollAreaEntry {
