@@ -46,6 +46,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -1018,13 +1019,44 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         List<ExecutableEntry> hoverChain = this.getActiveHoveredChain();
         ExecutableEntry activeHoverEntry = this.getActiveHoveredEntry();
 
+        float minSegmentY = Float.MAX_VALUE;
+        float maxSegmentBottom = Float.MIN_VALUE;
+        for (MinimapEntrySegment segment : this.minimapSegments) {
+            minSegmentY = Math.min(minSegmentY, segment.y);
+            maxSegmentBottom = Math.max(maxSegmentBottom, segment.y + segment.height);
+        }
+
         for (MinimapEntrySegment segment : this.minimapSegments) {
             ExecutableEntry entry = segment.entry;
-            graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, this.getMinimapEntryBaseColor(entry).getRGB());
+            int entryColor = this.getMinimapEntryBaseColor(entry).getRGB();
+            boolean roundTop = segment.y <= minSegmentY + 1.0F;
+            boolean roundBottom = (segment.y + segment.height) >= maxSegmentBottom - 1.0F;
+            float entryRadius = Math.min(radius, Math.max(0.0F, segment.height / 2.0F));
+            float topRadius = roundTop ? entryRadius : 0.0F;
+            float bottomRadius = roundBottom ? entryRadius : 0.0F;
+            if (roundTop || roundBottom) {
+                if (roundTop && roundBottom) {
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, segment.x, segment.y, segment.width, segment.height, entryRadius, entryRadius, entryRadius, entryRadius, entryColor, 1.0F);
+                } else if (roundTop) {
+                    SmoothRectangleRenderer.renderSmoothRectRoundTopCornersScaled(graphics, segment.x, segment.y, segment.width, segment.height, entryRadius, entryColor, 1.0F);
+                } else {
+                    SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, segment.x, segment.y, segment.width, segment.height, entryRadius, entryColor, 1.0F);
+                }
+            } else {
+                graphics.fill(segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, entryColor);
+            }
             if (this.selectedEntry == entry) {
-                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_selected_color, true, true, true, true);
+                if (roundTop || roundBottom) {
+                    SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(graphics, segment.x, segment.y, segment.width, segment.height, 1.0F, topRadius, topRadius, bottomRadius, bottomRadius, theme.actions_chain_indicator_selected_color.getColorInt(), 1.0F);
+                } else {
+                    UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.actions_chain_indicator_selected_color, true, true, true, true);
+                }
             } else if (activeHoverEntry == entry) {
-                UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.ui_interface_widget_label_color_normal, true, true, true, true);
+                if (roundTop || roundBottom) {
+                    SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(graphics, segment.x, segment.y, segment.width, segment.height, 1.0F, topRadius, topRadius, bottomRadius, bottomRadius, theme.ui_interface_widget_label_color_normal.getColorInt(), 1.0F);
+                } else {
+                    UIBase.renderBorder(graphics, segment.x, segment.y, segment.x + segment.width, segment.y + segment.height, 1, theme.ui_interface_widget_label_color_normal, true, true, true, true);
+                }
             }
         }
         if (!hoverChain.isEmpty()) {
@@ -1131,8 +1163,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
         Color viewportBaseColor = theme.actions_minimap_viewport_color.getColor();
         Color viewportColor = withAlpha(viewportBaseColor, Math.max(0, Math.min(255, viewportBaseColor.getAlpha() / 2)));
-        graphics.fill(this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, viewportColor.getRGB());
-        UIBase.renderBorder(graphics, this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, 1, theme.actions_minimap_viewport_border_color, true, true, true, true);
+        float radius = Math.min(UIBase.getInterfaceCornerRoundingRadius(), Math.max(0.0F, viewportHeight / 2.0F));
+        UIBase.renderRoundedRect(graphics, this.minimapContentX, viewportTop, this.minimapContentWidth, viewportHeight, radius, radius, radius, radius, viewportColor.getRGB());
+        UIBase.renderRoundedBorder(graphics, this.minimapContentX, viewportTop, this.minimapContentX + this.minimapContentWidth, viewportTop + viewportHeight, 1, radius, radius, radius, radius, theme.actions_minimap_viewport_border_color.getColorInt());
     }
 
     @NotNull
@@ -3083,6 +3116,49 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        }
+
+        @Override
+        protected void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            DrawableColor color = null;
+            if (!this.isHovered() && !this.isSelected()) {
+                if (this.backgroundColorNormal != null) {
+                    color = this.backgroundColorNormal.get();
+                }
+            } else if (this.backgroundColorHover != null) {
+                color = this.backgroundColorHover.get();
+            }
+            if (color == null) {
+                return;
+            }
+            float entryX = this.x;
+            float entryY = this.y;
+            float entryWidth = this.width;
+            float entryHeight = this.height;
+            ScrollArea scrollArea = this.parent;
+            float scissorPadding = scrollArea.isScissorEnabled() ? 2.0F : 0.0F;
+            float areaY = scrollArea.getInnerY() + scissorPadding;
+            float areaBottom = (scrollArea.getInnerY() + scrollArea.getInnerHeight()) - scissorPadding;
+            float visibleTop = Math.max(entryY, areaY);
+            float visibleBottom = Math.min(entryY + entryHeight, areaBottom);
+            float visibleHeight = visibleBottom - visibleTop;
+            if (visibleHeight <= 0.0F) {
+                return;
+            }
+            boolean roundTop = entryY <= areaY + 5;
+            boolean roundBottom = (entryY + entryHeight) >= areaBottom - 5;
+            if (roundTop || roundBottom) {
+                float radius = Math.min(UIBase.getInterfaceCornerRoundingRadius(), Math.max(0.0F, visibleHeight / 2.0F));
+                if (roundTop && roundBottom) {
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, entryX, visibleTop, entryWidth, visibleHeight, radius, radius, radius, radius, color.getColorInt(), partial);
+                } else if (roundTop) {
+                    SmoothRectangleRenderer.renderSmoothRectRoundTopCornersScaled(graphics, entryX, visibleTop, entryWidth, visibleHeight, radius, color.getColorInt(), partial);
+                } else {
+                    SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, entryX, visibleTop, entryWidth, visibleHeight, radius, color.getColorInt(), partial);
+                }
+            } else {
+                fillF(graphics, entryX, visibleTop, entryX + entryWidth, visibleTop + visibleHeight, color.getColorInt());
+            }
         }
 
         @Override

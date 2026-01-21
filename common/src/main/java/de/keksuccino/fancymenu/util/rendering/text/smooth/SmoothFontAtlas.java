@@ -135,7 +135,7 @@ final class SmoothFontAtlas implements AutoCloseable {
         float offsetX = (float)bounds.getX() - padding;
         float offsetY = (float)bounds.getY() - padding;
 
-        upload();
+        upload(slot.x, slot.y, glyphWidth, glyphHeight);
 
         return new SmoothFontGlyph(this, slot.x, slot.y, glyphWidth, glyphHeight, offsetX, offsetY, advance, true);
     }
@@ -244,6 +244,18 @@ final class SmoothFontAtlas implements AutoCloseable {
             dynamicTexture.upload();
         } else {
             RenderSystem.recordRenderCall(dynamicTexture::upload);
+        }
+    }
+
+    private void upload(int x, int y, int width, int height) {
+        Runnable action = () -> {
+            this.dynamicTexture.bind();
+            this.atlasImage.upload(0, x, y, x, y, width, height, false, false);
+        };
+        if (RenderSystem.isOnRenderThread()) {
+            action.run();
+        } else {
+            RenderSystem.recordRenderCall(action::run);
         }
     }
 

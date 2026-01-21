@@ -41,8 +41,6 @@ public class FancyMenu {
 
     //TODO Variable Manage screens zu PiPs machen
 
-    //TODO Action Editor zu blur screen machen
-
 
 
 
