@@ -612,9 +612,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                         }
                     }
                 }
-                Minecraft.getInstance().setScreen(this);
             });
-            Minecraft.getInstance().setScreen(s);
+            ManageRequirementsScreen.openInWindow(s, this.getWindow());
         } else if (targetExecutable instanceof ElseIfExecutableBlock block) {
             ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
                 if (container != null) {
@@ -628,9 +627,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                         }
                     }
                 }
-                Minecraft.getInstance().setScreen(this);
             });
-            Minecraft.getInstance().setScreen(s);
+            ManageRequirementsScreen.openInWindow(s, this.getWindow());
         } else if (targetExecutable instanceof WhileExecutableBlock block) {
             ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
                 if (container != null) {
@@ -644,9 +642,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                         }
                     }
                 }
-                Minecraft.getInstance().setScreen(this);
             });
-            Minecraft.getInstance().setScreen(s);
+            ManageRequirementsScreen.openInWindow(s, this.getWindow());
         } else if (targetExecutable instanceof DelayExecutableBlock block) {
             TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFilter().convertToLegacyFilter(), call -> {
                 if (call != null) {
@@ -742,9 +739,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 IfExecutableBlock block = new IfExecutableBlock(container);
                 this.finalizeExecutableAddition(block, resolvedReference, true);
             }
-            Minecraft.getInstance().setScreen(this);
         });
-        Minecraft.getInstance().setScreen(s);
+        ManageRequirementsScreen.openInWindow(s, this.getWindow());
     }
 
     protected void onAddWhile(@Nullable ExecutableEntry selectionReference) {
@@ -755,9 +751,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 WhileExecutableBlock block = new WhileExecutableBlock(container);
                 this.finalizeExecutableAddition(block, resolvedReference, true);
             }
-            Minecraft.getInstance().setScreen(this);
         });
-        Minecraft.getInstance().setScreen(s);
+        ManageRequirementsScreen.openInWindow(s, this.getWindow());
     }
 
     protected void onAddDelay(@Nullable ExecutableEntry selectionReference) {
@@ -792,7 +787,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if (container != null) {
                 ExecutableEntry resolvedEntry = this.findEntryForExecutable(targetExecutable);
                 if ((resolvedEntry == null) || !(resolvedEntry.executable instanceof AbstractExecutableBlock resolvedBlock)) {
-                    Minecraft.getInstance().setScreen(this);
                     return;
                 }
                 this.createUndoPoint();
@@ -802,9 +796,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.updateActionInstanceScrollArea(true);
                 this.focusEntryForExecutable(appended, true, true);
             }
-            Minecraft.getInstance().setScreen(this);
         });
-        Minecraft.getInstance().setScreen(s);
+        ManageRequirementsScreen.openInWindow(s, this.getWindow());
     }
 
     protected void onAppendElse(@Nullable ExecutableEntry targetEntry) {

@@ -405,9 +405,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                     this.editor.history.saveSnapshot();
                                     this.element.requirementContainer = call;
                                 }
-                                this.openContextMenuScreen(this.editor);
                             });
-                            this.openContextMenuScreen(s);
+                            menu.closeMenuChain();
+                            ManageRequirementsScreen.openInWindow(s);
                         } else if (entry.getStackMeta().isFirstInStack()) {
                             List<E> selectedElements = this.getFilteredSelectedElementList(element -> element.settings.isLoadingRequirementsEnabled());
                             List<RequirementContainer> containers = ObjectUtils.getOfAll(RequirementContainer.class, selectedElements, consumes -> consumes.element.requirementContainer);
@@ -423,14 +423,15 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                         e.element.requirementContainer = call.copy(true);
                                     }
                                 }
-                                this.openContextMenuScreen(this.editor);
                             });
                             if (allEqual) {
-                                this.openContextMenuScreen(s);
+                                menu.closeMenuChain();
+                                ManageRequirementsScreen.openInWindow(s);
                             } else {
                                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.elements.multiselect.loading_requirements.warning.override"), MessageDialogStyle.WARNING, call -> {
                                     if (call) {
-                                        this.openContextMenuScreen(s);
+                                        menu.closeMenuChain();
+                                        ManageRequirementsScreen.openInWindow(s);
                                     }
                                 });
                             }

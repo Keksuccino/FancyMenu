@@ -25,6 +25,12 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Objects;
 
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderStateShard;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.platform.GlStateManager;
+
 final class SmoothFontAtlas implements AutoCloseable {
 
     private static final int DEFAULT_ATLAS_SIZE = 1024;
@@ -51,6 +57,7 @@ final class SmoothFontAtlas implements AutoCloseable {
     private int cursorX;
     private int cursorY;
     private int rowHeight;
+    private RenderType renderType;
 
     SmoothFontAtlas(@Nonnull SmoothFont parentFont, @Nonnull Font awtFont, @Nonnull FontRenderContext fontRenderContext, float sdfRange, @Nonnull String debugName, int initialSize, @Nonnull String sourceLabel, int sourceIndex, @Nonnull String lodLabel, @Nonnull String styleLabel) {
         this.debugName = Objects.requireNonNull(debugName);
@@ -66,6 +73,43 @@ final class SmoothFontAtlas implements AutoCloseable {
 
         this.logicalWidth = this.initialSize;
         this.logicalHeight = this.initialSize;
+    }
+
+    RenderType getRenderType() {
+        if (renderType == null) {
+            ensureInitialized();
+            renderType = new RenderType(
+                    "fancymenu_smooth_text_" + debugName,
+                    DefaultVertexFormat.POSITION_TEX_COLOR,
+                    VertexFormat.Mode.QUADS,
+                    256,
+                    false,
+                    false,
+                    () -> {
+                        SmoothTextShader.applySdfRange(getEffectiveSdfRange());
+                        SmoothTextShader.applyEdge(SmoothTextShader.getResolvedEdge());
+                        SmoothTextShader.applySharpness(SmoothTextShader.getResolvedSharpness());
+                        RenderSystem.setShader(SmoothTextShader::getShader);
+
+                        TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+                        textureManager.getTexture(textureLocation).setFilter(false, false);
+                        RenderSystem.setShaderTexture(0, textureLocation);
+
+                        RenderSystem.enableBlend();
+                        RenderSystem.blendFuncSeparate(
+                                GlStateManager.SourceFactor.SRC_ALPHA,
+                                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                                GlStateManager.SourceFactor.ONE,
+                                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA
+                        );
+                    },
+                    () -> {
+                        RenderSystem.disableBlend();
+                        RenderSystem.defaultBlendFunc();
+                    }
+            ) {};
+        }
+        return renderType;
     }
 
     int getWidth() {
@@ -290,30 +334,76 @@ final class SmoothFontAtlas implements AutoCloseable {
 
     private static BufferedImage applyBlur(BufferedImage src, float sigma) {
         int radius = (int) Math.ceil(sigma * 3.0F);
+        if (radius <= 0) return src;
+
+        // Generate Gaussian kernel (1D)
         int kernelSize = radius * 2 + 1;
-        float[] kernelData = new float[kernelSize * kernelSize];
+        float[] kernel = new float[kernelSize];
         float twoSigmaSq = 2.0F * sigma * sigma;
         float sigmaRoot = (float) Math.sqrt(twoSigmaSq * Math.PI);
         float total = 0.0F;
 
-        for (int y = -radius; y <= radius; y++) {
-            for (int x = -radius; x <= radius; x++) {
-                float distanceSq = x * x + y * y;
-                float value = (float) Math.exp(-distanceSq / twoSigmaSq) / sigmaRoot;
-                kernelData[(y + radius) * kernelSize + (x + radius)] = value;
-                total += value;
+        for (int i = -radius; i <= radius; i++) {
+            float distanceSq = i * i;
+            float value = (float) Math.exp(-distanceSq / twoSigmaSq) / sigmaRoot;
+            kernel[i + radius] = value;
+            total += value;
+        }
+        for (int i = 0; i < kernel.length; i++) {
+            kernel[i] /= total;
+        }
+
+        int width = src.getWidth();
+        int height = src.getHeight();
+        int[] pixels = src.getRGB(0, 0, width, height, null, 0, width);
+
+        // Extract Alpha channel to float array for high-precision processing
+        float[] sourceAlpha = new float[pixels.length];
+        for (int i = 0; i < pixels.length; i++) {
+            sourceAlpha[i] = (pixels[i] >> 24) & 0xFF;
+        }
+
+        float[] tempAlpha = new float[pixels.length];
+
+        // Horizontal pass: sourceAlpha -> tempAlpha
+        convolveFloat1D(sourceAlpha, tempAlpha, width, height, kernel, radius, true);
+
+        // Vertical pass: tempAlpha -> sourceAlpha (reuse source buffer for destination)
+        convolveFloat1D(tempAlpha, sourceAlpha, width, height, kernel, radius, false);
+
+        // Pack back to integer pixels
+        for (int i = 0; i < pixels.length; i++) {
+            int a = Math.min(255, Math.max(0, Math.round(sourceAlpha[i])));
+            pixels[i] = (a << 24) | 0xFFFFFF; // White with new alpha
+        }
+
+        BufferedImage dst = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        dst.setRGB(0, 0, width, height, pixels, 0, width);
+        return dst;
+    }
+
+    private static void convolveFloat1D(float[] src, float[] dest, int width, int height, float[] kernel, int radius, boolean horizontal) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                float a = 0.0F;
+
+                for (int k = -radius; k <= radius; k++) {
+                    int kIndex = k + radius;
+                    int px = horizontal ? x + k : x;
+                    int py = horizontal ? y : y + k;
+
+                    // Clamp edges
+                    if (px < 0) px = 0;
+                    else if (px >= width) px = width - 1;
+                    if (py < 0) py = 0;
+                    else if (py >= height) py = height - 1;
+
+                    a += src[py * width + px] * kernel[kIndex];
+                }
+
+                dest[y * width + x] = a;
             }
         }
-
-        for (int i = 0; i < kernelData.length; i++) {
-            kernelData[i] /= total;
-        }
-
-        java.awt.image.Kernel kernel = new java.awt.image.Kernel(kernelSize, kernelSize, kernelData);
-        java.awt.image.ConvolveOp op = new java.awt.image.ConvolveOp(kernel, java.awt.image.ConvolveOp.EDGE_NO_OP, null);
-        
-        BufferedImage dst = new BufferedImage(src.getWidth(), src.getHeight(), src.getType());
-        return op.filter(src, dst);
     }
 
     private static byte[] buildRawRgba(BufferedImage image, int width, int height) {

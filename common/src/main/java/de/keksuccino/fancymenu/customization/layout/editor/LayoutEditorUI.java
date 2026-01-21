@@ -709,12 +709,13 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         menu.addSeparatorEntry("separator_after_close_audio");
 
         menu.addClickableEntry("layout_wide_requirements", Component.translatable("fancymenu.requirements.layouts.loading_requirements"), (menu1, entry) -> {
-                    this.openContextMenuScreen(new ManageRequirementsScreen(editor.layout.layoutWideRequirementContainer.copy(false), (call) -> {
+                    ManageRequirementsScreen s = new ManageRequirementsScreen(editor.layout.layoutWideRequirementContainer.copy(false), (call) -> {
                         if (call != null) {
                             editor.layout.layoutWideRequirementContainer = call;
                         }
-                        this.openContextMenuScreen(editor);
-                    }));
+                    });
+                    menu1.closeMenuChain();
+                    ManageRequirementsScreen.openInWindow(s);
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.layouts.loading_requirements.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("check_list"));
 

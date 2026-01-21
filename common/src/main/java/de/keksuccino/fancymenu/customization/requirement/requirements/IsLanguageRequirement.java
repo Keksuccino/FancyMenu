@@ -74,13 +74,24 @@ public class IsLanguageRequirement extends Requirement {
 
     @Override
     public void editValue(@NotNull Screen parentScreen, @NotNull RequirementInstance requirementInstance) {
+        boolean[] handled = {false};
+        final Runnable[] closeAction = new Runnable[] {() -> {}};
         IsLanguageValueConfigScreen s = new IsLanguageValueConfigScreen(Objects.requireNonNullElse(requirementInstance.value, ""), callback -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
             if (callback != null) {
                 requirementInstance.value = callback;
             }
-            Minecraft.getInstance().setScreen(parentScreen);
+            closeAction[0].run();
         });
-        Minecraft.getInstance().setScreen(s);
+        closeAction[0] = Requirement.openRequirementValueEditor(parentScreen, s, () -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+        });
     }
 
     public static class IsLanguageValueConfigScreen extends StringBuilderScreen {

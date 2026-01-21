@@ -29,8 +29,6 @@ public class FancyMenu {
 
 
 
-    //TODO font rendering für UI scale 1 optimieren
-
     //TODO font rendering performance verbessern (CPU dreht zu hoch beim rendern)
 
     //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren

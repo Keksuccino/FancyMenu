@@ -6,6 +6,9 @@ import de.keksuccino.fancymenu.customization.requirement.ui.AsyncRequirementErro
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
@@ -132,6 +135,25 @@ public abstract class Requirement {
             }
             Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
         }
+    }
+
+    @NotNull
+    protected static Runnable openRequirementValueEditor(@NotNull Screen parentScreen, @NotNull Screen editorScreen, @NotNull Runnable onWindowClosedExternally) {
+        if (parentScreen instanceof PipableScreen pipableScreen) {
+            PiPWindow window = new PiPWindow(editorScreen.getTitle())
+                    .setScreen(editorScreen)
+                    .setForceFancyMenuUiScale(true)
+                    .setAlwaysOnTop(true)
+                    .setBlockMinecraftScreenInputs(true)
+                    .setForceFocus(true)
+                    .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                    .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+            PiPWindowHandler.INSTANCE.openWindowCentered(window, pipableScreen.getWindow());
+            window.addCloseCallback(onWindowClosedExternally);
+            return window::close;
+        }
+        Minecraft.getInstance().setScreen(editorScreen);
+        return () -> Minecraft.getInstance().setScreen(parentScreen);
     }
 
     /**

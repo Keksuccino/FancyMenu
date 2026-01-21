@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
@@ -107,13 +106,24 @@ public class IsModLoadedRequirement extends Requirement {
 
     @Override
     public void editValue(@NotNull Screen parentScreen, @NotNull RequirementInstance requirementInstance) {
+        boolean[] handled = {false};
+        final Runnable[] closeAction = new Runnable[] {() -> {}};
         IsModLoadedValueConfigScreen s = new IsModLoadedValueConfigScreen(Objects.requireNonNullElse(requirementInstance.value, ""),callback -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
             if (callback != null) {
                 requirementInstance.value = callback;
             }
-            Minecraft.getInstance().setScreen(parentScreen);
+            closeAction[0].run();
         });
-        Minecraft.getInstance().setScreen(s);
+        closeAction[0] = Requirement.openRequirementValueEditor(parentScreen, s, () -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+        });
     }
 
     public static class IsModLoadedValueConfigScreen extends StringBuilderScreen {

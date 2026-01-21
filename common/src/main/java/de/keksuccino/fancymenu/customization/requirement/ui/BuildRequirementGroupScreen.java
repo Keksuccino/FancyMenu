@@ -8,6 +8,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
@@ -16,16 +19,17 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class BuildRequirementGroupScreen extends Screen {
+public class BuildRequirementGroupScreen extends PiPWindowBody {
 
-    protected Screen parentScreen;
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
+
     protected RequirementContainer parent;
     protected RequirementGroup group;
     protected boolean isEdit;
@@ -40,11 +44,10 @@ public class BuildRequirementGroupScreen extends Screen {
     protected ExtendedButton cancelButton;
     protected AdvancedTextField groupIdentifierTextField;
 
-    public BuildRequirementGroupScreen(@Nullable Screen parentScreen, @NotNull RequirementContainer parent, @Nullable RequirementGroup groupToEdit, @NotNull Consumer<RequirementGroup> callback) {
+    public BuildRequirementGroupScreen(@NotNull RequirementContainer parent, @Nullable RequirementGroup groupToEdit, @NotNull Consumer<RequirementGroup> callback) {
 
         super((groupToEdit != null) ? Component.literal(I18n.get("fancymenu.requirements.screens.edit_group")) : Component.literal(I18n.get("fancymenu.requirements.screens.add_group")));
 
-        this.parentScreen = parentScreen;
         this.parent = parent;
         this.group = (groupToEdit != null) ? groupToEdit : new RequirementGroup("group_" + System.currentTimeMillis(), RequirementGroup.GroupMode.AND, parent);
         this.callback = callback;
@@ -66,11 +69,6 @@ public class BuildRequirementGroupScreen extends Screen {
 
     @Override
     protected void init() {
-
-        //Reset the GUI scale in case the layout editor changed it
-        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
-		this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-		this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
         this.groupModeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             if (this.group.mode == RequirementGroup.GroupMode.AND) {
@@ -94,13 +92,13 @@ public class BuildRequirementGroupScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.groupModeButton);
 
         this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.add_requirement"), (button) -> {
-            BuildRequirementScreen s = new BuildRequirementScreen(this, this.parent, null, (call) -> {
+            BuildRequirementScreen s = new BuildRequirementScreen(this.parent, null, (call) -> {
                 if (call != null) {
                     this.group.addInstance(call);
                     this.updateRequirementsScrollArea();
                 }
             });
-            Minecraft.getInstance().setScreen(s);
+            BuildRequirementScreen.openInWindow(s, this.getWindow());
         });
         this.addWidget(this.addRequirementButton);
         this.addRequirementButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.add_requirement.desc")));
@@ -109,12 +107,12 @@ public class BuildRequirementGroupScreen extends Screen {
         this.editRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.edit_requirement"), (button) -> {
             RequirementInstance i = this.getSelectedInstance();
             if (i != null) {
-                BuildRequirementScreen s = new BuildRequirementScreen(this, this.parent, i, (call) -> {
+                BuildRequirementScreen s = new BuildRequirementScreen(this.parent, i, (call) -> {
                     if (call != null) {
                         this.updateRequirementsScrollArea();
                     }
                 });
-                Minecraft.getInstance().setScreen(s);
+                BuildRequirementScreen.openInWindow(s, this.getWindow());
             }
         }) {
             @Override
@@ -161,8 +159,8 @@ public class BuildRequirementGroupScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.removeRequirementButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.done"), (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.group);
+            this.closeWindow();
         }) {
             @Override
             public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
@@ -187,12 +185,12 @@ public class BuildRequirementGroupScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.cancel"), (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             if (this.isEdit) {
                 this.callback.accept(this.group);
             } else {
                 this.callback.accept(null);
             }
+            this.closeWindow();
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
@@ -202,8 +200,7 @@ public class BuildRequirementGroupScreen extends Screen {
     }
 
     @Override
-    public void onClose() {
-        Minecraft.getInstance().setScreen(this.parentScreen);
+    public void onWindowClosedExternally() {
         if (this.isEdit) {
             this.callback.accept(this.group);
         } else {
@@ -212,7 +209,7 @@ public class BuildRequirementGroupScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
@@ -262,8 +259,6 @@ public class BuildRequirementGroupScreen extends Screen {
         int idLabelWidth = this.font.width(idLabel);
         graphics.drawString(this.font, idLabel, this.width - 20 - idLabelWidth, this.groupIdentifierTextField.getY() - 15, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
-        super.render(graphics, mouseX, mouseY, partial);
-
     }
 
     @Override
@@ -288,6 +283,23 @@ public class BuildRequirementGroupScreen extends Screen {
             this.requirementsScrollArea.addEntry(e);
         }
 
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull BuildRequirementGroupScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull BuildRequirementGroupScreen screen) {
+        return openInWindow(screen, null);
     }
 
 }

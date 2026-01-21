@@ -50,9 +50,9 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                             this.editor.history.saveSnapshot();
                             this.element.activeStateSupplier = call;
                         }
-                        this.openContextMenuScreen(this.editor);
                     });
-                    this.openContextMenuScreen(s);
+                    menu.closeMenuChain();
+                    ManageRequirementsScreen.openInWindow(s);
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
                 .setStackable(false);

@@ -9,6 +9,10 @@ import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.RequirementRegistry;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
@@ -19,7 +23,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
@@ -28,9 +31,11 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class BuildRequirementScreen extends Screen {
+public class BuildRequirementScreen extends PiPWindowBody implements InitialWidgetFocusScreen {
 
-    protected Screen parentScreen;
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
+
     protected RequirementContainer parent;
     protected final RequirementInstance instance;
     protected boolean isEdit;
@@ -45,11 +50,10 @@ public class BuildRequirementScreen extends Screen {
             .thenComparing(Requirement::getDisplayName)
             .thenComparing(Requirement::getIdentifier);
 
-    public BuildRequirementScreen(@Nullable Screen parentScreen, @NotNull RequirementContainer parent, @Nullable RequirementInstance instanceToEdit, @NotNull Consumer<RequirementInstance> callback) {
+    public BuildRequirementScreen(@NotNull RequirementContainer parent, @Nullable RequirementInstance instanceToEdit, @NotNull Consumer<RequirementInstance> callback) {
 
         super((instanceToEdit != null) ? Component.translatable("fancymenu.requirements.screens.edit_requirement") : Component.translatable("fancymenu.requirements.screens.add_requirement"));
 
-        this.parentScreen = parentScreen;
         this.parent = parent;
         this.instance = (instanceToEdit != null) ? instanceToEdit : new RequirementInstance(null, null, RequirementInstance.RequirementMode.IF, parent);
         this.isEdit = instanceToEdit != null;
@@ -68,7 +72,7 @@ public class BuildRequirementScreen extends Screen {
         this.searchBar.setResponder(s -> this.updateRequirementsList());
         this.addRenderableWidget(this.searchBar);
         UIBase.applyDefaultWidgetSkinTo(this.searchBar);
-        this.setInitialFocus(this.searchBar);
+        this.setupInitialFocusWidget(this, this.searchBar);
 
         // Set positions for scroll areas
         this.requirementsListScrollArea.setWidth((this.width / 2) - 40, true);
@@ -109,8 +113,8 @@ public class BuildRequirementScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(editValueButton);
 
         ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.instance);
+            this.closeWindow();
         }).setUITooltipSupplier(consumes -> {
             if (this.instance.requirement == null) {
                 return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.finish.desc.no_requirement_selected"));
@@ -130,12 +134,12 @@ public class BuildRequirementScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(doneButton);
 
         ExtendedButton cancelButton = new ExtendedButton(cancelButtonX, cancelButtonY, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             if (this.isEdit) {
                 this.callback.accept(this.instance);
             } else {
                 this.callback.accept(null);
             }
+            this.closeWindow();
         }).setIsActiveSupplier(consumes -> !this.isEdit);
         cancelButton.visible = !this.isEdit;
         this.addRenderableWidget(cancelButton);
@@ -163,8 +167,7 @@ public class BuildRequirementScreen extends Screen {
     }
 
     @Override
-    public void onClose() {
-        Minecraft.getInstance().setScreen(this.parentScreen);
+    public void onWindowClosedExternally() {
         if (this.isEdit) {
             this.callback.accept(this.instance);
         } else {
@@ -173,7 +176,7 @@ public class BuildRequirementScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
@@ -186,7 +189,7 @@ public class BuildRequirementScreen extends Screen {
         int descLabelWidth = this.font.width(descLabel);
         graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
-        super.render(graphics, mouseX, mouseY, partial);
+        this.performInitialWidgetFocusActionInRender();
 
     }
 
@@ -374,8 +377,8 @@ public class BuildRequirementScreen extends Screen {
                     if (this.requirement.hasValue()) {
                         BuildRequirementScreen.this.instance.requirement.editValue(BuildRequirementScreen.this, BuildRequirementScreen.this.instance);
                     } else {
-                        Minecraft.getInstance().setScreen(BuildRequirementScreen.this.parentScreen);
                         BuildRequirementScreen.this.callback.accept(BuildRequirementScreen.this.instance);
+                        BuildRequirementScreen.this.closeWindow();
                     }
                     this.lastClickTime = 0; // Reset to prevent triple clicks
                     return;
@@ -388,6 +391,23 @@ public class BuildRequirementScreen extends Screen {
             super.onClick(entry, mouseX, mouseY, button);
         }
 
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull BuildRequirementScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull BuildRequirementScreen screen) {
+        return openInWindow(screen, null);
     }
 
 }
