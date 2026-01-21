@@ -33,13 +33,13 @@ public class FancyMenu {
 
     //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren
 
-    //TODO Listener Manage screens zu PiPs machen
-
-    //TODO Variable Manage screens zu PiPs machen
+    //TODO Preload Resources screen zu PiP machen
 
     //TODO QueueableScreen system PiP-based machen
 
     //TODO Buddy: Bar icons und bar textures customizable machen
+
+    //TODO Add a "pop out" feature to get the description of listeners in the ChooseListenerTypeScreen as an extra PiP window that stays open, so it can be used for easier remembering listener value placeholders
 
 
 

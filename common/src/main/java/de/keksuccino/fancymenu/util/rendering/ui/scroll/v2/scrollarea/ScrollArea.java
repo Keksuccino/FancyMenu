@@ -46,6 +46,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
     protected boolean roundedStyle = true;
     protected boolean setupForBlurInterface = false;
     protected boolean scissorEnabled = true;
+    private int renderFrameId = 0;
 
     public ScrollArea(float x, float y, float width, float height) {
         this.setX(x, true);
@@ -113,6 +114,8 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
 
     public void renderEntries(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        this.renderFrameId++;
+
         final float totalWidth = this.makeAllEntriesWidthOfWidestEntry ? this.getTotalEntryWidth() : 0;
         if (this.scissorEnabled) {
             int scissorMinX = (int) (this.getInnerX() + 2);
@@ -121,18 +124,36 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
             int scissorMaxY = (int) (this.getInnerY() + this.getInnerHeight() - 2);
             graphics.enableScissor(scissorMinX, scissorMinY, scissorMaxX, scissorMaxY);
         }
-        this.updateEntries((entry) -> {
+        this.updateEntriesForRender((entry) -> {
             if (this.makeAllEntriesWidthOfWidestEntry) entry.setWidth(totalWidth);
             if (this.minimumEntryWidthIsAreaWidth && (entry.getWidth() < this.getInnerWidth())) {
                 entry.setWidth(this.getInnerWidth());
             }
-            entry.render(graphics, mouseX, mouseY, partial);
+            if (this.isEntryVisible(entry)) {
+                entry.render(graphics, mouseX, mouseY, partial);
+            }
         });
         if (this.scissorEnabled) {
             graphics.disableScissor();
         }
 
     }
+
+    public int getRenderFrameId() {
+        return this.renderFrameId;
+    }
+    private boolean isEntryVisible(@NotNull ScrollAreaEntry entry) {
+        float innerX = this.getInnerX();
+        float innerY = this.getInnerY();
+        float innerMaxX = innerX + this.getInnerWidth();
+        float innerMaxY = innerY + this.getInnerHeight();
+        float entryMinX = entry.getX();
+        float entryMinY = entry.getY();
+        float entryMaxX = entryMinX + entry.getWidth();
+        float entryMaxY = entryMinY + entry.getHeight();
+        return (entryMaxX > innerX) && (entryMinX < innerMaxX) && (entryMaxY > innerY) && (entryMinY < innerMaxY);
+    }
+
 
     public float getEntryRenderOffsetX() {
         return this.getEntryRenderOffsetX(this.getTotalScrollWidth());
@@ -165,14 +186,25 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
     }
 
     public void updateEntries(@Nullable Consumer<ScrollAreaEntry> doAfterEachEntryUpdate) {
+        this.updateEntriesInternal(doAfterEachEntryUpdate, false);
+    }
+
+    private void updateEntriesForRender(@NotNull Consumer<ScrollAreaEntry> doAfterEachEntryUpdate) {
+        this.updateEntriesInternal(doAfterEachEntryUpdate, true);
+    }
+
+    private void updateEntriesInternal(@Nullable Consumer<ScrollAreaEntry> doAfterEachEntryUpdate, boolean stopAfterVisibleRange) {
         try {
             int index = 0;
             float y = this.getInnerY();
+            float renderOffsetX = this.getEntryRenderOffsetX();
+            float renderOffsetY = this.getEntryRenderOffsetY();
+            float innerMaxY = this.getInnerY() + this.getInnerHeight();
             List<ScrollAreaEntry> l = new ArrayList<>(this.entries);
             for (ScrollAreaEntry e : l) {
                 e.index = index;
-                e.setX(this.getInnerX() + this.getEntryRenderOffsetX());
-                e.setY(y + this.getEntryRenderOffsetY());
+                e.setX(this.getInnerX() + renderOffsetX);
+                e.setY(y + renderOffsetY);
                 if (this.makeEntriesWidthOfArea) {
                     e.setWidth(this.getInnerWidth());
                 }
@@ -181,6 +213,9 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
                 }
                 index++;
                 y += e.getHeight();
+                if (stopAfterVisibleRange && ((y + renderOffsetY) > innerMaxY)) {
+                    break;
+                }
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to update entries!", ex);

@@ -42,6 +42,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     public boolean selectOnClick = true;
     public int index = 0;
     protected boolean hovered = false;
+    protected int lastHoverUpdateFrameId = -1;
 
     public ScrollAreaEntry(ScrollArea parent, float width, float height) {
         this.parent = parent;
@@ -54,6 +55,9 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.hovered = this.isMouseOver(mouseX, mouseY);
+        if (this.parent != null) {
+            this.lastHoverUpdateFrameId = this.parent.getRenderFrameId();
+        }
         if (this.hovered && (this.tooltip != null)) TooltipHandler.INSTANCE.addRenderTickTooltip(this.tooltip, () -> true);
         this.renderBackground(graphics, mouseX, mouseY, partial);
         this.renderEntry(graphics, mouseX, mouseY, partial);
@@ -153,6 +157,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     }
 
     public boolean isHovered() {
+        if (this.parent != null && this.lastHoverUpdateFrameId != this.parent.getRenderFrameId()) return false;
         if (!this.parent.isInnerAreaHovered()) return false;
         if (this.parent.isMouseInteractingWithGrabbers()) return false;
         return this.hovered;

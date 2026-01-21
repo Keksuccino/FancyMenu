@@ -127,8 +127,6 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
     @Override
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         RenderSystem.enableBlend();
-
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
         
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, this.getGenericTextColor(), false);
@@ -167,6 +165,7 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
                     }
             );
             entry.listener = listener;
+            entry.setTextBaseColor(this.getLabelTextColor());
             entry.setDoubleClickAction(() -> {
                 if (this.selectedListener == listener) {
                     this.closeWithResult(this.selectedListener);

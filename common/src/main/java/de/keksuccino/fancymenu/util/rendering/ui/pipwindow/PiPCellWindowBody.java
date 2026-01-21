@@ -31,11 +31,19 @@ public abstract class PiPCellWindowBody extends CellScreen implements PipableScr
 
         super.init();
 
-        UIBase.applyDefaultWidgetSkinTo(this.searchBar, UIBase.shouldBlur());
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton, UIBase.shouldBlur());
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
+        boolean blur = UIBase.shouldBlur();
 
-        this.scrollArea.setSetupForBlurInterface(true);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar, blur);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, blur);
+        for (AbstractWidget widget : this.rightSideWidgets) {
+            UIBase.applyDefaultWidgetSkinTo(widget, blur);
+        }
+
+        this.scrollArea.setSetupForBlurInterface(blur);
+        if (this.descriptionScrollArea != null) {
+            this.descriptionScrollArea.setSetupForBlurInterface(blur);
+        }
 
     }
 

@@ -229,7 +229,6 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
 
     protected void refreshVariablesList() {
         this.updateVariablesList();
-        this.resize(Minecraft.getInstance(), this.width, this.height);
     }
 
     protected void requestDeleteSelectedVariable() {

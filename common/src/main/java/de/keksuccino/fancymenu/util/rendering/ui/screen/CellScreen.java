@@ -614,7 +614,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             this.cell.hovered = UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.parent.getInnerWidth(), this.getHeight());
             if ((cell.isSelectable() && cell.isHovered()) || (cell == CellScreen.this.selectedCell)) {
                 RenderingUtils.resetShaderColor(graphics);
-                graphics.fill((int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
+                this.renderRoundedEntryBackground(graphics, partial, this.cell.hoverColorSupplier.get().getColorInt());
                 RenderingUtils.resetShaderColor(graphics);
             }
             this.cell.render(graphics, mouseX, mouseY, partial);
@@ -906,7 +906,14 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         private boolean selectable = false;
         private boolean selected = false;
         protected boolean hovered = false;
-        protected Supplier<DrawableColor> hoverColorSupplier = () -> UIBase.getUITheme().ui_interface_area_entry_selected_color;
+        protected Supplier<DrawableColor> hoverColorSupplier = () -> {
+            if (CellScreen.this.scrollArea != null
+                    && CellScreen.this.scrollArea.isSetupForBlurInterface()
+                    && UIBase.shouldBlur()) {
+                return UIBase.getUITheme().ui_blur_interface_area_entry_selected_color;
+            }
+            return UIBase.getUITheme().ui_interface_area_entry_selected_color;
+        };
         @Nullable
         protected Supplier<List<Component>> descriptionSupplier = null;
         @NotNull

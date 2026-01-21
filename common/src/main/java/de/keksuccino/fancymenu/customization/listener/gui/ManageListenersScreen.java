@@ -211,8 +211,9 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             int descW = (int) this.descriptionScrollArea.getWidthWithBorder();
             int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
             int descEndY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder());
-            List<MutableComponent> renameTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt()).withItalic(true)), descW);
-            List<MutableComponent> quickEditTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt()).withItalic(true)), descW);
+            int inactiveLabelColor = this.getInactiveLabelTextColor();
+            List<MutableComponent> renameTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor).withItalic(true)), descW);
+            List<MutableComponent> quickEditTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor).withItalic(true)), descW);
             int lineY = descEndY + 4;
             for (MutableComponent line : renameTip) {
                 int lineWidth = (int)UIBase.getUITextWidthNormal(line);
@@ -297,6 +298,18 @@ public class ManageListenersScreen extends PiPCellWindowBody {
         }
     }
 
+    protected int getLabelTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+    }
+
+    protected int getInactiveLabelTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_inactive.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt();
+    }
+
     @NotNull
     protected List<Component> buildActionScriptDescription(@NotNull GenericExecutableBlock block, int indentLevel) {
         List<Component> lines = new ArrayList<>();
@@ -310,7 +323,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_1.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.screens.manage_screen.info.value.none")
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(this.getLabelTextColor()))));
         }
         
         return lines;
@@ -320,13 +333,14 @@ public class ManageListenersScreen extends PiPCellWindowBody {
     protected List<Component> buildExecutableDescription(@NotNull Executable executable, int indentLevel) {
         List<Component> lines = new ArrayList<>();
         String indent = "  ".repeat(Math.max(0, indentLevel));
+        int labelColor = this.getLabelTextColor();
         
         if (executable instanceof ActionInstance actionInstance) {
             // Action display name
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_2.getColorInt()))
                     .append(actionInstance.action.getDisplayName().copy()
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
             
             // Action value (indented more)
             String cachedValue = actionInstance.value;
@@ -336,16 +350,16 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             lines.add(Component.literal(indent + "    ◦ ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_1.getColorInt()))
                     .append(Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ")
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())))
+                            .setStyle(Style.EMPTY.withColor(labelColor)))
                     .append(Component.literal(valueString)
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
             
         } else if (executable instanceof IfExecutableBlock ifBlock) {
             String requirements = this.buildRequirementsString(ifBlock);
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements))
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
             
             // Add nested executables
             for (Executable nested : ifBlock.getExecutables()) {
@@ -364,7 +378,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements))
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
             
             // Add nested executables
             for (Executable nested : whileBlock.getExecutables()) {
@@ -374,7 +388,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.delay", Component.literal(delayBlock.getDelayMsRaw()))
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
 
             for (Executable nested : delayBlock.getExecutables()) {
                 lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
@@ -394,13 +408,14 @@ public class ManageListenersScreen extends PiPCellWindowBody {
     protected List<Component> buildAppendedBlockDescription(@NotNull AbstractExecutableBlock block, int indentLevel) {
         List<Component> lines = new ArrayList<>();
         String indent = "  ".repeat(Math.max(0, indentLevel));
+        int labelColor = this.getLabelTextColor();
         
         if (block instanceof ElseIfExecutableBlock elseIfBlock) {
             String requirements = this.buildRequirementsString(elseIfBlock);
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements))
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
             
             // Add nested executables
             for (Executable nested : elseIfBlock.getExecutables()) {
@@ -411,7 +426,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.else")
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
             
             // Add nested executables
             for (Executable nested : elseBlock.getExecutables()) {
@@ -493,11 +508,11 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             if (this.instance.getDisplayName() != null && !this.instance.getDisplayName().isBlank()) {
                 // Show display name if it exists
                 this.labelComponent = Component.literal(this.instance.getDisplayName())
-                        .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
+                        .setStyle(Style.EMPTY.withColor(ManageListenersScreen.this.getLabelTextColor()));
             } else {
                 // Show default label (listener type)
                 this.labelComponent = this.instance.parent.getDisplayName().copy()
-                        .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
+                        .setStyle(Style.EMPTY.withColor(ManageListenersScreen.this.getLabelTextColor()));
             }
         }
         
@@ -599,7 +614,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
                     18, 
                     Component.empty()
             );
-            UIBase.applyDefaultWidgetSkinTo(this.editBox);
+            UIBase.applyDefaultWidgetSkinTo(this.editBox, UIBase.shouldBlur());
             this.editBox.setMaxLength(100000);
             
             // Set current display name or empty if null
