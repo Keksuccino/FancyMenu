@@ -1149,6 +1149,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
 
         if (button == 0) {
+            PiPWindowResizeHandle handle = getResizeHandleForInput(mouseX, mouseY);
+            if (handle != PiPWindowResizeHandle.NONE) {
+                beginResize(handle, mouseX, mouseY);
+                return true;
+            }
             float buttonSlotSize = getTitleBarButtonSlotSize();
             float titleBarHeight = getRenderTitleBarHeight();
             float buttonY = getButtonY();
@@ -1171,11 +1176,6 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                     return true;
                 }
                 this.lastTitleBarClickTime = currentTime;
-            }
-            PiPWindowResizeHandle handle = getResizeHandleForInput(mouseX, mouseY);
-            if (handle != PiPWindowResizeHandle.NONE) {
-                beginResize(handle, mouseX, mouseY);
-                return true;
             }
             if (this.movable && isPointInTitleBar(mouseX, mouseY) && !this.maximized) {
                 beginDrag(mouseX, mouseY);

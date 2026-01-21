@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -62,11 +63,42 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
         if (!this.isHovered() && !this.isSelected()) {
             if (this.backgroundColorNormal != null) {
                 DrawableColor c = this.backgroundColorNormal.get();
-                if (c != null) fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.height, c.getColorInt());
+                if (c != null) this.renderRoundedEntryBackground(graphics, partial, c.getColorInt());
             }
         } else if (this.backgroundColorHover != null) {
             DrawableColor c = this.backgroundColorHover.get();
-            if (c != null) fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.height, c.getColorInt());
+            if (c != null) this.renderRoundedEntryBackground(graphics, partial, c.getColorInt());
+        }
+    }
+
+    protected void renderRoundedEntryBackground(@NotNull GuiGraphics graphics, float partial, int color) {
+        if (this.parent == null || !this.parent.isRoundedStyle()) {
+            fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.height, color);
+            return;
+        }
+        float areaY = this.parent.getInnerY() + 2;
+        float areaBottom = this.parent.getInnerY() + this.parent.getInnerHeight() - 2;
+        float entryY = this.y;
+        float entryHeight = this.height;
+        float visibleTop = Math.max(entryY, areaY);
+        float visibleBottom = Math.min(entryY + entryHeight, areaBottom);
+        float visibleHeight = visibleBottom - visibleTop;
+        if (visibleHeight <= 0) {
+            return;
+        }
+        boolean roundTop = entryY <= areaY + 5;
+        boolean roundBottom = (entryY + entryHeight) >= areaBottom - 5;
+        if (roundTop || roundBottom) {
+            float radius = UIBase.getInterfaceCornerRoundingRadius();
+            if (roundTop && roundBottom) {
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, this.x, visibleTop, this.width, visibleHeight, radius, radius, radius, radius, color, partial);
+            } else if (roundTop) {
+                SmoothRectangleRenderer.renderSmoothRectRoundTopCornersScaled(graphics, this.x, visibleTop, this.width, visibleHeight, radius, color, partial);
+            } else {
+                SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, this.x, visibleTop, this.width, visibleHeight, radius, color, partial);
+            }
+        } else {
+            fillF(graphics, this.x, visibleTop, this.x + this.width, visibleTop + visibleHeight, color);
         }
     }
 

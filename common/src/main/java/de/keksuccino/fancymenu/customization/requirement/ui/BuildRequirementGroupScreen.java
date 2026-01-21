@@ -13,8 +13,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.konkrete.gui.content.AdvancedTextField;
-import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
@@ -41,7 +41,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
     protected ExtendedButton editRequirementButton;
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
-    protected AdvancedTextField groupIdentifierTextField;
+    protected ExtendedEditBox groupIdentifierTextField;
 
     public BuildRequirementGroupScreen(@NotNull RequirementContainer parent, @Nullable RequirementGroup groupToEdit, @NotNull Consumer<RequirementGroup> callback) {
 
@@ -53,21 +53,25 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
         this.isEdit = groupToEdit != null;
         this.updateRequirementsScrollArea();
 
-        this.groupIdentifierTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 150, 20, true, CharacterFilter.getBasicFilenameCharacterFilter()) {
-            @Override
-            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                super.render(graphics, mouseX, mouseY, partial);
-                BuildRequirementGroupScreen.this.group.identifier = this.getValue();
-            }
-        };
-        if (this.group.identifier != null) {
-            this.groupIdentifierTextField.setValue(this.group.identifier);
-        }
-
     }
 
     @Override
     protected void init() {
+        boolean blur = UIBase.shouldBlur();
+        this.requirementsScrollArea.setSetupForBlurInterface(blur);
+
+        String identifierValue = "";
+        if (this.groupIdentifierTextField != null) {
+            identifierValue = this.groupIdentifierTextField.getValue();
+        } else if (this.group.identifier != null) {
+            identifierValue = this.group.identifier;
+        }
+        this.groupIdentifierTextField = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, Component.empty());
+        this.groupIdentifierTextField.setCharacterFilter(CharacterFilter.buildOnlyLowercaseFileNameFilter());
+        this.groupIdentifierTextField.setResponder(value -> this.group.identifier = value);
+        this.groupIdentifierTextField.setValue(identifierValue);
+        this.addWidget(this.groupIdentifierTextField);
+        UIBase.applyDefaultWidgetSkinTo(this.groupIdentifierTextField, blur);
 
         this.groupModeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             if (this.group.mode == RequirementGroup.GroupMode.AND) {
@@ -88,7 +92,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
         };
         this.addWidget(this.groupModeButton);
         this.groupModeButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.mode.desc")));
-        UIBase.applyDefaultWidgetSkinTo(this.groupModeButton);
+        UIBase.applyDefaultWidgetSkinTo(this.groupModeButton, blur);
 
         this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.add_requirement"), (button) -> {
             BuildRequirementScreen s = new BuildRequirementScreen(this.parent, null, (call) -> {
@@ -101,7 +105,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
         });
         this.addWidget(this.addRequirementButton);
         this.addRequirementButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.add_requirement.desc")));
-        UIBase.applyDefaultWidgetSkinTo(this.addRequirementButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addRequirementButton, blur);
 
         this.editRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.edit_requirement"), (button) -> {
             RequirementInstance i = this.getSelectedInstance();
@@ -128,7 +132,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
         };
         this.addWidget(this.editRequirementButton);
         this.editRequirementButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.edit_requirement.desc")));
-        UIBase.applyDefaultWidgetSkinTo(this.editRequirementButton);
+        UIBase.applyDefaultWidgetSkinTo(this.editRequirementButton, blur);
 
         this.removeRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.remove_requirement"), (button) -> {
             RequirementInstance i = this.getSelectedInstance();
@@ -155,7 +159,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
         };
         this.addWidget(this.removeRequirementButton);
         this.removeRequirementButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.remove_requirement.desc")));
-        UIBase.applyDefaultWidgetSkinTo(this.removeRequirementButton);
+        UIBase.applyDefaultWidgetSkinTo(this.removeRequirementButton, blur);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(this.group);
@@ -181,7 +185,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
             }
         };
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.cancel"), (button) -> {
             if (this.isEdit) {
@@ -192,7 +196,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
             this.closeWindow();
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, blur);
 
         this.addRenderableWidget(this.requirementsScrollArea);
 
@@ -209,10 +213,10 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
 
     @Override
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
-
-        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.build_group_screen.group_requirements"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        int textColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
+        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.build_group_screen.group_requirements"), 20, 50, textColor, false);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
@@ -253,7 +257,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
 
         String idLabel = I18n.get("fancymenu.requirements.screens.build_group_screen.group_identifier");
         int idLabelWidth = this.font.width(idLabel);
-        graphics.drawString(this.font, idLabel, this.width - 20 - idLabelWidth, this.groupIdentifierTextField.getY() - 15, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        graphics.drawString(this.font, idLabel, this.width - 20 - idLabelWidth, this.groupIdentifierTextField.getY() - 15, textColor, false);
 
     }
 

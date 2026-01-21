@@ -22,7 +22,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
@@ -52,6 +51,8 @@ public class ManageRequirementsScreen extends PiPWindowBody {
 
     @Override
     protected void init() {
+        boolean blur = UIBase.shouldBlur();
+        this.requirementsScrollArea.setSetupForBlurInterface(blur);
 
         this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.add_requirement"), (button) -> {
             BuildRequirementScreen s = new BuildRequirementScreen(this.container, null, (call) -> {
@@ -64,7 +65,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
         });
         this.addWidget(this.addRequirementButton);
         this.addRequirementButton.setUITooltip(UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.add_requirement.desc")));
-        UIBase.applyDefaultWidgetSkinTo(this.addRequirementButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addRequirementButton, blur);
 
         this.addGroupButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.add_group"), (button) -> {
             BuildRequirementGroupScreen s = new BuildRequirementGroupScreen(this.container, null, (call) -> {
@@ -77,7 +78,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
         });
         this.addWidget(this.addGroupButton);
         this.addGroupButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.add_group.desc")));
-        UIBase.applyDefaultWidgetSkinTo(this.addGroupButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addGroupButton, blur);
 
         this.editButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             BuildRequirementScreen requirementScreen = null;
@@ -121,7 +122,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
             }
         };
         this.addWidget(this.editButton);
-        UIBase.applyDefaultWidgetSkinTo(this.editButton);
+        UIBase.applyDefaultWidgetSkinTo(this.editButton, blur);
 
         this.removeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             if (this.isInstanceSelected()) {
@@ -162,21 +163,21 @@ public class ManageRequirementsScreen extends PiPWindowBody {
             }
         };
         this.addWidget(this.removeButton);
-        UIBase.applyDefaultWidgetSkinTo(this.removeButton);
+        UIBase.applyDefaultWidgetSkinTo(this.removeButton, blur);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(null);
             this.closeWindow();
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, blur);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(this.container);
             this.closeWindow();
         });
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
 
         this.addRenderableWidget(this.requirementsScrollArea);
 
@@ -189,10 +190,10 @@ public class ManageRequirementsScreen extends PiPWindowBody {
 
     @Override
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
-
-        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        int textColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
+        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, 50, textColor, false);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
@@ -278,9 +279,12 @@ public class ManageRequirementsScreen extends PiPWindowBody {
         public RequirementGroup group;
 
         public RequirementGroupEntry(ScrollArea parent, RequirementGroup group) {
-            super(parent, Component.literal(group.identifier).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())).append(Component.literal(" (" + I18n.get("fancymenu.requirements.screens.manage_screen.group.info", "" + group.getInstances().size()) + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))), UIBase.getUITheme().bullet_list_dot_color_3, (entry) -> {});
+            super(parent, Component.literal(group.identifier + " (" + I18n.get("fancymenu.requirements.screens.manage_screen.group.info", "" + group.getInstances().size()) + ")"), UIBase.getUITheme().bullet_list_dot_color_3, (entry) -> {});
             this.group = group;
             this.setHeight(this.getHeight() + (HEADER_FOOTER_HEIGHT * 2));
+            this.setTextBaseColor(UIBase.shouldBlur()
+                    ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                    : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
         }
 
     }
@@ -303,11 +307,11 @@ public class ManageRequirementsScreen extends PiPWindowBody {
             this.instance = instance;
             this.lineHeight = lineHeight;
 
-            this.displayNameComponent = Component.literal(this.instance.requirement.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
+            this.displayNameComponent = Component.literal(this.instance.requirement.getDisplayName());
             String modeString = (this.instance.mode == RequirementInstance.RequirementMode.IF) ? I18n.get("fancymenu.requirements.screens.requirement.info.mode.normal") : I18n.get("fancymenu.requirements.screens.requirement.info.mode.opposite");
-            this.modeComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.mode") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())).append(Component.literal(modeString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())));
+            this.modeComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.mode") + " " + modeString);
             String valueString = (this.instance.value != null) ? this.instance.value : I18n.get("fancymenu.requirements.screens.requirement.info.value.none");
-            this.valueComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())));
+            this.valueComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.value") + " " + valueString);
 
             this.setWidth(this.calculateWidth());
             this.setHeight((lineHeight * 3) + (HEADER_FOOTER_HEIGHT * 2));
@@ -324,15 +328,18 @@ public class ManageRequirementsScreen extends PiPWindowBody {
             int centerYLine3 = baseY + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 5);
 
             RenderSystem.enableBlend();
+            int labelColor = UIBase.shouldBlur()
+                    ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                    : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
 
             renderListingDot(graphics, baseX + 5, centerYLine1 - 2, UIBase.getUITheme().bullet_list_dot_color_2.getColorInt());
-            graphics.drawString(this.font, this.displayNameComponent, (baseX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
+            graphics.drawString(this.font, this.displayNameComponent, (baseX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), labelColor, false);
 
             renderListingDot(graphics, baseX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUITheme().bullet_list_dot_color_1.getColorInt());
-            graphics.drawString(this.font, this.modeComponent, (baseX + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
+            graphics.drawString(this.font, this.modeComponent, (baseX + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), labelColor, false);
 
             renderListingDot(graphics, baseX + 5 + 4 + 3, centerYLine3 - 2, UIBase.getUITheme().bullet_list_dot_color_1.getColorInt());
-            graphics.drawString(this.font, this.valueComponent, (baseX + 5 + 4 + 3 + 4 + 3), (centerYLine3 - (this.font.lineHeight / 2)), -1, false);
+            graphics.drawString(this.font, this.valueComponent, (baseX + 5 + 4 + 3 + 4 + 3), (centerYLine3 - (this.font.lineHeight / 2)), labelColor, false);
 
         }
 
@@ -358,9 +365,6 @@ public class ManageRequirementsScreen extends PiPWindowBody {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
-                .setAlwaysOnTop(true)
-                .setBlockMinecraftScreenInputs(true)
-                .setForceFocus(true)
                 .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
                 .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
         PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);

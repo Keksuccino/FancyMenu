@@ -64,6 +64,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
     @SuppressWarnings("all")
     @Override
     protected void init() {
+        boolean blur = UIBase.shouldBlur();
 
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
         this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
@@ -71,16 +72,18 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateRequirementsList());
         this.addRenderableWidget(this.searchBar);
-        UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar, blur);
         this.setupInitialFocusWidget(this, this.searchBar);
 
         // Set positions for scroll areas
+        this.requirementsListScrollArea.setSetupForBlurInterface(blur);
         this.requirementsListScrollArea.setWidth((this.width / 2) - 40, true);
         this.requirementsListScrollArea.setHeight(this.height - 85 - 25, true);
         this.requirementsListScrollArea.setX(20, true);
         this.requirementsListScrollArea.setY(50 + 15 + 25, true);
         this.addRenderableWidget(this.requirementsListScrollArea);
 
+        this.descriptionScrollArea.setSetupForBlurInterface(blur);
         this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
         this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
@@ -110,7 +113,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.edit_value.desc.normal"));
         }).setIsActiveSupplier(consumes -> (this.instance.requirement != null) && this.instance.requirement.hasValue());
         this.addRenderableWidget(editValueButton);
-        UIBase.applyDefaultWidgetSkinTo(editValueButton);
+        UIBase.applyDefaultWidgetSkinTo(editValueButton, blur);
 
         ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(this.instance);
@@ -131,7 +134,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             return true;
         });
         this.addRenderableWidget(doneButton);
-        UIBase.applyDefaultWidgetSkinTo(doneButton);
+        UIBase.applyDefaultWidgetSkinTo(doneButton, blur);
 
         ExtendedButton cancelButton = new ExtendedButton(cancelButtonX, cancelButtonY, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             if (this.isEdit) {
@@ -143,7 +146,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         }).setIsActiveSupplier(consumes -> !this.isEdit);
         cancelButton.visible = !this.isEdit;
         this.addRenderableWidget(cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(cancelButton, blur);
 
         ExtendedButton requirementModeButton = new ExtendedButton(requirementModeButtonX, requirementModeButtonY, 150, 20, Component.empty(), (button) -> {
             if (this.instance.mode == RequirementInstance.RequirementMode.IF) {
@@ -159,7 +162,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                     return Component.translatable("fancymenu.requirements.screens.build_screen.requirement_mode.opposite");
                 });
         this.addRenderableWidget(requirementModeButton);
-        UIBase.applyDefaultWidgetSkinTo(requirementModeButton);
+        UIBase.applyDefaultWidgetSkinTo(requirementModeButton, blur);
 
         this.updateRequirementsList();
         this.setDescription(this.instance.requirement);
@@ -177,14 +180,12 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
 
     @Override
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
-
-        graphics.drawString(this.font, Component.translatable("fancymenu.requirements.screens.build_screen.available_requirements"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        int textColor = this.getGenericTextColor();
+        graphics.drawString(this.font, Component.translatable("fancymenu.requirements.screens.build_screen.available_requirements"), 20, 50, textColor, false);
 
         Component descLabel = Component.translatable("fancymenu.requirements.screens.build_screen.requirement_description");
         int descLabelWidth = this.font.width(descLabel);
-        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, textColor, false);
 
         this.performInitialWidgetFocusActionInRender();
 
@@ -225,7 +226,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
-            e.setTextBaseColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
+            e.setTextBaseColor(this.getLabelTextColor());
             this.descriptionScrollArea.addEntry(e);
         });
     }
@@ -246,6 +247,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
     }
 
     protected void setContentOfRequirementsList(@Nullable String category) {
+        int labelColor = this.getLabelTextColor();
 
         String searchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
         if (searchValue.isBlank()) searchValue = null;
@@ -258,11 +260,12 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             for (Requirement r : requirements) {
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
                 if (!this.requirementFitsSearchValue(r, searchValue)) continue;
-                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
+                Component label = Component.literal(r.getDisplayName());
                 RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_1, (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
                 });
+                e.setTextBaseColor(labelColor);
                 e.requirement = r;
                 this.requirementsListScrollArea.addEntry(e);
             }
@@ -280,13 +283,14 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
 
             //Add category entries
             for (Map.Entry<String, List<Requirement>> m : sortedCategories) {
-                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
+                Component label = Component.literal(m.getKey());
                 TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_2, (entry) -> {
                     BuildRequirementScreen.this.setContentOfRequirementsList(m.getKey());
                     BuildRequirementScreen.this.instance.requirement = null;
                     this.setDescription(null);
                 });
                 e.setSelectable(false);
+                e.setTextBaseColor(labelColor);
                 this.requirementsListScrollArea.addEntry(e);
             }
 
@@ -295,11 +299,12 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             uncategorized.sort(REQUIREMENT_DISPLAY_NAME_COMPARATOR);
             for (Requirement r : uncategorized) {
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
-                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
+                Component label = Component.literal(r.getDisplayName());
                 RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_1, (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
                 });
+                e.setTextBaseColor(labelColor);
                 e.requirement = r;
                 this.requirementsListScrollArea.addEntry(e);
             }
@@ -307,13 +312,14 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         } else {
 
             //Add "Back" button
-            Component backLabel = Component.translatable("fancymenu.requirements.screens.lists.back").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+            Component backLabel = Component.translatable("fancymenu.requirements.screens.lists.back");
             TextListScrollAreaEntry backEntry = new TextListScrollAreaEntry(this.requirementsListScrollArea, backLabel, UIBase.getUITheme().bullet_list_dot_color_2, (entry) -> {
                 BuildRequirementScreen.this.setContentOfRequirementsList(null);
                 BuildRequirementScreen.this.instance.requirement = null;
                 this.setDescription(null);
             });
             backEntry.setSelectable(false);
+            backEntry.setTextBaseColor(UIBase.getUITheme().warning_text_color.getColorInt());
             this.requirementsListScrollArea.addEntry(backEntry);
 
             //Add requirement entries of given category
@@ -321,11 +327,12 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             if (l != null) {
                 for (Requirement r : l) {
                     if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
-                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
+                    Component label = Component.literal(r.getDisplayName());
                     RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_1, (entry) -> {
                         this.instance.requirement = r;
                         this.setDescription(this.instance.requirement);
                     });
+                    e.setTextBaseColor(labelColor);
                     e.requirement = r;
                     this.requirementsListScrollArea.addEntry(e);
                 }
@@ -388,6 +395,18 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             super.onClick(entry, mouseX, mouseY, button);
         }
 
+    }
+
+    private int getGenericTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
+    }
+
+    private int getLabelTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
     }
 
     public static @NotNull PiPWindow openInWindow(@NotNull BuildRequirementScreen screen, @Nullable PiPWindow parentWindow) {
