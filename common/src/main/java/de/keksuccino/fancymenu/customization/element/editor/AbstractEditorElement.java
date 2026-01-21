@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothCircleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
@@ -977,21 +978,12 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         float halfHeight = this.getHeight() / 2.0F;
         float radius = (float)Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8; // 8 pixels padding
 
-        // Use many points to create a smooth circle
-        int points = 360; // One point per degree for maximum smoothness
         int circleColor = UIBase.getUITheme().layout_editor_element_border_rotation_controls_color.getColorIntWithAlpha(ROTATION_CONTROLS_ALPHA.get(this));
 
-        // Draw the circle by plotting points
-        for (int i = 0; i < points; i++) {
-            float angle = (float)(i * 2 * Math.PI / points);
-
-            // Calculate position for this point
-            int x = Math.round(centerX + radius * (float)Math.cos(angle));
-            int y = Math.round(centerY + radius * (float)Math.sin(angle));
-
-            // Draw a single pixel
-            graphics.fill(x, y, x + 1, y + 1, circleColor);
-        }
+        float circleDiameter = radius * 2.0F;
+        float circleX = centerX - radius;
+        float circleY = centerY - radius;
+        SmoothCircleRenderer.renderSmoothCircleBorder(graphics, circleX, circleY, circleDiameter, circleDiameter, 1.0F, 2.0F, circleColor, partial);
 
         this.rotationGrabber.render(graphics, mouseX, mouseY, partial);
 

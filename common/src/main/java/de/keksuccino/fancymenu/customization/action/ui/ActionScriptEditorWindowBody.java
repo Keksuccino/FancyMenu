@@ -188,6 +188,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     @Override
     protected void init() {
 
+        boolean blur = UIBase.shouldBlur();
+        this.scriptEntriesScrollArea.setSetupForBlurInterface(blur);
+
         this.updateRightClickContextMenu(false, null);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
@@ -197,7 +200,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         });
         this.doneButton.setNavigatable(false);
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             Dialogs.openMessageWithCallback(Component.translatable("fancymenu.actions.script_editor.cancel_warning"), MessageDialogStyle.WARNING, call -> {
@@ -210,7 +213,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         });
         this.cancelButton.setNavigatable(false);
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, blur);
 
         this.addWidget(this.scriptEntriesScrollArea);
 
@@ -863,7 +866,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         UITheme theme = UIBase.getUITheme();
-        graphics.fill(0, 0, this.width, this.height, theme.ui_interface_background_color.getColorInt());
 
         // "Script Body" label
         graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.ui_interface_generic_text_color.getColorInt(), false);
@@ -1009,8 +1011,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
         UITheme theme = UIBase.getUITheme();
         RenderSystem.enableBlend();
-        graphics.fill(this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, theme.actions_minimap_background_color.getColorInt());
-        UIBase.renderBorder(graphics, this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, 1, theme.actions_minimap_border_color, true, true, true, true);
+        float radius = UIBase.getInterfaceCornerRoundingRadius();
+        UIBase.renderRoundedRect(graphics, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight, radius, radius, radius, radius, theme.actions_minimap_background_color.getColorInt());
+        UIBase.renderRoundedBorder(graphics, this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, 1, radius, radius, radius, radius, theme.actions_minimap_border_color.getColorInt());
 
         List<ExecutableEntry> hoverChain = this.getActiveHoveredChain();
         ExecutableEntry activeHoverEntry = this.getActiveHoveredEntry();
@@ -1061,15 +1064,18 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         UITheme theme = UIBase.getUITheme();
-        Color backgroundColor = withAlpha(theme.ui_interface_background_color.getColor(), 220);
+        Color backgroundColor = UIBase.shouldBlur()
+                ? theme.ui_blur_tooltip_background_tint.getColor()
+                : withAlpha(theme.ui_interface_background_color.getColor(), 220);
+        float radius = UIBase.getInterfaceCornerRoundingRadius();
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
         poseStack.translate(0.0F, 0.0F, 400.0F);
 
         RenderSystem.enableBlend();
-        graphics.fill(tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, backgroundColor.getRGB());
-        UIBase.renderBorder(graphics, tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, 1, theme.actions_minimap_tooltip_border_color, true, true, true, true);
+        UIBase.renderRoundedRect(graphics, tooltipX, tooltipY, tooltipWidth, tooltipHeight, radius, radius, radius, radius, backgroundColor.getRGB());
+        UIBase.renderRoundedBorder(graphics, tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, 1, radius, radius, radius, radius, theme.actions_minimap_tooltip_border_color.getColorInt());
 
         poseStack.translate(tooltipX + MINIMAP_TOOLTIP_PADDING, tooltipY + MINIMAP_TOOLTIP_PADDING, 0.0F);
         poseStack.scale(MINIMAP_TOOLTIP_SCALE, MINIMAP_TOOLTIP_SCALE, 1.0F);
@@ -1637,7 +1643,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         this.inlineValueEditBox.setValue((value != null) ? value : "");
         this.inlineValueEditBox.setCursorPosition(this.inlineValueEditBox.getValue().length());
         this.inlineValueEditBox.setHighlightPos(0);
-        UIBase.applyDefaultWidgetSkinTo(this.inlineValueEditBox);
+        UIBase.applyDefaultWidgetSkinTo(this.inlineValueEditBox, UIBase.shouldBlur());
         this.updateInlineValueEditorBounds();
         this.inlineValueEditBox.setFocused(true);
         this.setFocused(this.inlineValueEditBox);
@@ -1707,7 +1713,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         this.inlineNameEditBox.setValue(folder.getName());
         this.inlineNameEditBox.setCursorPosition(this.inlineNameEditBox.getValue().length());
         this.inlineNameEditBox.setHighlightPos(0);
-        UIBase.applyDefaultWidgetSkinTo(this.inlineNameEditBox);
+        UIBase.applyDefaultWidgetSkinTo(this.inlineNameEditBox, UIBase.shouldBlur());
         this.updateInlineNameEditorBounds();
         this.inlineNameEditBox.setFocused(true);
         this.setFocused(this.inlineNameEditBox);

@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class UIBase extends RenderingUtils {
 
-    private static final boolean USE_DEFAULT_MINECRAFT_FONT = true;
+    private static final boolean USE_DEFAULT_MINECRAFT_FONT = false;
 
     public static final int ELEMENT_BORDER_THICKNESS = 1;
     public static final int VERTICAL_SCROLL_BAR_WIDTH = 5;
@@ -39,7 +39,7 @@ public class UIBase extends RenderingUtils {
     }
 
     public static float getUITextSizeNormal() {
-        if (UIBase.getUIScale() == 1) return SmoothFonts.DEFAULT_TEXT_SIZE + 4; // make text easier to read on small scales
+        if (UIBase.getUIScale() == 1) return SmoothFonts.DEFAULT_TEXT_SIZE + 2; // make text easier to read on small scales
         return SmoothFonts.DEFAULT_TEXT_SIZE;
     }
 

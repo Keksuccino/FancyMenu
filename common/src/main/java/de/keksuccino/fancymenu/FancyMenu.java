@@ -43,8 +43,6 @@ public class FancyMenu {
 
     //TODO Action Editor zu blur screen machen
 
-    //TODO Rotation controls für editor elemente mit SmoothCircleRenderer rendern
-
 
 
 

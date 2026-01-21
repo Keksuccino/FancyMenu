@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatterRegistry;
 import net.minecraft.ChatFormatting;
@@ -75,7 +76,8 @@ public final class SmoothTextRenderer {
     public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull Component text, float size) {
         if (text.getString().isEmpty() || size <= 0.0F) return 0.0F;
 
-        int lod = font.getLodLevel(size);
+        float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
 
         FormattedWidthState state = new FormattedWidthState(font, lod, scale);
@@ -85,7 +87,8 @@ public final class SmoothTextRenderer {
 
     public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float size) {
         if (size <= 0.0F) return 0.0F;
-        int lod = font.getLodLevel(size);
+        float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
         FormattedWidthState state = new FormattedWidthState(font, lod, scale);
         text.accept(state);
@@ -113,8 +116,9 @@ public final class SmoothTextRenderer {
     }
 
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
-        // Select the LOD atlas set for this size.
-        int lod = font.getLodLevel(size);
+        // Select the LOD atlas set for this size, accounting for current render scale.
+        float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
 
         float baseRange = font.getSdfRange();
@@ -250,7 +254,8 @@ public final class SmoothTextRenderer {
     }
 
     private static void renderFormattedTextInternal(GuiGraphics graphics, SmoothFont font, FormattedCharSequence text, float x, float y, int baseColor, float size) {
-        int lod = font.getLodLevel(size);
+        float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
 
         float baseRange = font.getSdfRange();
@@ -290,7 +295,8 @@ public final class SmoothTextRenderer {
     }
 
     private static TextDimensions measureFormattedText(SmoothFont font, FormattedCharSequence text, float size) {
-        int lod = font.getLodLevel(size);
+        float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
         float lineHeight = font.getLineHeight(size);
         FormattedMeasureState state = new FormattedMeasureState(font, lod, scale, lineHeight);
@@ -303,7 +309,8 @@ public final class SmoothTextRenderer {
             return EMPTY_DIMENSION;
         }
 
-        int lod = font.getLodLevel(size);
+        float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
         float lineHeight = font.getLineHeight(size);
 
