@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
@@ -66,7 +65,7 @@ public class OpenScreenAction extends Action {
                 if ((lastErrorTriggered + 60000) < now) {
                     lastErrorTriggered = now;
                     MainThreadTaskExecutor.executeInMainThread(
-                            () -> ScreenUtils.setScreen(new GenericMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getActionDisplayName()))),
+                            () -> ScreenUtils.setScreen(new GenericMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getDisplayName()))),
                             MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
             }
@@ -74,13 +73,13 @@ public class OpenScreenAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.opengui");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.opengui.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.opengui.desc");
     }
 
     @Override

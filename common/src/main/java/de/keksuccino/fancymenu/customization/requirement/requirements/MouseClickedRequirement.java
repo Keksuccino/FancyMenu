@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.konkrete.input.MouseInput;
-import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class MouseClickedRequirement extends Requirement {
 
@@ -35,13 +34,13 @@ public class MouseClickedRequirement extends Requirement {
 
     @NotNull
     @Override
-    public String getDisplayName() {
-        return I18n.get("fancymenu.requirements.mouse_click");
+    public Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.mouse_click");
     }
 
     @Override
-    public List<String> getDescription() {
-        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.mouse_click.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.mouse_click.desc");
     }
 
     @Nullable
@@ -52,8 +51,8 @@ public class MouseClickedRequirement extends Requirement {
 
     @Nullable
     @Override
-    public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.mouse_click.value_name");
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.requirements.mouse_click.value_name");
     }
 
     @Nullable

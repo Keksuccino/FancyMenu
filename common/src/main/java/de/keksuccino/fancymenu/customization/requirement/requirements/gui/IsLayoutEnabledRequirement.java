@@ -5,13 +5,12 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsLayoutEnabledRequirement extends Requirement {
 
@@ -41,13 +40,13 @@ public class IsLayoutEnabledRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_layout_enabled");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_layout_enabled");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_layout_enabled.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_layout_enabled.desc");
     }
 
     @Override
@@ -56,8 +55,8 @@ public class IsLayoutEnabledRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.is_layout_enabled.value.desc");
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_layout_enabled.value.desc");
     }
 
     @Override

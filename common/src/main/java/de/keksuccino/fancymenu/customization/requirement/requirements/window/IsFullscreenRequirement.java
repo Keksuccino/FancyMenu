@@ -2,14 +2,13 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.window;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsFullscreenRequirement extends Requirement {
 
@@ -30,13 +29,13 @@ public class IsFullscreenRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.fullscreen");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.fullscreen");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.fullscreen.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.fullscreen.desc");
     }
 
     @Override
@@ -45,7 +44,7 @@ public class IsFullscreenRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
+    public Component getValueDisplayName() {
         return null;
     }
 

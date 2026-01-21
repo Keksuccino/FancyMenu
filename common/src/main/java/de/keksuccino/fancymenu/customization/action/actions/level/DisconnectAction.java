@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
@@ -70,13 +69,13 @@ public class DisconnectAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.disconnect");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.disconnect.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.disconnect.desc");
     }
 
     @Override

@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.world.pla
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
@@ -56,13 +55,13 @@ public class IsDifficultyRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.world.is_difficulty");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.world.is_difficulty");
     }
 
     @Override
-    public List<String> getDescription() {
-        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.world.is_difficulty.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.world.is_difficulty.desc");
     }
 
     @Override
@@ -71,8 +70,8 @@ public class IsDifficultyRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.world.is_difficulty.value");
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.requirements.world.is_difficulty.value");
     }
 
     @Override

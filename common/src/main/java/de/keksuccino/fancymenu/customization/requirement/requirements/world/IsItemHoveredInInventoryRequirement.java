@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.world;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractContainerScreen;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsItemHoveredInInventoryRequirement extends Requirement {
 
@@ -48,13 +48,13 @@ public class IsItemHoveredInInventoryRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_item_hovered_in_inventory");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_item_hovered_in_inventory");
     }
 
     @Override
-    public List<String> getDescription() {
-        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_item_hovered_in_inventory.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_item_hovered_in_inventory.desc");
     }
 
     @Override
@@ -63,7 +63,7 @@ public class IsItemHoveredInInventoryRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
+    public Component getValueDisplayName() {
         return null;
     }
 

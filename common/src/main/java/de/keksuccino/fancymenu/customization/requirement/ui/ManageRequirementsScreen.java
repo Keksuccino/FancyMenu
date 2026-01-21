@@ -307,7 +307,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
             this.instance = instance;
             this.lineHeight = lineHeight;
 
-            this.displayNameComponent = Component.literal(this.instance.requirement.getDisplayName());
+            this.displayNameComponent = this.instance.requirement.getDisplayName().copy();
             String modeString = (this.instance.mode == RequirementInstance.RequirementMode.IF) ? I18n.get("fancymenu.requirements.screens.requirement.info.mode.normal") : I18n.get("fancymenu.requirements.screens.requirement.info.mode.opposite");
             this.modeComponent = Component.literal(I18n.get("fancymenu.requirements.screens.requirement.info.mode") + " " + modeString);
             String valueString = (this.instance.value != null) ? this.instance.value : I18n.get("fancymenu.requirements.screens.requirement.info.value.none");

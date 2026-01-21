@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.action.actions.audio;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.element.elements.audio.AudioElementController;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -58,13 +57,13 @@ public class SetAudioElementVolumeAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.audio.set_audio_element_volume");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.audio.set_audio_element_volume.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.audio.set_audio_element_volume.desc");
     }
 
     @Override

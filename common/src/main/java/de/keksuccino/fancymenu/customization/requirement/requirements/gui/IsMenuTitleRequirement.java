@@ -21,7 +21,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -67,13 +66,13 @@ public class IsMenuTitleRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_menu_title");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_menu_title");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_menu_title.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_menu_title.desc");
     }
 
     @Override
@@ -82,8 +81,8 @@ public class IsMenuTitleRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return "";
+    public Component getValueDisplayName() {
+        return Component.literal("");
     }
 
     @Override

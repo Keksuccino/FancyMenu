@@ -2,15 +2,14 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.system;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import net.minecraft.network.chat.Component;
 
 public class IsOsLinuxRequirement extends Requirement {
 
@@ -40,13 +39,13 @@ public class IsOsLinuxRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.oslinux");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.oslinux");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.oslinux.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.oslinux.desc");
     }
 
     @Override
@@ -55,7 +54,7 @@ public class IsOsLinuxRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
+    public Component getValueDisplayName() {
         return null;
     }
 

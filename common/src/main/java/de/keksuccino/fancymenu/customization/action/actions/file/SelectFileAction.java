@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
@@ -80,7 +79,7 @@ public class SelectFileAction extends Action {
 
         String dialogTitle = Component.translatable("fancymenu.actions.select_file.dialog_title").getString();
         if (dialogTitle.isBlank()) {
-            dialogTitle = this.getActionDisplayName().getString();
+            dialogTitle = this.getDisplayName().getString();
         }
 
         List<String> filterPatterns = config.buildFilterPatterns();
@@ -145,13 +144,13 @@ public class SelectFileAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.select_file");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.select_file.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.select_file.desc");
     }
 
     @Override

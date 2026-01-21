@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.element.elements.animationcontrolle
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerStateController;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,13 +55,13 @@ public class EnableElementAnimatorAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.enable_element_animator");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.enable_element_animator.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.enable_element_animator.desc");
     }
 
     @Override

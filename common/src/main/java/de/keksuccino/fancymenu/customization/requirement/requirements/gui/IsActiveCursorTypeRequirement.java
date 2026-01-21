@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -57,13 +56,13 @@ public class IsActiveCursorTypeRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_active_cursor_type");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_active_cursor_type");
     }
 
     @Override
-    public List<String> getDescription() {
-        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_active_cursor_type.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_active_cursor_type.desc");
     }
 
     @Override
@@ -72,8 +71,8 @@ public class IsActiveCursorTypeRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.is_active_cursor_type.value_name");
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_active_cursor_type.value_name");
     }
 
     @Override

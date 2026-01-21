@@ -2,14 +2,12 @@ package de.keksuccino.fancymenu.customization.requirement.requirements;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.minecraft.network.chat.Component;
 
 /**
  * A requirement that returns true only once per game session.
@@ -50,13 +48,13 @@ public class OncePerSessionRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.once_per_session");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.once_per_session");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.once_per_session.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.once_per_session.desc");
     }
 
     @Override
@@ -65,7 +63,7 @@ public class OncePerSessionRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
+    public Component getValueDisplayName() {
         return null;
     }
 

@@ -3,12 +3,11 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.world;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.WorldUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsSingleplayerRequirement extends Requirement {
 
@@ -27,13 +26,13 @@ public class IsSingleplayerRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.singleplayer");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.singleplayer");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.singleplayer.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.singleplayer.desc");
     }
 
     @Override
@@ -42,7 +41,7 @@ public class IsSingleplayerRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
+    public Component getValueDisplayName() {
         return null;
     }
 

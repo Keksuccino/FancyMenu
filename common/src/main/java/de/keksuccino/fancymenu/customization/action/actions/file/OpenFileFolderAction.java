@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import net.minecraft.Util;
@@ -58,13 +57,13 @@ public class OpenFileFolderAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.open_file_folder");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_file_folder.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.open_file_folder.desc");
     }
 
     @Override

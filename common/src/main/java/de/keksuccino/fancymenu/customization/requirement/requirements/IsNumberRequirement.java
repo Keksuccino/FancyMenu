@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
@@ -142,13 +141,13 @@ public class IsNumberRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_number");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_number");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_number.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_number.desc");
     }
 
     @Override
@@ -157,8 +156,8 @@ public class IsNumberRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return "";
+    public Component getValueDisplayName() {
+        return Component.literal("");
     }
 
     @Override

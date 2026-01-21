@@ -24,7 +24,7 @@ import java.util.Objects;
  */
 public abstract class Action {
 
-    public static final Action EMPTY = new Action("empty") {@Override public boolean hasValue() {return false;}@Override public void execute(@Nullable String value) {}@Override public @NotNull Component getActionDisplayName() {return Component.empty();}@Override public @NotNull Component getActionDescription() {return Component.empty();}@Override public @Nullable Component getValueDisplayName() {return null;}@Override public @Nullable String getValuePreset() {return null;}};
+    public static final Action EMPTY = new Action("empty") {@Override public boolean hasValue() {return false;}@Override public void execute(@Nullable String value) {}@Override public @NotNull Component getDisplayName() {return Component.empty();}@Override public @NotNull Component getDescription() {return Component.empty();}@Override public @Nullable Component getValueDisplayName() {return null;}@Override public @Nullable String getValuePreset() {return null;}};
 
     private final String identifier;
     @Nullable
@@ -58,10 +58,10 @@ public abstract class Action {
     public abstract void execute(@Nullable String value);
 
     @NotNull
-    public abstract Component getActionDisplayName();
+    public abstract Component getDisplayName();
 
     @NotNull
-    public abstract Component getActionDescription();
+    public abstract Component getDescription();
 
     @Nullable
     public abstract Component getValueDisplayName();
@@ -131,7 +131,7 @@ public abstract class Action {
         boolean sameThread = Minecraft.getInstance().isSameThread();
         if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
             this.asyncErrorShown = true;
-            QueueableScreenHandler.addToQueue(new AsyncActionErrorScreen(this.getActionDisplayName()));
+            QueueableScreenHandler.addToQueue(new AsyncActionErrorScreen(this.getDisplayName()));
         }
         return this.canRunAsync() || sameThread; // should run action
     }

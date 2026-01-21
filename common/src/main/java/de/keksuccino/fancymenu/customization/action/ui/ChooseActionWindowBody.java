@@ -27,7 +27,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidgetFocusScreen {
@@ -188,10 +187,8 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
 
         this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
 
-        if ((action != null) && (action.getActionDescription() != null)) {
-            for (Component c : action.getActionDescription()) {
-                this.addDescriptionLine(c);
-            }
+        if ((action != null) && (action.getDescription() != null)) {
+            this.addDescriptionLine(action.getDescription());
         }
 
         this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
@@ -221,16 +218,13 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
     protected boolean actionFitsSearchValue(@NotNull Action action, @Nullable String s) {
         if ((s == null) || s.isBlank()) return true;
         s = s.toLowerCase();
-        if (action.getActionDisplayName().getString().toLowerCase().contains(s)) return true;
+        if (action.getDisplayName().getString().toLowerCase().contains(s)) return true;
         return this.actionDescriptionContains(action, s);
     }
 
     protected boolean actionDescriptionContains(@NotNull Action action, @NotNull String s) {
-        Component[] desc = Objects.requireNonNullElse(action.getActionDescription(), new Component[0]);
-        for (Component c : desc) {
-            if (c.getString().toLowerCase().contains(s)) return true;
-        }
-        return false;
+        Component desc = action.getDescription();
+        return (desc != null) && desc.getString().toLowerCase().contains(s);
     }
 
     protected void setContentOfActionsList() {
@@ -241,8 +235,8 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
         this.actionsListScrollArea.clearEntries();
         List<Action> actions = ActionRegistry.getActions();
         actions.sort(Comparator
-                .comparing((Action action) -> action.getActionDisplayName().getString(), String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(action -> action.getActionDisplayName().getString())
+                .comparing((Action action) -> action.getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(action -> action.getDisplayName().getString())
                 .thenComparing(Action::getIdentifier));
         for (Action action : actions) {
             if ((LayoutEditorScreen.getCurrentInstance() != null) && !action.shouldShowUpInEditorActionMenu(LayoutEditorScreen.getCurrentInstance())) continue;
@@ -290,7 +284,7 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
 
         @NotNull
         private static Component buildLabel(@NotNull Action action) {
-            MutableComponent c = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
+            MutableComponent c = action.getDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
             if (action.isDeprecated()) {
                 c = c.withStyle(Style.EMPTY.withStrikethrough(true));
                 c = c.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));

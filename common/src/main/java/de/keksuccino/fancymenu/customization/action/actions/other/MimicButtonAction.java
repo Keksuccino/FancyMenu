@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.widget.WidgetLocatorHandler;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import net.minecraft.network.chat.Component;
@@ -42,13 +41,13 @@ public class MimicButtonAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.mimicbutton");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimicbutton.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.mimicbutton.desc");
     }
 
     @Override

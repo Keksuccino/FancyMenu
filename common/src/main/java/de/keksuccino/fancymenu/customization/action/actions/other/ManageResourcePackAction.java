@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.enums.LocalizedEnum;
@@ -101,13 +100,13 @@ public class ManageResourcePackAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.manage_resource_pack");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.manage_resource_pack.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.manage_resource_pack.desc");
     }
 
     @Override

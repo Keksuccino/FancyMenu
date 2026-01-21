@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -12,6 +11,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsGuiScaleRequirement extends Requirement {
 
@@ -92,13 +92,13 @@ public class IsGuiScaleRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.guiscale");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.guiscale");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.guiscale.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.guiscale.desc");
     }
 
     @Override
@@ -107,8 +107,8 @@ public class IsGuiScaleRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.guiscale.value_name");
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.requirements.guiscale.value_name");
     }
 
     @Override

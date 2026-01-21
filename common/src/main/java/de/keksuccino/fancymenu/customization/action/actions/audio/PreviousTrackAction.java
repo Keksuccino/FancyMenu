@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.elements.audio.AudioElement;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,13 +47,13 @@ public class PreviousTrackAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.audio.previous_track");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.audio.previous_track.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.audio.previous_track.desc");
     }
 
     @Override

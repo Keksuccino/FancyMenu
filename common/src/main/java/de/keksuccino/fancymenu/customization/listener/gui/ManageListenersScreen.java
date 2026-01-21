@@ -328,7 +328,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             // Action display name
             lines.add(Component.literal(indent + "• ")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_2.getColorInt()))
-                    .append(actionInstance.action.getActionDisplayName().copy()
+                    .append(actionInstance.action.getDisplayName().copy()
                             .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()))));
             
             // Action value (indented more)

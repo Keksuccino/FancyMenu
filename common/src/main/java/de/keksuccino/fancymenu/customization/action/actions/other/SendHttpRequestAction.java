@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
@@ -178,13 +177,13 @@ public class SendHttpRequestAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.send_http_request");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.send_http_request.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.send_http_request.desc");
     }
 
     @Override

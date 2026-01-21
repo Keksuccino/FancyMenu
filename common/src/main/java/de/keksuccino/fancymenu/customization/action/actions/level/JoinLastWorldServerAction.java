@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
@@ -91,13 +90,13 @@ public class JoinLastWorldServerAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.join_last_world");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.join_last_world.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.join_last_world.desc");
     }
 
     @Override

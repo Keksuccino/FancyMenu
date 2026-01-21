@@ -71,13 +71,13 @@ public class PasteToChatAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.paste_to_chat");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.paste_to_chat.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.paste_to_chat.desc");
     }
 
     @Override

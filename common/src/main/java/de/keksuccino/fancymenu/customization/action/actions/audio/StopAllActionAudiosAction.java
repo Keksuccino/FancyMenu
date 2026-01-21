@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.actions.audio;
 
 import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -42,13 +41,13 @@ public class StopAllActionAudiosAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.stop_all_action_audios");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.stop_all_action_audios.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.stop_all_action_audios.desc");
     }
 
     @Override

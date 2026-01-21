@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -132,13 +131,13 @@ public class IsTextRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_text");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_text");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_text.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_text.desc");
     }
 
     @Override
@@ -147,8 +146,8 @@ public class IsTextRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return "";
+    public Component getValueDisplayName() {
+        return Component.literal("");
     }
 
     @Override

@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
@@ -9,8 +8,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsAnyScreenOpenRequirement extends Requirement {
 
@@ -31,13 +30,13 @@ public class IsAnyScreenOpenRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_any_screen_open");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_any_screen_open");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_any_screen_open.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_any_screen_open.desc");
     }
 
     @Override
@@ -46,7 +45,7 @@ public class IsAnyScreenOpenRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
+    public Component getValueDisplayName() {
         return null;
     }
 

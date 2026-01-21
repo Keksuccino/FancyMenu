@@ -2,16 +2,15 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.realtime;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsRealTimeYearRequirement extends Requirement {
 
@@ -53,13 +52,13 @@ public class IsRealTimeYearRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.realtime_year");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.realtime_year");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.realtime_year.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.realtime_year.desc");
     }
 
     @Override
@@ -68,8 +67,8 @@ public class IsRealTimeYearRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.realtime_year.value_name");
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.requirements.realtime_year.value_name");
     }
 
     @Override

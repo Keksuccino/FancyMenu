@@ -109,7 +109,7 @@ public class PlayAudioAction extends Action {
             if ((lastErrorTriggered + 60000L) < now) {
                 lastErrorTriggered = now;
                 MainThreadTaskExecutor.executeInMainThread(
-                        () -> ScreenUtils.setScreen(new GenericMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getActionDisplayName()))),
+                        () -> ScreenUtils.setScreen(new GenericMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getDisplayName()))),
                         MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
             }
             return;
@@ -168,13 +168,13 @@ public class PlayAudioAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.play_audio");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.play_audio.desc");
     }
 
     @Override

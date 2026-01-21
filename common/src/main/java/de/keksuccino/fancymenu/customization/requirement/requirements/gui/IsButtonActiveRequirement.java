@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.element.elements.button.custombutto
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -14,8 +13,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsButtonActiveRequirement extends Requirement {
 
@@ -53,13 +52,13 @@ public class IsButtonActiveRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_button_active");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_button_active");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_button_active.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_button_active.desc");
     }
 
     @Override
@@ -68,8 +67,8 @@ public class IsButtonActiveRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.is_button_active.value_name");
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_button_active.value_name");
     }
 
     @Override

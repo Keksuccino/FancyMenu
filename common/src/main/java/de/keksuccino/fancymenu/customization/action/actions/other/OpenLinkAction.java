@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.network.chat.Component;
@@ -27,13 +26,13 @@ public class OpenLinkAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.openlink");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.openlink.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.openlink.desc");
     }
 
     @Override

@@ -1,16 +1,14 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsResourcePackEnabledRequirement extends Requirement {
 
@@ -43,13 +41,13 @@ public class IsResourcePackEnabledRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_resource_pack_enabled");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_resource_pack_enabled");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_resource_pack_enabled.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_resource_pack_enabled.desc");
     }
 
     @Override
@@ -58,8 +56,8 @@ public class IsResourcePackEnabledRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.is_resource_pack_enabled.value_name");
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_resource_pack_enabled.value_name");
     }
 
     @Override

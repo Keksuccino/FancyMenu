@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.world.pla
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.platform.Services;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
@@ -84,13 +83,13 @@ public class IsEntityNearbyRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.world.is_entity_nearby");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.world.is_entity_nearby");
     }
 
     @Override
-    public List<String> getDescription() {
-        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.world.is_entity_nearby.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.world.is_entity_nearby.desc");
     }
 
     @Override
@@ -99,8 +98,8 @@ public class IsEntityNearbyRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return "";
+    public Component getValueDisplayName() {
+        return Component.literal("");
     }
 
     @Override

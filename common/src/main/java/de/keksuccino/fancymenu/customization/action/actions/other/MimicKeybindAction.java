@@ -190,13 +190,13 @@ public class MimicKeybindAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.mimic_keybind");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimic_keybind.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.mimic_keybind.desc");
     }
 
     @Override

@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
@@ -98,13 +97,13 @@ public class WriteFileAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.write_file");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.write_file.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.write_file.desc");
     }
 
     @Override

@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFi
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
@@ -111,13 +110,13 @@ public class SetTextInputFieldValueAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.set_text_input_field_value");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.set_text_input_field_value.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.set_text_input_field_value.desc");
     }
 
     @Override

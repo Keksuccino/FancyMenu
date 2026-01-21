@@ -5,14 +5,11 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementIns
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -47,13 +44,13 @@ public class IsVariableValueRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_variable_value");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_variable_value");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_variable_value.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_variable_value.desc");
     }
 
     @Override
@@ -62,8 +59,8 @@ public class IsVariableValueRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return "";
+    public Component getValueDisplayName() {
+        return Component.literal("");
     }
 
     @Override

@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,8 +14,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsElementHoveredRequirement extends Requirement {
 
@@ -65,13 +64,13 @@ public class IsElementHoveredRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_element_hovered");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_element_hovered");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_element_hovered.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_element_hovered.desc");
     }
 
     @Override
@@ -80,8 +79,8 @@ public class IsElementHoveredRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.is_element_hovered.value_name");
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_element_hovered.value_name");
     }
 
     @Override

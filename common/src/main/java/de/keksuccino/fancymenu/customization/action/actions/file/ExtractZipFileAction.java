@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
@@ -88,13 +87,13 @@ public class ExtractZipFileAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.extract_zip_file");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.extract_zip_file.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.extract_zip_file.desc");
     }
 
     @Override
@@ -113,7 +112,7 @@ public class ExtractZipFileAction extends Action {
         boolean[] handled = {false};
 
         DualTextInputWindowBody s = DualTextInputWindowBody.build(
-                this.getActionDisplayName(),
+                this.getDisplayName(),
                 Component.translatable("fancymenu.actions.extract_zip_file.value.source"),
                 Component.translatable("fancymenu.actions.extract_zip_file.value.target"), null, callback -> {
                     if (handled[0]) {
@@ -136,7 +135,7 @@ public class ExtractZipFileAction extends Action {
             s.setSecondText(array[1]);
         }
 
-        var opened = Dialogs.openGeneric(s, this.getActionDisplayName(), null, DualTextInputWindowBody.PIP_WINDOW_WIDTH, DualTextInputWindowBody.PIP_WINDOW_HEIGHT);
+        var opened = Dialogs.openGeneric(s, this.getDisplayName(), null, DualTextInputWindowBody.PIP_WINDOW_WIDTH, DualTextInputWindowBody.PIP_WINDOW_HEIGHT);
         opened.getSecond().addCloseCallback(() -> {
             if (handled[0]) {
                 return;

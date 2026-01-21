@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.events.screen.CloseScreenEvent;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -50,13 +49,13 @@ public class BackToLastScreenAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.back_to_last_screen");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.back_to_last_screen.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.back_to_last_screen.desc");
     }
 
     @Override

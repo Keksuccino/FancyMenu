@@ -46,8 +46,8 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
     protected ExtendedEditBox searchBar;
 
     private static final Comparator<Requirement> REQUIREMENT_DISPLAY_NAME_COMPARATOR = Comparator
-            .comparing((Requirement requirement) -> requirement.getDisplayName(), String.CASE_INSENSITIVE_ORDER)
-            .thenComparing(Requirement::getDisplayName)
+            .comparing((Requirement requirement) -> requirement.getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER)
+            .thenComparing(requirement -> requirement.getDisplayName().getString())
             .thenComparing(Requirement::getIdentifier);
 
     public BuildRequirementScreen(@NotNull RequirementContainer parent, @Nullable RequirementInstance instanceToEdit, @NotNull Consumer<RequirementInstance> callback) {
@@ -217,10 +217,9 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
 
         this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
 
-        if ((requirement != null) && (requirement.getDescription() != null)) {
-            for (String s : requirement.getDescription()) {
-                this.addDescriptionLine(Component.literal(s));
-            }
+        if (requirement != null) {
+            var desc = requirement.getDescription();
+            if (desc != null) this.addDescriptionLine(desc);
         }
 
         this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
@@ -242,7 +241,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
-            e.setTextBaseColor(this.getLabelTextColor());
+            e.setTextBaseColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
             this.descriptionScrollArea.addEntry(e);
         });
     }
@@ -250,16 +249,13 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
     protected boolean requirementFitsSearchValue(@NotNull Requirement requirement, @Nullable String s) {
         if ((s == null) || s.isBlank()) return true;
         s = s.toLowerCase();
-        if (requirement.getDisplayName().toLowerCase().contains(s)) return true;
+        if (requirement.getDisplayName().getString().toLowerCase().contains(s)) return true;
         return this.requirementDescriptionContains(requirement, s);
     }
 
     protected boolean requirementDescriptionContains(@NotNull Requirement requirement, @NotNull String s) {
-        List<String> desc = Objects.requireNonNullElse(requirement.getDescription(), new ArrayList<>());
-        for (String line : desc) {
-            if (line.toLowerCase().contains(s)) return true;
-        }
-        return false;
+        var desc = Objects.requireNonNullElse(requirement.getDescription(), Component.empty());
+        return desc.getString().toLowerCase().contains(s);
     }
 
     protected void setContentOfRequirementsList(@Nullable String category) {
@@ -276,7 +272,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             for (Requirement r : requirements) {
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
                 if (!this.requirementFitsSearchValue(r, searchValue)) continue;
-                Component label = Component.literal(r.getDisplayName());
+                Component label = r.getDisplayName();
                 RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_1, (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
@@ -315,7 +311,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             uncategorized.sort(REQUIREMENT_DISPLAY_NAME_COMPARATOR);
             for (Requirement r : uncategorized) {
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
-                Component label = Component.literal(r.getDisplayName());
+                Component label = r.getDisplayName();
                 RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_1, (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
@@ -343,7 +339,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             if (l != null) {
                 for (Requirement r : l) {
                     if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
-                    Component label = Component.literal(r.getDisplayName());
+                    Component label = r.getDisplayName();
                     RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_1, (entry) -> {
                         this.instance.requirement = r;
                         this.setDescription(this.instance.requirement);

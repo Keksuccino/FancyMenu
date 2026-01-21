@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -17,7 +16,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -49,13 +47,13 @@ public class IsKeyPressedRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_key_pressed");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_key_pressed");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_key_pressed.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_key_pressed.desc");
     }
 
     @Override
@@ -64,8 +62,8 @@ public class IsKeyPressedRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return "";
+    public Component getValueDisplayName() {
+        return Component.literal("");
     }
 
     @Override

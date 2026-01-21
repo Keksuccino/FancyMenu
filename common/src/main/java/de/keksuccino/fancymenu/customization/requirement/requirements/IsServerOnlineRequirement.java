@@ -3,14 +3,12 @@ package de.keksuccino.fancymenu.customization.requirement.requirements;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.multiplayer.ServerData;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsServerOnlineRequirement extends Requirement {
 
@@ -36,13 +34,13 @@ public class IsServerOnlineRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.serveronline");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.serveronline");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.serveronline.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.serveronline.desc");
     }
 
     @Override
@@ -51,8 +49,8 @@ public class IsServerOnlineRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return I18n.get("fancymenu.requirements.serveronline.value_name");
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.requirements.serveronline.value_name");
     }
 
     @Override

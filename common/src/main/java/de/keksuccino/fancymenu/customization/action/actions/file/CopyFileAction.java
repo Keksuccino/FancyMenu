@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
@@ -87,13 +86,13 @@ public class CopyFileAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.copy_file");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.copy_file.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.copy_file.desc");
     }
 
     @Override
@@ -112,7 +111,7 @@ public class CopyFileAction extends Action {
         boolean[] handled = {false};
 
         DualTextInputWindowBody s = DualTextInputWindowBody.build(
-                this.getActionDisplayName(),
+                this.getDisplayName(),
                 Component.translatable("fancymenu.actions.copy_file.value.source"),
                 Component.translatable("fancymenu.actions.copy_file.value.destination"), null, callback -> {
                     if (handled[0]) {
@@ -135,7 +134,7 @@ public class CopyFileAction extends Action {
             s.setSecondText(array[1]);
         }
 
-        var opened = Dialogs.openGeneric(s, this.getActionDisplayName(), null, DualTextInputWindowBody.PIP_WINDOW_WIDTH, DualTextInputWindowBody.PIP_WINDOW_HEIGHT);
+        var opened = Dialogs.openGeneric(s, this.getDisplayName(), null, DualTextInputWindowBody.PIP_WINDOW_WIDTH, DualTextInputWindowBody.PIP_WINDOW_HEIGHT);
         opened.getSecond().addCloseCallback(() -> {
             if (handled[0]) {
                 return;

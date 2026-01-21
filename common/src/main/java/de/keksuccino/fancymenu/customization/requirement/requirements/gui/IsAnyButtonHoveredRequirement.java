@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.element.elements.button.custombutto
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
@@ -15,8 +14,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Arrays;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsAnyButtonHoveredRequirement extends Requirement {
 
@@ -61,13 +60,13 @@ public class IsAnyButtonHoveredRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_any_button_hovered");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_any_button_hovered");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_any_button_hovered.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_any_button_hovered.desc");
     }
 
     @Override
@@ -76,7 +75,7 @@ public class IsAnyButtonHoveredRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
+    public Component getValueDisplayName() {
         return null;
     }
 

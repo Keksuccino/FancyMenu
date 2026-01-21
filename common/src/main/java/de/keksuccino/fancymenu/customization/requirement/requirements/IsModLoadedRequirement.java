@@ -7,9 +7,7 @@ import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.konkrete.Konkrete;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
@@ -73,13 +71,13 @@ public class IsModLoadedRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_mod_loaded");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_mod_loaded");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_mod_loaded.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_mod_loaded.desc");
     }
 
     @Override
@@ -88,8 +86,8 @@ public class IsModLoadedRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return "";
+    public Component getValueDisplayName() {
+        return Component.literal("");
     }
 
     @Override

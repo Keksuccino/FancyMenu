@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements.world.player;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -13,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class IsPlayerLeftHandedRequirement extends Requirement {
 
@@ -47,13 +47,13 @@ public class IsPlayerLeftHandedRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.world.is_left_handed");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.world.is_left_handed");
     }
 
     @Override
-    public List<String> getDescription() {
-        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.world.is_left_handed.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.world.is_left_handed.desc");
     }
 
     @Override
@@ -62,7 +62,7 @@ public class IsPlayerLeftHandedRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
+    public Component getValueDisplayName() {
         return null;
     }
 

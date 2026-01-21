@@ -454,8 +454,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         List<Action> regularActions = new ArrayList<>(availableActions.values());
         regularActions.sort((left, right) -> {
-            String leftName = left.getActionDisplayName().getString();
-            String rightName = right.getActionDisplayName().getString();
+            String leftName = left.getDisplayName().getString();
+            String rightName = right.getDisplayName().getString();
             return String.CASE_INSENSITIVE_ORDER.compare(leftName, rightName);
         });
 
@@ -491,7 +491,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     @NotNull
     protected MutableComponent buildActionMenuLabel(@NotNull Action action) {
         UITheme theme = UIBase.getUITheme();
-        MutableComponent label = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
+        MutableComponent label = action.getDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
         if (action.isDeprecated()) {
             label = label.withStyle(Style.EMPTY.withStrikethrough(true));
             label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
@@ -503,9 +503,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     @Nullable
     protected UITooltip createActionTooltip(@NotNull Action action, boolean isFavorite) {
         List<Component> lines = new ArrayList<>();
-        Component[] description = action.getActionDescription();
-        if ((description != null) && (description.length > 0)) {
-            Collections.addAll(lines, description);
+        Component description = action.getDescription();
+        if (description != null) {
+            lines.add(description);
         }
         UITheme theme = UIBase.getUITheme();
         Style hintStyle = Style.EMPTY
@@ -3016,7 +3016,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             this.valueLabelComponent = null;
             this.valueOnlyComponent = null;
             if (this.executable instanceof ActionInstance i) {
-                this.displayNameComponent = i.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
+                this.displayNameComponent = i.action.getDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.updateValueComponent();
             } else if (this.executable instanceof IfExecutableBlock b) {
                 String requirements = "";

@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementIns
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.structure.playerpos.PlayerPosStructuresPacket;
 import de.keksuccino.fancymenu.networking.packets.structure.structures.StructuresPacket;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
@@ -17,7 +16,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -63,13 +61,13 @@ public class IsPlayerInStructureRequirement extends Requirement {
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.requirements.is_player_in_structure");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.requirements.is_player_in_structure");
     }
 
     @Override
-    public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.is_player_in_structure.desc"));
+    public Component getDescription() {
+        return Component.translatable("fancymenu.requirements.is_player_in_structure.desc");
     }
 
     @Override
@@ -78,8 +76,8 @@ public class IsPlayerInStructureRequirement extends Requirement {
     }
 
     @Override
-    public String getValueDisplayName() {
-        return "";
+    public Component getValueDisplayName() {
+        return Component.literal("");
     }
 
     @Override
