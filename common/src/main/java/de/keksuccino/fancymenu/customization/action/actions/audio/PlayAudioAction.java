@@ -183,7 +183,7 @@ public class PlayAudioAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return PlayAudioConfig.defaultConfig().serialize();
     }
 

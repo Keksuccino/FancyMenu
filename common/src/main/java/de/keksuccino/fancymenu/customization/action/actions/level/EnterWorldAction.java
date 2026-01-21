@@ -68,7 +68,7 @@ public class EnterWorldAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "exampleworld";
     }
 

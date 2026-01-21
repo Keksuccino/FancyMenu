@@ -73,7 +73,7 @@ public class SetVideoMenuBackgroundVolumeAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "background_identifier:1.0";
     }
 

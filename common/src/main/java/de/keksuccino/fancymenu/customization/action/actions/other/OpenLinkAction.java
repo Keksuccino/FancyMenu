@@ -42,7 +42,7 @@ public class OpenLinkAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "https://example.com";
     }
 

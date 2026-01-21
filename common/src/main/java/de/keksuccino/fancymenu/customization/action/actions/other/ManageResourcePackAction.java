@@ -116,7 +116,7 @@ public class ManageResourcePackAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "Programmer Art|||TOGGLE|||true";
     }
 
@@ -126,7 +126,7 @@ public class ManageResourcePackAction extends Action {
         boolean[] handled = {false};
         final PiPWindow[] windowHolder = new PiPWindow[1];
         ManageResourcePackActionValueScreen screen = new ManageResourcePackActionValueScreen(
-                Objects.requireNonNullElse(instance.value, this.getValueExample()),
+                Objects.requireNonNullElse(instance.value, this.getValuePreset()),
                 editedValue -> {
                     if (handled[0]) {
                         return;

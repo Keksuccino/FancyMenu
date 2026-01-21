@@ -24,7 +24,7 @@ import java.util.Objects;
  */
 public abstract class Action {
 
-    public static final Action EMPTY = new Action("empty") {@Override public boolean hasValue() {return false;}@Override public void execute(@Nullable String value) {}@Override public @NotNull Component getActionDisplayName() {return Component.empty();}@Override public @NotNull Component[] getActionDescription() {return new Component[0];}@Override public @Nullable Component getValueDisplayName() {return null;}@Override public @Nullable String getValueExample() {return null;}};
+    public static final Action EMPTY = new Action("empty") {@Override public boolean hasValue() {return false;}@Override public void execute(@Nullable String value) {}@Override public @NotNull Component getActionDisplayName() {return Component.empty();}@Override public @NotNull Component getActionDescription() {return Component.empty();}@Override public @Nullable Component getValueDisplayName() {return null;}@Override public @Nullable String getValuePreset() {return null;}};
 
     private final String identifier;
     @Nullable
@@ -61,7 +61,7 @@ public abstract class Action {
     public abstract Component getActionDisplayName();
 
     @NotNull
-    public abstract Component[] getActionDescription();
+    public abstract Component getActionDescription();
 
     @Nullable
     public abstract Component getValueDisplayName();
@@ -70,7 +70,7 @@ public abstract class Action {
      * An example of how the value of this action should look like.
      */
     @Nullable
-    public abstract String getValueExample();
+    public abstract String getValuePreset();
 
     @NotNull
     public String getIdentifier() {
@@ -110,7 +110,7 @@ public abstract class Action {
             if (instance.value != null) {
                 s.setText(instance.value);
             } else {
-                s.setText(this.getValueExample());
+                s.setText(this.getValuePreset());
             }
             Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
         }

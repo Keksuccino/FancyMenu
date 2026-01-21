@@ -44,7 +44,7 @@ public class PrintToLogAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "This text will show up in the log!";
     }
 

@@ -371,19 +371,16 @@ public class CustomizationOverlayUI {
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.custom_guis.manage_overridden.desc")));
 
         customizationMenu.addClickableEntry("variables", Component.translatable("fancymenu.overlay.menu_bar.variables.manage"), (menu, entry) -> {
-                    ManageVariablesScreen s = new ManageVariablesScreen(call -> {
-                        Minecraft.getInstance().setScreen(screen);
-                    });
-                    Minecraft.getInstance().setScreen(s);
+                    ManageVariablesScreen s = new ManageVariablesScreen(call -> {});
+                    ManageVariablesScreen.openInWindow(s);
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.variables.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
         customizationMenu.addClickableEntry("manage_listeners", Component.translatable("fancymenu.listeners.manage"), (menu, entry) -> {
-                    ManageListenersScreen s = new ManageListenersScreen(aBoolean -> {
-                        Minecraft.getInstance().setScreen(screen);
+                    ManageListenersScreen s = new ManageListenersScreen(call -> {
                     });
-                    Minecraft.getInstance().setScreen(s);
+                    ManageListenersScreen.openInWindow(s);
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.listeners.manage.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("ear"));

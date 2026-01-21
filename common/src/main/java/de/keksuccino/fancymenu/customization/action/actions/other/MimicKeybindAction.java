@@ -205,7 +205,7 @@ public class MimicKeybindAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "key.jump|||false|||1000";
     }
 
@@ -214,7 +214,7 @@ public class MimicKeybindAction extends Action {
         String oldValue = instance.value;
         boolean[] handled = {false};
         final PiPWindow[] windowHolder = new PiPWindow[1];
-        MimicKeybindActionValueScreen screen = new MimicKeybindActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValueExample()), value -> {
+        MimicKeybindActionValueScreen screen = new MimicKeybindActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValuePreset()), value -> {
             if (handled[0]) {
                 return;
             }

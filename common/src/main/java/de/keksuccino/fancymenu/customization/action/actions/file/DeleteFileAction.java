@@ -75,7 +75,7 @@ public class DeleteFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/some_mod_folder/some_file.txt";
     }
 

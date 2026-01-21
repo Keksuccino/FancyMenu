@@ -193,7 +193,7 @@ public class SendHttpRequestAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "https://api.example.com|||POST|||{\"key\":\"value\"}|||application/json|||10|||true||||||true|||NONE|||||||||||||";
     }
 
@@ -202,7 +202,7 @@ public class SendHttpRequestAction extends Action {
         String oldValue = instance.value;
         boolean[] handled = {false};
         final PiPWindow[] windowHolder = new PiPWindow[1];
-        SendHttpRequestActionValueScreen s = new SendHttpRequestActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValueExample()), value -> {
+        SendHttpRequestActionValueScreen s = new SendHttpRequestActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValuePreset()), value -> {
             if (handled[0]) {
                 return;
             }

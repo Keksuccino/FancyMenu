@@ -250,7 +250,7 @@ public class DownloadFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "https://example.com/file.txt||/config/downloads";
     }
 

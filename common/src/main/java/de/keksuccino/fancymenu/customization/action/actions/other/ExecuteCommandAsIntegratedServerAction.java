@@ -71,7 +71,7 @@ public class ExecuteCommandAsIntegratedServerAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/give @p minecraft:diamond 1";
     }
 

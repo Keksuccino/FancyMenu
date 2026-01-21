@@ -126,7 +126,7 @@ public class SetTextInputFieldValueAction extends Action {
     }
 
     @Override
-    public @Nullable String getValueExample() {
+    public @Nullable String getValuePreset() {
         return "some.element.id" + VALUE_SEPARATOR + "Hello World!" + VALUE_SEPARATOR + "false";
     }
 
@@ -136,7 +136,7 @@ public class SetTextInputFieldValueAction extends Action {
         boolean[] handled = {false};
         final PiPWindow[] windowHolder = new PiPWindow[1];
         SetTextInputFieldValueActionValueScreen s = new SetTextInputFieldValueActionValueScreen(
-                Objects.requireNonNullElse(instance.value, this.getValueExample()),
+                Objects.requireNonNullElse(instance.value, this.getValuePreset()),
                 value -> {
                     if (handled[0]) {
                         return;

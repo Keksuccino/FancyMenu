@@ -73,7 +73,7 @@ public class TogglePlayTrackAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "audio_element_identifier";
     }
 

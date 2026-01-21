@@ -91,7 +91,7 @@ public class EditMinecraftOptionAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "option_name:set_to_value";
     }
 
@@ -100,7 +100,7 @@ public class EditMinecraftOptionAction extends Action {
         String oldValue = instance.value;
         boolean[] handled = {false};
         final PiPWindow[] windowHolder = new PiPWindow[1];
-        EditMinecraftOptionActionValueScreen s = new EditMinecraftOptionActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValueExample()), value -> {
+        EditMinecraftOptionActionValueScreen s = new EditMinecraftOptionActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValuePreset()), value -> {
             if (handled[0]) {
                 return;
             }

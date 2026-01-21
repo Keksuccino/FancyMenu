@@ -66,7 +66,7 @@ public class CreateFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/some_mod_folder/new_file.txt";
     }
 

@@ -112,7 +112,7 @@ public class JoinServerAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "exampleserver.com:25565";
     }
 

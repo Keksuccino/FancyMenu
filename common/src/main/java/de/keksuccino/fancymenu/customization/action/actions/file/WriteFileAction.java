@@ -113,7 +113,7 @@ public class WriteFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/mymod/output.txt|||Hello World!\\nThis is a new line.|||false";
     }
 
@@ -123,7 +123,7 @@ public class WriteFileAction extends Action {
         boolean[] handled = {false};
         final PiPWindow[] windowHolder = new PiPWindow[1];
         WriteFileActionValueScreen s = new WriteFileActionValueScreen(
-                Objects.requireNonNullElse(instance.value, this.getValueExample()),
+                Objects.requireNonNullElse(instance.value, this.getValuePreset()),
                 value -> {
                     if (handled[0]) {
                         return;

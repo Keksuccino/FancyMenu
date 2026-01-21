@@ -99,7 +99,7 @@ public class MoveFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/source_directory/some_file.txt||/config/destination_directory";
     }
 

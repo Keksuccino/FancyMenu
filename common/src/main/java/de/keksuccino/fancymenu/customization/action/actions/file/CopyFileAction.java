@@ -102,7 +102,7 @@ public class CopyFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/source_directory/some_file.txt||/config/destination_directory/some_file_copy.txt";
     }
 

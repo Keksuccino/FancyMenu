@@ -160,7 +160,7 @@ public class SelectFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/fancymenu/assets/background.png|||Image Files (*.png;*.jpg)|||png;jpg|||true";
     }
 
@@ -170,7 +170,7 @@ public class SelectFileAction extends Action {
         boolean[] handled = {false};
         final PiPWindow[] windowHolder = new PiPWindow[1];
         SelectFileActionValueScreen screen = new SelectFileActionValueScreen(
-                Objects.requireNonNullElse(instance.value, this.getValueExample()),
+                Objects.requireNonNullElse(instance.value, this.getValuePreset()),
                 value -> {
                     if (handled[0]) {
                         return;

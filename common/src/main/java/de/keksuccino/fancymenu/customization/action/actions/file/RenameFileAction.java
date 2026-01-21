@@ -82,7 +82,7 @@ public class RenameFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/some_mod_folder/old_name.txt||new_name.txt";
     }
 

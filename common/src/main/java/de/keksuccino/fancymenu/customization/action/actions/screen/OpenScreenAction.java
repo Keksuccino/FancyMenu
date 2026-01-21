@@ -89,7 +89,7 @@ public class OpenScreenAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "example.menu.identifier";
     }
 

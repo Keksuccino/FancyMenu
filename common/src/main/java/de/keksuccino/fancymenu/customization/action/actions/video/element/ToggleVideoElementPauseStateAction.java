@@ -61,7 +61,7 @@ public class ToggleVideoElementPauseStateAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "element_identifier";
     }
 

@@ -106,7 +106,7 @@ public class ShowToastAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return ToastConfig.defaultConfig().serialize();
     }
 

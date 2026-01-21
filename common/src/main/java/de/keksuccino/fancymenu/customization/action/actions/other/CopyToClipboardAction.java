@@ -41,7 +41,7 @@ public class CopyToClipboardAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "This text gets copied to the clipboard!";
     }
 

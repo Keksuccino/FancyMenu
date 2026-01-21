@@ -73,7 +73,7 @@ public class SetAudioElementVolumeAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "element_identifier:1.0";
     }
 

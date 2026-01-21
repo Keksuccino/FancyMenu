@@ -9,6 +9,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
@@ -19,7 +22,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +30,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ManageVariablesScreen extends Screen implements InitialWidgetFocusScreen {
+public class ManageVariablesScreen extends PiPWindowBody implements InitialWidgetFocusScreen {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     protected Consumer<List<Variable>> callback;
 
@@ -137,6 +142,7 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
 
         ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, buttonWidth, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(VariableHandler.getVariables());
+            this.closeWindow();
         });
         this.addRenderableWidget(doneButton);
         UIBase.applyDefaultWidgetSkinTo(doneButton);
@@ -146,12 +152,12 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
     }
 
     @Override
-    public void onClose() {
+    public void onWindowClosedExternally() {
         this.callback.accept(VariableHandler.getVariables());
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.performInitialWidgetFocusActionInRender();
 
@@ -159,12 +165,7 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
-
         graphics.drawString(this.font, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
-
-        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -246,6 +247,20 @@ public class ManageVariablesScreen extends Screen implements InitialWidgetFocusS
             this.variable = variable;
         }
 
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageVariablesScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageVariablesScreen screen) {
+        return openInWindow(screen, null);
     }
 
 }

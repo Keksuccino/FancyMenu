@@ -86,7 +86,7 @@ public class PasteToChatAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "true:Hi my name is Fred.";
     }
 
@@ -95,7 +95,7 @@ public class PasteToChatAction extends Action {
         String oldValue = instance.value;
         boolean[] handled = {false};
         final PiPWindow[] windowHolder = new PiPWindow[1];
-        PasteToChatActionValueScreen s = new PasteToChatActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValueExample()), value -> {
+        PasteToChatActionValueScreen s = new PasteToChatActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValuePreset()), value -> {
             if (handled[0]) {
                 return;
             }

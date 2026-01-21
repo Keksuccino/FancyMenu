@@ -56,7 +56,7 @@ public class SendMessageAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "This is an example chat message!";
     }
 

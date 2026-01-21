@@ -61,7 +61,7 @@ public class ToggleVideoMenuBackgroundPauseStateAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "background_identifier";
     }
 

@@ -53,7 +53,7 @@ public class ReloadResourcePacksAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return null;
     }
 

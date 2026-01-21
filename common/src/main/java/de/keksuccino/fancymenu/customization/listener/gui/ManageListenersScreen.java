@@ -21,7 +21,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -39,7 +41,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ManageListenersScreen extends CellScreen {
+public class ManageListenersScreen extends PiPCellWindowBody {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     @NotNull
     protected final Consumer<Boolean> callback;
@@ -51,6 +56,7 @@ public class ManageListenersScreen extends CellScreen {
     public ManageListenersScreen(@NotNull Consumer<Boolean> callback) {
         super(Component.translatable("fancymenu.listeners.manage"));
         this.callback = callback;
+        this.setAllowCloseOnEsc(false);
         // Create a copy of all listener instances to work with
         this.tempInstances.addAll(ListenerHandler.getInstances());
         this.setSearchBarEnabled(true);
@@ -193,22 +199,17 @@ public class ManageListenersScreen extends CellScreen {
     }
 
     @Override
-    public boolean shouldCloseOnEsc() {
-        return false;
-    }
-
-    @Override
     public boolean allowEnterForDone() {
         return false;
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.updateSelectedInstance();
+    }
 
-        super.render(graphics, mouseX, mouseY, partial);
-
+    @Override
+    public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (this.descriptionScrollArea != null) {
             int descW = (int) this.descriptionScrollArea.getWidthWithBorder();
             int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
@@ -234,10 +235,21 @@ public class ManageListenersScreen extends CellScreen {
     }
 
     @Override
+    public void setWindow(@Nullable PiPWindow window) {
+        if (window != null) {
+            window.setCloseWindowCheck((window1, decision) -> {
+                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.listeners.manage.cancel_warning"), MessageDialogStyle.WARNING, decision::supply);
+            });
+        }
+        super.setWindow(window);
+    }
+
+    @Override
     protected void onCancel() {
         Dialogs.openMessageWithCallback(Component.translatable("fancymenu.listeners.manage.cancel_warning"), MessageDialogStyle.WARNING, call -> {
             if (call) {
                 this.callback.accept(false);
+                this.closeWindow();
             }
         });
     }
@@ -255,6 +267,27 @@ public class ManageListenersScreen extends CellScreen {
         }
         
         this.callback.accept(true);
+        this.closeWindow();
+    }
+
+    @Override
+    public void onWindowClosedExternally() {
+        this.callback.accept(false);
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageListenersScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setBlockMinecraftScreenInputs(false)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageListenersScreen screen) {
+        return openInWindow(screen, null);
     }
 
     protected void updateSelectedInstance() {

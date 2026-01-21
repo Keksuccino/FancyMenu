@@ -44,7 +44,7 @@ public class SetVariableAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "cool_variable_name:some_value";
     }
 

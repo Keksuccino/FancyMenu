@@ -37,6 +37,10 @@ public class FancyMenu {
 
     //TODO Variable Manage screens zu PiPs machen
 
+    //TODO QueueableScreen system PiP-based machen
+
+    //TODO Buddy: Bar icons und bar textures customizable machen
+
 
 
 

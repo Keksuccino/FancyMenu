@@ -103,7 +103,7 @@ public class ExtractZipFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/archive.zip||/config/extracted/archive_contents";
     }
 

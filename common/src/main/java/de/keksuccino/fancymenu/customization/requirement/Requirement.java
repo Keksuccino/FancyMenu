@@ -68,7 +68,7 @@ public abstract class Requirement {
      * It is shown in the requirement options of the layout editor.
      */
     @NotNull
-    public abstract String getDisplayName();
+    public abstract Component getDisplayName();
 
     /**
      * The description of the requirement.<br>
@@ -77,7 +77,7 @@ public abstract class Requirement {
      * Every entry in the returned list counts as a text line.
      */
     @Nullable
-    public abstract List<String> getDescription();
+    public abstract Component getDescription();
 
     /**
      * The name of the category this requirement should be in.<br>
@@ -93,7 +93,7 @@ public abstract class Requirement {
      * Return NULL here if the requirement has no value.
      */
     @Nullable
-    public abstract String getValueDisplayName();
+    public abstract Component getValueDisplayName();
 
     /**
      * The preset/example of the value, if it has one.<br>
@@ -129,7 +129,7 @@ public abstract class Requirement {
      */
     public void editValue(@NotNull RequirementInstance instance, @NotNull RequirementEditingCompletedFeedback onEditingCompleted, @NotNull RequirementEditingCanceledFeedback onEditingCanceled) {
         if (this.hasValue()) {
-            Component title = (this.getValueDisplayName() != null) ? Component.literal(this.getValueDisplayName()) : Component.empty();
+            Component title = (this.getValueDisplayName() != null) ? this.getValueDisplayName() : Component.empty();
             TextEditorWindowBody s = new TextEditorWindowBody(title, null, editedValue -> {
                 if (editedValue != null) {
                     String old = instance.value;
@@ -150,28 +150,6 @@ public abstract class Requirement {
             Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
         }
     }
-    
-//    public void editValue(@NotNull Screen parentScreen, @NotNull RequirementInstance requirementInstance) {
-//        if (this.hasValue()) {
-//            String displayName = this.getValueDisplayName();
-//            Component title = (displayName != null) ? Component.literal(displayName) : Component.translatable("fancymenu.elements.requirements.edit_value");
-//            TextEditorWindowBody s = new TextEditorWindowBody(title, null, (call) -> {
-//                if (call != null) {
-//                    requirementInstance.value = call;
-//                }
-//            });
-//            if (this.getValueFormattingRules() != null) {
-//                s.formattingRules.addAll(this.getValueFormattingRules());
-//            }
-//            s.setMultilineMode(false);
-//            if (requirementInstance.value != null) {
-//                s.setText(requirementInstance.value);
-//            } else {
-//                s.setText(this.getValuePreset());
-//            }
-//            Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
-//        }
-//    }
 
     @NotNull
     protected static Runnable openRequirementValueEditor(@NotNull Screen editorScreen, @NotNull Runnable onWindowClosedExternally) {
@@ -237,7 +215,7 @@ public abstract class Requirement {
         boolean sameThread = Minecraft.getInstance().isSameThread();
         if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
             this.asyncErrorShown = true;
-            QueueableScreenHandler.addToQueue(new AsyncRequirementErrorScreen(Component.literal(this.getDisplayName())));
+            QueueableScreenHandler.addToQueue(new AsyncRequirementErrorScreen(this.getDisplayName()));
         }
         return this.canRunAsync() || sameThread; // should check requirement
     }

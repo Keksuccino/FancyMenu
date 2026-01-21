@@ -73,7 +73,7 @@ public class OpenFileFolderAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/fancymenu";
     }
 

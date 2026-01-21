@@ -57,7 +57,7 @@ public class DisplayInChatClientSideAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "&aThis text only shows up for you!";
     }
 

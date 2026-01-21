@@ -57,7 +57,7 @@ public class MimicButtonAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "example.menu.identifier:505280";
     }
 

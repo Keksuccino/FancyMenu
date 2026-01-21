@@ -43,7 +43,7 @@ public class ClearVariablesAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return null;
     }
 

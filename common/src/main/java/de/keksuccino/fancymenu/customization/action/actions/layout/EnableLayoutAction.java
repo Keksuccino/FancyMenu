@@ -54,7 +54,7 @@ public class EnableLayoutAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "my_cool_main_menu_layout";
     }
 

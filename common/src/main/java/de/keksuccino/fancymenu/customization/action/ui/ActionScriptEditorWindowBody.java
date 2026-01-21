@@ -686,7 +686,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
     protected void onAddAction(@NotNull Action action, @Nullable ExecutableEntry selectionReference) {
         ExecutableEntry resolvedReference = (selectionReference != null) ? this.findEntryForExecutable(selectionReference.executable) : null;
-        ActionInstance instance = new ActionInstance(action, action.hasValue() ? action.getValueExample() : null);
+        ActionInstance instance = new ActionInstance(action, action.hasValue() ? action.getValuePreset() : null);
         this.finalizeActionAddition(instance, resolvedReference, true);
     }
 
