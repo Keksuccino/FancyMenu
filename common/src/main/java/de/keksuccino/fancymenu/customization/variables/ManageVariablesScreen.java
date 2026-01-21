@@ -47,6 +47,8 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
 
     @Override
     protected void init() {
+        boolean blur = UIBase.shouldBlur();
+        this.variableListScrollArea.setSetupForBlurInterface(blur);
 
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
         this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
@@ -54,7 +56,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateVariablesList());
         this.addRenderableWidget(this.searchBar);
-        UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar, blur);
         this.setupInitialFocusWidget(this, this.searchBar);
 
         // Set positions for scroll area
@@ -96,7 +98,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
                     ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
         });
         this.addRenderableWidget(addVariableButton);
-        UIBase.applyDefaultWidgetSkinTo(addVariableButton);
+        UIBase.applyDefaultWidgetSkinTo(addVariableButton, blur);
 
         ExtendedButton setValueButton = new ExtendedButton(setValueButtonX, setValueButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
@@ -114,13 +116,13 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addRenderableWidget(setValueButton);
-        UIBase.applyDefaultWidgetSkinTo(setValueButton);
+        UIBase.applyDefaultWidgetSkinTo(setValueButton, blur);
 
         ExtendedButton deleteVariableButton = new ExtendedButton(deleteButtonX, deleteButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable"), (button) -> {
             this.requestDeleteSelectedVariable();
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addRenderableWidget(deleteVariableButton);
-        UIBase.applyDefaultWidgetSkinTo(deleteVariableButton);
+        UIBase.applyDefaultWidgetSkinTo(deleteVariableButton, blur);
 
         LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> resetOnLaunchDisabled = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.variables.manage.clear_on_launch", false);
         ExtendedButton toggleResetOnLaunchButton = new ExtendedButton(toggleResetButtonX, toggleResetButtonY, buttonWidth, 20, Component.empty(), (button) -> {
@@ -139,14 +141,14 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
                     return resetOnLaunchDisabled.getCycleComponent();
                 });
         this.addRenderableWidget(toggleResetOnLaunchButton);
-        UIBase.applyDefaultWidgetSkinTo(toggleResetOnLaunchButton);
+        UIBase.applyDefaultWidgetSkinTo(toggleResetOnLaunchButton, blur);
 
         ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, buttonWidth, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(VariableHandler.getVariables());
             this.closeWindow();
         });
         this.addRenderableWidget(doneButton);
-        UIBase.applyDefaultWidgetSkinTo(doneButton);
+        UIBase.applyDefaultWidgetSkinTo(doneButton, blur);
 
         this.refreshVariablesList();
 
@@ -164,9 +166,10 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
 
         RenderSystem.enableBlend();
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
-
-        graphics.drawString(this.font, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        int textColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
+        graphics.drawString(this.font, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, textColor, false);
 
     }
 
@@ -247,8 +250,14 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
         public Variable variable;
 
         public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
+            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(resolveLabelColor())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
             this.variable = variable;
+        }
+
+        private static int resolveLabelColor() {
+            return UIBase.shouldBlur()
+                    ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                    : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
         }
 
     }
