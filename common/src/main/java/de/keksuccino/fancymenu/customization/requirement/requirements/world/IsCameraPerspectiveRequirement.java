@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementIns
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -105,7 +104,7 @@ public class IsCameraPerspectiveRequirement extends Requirement {
         });
     }
 
-    public static class IsCameraPerspectiveValueConfigScreen extends StringBuilderScreen {
+    public static class IsCameraPerspectiveValueConfigScreen extends Requirement.RequirementValueEditScreen {
 
         @NotNull
         protected Perspective perspective = Perspective.FIRST_PERSON;

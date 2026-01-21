@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements;
 
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.platform.Services;
@@ -126,7 +125,7 @@ public class IsModLoadedRequirement extends Requirement {
         });
     }
 
-    public static class IsModLoadedValueConfigScreen extends StringBuilderScreen {
+    public static class IsModLoadedValueConfigScreen extends Requirement.RequirementValueEditScreen {
 
         @NotNull
         protected String modId;

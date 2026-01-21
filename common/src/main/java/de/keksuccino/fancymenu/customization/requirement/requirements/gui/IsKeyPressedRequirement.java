@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.Minecraft;
@@ -111,7 +110,7 @@ public class IsKeyPressedRequirement extends Requirement {
         return (key != null) ? key : InputConstants.UNKNOWN;
     }
 
-    public static class IsKeyPressedValueConfigScreen extends StringBuilderScreen {
+    public static class IsKeyPressedValueConfigScreen extends Requirement.RequirementValueEditScreen {
 
         protected int keyCode;
         protected boolean keyInputModeEnabled = false;

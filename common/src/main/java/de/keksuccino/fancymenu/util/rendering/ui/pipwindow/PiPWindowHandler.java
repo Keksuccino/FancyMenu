@@ -133,6 +133,24 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         return !windows.isEmpty();
     }
 
+    @Nullable
+    public PiPWindow getTopWindowAt(double mouseX, double mouseY) {
+        for (int i = windows.size() - 1; i >= 0; i--) {
+            PiPWindow window = windows.get(i);
+            if (!window.isVisible()) {
+                continue;
+            }
+            if (window.isMouseOver(mouseX, mouseY)) {
+                return window;
+            }
+        }
+        return null;
+    }
+
+    public boolean isPointVisibleForWindow(@NotNull PiPWindow window, double mouseX, double mouseY) {
+        return getTopWindowAt(mouseX, mouseY) == window;
+    }
+
     public void refreshAllScreens() {
         for (PiPWindow window : new ArrayList<>(windows)) {
             window.refreshScreen();

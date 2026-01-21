@@ -20,7 +20,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
@@ -212,9 +211,6 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
-
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.build_group_screen.group_requirements"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 

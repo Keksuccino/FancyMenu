@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.networking.packets.structure.playerpos.PlayerPosS
 import de.keksuccino.fancymenu.networking.packets.structure.structures.StructuresPacket;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.gui.GuiGraphics;
@@ -116,7 +115,7 @@ public class IsPlayerInStructureRequirement extends Requirement {
         });
     }
 
-    public static class IsPlayerInStructureValueConfigScreen extends StringBuilderScreen {
+    public static class IsPlayerInStructureValueConfigScreen extends Requirement.RequirementValueEditScreen {
 
         @NotNull
         protected String oldStructureKey;

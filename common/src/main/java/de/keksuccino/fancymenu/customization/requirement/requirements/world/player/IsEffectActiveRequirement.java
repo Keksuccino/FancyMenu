@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementIns
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.Minecraft;
@@ -128,7 +127,7 @@ public class IsEffectActiveRequirement extends Requirement {
         return keys;
     }
 
-    public static class IsEffectActiveValueConfigScreen extends StringBuilderScreen {
+    public static class IsEffectActiveValueConfigScreen extends Requirement.RequirementValueEditScreen {
 
         @NotNull
         protected String value;

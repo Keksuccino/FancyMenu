@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
@@ -100,7 +99,7 @@ public class IsVariableValueRequirement extends Requirement {
         });
     }
 
-    public static class IsVariableValueConfigScreen extends StringBuilderScreen {
+    public static class IsVariableValueConfigScreen extends Requirement.RequirementValueEditScreen {
 
         @NotNull
         protected String variableName = "";

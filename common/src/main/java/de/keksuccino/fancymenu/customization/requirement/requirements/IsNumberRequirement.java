@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -195,7 +194,7 @@ public class IsNumberRequirement extends Requirement {
         });
     }
 
-    public static class IsNumberValueConfigScreen extends StringBuilderScreen {
+    public static class IsNumberValueConfigScreen extends Requirement.RequirementValueEditScreen {
 
         @NotNull
         protected NumberCompareMode mode = NumberCompareMode.EQUALS;

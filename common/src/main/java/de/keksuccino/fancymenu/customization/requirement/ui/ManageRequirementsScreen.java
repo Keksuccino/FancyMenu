@@ -192,9 +192,6 @@ public class ManageRequirementsScreen extends PiPWindowBody {
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
-
         graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);

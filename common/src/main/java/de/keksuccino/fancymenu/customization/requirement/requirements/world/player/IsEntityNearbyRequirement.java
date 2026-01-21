@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.Minecraft;
@@ -150,7 +149,7 @@ public class IsEntityNearbyRequirement extends Requirement {
         return types;
     }
 
-    public static class IsEntityNearbyValueConfigScreen extends StringBuilderScreen {
+    public static class IsEntityNearbyValueConfigScreen extends Requirement.RequirementValueEditScreen {
 
         @NotNull
         protected String radius;

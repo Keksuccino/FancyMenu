@@ -102,6 +102,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private boolean draggingTitleBar = false;
     private PiPWindowResizeHandle activeResizeHandle = PiPWindowResizeHandle.NONE;
+    private PiPWindowResizeHandle hoverResizeHandle = PiPWindowResizeHandle.NONE;
+    private double lastMouseX;
+    private double lastMouseY;
+    private boolean hasMousePosition = false;
     private double dragOffsetX;
     private double dragOffsetY;
     private double resizeStartMouseX;
@@ -1168,7 +1172,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                 }
                 this.lastTitleBarClickTime = currentTime;
             }
-            PiPWindowResizeHandle handle = getResizeHandleAt(mouseX, mouseY);
+            PiPWindowResizeHandle handle = getResizeHandleForInput(mouseX, mouseY);
             if (handle != PiPWindowResizeHandle.NONE) {
                 beginResize(handle, mouseX, mouseY);
                 return true;
@@ -1264,6 +1268,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (!this.visible) {
             return;
         }
+        this.lastMouseX = mouseX;
+        this.lastMouseY = mouseY;
+        this.hasMousePosition = true;
+        updateHoverResizeHandle(mouseX, mouseY);
         for (GuiEventListener child : this.children) {
             child.mouseMoved(mouseX, mouseY);
         }
@@ -1373,11 +1381,16 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private void updateResizeCursor(int mouseX, int mouseY) {
         if (!this.visible) {
+            this.hoverResizeHandle = PiPWindowResizeHandle.NONE;
             return;
         }
-        PiPWindowResizeHandle handle = this.activeResizeHandle != PiPWindowResizeHandle.NONE
-                ? this.activeResizeHandle
-                : getResizeHandleAt(mouseX, mouseY);
+        if (!this.hasMousePosition) {
+            this.lastMouseX = mouseX;
+            this.lastMouseY = mouseY;
+            this.hasMousePosition = true;
+        }
+        updateHoverResizeHandle(this.lastMouseX, this.lastMouseY);
+        PiPWindowResizeHandle handle = this.hoverResizeHandle;
         if (handle == PiPWindowResizeHandle.NONE) {
             return;
         }
@@ -1389,6 +1402,29 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             default -> {
             }
         }
+    }
+
+    private void updateHoverResizeHandle(double mouseX, double mouseY) {
+        if (!this.visible) {
+            this.hoverResizeHandle = PiPWindowResizeHandle.NONE;
+            return;
+        }
+        if (this.activeResizeHandle != PiPWindowResizeHandle.NONE) {
+            this.hoverResizeHandle = this.activeResizeHandle;
+            return;
+        }
+        if (!PiPWindowHandler.INSTANCE.isPointVisibleForWindow(this, mouseX, mouseY)) {
+            this.hoverResizeHandle = PiPWindowResizeHandle.NONE;
+            return;
+        }
+        this.hoverResizeHandle = getResizeHandleAt(mouseX, mouseY);
+    }
+
+    private PiPWindowResizeHandle getResizeHandleForInput(double mouseX, double mouseY) {
+        if (this.hoverResizeHandle != PiPWindowResizeHandle.NONE) {
+            return this.hoverResizeHandle;
+        }
+        return getResizeHandleAt(mouseX, mouseY);
     }
 
     private PiPWindowResizeHandle getResizeHandleAt(double mouseX, double mouseY) {

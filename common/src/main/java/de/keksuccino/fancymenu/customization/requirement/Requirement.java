@@ -9,9 +9,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * A LoadingRequirement.<br><br>
@@ -154,6 +157,22 @@ public abstract class Requirement {
         }
         Minecraft.getInstance().setScreen(editorScreen);
         return () -> Minecraft.getInstance().setScreen(parentScreen);
+    }
+
+    public static abstract class RequirementValueEditScreen extends StringBuilderScreen {
+
+        protected RequirementValueEditScreen(@NotNull Component title, @NotNull Consumer<String> callback) {
+            super(title, callback);
+        }
+
+        @Override
+        protected void renderTitle(@NotNull GuiGraphics graphics) {
+            if (PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
+                return;
+            }
+            super.renderTitle(graphics);
+        }
+
     }
 
     /**

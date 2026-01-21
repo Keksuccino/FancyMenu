@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements;
 
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -94,7 +93,7 @@ public class IsLanguageRequirement extends Requirement {
         });
     }
 
-    public static class IsLanguageValueConfigScreen extends StringBuilderScreen {
+    public static class IsLanguageValueConfigScreen extends Requirement.RequirementValueEditScreen {
 
         @NotNull
         protected String langId;

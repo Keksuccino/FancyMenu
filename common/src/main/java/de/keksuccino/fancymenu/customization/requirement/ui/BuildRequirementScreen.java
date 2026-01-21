@@ -180,9 +180,6 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
-
         graphics.drawString(this.font, Component.translatable("fancymenu.requirements.screens.build_screen.available_requirements"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         Component descLabel = Component.translatable("fancymenu.requirements.screens.build_screen.requirement_description");

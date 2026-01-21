@@ -66,6 +66,8 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     protected boolean descriptionAreaEnabled = false;
     @Nullable
     protected ScrollArea descriptionScrollArea;
+    protected boolean shouldAutoScale = false;
+    protected boolean initialized = false;
 
     protected CellScreen(@NotNull Component title) {
         super(title);
@@ -172,6 +174,19 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         });
     }
 
+    public boolean shouldAutoScale() {
+        return shouldAutoScale;
+    }
+
+    public CellScreen setShouldAutoScale(boolean shouldAutoScale) {
+        this.shouldAutoScale = shouldAutoScale;
+        if (this.initialized) {
+            RenderingUtils.resetGuiScale();
+            this.resize(Minecraft.getInstance(), this.width, this.height);
+        }
+        return this;
+    }
+
     /**
      * Updates the cell list based on the search filter.
      * Only cells that match the search query are visible.
@@ -240,6 +255,8 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     @Override
     protected void init() {
+
+        this.initialized = true;
 
         this.rightSideWidgets.clear();
         this.allCells.clear();
@@ -336,6 +353,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     }
 
     protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
+        if (!this.shouldAutoScale()) return;
         Window window = Minecraft.getInstance().getWindow();
         boolean resized = (window.getScreenWidth() != this.lastWidth) || (window.getScreenHeight() != this.lastHeight);
         this.lastWidth = window.getScreenWidth();
