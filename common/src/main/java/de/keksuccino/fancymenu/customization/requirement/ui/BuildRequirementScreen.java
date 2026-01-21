@@ -171,7 +171,12 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         if (this.instance.requirement == null) {
             return;
         }
-        this.instance.requirement.editValue(this, this.instance);
+        this.setWindowVisible(false);
+        this.instance.requirement.editValue(this.instance, (instance1, oldValue, newValue) -> {
+            this.closeWindow();
+        }, instance1 -> {
+            this.setWindowVisible(true);
+        });
     }
 
     protected boolean hasValue() {

@@ -123,32 +123,6 @@ public abstract class Action {
         ScreenUtils.blockSetScreenCalls(false);
     }
 
-//    /**
-//     * @param parentScreen Not used anymore and will always be {@link Action#DUMMY_PARENT_SCREEN}.
-//     *
-//     * @deprecated Use {@link Action#editValue(ActionInstance)} instead.
-//     */
-//    @Deprecated(forRemoval = true)
-//    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
-//        if (this.hasValue()) {
-//            Component title = (this.getValueDisplayName() != null) ? this.getValueDisplayName() : Component.empty();
-//            TextEditorWindowBody s = new TextEditorWindowBody(title, null, (call) -> {
-//                if (call != null) {
-//                    instance.value = call;
-//                }
-//            });
-//            List<TextEditorFormattingRule> formattingRules = this.getValueFormattingRules();
-//            if (formattingRules != null) s.formattingRules.addAll(formattingRules);
-//            s.setMultilineMode(false);
-//            if (instance.value != null) {
-//                s.setText(instance.value);
-//            } else {
-//                s.setText(this.getValueExample());
-//            }
-//            Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
-//        }
-//    }
-
     public boolean canRunAsync() {
         return true;
     }

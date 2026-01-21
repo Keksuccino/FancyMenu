@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestio
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -104,24 +103,29 @@ public class IsModLoadedRequirement extends Requirement {
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull RequirementInstance requirementInstance) {
+    public void editValue(@NotNull RequirementInstance instance, @NotNull RequirementEditingCompletedFeedback onEditingCompleted, @NotNull RequirementEditingCanceledFeedback onEditingCanceled) {
         boolean[] handled = {false};
         final Runnable[] closeAction = new Runnable[] {() -> {}};
-        IsModLoadedValueConfigScreen s = new IsModLoadedValueConfigScreen(Objects.requireNonNullElse(requirementInstance.value, ""),callback -> {
+        IsModLoadedValueConfigScreen s = new IsModLoadedValueConfigScreen(Objects.requireNonNullElse(instance.value, ""), callback -> {
             if (handled[0]) {
                 return;
             }
             handled[0] = true;
             if (callback != null) {
-                requirementInstance.value = callback;
+                String oldValue = instance.value;
+                instance.value = callback;
+                onEditingCompleted.accept(instance, oldValue, callback);
+            } else {
+                onEditingCanceled.accept(instance);
             }
             closeAction[0].run();
         });
-        closeAction[0] = Requirement.openRequirementValueEditor(parentScreen, s, () -> {
+        closeAction[0] = Requirement.openRequirementValueEditor(s, () -> {
             if (handled[0]) {
                 return;
             }
             handled[0] = true;
+            onEditingCanceled.accept(instance);
         });
     }
 

@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -88,27 +87,32 @@ public class IsActiveCursorTypeRequirement extends Requirement {
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull RequirementInstance requirementInstance) {
+    public void editValue(@NotNull RequirementInstance instance, @NotNull RequirementEditingCompletedFeedback onEditingCompleted, @NotNull RequirementEditingCanceledFeedback onEditingCanceled) {
         boolean[] handled = {false};
         final Runnable[] closeAction = new Runnable[] {() -> {}};
         IsActiveCursorTypeValueConfigScreen s = new IsActiveCursorTypeValueConfigScreen(
-                Objects.requireNonNullElse(requirementInstance.value, this.getValuePreset()),
+                Objects.requireNonNullElse(instance.value, this.getValuePreset()),
                 callback -> {
                     if (handled[0]) {
                         return;
                     }
                     handled[0] = true;
                     if (callback != null) {
-                        requirementInstance.value = callback;
+                        String oldValue = instance.value;
+                        instance.value = callback;
+                        onEditingCompleted.accept(instance, oldValue, callback);
+                    } else {
+                        onEditingCanceled.accept(instance);
                     }
                     closeAction[0].run();
                 }
         );
-        closeAction[0] = Requirement.openRequirementValueEditor(parentScreen, s, () -> {
+        closeAction[0] = Requirement.openRequirementValueEditor(s, () -> {
             if (handled[0]) {
                 return;
             }
             handled[0] = true;
+            onEditingCanceled.accept(instance);
         });
     }
 

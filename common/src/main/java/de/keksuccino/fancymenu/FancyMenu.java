@@ -33,8 +33,6 @@ public class FancyMenu {
 
     //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren
 
-    //TODO Requirement Manage screens zu PiPs machen
-
     //TODO Listener Manage screens zu PiPs machen
 
     //TODO Variable Manage screens zu PiPs machen

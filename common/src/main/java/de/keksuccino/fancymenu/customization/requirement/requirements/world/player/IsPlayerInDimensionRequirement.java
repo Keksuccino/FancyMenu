@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFor
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
@@ -88,24 +87,29 @@ public class IsPlayerInDimensionRequirement extends Requirement {
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull RequirementInstance requirementInstance) {
+    public void editValue(@NotNull RequirementInstance instance, @NotNull RequirementEditingCompletedFeedback onEditingCompleted, @NotNull RequirementEditingCanceledFeedback onEditingCanceled) {
         boolean[] handled = {false};
         final Runnable[] closeAction = new Runnable[] {() -> {}};
-        IsPlayerInDimensionValueConfigScreen s = new IsPlayerInDimensionValueConfigScreen(Objects.requireNonNullElse(requirementInstance.value, this.getValuePreset()), callback -> {
+        IsPlayerInDimensionValueConfigScreen s = new IsPlayerInDimensionValueConfigScreen(Objects.requireNonNullElse(instance.value, this.getValuePreset()), callback -> {
             if (handled[0]) {
                 return;
             }
             handled[0] = true;
             if (callback != null) {
-                requirementInstance.value = callback;
+                String oldValue = instance.value;
+                instance.value = callback;
+                onEditingCompleted.accept(instance, oldValue, callback);
+            } else {
+                onEditingCanceled.accept(instance);
             }
             closeAction[0].run();
         });
-        closeAction[0] = Requirement.openRequirementValueEditor(parentScreen, s, () -> {
+        closeAction[0] = Requirement.openRequirementValueEditor(s, () -> {
             if (handled[0]) {
                 return;
             }
             handled[0] = true;
+            onEditingCanceled.accept(instance);
         });
     }
 

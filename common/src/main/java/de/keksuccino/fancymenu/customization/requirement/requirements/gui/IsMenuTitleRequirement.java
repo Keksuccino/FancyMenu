@@ -97,24 +97,29 @@ public class IsMenuTitleRequirement extends Requirement {
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull RequirementInstance requirementInstance) {
+    public void editValue(@NotNull RequirementInstance instance, @NotNull RequirementEditingCompletedFeedback onEditingCompleted, @NotNull RequirementEditingCanceledFeedback onEditingCanceled) {
         boolean[] handled = {false};
         final Runnable[] closeAction = new Runnable[] {() -> {}};
-        IsMenuTitleValueConfigScreen s = new IsMenuTitleValueConfigScreen(Objects.requireNonNullElse(requirementInstance.value, ""), callback -> {
+        IsMenuTitleValueConfigScreen s = new IsMenuTitleValueConfigScreen(Objects.requireNonNullElse(instance.value, ""), callback -> {
             if (handled[0]) {
                 return;
             }
             handled[0] = true;
             if (callback != null) {
-                requirementInstance.value = callback;
+                String oldValue = instance.value;
+                instance.value = callback;
+                onEditingCompleted.accept(instance, oldValue, callback);
+            } else {
+                onEditingCanceled.accept(instance);
             }
             closeAction[0].run();
         });
-        closeAction[0] = Requirement.openRequirementValueEditor(parentScreen, s, () -> {
+        closeAction[0] = Requirement.openRequirementValueEditor(s, () -> {
             if (handled[0]) {
                 return;
             }
             handled[0] = true;
+            onEditingCanceled.accept(instance);
         });
     }
 

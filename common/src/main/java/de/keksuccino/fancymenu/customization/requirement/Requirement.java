@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFor
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -118,45 +117,75 @@ public abstract class Requirement {
     @Nullable
     public abstract List<TextEditorFormattingRule> getValueFormattingRules();
 
-    public void editValue(@NotNull Screen parentScreen, @NotNull RequirementInstance requirementInstance) {
+    /**
+     * Called when editing the value of an {@link RequirementInstance}.<br>
+     * The value of the given {@code instance} needs to get updated during the editing process.<br><br>
+     *
+     * This method should only open {@link PiPWindow}s and NEVER real {@link Screen}s!
+     *
+     * @param instance The {@link RequirementInstance} to edit.
+     * @param onEditingCompleted Always needs to get called when the editing was completed without canceling it. Should get called AFTER updating the instance's value.
+     * @param onEditingCanceled Always needs to get called when the editing got canceled without completing it.
+     */
+    public void editValue(@NotNull RequirementInstance instance, @NotNull RequirementEditingCompletedFeedback onEditingCompleted, @NotNull RequirementEditingCanceledFeedback onEditingCanceled) {
         if (this.hasValue()) {
-            String displayName = this.getValueDisplayName();
-            Component title = (displayName != null) ? Component.literal(displayName) : Component.translatable("fancymenu.elements.requirements.edit_value");
-            TextEditorWindowBody s = new TextEditorWindowBody(title, null, (call) -> {
-                if (call != null) {
-                    requirementInstance.value = call;
+            Component title = (this.getValueDisplayName() != null) ? Component.literal(this.getValueDisplayName()) : Component.empty();
+            TextEditorWindowBody s = new TextEditorWindowBody(title, null, editedValue -> {
+                if (editedValue != null) {
+                    String old = instance.value;
+                    instance.value = editedValue;
+                    onEditingCompleted.accept(instance, old, editedValue);
+                } else {
+                    onEditingCanceled.accept(instance);
                 }
             });
-            if (this.getValueFormattingRules() != null) {
-                s.formattingRules.addAll(this.getValueFormattingRules());
-            }
+            List<TextEditorFormattingRule> formattingRules = this.getValueFormattingRules();
+            if (formattingRules != null) s.formattingRules.addAll(formattingRules);
             s.setMultilineMode(false);
-            if (requirementInstance.value != null) {
-                s.setText(requirementInstance.value);
+            if (instance.value != null) {
+                s.setText(instance.value);
             } else {
                 s.setText(this.getValuePreset());
             }
             Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
         }
     }
+    
+//    public void editValue(@NotNull Screen parentScreen, @NotNull RequirementInstance requirementInstance) {
+//        if (this.hasValue()) {
+//            String displayName = this.getValueDisplayName();
+//            Component title = (displayName != null) ? Component.literal(displayName) : Component.translatable("fancymenu.elements.requirements.edit_value");
+//            TextEditorWindowBody s = new TextEditorWindowBody(title, null, (call) -> {
+//                if (call != null) {
+//                    requirementInstance.value = call;
+//                }
+//            });
+//            if (this.getValueFormattingRules() != null) {
+//                s.formattingRules.addAll(this.getValueFormattingRules());
+//            }
+//            s.setMultilineMode(false);
+//            if (requirementInstance.value != null) {
+//                s.setText(requirementInstance.value);
+//            } else {
+//                s.setText(this.getValuePreset());
+//            }
+//            Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+//        }
+//    }
 
     @NotNull
-    protected static Runnable openRequirementValueEditor(@NotNull Screen parentScreen, @NotNull Screen editorScreen, @NotNull Runnable onWindowClosedExternally) {
-        if (parentScreen instanceof PipableScreen pipableScreen) {
-            PiPWindow window = new PiPWindow(editorScreen.getTitle())
-                    .setScreen(editorScreen)
-                    .setForceFancyMenuUiScale(true)
-                    .setAlwaysOnTop(true)
-                    .setBlockMinecraftScreenInputs(true)
-                    .setForceFocus(true)
-                    .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
-                    .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
-            PiPWindowHandler.INSTANCE.openWindowCentered(window, pipableScreen.getWindow());
-            window.addCloseCallback(onWindowClosedExternally);
-            return window::close;
-        }
-        Minecraft.getInstance().setScreen(editorScreen);
-        return () -> Minecraft.getInstance().setScreen(parentScreen);
+    protected static Runnable openRequirementValueEditor(@NotNull Screen editorScreen, @NotNull Runnable onWindowClosedExternally) {
+        PiPWindow window = new PiPWindow(editorScreen.getTitle())
+                .setScreen(editorScreen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+        window.addCloseCallback(onWindowClosedExternally);
+        return window::close;
     }
 
     public static abstract class RequirementValueEditScreen extends StringBuilderScreen {
@@ -211,6 +240,16 @@ public abstract class Requirement {
             QueueableScreenHandler.addToQueue(new AsyncRequirementErrorScreen(Component.literal(this.getDisplayName())));
         }
         return this.canRunAsync() || sameThread; // should check requirement
+    }
+
+    @FunctionalInterface
+    public interface RequirementEditingCompletedFeedback {
+        void accept(@NotNull RequirementInstance instance, @Nullable String oldValue, @NotNull String newValue);
+    }
+
+    @FunctionalInterface
+    public interface RequirementEditingCanceledFeedback {
+        void accept(@NotNull RequirementInstance instance);
     }
 
 }
