@@ -2194,7 +2194,7 @@
   "fancymenu.requirements.screens.manage_screen.edit.desc": "Edit the selected group or requirement.",
   "fancymenu.requirements.screens.manage_screen.edit.generic": "Edit",
   "fancymenu.requirements.screens.manage_screen.group.info": "Group with %s Requirements",
-  "fancymenu.requirements.screens.manage_screen.manage": "Manage Loading Requirements",
+  "fancymenu.requirements.screens.manage_screen.manage": "Manage Requirements",
   "fancymenu.requirements.screens.manage_screen.no_entry_selected": "§xYou need to select a group or requirement!",
   "fancymenu.requirements.screens.manage_screen.remove.desc": "Remove the selected group or requirement.",
   "fancymenu.requirements.screens.manage_screen.remove.generic": "Remove",

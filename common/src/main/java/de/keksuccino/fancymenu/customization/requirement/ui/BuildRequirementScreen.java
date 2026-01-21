@@ -96,45 +96,17 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         int doneButtonY = this.height - 20 - 20;
         int cancelButtonX = doneButtonX;
         int cancelButtonY = doneButtonY - 5 - 20;
-        int editValueButtonX = doneButtonX;
-        int editValueButtonY = (this.isEdit ? doneButtonY : cancelButtonY) - 15 - 20;
         int requirementModeButtonX = doneButtonX;
-        int requirementModeButtonY = editValueButtonY - 5 - 20;
+        int requirementModeButtonY = (this.isEdit ? doneButtonY : cancelButtonY) - 15 - 20;
 
         // Create buttons with positions in constructors
-        ExtendedButton editValueButton = new ExtendedButton(editValueButtonX, editValueButtonY, 150, 20, Component.translatable("fancymenu.requirements.screens.build_screen.edit_value"), (button) -> {
-            if (this.instance.requirement != null) {
-                this.instance.requirement.editValue(this, this.instance);
-            }
-        }).setUITooltipSupplier(consumes -> {
-            if ((this.instance.requirement != null) && !this.instance.requirement.hasValue()) {
-                return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.edit_value.desc.no_value"));
-            }
-            return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.edit_value.desc.normal"));
-        }).setIsActiveSupplier(consumes -> (this.instance.requirement != null) && this.instance.requirement.hasValue());
-        this.addRenderableWidget(editValueButton);
-        UIBase.applyDefaultWidgetSkinTo(editValueButton, blur);
-
-        ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
-            this.callback.accept(this.instance);
-            this.closeWindow();
-        }).setUITooltipSupplier(consumes -> {
-            if (this.instance.requirement == null) {
-                return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.finish.desc.no_requirement_selected"));
-            } else if ((this.instance.value == null) && this.instance.requirement.hasValue()) {
-                return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.screens.build_screen.finish.desc.no_value_set"));
-            }
-            return null;
-        }).setIsActiveSupplier(consumes -> {
-            if (this.instance.requirement == null) {
-                return false;
-            } else if ((this.instance.value == null) && this.instance.requirement.hasValue()) {
-                return false;
-            }
-            return true;
-        });
-        this.addRenderableWidget(doneButton);
-        UIBase.applyDefaultWidgetSkinTo(doneButton, blur);
+        ExtendedButton doneOrNextButton = new ExtendedButton(doneButtonX, doneButtonY, 150, 20, Component.empty(), (button) -> {
+            this.onNextStep();
+        }).setLabelSupplier(consumes -> this.needsValueFirst()
+                ? Component.translatable("fancymenu.ui.generic.next_step")
+                : Component.translatable("fancymenu.common_components.done"));
+        this.addRenderableWidget(doneOrNextButton);
+        UIBase.applyDefaultWidgetSkinTo(doneOrNextButton, blur);
 
         ExtendedButton cancelButton = new ExtendedButton(cancelButtonX, cancelButtonY, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             if (this.isEdit) {
@@ -193,6 +165,41 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
 
     @Override
     public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
+    protected void onEditValue() {
+        if (this.instance.requirement == null) {
+            return;
+        }
+        this.instance.requirement.editValue(this, this.instance);
+    }
+
+    protected boolean hasValue() {
+        return (this.instance.requirement != null) && this.instance.requirement.hasValue();
+    }
+
+    protected void onDone() {
+        this.callback.accept((this.instance.requirement != null) ? this.instance : null);
+        this.closeWindow();
+    }
+
+    protected boolean canClickDone() {
+        if (this.instance.requirement == null) {
+            return false;
+        }
+        return (this.instance.value != null) || !this.instance.requirement.hasValue();
+    }
+
+    protected boolean needsValueFirst() {
+        return this.hasValue() && !this.canClickDone();
+    }
+
+    protected void onNextStep() {
+        if (this.hasValue()) {
+            this.onEditValue();
+        } else if (this.canClickDone()) {
+            this.onDone();
+        }
     }
 
     protected void setDescription(@Nullable Requirement requirement) {
@@ -378,12 +385,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                 // Double-click detected
                 if ((this.requirement != null) && (BuildRequirementScreen.this.instance.requirement == this.requirement)) {
                     // Check if requirement has value or doesn't need value -> act as "Done"
-                    if (this.requirement.hasValue()) {
-                        BuildRequirementScreen.this.instance.requirement.editValue(BuildRequirementScreen.this, BuildRequirementScreen.this.instance);
-                    } else {
-                        BuildRequirementScreen.this.callback.accept(BuildRequirementScreen.this.instance);
-                        BuildRequirementScreen.this.closeWindow();
-                    }
+                    BuildRequirementScreen.this.onNextStep();
                     this.lastClickTime = 0; // Reset to prevent triple clicks
                     return;
                 }
