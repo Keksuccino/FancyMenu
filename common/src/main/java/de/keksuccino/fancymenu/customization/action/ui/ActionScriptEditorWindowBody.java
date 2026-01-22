@@ -3680,7 +3680,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if (ActionScriptEditorWindowBody.this.isFavorite(this.action)) {
                 this.setIcon(ContextMenu.IconFactory.getIcon("favorite"));
             } else {
-                this.setIcon(null);
+                this.setIcon((ResourceLocation) null);
             }
         }
 

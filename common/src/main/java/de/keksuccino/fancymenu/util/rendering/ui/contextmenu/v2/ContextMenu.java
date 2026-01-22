@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -106,7 +107,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         boolean addIconSpace = false;
         for (ContextMenuEntry<?> e : this.entries) {
             if (e instanceof ClickableContextMenuEntry<?> c) {
-                if (c.icon != null) {
+                if (c.hasIconAssigned()) {
                     addIconSpace = true;
                     break;
                 }
@@ -1613,6 +1614,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     public static class ClickableContextMenuEntry<T extends ClickableContextMenuEntry<T>> extends ContextMenuEntry<T> {
 
         protected static final int ICON_WIDTH_HEIGHT = 10;
+        protected static final int ICON_PADDING_LEFT = 10;
+        protected static final int ICON_LABEL_SPACING = 20;
 
         @NotNull
         protected ClickAction clickAction;
@@ -1622,6 +1625,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected Supplier<Component> shortcutTextSupplier;
         @Nullable
         protected ResourceLocation icon;
+        @Nullable
+        protected MaterialIcon materialIcon;
         protected boolean tooltipIconHovered = false;
         protected boolean tooltipActive = false;
         protected long tooltipIconHoverStart = -1;
@@ -1638,8 +1643,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             this.renderBackground(graphics);
 
-            int labelX = (int) (this.x + 10);
-            if ((this.icon != null) || this.addSpaceForIcon) labelX += 20;
+            int labelX = (int) (this.x + ICON_PADDING_LEFT);
+            if (this.hasIconAssigned() || this.addSpaceForIcon) labelX += ICON_LABEL_SPACING;
             int labelY = (int) (this.y + (this.height / 2) - (UIBase.getUITextHeightNormal() / 2));
             UIBase.renderText(graphics, this.getLabel(), labelX, labelY, this.getLabelColor());
 
@@ -1659,12 +1664,59 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected void renderIcon(GuiGraphics graphics) {
-            if (this.icon != null) {
-                RenderSystem.enableBlend();
-                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-                graphics.blit(this.icon, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
-                RenderingUtils.resetShaderColor(graphics);
+            IconRenderData iconData = this.resolveIconData();
+            if (iconData == null) {
+                return;
             }
+            float areaX = this.x + ICON_PADDING_LEFT;
+            float areaY = this.y + (this.getHeight() / 2.0F) - (ICON_WIDTH_HEIGHT / 2.0F);
+            RenderSystem.enableBlend();
+            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+            this.blitScaledIcon(graphics, iconData, areaX, areaY, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+            RenderingUtils.resetShaderColor(graphics);
+        }
+
+        @Nullable
+        protected IconRenderData resolveIconData() {
+            if (this.materialIcon != null) {
+                ResourceLocation location = this.materialIcon.getTextureLocation();
+                if (location == null) {
+                    return null;
+                }
+                int width = this.materialIcon.getWidth();
+                int height = this.materialIcon.getHeight();
+                if (width <= 0 || height <= 0) {
+                    return null;
+                }
+                return new IconRenderData(location, width, height);
+            }
+            if (this.icon != null) {
+                return new IconRenderData(this.icon, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+            }
+            return null;
+        }
+
+        protected void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+            if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
+                return;
+            }
+            float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
+            if (!Float.isFinite(scale) || scale <= 0.0F) {
+                return;
+            }
+            float scaledWidth = iconData.width * scale;
+            float scaledHeight = iconData.height * scale;
+            float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
+            float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
+            graphics.pose().pushPose();
+            graphics.pose().translate(drawX, drawY, 0.0F);
+            graphics.pose().scale(scale, scale, 1.0F);
+            graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+            graphics.pose().popPose();
+        }
+
+        protected boolean hasIconAssigned() {
+            return this.icon != null || this.materialIcon != null;
         }
 
         protected void renderTooltipIconAndRegisterTooltip(GuiGraphics graphics, int mouseX, int mouseY, int offsetX) {
@@ -1727,14 +1779,30 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Nullable
         public ResourceLocation getIcon() {
-            return this.icon;
+            if (this.icon != null) {
+                return this.icon;
+            }
+            if (this.materialIcon != null) {
+                return this.materialIcon.getTextureLocation();
+            }
+            return null;
         }
 
         /**
-         * Icons should be 10x10 pixels and completely white. No other colors should be used.
+         * Icons should be completely white. No other colors should be used.
          */
         public T setIcon(@Nullable ResourceLocation icon) {
             this.icon = icon;
+            this.materialIcon = null;
+            return (T) this;
+        }
+
+        /**
+         * Icons should be completely white. No other colors should be used.
+         */
+        public T setIcon(@Nullable MaterialIcon icon) {
+            this.materialIcon = icon;
+            this.icon = null;
             return (T) this;
         }
 
@@ -1793,6 +1861,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
+            copy.materialIcon = this.materialIcon;
             copy.stackApplier = this.stackApplier;
             copy.stackValueSupplier = this.stackValueSupplier;
             copy.stackGroupKey = this.stackGroupKey;
@@ -1809,8 +1878,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             if (shortcutText != null) {
                 i += UIBase.getUITextWidthSmall(shortcutText) + 30;
             }
-            if ((this.icon != null) || this.addSpaceForIcon) {
-                i += 20;
+            if (this.hasIconAssigned() || this.addSpaceForIcon) {
+                i += ICON_LABEL_SPACING;
             }
             return i;
         }
@@ -1841,6 +1910,18 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             void onClick(ContextMenu menu, ClickableContextMenuEntry<?> entry);
         }
 
+    }
+
+    protected static final class IconRenderData {
+        final ResourceLocation texture;
+        final int width;
+        final int height;
+
+        private IconRenderData(@NotNull ResourceLocation texture, int width, int height) {
+            this.texture = texture;
+            this.width = width;
+            this.height = height;
+        }
     }
 
     public static class ValueCycleContextMenuEntry<V> extends ClickableContextMenuEntry<ValueCycleContextMenuEntry<V>> {
@@ -1880,6 +1961,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
+            copy.materialIcon = this.materialIcon;
             copy.stackApplier = this.stackApplier;
             copy.stackValueSupplier = this.stackValueSupplier;
             copy.stackGroupKey = this.stackGroupKey;
@@ -2038,6 +2120,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.labelSupplier = this.labelSupplier;
             copy.icon = this.icon;
+            copy.materialIcon = this.materialIcon;
             copy.stackApplier = this.stackApplier;
             copy.stackValueSupplier = this.stackValueSupplier;
             copy.stackGroupKey = this.stackGroupKey;

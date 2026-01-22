@@ -24,6 +24,7 @@ import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -107,17 +108,17 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     menu.closeMenu();
                     editor.saveLayout();
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.save"))
-                .setIcon(ContextMenu.IconFactory.getIcon("save"));
+                .setIcon(MaterialIcons.SAVE);
 
         layoutMenu.addClickableEntry("save_layout_as", Component.translatable("fancymenu.editor.layout.saveas"), (menu, entry) -> {
             menu.closeMenu();
             editor.saveLayoutAs();
-        }).setIcon(ContextMenu.IconFactory.getIcon("save_as"));
+        }).setIcon(MaterialIcons.SAVE_AS);
 
         layoutMenu.addSeparatorEntry("separator_after_save_as");
 
         layoutMenu.addSubMenuEntry("layout_settings", Component.translatable("fancymenu.editor.layout.properties"), buildRightClickContextMenu())
-                .setIcon(ContextMenu.IconFactory.getIcon("settings"))
+                .setIcon(MaterialIcons.SETTINGS)
                 .setHoverAction((menu, entry, isPost) -> {
                     if (!isPost) {
                         int menuBarHeight = (int)((float)MenuBar.HEIGHT * MenuBar.getRenderScale());
@@ -134,7 +135,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     editor.closeEditor();
                 }
             });
-        }).setIcon(ContextMenu.IconFactory.getIcon("close"));
+        }).setIcon(MaterialIcons.CLOSE);
 
         //EDIT
         ContextMenu editMenu = new ContextMenu();
@@ -145,14 +146,14 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     editor.history.stepBack();
                     editor.resize(Minecraft.getInstance(), editor.width, editor.height);
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
-                .setIcon(ContextMenu.IconFactory.getIcon("undo"));
+                .setIcon(MaterialIcons.UNDO);
 
         editMenu.addClickableEntry("redo_action", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
                     grandfatheredMenuBar = menuBar;
                     editor.history.stepForward();
                     editor.resize(Minecraft.getInstance(), editor.width, editor.height);
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
-                .setIcon(ContextMenu.IconFactory.getIcon("redo"));
+                .setIcon(MaterialIcons.REDO);
 
         editMenu.addSeparatorEntry("separator_after_redo");
 
@@ -160,21 +161,21 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     editor.copyElementsToClipboard(editor.getSelectedElements().toArray(new AbstractEditorElement[0]));
                 }).addIsActiveSupplier((menu, entry) -> !editor.getSelectedElements().isEmpty())
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"))
-                .setIcon(ContextMenu.IconFactory.getIcon("copy"));
+                .setIcon(MaterialIcons.CONTENT_COPY);
 
         editMenu.addClickableEntry("paste_copied_elements", Component.translatable("fancymenu.editor.edit.paste"), (menu, entry) -> {
                     editor.history.saveSnapshot();
                     editor.pasteElementsFromClipboard();
                 }).addIsActiveSupplier((menu, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"))
-                .setIcon(ContextMenu.IconFactory.getIcon("paste"));
+                .setIcon(MaterialIcons.CONTENT_PASTE);
 
         editMenu.addSeparatorEntry("separator_after_paste_copied");
 
         editMenu.addClickableEntry("select_all_elements", Component.translatable("fancymenu.editor.menu_bar.edit.select_all"), (menu, entry) -> {
                     editor.selectAllElements();
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"))
-                .setIcon(ContextMenu.IconFactory.getIcon("select"));
+                .setIcon(MaterialIcons.SELECT_ALL);
 
         //ELEMENT
         ContextMenu elementMenu = new ContextMenu();
