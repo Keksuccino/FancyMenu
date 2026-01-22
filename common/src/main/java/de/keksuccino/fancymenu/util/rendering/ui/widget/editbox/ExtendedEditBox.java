@@ -607,6 +607,20 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
         if (!this.canConsumeUserInput) return false;
+        if (!Screen.hasShiftDown()) {
+            int cursorPos = this.getCursorPosition();
+            int highlightPos = this.getHighlightPosition();
+            if (cursorPos != highlightPos) {
+                if (keycode == 263) {
+                    this.moveCursorTo(Math.min(cursorPos, highlightPos), false);
+                    return true;
+                }
+                if (keycode == 262) {
+                    this.moveCursorTo(Math.max(cursorPos, highlightPos), false);
+                    return true;
+                }
+            }
+        }
         //If select all, only select parts that are not prefix or suffix
         if (Screen.isSelectAll(keycode) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
             if (this.inputSuffix != null) {

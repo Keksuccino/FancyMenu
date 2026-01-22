@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlo
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
@@ -433,6 +434,15 @@ public class ManageListenersScreen extends PiPCellWindowBody {
                             .setStyle(Style.EMPTY.withColor(labelColor))));
 
             for (Executable nested : delayBlock.getExecutables()) {
+                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
+            }
+        } else if (executable instanceof ExecuteLaterExecutableBlock executeLaterBlock) {
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .append(Component.translatable("fancymenu.actions.blocks.execute_later", Component.literal(executeLaterBlock.getDelayMsRaw()))
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
+
+            for (Executable nested : executeLaterBlock.getExecutables()) {
                 lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
             }
         } else if (executable instanceof AbstractExecutableBlock) {

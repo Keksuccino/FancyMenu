@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlo
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.FolderExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
@@ -21,6 +22,7 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementCon
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
+import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -40,7 +42,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -73,6 +74,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @SuppressWarnings("all")
 public class ActionScriptEditorWindowBody extends PiPWindowBody {
@@ -185,6 +187,21 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 .setBlockMinecraftScreenInputs(false);
         PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
         return window;
+    }
+
+    private void openChildWindow(@NotNull Function<PiPWindow, PiPWindow> opener) {
+        PiPWindow parentWindow = this.getWindow();
+        PiPWindow childWindow = opener.apply(parentWindow);
+        this.setupChildWindow(parentWindow, childWindow);
+    }
+
+    private void setupChildWindow(@Nullable PiPWindow parentWindow, @Nullable PiPWindow childWindow) {
+        if (parentWindow == null || childWindow == null) {
+            return;
+        }
+        childWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+        parentWindow.setVisible(false);
+        childWindow.addCloseCallback(() -> parentWindow.setVisible(true));
     }
 
     @Override
@@ -394,6 +411,14 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.actions.blocks.add.delay.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("add"));
 
+        this.rightClickContextMenu.addClickableEntry("add_execute_later", Component.translatable("fancymenu.actions.blocks.add.execute_later"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
+            menu.closeMenu();
+            this.onAddExecuteLater(target);
+        }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.actions.blocks.add.execute_later.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("add"));
+
         this.rightClickContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             ExecutableEntry target = this.getContextMenuTargetEntry();
@@ -581,6 +606,10 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if (!instance.action.hasValue()) {
                 return;
             }
+            PiPWindow parentWindow = this.getWindow();
+            if (parentWindow != null) {
+                parentWindow.setVisible(false);
+            }
             instance.action.editValueInternal(instance,
                     (instance1, oldValue, newValue) -> { // onEditingCompleted
                         if (!Objects.equals(oldValue, newValue)) {
@@ -602,9 +631,15 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                                 }
                             }
                         }
+                        if (parentWindow != null) {
+                            parentWindow.setVisible(true);
+                        }
                     },
                     instance1 -> { // onEditingCanceled
                         // do nothing on cancel
+                        if (parentWindow != null) {
+                            parentWindow.setVisible(true);
+                        }
                     });
         } else if (targetExecutable instanceof IfExecutableBlock block) {
             ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
@@ -620,7 +655,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     }
                 }
             });
-            ManageRequirementsScreen.openInWindow(s, this.getWindow());
+            this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
         } else if (targetExecutable instanceof ElseIfExecutableBlock block) {
             ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
                 if (container != null) {
@@ -635,7 +670,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     }
                 }
             });
-            ManageRequirementsScreen.openInWindow(s, this.getWindow());
+            this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
         } else if (targetExecutable instanceof WhileExecutableBlock block) {
             ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
                 if (container != null) {
@@ -650,9 +685,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     }
                 }
             });
-            ManageRequirementsScreen.openInWindow(s, this.getWindow());
+            this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
         } else if (targetExecutable instanceof DelayExecutableBlock block) {
-            TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFilter().convertToLegacyFilter(), call -> {
+            TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.delay.edit"), null, call -> {
                 if (call != null) {
                     ExecutableEntry currentEntry = this.findEntryForExecutable(block);
                     if ((currentEntry != null) && (currentEntry.executable instanceof DelayExecutableBlock currentBlock)) {
@@ -670,13 +705,33 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 }
             });
             s.setMultilineMode(false);
-            s.setPlaceholdersAllowed(false);
+            s.setPlaceholdersAllowed(true);
             s.setText(block.getDelayMsRaw());
-            s.setTextValidator(editor -> {
-                String text = Objects.requireNonNullElse(editor.getText(), "").trim();
-                return !text.isEmpty() && de.keksuccino.konkrete.math.MathUtils.isLong(text) && Long.parseLong(text) >= 0L;
+            Pair<TextEditorWindowBody, PiPWindow> dialog = Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.delay.edit"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+            this.setupChildWindow(this.getWindow(), dialog.getSecond());
+        } else if (targetExecutable instanceof ExecuteLaterExecutableBlock block) {
+            TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.execute_later.edit"), null, call -> {
+                if (call != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
+                    if ((currentEntry != null) && (currentEntry.executable instanceof ExecuteLaterExecutableBlock currentBlock)) {
+                        String normalized = call.trim();
+                        if (normalized.isEmpty()) {
+                            normalized = ExecuteLaterExecutableBlock.DEFAULT_DELAY_MS;
+                        }
+                        if (!Objects.equals(currentBlock.getDelayMsRaw(), normalized)) {
+                            this.createUndoPoint();
+                            currentBlock.setDelayMs(normalized);
+                            this.updateActionInstanceScrollArea(true);
+                            this.focusEntryForExecutable(currentBlock, true, true);
+                        }
+                    }
+                }
             });
-            Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.delay.edit"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+            s.setMultilineMode(false);
+            s.setPlaceholdersAllowed(true);
+            s.setText(block.getDelayMsRaw());
+            Pair<TextEditorWindowBody, PiPWindow> dialog = Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.execute_later.edit"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+            this.setupChildWindow(this.getWindow(), dialog.getSecond());
         }
     }
 
@@ -688,7 +743,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.finalizeActionAddition(call, resolvedReference);
             }
         });
-        Dialogs.openGeneric(screen, screen.getTitle(), null, ChooseActionWindowBody.PIP_WINDOW_WIDTH, ChooseActionWindowBody.PIP_WINDOW_HEIGHT);
+        Pair<ChooseActionWindowBody, PiPWindow> dialog = Dialogs.openGeneric(screen, screen.getTitle(), null, ChooseActionWindowBody.PIP_WINDOW_WIDTH, ChooseActionWindowBody.PIP_WINDOW_HEIGHT);
+        this.setupChildWindow(this.getWindow(), dialog.getSecond());
     }
 
     protected void onAddAction(@NotNull Action action, @Nullable ExecutableEntry selectionReference) {
@@ -747,7 +803,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.finalizeExecutableAddition(block, resolvedReference, true);
             }
         });
-        ManageRequirementsScreen.openInWindow(s, this.getWindow());
+        this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
     }
 
     protected void onAddWhile(@Nullable ExecutableEntry selectionReference) {
@@ -759,12 +815,12 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.finalizeExecutableAddition(block, resolvedReference, true);
             }
         });
-        ManageRequirementsScreen.openInWindow(s, this.getWindow());
+        this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
     }
 
     protected void onAddDelay(@Nullable ExecutableEntry selectionReference) {
         final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
-        TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.delay.edit"), CharacterFilter.buildIntegerFilter().convertToLegacyFilter(), call -> {
+        TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.delay.edit"), null, call -> {
             if (call != null) {
                 ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 DelayExecutableBlock block = new DelayExecutableBlock();
@@ -773,13 +829,27 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             }
         });
         s.setMultilineMode(false);
-        s.setPlaceholdersAllowed(false);
+        s.setPlaceholdersAllowed(true);
         s.setText(DelayExecutableBlock.DEFAULT_DELAY_MS);
-        s.setTextValidator(editor -> {
-            String text = Objects.requireNonNullElse(editor.getText(), "").trim();
-            return !text.isEmpty() && de.keksuccino.konkrete.math.MathUtils.isLong(text) && Long.parseLong(text) >= 0L;
+        Pair<TextEditorWindowBody, PiPWindow> dialog = Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.delay.edit"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        this.setupChildWindow(this.getWindow(), dialog.getSecond());
+    }
+
+    protected void onAddExecuteLater(@Nullable ExecutableEntry selectionReference) {
+        final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
+        TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.execute_later.edit"), null, call -> {
+            if (call != null) {
+                ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
+                ExecuteLaterExecutableBlock block = new ExecuteLaterExecutableBlock();
+                block.setDelayMs(call);
+                this.finalizeExecutableAddition(block, resolvedReference, true);
+            }
         });
-        Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.delay.edit"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        s.setMultilineMode(false);
+        s.setPlaceholdersAllowed(true);
+        s.setText(ExecuteLaterExecutableBlock.DEFAULT_DELAY_MS);
+        Pair<TextEditorWindowBody, PiPWindow> dialog = Dialogs.openGeneric(s, Component.translatable("fancymenu.actions.blocks.execute_later.edit"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        this.setupChildWindow(this.getWindow(), dialog.getSecond());
     }
 
     protected void onAppendElseIf(@Nullable ExecutableEntry targetEntry) {
@@ -804,7 +874,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.focusEntryForExecutable(appended, true, true);
             }
         });
-        ManageRequirementsScreen.openInWindow(s, this.getWindow());
+        this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
     }
 
     protected void onAppendElse(@Nullable ExecutableEntry targetEntry) {
@@ -869,13 +939,15 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         UITheme theme = UIBase.getUITheme();
 
         // "Script Body" label
-        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.ui_interface_generic_text_color.getColorInt(), false);
+        int scrollAreaTop = 50 + 15;
+        float labelY = scrollAreaTop - UIBase.getUITextHeightNormal() - 3.0F;
+        UIBase.renderText(graphics, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, labelY, theme.ui_interface_generic_text_color.getColorInt());
 
         int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - MINIMAP_WIDTH - MINIMAP_GAP);
         this.scriptEntriesScrollArea.setWidth(scrollAreaWidth, true);
         this.scriptEntriesScrollArea.setHeight(this.height - 85, true);
         this.scriptEntriesScrollArea.setX(LEFT_MARGIN, true);
-        this.scriptEntriesScrollArea.setY(50 + 15, true);
+        this.scriptEntriesScrollArea.setY(scrollAreaTop, true);
 
         this.scriptEntriesScrollArea.updateScrollArea();
         this.scriptEntriesScrollArea.updateEntries(null);
@@ -905,10 +977,10 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         if (this.scriptEntriesScrollArea.getEntries().isEmpty()) {
             // Hint overlay when no actions exist
             Component hint = Component.translatable("fancymenu.actions.script_editor.empty_hint");
-            int hintWidth = this.font.width(hint);
-            int hintX = (int)(this.scriptEntriesScrollArea.getInnerX() + (this.scriptEntriesScrollArea.getInnerWidth() / 2) - (hintWidth / 2));
-            int hintY = (int)(this.scriptEntriesScrollArea.getInnerY() + (this.scriptEntriesScrollArea.getInnerHeight() / 2) - (this.font.lineHeight / 2));
-            graphics.drawString(this.font, hint, hintX, hintY, theme.ui_interface_widget_label_color_inactive.getColorInt(), false);
+            float hintWidth = UIBase.getUITextWidthNormal(hint);
+            float hintX = this.scriptEntriesScrollArea.getInnerX() + (this.scriptEntriesScrollArea.getInnerWidth() / 2F) - (hintWidth / 2F);
+            float hintY = this.scriptEntriesScrollArea.getInnerY() + (this.scriptEntriesScrollArea.getInnerHeight() / 2F) - (UIBase.getUITextHeightNormal() / 2F);
+            UIBase.renderText(graphics, hint, hintX, hintY, theme.ui_interface_widget_label_color_inactive.getColorInt());
         }
         this.renderInlineEditors(graphics, mouseX, mouseY, partial);
         this.updateCursor(mouseX, mouseY);
@@ -1182,6 +1254,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             base = theme.actions_entry_background_color_while.getColor();
         } else if (entry.executable instanceof DelayExecutableBlock) {
             base = theme.actions_entry_background_color_delay.getColor();
+        } else if (entry.executable instanceof ExecuteLaterExecutableBlock) {
+            base = theme.actions_entry_background_color_execute_later.getColor();
         } else if (entry.executable instanceof FolderExecutableBlock) {
             base = theme.actions_entry_background_color_folder.getColor();
         } else if (entry.executable instanceof AbstractExecutableBlock) {
@@ -1551,7 +1625,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             this.startInlineNameEditing(selected);
             return true;
         }
-        if ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock) || (selected.executable instanceof WhileExecutableBlock) || (selected.executable instanceof DelayExecutableBlock)) {
+        if ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock) || (selected.executable instanceof WhileExecutableBlock) || (selected.executable instanceof DelayExecutableBlock) || (selected.executable instanceof ExecuteLaterExecutableBlock)) {
             this.onEdit(this.getSelectedEntry());
             return true;
         }
@@ -2368,7 +2442,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
     protected void moveUp(ExecutableEntry entry) {
         if (entry != null) {
-            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock) || (entry.executable instanceof DelayExecutableBlock)) {
+            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock) || (entry.executable instanceof DelayExecutableBlock) || (entry.executable instanceof ExecuteLaterExecutableBlock)) {
                 boolean manualUpdate = false;
                 if (this.scriptEntriesScrollArea.getEntries().indexOf(entry) == 1) {
                     this.moveAfter(entry, BEFORE_FIRST);
@@ -2445,7 +2519,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
     protected void moveDown(ExecutableEntry entry) {
         if (entry != null) {
-            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock) || (entry.executable instanceof DelayExecutableBlock)) {
+            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock) || (entry.executable instanceof DelayExecutableBlock) || (entry.executable instanceof ExecuteLaterExecutableBlock)) {
                 boolean manualUpdate = false;
                 if ((entry.getParentBlock() != this.executableBlock) && (entry.getParentBlock().getAppendedBlock() == null) && (entry.getParentBlock().getExecutables().indexOf(entry.executable) == entry.getParentBlock().getExecutables().size()-1)) {
                     ExecutableEntry parentBlock = this.findEntryForExecutable(entry.getParentBlock());
@@ -2638,6 +2712,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             } else if (b instanceof WhileExecutableBlock whileBlock && whileBlock.isCollapsed()) {
                 skipChildren = true;
             } else if (b instanceof DelayExecutableBlock delayBlock && delayBlock.isCollapsed()) {
+                skipChildren = true;
+            } else if (b instanceof ExecuteLaterExecutableBlock executeLaterBlock && executeLaterBlock.isCollapsed()) {
                 skipChildren = true;
             }
             if (!skipChildren) {
@@ -3000,6 +3076,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             } else if (this.executable instanceof DelayExecutableBlock) {
                 idle = theme.actions_entry_background_color_delay;
                 hover = theme.actions_entry_background_color_delay_hover;
+            } else if (this.executable instanceof ExecuteLaterExecutableBlock) {
+                idle = theme.actions_entry_background_color_execute_later;
+                hover = theme.actions_entry_background_color_execute_later_hover;
             } else if (this.executable instanceof FolderExecutableBlock) {
                 idle = theme.actions_entry_background_color_folder;
                 hover = theme.actions_entry_background_color_folder_hover;
@@ -3074,6 +3153,13 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof DelayExecutableBlock b) {
                 MutableComponent display = Component.translatable("fancymenu.actions.blocks.delay", Component.literal(b.getDelayMsRaw())).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
+                if (b.isCollapsed()) {
+                    display = display.append(this.createCollapsedSuffixComponent(theme));
+                }
+                this.displayNameComponent = display;
+                this.valueComponent = Component.empty();
+            } else if (this.executable instanceof ExecuteLaterExecutableBlock b) {
+                MutableComponent display = Component.translatable("fancymenu.actions.blocks.execute_later", Component.literal(b.getDelayMsRaw())).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
                 }
@@ -3194,6 +3280,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             int baseY = (int)this.getY();
             int centerYLine1 = baseY + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             int centerYLine2 = baseY + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
+            float textOffset = UIBase.getUITextHeightNormal() / 2F;
 
             int renderX = baseX + (INDENT_X_OFFSET * this.indentLevel) + this.getContentOffset();
 
@@ -3204,16 +3291,16 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
                 this.renderCollapseToggle(graphics, toggleX, toggleY, folder.isCollapsed());
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
-                int textY = centerYLine1 - (this.font.lineHeight / 2);
+                float textY = centerYLine1 - textOffset;
                 if (ActionScriptEditorWindowBody.this.inlineNameEntry != this) {
-                    graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                    UIBase.renderText(graphics, this.displayNameComponent, textX, textY, -1);
                 } else {
                     if (this.folderLabelComponent != null) {
-                        graphics.drawString(this.font, this.folderLabelComponent, textX, textY, -1, false);
+                        UIBase.renderText(graphics, this.folderLabelComponent, textX, textY, -1);
                     }
                     if ((ActionScriptEditorWindowBody.this.inlineNameEditBox != null) && (this.folderCollapsedSuffixComponent != null)) {
                         int suffixX = ActionScriptEditorWindowBody.this.inlineNameEditBox.getX() + ActionScriptEditorWindowBody.this.inlineNameEditBox.getWidth() + 2;
-                        graphics.drawString(this.font, this.folderCollapsedSuffixComponent, suffixX, textY, -1, false);
+                        UIBase.renderText(graphics, this.folderCollapsedSuffixComponent, suffixX, textY, -1);
                     }
                 }
             } else if (this.executable instanceof IfExecutableBlock ifBlock) {
@@ -3221,51 +3308,58 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
                 this.renderCollapseToggle(graphics, toggleX, toggleY, ifBlock.isCollapsed());
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
-                int textY = centerYLine1 - (this.font.lineHeight / 2);
-                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                float textY = centerYLine1 - textOffset;
+                UIBase.renderText(graphics, this.displayNameComponent, textX, textY, -1);
             } else if (this.executable instanceof WhileExecutableBlock whileBlock) {
                 int toggleX = renderX + 5;
                 int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
                 this.renderCollapseToggle(graphics, toggleX, toggleY, whileBlock.isCollapsed());
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
-                int textY = centerYLine1 - (this.font.lineHeight / 2);
-                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                float textY = centerYLine1 - textOffset;
+                UIBase.renderText(graphics, this.displayNameComponent, textX, textY, -1);
             } else if (this.executable instanceof DelayExecutableBlock delayBlock) {
                 int toggleX = renderX + 5;
                 int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
                 this.renderCollapseToggle(graphics, toggleX, toggleY, delayBlock.isCollapsed());
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
-                int textY = centerYLine1 - (this.font.lineHeight / 2);
-                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                float textY = centerYLine1 - textOffset;
+                UIBase.renderText(graphics, this.displayNameComponent, textX, textY, -1);
+            } else if (this.executable instanceof ExecuteLaterExecutableBlock executeLaterBlock) {
+                int toggleX = renderX + 5;
+                int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
+                this.renderCollapseToggle(graphics, toggleX, toggleY, executeLaterBlock.isCollapsed());
+                int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
+                float textY = centerYLine1 - textOffset;
+                UIBase.renderText(graphics, this.displayNameComponent, textX, textY, -1);
             } else if (this.executable instanceof ElseIfExecutableBlock) {
                 int indicatorX = renderX + 5;
                 int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
                 this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.bullet_list_dot_color_2.getColor());
                 int textX = indicatorX + COLLAPSE_TOGGLE_SIZE + 3;
-                int textY = centerYLine1 - (this.font.lineHeight / 2);
-                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                float textY = centerYLine1 - textOffset;
+                UIBase.renderText(graphics, this.displayNameComponent, textX, textY, -1);
             } else if (this.executable instanceof ElseExecutableBlock) {
                 int indicatorX = renderX + 5;
                 int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
                 this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.bullet_list_dot_color_2.getColor());
                 int textX = indicatorX + COLLAPSE_TOGGLE_SIZE + 3;
-                int textY = centerYLine1 - (this.font.lineHeight / 2);
-                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                float textY = centerYLine1 - textOffset;
+                UIBase.renderText(graphics, this.displayNameComponent, textX, textY, -1);
             } else if (this.executable instanceof ActionInstance) {
                 UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, theme.bullet_list_dot_color_2.getColor());
-                graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
+                UIBase.renderText(graphics, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - textOffset), -1);
 
                 UIBase.renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, theme.bullet_list_dot_color_1.getColor());
                 int valueTextX = renderX + 5 + 4 + 3 + 4 + 3;
-                int valueTextY = centerYLine2 - (this.font.lineHeight / 2);
+                float valueTextY = centerYLine2 - textOffset;
                 if (ActionScriptEditorWindowBody.this.inlineValueEntry != this) {
-                    graphics.drawString(this.font, this.valueComponent, valueTextX, valueTextY, -1, false);
+                    UIBase.renderText(graphics, this.valueComponent, valueTextX, valueTextY, -1);
                 } else if (this.valueLabelComponent != null) {
-                    graphics.drawString(this.font, this.valueLabelComponent, valueTextX, valueTextY, -1, false);
+                    UIBase.renderText(graphics, this.valueLabelComponent, valueTextX, valueTextY, -1);
                 }
             } else {
                 UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, theme.warning_text_color.getColor());
-                graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
+                UIBase.renderText(graphics, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - textOffset), -1);
             }
         }
         private void renderChainColumn(@NotNull GuiGraphics graphics, @NotNull Color color, @NotNull ExecutableEntry anchorEntry) {
@@ -3293,7 +3387,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if (this.leftMouseDownDragging) {
                 if ((this.leftMouseDownDraggingPosX != getRenderMouseX()) || (this.leftMouseDownDraggingPosY != getRenderMouseY())) {
                     // Only allow dragging for specific entries
-                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof FolderExecutableBlock)) {
+                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock) || (this.executable instanceof FolderExecutableBlock)) {
                         this.dragging = true;
                     }
                 }
@@ -3317,7 +3411,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         private int calculateWidth() {
             int w;
-            if ((this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ElseIfExecutableBlock) || (this.executable instanceof ElseExecutableBlock)) {
+            if ((this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock) || (this.executable instanceof ElseIfExecutableBlock) || (this.executable instanceof ElseExecutableBlock)) {
                 int textWidth = this.font.width(this.displayNameComponent);
                 w = 5 + COLLAPSE_TOGGLE_SIZE + 3 + textWidth + 5;
             } else {
@@ -3441,7 +3535,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         protected boolean canToggleCollapse() {
-            return (this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock);
+            return (this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock);
         }
 
         protected boolean isMouseOverCollapseToggle(int mouseX, int mouseY) {
@@ -3477,6 +3571,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 toggled = true;
             } else if (this.executable instanceof DelayExecutableBlock delayBlock) {
                 delayBlock.setCollapsed(!delayBlock.isCollapsed());
+                toggled = true;
+            } else if (this.executable instanceof ExecuteLaterExecutableBlock executeLaterBlock) {
+                executeLaterBlock.setCollapsed(!executeLaterBlock.isCollapsed());
                 toggled = true;
             }
             if (toggled) {

@@ -2593,5 +2593,9 @@
   "fancymenu.decoration_overlays.buddy.custom_status_icon_experience_texture.desc": "Optional icon for Buddy's experience bar. Size: 12x12.",
   "fancymenu.panorama.choose.preview": "Panorama Preview",
   "fancymenu.common_components.apply": "Apply",
-  "fancymenu.listeners.choose_type.description.popout_title": "Listener Description: %s"
+  "fancymenu.listeners.choose_type.description.popout_title": "Listener Description: %s",
+  "fancymenu.actions.blocks.add.execute_later": "Add EXECUTE LATER Block",
+  "fancymenu.actions.blocks.add.execute_later.desc": "Adds an Execute Later block that schedules its contained actions to run after the specified delay.\n\nDelay time is in milliseconds.\n\nEvery time the script reaches this block, it schedules a new execution on the main thread.\n\nThis is useful for delayed actions in scripts that only run once.",
+  "fancymenu.actions.blocks.execute_later": "EXECUTE LATER (%s ms)",
+  "fancymenu.actions.blocks.execute_later.edit": "Edit Execute Later Delay (ms)"
 }
