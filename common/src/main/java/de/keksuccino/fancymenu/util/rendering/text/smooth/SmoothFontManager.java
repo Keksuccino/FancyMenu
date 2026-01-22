@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -9,7 +8,6 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.Font;
@@ -290,10 +288,6 @@ public final class SmoothFontManager {
                     clear();
                     SmoothFonts.clearCache();
                     SmoothTextRenderer.clearCaches();
-                    // Only preload fonts if modpack mode is disabled, to save memory for end-users
-                    if (!FancyMenu.getOptions().modpackMode.getValue()) {
-                        SmoothFonts.preloadFonts();
-                    }
                 });
             }
         });

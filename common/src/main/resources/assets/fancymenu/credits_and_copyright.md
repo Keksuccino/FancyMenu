@@ -71,6 +71,12 @@ This Font Software is licensed under the SIL Open Font License, Version 1.1 . Th
 
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
 
+### Noto Emoji
+Copyright 2013 Google LLC
+This Font Software is licensed under the SIL Open Font License, Version 1.1 . This license is copied below, and is also available with a FAQ at: https://openfontlicense.org
+
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
 
 ## BUDDY'S ASSETS
 
