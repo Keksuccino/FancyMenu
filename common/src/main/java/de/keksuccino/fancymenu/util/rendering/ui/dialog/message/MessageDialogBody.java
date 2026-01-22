@@ -96,7 +96,7 @@ public class MessageDialogBody extends PiPWindowBody {
         int y = textY;
         int textColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt() : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
         for (Component line : this.renderLines) {
-            graphics.drawString(this.font, line, textX, y, textColor, false);
+            UIBase.renderText(graphics, line, textX, y, textColor);
             y += LINE_SPACING;
         }
 
