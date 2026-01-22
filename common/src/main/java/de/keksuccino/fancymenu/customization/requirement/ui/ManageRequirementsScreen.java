@@ -25,6 +25,7 @@ import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class ManageRequirementsScreen extends PiPWindowBody {
 
@@ -61,7 +62,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
                     this.updateRequirementsScrollArea();
                 }
             });
-            BuildRequirementScreen.openInWindow(s, this.getWindow());
+            this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(s, parentWindow));
         });
         this.addWidget(this.addRequirementButton);
         this.addRequirementButton.setUITooltip(UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.add_requirement.desc")));
@@ -74,7 +75,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
                     this.updateRequirementsScrollArea();
                 }
             });
-            BuildRequirementGroupScreen.openInWindow(s, this.getWindow());
+            this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(s, parentWindow));
         });
         this.addWidget(this.addGroupButton);
         this.addGroupButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.add_group.desc")));
@@ -97,9 +98,11 @@ public class ManageRequirementsScreen extends PiPWindowBody {
                 });
             }
             if (requirementScreen != null) {
-                BuildRequirementScreen.openInWindow(requirementScreen, this.getWindow());
+                BuildRequirementScreen requirementScreenFinal = requirementScreen;
+                this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(requirementScreenFinal, parentWindow));
             } else if (groupScreen != null) {
-                BuildRequirementGroupScreen.openInWindow(groupScreen, this.getWindow());
+                BuildRequirementGroupScreen groupScreenFinal = groupScreen;
+                this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(groupScreenFinal, parentWindow));
             }
         }) {
             @Override
@@ -193,12 +196,14 @@ public class ManageRequirementsScreen extends PiPWindowBody {
         int textColor = UIBase.shouldBlur()
                 ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
                 : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
-        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, 50, textColor, false);
+        int scrollAreaTop = 50 + 15;
+        float labelY = scrollAreaTop - UIBase.getUITextHeightNormal() - 3.0F;
+        UIBase.renderText(graphics, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, labelY, textColor);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
         this.requirementsScrollArea.setX(20, true);
-        this.requirementsScrollArea.setY(50 + 15, true);
+        this.requirementsScrollArea.setY(scrollAreaTop, true);
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
@@ -270,6 +275,17 @@ public class ManageRequirementsScreen extends PiPWindowBody {
             this.requirementsScrollArea.addEntry(e);
         }
 
+    }
+
+    private void openChildWindow(@NotNull Function<PiPWindow, PiPWindow> opener) {
+        PiPWindow parentWindow = this.getWindow();
+        PiPWindow childWindow = opener.apply(parentWindow);
+        if (parentWindow == null || childWindow == null) {
+            return;
+        }
+        childWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+        parentWindow.setVisible(false);
+        childWindow.addCloseCallback(() -> parentWindow.setVisible(true));
     }
 
     public static class RequirementGroupEntry extends TextListScrollAreaEntry {

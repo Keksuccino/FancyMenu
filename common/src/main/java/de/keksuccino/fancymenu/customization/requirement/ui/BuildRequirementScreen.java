@@ -152,11 +152,16 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
     @Override
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int textColor = this.getGenericTextColor();
-        graphics.drawString(this.font, Component.translatable("fancymenu.requirements.screens.build_screen.available_requirements"), 20, 50, textColor, false);
+        float labelHeight = UIBase.getUITextHeightNormal();
+        int availableAreaTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
+        float availableLabelY = availableAreaTop - labelHeight - 3.0F;
+        UIBase.renderText(graphics, Component.translatable("fancymenu.requirements.screens.build_screen.available_requirements"), 20, availableLabelY, textColor);
 
         Component descLabel = Component.translatable("fancymenu.requirements.screens.build_screen.requirement_description");
-        int descLabelWidth = this.font.width(descLabel);
-        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, textColor, false);
+        float descLabelWidth = UIBase.getUITextWidthNormal(descLabel);
+        float descAreaTop = (this.descriptionScrollArea != null) ? this.descriptionScrollArea.getYWithBorder() : (50 + 15);
+        float descLabelY = descAreaTop - labelHeight - 3.0F;
+        UIBase.renderText(graphics, descLabel, this.width - 20 - descLabelWidth, descLabelY, textColor);
 
         this.performInitialWidgetFocusActionInRender();
 
@@ -412,8 +417,6 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
-                .setAlwaysOnTop(true)
-                .setBlockMinecraftScreenInputs(true)
                 .setForceFocus(true)
                 .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
                 .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);

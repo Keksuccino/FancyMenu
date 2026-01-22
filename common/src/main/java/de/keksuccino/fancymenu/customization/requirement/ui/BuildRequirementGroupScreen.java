@@ -216,7 +216,10 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
         int textColor = UIBase.shouldBlur()
                 ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
                 : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
-        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.build_group_screen.group_requirements"), 20, 50, textColor, false);
+        float labelHeight = UIBase.getUITextHeightNormal();
+        int scrollAreaTop = 50 + 15;
+        float requirementsLabelY = scrollAreaTop - labelHeight - 3.0F;
+        UIBase.renderText(graphics, I18n.get("fancymenu.requirements.screens.build_group_screen.group_requirements"), 20, requirementsLabelY, textColor);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
@@ -256,8 +259,9 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
         this.groupIdentifierTextField.render(graphics, mouseX, mouseY, partial);
 
         String idLabel = I18n.get("fancymenu.requirements.screens.build_group_screen.group_identifier");
-        int idLabelWidth = this.font.width(idLabel);
-        graphics.drawString(this.font, idLabel, this.width - 20 - idLabelWidth, this.groupIdentifierTextField.getY() - 15, textColor, false);
+        float idLabelWidth = UIBase.getUITextWidth(idLabel);
+        float idLabelY = this.groupIdentifierTextField.getY() - labelHeight - 3.0F;
+        UIBase.renderText(graphics, idLabel, this.width - 20 - idLabelWidth, idLabelY, textColor);
 
     }
 
@@ -289,8 +293,6 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
-                .setAlwaysOnTop(true)
-                .setBlockMinecraftScreenInputs(true)
                 .setForceFocus(true)
                 .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
                 .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);

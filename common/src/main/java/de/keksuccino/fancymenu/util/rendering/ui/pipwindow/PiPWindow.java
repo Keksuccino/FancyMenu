@@ -291,8 +291,6 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private void renderWindowForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         renderWindowFrame(graphics, partial);
 
-        Font font = this.minecraft.font;
-
         float scale = getFrameScaleSafe();
         float frameX = this.x;
         float frameY = this.y;
@@ -302,7 +300,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         float titleBarY = frameY + border;
         float titleBarX = frameX + border;
         float titleBarRight = frameX + frameWidth - border;
-        float titleCenterY = titleBarY + Math.max(0.0F, (titleBarHeight - font.lineHeight * scale) / 2.0F);
+        float titleCenterY = titleBarY + Math.max(0.0F, (titleBarHeight - UIBase.getUITextHeightNormal() * scale) / 2.0F);
 
         UITheme theme = getTheme();
         float buttonSlotSize = getTitleBarButtonSlotSize();
@@ -341,10 +339,15 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
         float titleRightLimit = titleBarRight - buttonsWidth - padding;
         float maxTitleWidth = Math.max(0.0F, titleRightLimit - textStartX);
-        int maxTitleWidthForFont = scale <= 0.0F ? (int) maxTitleWidth : Math.max(0, (int) Math.floor(maxTitleWidth / scale));
-        var split = font.split(this.title, maxTitleWidthForFont);
-        FormattedCharSequence titleText = !split.isEmpty() ? split.get(0) : Component.empty().getVisualOrderText();
-        drawScaledString(graphics, font, titleText, Math.round(textStartX), Math.round(titleCenterY), this.getLabelColor(theme), scale);
+        float maxTitleWidthForFont = scale <= 0.0F ? maxTitleWidth : (maxTitleWidth / scale);
+        List<? extends Component> split = UIBase.lineWrapUIComponentsNormal(this.title, maxTitleWidthForFont);
+        Component titleText = !split.isEmpty() ? split.get(0) : Component.empty();
+        graphics.pose().pushPose();
+        if (scale != 1.0F) {
+            graphics.pose().scale(scale, scale, 1.0F);
+        }
+        UIBase.renderText(graphics, titleText, textStartX / scale, titleCenterY / scale, this.getLabelColor(theme));
+        graphics.pose().popPose();
 
         if (titleBarHeight > 0.0F) {
             float bottom = titleBarY + titleBarHeight;
