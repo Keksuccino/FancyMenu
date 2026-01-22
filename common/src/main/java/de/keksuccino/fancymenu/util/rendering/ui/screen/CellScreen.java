@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
@@ -155,15 +154,8 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     }
 
     protected void addDescriptionLine(@NotNull Component line) {
-        List<Component> lines = new ArrayList<>();
-        int maxWidth = (int)(this.descriptionScrollArea.getInnerWidth() - 15F);
-        if (this.font.width(line) > maxWidth) {
-            this.font.getSplitter().splitLines(line, maxWidth, Style.EMPTY).forEach(formatted -> {
-                lines.add(TextFormattingUtils.convertFormattedTextToComponent(formatted));
-            });
-        } else {
-            lines.add(line);
-        }
+        float maxWidth = this.descriptionScrollArea.getInnerWidth() - 15F;
+        List<MutableComponent> lines = UIBase.lineWrapUIComponentsNormal(line, maxWidth);
         lines.forEach(component -> {
             TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, component, (entry) -> {});
             e.setSelectable(false);

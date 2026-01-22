@@ -1,11 +1,14 @@
 package de.keksuccino.fancymenu.util.rendering.text;
 
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFont;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -136,6 +139,180 @@ public class TextFormattingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapComponents(@NotNull C lines, int maxLength) {
         return lineWrapComponents(List.of(lines), maxLength);
+    }
+
+    /**
+     * Line-wraps components using the SmoothTextRenderer measurement logic.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapComponentsSmooth(@NotNull List<C> lines, @NotNull SmoothFont font, float textSize, float maxWidth) {
+        Objects.requireNonNull(font);
+        List<MutableComponent> wrappedLines = new ArrayList<>();
+        for (Component line : lines) {
+            if (line.getString().isBlank()) line = Component.literal(" ");
+            List<StyledCodepoint> codepoints = collectStyledCodepoints(line);
+            wrappedLines.addAll(wrapSmoothCodepoints(codepoints, font, textSize, maxWidth));
+        }
+        return wrappedLines;
+    }
+
+    /**
+     * Line-wraps components using the SmoothTextRenderer measurement logic.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapComponentsSmooth(@NotNull C lines, @NotNull SmoothFont font, float textSize, float maxWidth) {
+        return lineWrapComponentsSmooth(List.of(lines), font, textSize, maxWidth);
+    }
+
+    @NotNull
+    private static List<StyledCodepoint> collectStyledCodepoints(@NotNull Component component) {
+        List<StyledCodepoint> codepoints = new ArrayList<>();
+        FormattedCharSequence sequence = component.getVisualOrderText();
+        sequence.accept((index, style, codepoint) -> {
+            codepoints.add(new StyledCodepoint(codepoint, style != null ? style : Style.EMPTY));
+            return true;
+        });
+        return codepoints;
+    }
+
+    @NotNull
+    private static List<MutableComponent> wrapSmoothCodepoints(@NotNull List<StyledCodepoint> codepoints, @NotNull SmoothFont font, float textSize, float maxWidth) {
+        List<MutableComponent> result = new ArrayList<>();
+        if (codepoints.isEmpty()) {
+            result.add(Component.literal(" "));
+            return result;
+        }
+
+        List<StyledCodepoint> currentLine = new ArrayList<>();
+        int lastBreakIndex = -1;
+
+        for (int i = 0; i < codepoints.size(); i++) {
+            StyledCodepoint entry = codepoints.get(i);
+            if (entry.codepoint == '\n') {
+                result.add(buildComponentFromCodepoints(currentLine));
+                currentLine.clear();
+                lastBreakIndex = -1;
+                continue;
+            }
+
+            currentLine.add(entry);
+            if (isBreakable(entry.codepoint)) {
+                lastBreakIndex = currentLine.size() - 1;
+            }
+
+            if (maxWidth > 0.0F && currentLine.size() > 1) {
+                float width = measureSmoothWidth(currentLine, font, textSize);
+                if (width > maxWidth) {
+                    if (lastBreakIndex >= 0) {
+                        int endIndex = trimTrailingWhitespaceIndex(currentLine, lastBreakIndex);
+                        result.add(buildComponentFromCodepoints(currentLine.subList(0, endIndex)));
+                        currentLine.subList(0, lastBreakIndex + 1).clear();
+                        trimLeadingWhitespace(currentLine);
+                    } else {
+                        result.add(buildComponentFromCodepoints(currentLine.subList(0, currentLine.size() - 1)));
+                        StyledCodepoint last = currentLine.get(currentLine.size() - 1);
+                        currentLine.clear();
+                        currentLine.add(last);
+                    }
+                    lastBreakIndex = findLastBreakIndex(currentLine);
+                }
+            }
+        }
+
+        if (!currentLine.isEmpty()) {
+            result.add(buildComponentFromCodepoints(currentLine));
+        }
+
+        if (result.isEmpty()) {
+            result.add(Component.literal(" "));
+        }
+
+        return result;
+    }
+
+    private static float measureSmoothWidth(@NotNull List<StyledCodepoint> codepoints, @NotNull SmoothFont font, float textSize) {
+        if (codepoints.isEmpty()) return 0.0F;
+        FormattedCharSequence sequence = sink -> {
+            int index = 0;
+            for (StyledCodepoint entry : codepoints) {
+                if (!sink.accept(index++, entry.style, entry.codepoint)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        return SmoothTextRenderer.getTextWidth(font, sequence, textSize);
+    }
+
+    private static int trimTrailingWhitespaceIndex(@NotNull List<StyledCodepoint> line, int endIndex) {
+        int trimmed = Math.min(endIndex, line.size());
+        while (trimmed > 0 && isBreakable(line.get(trimmed - 1).codepoint)) {
+            trimmed--;
+        }
+        return trimmed;
+    }
+
+    private static void trimLeadingWhitespace(@NotNull List<StyledCodepoint> line) {
+        while (!line.isEmpty() && isBreakable(line.get(0).codepoint)) {
+            line.remove(0);
+        }
+    }
+
+    private static int findLastBreakIndex(@NotNull List<StyledCodepoint> line) {
+        for (int i = line.size() - 1; i >= 0; i--) {
+            if (isBreakable(line.get(i).codepoint)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean isBreakable(int codepoint) {
+        return Character.isWhitespace(codepoint);
+    }
+
+    @NotNull
+    private static MutableComponent buildComponentFromCodepoints(@NotNull List<StyledCodepoint> codepoints) {
+        if (codepoints.isEmpty()) {
+            return Component.literal(" ");
+        }
+        MutableComponent line = Component.literal("");
+        StringBuilder run = new StringBuilder();
+        Style runStyle = null;
+        for (StyledCodepoint entry : codepoints) {
+            if (entry.codepoint == '\n') {
+                continue;
+            }
+            Style style = entry.style != null ? entry.style : Style.EMPTY;
+            if (runStyle == null) {
+                runStyle = style;
+            }
+            if (!runStyle.equals(style)) {
+                if (!run.isEmpty()) {
+                    line.append(Component.literal(run.toString()).withStyle(runStyle));
+                    run.setLength(0);
+                }
+                runStyle = style;
+            }
+            run.appendCodePoint(entry.codepoint);
+        }
+        if (!run.isEmpty()) {
+            line.append(Component.literal(run.toString()).withStyle(runStyle == null ? Style.EMPTY : runStyle));
+        }
+        if (line.getString().isBlank()) {
+            return Component.literal(" ");
+        }
+        return line;
+    }
+
+    private static final class StyledCodepoint {
+        private final int codepoint;
+        private final Style style;
+
+        private StyledCodepoint(int codepoint, @NotNull Style style) {
+            this.codepoint = codepoint;
+            this.style = style;
+        }
     }
 
 }

@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.dialog.message;
 
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -143,8 +142,8 @@ public class MessageDialogBody extends PiPWindowBody {
 
     private void updateRenderLines() {
         int wrapWidth = getWrapWidth();
-        List<MutableComponent> linesCopy = TextFormattingUtils.lineWrapComponents(this.message, 100000);
-        this.renderLines = TextFormattingUtils.lineWrapComponents(linesCopy, wrapWidth);
+        List<MutableComponent> linesCopy = UIBase.lineWrapUIComponentsNormal(this.message, 100000.0F);
+        this.renderLines = UIBase.lineWrapUIComponentsNormal(linesCopy, (float)wrapWidth);
         this.lastWrapWidth = wrapWidth;
     }
 

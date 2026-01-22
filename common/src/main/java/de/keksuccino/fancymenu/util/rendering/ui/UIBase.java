@@ -1,11 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
 import java.awt.Color;
+import java.util.List;
 import java.util.Objects;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFont;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFonts;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
@@ -19,6 +21,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtend
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,6 +100,54 @@ public class UIBase extends RenderingUtils {
     public static float getUITextWidth(@NotNull String text, float textSize) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the normal UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull List<C> lines, float maxWidth) {
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the normal UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull C lines, float maxWidth) {
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the small UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull List<C> lines, float maxWidth) {
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the small UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull C lines, float maxWidth) {
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the large UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull List<C> lines, float maxWidth) {
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the large UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull C lines, float maxWidth) {
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
     }
 
     /**
@@ -196,6 +247,7 @@ public class UIBase extends RenderingUtils {
         }
         editBox.setTextShadow_FancyMenu(false);
         editBox.setLabelRenderedWithUiBase(true);
+        editBox.setFancyHighlightEnabled(true);
         editBox.setRoundedColorBackgroundEnabled(true);
         return editBox;
     }

@@ -53,7 +53,7 @@ public final class SmoothTextRenderer {
             renderTextInternal(graphics, font, text, x + 1.0F, y + 1.0F, darkenColor(color), size);
         }
         renderTextInternal(graphics, font, text, x, y, color, size);
-        
+        graphics.flush();
         return dimension;
     }
 
@@ -61,12 +61,16 @@ public final class SmoothTextRenderer {
         if (size <= 0.0F) return EMPTY_DIMENSION;
         FormattedCharSequence sequence = text.getVisualOrderText();
         if (sequence == FormattedCharSequence.EMPTY) return EMPTY_DIMENSION;
-        return renderFormattedText(graphics, font, sequence, x, y, color, size, shadow);
+        TextDimensions dimensions = renderFormattedText(graphics, font, sequence, x, y, color, size, shadow);
+        graphics.flush();
+        return dimensions;
     }
 
     public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float x, float y, int color, float size, boolean shadow) {
         if (size <= 0.0F) return EMPTY_DIMENSION;
-        return renderFormattedText(graphics, font, text, x, y, color, size, shadow);
+        TextDimensions dimensions = renderFormattedText(graphics, font, text, x, y, color, size, shadow);
+        graphics.flush();
+        return dimensions;
     }
 
     public static TextDimensions renderTextScreenSpace(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float xPixels, float yPixels, int color, float sizePixels, boolean shadow) {

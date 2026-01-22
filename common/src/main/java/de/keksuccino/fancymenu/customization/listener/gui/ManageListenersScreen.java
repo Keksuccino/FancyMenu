@@ -16,7 +16,6 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGro
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
@@ -212,8 +211,8 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
             int descEndY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder());
             int inactiveLabelColor = this.getInactiveLabelTextColor();
-            List<MutableComponent> renameTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor).withItalic(true)), descW);
-            List<MutableComponent> quickEditTip = TextFormattingUtils.lineWrapComponents(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor).withItalic(true)), descW);
+            List<MutableComponent> renameTip = UIBase.lineWrapUIComponentsNormal(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor).withItalic(true)), descW);
+            List<MutableComponent> quickEditTip = UIBase.lineWrapUIComponentsNormal(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor).withItalic(true)), descW);
             int lineY = descEndY + 4;
             for (MutableComponent line : renameTip) {
                 int lineWidth = (int)UIBase.getUITextWidthNormal(line);

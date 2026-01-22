@@ -12,9 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -283,10 +281,7 @@ public class UITooltip implements Renderable {
                 b = false;
             }
         }
-        this.textLines = new ArrayList<>();
-        for (FormattedText s : Minecraft.getInstance().font.getSplitter().splitLines(merged, 300, Style.EMPTY)) {
-            this.textLines.add(TextFormattingUtils.convertFormattedTextToComponent(s));
-        }
+        this.textLines = new ArrayList<>(TextFormattingUtils.lineWrapComponentsSmooth(merged, UIBase.getUIFont(), UIBase.getUITextSizeNormal(), 300.0F));
         this.updateSize();
         return this;
     }
