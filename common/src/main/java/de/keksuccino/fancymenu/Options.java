@@ -65,6 +65,7 @@ public class Options extends AbstractOptions {
     public final Option<String> uiTheme = new Option<>(config, "ui_theme", "dark", "ui");
     public final Option<Boolean> enableUiBlur = new Option<>(config, "enable_ui_blur", true, "ui");
     public final Option<Float> uiBlurIntensity = new Option<>(config, "ui_blur_intensity", 3.0F, "ui");
+    public final Option<Boolean> useMinecraftFont = new Option<>(config, "use_minecraft_font", false, "ui");
     public final Option<Boolean> enableUiAnimations = new Option<>(config, "enable_ui_animations", true, "ui");
 
     public final Option<Boolean> showDebugOverlay = new Option<>(config, "show_debug_overlay", false, "debug_overlay");

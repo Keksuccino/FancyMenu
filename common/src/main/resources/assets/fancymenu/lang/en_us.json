@@ -2573,5 +2573,7 @@
   "fancymenu.buddy.achievement.perfect_harmony.name": "Perfect Harmony",
   "fancymenu.buddy.achievement.perfect_harmony.desc": "Keep all buddy stats above 90% for an entire session",
   "fancymenu.buddy.achievement.achievement_hunter.name": "Achievement Hunter",
-  "fancymenu.buddy.achievement.achievement_hunter.desc": "Unlock all other achievements"
+  "fancymenu.buddy.achievement.achievement_hunter.desc": "Unlock all other achievements",
+  "fancymenu.overlay.menu_bar.user_interface.use_minecraft_font": "Use Minecraft Font: %s",
+  "fancymenu.overlay.menu_bar.user_interface.use_minecraft_font.desc": "If FancyMenu's UI should use the Vanilla Minecraft font for text rendering instead of the custom one."
 }

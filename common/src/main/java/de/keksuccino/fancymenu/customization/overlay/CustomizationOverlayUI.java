@@ -1040,6 +1040,10 @@ public class CustomizationOverlayUI {
         );
         blurIntensityEntry.addIsActiveSupplier((menu, entry) -> FancyMenu.getOptions().enableUiBlur.getValue());
 
+        userInterfaceMenu.addValueCycleEntry("use_minecraft_font", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.use_minecraft_font", FancyMenu.getOptions().useMinecraftFont.getValue())
+                        .addCycleListener(cycle -> FancyMenu.getOptions().useMinecraftFont.setValue(cycle.getAsBoolean())))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.user_interface.use_minecraft_font.desc")));
+
         userInterfaceMenu.addSeparatorEntry("separator_after_blur_settings");
 
         int preSelectedContextHoverOpenSpeed = FancyMenu.getOptions().contextMenuHoverOpenSpeed.getValue();

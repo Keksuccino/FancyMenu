@@ -25,8 +25,6 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class UIBase extends RenderingUtils {
 
-    private static final boolean USE_DEFAULT_MINECRAFT_FONT = false;
-
     public static final int ELEMENT_BORDER_THICKNESS = 1;
     public static final int VERTICAL_SCROLL_BAR_WIDTH = 5;
     public static final int VERTICAL_SCROLL_BAR_HEIGHT = 40;
@@ -52,52 +50,52 @@ public class UIBase extends RenderingUtils {
     }
 
     public static float getUITextHeightNormal() {
-        if (USE_DEFAULT_MINECRAFT_FONT) return Minecraft.getInstance().font.lineHeight;
+        if (useMinecraftFont()) return Minecraft.getInstance().font.lineHeight;
         return getUIFont().getLineHeight(getUITextSizeNormal());
     }
 
     public static float getUITextHeightLarge() {
-        if (USE_DEFAULT_MINECRAFT_FONT) return Minecraft.getInstance().font.lineHeight;
+        if (useMinecraftFont()) return Minecraft.getInstance().font.lineHeight;
         return getUIFont().getLineHeight(getUITextSizeLarge());
     }
 
     public static float getUITextHeightSmall() {
-        if (USE_DEFAULT_MINECRAFT_FONT) return Minecraft.getInstance().font.lineHeight;
+        if (useMinecraftFont()) return Minecraft.getInstance().font.lineHeight;
         return getUIFont().getLineHeight(getUITextSizeSmall());
     }
 
     public static float getUITextHeight(float textSize) {
-        if (USE_DEFAULT_MINECRAFT_FONT) return Minecraft.getInstance().font.lineHeight;
+        if (useMinecraftFont()) return Minecraft.getInstance().font.lineHeight;
         return getUIFont().getLineHeight(textSize);
     }
 
     public static float getUITextWidthNormal(@NotNull Component text) {
-        if (USE_DEFAULT_MINECRAFT_FONT) return Minecraft.getInstance().font.width(text);
+        if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
     }
 
     public static float getUITextWidthLarge(@NotNull Component text) {
-        if (USE_DEFAULT_MINECRAFT_FONT) return Minecraft.getInstance().font.width(text);
+        if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeLarge());
     }
 
     public static float getUITextWidthSmall(@NotNull Component text) {
-        if (USE_DEFAULT_MINECRAFT_FONT) return Minecraft.getInstance().font.width(text);
+        if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeSmall());
     }
 
     public static float getUITextWidth(@NotNull String text) {
-        if (USE_DEFAULT_MINECRAFT_FONT) return Minecraft.getInstance().font.width(text);
+        if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
     }
 
     public static float getUITextWidth(@NotNull Component text, float textSize) {
-        if (USE_DEFAULT_MINECRAFT_FONT) return Minecraft.getInstance().font.width(text);
+        if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
     }
 
     public static float getUITextWidth(@NotNull String text, float textSize) {
-        if (USE_DEFAULT_MINECRAFT_FONT) return Minecraft.getInstance().font.width(text);
+        if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
     }
 
@@ -385,13 +383,17 @@ public class UIBase extends RenderingUtils {
      * Draws a label component with the given base color, text size, and shadow state.
      */
     public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, float textSize) {
-        if (USE_DEFAULT_MINECRAFT_FONT) {
+        if (useMinecraftFont()) {
             int width = (int)getUITextWidthNormal(text);
             TextDimensions dimensions = new TextDimensions(width, Minecraft.getInstance().font.lineHeight);
             graphics.drawString(Minecraft.getInstance().font, text, (int)x, (int)y, baseColor, false);
             return dimensions;
         }
         return SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, false);
+    }
+
+    private static boolean useMinecraftFont() {
+        return FancyMenu.getOptions().useMinecraftFont.getValue();
     }
 
 }
