@@ -240,6 +240,8 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
                     if (location != null) {
                         String s = ResourceSourceType.LOCATION.getSourcePrefix() + location;
                         this.setSource(s, false);
+                        this.onDone();
+                        return;
                     }
                     this.rebuild();
                     PiPWindow window = this.getWindow();
@@ -274,6 +276,8 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
                         if (!s.startsWith("/")) s = "/" + s;
                         s = ResourceSourceType.LOCAL.getSourcePrefix() + s;
                         this.setSource(s, false);
+                        this.onDone();
+                        return;
                     }
                     this.rebuild();
                     PiPWindow window = this.getWindow();
