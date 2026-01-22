@@ -288,6 +288,8 @@ public final class SmoothFontManager {
             if (action == MinecraftResourceReloadObserver.ReloadAction.STARTING) {
                 RenderSystem.recordRenderCall(() -> {
                     clear();
+                    SmoothFonts.clearCache();
+                    SmoothTextRenderer.clearCaches();
                     // Only preload fonts if modpack mode is disabled, to save memory for end-users
                     if (!FancyMenu.getOptions().modpackMode.getValue()) {
                         SmoothFonts.preloadFonts();

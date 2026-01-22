@@ -23,6 +23,8 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.FormattedCharSink;
 import org.joml.Matrix4f;
 import javax.annotation.Nonnull;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Random;
 
 public final class SmoothTextRenderer {
@@ -31,8 +33,16 @@ public final class SmoothTextRenderer {
     private static final Random OBFUSCATION_RANDOM = new Random();
     private static final String OBFUSCATION_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final TextDimensions EMPTY_DIMENSION = new TextDimensions(0.0F, 0.0F);
+    private static final int MEASURE_CACHE_LIMIT = 512;
+    private static final MeasureCache<LegacyMeasureKey> LEGACY_MEASURE_CACHE = new MeasureCache<>(MEASURE_CACHE_LIMIT);
+    private static final MeasureCache<FormattedMeasureKey> FORMATTED_MEASURE_CACHE = new MeasureCache<>(MEASURE_CACHE_LIMIT);
 
     private SmoothTextRenderer() {
+    }
+
+    public static void clearCaches() {
+        LEGACY_MEASURE_CACHE.clear();
+        FORMATTED_MEASURE_CACHE.clear();
     }
 
     public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float x, float y, int color, float size, boolean shadow) {
@@ -48,8 +58,10 @@ public final class SmoothTextRenderer {
     }
 
     public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull Component text, float x, float y, int color, float size, boolean shadow) {
-        if (size <= 0.0F || text.getString().isEmpty()) return EMPTY_DIMENSION;
-        return renderFormattedText(graphics, font, text.getVisualOrderText(), x, y, color, size, shadow);
+        if (size <= 0.0F) return EMPTY_DIMENSION;
+        FormattedCharSequence sequence = text.getVisualOrderText();
+        if (sequence == FormattedCharSequence.EMPTY) return EMPTY_DIMENSION;
+        return renderFormattedText(graphics, font, sequence, x, y, color, size, shadow);
     }
 
     public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float x, float y, int color, float size, boolean shadow) {
@@ -78,25 +90,15 @@ public final class SmoothTextRenderer {
     }
 
     public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull Component text, float size) {
-        if (text.getString().isEmpty() || size <= 0.0F) return 0.0F;
-
-        float renderScale = RenderScaleUtil.getCurrentRenderScale();
-        int lod = font.getLodLevel(size, renderScale);
-        float scale = font.getScaleForLod(lod, size);
-
-        FormattedWidthState state = new FormattedWidthState(font, lod, scale);
-        text.getVisualOrderText().accept(state);
-        return state.getMaxWidth();
+        if (size <= 0.0F) return 0.0F;
+        FormattedCharSequence sequence = text.getVisualOrderText();
+        if (sequence == FormattedCharSequence.EMPTY) return 0.0F;
+        return getTextWidth(font, sequence, size);
     }
 
     public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float size) {
         if (size <= 0.0F) return 0.0F;
-        float renderScale = RenderScaleUtil.getCurrentRenderScale();
-        int lod = font.getLodLevel(size, renderScale);
-        float scale = font.getScaleForLod(lod, size);
-        FormattedWidthState state = new FormattedWidthState(font, lod, scale);
-        text.accept(state);
-        return state.getMaxWidth();
+        return measureFormattedText(font, text, size).width();
     }
 
     public static float getTextHeight(@Nonnull SmoothFont font, @Nonnull String text, float size) {
@@ -105,18 +107,15 @@ public final class SmoothTextRenderer {
     }
 
     public static float getTextHeight(@Nonnull SmoothFont font, @Nonnull Component text, float size) {
-        if (text.getString().isEmpty() || size <= 0.0F) return 0.0F;
-        FormattedLineCountState state = new FormattedLineCountState();
-        text.getVisualOrderText().accept(state);
-        return state.getHeight(font.getLineHeight(size));
+        if (size <= 0.0F) return 0.0F;
+        FormattedCharSequence sequence = text.getVisualOrderText();
+        if (sequence == FormattedCharSequence.EMPTY) return 0.0F;
+        return getTextHeight(font, sequence, size);
     }
 
     public static float getTextHeight(@Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float size) {
         if (size <= 0.0F) return 0.0F;
-        float lineHeight = font.getLineHeight(size);
-        FormattedLineCountState state = new FormattedLineCountState();
-        text.accept(state);
-        return state.getHeight(lineHeight);
+        return measureFormattedText(font, text, size).height();
     }
 
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
@@ -248,12 +247,19 @@ public final class SmoothTextRenderer {
 
     private static TextDimensions measureFormattedText(SmoothFont font, FormattedCharSequence text, float size) {
         float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        FormattedMeasureKey key = new FormattedMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(renderScale));
+        TextDimensions cached = FORMATTED_MEASURE_CACHE.get(key);
+        if (cached != null) {
+            return cached;
+        }
         int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
         float lineHeight = font.getLineHeight(size);
         FormattedMeasureState state = new FormattedMeasureState(font, lod, scale, lineHeight);
         text.accept(state);
-        return state.getDimension();
+        TextDimensions dimension = state.getDimension();
+        FORMATTED_MEASURE_CACHE.put(key, dimension);
+        return dimension;
     }
 
     private static TextDimensions measureLegacyText(SmoothFont font, String text, float size) {
@@ -262,6 +268,11 @@ public final class SmoothTextRenderer {
         }
 
         float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        LegacyMeasureKey key = new LegacyMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(renderScale));
+        TextDimensions cached = LEGACY_MEASURE_CACHE.get(key);
+        if (cached != null) {
+            return cached;
+        }
         int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
         float lineHeight = font.getLineHeight(size);
@@ -295,7 +306,9 @@ public final class SmoothTextRenderer {
         }
 
         maxWidth = Math.max(maxWidth, lineWidth);
-        return new TextDimensions(maxWidth, lineHeight * lines);
+        TextDimensions dimension = new TextDimensions(maxWidth, lineHeight * lines);
+        LEGACY_MEASURE_CACHE.put(key, dimension);
+        return dimension;
     }
 
     private static void applyShaderState() {
@@ -693,6 +706,94 @@ public final class SmoothTextRenderer {
                 return 0.0F;
             }
             return lineHeight * lines;
+        }
+    }
+
+    private static final class MeasureCache<K> extends LinkedHashMap<K, TextDimensions> {
+        private final int limit;
+
+        private MeasureCache(int limit) {
+            super(16, 0.75f, true);
+            this.limit = Math.max(1, limit);
+        }
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<K, TextDimensions> eldest) {
+            return size() > limit;
+        }
+    }
+
+    private static final class LegacyMeasureKey {
+        private final SmoothFont font;
+        private final String text;
+        private final int sizeBits;
+        private final int renderScaleBits;
+
+        private LegacyMeasureKey(SmoothFont font, String text, int sizeBits, int renderScaleBits) {
+            this.font = font;
+            this.text = text;
+            this.sizeBits = sizeBits;
+            this.renderScaleBits = renderScaleBits;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof LegacyMeasureKey other)) {
+                return false;
+            }
+            return font == other.font
+                    && text.equals(other.text)
+                    && sizeBits == other.sizeBits
+                    && renderScaleBits == other.renderScaleBits;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = System.identityHashCode(font);
+            result = 31 * result + text.hashCode();
+            result = 31 * result + sizeBits;
+            result = 31 * result + renderScaleBits;
+            return result;
+        }
+    }
+
+    private static final class FormattedMeasureKey {
+        private final SmoothFont font;
+        private final FormattedCharSequence text;
+        private final int sizeBits;
+        private final int renderScaleBits;
+
+        private FormattedMeasureKey(SmoothFont font, FormattedCharSequence text, int sizeBits, int renderScaleBits) {
+            this.font = font;
+            this.text = text;
+            this.sizeBits = sizeBits;
+            this.renderScaleBits = renderScaleBits;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof FormattedMeasureKey other)) {
+                return false;
+            }
+            return font == other.font
+                    && text == other.text
+                    && sizeBits == other.sizeBits
+                    && renderScaleBits == other.renderScaleBits;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = System.identityHashCode(font);
+            result = 31 * result + System.identityHashCode(text);
+            result = 31 * result + sizeBits;
+            result = 31 * result + renderScaleBits;
+            return result;
         }
     }
 
