@@ -25,6 +25,9 @@ public class ChooseFileWindowBody extends AbstractFileBrowserWindowBody {
 
     public ChooseFileWindowBody(@Nullable File rootDirectory, @NotNull File startDirectory, @NotNull Consumer<File> callback) {
         super(Component.translatable("fancymenu.ui.filechooser.choose.file"), rootDirectory, startDirectory, callback);
+        this.setWindowAlwaysOnTop(false);
+        this.setWindowBlocksMinecraftScreenInputs(false);
+        this.setWindowForceFocus(false);
     }
 
     @Override

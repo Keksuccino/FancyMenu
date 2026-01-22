@@ -111,6 +111,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     protected int fileTypeScrollListYOffset = 0;
     @Nullable
     protected MutableComponent currentFileTypesComponent;
+    protected boolean windowAlwaysOnTop = true;
+    protected boolean windowBlocksMinecraftScreenInputs = true;
+    protected boolean windowForceFocus = true;
 
     protected AbstractBrowserWindowBody(@NotNull Component title) {
         super(title);
@@ -120,9 +123,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         PiPWindow window = new PiPWindow(this.getTitle())
                 .setScreen(this)
                 .setForceFancyMenuUiScale(true)
-                .setAlwaysOnTop(true)
-                .setBlockMinecraftScreenInputs(true)
-                .setForceFocus(true)
+                .setAlwaysOnTop(this.windowAlwaysOnTop)
+                .setBlockMinecraftScreenInputs(this.windowBlocksMinecraftScreenInputs)
+                .setForceFocus(this.windowForceFocus)
                 .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
                 .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
         PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
@@ -452,6 +455,30 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
      */
     public void setApplyButtonEnabled(boolean enabled) {
         this.applyButtonEnabled = enabled;
+    }
+
+    /**
+     * Set whether the PiP window should stay above other windows.
+     * Should be called before {@link #openInWindow(PiPWindow)}.
+     */
+    public void setWindowAlwaysOnTop(boolean alwaysOnTop) {
+        this.windowAlwaysOnTop = alwaysOnTop;
+    }
+
+    /**
+     * Set whether the PiP window blocks Minecraft screen inputs.
+     * Should be called before {@link #openInWindow(PiPWindow)}.
+     */
+    public void setWindowBlocksMinecraftScreenInputs(boolean blockInputs) {
+        this.windowBlocksMinecraftScreenInputs = blockInputs;
+    }
+
+    /**
+     * Set whether the PiP window forces focus on open.
+     * Should be called before {@link #openInWindow(PiPWindow)}.
+     */
+    public void setWindowForceFocus(boolean forceFocus) {
+        this.windowForceFocus = forceFocus;
     }
 
     @Nullable

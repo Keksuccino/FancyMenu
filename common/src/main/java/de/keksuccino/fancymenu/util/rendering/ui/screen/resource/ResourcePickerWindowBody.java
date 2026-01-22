@@ -58,6 +58,9 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
 
     public ResourcePickerWindowBody(@Nullable ResourceLocation startLocation, @Nullable FileTypeGroup<?> allowedFileTypes, @NotNull Consumer<ResourceLocation> callback) {
         super(Component.translatable("fancymenu.ui.resourcepicker.choose.resource"));
+        this.setWindowAlwaysOnTop(false);
+        this.setWindowBlocksMinecraftScreenInputs(false);
+        this.setWindowForceFocus(false);
         this.allowedFileTypes = allowedFileTypes;
         this.callback = Objects.requireNonNull(callback);
         this.applyStartLocation(startLocation);
