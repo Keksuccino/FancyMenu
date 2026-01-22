@@ -42,6 +42,7 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
     protected ScrollArea descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedEditBox searchBar;
     protected ExtendedButton copyVariablesButton;
+    protected ExtendedButton popOutDescriptionButton;
 
     public ChooseListenerTypeScreen(@NotNull Consumer<AbstractListener> callback) {
         super(Component.translatable("fancymenu.listeners.choose_type"));
@@ -91,6 +92,18 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         ).setIsActiveSupplier(consumes -> this.selectedListener != null);
         this.addRenderableWidget(this.copyVariablesButton);
         UIBase.applyDefaultWidgetSkinTo(this.copyVariablesButton, blur);
+
+        int popOutButtonY = copyButtonY + 5 + 20;
+        this.popOutDescriptionButton = new ExtendedButton(
+                copyButtonX,
+                popOutButtonY,
+                copyButtonWidth,
+                20,
+                Component.translatable("fancymenu.listeners.choose_type.pop_out_description"),
+                button -> this.openDescriptionPopout()
+        ).setIsActiveSupplier(consumes -> this.selectedListener != null);
+        this.addRenderableWidget(this.popOutDescriptionButton);
+        UIBase.applyDefaultWidgetSkinTo(this.popOutDescriptionButton, blur);
         
         // Done button
         ExtendedButton doneButton = new ExtendedButton(
@@ -235,6 +248,19 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         Minecraft.getInstance().keyboardHandler.setClipboard(builder.toString());
     }
 
+    protected void openDescriptionPopout() {
+        if (this.selectedListener == null) return;
+
+        AbstractListener listener = this.selectedListener;
+        List<Component> cachedDescription = (listener.getDescription() != null) ? listener.getDescription() : List.of();
+        Component title = Component.translatable("fancymenu.listeners.choose_type.description")
+                .copy()
+                .append(Component.literal(": "))
+                .append(listener.getDisplayName().copy());
+        ListenerDescriptionPopoutBody popout = new ListenerDescriptionPopoutBody(title, cachedDescription);
+        ListenerDescriptionPopoutBody.openInWindow(popout, this.getWindow());
+    }
+
     protected boolean listenerFitsSearchValue(@NotNull AbstractListener listener, @Nullable String searchValue) {
         if ((searchValue == null) || searchValue.isBlank()) return true;
         searchValue = searchValue.toLowerCase();
@@ -288,6 +314,116 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
 
     public static @NotNull PiPWindow openInWindow(@NotNull ChooseListenerTypeScreen screen) {
         return openInWindow(screen, null);
+    }
+
+    public static class ListenerDescriptionPopoutBody extends PiPWindowBody {
+
+        public static final int PIP_WINDOW_WIDTH = 360;
+        public static final int PIP_WINDOW_HEIGHT = 260;
+
+        @NotNull
+        private final List<Component> descriptionLines;
+        protected final ScrollArea descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
+
+        public ListenerDescriptionPopoutBody(@NotNull Component title, @NotNull List<Component> descriptionLines) {
+            super(title);
+            this.descriptionLines = new ArrayList<>(descriptionLines.size());
+            for (Component component : descriptionLines) {
+                if (component != null) {
+                    this.descriptionLines.add(component.copy());
+                }
+            }
+        }
+
+        @Override
+        protected void init() {
+            boolean blur = UIBase.shouldBlur();
+
+            this.descriptionScrollArea.setSetupForBlurInterface(blur);
+            this.descriptionScrollArea.setWidth(this.width - 40, true);
+            this.descriptionScrollArea.setHeight(this.height - 40, true);
+            this.descriptionScrollArea.setX(20, true);
+            this.descriptionScrollArea.setY(20, true);
+            this.descriptionScrollArea.horizontalScrollBar.active = false;
+            this.addRenderableWidget(this.descriptionScrollArea);
+
+            this.populateDescription();
+        }
+
+        @Override
+        public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        }
+
+        private void populateDescription() {
+            this.descriptionScrollArea.clearEntries();
+            this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+            for (Component line : this.descriptionLines) {
+                this.addDescriptionLine(line);
+            }
+            this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+        }
+
+        private void addDescriptionLine(@NotNull Component line) {
+            List<Component> lines = new ArrayList<>();
+            int maxWidth = (int) (this.descriptionScrollArea.getInnerWidth() - 15F);
+            if (this.font.width(line) > maxWidth) {
+                this.font.getSplitter().splitLines(line, maxWidth, Style.EMPTY).forEach(formatted -> {
+                    lines.add(TextFormattingUtils.convertFormattedTextToComponent(formatted));
+                });
+            } else {
+                lines.add(line);
+            }
+            int textColor = this.getLabelTextColor();
+            lines.forEach(component -> {
+                TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, component, (entry) -> {});
+                e.setSelectable(false);
+                e.setBackgroundColorHover(e.getBackgroundColorNormal());
+                e.setPlayClickSound(false);
+                e.setTextBaseColor(textColor);
+                this.descriptionScrollArea.addEntry(e);
+            });
+        }
+
+        private int getLabelTextColor() {
+            return UIBase.shouldBlur()
+                    ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                    : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+        }
+
+        public static @NotNull PiPWindow openInWindow(@NotNull ListenerDescriptionPopoutBody screen, @Nullable PiPWindow anchorWindow) {
+            PiPWindow window = new PiPWindow(screen.getTitle())
+                    .setScreen(screen)
+                    .setForceFancyMenuUiScale(true)
+                    .setBlockMinecraftScreenInputs(false)
+                    .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                    .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+            if (anchorWindow != null) {
+                int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+                int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+                int offset = 10;
+                int x = anchorWindow.getX() + anchorWindow.getWidth() + offset;
+                int y = anchorWindow.getY();
+                if (x + window.getWidth() > screenWidth) {
+                    x = anchorWindow.getX() - window.getWidth() - offset;
+                }
+                if (x < 0) {
+                    x = Math.max(0, screenWidth - window.getWidth());
+                }
+                if (y + window.getHeight() > screenHeight) {
+                    y = Math.max(0, screenHeight - window.getHeight());
+                }
+                window.setPosition(x, y);
+                PiPWindowHandler.INSTANCE.openWindow(window, null);
+                return window;
+            }
+            PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+            return window;
+        }
+
+        public static @NotNull PiPWindow openInWindow(@NotNull ListenerDescriptionPopoutBody screen) {
+            return openInWindow(screen, null);
+        }
+
     }
 
     public class ListenerScrollEntry extends TextListScrollAreaEntry {

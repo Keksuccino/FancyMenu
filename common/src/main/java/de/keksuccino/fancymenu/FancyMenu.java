@@ -29,8 +29,6 @@ public class FancyMenu {
 
 
 
-    //TODO font rendering performance verbessern (CPU dreht zu hoch beim rendern)
-
     //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren
 
     //TODO Preload Resources screen zu PiP machen
@@ -38,8 +36,6 @@ public class FancyMenu {
     //TODO QueueableScreen system PiP-based machen
 
     //TODO Buddy: Bar icons und bar textures customizable machen
-
-    //TODO Add a "pop out" feature to get the description of listeners in the ChooseListenerTypeScreen as an extra PiP window that stays open, so it can be used for easier remembering listener value placeholders
 
     //TODO "Apply" button zu file chooser adden, um live preview der changes zu haben (Cancel will undo the preview and revert to original)
 

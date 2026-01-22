@@ -35,6 +35,13 @@ public class BuddyTextures {
     public static final ResourceLocation DEFAULT_DEFAULT_BUTTON_INACTIVE = BuddyGuiButton.DEFAULT_BUTTON_INACTIVE;
     public static final ResourceLocation DEFAULT_CLOSE_BUTTON_NORMAL = BuddyGuiButton.BUTTON_CLOSE_NORMAL;
     public static final ResourceLocation DEFAULT_CLOSE_BUTTON_HOVER = BuddyGuiButton.BUTTON_CLOSE_HOVER;
+    public static final ResourceLocation DEFAULT_STATUS_BAR = BuddyStatusScreen.STATUS_BAR_TEXTURE;
+    public static final ResourceLocation DEFAULT_STATUS_BAR_BACKGROUND = BuddyStatusScreen.STATUS_BAR_BACKGROUND_TEXTURE;
+    public static final ResourceLocation DEFAULT_STATUS_ICON_HUNGER = BuddyStatusScreen.STATUS_ICON_HUNGER;
+    public static final ResourceLocation DEFAULT_STATUS_ICON_HAPPINESS = BuddyStatusScreen.STATUS_ICON_HAPPINESS;
+    public static final ResourceLocation DEFAULT_STATUS_ICON_ENERGY = BuddyStatusScreen.STATUS_ICON_ENERGY;
+    public static final ResourceLocation DEFAULT_STATUS_ICON_FUN = BuddyStatusScreen.STATUS_ICON_FUN;
+    public static final ResourceLocation DEFAULT_STATUS_ICON_EXPERIENCE = BuddyStatusScreen.STATUS_ICON_EXPERIENCE;
 
     private @Nullable ResourceSupplier<ITexture> customAtlasTextureSupplier = null;
     private @Nullable ResourceSupplier<ITexture> customThoughtBubbleTextureSupplier = null;
@@ -53,6 +60,13 @@ public class BuddyTextures {
     private @Nullable ResourceSupplier<ITexture> customDefaultButtonInactiveTextureSupplier = null;
     private @Nullable ResourceSupplier<ITexture> customCloseButtonTextureSupplier = null;
     private @Nullable ResourceSupplier<ITexture> customCloseButtonHoverTextureSupplier = null;
+    private @Nullable ResourceSupplier<ITexture> customStatusBarTextureSupplier = null;
+    private @Nullable ResourceSupplier<ITexture> customStatusBarBackgroundTextureSupplier = null;
+    private @Nullable ResourceSupplier<ITexture> customStatusIconHungerTextureSupplier = null;
+    private @Nullable ResourceSupplier<ITexture> customStatusIconHappinessTextureSupplier = null;
+    private @Nullable ResourceSupplier<ITexture> customStatusIconEnergyTextureSupplier = null;
+    private @Nullable ResourceSupplier<ITexture> customStatusIconFunTextureSupplier = null;
+    private @Nullable ResourceSupplier<ITexture> customStatusIconExperienceTextureSupplier = null;
 
     @NotNull
     public ResourceLocation getAtlasTexture() {
@@ -139,6 +153,41 @@ public class BuddyTextures {
         return resolve(customCloseButtonHoverTextureSupplier, DEFAULT_CLOSE_BUTTON_HOVER);
     }
 
+    @NotNull
+    public ResourceLocation getStatusBarTexture() {
+        return resolve(customStatusBarTextureSupplier, DEFAULT_STATUS_BAR);
+    }
+
+    @NotNull
+    public ResourceLocation getStatusBarBackgroundTexture() {
+        return resolve(customStatusBarBackgroundTextureSupplier, DEFAULT_STATUS_BAR_BACKGROUND);
+    }
+
+    @NotNull
+    public ResourceLocation getStatusIconHungerTexture() {
+        return resolve(customStatusIconHungerTextureSupplier, DEFAULT_STATUS_ICON_HUNGER);
+    }
+
+    @NotNull
+    public ResourceLocation getStatusIconHappinessTexture() {
+        return resolve(customStatusIconHappinessTextureSupplier, DEFAULT_STATUS_ICON_HAPPINESS);
+    }
+
+    @NotNull
+    public ResourceLocation getStatusIconEnergyTexture() {
+        return resolve(customStatusIconEnergyTextureSupplier, DEFAULT_STATUS_ICON_ENERGY);
+    }
+
+    @NotNull
+    public ResourceLocation getStatusIconFunTexture() {
+        return resolve(customStatusIconFunTextureSupplier, DEFAULT_STATUS_ICON_FUN);
+    }
+
+    @NotNull
+    public ResourceLocation getStatusIconExperienceTexture() {
+        return resolve(customStatusIconExperienceTextureSupplier, DEFAULT_STATUS_ICON_EXPERIENCE);
+    }
+
     public void setCustomAtlasTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
         this.customAtlasTextureSupplier = supplier;
     }
@@ -207,6 +256,34 @@ public class BuddyTextures {
         this.customCloseButtonHoverTextureSupplier = supplier;
     }
 
+    public void setCustomStatusBarTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.customStatusBarTextureSupplier = supplier;
+    }
+
+    public void setCustomStatusBarBackgroundTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.customStatusBarBackgroundTextureSupplier = supplier;
+    }
+
+    public void setCustomStatusIconHungerTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.customStatusIconHungerTextureSupplier = supplier;
+    }
+
+    public void setCustomStatusIconHappinessTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.customStatusIconHappinessTextureSupplier = supplier;
+    }
+
+    public void setCustomStatusIconEnergyTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.customStatusIconEnergyTextureSupplier = supplier;
+    }
+
+    public void setCustomStatusIconFunTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.customStatusIconFunTextureSupplier = supplier;
+    }
+
+    public void setCustomStatusIconExperienceTextureSupplier(@Nullable ResourceSupplier<ITexture> supplier) {
+        this.customStatusIconExperienceTextureSupplier = supplier;
+    }
+
     /**
      * Copies all custom texture suppliers from the provided instance.
      * Default fallbacks are not affected.
@@ -229,6 +306,13 @@ public class BuddyTextures {
         this.customDefaultButtonInactiveTextureSupplier = source.customDefaultButtonInactiveTextureSupplier;
         this.customCloseButtonTextureSupplier = source.customCloseButtonTextureSupplier;
         this.customCloseButtonHoverTextureSupplier = source.customCloseButtonHoverTextureSupplier;
+        this.customStatusBarTextureSupplier = source.customStatusBarTextureSupplier;
+        this.customStatusBarBackgroundTextureSupplier = source.customStatusBarBackgroundTextureSupplier;
+        this.customStatusIconHungerTextureSupplier = source.customStatusIconHungerTextureSupplier;
+        this.customStatusIconHappinessTextureSupplier = source.customStatusIconHappinessTextureSupplier;
+        this.customStatusIconEnergyTextureSupplier = source.customStatusIconEnergyTextureSupplier;
+        this.customStatusIconFunTextureSupplier = source.customStatusIconFunTextureSupplier;
+        this.customStatusIconExperienceTextureSupplier = source.customStatusIconExperienceTextureSupplier;
     }
 
     @NotNull

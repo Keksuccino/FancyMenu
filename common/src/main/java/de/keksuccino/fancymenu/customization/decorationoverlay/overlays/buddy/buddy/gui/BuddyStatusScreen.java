@@ -342,6 +342,7 @@ public class BuddyStatusScreen implements Renderable {
         int contentStartX = guiX + 20;
         int contentStartY = guiY + 30;
         Component tooltip = null;
+        BuddyTextures textures = buddy.getTextures();
 
         // Draw title
         String title = I18n.get("fancymenu.buddy.title.stats");
@@ -375,8 +376,8 @@ public class BuddyStatusScreen implements Renderable {
         int xpBarY = contentStartY + 140;
         int xpIconX = xpBarX - STATUS_ICON_GAP - STATUS_ICON_SIZE;
         int xpIconY = xpBarY + (STATUS_BAR_HEIGHT - STATUS_ICON_SIZE) / 2;
-        graphics.blit(STATUS_ICON_EXPERIENCE, xpIconX, xpIconY, 0.0F, 0.0F, STATUS_ICON_SIZE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
-        renderTexturedBar(graphics, xpBarX, xpBarY, levelingManager.getLevelProgressPercentage() / 100f, 0.3f, 0.85f, 0.45f);
+        graphics.blit(textures.getStatusIconExperienceTexture(), xpIconX, xpIconY, 0.0F, 0.0F, STATUS_ICON_SIZE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
+        renderTexturedBar(graphics, xpBarX, xpBarY, levelingManager.getLevelProgressPercentage() / 100f, 0.3f, 0.85f, 0.45f, textures.getStatusBarBackgroundTexture(), textures.getStatusBarTexture());
 
         // Fill based on progress to next level
         if (tooltip == null && isMouseOver(mouseX, mouseY, xpBarX, xpBarY, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT)) {
@@ -670,6 +671,7 @@ public class BuddyStatusScreen implements Renderable {
         Component tooltip = null;
         int itemHeight = Math.max(STATUS_ICON_SIZE, STATUS_BAR_HEIGHT);
         int barX = startX + STATUS_ICON_SIZE + STATUS_ICON_GAP;
+        BuddyTextures textures = buddy.getTextures();
 
         // Draw each status bar with proper spacing
         for (int i = 0; i < STATUS_BAR_COUNT; i++) {
@@ -688,7 +690,7 @@ public class BuddyStatusScreen implements Renderable {
                 case 0:
                     fillAmount = buddy.getHunger() / 100f;
                     displayValue = Math.round(Math.max(0f, Math.min(100f, buddy.getHunger())));
-                    iconTexture = STATUS_ICON_HUNGER;
+                    iconTexture = textures.getStatusIconHungerTexture();
                     tooltipKey = "fancymenu.buddy.status_bar.hunger";
                     tintR = 0.95f;
                     tintG = 0.35f;
@@ -697,7 +699,7 @@ public class BuddyStatusScreen implements Renderable {
                 case 1:
                     fillAmount = buddy.getHappiness() / 100f;
                     displayValue = Math.round(Math.max(0f, Math.min(100f, buddy.getHappiness())));
-                    iconTexture = STATUS_ICON_HAPPINESS;
+                    iconTexture = textures.getStatusIconHappinessTexture();
                     tooltipKey = "fancymenu.buddy.status_bar.happiness";
                     tintR = 0.35f;
                     tintG = 0.9f;
@@ -706,7 +708,7 @@ public class BuddyStatusScreen implements Renderable {
                 case 2:
                     fillAmount = buddy.getEnergy() / 100f;
                     displayValue = Math.round(Math.max(0f, Math.min(100f, buddy.getEnergy())));
-                    iconTexture = STATUS_ICON_ENERGY;
+                    iconTexture = textures.getStatusIconEnergyTexture();
                     tooltipKey = "fancymenu.buddy.status_bar.energy";
                     tintR = 0.35f;
                     tintG = 0.55f;
@@ -715,7 +717,7 @@ public class BuddyStatusScreen implements Renderable {
                 case 3:
                     fillAmount = buddy.getFunLevel() / 100f;
                     displayValue = Math.round(Math.max(0f, Math.min(100f, buddy.getFunLevel())));
-                    iconTexture = STATUS_ICON_FUN;
+                    iconTexture = textures.getStatusIconFunTexture();
                     tooltipKey = "fancymenu.buddy.status_bar.fun";
                     tintR = 0.8f;
                     tintG = 0.4f;
@@ -724,7 +726,7 @@ public class BuddyStatusScreen implements Renderable {
                 default:
                     fillAmount = 0f;
                     displayValue = 0;
-                    iconTexture = STATUS_ICON_HUNGER;
+                    iconTexture = textures.getStatusIconHungerTexture();
                     tooltipKey = "fancymenu.buddy.status_bar.hunger";
                     tintR = 1.0f;
                     tintG = 1.0f;
@@ -733,7 +735,7 @@ public class BuddyStatusScreen implements Renderable {
             }
 
             graphics.blit(iconTexture, startX, iconY, 0.0F, 0.0F, STATUS_ICON_SIZE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
-            renderTexturedBar(graphics, barX, barY, fillAmount, tintR, tintG, tintB);
+            renderTexturedBar(graphics, barX, barY, fillAmount, tintR, tintG, tintB, textures.getStatusBarBackgroundTexture(), textures.getStatusBarTexture());
 
             if (tooltip == null && isMouseOver(mouseX, mouseY, barX, barY, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT)) {
                 tooltip = Component.translatable(tooltipKey, displayValue);
@@ -743,13 +745,13 @@ public class BuddyStatusScreen implements Renderable {
         return tooltip;
     }
 
-    private static void renderTexturedBar(GuiGraphics graphics, int barX, int barY, float fillAmount, float tintR, float tintG, float tintB) {
+    private static void renderTexturedBar(GuiGraphics graphics, int barX, int barY, float fillAmount, float tintR, float tintG, float tintB, ResourceLocation backgroundTexture, ResourceLocation barTexture) {
         float clampedFill = Math.max(0f, Math.min(1f, fillAmount));
-        graphics.blit(STATUS_BAR_BACKGROUND_TEXTURE, barX, barY, 0.0F, 0.0F, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT);
+        graphics.blit(backgroundTexture, barX, barY, 0.0F, 0.0F, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT);
         int fillWidth = (int)(STATUS_BAR_WIDTH * clampedFill);
         if (fillWidth > 0) {
             graphics.setColor(tintR, tintG, tintB, 1.0F);
-            graphics.blit(STATUS_BAR_TEXTURE, barX, barY, 0.0F, 0.0F, fillWidth, STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT);
+            graphics.blit(barTexture, barX, barY, 0.0F, 0.0F, fillWidth, STATUS_BAR_HEIGHT, STATUS_BAR_WIDTH, STATUS_BAR_HEIGHT);
             graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         }
     }

@@ -389,11 +389,9 @@ public class CustomizationOverlayUI {
 
         customizationMenu.addClickableEntry("pre_load_resources", Component.translatable("fancymenu.resources.pre_loading"),
                         (menu, entry) -> {
-                            Screen current = Minecraft.getInstance().screen;
-                            ManageResourcePreLoadScreen s = new ManageResourcePreLoadScreen(aBoolean -> {
-                                Minecraft.getInstance().setScreen(current);
-                            });
-                            Minecraft.getInstance().setScreen(s);
+                            ManageResourcePreLoadScreen s = new ManageResourcePreLoadScreen(aBoolean -> {});
+                            ManageResourcePreLoadScreen.openInWindow(s);
+                            menu.closeMenuChain();
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.pre_loading.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("check_list"));
