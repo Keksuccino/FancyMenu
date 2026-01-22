@@ -676,16 +676,14 @@ public class CustomizationOverlayUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         panoramaMenu.addClickableEntry("choose_panorama", Component.translatable("fancymenu.global_customizations.background_panorama.choose"), (menu, entry) -> {
-            Screen current = Minecraft.getInstance().screen;
             String currentPanorama = FancyMenu.getOptions().globalBackgroundPanorama.getValue();
             ChoosePanoramaScreen s = new ChoosePanoramaScreen(currentPanorama.isEmpty() ? null : currentPanorama, panoramaName -> {
                 if (panoramaName != null) {
                     FancyMenu.getOptions().globalBackgroundPanorama.setValue(panoramaName);
                 }
-                Minecraft.getInstance().setScreen(current);
                 forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("global_customizations", "background_panorama")));
             });
-            Minecraft.getInstance().setScreen(s);
+            ChoosePanoramaScreen.openInWindow(s);
         });
 
         panoramaMenu.addClickableEntry("clear_panorama", Component.translatable("fancymenu.global_customizations.background_panorama.clear"), (menu, entry) -> {

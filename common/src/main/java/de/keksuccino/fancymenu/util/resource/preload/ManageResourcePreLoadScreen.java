@@ -13,8 +13,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -80,27 +78,23 @@ public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
         });
 
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add.panorama"), extendedButton -> {
-            Screen previousScreen = Minecraft.getInstance().screen;
             ChoosePanoramaScreen s = new ChoosePanoramaScreen(null, panoramaName -> {
                 if (panoramaName != null) {
                     this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(ResourcePreLoader.CUBIC_PANORAMA_SOURCE_PREFIX + panoramaName), this.cachedSerialized, false);
                 }
-                Minecraft.getInstance().setScreen(previousScreen);
                 this.rebuild();
             });
-            Minecraft.getInstance().setScreen(s);
+            ChoosePanoramaScreen.openInWindow(s, this.getWindow());
         });
 
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add.slideshow"), extendedButton -> {
-            Screen previousScreen = Minecraft.getInstance().screen;
             ChooseSlideshowScreen s = new ChooseSlideshowScreen(null, slideshowName -> {
                 if (slideshowName != null) {
                     this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(ResourcePreLoader.SLIDESHOW_SOURCE_PREFIX + slideshowName), this.cachedSerialized, false);
                 }
-                Minecraft.getInstance().setScreen(previousScreen);
                 this.rebuild();
             });
-            Minecraft.getInstance().setScreen(s);
+            ChooseSlideshowScreen.openInWindow(s, this.getWindow());
         });
 
         this.addRightSideDefaultSpacer();
@@ -111,6 +105,7 @@ public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.resources.pre_loading.manage.remove.confirm"), MessageDialogStyle.WARNING, aBoolean -> {
                     if (aBoolean) {
                         this.cachedSerialized = ResourcePreLoader.removeResourceSource(ResourcePreLoader.buildSourceFromString(source), this.cachedSerialized, false);
+                        this.rebuild();
                     }
                 });
             }

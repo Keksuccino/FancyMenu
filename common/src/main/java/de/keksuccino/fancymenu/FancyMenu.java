@@ -35,8 +35,6 @@ public class FancyMenu {
 
     //TODO QueueableScreen system PiP-based machen
 
-    //TODO Buddy: Bar icons und bar textures customizable machen
-
     //TODO "Apply" button zu file chooser adden, um live preview der changes zu haben (Cancel will undo the preview and revert to original)
 
 

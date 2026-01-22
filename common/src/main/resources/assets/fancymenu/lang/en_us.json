@@ -2590,5 +2590,6 @@
   "fancymenu.decoration_overlays.buddy.custom_status_icon_fun_texture": "Custom Buddy Fun Icon",
   "fancymenu.decoration_overlays.buddy.custom_status_icon_fun_texture.desc": "Optional icon for Buddy's fun bar. Size: 12x12.",
   "fancymenu.decoration_overlays.buddy.custom_status_icon_experience_texture": "Custom Buddy Experience Icon",
-  "fancymenu.decoration_overlays.buddy.custom_status_icon_experience_texture.desc": "Optional icon for Buddy's experience bar. Size: 12x12."
+  "fancymenu.decoration_overlays.buddy.custom_status_icon_experience_texture.desc": "Optional icon for Buddy's experience bar. Size: 12x12.",
+  "fancymenu.panorama.choose.preview": "Panorama Preview"
 }

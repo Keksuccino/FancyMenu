@@ -1,9 +1,13 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
@@ -11,17 +15,19 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class ChoosePanoramaScreen extends Screen {
+public class ChoosePanoramaScreen extends PiPWindowBody {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     protected Consumer<String> callback;
     protected String selectedPanoramaName = null;
+    protected LocalTexturePanoramaRenderer selectedPanorama = null;
 
     protected ScrollArea panoramaListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedButton doneButton;
@@ -49,61 +55,68 @@ public class ChoosePanoramaScreen extends Screen {
     @Override
     protected void init() {
 
-        super.init();
+        boolean blur = UIBase.shouldBlur();
+
+        this.panoramaListScrollArea.setSetupForBlurInterface(blur);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
-            this.callback.accept(this.selectedPanoramaName);
-        }).setIsActiveSupplier(consumes -> ChoosePanoramaScreen.this.selectedPanoramaName == null)
+            this.closeWithResult(this.selectedPanoramaName);
+        }).setIsActiveSupplier(consumes -> ChoosePanoramaScreen.this.selectedPanoramaName != null)
                 .setUITooltipSupplier(consumes -> {
                     if (ChoosePanoramaScreen.this.selectedPanoramaName == null) {
                         return UITooltip.of(Component.translatable("fancymenu.panorama.choose.no_panorama_selected"));
                     }
                     return null;
                 });
-        this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+        this.addRenderableWidget(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
-            this.callback.accept(null);
+            this.closeWithResult(null);
         });
-        this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+        this.addRenderableWidget(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, blur);
 
         this.addRenderableWidget(this.panoramaListScrollArea);
 
     }
 
     @Override
-    public void onClose() {
+    public void onWindowClosedExternally() {
         this.callback.accept(null);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
-
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
-
-        graphics.drawString(this.font, Component.translatable("fancymenu.panorama.choose.available_panoramas"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        graphics.drawString(this.font, Component.translatable("fancymenu.panorama.choose.available_panoramas"), 20, 50, getGenericTextColor(), false);
 
         this.panoramaListScrollArea.setWidth(((float) this.width / 2) - 40, true);
         this.panoramaListScrollArea.setHeight(this.height - 85, true);
         this.panoramaListScrollArea.setX(20, true);
         this.panoramaListScrollArea.setY(50 + 15, true);
 
+        if (this.selectedPanorama != null) {
+            Component previewLabel = Component.translatable("fancymenu.panorama.choose.preview");
+            int previewLabelWidth = this.font.width(previewLabel);
+            graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, getGenericTextColor(), false);
+
+            int previewW = (this.width / 2) - 40;
+            int previewH = this.height / 2;
+            int previewX = this.width - 20 - previewW;
+            int previewY = 50 + 15;
+            graphics.fill(previewX, previewY, previewX + previewW, previewY + previewH, getAreaBackgroundColor());
+            this.selectedPanorama.renderInArea(graphics, previewX, previewY, previewW, previewH, partial);
+            UIBase.renderBorder(graphics, previewX, previewY, previewX + previewW, previewY + previewH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);
+        }
+
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.cancelButton.render(graphics, mouseX, mouseY, partial);
-
-        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -114,15 +127,17 @@ public class ChoosePanoramaScreen extends Screen {
     protected void setSelectedPanorama(@Nullable ChoosePanoramaScreen.PanoramaScrollEntry entry) {
         if (entry == null) {
             this.selectedPanoramaName = null;
+            this.selectedPanorama = null;
             return;
         }
         this.selectedPanoramaName = entry.panorama;
+        this.selectedPanorama = PanoramaHandler.getPanorama(entry.panorama);
     }
 
     protected void updatePanoramaScrollAreaContent() {
         this.panoramaListScrollArea.clearEntries();
         for (String s : PanoramaHandler.getPanoramaNames()) {
-            PanoramaScrollEntry e = new PanoramaScrollEntry(this.panoramaListScrollArea, s, (entry) -> {
+            PanoramaScrollEntry e = new PanoramaScrollEntry(this.panoramaListScrollArea, s, getLabelTextColor(), (entry) -> {
                 this.setSelectedPanorama((PanoramaScrollEntry)entry);
             });
             this.panoramaListScrollArea.addEntry(e);
@@ -141,7 +156,7 @@ public class ChoosePanoramaScreen extends Screen {
 
         if (button == InputConstants.KEY_ENTER) {
             if (this.selectedPanoramaName != null) {
-                this.callback.accept(this.selectedPanoramaName);
+                this.closeWithResult(this.selectedPanoramaName);
                 return true;
             }
         }
@@ -150,12 +165,52 @@ public class ChoosePanoramaScreen extends Screen {
 
     }
 
+    protected void closeWithResult(@Nullable String panoramaName) {
+        this.callback.accept(panoramaName);
+        this.closeWindow();
+    }
+
+    private int getGenericTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
+    }
+
+    private int getLabelTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+    }
+
+    private int getAreaBackgroundColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_area_background_color_type_1.getColorInt()
+                : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ChoosePanoramaScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ChoosePanoramaScreen screen) {
+        return openInWindow(screen, null);
+    }
+
     public static class PanoramaScrollEntry extends TextListScrollAreaEntry {
 
         public String panorama;
 
-        public PanoramaScrollEntry(ScrollArea parent, @NotNull String panorama, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(panorama).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
+        public PanoramaScrollEntry(ScrollArea parent, @NotNull String panorama, int labelColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
+            super(parent, Component.literal(panorama).setStyle(Style.EMPTY.withColor(labelColor)), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
             this.panorama = panorama;
         }
 

@@ -36,9 +36,9 @@ public class SlideshowEditorElement extends AbstractEditorElement<SlideshowEdito
                         ((SlideshowElement)e.element).slideshowName = call;
                     }
                 }
-                this.openContextMenuScreen(this.editor);
             });
-            this.openContextMenuScreen(s);
+            menu.closeMenuChain();
+            ChooseSlideshowScreen.openInWindow(s);
         }).setStackable(true);
 
         this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.slideshow.restore_aspect_ratio"), (menu, entry) -> {
