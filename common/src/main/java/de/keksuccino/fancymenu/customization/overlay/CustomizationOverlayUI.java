@@ -1018,6 +1018,10 @@ public class CustomizationOverlayUI {
         userInterfaceMenu.addValueCycleEntry("ui_animations", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_animations", FancyMenu.getOptions().enableUiAnimations.getValue())
                         .addCycleListener(cycle -> FancyMenu.getOptions().enableUiAnimations.setValue(cycle.getAsBoolean())));
 
+        userInterfaceMenu.addValueCycleEntry("use_minecraft_font", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.use_minecraft_font", FancyMenu.getOptions().useMinecraftFont.getValue())
+                        .addCycleListener(cycle -> FancyMenu.getOptions().useMinecraftFont.setValue(cycle.getAsBoolean())))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.user_interface.use_minecraft_font.desc")));
+
         userInterfaceMenu.addSeparatorEntry("separator_before_blur_settings");
 
         userInterfaceMenu.addValueCycleEntry("ui_blur", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_blur", FancyMenu.getOptions().enableUiBlur.getValue())
@@ -1039,10 +1043,6 @@ public class CustomizationOverlayUI {
                 }
         );
         blurIntensityEntry.addIsActiveSupplier((menu, entry) -> FancyMenu.getOptions().enableUiBlur.getValue());
-
-        userInterfaceMenu.addValueCycleEntry("use_minecraft_font", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.use_minecraft_font", FancyMenu.getOptions().useMinecraftFont.getValue())
-                        .addCycleListener(cycle -> FancyMenu.getOptions().useMinecraftFont.setValue(cycle.getAsBoolean())))
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.user_interface.use_minecraft_font.desc")));
 
         userInterfaceMenu.addSeparatorEntry("separator_after_blur_settings");
 
