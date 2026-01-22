@@ -100,6 +100,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     protected boolean previewAudioPlaying = false;
     protected long previewAudioSeed = 0L;
     protected ExtendedButton confirmButton;
+    @Nullable
+    protected ExtendedButton applyButton;
+    protected boolean applyButtonEnabled = false;
     protected ExtendedButton cancelButton;
     protected ExtendedButton audioPreviewToggleButton;
     protected RangeSlider audioPreviewVolumeSlider;
@@ -162,6 +165,14 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         this.addWidget(this.confirmButton);
         UIBase.applyDefaultWidgetSkinTo(this.confirmButton, UIBase.shouldBlur());
 
+        if (this.applyButtonEnabled) {
+            this.applyButton = this.buildApplyButton();
+            if (this.applyButton != null) {
+                this.addWidget(this.applyButton);
+                UIBase.applyDefaultWidgetSkinTo(this.applyButton, UIBase.shouldBlur());
+            }
+        }
+
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.stopPreviewAudio();
             this.onCancel();
@@ -187,6 +198,11 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     @NotNull
     protected abstract ExtendedButton buildConfirmButton();
+
+    @Nullable
+    protected ExtendedButton buildApplyButton() {
+        return null;
+    }
 
     protected abstract void updateEntryList();
 
@@ -258,6 +274,8 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
         this.renderConfirmButton(graphics, mouseX, mouseY, partial);
 
+        this.renderApplyButton(graphics, mouseX, mouseY, partial);
+
         this.renderCancelButton(graphics, mouseX, mouseY, partial);
 
         this.renderExtraButtons(graphics, mouseX, mouseY, partial);
@@ -289,9 +307,17 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         this.confirmButton.render(graphics, mouseX, mouseY, partial);
     }
 
+    protected void renderApplyButton(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (this.applyButton == null) return;
+        this.applyButton.setX(this.width - 20 - this.applyButton.getWidth());
+        this.applyButton.setY(this.confirmButton.getY() - 5 - 20);
+        this.applyButton.render(graphics, mouseX, mouseY, partial);
+    }
+
     protected void renderCancelButton(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.confirmButton.getY() - 5 - 20);
+        int anchorY = (this.applyButton != null) ? this.applyButton.getY() : this.confirmButton.getY();
+        this.cancelButton.setY(anchorY - 5 - 20);
         this.cancelButton.render(graphics, mouseX, mouseY, partial);
     }
 
@@ -418,6 +444,14 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     protected boolean allowEnterForDone() {
         return this.enterKeyForDoneEnabled;
+    }
+
+    /**
+     * Enable or disable the optional apply button.
+     * Should be called before {@link #init()} for proper initialization.
+     */
+    public void setApplyButtonEnabled(boolean enabled) {
+        this.applyButtonEnabled = enabled;
     }
 
     @Nullable

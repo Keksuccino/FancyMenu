@@ -723,6 +723,19 @@ public interface ContextMenuBuilder<O> {
                                     this.applyStackAppliers(entry, source);
                                 }
                             });
+                            List<ResourceSupplier<R>> originalSuppliers = new ArrayList<>();
+                            for (O object : selectedObjects) {
+                                originalSuppliers.add(targetFieldGetter.get(object));
+                            }
+                            chooserScreen.setPreviewCallbacks(source -> {
+                                if (source != null) {
+                                    this.applyStackAppliers(entry, source);
+                                }
+                            }, () -> {
+                                for (int i = 0; i < selectedObjects.size(); i++) {
+                                    targetFieldSetter.accept(selectedObjects.get(i), originalSuppliers.get(i));
+                                }
+                            });
                             for (ContextMenuScreenOpenProcessor processor : this.getContextMenuScreenOpenProcessors()) {
                                 processor.beforeOpen(chooserScreen);
                             }

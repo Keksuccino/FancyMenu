@@ -1,22 +1,23 @@
 package de.keksuccino.fancymenu.customization.action;
 
-import de.keksuccino.fancymenu.customization.action.ui.AsyncActionErrorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
-
 
 /**
  * An action to use with buttons, tickers, etc.<br>
@@ -131,7 +132,10 @@ public abstract class Action {
         boolean sameThread = Minecraft.getInstance().isSameThread();
         if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
             this.asyncErrorShown = true;
-            QueueableScreenHandler.addToQueue(new AsyncActionErrorScreen(this.getDisplayName()));
+            MainThreadTaskExecutor.executeInMainThread(() -> {
+                Component actionNameFormatted = this.getDisplayName().copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                Dialogs.openMessage(Component.translatable("fancymenu.actions.async.cant_run_async", actionNameFormatted), MessageDialogStyle.ERROR);
+            }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }
         return this.canRunAsync() || sameThread; // should run action
     }

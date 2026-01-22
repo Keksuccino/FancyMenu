@@ -70,6 +70,10 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
     protected boolean allowLocal = true;
     protected boolean allowWeb = true;
     @Nullable
+    protected Consumer<String> previewApplyCallback;
+    @Nullable
+    protected Runnable previewCancelCallback;
+    @Nullable
     protected CycleButton<ResourceSourceType> resourceSourceTypeCycleButton;
     protected ExtendedEditBox editBox;
     protected boolean showWarningLegacyLocal = false;
@@ -243,6 +247,11 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
                         window.setVisible(true);
                     }
                 });
+                if (this.previewApplyCallback != null) {
+                    picker.setApplyButtonEnabled(true);
+                    picker.setPreviewApplyCallback(location -> this.previewApplyCallback.accept(ResourceSourceType.LOCATION.getSourcePrefix() + location));
+                    picker.setPreviewCancelCallback(this.previewCancelCallback);
+                }
                 PiPWindow window = this.getWindow();
                 if (window != null) {
                     window.setVisible(false);
@@ -272,6 +281,15 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
                         window.setVisible(true);
                     }
                 });
+                if (this.previewApplyCallback != null) {
+                    fileChooser.setApplyButtonEnabled(true);
+                    fileChooser.setPreviewApplyCallback(file -> {
+                        String s = GameDirectoryUtils.getPathWithoutGameDirectory(file.getAbsolutePath());
+                        if (!s.startsWith("/")) s = "/" + s;
+                        this.previewApplyCallback.accept(ResourceSourceType.LOCAL.getSourcePrefix() + s);
+                    });
+                    fileChooser.setPreviewCancelCallback(this.previewCancelCallback);
+                }
                 fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
                 fileChooser.setFileTypes(this.allowedFileTypes);
                 fileChooser.setFileFilter(this.fileFilter);
@@ -423,6 +441,12 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
         return this;
     }
 
+    public ResourceChooserWindowBody<R,F> setPreviewCallbacks(@Nullable Consumer<String> previewApplyCallback, @Nullable Runnable previewCancelCallback) {
+        this.previewApplyCallback = previewApplyCallback;
+        this.previewCancelCallback = previewCancelCallback;
+        return this;
+    }
+
     public boolean isLocationSourceAllowed() {
         return this.allowLocation;
     }
@@ -463,6 +487,9 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
 
     @Override
     protected void onCancel() {
+        if (this.previewCancelCallback != null) {
+            this.previewCancelCallback.run();
+        }
         this.resourceSourceCallback.accept(null);
         this.closeWindow();
     }
@@ -480,6 +507,9 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
 
     @Override
     public void onWindowClosedExternally() {
+        if (this.previewCancelCallback != null) {
+            this.previewCancelCallback.run();
+        }
         this.resourceSourceCallback.accept(null);
     }
 

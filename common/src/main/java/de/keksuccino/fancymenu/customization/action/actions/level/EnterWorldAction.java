@@ -2,8 +2,9 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.util.ScreenUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -36,7 +37,9 @@ public class EnterWorldAction extends Action {
             long now = System.currentTimeMillis();
             if ((lastJoinErrorTrigger + 20000) < now) {
                 lastJoinErrorTrigger = now;
-                QueueableScreenHandler.addToQueue(new QueueableNotificationScreen(Component.translatable("fancymenu.actions.errors.cannot_join_world_while_in_world")));
+                MainThreadTaskExecutor.executeInMainThread(() -> {
+                    Dialogs.openMessage(Component.translatable("fancymenu.actions.errors.cannot_join_world_while_in_world"), MessageDialogStyle.ERROR);
+                }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
             }
             return;
         }

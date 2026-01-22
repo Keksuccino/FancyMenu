@@ -51,6 +51,10 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
     protected Set<ResourceLocation> cachedResourceLocations;
     protected boolean blockResourceUnfriendlyNames = true;
     protected boolean showBlockedResourceUnfriendlyNames = true;
+    @Nullable
+    private Consumer<ResourceLocation> previewApplyCallback;
+    @Nullable
+    private Runnable previewCancelCallback;
 
     public ResourcePickerWindowBody(@Nullable ResourceLocation startLocation, @Nullable FileTypeGroup<?> allowedFileTypes, @NotNull Consumer<ResourceLocation> callback) {
         super(Component.translatable("fancymenu.ui.resourcepicker.choose.resource"));
@@ -95,7 +99,31 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
     }
 
     @Override
+    protected @Nullable ExtendedButton buildApplyButton() {
+        return new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.apply"), (button) -> {
+            Consumer<ResourceLocation> callback = this.previewApplyCallback;
+            if (callback == null) return;
+            ResourceScrollAreaEntry selected = this.getSelectedEntry();
+            if ((selected != null) && !selected.resourceUnfriendlyName) {
+                callback.accept(selected.location);
+            }
+        }) {
+            @Override
+            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+                ResourceScrollAreaEntry selected = ResourcePickerWindowBody.this.getSelectedEntry();
+                this.active = (ResourcePickerWindowBody.this.previewApplyCallback != null)
+                        && (selected != null)
+                        && !selected.resourceUnfriendlyName;
+                super.render(graphics, mouseX, mouseY, partial);
+            }
+        };
+    }
+
+    @Override
     protected void onCancel() {
+        if (this.previewCancelCallback != null) {
+            this.previewCancelCallback.run();
+        }
         this.callback.accept(null);
     }
 
@@ -206,6 +234,16 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
 
     public void updatePreview(@Nullable ResourceLocation location) {
         this.updatePreviewForKey(location);
+    }
+
+    public ResourcePickerWindowBody setPreviewApplyCallback(@Nullable Consumer<ResourceLocation> previewApplyCallback) {
+        this.previewApplyCallback = previewApplyCallback;
+        return this;
+    }
+
+    public ResourcePickerWindowBody setPreviewCancelCallback(@Nullable Runnable previewCancelCallback) {
+        this.previewCancelCallback = previewCancelCallback;
+        return this;
     }
 
     protected void setTextPreview(@Nullable ResourceLocation location) {

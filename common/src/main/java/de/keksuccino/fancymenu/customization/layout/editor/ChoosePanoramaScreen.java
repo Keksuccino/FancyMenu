@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;

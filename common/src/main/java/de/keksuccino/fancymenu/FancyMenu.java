@@ -31,8 +31,6 @@ public class FancyMenu {
 
     //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren
 
-    //TODO Preload Resources screen zu PiP machen
-
     //TODO QueueableScreen system PiP-based machen
 
     //TODO "Apply" button zu file chooser adden, um live preview der changes zu haben (Cancel will undo the preview and revert to original)
