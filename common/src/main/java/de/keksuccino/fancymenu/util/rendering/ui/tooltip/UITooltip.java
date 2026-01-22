@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
-import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -281,7 +280,7 @@ public class UITooltip implements Renderable {
                 b = false;
             }
         }
-        this.textLines = new ArrayList<>(TextFormattingUtils.lineWrapComponentsSmooth(merged, UIBase.getUIFont(), UIBase.getUITextSizeNormal(), 300.0F));
+        this.textLines = new ArrayList<>(UIBase.lineWrapUIComponentsNormal(merged, 300.0F));
         this.updateSize();
         return this;
     }

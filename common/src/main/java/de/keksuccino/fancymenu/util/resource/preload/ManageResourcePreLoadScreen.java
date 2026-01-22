@@ -68,33 +68,57 @@ public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
     protected void initRightSideWidgets() {
 
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add"), extendedButton -> {
+            PiPWindow parentWindow = this.getWindow();
+            if (parentWindow != null) {
+                parentWindow.setVisible(false);
+            }
             ResourceChooserWindowBody<?,?> s = ResourceChooserWindowBody.generic(FileTypeGroup.allSupported(), null, source -> {
                 if (source != null) {
                     this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(source), this.cachedSerialized, false);
                 }
                 this.rebuild();
             });
-            s.openInWindow(this.getWindow());
+            PiPWindow chooserWindow = s.openInWindow(parentWindow);
+            if (parentWindow != null) {
+                chooserWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+                chooserWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+            }
         });
 
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add.panorama"), extendedButton -> {
+            PiPWindow parentWindow = this.getWindow();
+            if (parentWindow != null) {
+                parentWindow.setVisible(false);
+            }
             ChoosePanoramaScreen s = new ChoosePanoramaScreen(null, panoramaName -> {
                 if (panoramaName != null) {
                     this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(ResourcePreLoader.CUBIC_PANORAMA_SOURCE_PREFIX + panoramaName), this.cachedSerialized, false);
                 }
                 this.rebuild();
             });
-            ChoosePanoramaScreen.openInWindow(s, this.getWindow());
+            PiPWindow chooseWindow = ChoosePanoramaScreen.openInWindow(s, parentWindow);
+            if (parentWindow != null) {
+                chooseWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+                chooseWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+            }
         });
 
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add.slideshow"), extendedButton -> {
+            PiPWindow parentWindow = this.getWindow();
+            if (parentWindow != null) {
+                parentWindow.setVisible(false);
+            }
             ChooseSlideshowScreen s = new ChooseSlideshowScreen(null, slideshowName -> {
                 if (slideshowName != null) {
                     this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(ResourcePreLoader.SLIDESHOW_SOURCE_PREFIX + slideshowName), this.cachedSerialized, false);
                 }
                 this.rebuild();
             });
-            ChooseSlideshowScreen.openInWindow(s, this.getWindow());
+            PiPWindow chooseWindow = ChooseSlideshowScreen.openInWindow(s, parentWindow);
+            if (parentWindow != null) {
+                chooseWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+                chooseWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+            }
         });
 
         this.addRightSideDefaultSpacer();

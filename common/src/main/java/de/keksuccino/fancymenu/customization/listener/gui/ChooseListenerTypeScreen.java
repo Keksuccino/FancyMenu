@@ -245,10 +245,7 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
 
         AbstractListener listener = this.selectedListener;
         List<Component> cachedDescription = (listener.getDescription() != null) ? listener.getDescription() : List.of();
-        Component title = Component.translatable("fancymenu.listeners.choose_type.description")
-                .copy()
-                .append(Component.literal(": "))
-                .append(listener.getDisplayName().copy());
+        Component title = Component.translatable("fancymenu.listeners.choose_type.description.popout_title", listener.getDisplayName().copy());
         ListenerDescriptionPopoutBody popout = new ListenerDescriptionPopoutBody(title, cachedDescription);
         ListenerDescriptionPopoutBody.openInWindow(popout, this.getWindow());
     }
@@ -295,9 +292,9 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
-                .setAlwaysOnTop(true)
-                .setBlockMinecraftScreenInputs(true)
-                .setForceFocus(true)
+                .setAlwaysOnTop(false)
+                .setBlockMinecraftScreenInputs(false)
+                .setForceFocus(false)
                 .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
                 .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
         PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);

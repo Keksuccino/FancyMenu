@@ -47,6 +47,8 @@ public class ManageListenersScreen extends PiPCellWindowBody {
 
     @NotNull
     protected final Consumer<Boolean> callback;
+    protected boolean resultHandled = false;
+    protected boolean skipCloseWarning = false;
     @NotNull
     protected final List<ListenerInstance> tempInstances = new ArrayList<>();
     @Nullable
@@ -115,8 +117,14 @@ public class ManageListenersScreen extends PiPCellWindowBody {
         
         // Add listener button
         this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.add"), button -> {
+            PiPWindow parentWindow = this.getWindow();
+            if (parentWindow != null) {
+                parentWindow.setVisible(false);
+            }
+            boolean[] restoreParentOnClose = new boolean[] { true };
             ChooseListenerTypeScreen chooseScreen = new ChooseListenerTypeScreen(listener -> {
                 if (listener != null) {
+                    restoreParentOnClose[0] = false;
                     // Create new instance and open action editor
                     ListenerInstance newInstance = listener.createFreshInstance();
                     ActionScriptEditorWindowBody actionsScreen = new ActionScriptEditorWindowBody(newInstance.getActionScript(), updatedScript -> {
@@ -126,10 +134,22 @@ public class ManageListenersScreen extends PiPCellWindowBody {
                             this.rebuild();
                         }
                     });
-                    ActionScriptEditorWindowBody.openInWindow(actionsScreen);
+                    PiPWindow actionWindow = ActionScriptEditorWindowBody.openInWindow(actionsScreen, parentWindow);
+                    if (parentWindow != null) {
+                        actionWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+                        actionWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+                    }
                 }
             });
-            ChooseListenerTypeScreen.openInWindow(chooseScreen, this.getWindow());
+            PiPWindow chooseWindow = ChooseListenerTypeScreen.openInWindow(chooseScreen, parentWindow);
+            if (parentWindow != null) {
+                chooseWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+                chooseWindow.addCloseCallback(() -> {
+                    if (restoreParentOnClose[0]) {
+                        parentWindow.setVisible(true);
+                    }
+                });
+            }
         });
         
         // Edit listener button
@@ -161,7 +181,15 @@ public class ManageListenersScreen extends PiPCellWindowBody {
                     cached.setActionScript(updatedScript);
                 }
             });
-            ActionScriptEditorWindowBody.openInWindow(actionsScreen);
+            PiPWindow parentWindow = this.getWindow();
+            if (parentWindow != null) {
+                parentWindow.setVisible(false);
+            }
+            PiPWindow actionWindow = ActionScriptEditorWindowBody.openInWindow(actionsScreen, parentWindow);
+            if (parentWindow != null) {
+                actionWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+                actionWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+            }
         }
     }
 
@@ -211,21 +239,21 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
             int descEndY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder());
             int inactiveLabelColor = this.getInactiveLabelTextColor();
-            List<MutableComponent> renameTip = UIBase.lineWrapUIComponentsNormal(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor).withItalic(true)), descW);
-            List<MutableComponent> quickEditTip = UIBase.lineWrapUIComponentsNormal(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor).withItalic(true)), descW);
+            List<MutableComponent> renameTip = UIBase.lineWrapUIComponentsSmall(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor)), descW);
+            List<MutableComponent> quickEditTip = UIBase.lineWrapUIComponentsSmall(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor)), descW);
             int lineY = descEndY + 4;
             for (MutableComponent line : renameTip) {
-                int lineWidth = (int)UIBase.getUITextWidthNormal(line);
+                int lineWidth = (int)UIBase.getUITextWidthSmall(line);
                 int lineX = descEndX - lineWidth;
-                UIBase.renderText(graphics, line, lineX, lineY, -1);
-                lineY += (int) (UIBase.getUITextHeightNormal() + 2);
+                UIBase.renderText(graphics, line, lineX, lineY, -1, UIBase.getUITextSizeSmall());
+                lineY += (int) (UIBase.getUITextHeightSmall() + 2);
             }
             lineY += 2;
             for (MutableComponent line : quickEditTip) {
-                int lineWidth = (int)UIBase.getUITextWidthNormal(line);
+                int lineWidth = (int)UIBase.getUITextWidthSmall(line);
                 int lineX = descEndX - lineWidth;
-                UIBase.renderText(graphics, line, lineX, lineY, -1);
-                lineY += (int) (UIBase.getUITextHeightNormal() + 2);
+                UIBase.renderText(graphics, line, lineX, lineY, -1, UIBase.getUITextSizeSmall());
+                lineY += (int) (UIBase.getUITextHeightSmall() + 2);
             }
         }
 
@@ -235,7 +263,19 @@ public class ManageListenersScreen extends PiPCellWindowBody {
     public void setWindow(@Nullable PiPWindow window) {
         if (window != null) {
             window.setCloseWindowCheck((window1, decision) -> {
+                if (this.skipCloseWarning) {
+                    this.skipCloseWarning = false;
+                    decision.supply(true);
+                    return;
+                }
                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.listeners.manage.cancel_warning"), MessageDialogStyle.WARNING, decision::supply);
+            });
+            window.addCloseCallback(() -> {
+                if (this.resultHandled) {
+                    return;
+                }
+                this.resultHandled = true;
+                this.callback.accept(false);
             });
         }
         super.setWindow(window);
@@ -243,12 +283,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
 
     @Override
     protected void onCancel() {
-        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.listeners.manage.cancel_warning"), MessageDialogStyle.WARNING, call -> {
-            if (call) {
-                this.callback.accept(false);
-                this.closeWindow();
-            }
-        });
+        this.closeWindow();
     }
 
     @Override
@@ -263,13 +298,21 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             ListenerHandler.addInstance(instance);
         }
         
-        this.callback.accept(true);
-        this.closeWindow();
+        this.closeWithResult(true);
     }
 
     @Override
     public void onWindowClosedExternally() {
-        this.callback.accept(false);
+    }
+
+    protected void closeWithResult(boolean accepted) {
+        if (this.resultHandled) {
+            return;
+        }
+        this.resultHandled = true;
+        this.skipCloseWarning = accepted;
+        this.callback.accept(accepted);
+        this.closeWindow();
     }
 
     public static @NotNull PiPWindow openInWindow(@NotNull ManageListenersScreen screen, @Nullable PiPWindow parentWindow) {

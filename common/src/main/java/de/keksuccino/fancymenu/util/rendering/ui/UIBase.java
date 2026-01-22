@@ -107,6 +107,7 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull List<C> lines, float maxWidth) {
+        if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
         return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
     }
 
@@ -115,6 +116,7 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull C lines, float maxWidth) {
+        if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
         return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
     }
 
@@ -123,6 +125,7 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull List<C> lines, float maxWidth) {
+        if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
         return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
     }
 
@@ -131,6 +134,7 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull C lines, float maxWidth) {
+        if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
         return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
     }
 
@@ -139,6 +143,7 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull List<C> lines, float maxWidth) {
+        if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
         return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
     }
 
@@ -147,6 +152,7 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull C lines, float maxWidth) {
+        if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
         return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
     }
 

@@ -162,6 +162,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     private final Deque<ScriptSnapshot> redoHistory = new ArrayDeque<>();
     private boolean suppressHistoryCapture = false;
     private boolean actionsMenuRightClickConsumedByEntry = false;
+    private boolean skipCloseWarning = false;
 
     public ActionScriptEditorWindowBody(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
         super(Component.translatable("fancymenu.actions.screens.manage_screen.manage"));
@@ -226,6 +227,11 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     public void setWindow(@Nullable PiPWindow window) {
         if (window != null) {
             window.setCloseWindowCheck((window1, decision) -> {
+                if (this.skipCloseWarning) {
+                    this.skipCloseWarning = false;
+                    decision.supply(true);
+                    return;
+                }
                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.actions.script_editor.cancel_warning"), MessageDialogStyle.WARNING, close -> {
                     decision.supply(close);
                 });
@@ -261,6 +267,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             return;
         }
         this.resultHandled = true;
+        this.skipCloseWarning = true;
         this.callback.accept(result);
         this.closeWindow();
     }
