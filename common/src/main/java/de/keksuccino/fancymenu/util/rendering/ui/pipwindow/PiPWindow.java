@@ -263,7 +263,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         double inputScale = renderScale <= 0.0 ? 1.0 : 1.0 / renderScale;
         int localMouseX = (int) Math.floor((mouseX - bodyX) * inputScale);
         int localMouseY = (int) Math.floor((mouseY - bodyY) * inputScale);
-        if (!PiPWindowHandler.INSTANCE.isWindowFocused(this)) {
+        if (!PiPWindowHandler.INSTANCE.canMouseReachWindow(this, mouseX, mouseY)) {
             localMouseX = -100000;
             localMouseY = -100000;
         }
@@ -1278,7 +1278,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (this.screen != null && !isInputLocked()) {
             double screenMouseX = toScreenMouseX(mouseX);
             double screenMouseY = toScreenMouseY(mouseY);
-            if (!PiPWindowHandler.INSTANCE.isWindowFocused(this)) {
+            if (!PiPWindowHandler.INSTANCE.canMouseReachWindow(this, mouseX, mouseY)) {
                 screenMouseX = -100000;
                 screenMouseY = -100000;
             }

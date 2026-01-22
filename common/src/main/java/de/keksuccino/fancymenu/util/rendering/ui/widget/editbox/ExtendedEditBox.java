@@ -44,6 +44,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected DrawableColor textColorUneditable = DrawableColor.of(new Color(7368816));
     protected DrawableColor suggestionTextColor = DrawableColor.of(new Color(-8355712));
     protected boolean textShadow = true;
+    protected boolean renderLabelWithUiBase = false;
     protected final Font font;
     @Nullable
     protected String identifier;
@@ -186,7 +187,12 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             boolean vanillaHintRendered = false;
             if ((hint != null) && text.isEmpty() && !this.isFocused()) {
                 graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
-                graphics.drawString(this.font, hint, textXAfterCursor, textY, textColor, this.textShadow);
+                if (this.renderLabelWithUiBase) {
+                    float hintY = this.getY() + (this.getHeight() / 2F) - (UIBase.getUITextHeightNormal() / 2F);
+                    UIBase.renderText(graphics, hint, textXAfterCursor, hintY, textColor);
+                } else {
+                    graphics.drawString(this.font, hint, textXAfterCursor, textY, textColor, this.textShadow);
+                }
                 graphics.disableScissor();
                 vanillaHintRendered = true;
             }
@@ -195,7 +201,12 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             Component hintFm = this.getHintFancyMenu();
             if (!vanillaHintRendered && (hintFm != null) && text.isEmpty()) {
                 graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
-                graphics.drawString(this.font, hintFm, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), -1, false);
+                if (this.renderLabelWithUiBase) {
+                    float hintY = this.getY() + (this.getHeight() / 2F) - (UIBase.getUITextHeightNormal() / 2F);
+                    UIBase.renderText(graphics, hintFm, this.getX() + 4, hintY, -1);
+                } else {
+                    graphics.drawString(this.font, hintFm, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), -1, false);
+                }
                 graphics.disableScissor();
             }
 
@@ -293,6 +304,15 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
      */
     public ExtendedEditBox setTextShadow_FancyMenu(boolean textShadow) {
         this.textShadow = textShadow;
+        return this;
+    }
+
+    public boolean isLabelRenderedWithUiBase() {
+        return this.renderLabelWithUiBase;
+    }
+
+    public ExtendedEditBox setLabelRenderedWithUiBase(boolean renderLabelWithUiBase) {
+        this.renderLabelWithUiBase = renderLabelWithUiBase;
         return this;
     }
 

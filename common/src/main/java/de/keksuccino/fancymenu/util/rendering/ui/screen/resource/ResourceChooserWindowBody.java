@@ -54,7 +54,7 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
     private static final Logger LOGGER = LogManager.getLogger();
     protected static final PngTexture WARNING_TEXTURE = PngTexture.location(ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/warning_framed_24x24.png"));
     public static final int PIP_WINDOW_WIDTH = 600;
-    public static final int PIP_WINDOW_HEIGHT = 420;
+    public static final int PIP_WINDOW_HEIGHT = 446;
 
     @Nullable
     protected FileTypeGroup<F> allowedFileTypes;
@@ -258,7 +258,10 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
                 if (window != null) {
                     window.setVisible(false);
                 }
-                picker.openInWindow(window);
+                PiPWindow pickerWindow = picker.openInWindow(window);
+                if (window != null) {
+                    pickerWindow.setPosition(window.getX(), window.getY());
+                }
             }), true);
         }
 
@@ -301,7 +304,10 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
                 if (window != null) {
                     window.setVisible(false);
                 }
-                fileChooser.openInWindow(window);
+                PiPWindow fileChooserWindow = fileChooser.openInWindow(window);
+                if (window != null) {
+                    fileChooserWindow.setPosition(window.getX(), window.getY());
+                }
             }), true);
         }
 

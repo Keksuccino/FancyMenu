@@ -40,6 +40,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected DrawableColor labelBaseColorNormal = DrawableColor.of(new Color(0xFFFFFF));
     protected DrawableColor labelBaseColorInactive = DrawableColor.of(new Color(0xA0A0A0));
     protected boolean labelShadow = true;
+    protected boolean renderLabelWithUiBase = false;
     @NotNull
     protected ConsumingSupplier<ExtendedButton, Component> labelSupplier = consumes -> Component.empty();
     protected ConsumingSupplier<ExtendedButton, UITooltip> uiTooltipSupplier = null;
@@ -198,7 +199,11 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected void renderLabelText(@NotNull GuiGraphics graphics) {
         if (this.enableLabel) {
             int k = this.active ? this.labelBaseColorNormal.getColorIntWithAlpha(this.alpha) : this.labelBaseColorInactive.getColorIntWithAlpha(this.alpha);
-            this.renderScrollingLabel(this, graphics, mc.font, 2, this.labelShadow, k);
+            if (this.renderLabelWithUiBase) {
+                this.renderScrollingLabelUiBase(this, graphics, 2, k);
+            } else {
+                this.renderScrollingLabel(this, graphics, mc.font, 2, this.labelShadow, k);
+            }
         }
     }
 
@@ -341,6 +346,15 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     public ExtendedButton setLabelShadowEnabled(boolean enabled) {
         this.labelShadow = enabled;
+        return this;
+    }
+
+    public boolean isLabelRenderedWithUiBase() {
+        return this.renderLabelWithUiBase;
+    }
+
+    public ExtendedButton setLabelRenderedWithUiBase(boolean renderLabelWithUiBase) {
+        this.renderLabelWithUiBase = renderLabelWithUiBase;
         return this;
     }
 

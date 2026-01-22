@@ -158,6 +158,7 @@ public class UIBase extends RenderingUtils {
             slider.setLabelColorInactive(UIBase.getUITheme().ui_interface_widget_label_color_inactive);
         }
         slider.setLabelShadow(false);
+        slider.setLabelRenderedWithUiBase(true);
         slider.setRoundedColorBackgroundEnabled(true);
         return slider;
     }
@@ -194,6 +195,7 @@ public class UIBase extends RenderingUtils {
             editBox.setSuggestionTextColor(theme.ui_interface_input_field_suggestion_text_color);
         }
         editBox.setTextShadow_FancyMenu(false);
+        editBox.setLabelRenderedWithUiBase(true);
         editBox.setRoundedColorBackgroundEnabled(true);
         return editBox;
     }
@@ -222,6 +224,7 @@ public class UIBase extends RenderingUtils {
             button.setLabelBaseColorInactive(UIBase.getUITheme().ui_interface_widget_label_color_inactive);
         }
         button.setLabelShadowEnabled(false);
+        button.setLabelRenderedWithUiBase(true);
         button.setRoundedColorBackgroundEnabled(true);
         return button;
     }
@@ -380,16 +383,23 @@ public class UIBase extends RenderingUtils {
     }
 
     /**
-     * Draws a label component with the given base color, text size, and shadow state.
+     * Draws a label component with the given base color and text size.
      */
     public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, float textSize) {
+        return renderText(graphics, text, x, y, baseColor, textSize, false);
+    }
+
+    /**
+     * Draws a label component with the given base color, text size, and shadow state.
+     */
+    public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, float textSize, boolean shadow) {
         if (useMinecraftFont()) {
             int width = (int)getUITextWidthNormal(text);
             TextDimensions dimensions = new TextDimensions(width, Minecraft.getInstance().font.lineHeight);
-            graphics.drawString(Minecraft.getInstance().font, text, (int)x, (int)y, baseColor, false);
+            graphics.drawString(Minecraft.getInstance().font, text, (int)x, (int)y, baseColor, shadow);
             return dimensions;
         }
-        return SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, false);
+        return SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, shadow);
     }
 
     private static boolean useMinecraftFont() {

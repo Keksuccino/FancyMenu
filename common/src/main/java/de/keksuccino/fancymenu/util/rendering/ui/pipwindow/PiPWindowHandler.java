@@ -151,6 +151,14 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         return getTopWindowAt(mouseX, mouseY) == window;
     }
 
+    public boolean canMouseReachWindow(@NotNull PiPWindow window, double mouseX, double mouseY) {
+        PiPWindow blockingWindow = getTopInputBlockingWindow();
+        if (blockingWindow != null && blockingWindow != window) {
+            return false;
+        }
+        return isPointVisibleForWindow(window, mouseX, mouseY);
+    }
+
     public void refreshAllScreens() {
         for (PiPWindow window : new ArrayList<>(windows)) {
             window.refreshScreen();
@@ -248,6 +256,9 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         PiPWindow forcedWindow = getTopInputBlockingWindow();
         if (forcedWindow != null) {
+            if (!isWindowFocused(forcedWindow)) {
+                bringToFront(forcedWindow);
+            }
             focusedWindow = forcedWindow;
             if (!forcedWindow.isMouseOver(mouseX, mouseY)) {
                 UISounds.playDefaultBeep();
@@ -297,6 +308,9 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
                 activePointerButton = button;
                 enforceForceFocus();
                 return true;
+            }
+            if (!isWindowFocused(window)) {
+                bringToFront(window);
             }
             window.mouseClicked(mouseX, mouseY, button);
             if (windows.contains(window)) {

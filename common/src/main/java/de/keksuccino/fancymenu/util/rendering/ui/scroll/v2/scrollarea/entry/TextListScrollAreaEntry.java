@@ -3,8 +3,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +14,6 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
     public DrawableColor listDotColor;
     protected Component text;
     protected int textWidth;
-    public Font font = Minecraft.getInstance().font;
     protected Consumer<TextListScrollAreaEntry> onClickCallback;
     protected int textBaseColor = UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
     protected int labelRenderOffsetY = 1;
@@ -32,7 +29,7 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
     public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         float centerY = this.getY() + (this.getHeight() / 2f);
         renderListingDot(graphics, (this.getX() + 5f), (centerY - 2f), this.listDotColor.getColorInt());
-        graphics.drawString(this.font, this.text, (int)(this.getX() + 5f + 4f + 3f), (int)(centerY - (this.font.lineHeight / 2f)) + this.getLabelRenderOffsetY(), this.textBaseColor, false);
+        UIBase.renderText(graphics, this.text, this.getX() + 5f + 4f + 3f, centerY - (UIBase.getUITextHeightNormal() / 2f) + this.getLabelRenderOffsetY(), this.textBaseColor);
     }
 
     @Override
@@ -42,7 +39,7 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
 
     public void setText(@NotNull Component text) {
         this.text = text;
-        this.textWidth = this.font.width(this.text);
+        this.textWidth = (int)UIBase.getUITextWidthNormal(this.text);
         this.setWidth(5 + 4 + 3 + this.textWidth + 5);
     }
 

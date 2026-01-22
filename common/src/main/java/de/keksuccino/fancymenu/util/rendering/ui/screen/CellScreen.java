@@ -408,7 +408,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     protected void renderTitle(@NotNull GuiGraphics graphics) {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        UIBase.renderText(graphics, titleComp, 20, 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt());
     }
 
     protected void renderCellScreenBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {

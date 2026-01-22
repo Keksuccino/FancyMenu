@@ -50,6 +50,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     @NotNull
     protected DrawableColor labelColorInactive = DrawableColor.of(new Color(10526880));
     protected boolean labelShadow = true;
+    protected boolean renderLabelWithUiBase = false;
     @Nullable
     protected SliderValueUpdateListener sliderValueUpdateListener;
     @NotNull
@@ -300,7 +301,12 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     protected void renderLabel(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int textColor = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
-        this.renderScrollingLabel(this, graphics, Minecraft.getInstance().font, 2, this.labelShadow, RenderingUtils.replaceAlphaInColor(textColor, this.alpha));
+        int finalTextColor = RenderingUtils.replaceAlphaInColor(textColor, this.alpha);
+        if (this.renderLabelWithUiBase) {
+            this.renderScrollingLabelUiBase(this, graphics, 2, finalTextColor);
+        } else {
+            this.renderScrollingLabel(this, graphics, Minecraft.getInstance().font, 2, this.labelShadow, finalTextColor);
+        }
     }
 
     public int getHandleX() {
@@ -498,6 +504,15 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     public AbstractExtendedSlider setLabelShadow(boolean labelShadow) {
         this.labelShadow = labelShadow;
+        return this;
+    }
+
+    public boolean isLabelRenderedWithUiBase() {
+        return this.renderLabelWithUiBase;
+    }
+
+    public AbstractExtendedSlider setLabelRenderedWithUiBase(boolean renderLabelWithUiBase) {
+        this.renderLabelWithUiBase = renderLabelWithUiBase;
         return this;
     }
 

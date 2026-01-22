@@ -98,20 +98,24 @@ public class UITooltip implements Renderable {
     }
 
     protected void renderTextLines(GuiGraphics graphics, int x, int y) {
-        int yLine = y;
+        float yLine = y;
+        float lineHeight = UIBase.getUITextHeightNormal();
+        int baseColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
         for (Component c : this.textLines) {
-            int w = this.font.width(c);
-            int x2 = x + this.textBorderSize;
-            int y2 = yLine + this.textBorderSize;
+            float w = UIBase.getUITextWidthNormal(c);
+            float x2 = x + this.textBorderSize;
+            float y2 = yLine + this.textBorderSize;
             if (this.textAlignment == TooltipTextAlignment.RIGHT) {
-                int diff = Math.max(0, (x + this.getWidth() - this.textBorderSize) - (x2 + w));
+                float diff = Math.max(0.0F, (x + this.getWidth() - this.textBorderSize) - (x2 + w));
                 x2 += diff;
             }
             if (this.textAlignment == TooltipTextAlignment.CENTERED) {
-                x2 = x + Math.max(0, (this.getWidth() / 2) - (w / 2));
+                x2 = x + Math.max(0.0F, (this.getWidth() / 2.0F) - (w / 2.0F));
             }
-            graphics.drawString(this.font, c, x2, y2, UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt() : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt(), this.hasTextShadow());
-            yLine += this.font.lineHeight + 2;
+            UIBase.renderText(graphics, c, x2, y2, baseColor, UIBase.getUITextSizeNormal(), this.hasTextShadow());
+            yLine += lineHeight + 2.0F;
         }
     }
 
@@ -234,20 +238,21 @@ public class UITooltip implements Renderable {
     }
 
     protected void updateSize() {
-        int w = 0;
-        int h = 0;
+        float w = 0.0F;
+        float h = 0.0F;
+        float lineHeight = UIBase.getUITextHeightNormal();
         for (Component c : this.textLines) {
-            int wl = this.font.width(c);
+            float wl = UIBase.getUITextWidthNormal(c);
             if (wl > w) {
                 w = wl;
             }
-            h += this.font.lineHeight + 2;
+            h += lineHeight + 2.0F;
         }
-        if (h > 0) {
-            h -= 2;
+        if (h > 0.0F) {
+            h -= 2.0F;
         }
-        this.width = w + (this.textBorderSize * 2);
-        this.height = h + (this.textBorderSize * 2);
+        this.width = (int)Math.ceil(w) + (this.textBorderSize * 2);
+        this.height = (int)Math.ceil(h) + (this.textBorderSize * 2);
     }
 
     public boolean isEmpty() {

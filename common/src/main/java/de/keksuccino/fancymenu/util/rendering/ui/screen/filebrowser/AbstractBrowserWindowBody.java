@@ -24,7 +24,6 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -46,7 +45,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     protected static final int ICON_PIXEL_SIZE = 32;
     public static final int PIP_WINDOW_WIDTH = 600;
-    public static final int PIP_WINDOW_HEIGHT = 420;
+    public static final int PIP_WINDOW_HEIGHT = 446;
 
     // All icon textures are 32x32 pixels
     protected static final ResourceLocation GO_UP_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/go_up_icon.png");
@@ -1070,7 +1069,6 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
         protected static final int BORDER = 3;
 
-        protected final Font font = Minecraft.getInstance().font;
         protected final MutableComponent entryNameComponent;
         protected long lastClick = -1;
 
@@ -1078,7 +1076,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             super(parent, 100, 30);
             this.entryNameComponent = entryNameComponent;
 
-            this.setWidth(this.font.width(this.entryNameComponent) + (BORDER * 2) + ICON_PIXEL_SIZE + 3);
+            this.setWidth((int)UIBase.getUITextWidthNormal(this.entryNameComponent) + (BORDER * 2) + ICON_PIXEL_SIZE + 3);
             this.setHeight((BORDER * 2) + ICON_PIXEL_SIZE);
 
             this.playClickSound = false;
@@ -1125,7 +1123,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
                 graphics.pose().popPose();
             }
 
-            graphics.drawString(this.font, this.entryNameComponent, (int)(this.x + BORDER + ICON_PIXEL_SIZE + 3), (int)(this.y + (this.height / 2) - (this.font.lineHeight / 2)), this.getTextColor(), false);
+            UIBase.renderText(graphics, this.entryNameComponent, this.x + BORDER + ICON_PIXEL_SIZE + 3, this.y + (this.height / 2f) - (UIBase.getUITextHeightNormal() / 2f), this.getTextColor());
 
             if (this.isResourceUnfriendly() && this.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.height) && this.parent.isMouseOverInnerArea(mouseX, mouseY)) {
                 TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip")), () -> true);
