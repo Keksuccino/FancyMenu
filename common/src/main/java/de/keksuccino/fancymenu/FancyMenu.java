@@ -41,7 +41,7 @@ public class FancyMenu {
 
     //TODO Add a "pop out" feature to get the description of listeners in the ChooseListenerTypeScreen as an extra PiP window that stays open, so it can be used for easier remembering listener value placeholders
 
-
+    //TODO "Apply" button zu file chooser adden, um live preview der changes zu haben (Cancel will undo the preview and revert to original)
 
 
 
