@@ -97,10 +97,10 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     }
                 }
             });
-        }).setIcon(ContextMenu.IconFactory.getIcon("add"));
+        }).setIcon(MaterialIcons.ADD);
 
         layoutMenu.addSubMenuEntry("open_layout", Component.translatable("fancymenu.editor.layout.open"), buildOpenLayoutContextMenu())
-                .setIcon(ContextMenu.IconFactory.getIcon("open"));
+                .setIcon(MaterialIcons.FOLDER_OPEN);
 
         layoutMenu.addSeparatorEntry("separator_after_open_layout");
 
@@ -182,17 +182,17 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         menuBar.addContextMenuEntry("element_tab", Component.translatable("fancymenu.editor.element"), elementMenu);
 
         elementMenu.addSubMenuEntry("new_element", Component.translatable("fancymenu.editor.element.new"), buildElementContextMenu())
-                .setIcon(ContextMenu.IconFactory.getIcon("add"));
+                .setIcon(MaterialIcons.ADD);
 
         elementMenu.addSubMenuEntry("manage_hidden_vanilla_elements", Component.translatable("fancymenu.fancymenu.editor.element.deleted_vanilla_elements"), buildHiddenVanillaElementsContextMenu())
-                .setIcon(ContextMenu.IconFactory.getIcon("delete"));
+                .setIcon(MaterialIcons.VISIBILITY_OFF);
 
         //WINDOW
         ContextMenu windowMenu = new ContextMenu();
         menuBar.addContextMenuEntry("window_tab", Component.translatable("fancymenu.editor.menu_bar.window"), windowMenu);
 
         windowMenu.addSubMenuEntry("editor_widgets", Component.translatable("fancymenu.editor.widgets"), buildEditorWidgetsContextMenu())
-                .setIcon(ContextMenu.IconFactory.getIcon("widget"));
+                .setIcon(MaterialIcons.WIDGETS);
 
         windowMenu.addSeparatorEntry("separator_after_editor_widgets");
 
@@ -206,7 +206,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     }
                 })
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.grid"))
-                .setIcon(ContextMenu.IconFactory.getIcon("grid"));
+                .setIcon(MaterialIcons.GRID_ON);
 
         List<Integer> gridSizes = List.of(10,20,30,40,50,60,70,80,90,100);
         int preSelectedGridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
@@ -218,13 +218,14 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         .addCycleListener(integer -> {
                             FancyMenu.getOptions().layoutEditorGridSize.setValue(integer);
                         }))
-                .setIcon(ContextMenu.IconFactory.getIcon("measure"));
+                .setIcon(MaterialIcons.STRAIGHTEN);
 
         windowMenu.addValueCycleEntry("grid_snapping", CommonCycles.cycleEnabledDisabled("fancymenu.layout_editor.grid.snapping", FancyMenu.getOptions().layoutEditorGridSnapping.getValue())
                         .addCycleListener(cycleEnabledDisabled -> {
                             FancyMenu.getOptions().layoutEditorGridSnapping.setValue(cycleEnabledDisabled.getAsBoolean());
                         }))
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout_editor.grid.snapping.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout_editor.grid.snapping.desc")))
+                .setIcon(MaterialIcons.GRID_GUIDES);
 
         List<Float> gridSnappingStrengths = List.of(0.5f,0.75f,1.0f,1.5f,2.0f,3.0f,5.0f);
         float preSelectedGridSnappingStrength = FancyMenu.getOptions().layoutEditorGridSnappingStrength.getValue();
@@ -246,18 +247,21 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         .addCycleListener(strength -> {
                             FancyMenu.getOptions().layoutEditorGridSnappingStrength.setValue(strength);
                         }))
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout_editor.grid.snapping.strength.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout_editor.grid.snapping.strength.desc")))
+                .setIcon(MaterialIcons.TUNE);
 
         windowMenu.addSeparatorEntry("separator_after_grid_size");
 
         windowMenu.addValueCycleEntry("anchor_overlay_visibility_mode",
                 AnchorPointOverlay.AnchorOverlayVisibilityMode.ALWAYS.cycle(editor.anchorPointOverlay.getVisibilityMode())
-                        .addCycleListener(anchorOverlayVisibilityMode -> FancyMenu.getOptions().anchorOverlayVisibilityMode.setValue(anchorOverlayVisibilityMode.getName())));
+                        .addCycleListener(anchorOverlayVisibilityMode -> FancyMenu.getOptions().anchorOverlayVisibilityMode.setValue(anchorOverlayVisibilityMode.getName())))
+                .setIcon(MaterialIcons.VISIBILITY);
 
         windowMenu.addValueCycleEntry("show_all_anchor_connections",
                 CommonCycles.cycleEnabledDisabled("fancymenu.editor.anchor_overlay.show_all_anchor_connections",
                                 FancyMenu.getOptions().showAllAnchorOverlayConnections.getValue())
-                        .addCycleListener(cycle -> FancyMenu.getOptions().showAllAnchorOverlayConnections.setValue(cycle.getAsBoolean())));
+                        .addCycleListener(cycle -> FancyMenu.getOptions().showAllAnchorOverlayConnections.setValue(cycle.getAsBoolean())))
+                .setIcon(MaterialIcons.LINK);
 
         windowMenu.addSeparatorEntry("separator_after_show_all_anchor_connections");
 
@@ -265,13 +269,15 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         CommonCycles.cycleEnabledDisabled("fancymenu.editor.anchor_overlay.change_anchor_on_area_hover",
                                         FancyMenu.getOptions().anchorOverlayChangeAnchorOnAreaHover.getValue())
                                 .addCycleListener(cycle -> FancyMenu.getOptions().anchorOverlayChangeAnchorOnAreaHover.setValue(cycle.getAsBoolean())))
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.change_anchor_on_area_hover.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.change_anchor_on_area_hover.desc")))
+                .setIcon(MaterialIcons.MOUSE);
 
         windowMenu.addValueCycleEntry("anchor_element_hovering",
                         CommonCycles.cycleEnabledDisabled("fancymenu.editor.anchor_overlay.change_anchor_on_element_hover",
                                         FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.getValue())
                                 .addCycleListener(cycle -> FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.setValue(cycle.getAsBoolean())))
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.change_anchor_on_element_hover.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.change_anchor_on_element_hover.desc")))
+                .setIcon(MaterialIcons.HIGHLIGHT_MOUSE_CURSOR);
 
         ContextMenuBuilder<LayoutEditorUI> editorSettingsMenuBuilder = this.buildEditorSettingsContextMenuBuilder();
         ConsumingSupplier<LayoutEditorUI, Boolean> layoutEditorFilter = consumes -> true;
@@ -283,7 +289,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         Component.translatable("fancymenu.editor.anchor_overlay.charging_time"),
                         true, FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.getDefaultValue(),
                         1.0D, 20.0D, value -> Component.translatable("fancymenu.editor.anchor_overlay.charging_time.slider_label", value))
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.charging_time.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.charging_time.desc")))
+                .setIcon(MaterialIcons.TIMER);
 
         windowMenu.addSeparatorEntry("separator_after_anchor_overlay_hover_charging_time");
 
@@ -291,7 +298,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         CommonCycles.cycleEnabledDisabled("fancymenu.editor.anchor_overlay.invert_colors",
                                         FancyMenu.getOptions().invertAnchorOverlayColor.getValue())
                                 .addCycleListener(cycle -> FancyMenu.getOptions().invertAnchorOverlayColor.setValue(cycle.getAsBoolean())))
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.invert_colors.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.invert_colors.desc")))
+                .setIcon(MaterialIcons.INVERT_COLORS);
 
         editorSettingsMenuBuilder.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_base_color",
                         layoutEditorFilter,
@@ -301,7 +309,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_base"),
                         true, FancyMenu.getOptions().anchorOverlayColorBaseOverride.getDefaultValue(),
                         TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
+                .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue())
+                .setIcon(MaterialIcons.PALETTE);
 
         editorSettingsMenuBuilder.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_border_color",
                         layoutEditorFilter,
@@ -311,7 +320,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_border"),
                         true, FancyMenu.getOptions().anchorOverlayColorBorderOverride.getDefaultValue(),
                         TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
+                .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue())
+                .setIcon(MaterialIcons.BORDER_COLOR);
 
         windowMenu.addSeparatorEntry("separator_after_custom_anchor_overlay_border_color");
 
@@ -322,7 +332,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal"),
                         true, (double) FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getDefaultValue(),
                         0.0D, 1.0D, value -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal.slider_label", ((int)(value * 100.0D)) + "%"))
-                .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
+                .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue())
+                .setIcon(MaterialIcons.OPACITY);
 
         editorSettingsMenuBuilder.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_busy",
                         layoutEditorFilter,
@@ -331,7 +342,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy"),
                         true, (double) FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getDefaultValue(),
                         0.0D, 1.0D, value -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy.slider_label", ((int)(value * 100.0D)) + "%"))
-                .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
+                .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue())
+                .setIcon(MaterialIcons.OPACITY);
 
         windowMenu.addSeparatorEntry("separator_after_anchor_overlay_opacity");
 
@@ -345,7 +357,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     }
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.settings.enable_rotation_grabbers.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("reload"));
+                .setIcon(MaterialIcons.ROTATE_RIGHT);
 
         LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> tiltingControlsToggleCycle = CommonCycles.cycleEnabledDisabled("fancymenu.editor.settings.enable_element_tilting_controls", FancyMenu.getOptions().enableElementTiltingControls.getValue());
         tiltingControlsToggleCycle.addCycleListener(cycle -> FancyMenu.getOptions().enableElementTiltingControls.setValue(cycle.getAsBoolean()));
@@ -357,7 +369,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     }
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.settings.enable_element_tilting_controls.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"));
+                .setIcon(MaterialIcons.FILTER_TILT_SHIFT);
 
         windowMenu.addSeparatorEntry("separator_after_rotation_tilting_controls");
 
@@ -420,6 +432,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 w.setVisible(!w.isVisible());
             });
             entry.setLabelSupplier((menu1, entry1) -> buildEditorWidgetToggleLabel(w));
+            entry.setIcon(MaterialIcons.VISIBILITY);
             i++;
         }
         return menu;
@@ -445,7 +458,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         if (editor.layout.isUniversalLayout()) {
 
             ContextMenu universalLayoutMenu = new ContextMenu();
-            menu.addSubMenuEntry("universal_layout_settings", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options"), universalLayoutMenu);
+            menu.addSubMenuEntry("universal_layout_settings", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options"), universalLayoutMenu)
+                    .setIcon(MaterialIcons.PUBLIC);
 
             universalLayoutMenu.addClickableEntry("add_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist"), (menu1, entry) -> {
                 TextInputWindowBody s = new TextInputWindowBody(null, call -> {
@@ -460,7 +474,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"),
                         ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
                 menu1.closeMenuChain();
-            }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")));
+            }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")))
+                    .setIcon(MaterialIcons.BLOCK);
 
             universalLayoutMenu.addClickableEntry("remove_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), (menu1, entry) -> {
                 this.openContextMenuScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuBlacklist, s1 -> {
@@ -476,7 +491,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         this.openContextMenuScreen(editor);
                     }
                 }));
-            });
+            }).setIcon(MaterialIcons.REMOVE);
 
             universalLayoutMenu.addClickableEntry("clear_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), (menu1, entry) -> {
                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm"), MessageDialogStyle.WARNING, call2 -> {
@@ -485,7 +500,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         editor.layout.universalLayoutMenuBlacklist.clear();
                     }
                 });
-            });
+            }).setIcon(MaterialIcons.DELETE_SWEEP);
 
             universalLayoutMenu.addSeparatorEntry("separator_after_clear_blacklist");
 
@@ -502,7 +517,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"),
                         ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
                 menu1.closeMenuChain();
-            }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")));
+            }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")))
+                    .setIcon(MaterialIcons.CHECK_CIRCLE);
 
             universalLayoutMenu.addClickableEntry("remove_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), (menu1, entry) -> {
                 this.openContextMenuScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuWhitelist, s1 -> {
@@ -518,7 +534,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         this.openContextMenuScreen(editor);
                     }
                 }));
-            });
+            }).setIcon(MaterialIcons.REMOVE);
 
             universalLayoutMenu.addClickableEntry("clear_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), (menu1, entry) -> {
                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm"), MessageDialogStyle.WARNING, call2 -> {
@@ -527,7 +543,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         editor.layout.universalLayoutMenuWhitelist.clear();
                     }
                 });
-            });
+            }).setIcon(MaterialIcons.DELETE_SWEEP);
 
         }
 
@@ -539,7 +555,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
         menu.addSubMenuEntry("decoration_overlays", Component.translatable("fancymenu.editor.decoration_overlays"), buildDecorationOverlaysMenu())
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.editor.decoration_overlays.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("decoration_overlay"));
+                .setIcon(MaterialIcons.AUTO_AWESOME);
 
         menu.addSeparatorEntry("separator_after_decoration_overlays");
 
@@ -555,7 +571,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             consumes -> !consumes.isEmpty(),
                             consumes -> consumes.isEmpty() ? UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.reset.invalid_title")) : null)
                     .setTooltipSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen) ? UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")) : UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.custom_gui.desc")))
-                    .setIcon(ContextMenu.IconFactory.getIcon("text"))
+                    .setIcon(MaterialIcons.TEXT_FIELDS)
                     .addIsActiveSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen));
 
             menu.addSeparatorEntry("separator_after_edit_menu_title");
@@ -563,7 +579,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         }
 
         menu.addSubMenuEntry("scroll_list_customizations", Component.translatable("fancymenu.customization.scroll_lists"), buildScrollListCustomizationsContextMenu())
-                .setIcon(ContextMenu.IconFactory.getIcon("scroll_edit"))
+                .setIcon(MaterialIcons.FORMAT_LIST_BULLETED)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.scroll_lists.desc")))
                 .addIsActiveSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen));
 
@@ -583,7 +599,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     s.setText("" + editor.layout.layoutIndex);
                     menu1.closeMenuChain();
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.layout.index.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("stack"));
+                .setIcon(MaterialIcons.FORMAT_LIST_NUMBERED);
 
         menu.addSeparatorEntry("separator_after_layout_index");
 
@@ -591,7 +607,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     editor.history.saveSnapshot();
                     editor.layout.randomMode = cycle.getAsBoolean();
                 })).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("random"));
+                .setIcon(MaterialIcons.SHUFFLE);
 
         menu.addClickableEntry("random_mode_group", Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), (menu1, entry) -> {
                     TextInputWindowBody s = new TextInputWindowBody(CharacterFilter.buildIntegerFilter(), call -> {
@@ -610,21 +626,22 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     menu1.closeMenuChain();
                 }).addIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("group"));
+                .setIcon(MaterialIcons.GROUP);
 
         menu.addValueCycleEntry("random_mode_first_time", CommonCycles.cycleEnabledDisabled("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime", editor.layout.randomOnlyFirstTime).addCycleListener(cycle -> {
                     editor.history.saveSnapshot();
                     editor.layout.randomOnlyFirstTime = cycle.getAsBoolean();
                 })).addIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("random_once"));
+                .setIcon(MaterialIcons.SHUFFLE_ON);
 
         menu.addSeparatorEntry("separator_after_random_mode_first_time");
 
         menu.addValueCycleEntry("render_custom_elements_behind_vanilla", CommonCycles.cycleEnabledDisabled("fancymenu.editor.render_custom_behind_vanilla", editor.layout.renderElementsBehindVanilla).addCycleListener(cycle -> {
             editor.history.saveSnapshot();
             editor.layout.renderElementsBehindVanilla = cycle.getAsBoolean();
-        })).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.render_custom_behind_vanilla.desc")));
+        })).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.render_custom_behind_vanilla.desc")))
+                .setIcon(MaterialIcons.FLIP_TO_BACK);
 
         menu.addSeparatorEntry("separator_after_render_custom_behind_vanilla");
 
@@ -654,7 +671,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     }
                     return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.forced_scale_needed"));
                 })
-                .setIcon(ContextMenu.IconFactory.getIcon("measure"));
+                .setIcon(MaterialIcons.FIT_SCREEN);
 
         this.addGenericIntegerInputContextMenuEntryTo(menu, "forced_gui_scale",
                         null,
@@ -681,7 +698,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             }
                             return null;
                         }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("measure"))
+                .setIcon(MaterialIcons.STRAIGHTEN)
                 .addIsActiveSupplier((menu1, entry) -> editor.layout.autoScalingWidth == 0)
                 .setTooltipSupplier((menu1, entry) -> entry.isActive() ? null : UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.auto_scaling.disable_forced_scale_first")));
 
@@ -695,7 +712,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         Component.translatable("fancymenu.editor.open_audio"),
                         true, null, true, true, true)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.open_audio.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+                .setIcon(MaterialIcons.VOLUME_UP);
 
         this.addAudioResourceChooserContextMenuEntryTo(menu, "close_audio",
                         layoutEditorFilter,
@@ -705,7 +722,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         Component.translatable("fancymenu.editor.close_audio"),
                         true, null, true, true, true)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.close_audio.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+                .setIcon(MaterialIcons.VOLUME_DOWN);
 
         menu.addSeparatorEntry("separator_after_close_audio");
 
@@ -718,7 +735,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     menu1.closeMenuChain();
                     ManageRequirementsScreen.openInWindow(s);
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.requirements.layouts.loading_requirements.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("check_list"));
+                .setIcon(MaterialIcons.CHECKLIST);
 
         menu.addSeparatorEntry("separator_after_layout_wide_requirements");
 
@@ -733,7 +750,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     menu1.closeMenuChain();
                     ActionScriptEditorWindowBody.openInWindow(s);
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout.editor.edit_open_screen_action_script.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("script"))
+                .setIcon(MaterialIcons.CODE)
                 .setStackable(false);
 
         menu.addClickableEntry("manage_close_screen_actions", Component.translatable("fancymenu.layout.editor.edit_close_screen_action_script"), (menu1, entry) -> {
@@ -747,7 +764,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     menu1.closeMenuChain();
                     ActionScriptEditorWindowBody.openInWindow(s);
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout.editor.edit_close_screen_action_script.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("script"))
+                .setIcon(MaterialIcons.CODE)
                 .setStackable(false);
 
         menu.addSeparatorEntry("separator_after_manage_actions");
@@ -756,12 +773,12 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     editor.history.saveSnapshot();
                     editor.pasteElementsFromClipboard();
                 }).addIsActiveSupplier((menu1, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
-                .setIcon(ContextMenu.IconFactory.getIcon("paste"));
+                .setIcon(MaterialIcons.CONTENT_PASTE);
 
         menu.addSeparatorEntry("separator_after_paste_elements");
 
         menu.addSubMenuEntry("add_element", Component.translatable("fancymenu.editor.layout.settings.new_element"), buildElementContextMenu())
-                .setIcon(ContextMenu.IconFactory.getIcon("add"));
+                .setIcon(MaterialIcons.ADD);
 
         return menu;
 
@@ -771,10 +788,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
         ContextMenu backgroundsMenu = new ContextMenu();
         addTo.addSubMenuEntry("menu_backgrounds", Component.translatable("fancymenu.backgrounds.general.backgrounds"), backgroundsMenu)
-                .setIcon(ContextMenu.IconFactory.getIcon("image"));
+                .setIcon(MaterialIcons.WALLPAPER);
         // The backgrounds list always holds exactly one instance of each background type
         editor.layout.menuBackgrounds.forEach(background -> {
             var entry = backgroundsMenu.addSubMenuEntry("menu_background_" + background.builder.getIdentifier(), background.builder.getDisplayName(), background._initConfigMenu(editor));
+            entry.setIcon(MaterialIcons.WALLPAPER);
             var desc = background.builder.getDescription();
             if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> UITooltip.of(desc));
         });
@@ -784,17 +802,19 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         backgroundsMenu.addValueCycleEntry("keep_background_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect", editor.layout.preserveBackgroundAspectRatio).addCycleListener(cycle -> {
             editor.history.saveSnapshot();
             editor.layout.preserveBackgroundAspectRatio = cycle.getAsBoolean();
-        })).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
+        })).setIcon(MaterialIcons.ASPECT_RATIO);
 
         backgroundsMenu.addValueCycleEntry("show_overlay_on_custom_background", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.show_overlay_on_custom_background", editor.layout.showScreenBackgroundOverlayOnCustomBackground).addCycleListener(cycle -> {
             editor.history.saveSnapshot();
             editor.layout.showScreenBackgroundOverlayOnCustomBackground = cycle.getAsBoolean();
-        })).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.show_overlay_on_custom_background.desc")));
+        })).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.show_overlay_on_custom_background.desc")))
+                .setIcon(MaterialIcons.LAYERS);
 
         backgroundsMenu.addValueCycleEntry("apply_vanilla_background_blur", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.blur_background", editor.layout.applyVanillaBackgroundBlur).addCycleListener(cycle -> {
             editor.history.saveSnapshot();
             editor.layout.applyVanillaBackgroundBlur = cycle.getAsBoolean();
-        })).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.blur_background.desc")));
+        })).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.blur_background.desc")))
+                .setIcon(MaterialIcons.BLUR_ON);
 
     }
 
@@ -806,6 +826,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         // Normal layouts always have one instance of each overlay type, so doing this is fine
         editor.layout.decorationOverlays.forEach(pair -> {
             var entry = menu.addSubMenuEntry("overlay_" + pair.getFirst().getIdentifier(), pair.getFirst().getDisplayName(), pair.getSecond()._initConfigMenu(editor));
+            entry.setIcon(MaterialIcons.AUTO_AWESOME);
             var desc = pair.getFirst().getDescription();
             if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> UITooltip.of(desc));
         });
@@ -827,7 +848,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         (consumes, value) -> editor.layout.scrollListHeaderTexture = value,
                         Component.translatable("fancymenu.customization.scroll_lists.header_texture"),
                         true, null, true, true, true)
-                .setIcon(ContextMenu.IconFactory.getIcon("image"));
+                .setIcon(MaterialIcons.IMAGE);
 
         this.addImageResourceChooserContextMenuEntryTo(menu, "footer_texture",
                         layoutEditorFilter,
@@ -836,26 +857,28 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         (consumes, value) -> editor.layout.scrollListFooterTexture = value,
                         Component.translatable("fancymenu.customization.scroll_lists.footer_texture"),
                         true, null, true, true, true)
-                .setIcon(ContextMenu.IconFactory.getIcon("image"));
+                .setIcon(MaterialIcons.IMAGE);
 
         menu.addSeparatorEntry("separator_after_footer_texture");
 
         menu.addValueCycleEntry("repeat_header_texture", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.repeat_header", editor.layout.repeatScrollListHeaderTexture).addCycleListener(cycleEnabledDisabled -> {
             editor.history.saveSnapshot();
             editor.layout.repeatScrollListHeaderTexture = cycleEnabledDisabled.getAsBoolean();
-        })).addIsActiveSupplier((menu1, entry) -> !editor.layout.preserveScrollListHeaderFooterAspectRatio);
+        })).addIsActiveSupplier((menu1, entry) -> !editor.layout.preserveScrollListHeaderFooterAspectRatio)
+                .setIcon(MaterialIcons.REPEAT);
 
         menu.addValueCycleEntry("repeat_footer_texture", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.repeat_footer", editor.layout.repeatScrollListFooterTexture).addCycleListener(cycleEnabledDisabled -> {
             editor.history.saveSnapshot();
             editor.layout.repeatScrollListFooterTexture = cycleEnabledDisabled.getAsBoolean();
-        })).addIsActiveSupplier((menu1, entry) -> !editor.layout.preserveScrollListHeaderFooterAspectRatio);
+        })).addIsActiveSupplier((menu1, entry) -> !editor.layout.preserveScrollListHeaderFooterAspectRatio)
+                .setIcon(MaterialIcons.REPEAT);
 
         menu.addSeparatorEntry("separator_after_header_footer_repeat_texture");
 
         menu.addValueCycleEntry("preserve_header_footer_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.preserve_header_footer_aspect_ratio", editor.layout.preserveScrollListHeaderFooterAspectRatio).addCycleListener(cycle -> {
                     editor.history.saveSnapshot();
                     editor.layout.preserveScrollListHeaderFooterAspectRatio = cycle.getAsBoolean();
-                })).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"))
+                })).setIcon(MaterialIcons.ASPECT_RATIO)
                 .addIsActiveSupplier((menu1, entry) -> (!editor.layout.repeatScrollListHeaderTexture && !editor.layout.repeatScrollListFooterTexture));
 
         menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
@@ -863,7 +886,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         menu.addValueCycleEntry("show_header_footer_preview", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.show_preview", editor.layout.showScrollListHeaderFooterPreviewInEditor).addCycleListener(cycle -> {
             editor.history.saveSnapshot();
             editor.layout.showScrollListHeaderFooterPreviewInEditor = cycle.getAsBoolean();
-        })).setIcon(ContextMenu.IconFactory.getIcon("eye"));
+        })).setIcon(MaterialIcons.VISIBILITY);
 
         return menu;
 
@@ -902,6 +925,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 if ((desc != null) && (desc.length > 0)) {
                     entry.setTooltipSupplier((menu1, entry1) -> UITooltip.of(desc));
                 }
+                entry.setIcon(MaterialIcons.WIDGETS);
                 i++;
             }
         }
@@ -935,7 +959,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         editor.history.saveSnapshot();
                         e.setHidden(false);
                         MainThreadTaskExecutor.executeInMainThread(() -> menu1.removeEntry(entry.getIdentifier()), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                    }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
+                    }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")))
+                            .setIcon(MaterialIcons.VISIBILITY);
                     i++;
                 }
 
@@ -966,7 +991,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             c.append(l.getStatus().getValueComponent());
                             c.append(Component.literal(")").setStyle(style));
                             return c;
-                        });
+                        })
+                        .setIcon(MaterialIcons.VIEW_QUILT);
                 i++;
             }
             if (allLayoutsCount > 8) {
@@ -981,7 +1007,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 							}));
 						}
                     });
-                });
+                }).setIcon(MaterialIcons.MORE_HORIZ);
             }
 
             menu.addSeparatorEntry("separator_after_recent_layouts");
@@ -995,7 +1021,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         }));
                     }
                 });
-            });
+            }).setIcon(MaterialIcons.VIEW_LIST);
 
         } else if (editor.layout.screenIdentifier != null) {
 
@@ -1012,7 +1038,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             c.append(l.getStatus().getValueComponent());
                             c.append(Component.literal(")").setStyle(style));
                             return c;
-                        });
+                        })
+                        .setIcon(MaterialIcons.VIEW_QUILT);
                 i++;
             }
             if (allLayoutsCount > 8) {
@@ -1026,7 +1053,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             }));
                         }
                     });
-                });
+                }).setIcon(MaterialIcons.MORE_HORIZ);
             }
 
             menu.addSeparatorEntry("separator_after_recent_layouts");
@@ -1040,7 +1067,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         }));
                     }
                 });
-            });
+            }).setIcon(MaterialIcons.VIEW_LIST);
 
         }
 
@@ -1058,7 +1085,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
                 layout.setEnabled(!layout.isEnabled(), true);
             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-        }).setLabelSupplier((menu1, entry) -> layout.getStatus().getCycleComponent());
+        }).setLabelSupplier((menu1, entry) -> layout.getStatus().getCycleComponent())
+                .setIcon(MaterialIcons.TOGGLE_ON);
 
         menu.addClickableEntry("edit_layout", Component.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
             displayUnsavedWarning(call -> {
@@ -1067,13 +1095,13 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : editor.layoutTargetScreen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
             });
-        }).setIcon(ContextMenu.IconFactory.getIcon("edit"));
+        }).setIcon(MaterialIcons.EDIT);
 
         menu.addClickableEntry("edit_in_system_text_editor", Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (menu1, entry) -> {
             if (layout.layoutFile != null) {
                 FileUtils.openFile(layout.layoutFile);
             }
-        });
+        }).setIcon(MaterialIcons.OPEN_IN_NEW);
 
         return menu;
 
