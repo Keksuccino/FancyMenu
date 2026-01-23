@@ -28,12 +28,17 @@ public class FancyMenu {
 
 
 
+    //TODO Pfeil icon für sub menüs in ContextMenu mit MaterialIcon ersetzen
+
+    //TODO Tooltip icon für entries in ContextMenu mit MaterialIcon ersetzen
+
+    //TODO Element context menü entries -> MaterialIcons setzen !!!!
+
+    //TODO Menu Background context menü entries -> MaterialIcons setzen !!!!
+
+    //TODO Decoration Overlay context menü entries -> MaterialIcons setzen !!!!
 
     //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren
-
-    //TODO QueueableScreen system PiP-based machen
-
-    //TODO "Apply" button zu file chooser adden, um live preview der changes zu haben (Cancel will undo the preview and revert to original)
 
 
 
