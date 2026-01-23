@@ -122,4 +122,7 @@ Japng is licensed under Apache-2.0.
 Original code by Kevin Weiner on [fmsware.com](http://www.fmsware.com/stuff/gif.html).
 Re-packaged and improved by Roberto Tyley. Improvements licensed under the Apache-2.0 license.
 
+Material Icons © Copyright Google LLC.
+Material Icons are licensed under the Apache License, Version 2.0.
+
 ^^^
