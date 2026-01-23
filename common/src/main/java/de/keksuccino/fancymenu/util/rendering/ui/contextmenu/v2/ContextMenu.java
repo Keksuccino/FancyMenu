@@ -46,6 +46,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private static final ResourceLocation SCROLL_DOWN_ARROW = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_down_arrow.png");
     private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
     private static final int SCROLL_INDICATOR_HEIGHT = 12; // Space reserved for arrows
+    private static final int MATERIAL_ICON_SIZE_SMALL = 50;
+    private static final int MATERIAL_ICON_SIZE_NORMAL = 100;
+    private static final int MATERIAL_ICON_SIZE_LARGE = 200;
+    private static java.util.function.Supplier<Integer> MATERIAL_ICON_SIZE = () -> {
+      if (UIBase.getUIScale() <= 1) return MATERIAL_ICON_SIZE_SMALL;
+      if (UIBase.getUIScale() <= 2) return MATERIAL_ICON_SIZE_NORMAL;
+      return MATERIAL_ICON_SIZE_LARGE;
+    };
 
     protected final List<ContextMenuEntry<?>> entries = new ArrayList<>();
     protected float scale = UIBase.getUIScale();
@@ -1679,12 +1687,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         @Nullable
         protected IconRenderData resolveIconData() {
             if (this.materialIcon != null) {
-                ResourceLocation location = this.materialIcon.getTextureLocation();
+                ResourceLocation location = this.materialIcon.getTextureLocation(MATERIAL_ICON_SIZE.get());
                 if (location == null) {
                     return null;
                 }
-                int width = this.materialIcon.getWidth();
-                int height = this.materialIcon.getHeight();
+                int width = this.materialIcon.getWidth(MATERIAL_ICON_SIZE.get());
+                int height = this.materialIcon.getHeight(MATERIAL_ICON_SIZE.get());
                 if (width <= 0 || height <= 0) {
                     return null;
                 }
@@ -1783,7 +1791,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 return this.icon;
             }
             if (this.materialIcon != null) {
-                return this.materialIcon.getTextureLocation();
+                return this.materialIcon.getTextureLocation(MATERIAL_ICON_SIZE.get());
             }
             return null;
         }
