@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.ConfettiOverlay;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,27 +40,35 @@ public class ConfettiDecorationOverlay extends AbstractDecorationOverlay<Confett
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
         this.confettiColorMixMode.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.SHUFFLE)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.color_mix.desc")));
 
         this.confettiColorHex.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.PALETTE)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.color.desc")));
 
         this.confettiScale.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.STRAIGHTEN)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.scale.desc")));
 
         this.confettiFallSpeed.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.SPEED)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.fall_speed.desc")));
 
         this.confettiBurstDensity.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.DENSITY_MEDIUM)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.density.desc")));
 
         this.confettiBurstAmount.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.FORMAT_LIST_NUMBERED)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.amount.desc")));
 
         this.confettiParticleCap.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.CHECKLIST)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.particle_cap.desc")));
 
         this.confettiMouseClickMode.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.MOUSE)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.confetti.mouse_click_mode.desc")));
 
     }

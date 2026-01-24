@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.RainOverlay;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -35,24 +36,31 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
         this.rainPuddles.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.WATER)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.puddles.desc")));
 
         this.rainDrips.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.WATER_DROP)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.drips.desc")));
 
         this.rainThunder.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.THUNDERSTORM)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.thunder.desc")));
 
         this.rainThunderBrightness.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.BRIGHTNESS_6)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.thunder_brightness.desc")));
 
         this.rainColorHex.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.PALETTE)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.color.desc")));
 
         this.rainIntensity.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.SPEED)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.intensity.desc")));
 
         this.rainScale.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.STRAIGHTEN)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.rain.scale.desc")));
 
     }

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRender
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -47,7 +48,7 @@ public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackgroun
                 name = Component.literal(switcherValue).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
             }
             return Component.translatable("fancymenu.backgrounds.panorama.name", name);
-        });
+        }).setIcon(MaterialIcons.PANORAMA);
 
     }
 

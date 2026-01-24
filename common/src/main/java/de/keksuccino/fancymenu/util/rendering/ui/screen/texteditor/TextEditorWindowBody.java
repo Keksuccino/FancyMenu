@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
@@ -291,13 +292,13 @@ public class TextEditorWindowBody extends PiPWindowBody {
                     if (!menu.isOpen()) return false;
                     return this.selectedHoveredOnRightClickMenuOpen;
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"))
-                .setIcon(ContextMenu.IconFactory.getIcon("copy"));
+                .setIcon(MaterialIcons.CONTENT_COPY);
 
         this.rightClickContextMenu.addClickableEntry("paste", Component.translatable("fancymenu.ui.text_editor.paste"), (menu, entry) -> {
                     this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
                     menu.closeMenu();
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"))
-                .setIcon(ContextMenu.IconFactory.getIcon("paste"));
+                .setIcon(MaterialIcons.CONTENT_PASTE);
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_paste");
 
@@ -308,7 +309,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
                     if (!menu.isOpen()) return false;
                     return this.selectedHoveredOnRightClickMenuOpen;
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.cut"))
-                .setIcon(ContextMenu.IconFactory.getIcon("cut"));
+                .setIcon(MaterialIcons.CONTENT_CUT);
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_cut");
 
@@ -322,19 +323,19 @@ public class TextEditorWindowBody extends PiPWindowBody {
                     this.endHighlightLineIndex = this.getLineCount()-1;
                     menu.closeMenu();
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"))
-                .setIcon(ContextMenu.IconFactory.getIcon("select"));
+                .setIcon(MaterialIcons.SELECT_ALL);
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_select_all");
 
         this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
                     this.history.stepBack();
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
-                .setIcon(ContextMenu.IconFactory.getIcon("undo"));
+                .setIcon(MaterialIcons.UNDO);
 
         this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
                     this.history.stepForward();
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
-                .setIcon(ContextMenu.IconFactory.getIcon("redo"));
+                .setIcon(MaterialIcons.REDO);
 
     }
 

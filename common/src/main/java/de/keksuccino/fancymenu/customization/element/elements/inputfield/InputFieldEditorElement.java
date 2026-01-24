@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.inputfield;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -28,7 +29,7 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                         null, false, false, Component.translatable("fancymenu.elements.input_field.editor.set_variable"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_variable.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("script"));
+                .setIcon(MaterialIcons.VARIABLES);
 
         this.rightClickMenu.addSeparatorEntry("input_field_separator_1");
 
@@ -49,7 +50,8 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                             }
                             return Component.translatable("fancymenu.elements.input_field.type.url");
                         })
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_type.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_type.desc")))
+                .setIcon(MaterialIcons.TUNE);
 
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_length",
@@ -58,18 +60,19 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                         (element, length) -> element.element.maxTextLength = length,
                         Component.translatable("fancymenu.elements.input_field.editor.set_max_length"),
                         true, 10000, null, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.SHORT_TEXT);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_audios");
 
         this.element.hoverSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+                .setIcon(MaterialIcons.VOLUME_UP);
 
         this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+                .setIcon(MaterialIcons.VOLUME_UP);
 
         this.element.clickSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+                .setIcon(MaterialIcons.VOLUME_UP);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
 
@@ -77,7 +80,8 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                         consumes -> consumes.element.navigatable,
                         (buttonEditorElement, aBoolean) -> buttonEditorElement.element.navigatable = aBoolean,
                         "fancymenu.elements.widgets.generic.navigatable")
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")))
+                .setIcon(MaterialIcons.MOUSE);
 
     }
 

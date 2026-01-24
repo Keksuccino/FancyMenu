@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -112,12 +113,15 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
                         return UITooltip.of(Component.translatable("fancymenu.backgrounds.video_mcef.configure.no_video"));
                     }
                     return null;
-                });
+                })
+                .setIcon(MaterialIcons.MOVIE);
 
         menu.addSeparatorEntry("separator_after_video_source");
 
-        this.loop.buildContextMenuEntryAndAddTo(menu, this);
-        this.volume.buildContextMenuEntryAndAddTo(menu, this);
+        this.loop.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.REPEAT);
+        this.volume.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.VOLUME_UP);
 
         List<SoundSource> soundSources = Arrays.asList(SoundSource.values());
         this.addCycleContextMenuEntryTo(menu, "sound_source", soundSources, MCEFVideoMenuBackground.class, MCEFVideoMenuBackground::getSoundSourceOrDefault, (background, source) -> {
@@ -128,17 +132,21 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
             Component name = Component.translatable("soundCategory." + switcherValue.getName())
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
             return Component.translatable("fancymenu.elements.video_mcef.sound_channel", name);
-        });
+        }).setIcon(MaterialIcons.SPEAKER);
 
         menu.addSeparatorEntry("separator_before_parallax");
 
-        this.parallaxEnabled.buildContextMenuEntryAndAddTo(menu, this);
+        this.parallaxEnabled.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons._3D);
         this.parallaxIntensityXString.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")));
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")))
+                .setIcon(MaterialIcons.SPLITSCREEN_LANDSCAPE);
         this.parallaxIntensityYString.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")));
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")))
+                .setIcon(MaterialIcons.SPLITSCREEN_PORTRAIT);
         this.invertParallax.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")));
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")))
+                .setIcon(MaterialIcons.SWAP_HORIZ);
 
     }
 

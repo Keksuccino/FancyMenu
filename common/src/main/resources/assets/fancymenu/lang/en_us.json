@@ -2597,5 +2597,7 @@
   "fancymenu.actions.blocks.add.execute_later": "Add EXECUTE LATER Block",
   "fancymenu.actions.blocks.add.execute_later.desc": "Adds an Execute Later block that schedules its contained actions to run after the specified delay.\n\nDelay time is in milliseconds.\n\nEvery time the script reaches this block, it schedules a new execution on the main thread.\n\nThis is useful for delayed actions in scripts that only run once.",
   "fancymenu.actions.blocks.execute_later": "EXECUTE LATER (%s ms)",
-  "fancymenu.actions.blocks.execute_later.edit": "Edit Execute Later Delay (ms)"
+  "fancymenu.actions.blocks.execute_later.edit": "Edit Execute Later Delay (ms)",
+  "fancymenu.overlay.menu_bar.customization.settings.developer.smooth_font_multiline_rendering": "Smooth Font Multiline: %s",
+  "fancymenu.overlay.menu_bar.customization.settings.developer.smooth_font_multiline_rendering.desc": "If smooth font rendering should treat new lines as line breaks. When disabled, new lines are rendered as spaces."
 }

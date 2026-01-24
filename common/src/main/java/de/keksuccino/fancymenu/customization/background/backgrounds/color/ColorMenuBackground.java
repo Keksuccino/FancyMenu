@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -23,7 +24,8 @@ public class ColorMenuBackground extends MenuBackground<ColorMenuBackground> {
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        this.color.buildContextMenuEntryAndAddTo(menu, this);
+        this.color.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.PALETTE);
 
     }
 

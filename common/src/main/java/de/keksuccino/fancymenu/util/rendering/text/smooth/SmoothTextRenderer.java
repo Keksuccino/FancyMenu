@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
@@ -43,6 +44,10 @@ public final class SmoothTextRenderer {
     public static void clearCaches() {
         LEGACY_MEASURE_CACHE.clear();
         FORMATTED_MEASURE_CACHE.clear();
+    }
+
+    private static boolean isMultilineEnabled() {
+        return FancyMenu.getOptions().smoothFontMultilineRendering.getValue();
     }
 
     public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float x, float y, int color, float size, boolean shadow) {
@@ -127,6 +132,7 @@ public final class SmoothTextRenderer {
         float renderScale = RenderScaleUtil.getCurrentRenderScale();
         int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
+        boolean allowMultiline = isMultilineEnabled();
 
         float ascent = font.getAscent(size);
         float lineHeight = font.getLineHeight(size);
@@ -151,20 +157,38 @@ public final class SmoothTextRenderer {
         for (int index = 0; index < text.length(); ) {
             char c = text.charAt(index);
             if (c == '\n') {
-                drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
-                drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
-                penX = x;
-                lineY += lineHeight;
-                baseline = lineY + ascent;
-                if (style.underline) {
-                    underlineStartX = penX;
-                    underlineColor = style.color;
+                if (allowMultiline) {
+                    drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
+                    drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
+                    penX = x;
+                    lineY += lineHeight;
+                    baseline = lineY + ascent;
+                    if (style.underline) {
+                        underlineStartX = penX;
+                        underlineColor = style.color;
+                    }
+                    if (style.strikethrough) {
+                        strikeStartX = penX;
+                        strikeColor = style.color;
+                    }
+                    index++;
+                    continue;
                 }
-                if (style.strikethrough) {
-                    strikeStartX = penX;
-                    strikeColor = style.color;
-                }
+                int codepoint = ' ';
                 index++;
+                if (style.obfuscated) {
+                    codepoint = getObfuscatedCodepoint(codepoint);
+                }
+                SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+                if (glyph.hasTexture()) {
+                    SmoothFontAtlas atlas = glyph.atlas();
+                    if (consumer == null || currentAtlas != atlas) {
+                        currentAtlas = atlas;
+                        consumer = graphics.bufferSource().getBuffer(atlas.getRenderType());
+                    }
+                    addGlyph(consumer, matrix, glyph, penX, baseline, scale, style.color, style.italic);
+                }
+                penX += glyph.advance() * scale;
                 continue;
             }
             if (c == FORMAT_PREFIX && index + 1 < text.length()) {
@@ -224,11 +248,12 @@ public final class SmoothTextRenderer {
         float renderScale = RenderScaleUtil.getCurrentRenderScale();
         int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
+        boolean allowMultiline = isMultilineEnabled();
 
         float ascent = font.getAscent(size);
         float lineHeight = font.getLineHeight(size);
 
-        ComponentRenderState state = new ComponentRenderState(graphics, font, baseColor, size, lod, scale, ascent, lineHeight, x, y);
+        ComponentRenderState state = new ComponentRenderState(graphics, font, baseColor, size, lod, scale, ascent, lineHeight, x, y, allowMultiline);
         text.accept(state);
         state.finish();
 
@@ -251,7 +276,8 @@ public final class SmoothTextRenderer {
 
     private static TextDimensions measureFormattedText(SmoothFont font, FormattedCharSequence text, float size) {
         float renderScale = RenderScaleUtil.getCurrentRenderScale();
-        FormattedMeasureKey key = new FormattedMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(renderScale));
+        boolean allowMultiline = isMultilineEnabled();
+        FormattedMeasureKey key = new FormattedMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(renderScale), allowMultiline);
         TextDimensions cached = FORMATTED_MEASURE_CACHE.get(key);
         if (cached != null) {
             return cached;
@@ -259,7 +285,7 @@ public final class SmoothTextRenderer {
         int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
         float lineHeight = font.getLineHeight(size);
-        FormattedMeasureState state = new FormattedMeasureState(font, lod, scale, lineHeight);
+        FormattedMeasureState state = new FormattedMeasureState(font, lod, scale, lineHeight, allowMultiline);
         text.accept(state);
         TextDimensions dimension = state.getDimension();
         FORMATTED_MEASURE_CACHE.put(key, dimension);
@@ -272,7 +298,8 @@ public final class SmoothTextRenderer {
         }
 
         float renderScale = RenderScaleUtil.getCurrentRenderScale();
-        LegacyMeasureKey key = new LegacyMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(renderScale));
+        boolean allowMultiline = isMultilineEnabled();
+        LegacyMeasureKey key = new LegacyMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(renderScale), allowMultiline);
         TextDimensions cached = LEGACY_MEASURE_CACHE.get(key);
         if (cached != null) {
             return cached;
@@ -289,10 +316,17 @@ public final class SmoothTextRenderer {
         for (int index = 0; index < text.length(); ) {
             char c = text.charAt(index);
             if (c == '\n') {
-                maxWidth = Math.max(maxWidth, lineWidth);
-                lineWidth = 0.0F;
-                lines++;
+                if (allowMultiline) {
+                    maxWidth = Math.max(maxWidth, lineWidth);
+                    lineWidth = 0.0F;
+                    lines++;
+                    index++;
+                    continue;
+                }
+                int codepoint = ' ';
                 index++;
+                SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+                lineWidth += glyph.advance() * scale;
                 continue;
             }
             if (c == FORMAT_PREFIX && index + 1 < text.length()) {
@@ -493,6 +527,7 @@ public final class SmoothTextRenderer {
         private final float ascent;
         private final float lineHeight;
         private final float startX;
+        private final boolean allowMultiline;
         private float penX;
         private float lineY;
         private float baseline;
@@ -508,7 +543,7 @@ public final class SmoothTextRenderer {
         private VertexConsumer consumer;
         private SmoothFontAtlas currentAtlas;
 
-        private ComponentRenderState(GuiGraphics graphics, SmoothFont font, int baseColor, float size, int lod, float scale, float ascent, float lineHeight, float x, float y) {
+        private ComponentRenderState(GuiGraphics graphics, SmoothFont font, int baseColor, float size, int lod, float scale, float ascent, float lineHeight, float x, float y, boolean allowMultiline) {
             this.graphics = graphics;
             this.font = font;
             this.baseColor = baseColor;
@@ -518,6 +553,7 @@ public final class SmoothTextRenderer {
             this.ascent = ascent;
             this.lineHeight = lineHeight;
             this.startX = x;
+            this.allowMultiline = allowMultiline;
             this.penX = x;
             this.lineY = y;
             this.baseline = y + ascent;
@@ -539,8 +575,11 @@ public final class SmoothTextRenderer {
             }
 
             if (codepoint == '\n') {
-                handleNewLine();
-                return true;
+                if (allowMultiline) {
+                    handleNewLine();
+                    return true;
+                }
+                codepoint = ' ';
             }
 
             int renderCodepoint = style.obfuscated ? getObfuscatedCodepoint(codepoint) : codepoint;
@@ -610,6 +649,7 @@ public final class SmoothTextRenderer {
         private final int lod;
         private final float scale;
         private final float lineHeight;
+        private final boolean allowMultiline;
         private float maxWidth;
         private float lineWidth;
         private int lines = 1;
@@ -617,11 +657,12 @@ public final class SmoothTextRenderer {
         private final StyleState style;
         private final StyleState nextStyle;
 
-        private FormattedMeasureState(SmoothFont font, int lod, float scale, float lineHeight) {
+        private FormattedMeasureState(SmoothFont font, int lod, float scale, float lineHeight, boolean allowMultiline) {
             this.font = font;
             this.lod = lod;
             this.scale = scale;
             this.lineHeight = lineHeight;
+            this.allowMultiline = allowMultiline;
             this.style = new StyleState(0xFFFFFFFF);
             this.nextStyle = new StyleState(0xFFFFFFFF);
         }
@@ -632,10 +673,13 @@ public final class SmoothTextRenderer {
             nextStyle.applyFromStyle(styleIn);
             style.copyFrom(nextStyle);
             if (codepoint == '\n') {
-                maxWidth = Math.max(maxWidth, lineWidth);
-                lineWidth = 0.0F;
-                lines++;
-                return true;
+                if (allowMultiline) {
+                    maxWidth = Math.max(maxWidth, lineWidth);
+                    lineWidth = 0.0F;
+                    lines++;
+                    return true;
+                }
+                codepoint = ' ';
             }
             SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
             lineWidth += glyph.advance() * scale;
@@ -655,16 +699,18 @@ public final class SmoothTextRenderer {
         private final SmoothFont font;
         private final int lod;
         private final float scale;
+        private final boolean allowMultiline;
         private float maxWidth;
         private float lineWidth;
         private boolean sawAny;
         private final StyleState style;
         private final StyleState nextStyle;
 
-        private FormattedWidthState(SmoothFont font, int lod, float scale) {
+        private FormattedWidthState(SmoothFont font, int lod, float scale, boolean allowMultiline) {
             this.font = font;
             this.lod = lod;
             this.scale = scale;
+            this.allowMultiline = allowMultiline;
             this.style = new StyleState(0xFFFFFFFF);
             this.nextStyle = new StyleState(0xFFFFFFFF);
         }
@@ -675,9 +721,12 @@ public final class SmoothTextRenderer {
             nextStyle.applyFromStyle(styleIn);
             style.copyFrom(nextStyle);
             if (codepoint == '\n') {
-                maxWidth = Math.max(maxWidth, lineWidth);
-                lineWidth = 0.0F;
-                return true;
+                if (allowMultiline) {
+                    maxWidth = Math.max(maxWidth, lineWidth);
+                    lineWidth = 0.0F;
+                    return true;
+                }
+                codepoint = ' ';
             }
             SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
             lineWidth += glyph.advance() * scale;
@@ -693,13 +742,18 @@ public final class SmoothTextRenderer {
     }
 
     private static final class FormattedLineCountState implements FormattedCharSink {
+        private final boolean allowMultiline;
         private int lines = 1;
         private boolean sawAny;
+
+        private FormattedLineCountState(boolean allowMultiline) {
+            this.allowMultiline = allowMultiline;
+        }
 
         @Override
         public boolean accept(int index, Style style, int codepoint) {
             sawAny = true;
-            if (codepoint == '\n') {
+            if (allowMultiline && codepoint == '\n') {
                 lines++;
             }
             return true;
@@ -732,12 +786,14 @@ public final class SmoothTextRenderer {
         private final String text;
         private final int sizeBits;
         private final int renderScaleBits;
+        private final boolean allowMultiline;
 
-        private LegacyMeasureKey(SmoothFont font, String text, int sizeBits, int renderScaleBits) {
+        private LegacyMeasureKey(SmoothFont font, String text, int sizeBits, int renderScaleBits, boolean allowMultiline) {
             this.font = font;
             this.text = text;
             this.sizeBits = sizeBits;
             this.renderScaleBits = renderScaleBits;
+            this.allowMultiline = allowMultiline;
         }
 
         @Override
@@ -751,7 +807,8 @@ public final class SmoothTextRenderer {
             return font == other.font
                     && text.equals(other.text)
                     && sizeBits == other.sizeBits
-                    && renderScaleBits == other.renderScaleBits;
+                    && renderScaleBits == other.renderScaleBits
+                    && allowMultiline == other.allowMultiline;
         }
 
         @Override
@@ -760,6 +817,7 @@ public final class SmoothTextRenderer {
             result = 31 * result + text.hashCode();
             result = 31 * result + sizeBits;
             result = 31 * result + renderScaleBits;
+            result = 31 * result + (allowMultiline ? 1 : 0);
             return result;
         }
     }
@@ -769,12 +827,14 @@ public final class SmoothTextRenderer {
         private final FormattedCharSequence text;
         private final int sizeBits;
         private final int renderScaleBits;
+        private final boolean allowMultiline;
 
-        private FormattedMeasureKey(SmoothFont font, FormattedCharSequence text, int sizeBits, int renderScaleBits) {
+        private FormattedMeasureKey(SmoothFont font, FormattedCharSequence text, int sizeBits, int renderScaleBits, boolean allowMultiline) {
             this.font = font;
             this.text = text;
             this.sizeBits = sizeBits;
             this.renderScaleBits = renderScaleBits;
+            this.allowMultiline = allowMultiline;
         }
 
         @Override
@@ -788,7 +848,8 @@ public final class SmoothTextRenderer {
             return font == other.font
                     && text == other.text
                     && sizeBits == other.sizeBits
-                    && renderScaleBits == other.renderScaleBits;
+                    && renderScaleBits == other.renderScaleBits
+                    && allowMultiline == other.allowMultiline;
         }
 
         @Override
@@ -797,6 +858,7 @@ public final class SmoothTextRenderer {
             result = 31 * result + System.identityHashCode(text);
             result = 31 * result + sizeBits;
             result = 31 * result + renderScaleBits;
+            result = 31 * result + (allowMultiline ? 1 : 0);
             return result;
         }
     }

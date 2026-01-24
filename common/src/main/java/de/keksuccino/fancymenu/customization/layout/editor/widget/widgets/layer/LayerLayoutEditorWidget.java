@@ -598,7 +598,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         if (super.mouseScrolledComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, scrollDeltaX, scrollDeltaY)) return true;
 
         // Handle scroll wheel manually to support the widget's translated coordinate system
-        if (scrollDeltaY != 0.0D && this.scrollArea.verticalScrollBar.active && this.scrollArea.verticalScrollBar.isScrollWheelAllowed()) {
+        if (scrollDeltaY != 0.0D && this.scrollArea.isVerticalScrollBarVisible() && this.scrollArea.verticalScrollBar.isScrollWheelAllowed()) {
             boolean hoveringContent = this.scrollArea.isMouseOverInnerArea(realMouseX, realMouseY);
             boolean hoveringBar = this.scrollArea.verticalScrollBar.isMouseInsideScrollArea(realMouseX, realMouseY, true);
             if (hoveringContent || hoveringBar) {

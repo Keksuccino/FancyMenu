@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -107,14 +108,16 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Ren
 
         var menu = new ContextMenu();
 
-        this.showBackground.buildContextMenuEntryAndAddTo(menu, this);
+        this.showBackground.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.VISIBILITY);
 
         menu.addSeparatorEntry("separator_after_show_background_toggle");
 
         menu.addClickableEntry("copy_background_identifier", Component.translatable("fancymenu.editor.background_options.copy_background_identifier"), (menu1, entry) -> {
                     Minecraft.getInstance().keyboardHandler.setClipboard(this.getInstanceIdentifier());
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background_options.copy_background_identifier.desc")))
-                .addIsActiveSupplier((menu1, entry) -> !editor.layout.menuBackgrounds.isEmpty());
+                .addIsActiveSupplier((menu1, entry) -> !editor.layout.menuBackgrounds.isEmpty())
+                .setIcon(MaterialIcons.CONTENT_COPY);
 
         menu.addSeparatorEntry("separator_after_copy_identifier");
 

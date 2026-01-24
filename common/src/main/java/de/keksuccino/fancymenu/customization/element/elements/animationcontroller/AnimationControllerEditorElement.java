@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -48,29 +49,33 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                                         this.openContextMenuScreen(this.editor);
                                     }
                             );
-                            this.openContextMenuScreen(managerScreen);
-                        })
+            this.openContextMenuScreen(managerScreen);
+        })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_keyframes.desc")))
-                .setStackable(false);
+                .setStackable(false)
+                .setIcon(MaterialIcons.ANIMATION);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "loop", AnimationControllerEditorElement.class,
                 consumes -> consumes.element.loop,
                 (element, aBoolean) -> element.element.loop = aBoolean,
-                "fancymenu.elements.animation_controller.loop");
+                "fancymenu.elements.animation_controller.loop")
+                .setIcon(MaterialIcons.REPEAT);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "ignore_size", AnimationControllerEditorElement.class,
                         consumes -> consumes.element.ignoreSize,
                         (element, aBoolean) -> element.element.ignoreSize = aBoolean,
                         "fancymenu.elements.animation_controller.ignore_size")
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_size.desc")))
-                .setStackable(false);
+                .setStackable(false)
+                .setIcon(MaterialIcons.STRAIGHTEN);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "ignore_position", AnimationControllerEditorElement.class,
                         consumes -> consumes.element.ignorePosition,
                         (element, aBoolean) -> element.element.ignorePosition = aBoolean,
                         "fancymenu.elements.animation_controller.ignore_position")
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_position.desc")))
-                .setStackable(false);
+                .setStackable(false)
+                .setIcon(MaterialIcons.MOVE);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_random_timing_offsets");
 
@@ -79,7 +84,8 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                         (element, aBoolean) -> element.element.randomTimingOffsetMode = aBoolean,
                         "fancymenu.elements.animation_controller.random_timing_offsets")
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.desc")))
-                .setStackable(false);
+                .setStackable(false)
+                .setIcon(MaterialIcons.SHUFFLE);
 
         this.rightClickMenu.addClickableEntry("random_timing_offsets_range", Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"),
                         (menu, entry) -> {
@@ -109,7 +115,8 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                             Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"), null, DualTextInputWindowBody.PIP_WINDOW_WIDTH, DualTextInputWindowBody.PIP_WINDOW_HEIGHT);
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.range.desc")))
-                .setStackable(false);
+                .setStackable(false)
+                .setIcon(MaterialIcons.TIMER);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_manage");
 
@@ -128,7 +135,8 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                             this.openContextMenuScreen(managerScreen);
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_targets.desc")))
-                .setStackable(false);
+                .setStackable(false)
+                .setIcon(MaterialIcons.LINK);
 
     }
 

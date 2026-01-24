@@ -23,6 +23,7 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementIns
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.util.Pair;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -312,7 +313,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     menu.closeMenu();
                     this.onEdit(target);
                 }).addIsActiveSupplier((menu, entry) -> this.canEditEntry(this.getContextMenuTargetEntry()))
-                .setIcon(ContextMenu.IconFactory.getIcon("edit"));
+                .setIcon(MaterialIcons.EDIT);
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_edit");
 
@@ -323,7 +324,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     this.onRemove(target);
                 }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetEntry() != null)
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"))
-                .setIcon(ContextMenu.IconFactory.getIcon("delete"));
+                .setIcon(MaterialIcons.DELETE);
 
         if (reopen || wasOpen) {
             float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)this.getRenderMouseX();
@@ -347,7 +348,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     return UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_up.desc"));
                 })
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.shift_arrow_up"))
-                .setIcon(ContextMenu.IconFactory.getIcon("arrow_up"));
+                .setIcon(MaterialIcons.ARROW_UPWARD);
 
         this.rightClickContextMenu.addClickableEntry("move_down", Component.translatable("fancymenu.actions.screens.move_action_down"), (menu, contextMenuEntry) -> {
                     this.markContextMenuActionSelectionSuppressed();
@@ -363,7 +364,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     return UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.actions.screens.move_action_down.desc"));
                 })
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.shift_arrow_down"))
-                .setIcon(ContextMenu.IconFactory.getIcon("arrow_down"));
+                .setIcon(MaterialIcons.ARROW_DOWNWARD);
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_reorder");
 
@@ -372,14 +373,14 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     this.undo();
                 }).addIsActiveSupplier((menu, entry) -> this.canUndo())
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
-                .setIcon(ContextMenu.IconFactory.getIcon("undo"));
+                .setIcon(MaterialIcons.UNDO);
 
         this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
                     this.redo();
                 }).addIsActiveSupplier((menu, entry) -> this.canRedo())
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
-                .setIcon(ContextMenu.IconFactory.getIcon("redo"));
+                .setIcon(MaterialIcons.REDO);
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_history");
 
@@ -387,21 +388,21 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         boolean hasActionEntries = !addActionSubMenu.getEntries().isEmpty();
         this.rightClickContextMenu.addSubMenuEntry("add_action", Component.translatable("fancymenu.actions.screens.add_action"), addActionSubMenu)
                 .addIsActiveSupplier((menu, entry) -> hasActionEntries)
-                .setIcon(ContextMenu.IconFactory.getIcon("add"));
+                .setIcon(MaterialIcons.ADD);
 
         this.rightClickContextMenu.addClickableEntry("add_if", Component.translatable("fancymenu.actions.blocks.add.if"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             ExecutableEntry target = this.getContextMenuTargetEntry();
             menu.closeMenu();
             this.onAddIf(target);
-        }).setIcon(ContextMenu.IconFactory.getIcon("add"));
+        }).setIcon(MaterialIcons.ADD);
 
         this.rightClickContextMenu.addClickableEntry("add_while", Component.translatable("fancymenu.actions.blocks.add.while"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             ExecutableEntry target = this.getContextMenuTargetEntry();
             menu.closeMenu();
             this.onAddWhile(target);
-        }).setIcon(ContextMenu.IconFactory.getIcon("add"));
+        }).setIcon(MaterialIcons.ADD);
 
         this.rightClickContextMenu.addClickableEntry("add_delay", Component.translatable("fancymenu.actions.blocks.add.delay"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
@@ -409,7 +410,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             menu.closeMenu();
             this.onAddDelay(target);
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.actions.blocks.add.delay.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("add"));
+                .setIcon(MaterialIcons.ADD);
 
         this.rightClickContextMenu.addClickableEntry("add_execute_later", Component.translatable("fancymenu.actions.blocks.add.execute_later"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
@@ -417,14 +418,14 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             menu.closeMenu();
             this.onAddExecuteLater(target);
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.actions.blocks.add.execute_later.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("add"));
+                .setIcon(MaterialIcons.ADD);
 
         this.rightClickContextMenu.addClickableEntry("add_folder", Component.translatable("fancymenu.actions.blocks.add.folder"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
             ExecutableEntry target = this.getContextMenuTargetEntry();
             menu.closeMenu();
             this.onAddFolder(target);
-        }).setIcon(ContextMenu.IconFactory.getIcon("add"));
+        }).setIcon(MaterialIcons.CREATE_NEW_FOLDER);
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_add");
 
@@ -434,7 +435,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     menu.closeMenu();
                     this.onAppendElseIf(target);
                 }).addIsActiveSupplier((menu, entry) -> this.canAppendConditionalBlock(this.getContextMenuTargetEntry()))
-                .setIcon(ContextMenu.IconFactory.getIcon("link"));
+                .setIcon(MaterialIcons.LINK);
 
         this.rightClickContextMenu.addClickableEntry("append_else", Component.translatable("fancymenu.actions.blocks.add.else"), (menu, entry) -> {
                     this.markContextMenuActionSelectionSuppressed();
@@ -442,7 +443,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     menu.closeMenu();
                     this.onAppendElse(target);
                 }).addIsActiveSupplier((menu, entry) -> this.canAppendElseBlock(this.getContextMenuTargetEntry()))
-                .setIcon(ContextMenu.IconFactory.getIcon("link"));
+                .setIcon(MaterialIcons.LINK);
 
     }
 
@@ -498,7 +499,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     ExecutableEntry selectionReference = this.getContextMenuTargetEntry();
                     this.rightClickContextMenu.closeMenu();
                     this.onOpenChooserToAddAction(selectionReference);
-                }).setIcon(ContextMenu.IconFactory.getIcon("pick"))
+                }).setIcon(MaterialIcons.SEARCH)
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.actions.script_editor.shortcuts.a"))
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_action_chooser.desc")));
 
@@ -3678,9 +3679,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         private void updateFavoriteIcon() {
             if (ActionScriptEditorWindowBody.this.isFavorite(this.action)) {
-                this.setIcon(ContextMenu.IconFactory.getIcon("favorite"));
+                this.setIcon(MaterialIcons.FAVORITE);
             } else {
-                this.setIcon((ResourceLocation) null);
+                this.setIcon(MaterialIcons.STAR);
             }
         }
 

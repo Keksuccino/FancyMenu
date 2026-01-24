@@ -8,6 +8,8 @@ import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcon;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
@@ -79,13 +81,15 @@ public class ContextMenuUtils {
                         }
                     });
                     chooserScreen.openInWindow(null);
-                }).setStackable(false);
+                }).setStackable(false)
+                .setIcon(MaterialIcons.FILE_OPEN);
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.ui.resources.reset"),
                     (menu, entry) -> {
                         targetFieldSetter.accept(defaultValue);
-                    }).setStackable(false);
+                    }).setStackable(false)
+                    .setIcon(MaterialIcons.UNDO);
         }
 
         Supplier<Component> currentValueDisplayLabelSupplier = () -> {
@@ -110,9 +114,11 @@ public class ContextMenuUtils {
         subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
                 .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
                 .setClickSoundEnabled(false)
-                .setIcon(ContextMenu.IconFactory.getIcon("info"));
+                .setIcon(MaterialIcons.INFO);
 
-        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
+        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu)
+                .setStackable(true)
+                .setIcon(MaterialIcons.FOLDER_OPEN);
 
     }
 
@@ -153,12 +159,12 @@ public class ContextMenuUtils {
             fileChooser.setFileFilter(fileFilter);
             fileChooser.setFileTypes(fileTypes);
             fileChooser.openInWindow(null);
-        });
+        }).setIcon(MaterialIcons.FILE_OPEN);
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.editor.filechooser.reset"), (menu, entry) -> {
                 setter.accept(defaultValue);
-            });
+            }).setIcon(MaterialIcons.UNDO);
         }
 
         Supplier<Component> currentValueDisplayLabelSupplier = () -> {
@@ -183,25 +189,31 @@ public class ContextMenuUtils {
                 .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)
-                .setIcon(ContextMenu.IconFactory.getIcon("info"));
+                .setIcon(MaterialIcons.INFO);
 
-        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu);
+        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu)
+                .setIcon(MaterialIcons.FOLDER_OPEN);
     }
 
     @NotNull
     public static <T> ContextMenu.ClickableContextMenuEntry<?> addGenericInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<T> getter, @NotNull Consumer<T> setter, boolean addResetOption, T defaultValue, @NotNull Consumer<Consumer<T>> inputLogic) {
+        return addGenericInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, inputLogic, MaterialIcons.TEXT_FIELDS, MaterialIcons.EDIT);
+    }
+
+    @NotNull
+    private static <T> ContextMenu.ClickableContextMenuEntry<?> addGenericInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<T> getter, @NotNull Consumer<T> setter, boolean addResetOption, T defaultValue, @NotNull Consumer<Consumer<T>> inputLogic, @NotNull MaterialIcon inputIcon, @NotNull MaterialIcon parentIcon) {
 
         ContextMenu subMenu = new ContextMenu();
 
         subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) -> {
             menu.closeMenuChain();
             inputLogic.accept(setter);
-        });
+        }).setIcon(inputIcon);
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"), (menu, entry) -> {
                 setter.accept(defaultValue);
-            });
+            }).setIcon(MaterialIcons.UNDO);
         }
 
         Supplier<Component> currentValueDisplayLabelSupplier = () -> {
@@ -226,9 +238,10 @@ public class ContextMenuUtils {
                 .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)
-                .setIcon(ContextMenu.IconFactory.getIcon("info"));
+                .setIcon(MaterialIcons.INFO);
 
-        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu);
+        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu)
+                .setIcon(parentIcon);
     }
 
     @NotNull
@@ -246,7 +259,7 @@ public class ContextMenuUtils {
             MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled")
                     .withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
             return Component.translatable(labelLocalizationKeyBase, disabled);
-        });
+        }).setIcon(MaterialIcons.TOGGLE_ON);
     }
 
     @NotNull
@@ -263,7 +276,7 @@ public class ContextMenuUtils {
                     .setMinSize(RangeSliderWindowBody.PIP_WINDOW_WIDTH, RangeSliderWindowBody.PIP_WINDOW_HEIGHT)
                     .setSize(RangeSliderWindowBody.PIP_WINDOW_WIDTH, RangeSliderWindowBody.PIP_WINDOW_HEIGHT);
             PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
-        });
+        }, MaterialIcons.SLIDERS, MaterialIcons.SLIDERS);
     }
 
     @NotNull

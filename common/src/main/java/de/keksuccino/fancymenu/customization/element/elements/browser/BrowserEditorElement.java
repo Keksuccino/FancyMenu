@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.browser;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -23,14 +24,16 @@ public class BrowserEditorElement extends AbstractEditorElement<BrowserEditorEle
                         (element1, s) -> element1.element.url = s,
                         null, false, true, Component.translatable("fancymenu.elements.browser.url"),
                         true, "https://docs.fancymenu.net", null, null)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.url.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.url.desc")))
+                .setIcon(MaterialIcons.OPEN_IN_BROWSER);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "interactable", BrowserEditorElement.class,
                         consumes -> consumes.element.interactable,
                         (element, aBoolean) -> element.element.interactable = aBoolean,
                         "fancymenu.elements.browser.interactable")
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.interactable.desc")))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.TOUCH_APP);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_interactable");
 
@@ -39,28 +42,32 @@ public class BrowserEditorElement extends AbstractEditorElement<BrowserEditorEle
                         (element, aBoolean) -> element.element.hideVideoControls = aBoolean,
                         "fancymenu.elements.browser.hide_video_controls")
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.hide_video_controls.desc")))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.VIDEO_SETTINGS);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "loop_videos", BrowserEditorElement.class,
                         consumes -> consumes.element.loopVideos,
                         (element, aBoolean) -> element.element.loopVideos = aBoolean,
                         "fancymenu.elements.browser.loop_videos")
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.loop_videos.desc")))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.REPEAT);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "mute_media", BrowserEditorElement.class,
                         consumes -> consumes.element.muteMedia,
                         (element, aBoolean) -> element.element.muteMedia = aBoolean,
                         "fancymenu.elements.browser.mute_media")
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.mute_media.desc")))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.VOLUME_OFF);
 
         this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "media_volume", BrowserEditorElement.class,
                         consumes -> consumes.element.mediaVolume,
                         (element1, aFloat) -> element1.element.mediaVolume = aFloat,
                         Component.translatable("fancymenu.elements.browser.media_volume"), true, 1.0F, null, null)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.media_volume.desc")))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.VOLUME_UP);
 
     }
 

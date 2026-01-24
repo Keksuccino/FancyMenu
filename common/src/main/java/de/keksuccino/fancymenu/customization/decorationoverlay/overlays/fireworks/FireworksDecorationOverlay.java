@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.FireworksOverlay;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -28,15 +29,19 @@ public class FireworksDecorationOverlay extends AbstractDecorationOverlay<Firewo
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
         this.fireworksShowRockets.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.ROCKET_LAUNCH)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireworks.show_rockets.desc")));
 
         this.fireworksScale.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.STRAIGHTEN)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireworks.scale.desc")));
 
         this.fireworksExplosionSize.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.EXPLOSION)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireworks.explosion_size.desc")));
 
         this.fireworksAmount.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.FORMAT_LIST_NUMBERED)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.fireworks.amount.desc")));
 
     }

@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -33,7 +34,7 @@ public class CursorEditorElement extends AbstractEditorElement<CursorEditorEleme
                         Component.translatable("fancymenu.elements.cursor.cursor_texture"),
                         true, FileTypeGroup.of(FileTypes.PNG_IMAGE), null, true, true, false)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.cursor_texture.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("cursor"))
+                .setIcon(MaterialIcons.MOUSE)
                 .setStackable(true);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_cursor_texture").setStackable(true);
@@ -44,7 +45,8 @@ public class CursorEditorElement extends AbstractEditorElement<CursorEditorEleme
                         Component.translatable("fancymenu.elements.cursor.hotspot_x"),
                         true, 0, MathUtils::isInteger, null)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.hotspot_x.desc")))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.CENTER_FOCUS_STRONG);
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "hotspot_y", CursorEditorElement.class,
                         consumes -> consumes.element.hotspotY,
@@ -52,7 +54,8 @@ public class CursorEditorElement extends AbstractEditorElement<CursorEditorEleme
                         Component.translatable("fancymenu.elements.cursor.hotspot_y"),
                         true, 0, MathUtils::isInteger, null)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.hotspot_y.desc")))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.CENTER_FOCUS_STRONG);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_hotspot_y").setStackable(true);
 
@@ -64,7 +67,8 @@ public class CursorEditorElement extends AbstractEditorElement<CursorEditorEleme
                         },
                         "fancymenu.elements.cursor.editor_preview_mode")
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.editor_preview_mode.desc")))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.VISIBILITY);
 
     }
 

@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
@@ -48,7 +49,7 @@ public class SlideshowMenuBackground extends MenuBackground<SlideshowMenuBackgro
                 name = Component.literal(switcherValue).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
             }
             return Component.translatable("fancymenu.backgrounds.slideshow.name", name);
-        });
+        }).setIcon(MaterialIcons.SLIDESHOW);
 
     }
 

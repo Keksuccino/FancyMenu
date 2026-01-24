@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +40,8 @@ public class SlideshowEditorElement extends AbstractEditorElement<SlideshowEdito
             });
             menu.closeMenuChain();
             ChooseSlideshowScreen.openInWindow(s);
-        }).setStackable(true);
+        }).setStackable(true)
+                .setIcon(MaterialIcons.SLIDESHOW);
 
         this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.slideshow.restore_aspect_ratio"), (menu, entry) -> {
             List<AbstractEditorElement<?,?>> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SlideshowEditorElement));
@@ -48,7 +50,7 @@ public class SlideshowEditorElement extends AbstractEditorElement<SlideshowEdito
                 ((SlideshowElement)e.element).restoreAspectRatio();
             }
         }).setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
+                .setIcon(MaterialIcons.ASPECT_RATIO);
 
     }
 

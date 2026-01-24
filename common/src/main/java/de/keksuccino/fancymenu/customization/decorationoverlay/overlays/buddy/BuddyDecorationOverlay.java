@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -117,7 +118,9 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
         ContextMenu texturesMenu = new ContextMenu();
-        menu.addSubMenuEntry("buddy_custom_textures", Component.translatable("fancymenu.decoration_overlays.buddy.custom_textures"), texturesMenu).setStackable(true);
+        menu.addSubMenuEntry("buddy_custom_textures", Component.translatable("fancymenu.decoration_overlays.buddy.custom_textures"), texturesMenu)
+                .setIcon(MaterialIcons.TEXTURE)
+                .setStackable(true);
 
         addTextureEntry(texturesMenu, this.customAtlasTexture, "fancymenu.decoration_overlays.buddy.custom_atlas_texture.desc");
         addTextureEntry(texturesMenu, this.customThoughtBubbleTexture, "fancymenu.decoration_overlays.buddy.custom_thought_texture.desc");
@@ -145,7 +148,9 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         addTextureEntry(texturesMenu, this.customCloseButtonHoverTexture, "fancymenu.decoration_overlays.buddy.custom_close_button_hover_texture.desc");
 
         ContextMenu statsMenu = new ContextMenu();
-        menu.addSubMenuEntry("buddy_stats_tuning", Component.translatable("fancymenu.decoration_overlays.buddy.stats"), statsMenu).setStackable(true);
+        menu.addSubMenuEntry("buddy_stats_tuning", Component.translatable("fancymenu.decoration_overlays.buddy.stats"), statsMenu)
+                .setIcon(MaterialIcons.BAR_CHART)
+                .setStackable(true);
 
         addFloatEntry(statsMenu, hungerDecayPerTick, "fancymenu.decoration_overlays.buddy.hunger_decay_per_tick.desc");
         addFloatEntry(statsMenu, happinessDecayPerTick, "fancymenu.decoration_overlays.buddy.happiness_decay_per_tick.desc");
@@ -174,6 +179,7 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
 
         menu.addSeparatorEntry("separator_before_reset_buddy_save").setStackable(true);
         menu.addClickableEntry("reset_buddy_save", Component.translatable("fancymenu.decoration_overlays.buddy.reset_save"), (contextMenu, entry) -> requestResetBuddySave())
+                .setIcon(MaterialIcons.RESET_SETTINGS)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.buddy.reset_save.desc")))
                 .setStackable(true);
     }
@@ -345,21 +351,25 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
 
     private void addTextureEntry(@NotNull ContextMenu menu, @NotNull Property<ResourceSupplier<ITexture>> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.TEXTURE)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(descriptionKey)));
     }
 
     private void addFloatEntry(@NotNull ContextMenu menu, @NotNull Property<Float> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.SPEED)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(descriptionKey)));
     }
 
     private void addIntEntry(@NotNull ContextMenu menu, @NotNull Property<Integer> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.FORMAT_LIST_NUMBERED)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(descriptionKey)));
     }
 
     private void addBooleanEntry(@NotNull ContextMenu menu, @NotNull Property<Boolean> property, @NotNull String descriptionKey) {
         property.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.TOGGLE_ON)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(descriptionKey)));
     }
 }

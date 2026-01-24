@@ -77,10 +77,10 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
 
         this.renderBorder(graphics, mouseX, mouseY, partial);
 
-        if (this.verticalScrollBar.active) {
+        if (this.isVerticalScrollBarVisible()) {
             this.verticalScrollBar.render(graphics, mouseX, mouseY, partial);
         }
-        if (this.horizontalScrollBar.active) {
+        if (this.isHorizontalScrollBarVisible()) {
             this.horizontalScrollBar.render(graphics, mouseX, mouseY, partial);
         }
 
@@ -283,7 +283,16 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
     }
 
     public boolean isMouseInteractingWithGrabbers() {
-        return this.verticalScrollBar.isGrabberGrabbed() || this.verticalScrollBar.isGrabberHovered() || this.horizontalScrollBar.isGrabberGrabbed() || this.horizontalScrollBar.isGrabberHovered();
+        return (this.isVerticalScrollBarVisible() && (this.verticalScrollBar.isGrabberGrabbed() || this.verticalScrollBar.isGrabberHovered()))
+                || (this.isHorizontalScrollBarVisible() && (this.horizontalScrollBar.isGrabberGrabbed() || this.horizontalScrollBar.isGrabberHovered()));
+    }
+
+    public boolean isVerticalScrollBarVisible() {
+        return this.verticalScrollBar.active && (this.getTotalScrollHeight() > 0.0F);
+    }
+
+    public boolean isHorizontalScrollBarVisible() {
+        return this.horizontalScrollBar.active && (this.getTotalScrollWidth() > 0.0F);
     }
 
     public void setX(float x, boolean respectBorder) {
@@ -533,8 +542,8 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.verticalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
-        if (this.horizontalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+        if (this.isVerticalScrollBarVisible() && this.verticalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+        if (this.isHorizontalScrollBarVisible() && this.horizontalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
         for (ScrollAreaEntry entry : this.entries) {
             if (entry.mouseClicked(mouseX, mouseY, button)) return true;
         }
@@ -543,22 +552,22 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (this.verticalScrollBar.mouseReleased(mouseX, mouseY, button)) return true;
-        if (this.horizontalScrollBar.mouseReleased(mouseX, mouseY, button)) return true;
+        if (this.isVerticalScrollBarVisible() && this.verticalScrollBar.mouseReleased(mouseX, mouseY, button)) return true;
+        if (this.isHorizontalScrollBarVisible() && this.horizontalScrollBar.mouseReleased(mouseX, mouseY, button)) return true;
         return false;
     }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
-        if (this.verticalScrollBar.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
-        if (this.horizontalScrollBar.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
+        if (this.isVerticalScrollBarVisible() && this.verticalScrollBar.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
+        if (this.isHorizontalScrollBarVisible() && this.horizontalScrollBar.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
         return false;
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
-        if (this.verticalScrollBar.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) return true;
-        if (this.horizontalScrollBar.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) return true;
+        if (this.isVerticalScrollBarVisible() && this.verticalScrollBar.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) return true;
+        if (this.isHorizontalScrollBarVisible() && this.horizontalScrollBar.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) return true;
         return false;
     }
 

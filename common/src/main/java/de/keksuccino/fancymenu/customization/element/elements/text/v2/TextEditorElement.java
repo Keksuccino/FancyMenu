@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -34,7 +35,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                             textEditorElement.element.setSource(sourceMode, null);
                         },
                         (menu, entry, switcherValue) -> switcherValue.getCycleComponent())
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.source_mode.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.source_mode.desc")))
+                .setIcon(MaterialIcons.TUNE);
 
         this.addTextResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_text_resource",
                         TextEditorElement.class,
@@ -43,7 +45,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (element, supplier) -> element.element.setSource(TextElement.SourceMode.RESOURCE, supplier.getSourceWithPrefix()),
                         Component.translatable("fancymenu.elements.text.v2.source.choose"),
                         false, null, true, true, true)
-                .setIcon(ContextMenu.IconFactory.getIcon("text"))
+                .setIcon(MaterialIcons.FILE_OPEN)
                 .addIsVisibleSupplier((menu, entry) -> this.element.sourceMode == TextElement.SourceMode.RESOURCE)
                 .setStackable(false);
 
@@ -53,7 +55,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (textEditorElement, s) -> textEditorElement.element.setSource(TextElement.SourceMode.DIRECT, s),
                         null, true, true, Component.translatable("fancymenu.elements.text.v2.source.input"),
                         false, null, null, null)
-                .setIcon(ContextMenu.IconFactory.getIcon("text"))
+                .setIcon(MaterialIcons.TEXT_FIELDS)
                 .addIsVisibleSupplier((menu, entry) -> this.element.sourceMode == TextElement.SourceMode.DIRECT)
                 .setStackable(false);
 
@@ -63,7 +65,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         consumes -> consumes.element.markdownRenderer.isRemoveHtmlBreaks(),
                         (textEditorElement, aBoolean) -> textEditorElement.element.markdownRenderer.setRemoveHtmlBreaks(aBoolean),
                         "fancymenu.elements.text.remove_html_breaks")
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.FORMAT_TEXT_WRAP);
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_case_mode",
                 ListUtils.of(MarkdownRenderer.TextCase.NORMAL, MarkdownRenderer.TextCase.ALL_UPPER, MarkdownRenderer.TextCase.ALL_LOWER),
@@ -78,7 +81,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         return Component.translatable("fancymenu.elements.text.case_mode.lower");
                     }
                     return Component.translatable("fancymenu.elements.text.case_mode.upper");
-                }).setIcon(ContextMenu.IconFactory.getIcon("text_size"));
+                }).setIcon(MaterialIcons.TEXT_FORMAT);
 
         this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -89,7 +92,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         },
                         Component.translatable("fancymenu.elements.text.scale"),
                         true, 1.0F, null, null)
-                .setIcon(ContextMenu.IconFactory.getIcon("measure"))
+                .setIcon(MaterialIcons.FORMAT_SIZE)
                 .setStackable(true);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "set_shadow", TextEditorElement.class,
@@ -97,7 +100,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (textEditorElement, aBoolean) -> textEditorElement.element.markdownRenderer.setTextShadow(aBoolean),
                         "fancymenu.elements.text.shadow")
                 .setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("shadow"));
+                .setIcon(MaterialIcons.SHADOW);
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_base_color",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -105,7 +108,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (element, colorHex) -> (element.element).markdownRenderer.setTextBaseColor(DrawableColor.of(colorHex)), null, false, false, Component.translatable("fancymenu.elements.text.base_color"),
                         true, DrawableColor.WHITE.getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.base_color.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.base_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_border",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -114,7 +118,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         Component.translatable("fancymenu.elements.text.text_border"),
                         true, 2, null, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.text_border.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.text_border.desc")))
+                .setIcon(MaterialIcons.BORDER_OUTER);
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_line_spacing",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -124,25 +129,30 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         },
                         Component.translatable("fancymenu.elements.text.line_spacing"),
                         true, 2, null, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.FORMAT_LINE_SPACING);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_line_wrapping", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.isAutoLineBreakingEnabled(),
                         (textEditorElement, aBoolean) -> textEditorElement.element.markdownRenderer.setAutoLineBreakingEnabled(aBoolean),
                         "fancymenu.elements.text.auto_line_wrapping")
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.FORMAT_TEXT_WRAP);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_line_wrapping").setStackable(true);
 
         ContextMenu markdownMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("markdown", Component.translatable("fancymenu.elements.text.markdown"), markdownMenu).setStackable(true);
+        this.rightClickMenu.addSubMenuEntry("markdown", Component.translatable("fancymenu.elements.text.markdown"), markdownMenu)
+                .setStackable(true)
+                .setIcon(MaterialIcons.MENU_BOOK);
 
         this.addToggleContextMenuEntryTo(markdownMenu, "parse_markdown",
                         TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.isParseMarkdown(),
                         (textEditorElement, aBoolean) -> textEditorElement.element.markdownRenderer.setParseMarkdown(aBoolean),
                         "fancymenu.elements.text.markdown.toggle")
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.toggle.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.toggle.desc")))
+                .setIcon(MaterialIcons.CODE);
 
         markdownMenu.addSeparatorEntry("separator_after_parse_markdown");
 
@@ -151,14 +161,16 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setCodeBlockSingleLineColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.code_block.single.color"),
                         true, DrawableColor.of(115, 115, 115).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         this.addStringInputContextMenuEntryTo(markdownMenu, "code_block_multi_line_color", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.getCodeBlockMultiLineColor().getHex(),
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setCodeBlockMultiLineColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.code_block.multi.color"),
                         true, DrawableColor.of(86, 86, 86).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         markdownMenu.addSeparatorEntry("separator_after_code_block");
 
@@ -167,7 +179,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setHeadlineLineColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.headline.line.color"),
                         true, DrawableColor.of(169, 169, 169).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         markdownMenu.addSeparatorEntry("separator_after_headline");
 
@@ -176,7 +189,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setSeparationLineColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.separation_line.color"),
                         true, DrawableColor.of(169, 169, 169).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         markdownMenu.addSeparatorEntry("separator_after_separation_line");
 
@@ -185,21 +199,24 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setHyperlinkColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.hyperlink.color"),
                         true, DrawableColor.of(7, 113, 252).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         this.addStringInputContextMenuEntryTo(markdownMenu, "click_event_color", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.getTextClickEventColor().getHex(),
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setTextClickEventColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.click_event.color"),
                         true, DrawableColor.of(7, 113, 252).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         this.addStringInputContextMenuEntryTo(markdownMenu, "hover_event_color", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.getTextHoverEventColor().getHex(),
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setTextHoverEventColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.hover_event.color"),
                         true, DrawableColor.of(7, 113, 252).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         markdownMenu.addSeparatorEntry("separator_after_hyperlink");
 
@@ -208,19 +225,22 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setQuoteColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.quote.color"),
                         true, DrawableColor.of(129, 129, 129).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         this.addIntegerInputContextMenuEntryTo(markdownMenu, "quote_indent", TextEditorElement.class,
                         consumes -> (int)consumes.element.markdownRenderer.getQuoteIndent(),
                         (textEditorElement, integer) -> textEditorElement.element.markdownRenderer.setQuoteIndent(integer),
                         Component.translatable("fancymenu.elements.text.markdown.quote.indent"), true, 8, null, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.FORMAT_INDENT_INCREASE);
 
         this.addToggleContextMenuEntryTo(markdownMenu, "quote_italic", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.isQuoteItalic(),
                         (textEditorElement, aBoolean) -> textEditorElement.element.markdownRenderer.setQuoteItalic(aBoolean),
                         "fancymenu.elements.text.markdown.quote.italic")
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.FORMAT_ITALIC);
 
         markdownMenu.addSeparatorEntry("separator_after_quote");
 
@@ -229,19 +249,22 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setBulletListDotColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.bullet_list.dot.color"),
                         true, DrawableColor.of(169, 169, 169).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         this.addIntegerInputContextMenuEntryTo(markdownMenu, "bullet_list_indent", TextEditorElement.class,
                         consumes -> (int)consumes.element.markdownRenderer.getBulletListIndent(),
                         (textEditorElement, integer) -> textEditorElement.element.markdownRenderer.setBulletListIndent(integer),
                         Component.translatable("fancymenu.elements.text.markdown.bullet_list.indent"), true, 8, null, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.FORMAT_INDENT_INCREASE);
 
         this.addIntegerInputContextMenuEntryTo(markdownMenu, "bullet_list_spacing", TextEditorElement.class,
                         consumes -> (int)consumes.element.markdownRenderer.getBulletListSpacing(),
                         (textEditorElement, integer) -> textEditorElement.element.markdownRenderer.setBulletListSpacing(integer),
                         Component.translatable("fancymenu.elements.text.markdown.bullet_list.spacing"), true, 3, null, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.FORMAT_LINE_SPACING);
 
         markdownMenu.addSeparatorEntry("separator_after_bullet_list");
 
@@ -249,19 +272,22 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
         ContextMenu tableMenu = new ContextMenu();
         markdownMenu.addSubMenuEntry("tables", Component.translatable("fancymenu.elements.text.markdown.tables"), tableMenu)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.desc")))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.TABLE_CHART);
 
         this.addToggleContextMenuEntryTo(tableMenu, "table_show_header", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.isTableShowHeader(),
                         (textEditorElement, aBoolean) -> textEditorElement.element.markdownRenderer.setTableShowHeader(aBoolean),
                         "fancymenu.elements.text.markdown.tables.show_header")
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.TABLE_VIEW);
 
         this.addToggleContextMenuEntryTo(tableMenu, "table_alternate_row_colors", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.isTableAlternateRowColors(),
                         (textEditorElement, aBoolean) -> textEditorElement.element.markdownRenderer.setTableAlternateRowColors(aBoolean),
                         "fancymenu.elements.text.markdown.tables.alternate_row_colors")
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.VIEW_LIST);
 
         tableMenu.addSeparatorEntry("separator_after_table_toggles");
 
@@ -270,21 +296,24 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setTableLineColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.tables.line_color"),
                         true, DrawableColor.of(120, 120, 120).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         this.addStringInputContextMenuEntryTo(tableMenu, "table_header_background_color", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.getTableHeaderBackgroundColor().getHex(),
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setTableHeaderBackgroundColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.tables.header_background_color"),
                         true, DrawableColor.of(50, 50, 50).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         this.addStringInputContextMenuEntryTo(tableMenu, "table_row_background_color", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.getTableRowBackgroundColor().getHex(),
                         (textEditorElement, s) -> textEditorElement.element.markdownRenderer.setTableRowBackgroundColor(DrawableColor.of(s)),
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.tables.row_background_color"),
                         true, DrawableColor.of(40, 40, 40).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.PALETTE);
 
         this.addStringInputContextMenuEntryTo(tableMenu, "table_alternate_row_color", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.getTableAlternateRowColor().getHex(),
@@ -292,7 +321,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         null, false, false, Component.translatable("fancymenu.elements.text.markdown.tables.alternate_row_color"),
                         true, DrawableColor.of(60, 60, 60).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.alternate_row_color.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.alternate_row_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
 
         tableMenu.addSeparatorEntry("separator_after_table_colors");
 
@@ -300,21 +330,24 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         consumes -> consumes.element.markdownRenderer.getTableLineThickness(),
                         (textEditorElement, aFloat) -> textEditorElement.element.markdownRenderer.setTableLineThickness(Math.max(0.5F, aFloat)),
                         Component.translatable("fancymenu.elements.text.markdown.tables.line_thickness"), true, 1.0F, null, null)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.LINE_WEIGHT);
 
         this.addFloatInputContextMenuEntryTo(tableMenu, "table_cell_padding", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.getTableCellPadding(),
                         (textEditorElement, aFloat) -> textEditorElement.element.markdownRenderer.setTableCellPadding(Math.max(0.0F, aFloat)),
                         Component.translatable("fancymenu.elements.text.markdown.tables.cell_padding"), true, 8.0F, null, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.cell_padding.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.cell_padding.desc")))
+                .setIcon(MaterialIcons.PADDING_ICON);
 
         this.addFloatInputContextMenuEntryTo(tableMenu, "table_margin", TextEditorElement.class,
                         consumes -> consumes.element.markdownRenderer.getTableMargin(),
                         (textEditorElement, aFloat) -> textEditorElement.element.markdownRenderer.setTableMargin(Math.max(0.0F, aFloat)),
                         Component.translatable("fancymenu.elements.text.markdown.tables.margin"), true, 4.0F, null, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.margin.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.margin.desc")))
+                .setIcon(MaterialIcons.MARGIN);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_markdown");
 
@@ -322,14 +355,15 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         consumes -> consumes.element.enableScrolling,
                         (textEditorElement, aBoolean) -> textEditorElement.element.enableScrolling = aBoolean,
                         "fancymenu.elements.text.scrolling")
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.SWIPE_VERTICAL);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_scrolling");
 
         ContextMenu grabberTextureMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("grabber_texture", Component.translatable("fancymenu.elements.text.scroll_grabber_texture"), grabberTextureMenu)
                 .setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("image"));
+                .setIcon(MaterialIcons.IMAGE);
 
         this.addImageResourceChooserContextMenuEntryTo(grabberTextureMenu, "vertical_normal_grabber_texture",
                 TextEditorElement.class,
@@ -337,7 +371,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 consumes -> consumes.element.verticalScrollGrabberTextureNormal,
                 (element, supplier) -> element.element.verticalScrollGrabberTextureNormal = supplier,
                 Component.translatable("fancymenu.elements.text.vertical_scroll_grabber_texture.normal"),
-                true, null, true, true, true);
+                true, null, true, true, true)
+                .setIcon(MaterialIcons.IMAGE);
 
         this.addImageResourceChooserContextMenuEntryTo(grabberTextureMenu, "vertical_hover_grabber_texture",
                 TextEditorElement.class,
@@ -345,7 +380,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 consumes -> consumes.element.verticalScrollGrabberTextureHover,
                 (element, supplier) -> element.element.verticalScrollGrabberTextureHover = supplier,
                 Component.translatable("fancymenu.elements.text.vertical_scroll_grabber_texture.hover"),
-                true, null, true, true, true);
+                true, null, true, true, true)
+                .setIcon(MaterialIcons.IMAGE);
 
         grabberTextureMenu.addSeparatorEntry("separator_after_vertical_textures");
 
@@ -355,7 +391,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 consumes -> consumes.element.horizontalScrollGrabberTextureNormal,
                 (element, supplier) -> element.element.horizontalScrollGrabberTextureNormal = supplier,
                 Component.translatable("fancymenu.elements.text.horizontal_scroll_grabber_texture.normal"),
-                true, null, true, true, true);
+                true, null, true, true, true)
+                .setIcon(MaterialIcons.IMAGE);
 
         this.addImageResourceChooserContextMenuEntryTo(grabberTextureMenu, "horizontal_hover_grabber_texture",
                 TextEditorElement.class,
@@ -363,16 +400,20 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 consumes -> consumes.element.horizontalScrollGrabberTextureHover,
                 (element, supplier) -> element.element.horizontalScrollGrabberTextureHover = supplier,
                 Component.translatable("fancymenu.elements.text.horizontal_scroll_grabber_texture.hover"),
-                true, null, true, true, true);
+                true, null, true, true, true)
+                .setIcon(MaterialIcons.IMAGE);
 
         ContextMenu grabberColorMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("grabber_color", Component.translatable("fancymenu.elements.text.scroll_grabber_color"), grabberColorMenu)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.scroll_grabber_color.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.scroll_grabber_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
 
-        this.element.scrollGrabberColorHexNormal.buildContextMenuEntryAndAddTo(grabberColorMenu, this);
+        this.element.scrollGrabberColorHexNormal.buildContextMenuEntryAndAddTo(grabberColorMenu, this)
+                .setIcon(MaterialIcons.PALETTE);
 
-        this.element.scrollGrabberColorHexHover.buildContextMenuEntryAndAddTo(grabberColorMenu, this);
+        this.element.scrollGrabberColorHexHover.buildContextMenuEntryAndAddTo(grabberColorMenu, this)
+                .setIcon(MaterialIcons.PALETTE);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_hover_grabber_color");
 
@@ -380,7 +421,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         consumes -> consumes.element.interactable,
                         (textEditorElement, aBoolean) -> textEditorElement.element.interactable = aBoolean,
                         "fancymenu.elements.text.v2.interactable")
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.interactable.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.interactable.desc")))
+                .setIcon(MaterialIcons.TOUCH_APP);
 
     }
 

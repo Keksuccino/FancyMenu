@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.LeavesOverlay;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -37,24 +38,31 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
         this.leavesColorStartHex.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.PALETTE)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.color_start.desc")));
 
         this.leavesColorEndHex.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.PALETTE)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.color_end.desc")));
 
         this.leavesDensity.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.DENSITY_MEDIUM)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.density.desc")));
 
         this.leavesWindIntensity.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.AIR)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.wind.desc")));
 
         this.leavesWindBlows.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.AIR)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.wind_blows.desc")));
 
         this.leavesFallSpeed.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.SPEED)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.fall_speed.desc")));
 
         this.leavesScale.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.STRAIGHTEN)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.leaves.scale.desc")));
 
     }

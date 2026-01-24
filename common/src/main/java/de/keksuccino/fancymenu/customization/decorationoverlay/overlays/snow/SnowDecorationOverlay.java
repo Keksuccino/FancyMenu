@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.SnowfallOverlay;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -33,18 +34,23 @@ public class SnowDecorationOverlay extends AbstractDecorationOverlay<SnowDecorat
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
         this.snowAccumulation.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.SNOWING)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.accumulate_snow.desc")));
 
         this.snowColorHex.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.PALETTE)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.color.desc")));
 
         this.snowIntensity.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.DENSITY_MEDIUM)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.intensity.desc")));
 
         this.snowScale.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.STRAIGHTEN)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.scale.desc")));
 
         this.snowSpeed.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.SPEED)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.snow.speed.desc")));
 
     }

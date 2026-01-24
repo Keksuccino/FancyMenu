@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.elements.video.SetVideoVolu
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -34,7 +35,7 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
                         }
                     }).setSource((this.element.rawVideoUrlSource != null) ? this.element.rawVideoUrlSource.getSerializationSource() : null, false)
                             .openInWindow(null);
-                }).setIcon(ContextMenu.IconFactory.getIcon("image"))
+                }).setIcon(MaterialIcons.VIDEO_FILE)
                 .setStackable(false);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_loop", MCEFVideoEditorElement.class,
@@ -42,14 +43,14 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
                         (element, aBoolean) -> element.element.loop = aBoolean,
                         "fancymenu.elements.video_mcef.loop")
                 .setStackable(false)
-                .setIcon(ContextMenu.IconFactory.getIcon("reload"));
+                .setIcon(MaterialIcons.REPEAT);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "preserve_aspect_ratio", MCEFVideoEditorElement.class,
                         element -> element.element.preserveAspectRatio,
                         (element, aBoolean) -> element.element.preserveAspectRatio = aBoolean,
                         "fancymenu.elements.video_mcef.preserve_aspect_ratio")
                 .setStackable(false)
-                .setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
+                .setIcon(MaterialIcons.ASPECT_RATIO);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_toggle_loop");
 
@@ -62,7 +63,7 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
                 this.openContextMenuScreen(this.editor);
             }));
         }).setStackable(false)
-                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+                .setIcon(MaterialIcons.VOLUME_UP);
 
         this.addCycleContextMenuEntryTo(this.rightClickMenu, "sound_channel",
                         Arrays.asList(SoundSource.values()),
@@ -71,7 +72,7 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
                         (audioEditorElement, soundSource) -> audioEditorElement.element.soundSource = soundSource,
                         (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.video_mcef.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))))
                 .setStackable(false)
-                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+                .setIcon(MaterialIcons.VOLUME_UP);
 
     }
 

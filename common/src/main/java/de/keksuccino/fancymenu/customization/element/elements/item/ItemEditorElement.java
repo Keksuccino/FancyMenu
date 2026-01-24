@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -33,7 +34,8 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
                         null, false, true, Component.translatable("fancymenu.elements.item.key"),
                         true, "" + BuiltInRegistries.ITEM.getKey(Items.BARRIER), null, null)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.key.desc")))
-                .setStackable(false);
+                .setStackable(false)
+                .setIcon(MaterialIcons.INVENTORY);
 
         if (itemKeyEntry instanceof ContextMenu.SubMenuContextMenuEntry subMenuEntry) {
 
@@ -52,7 +54,8 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
                     });
                     this.openContextMenuScreen(inputScreen);
                 }
-            }).setStackable(false);
+            }).setStackable(false)
+                    .setIcon(MaterialIcons.EDIT);
 
         }
 
@@ -60,13 +63,15 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
                 consumes -> consumes.element.itemName,
                 (itemEditorElement, s) -> itemEditorElement.element.itemName = s,
                 null, false, true, Component.translatable("fancymenu.elements.item.name"),
-                true, null, null, null);
+                true, null, null, null)
+                .setIcon(MaterialIcons.TEXT_FIELDS);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_count", ItemEditorElement.class,
                 consumes -> consumes.element.itemCount,
                 (itemEditorElement, s) -> itemEditorElement.element.itemCount = s,
                 null, false, true, Component.translatable("fancymenu.elements.item.item_count"),
-                true, "1", null, null);
+                true, "1", null, null)
+                .setIcon(MaterialIcons.NUMBERS);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_lore", ItemEditorElement.class, consumes -> {
                     if (consumes.element.lore != null) return consumes.element.lore.replace("%n%", "\n");
@@ -79,17 +84,20 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
                         itemEditorElement.element.lore = null;
                     }
                 }, null, true, true, Component.translatable("fancymenu.elements.item.lore"), true, null, null, null)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.lore.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.lore.desc")))
+                .setIcon(MaterialIcons.NOTES);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "enchanted", ItemEditorElement.class,
                 consumes -> consumes.element.enchanted,
                 (itemEditorElement, aBoolean) -> itemEditorElement.element.enchanted = aBoolean,
-                "fancymenu.elements.item.enchanted");
+                "fancymenu.elements.item.enchanted")
+                .setIcon(MaterialIcons.AUTO_AWESOME);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "show_tooltip", ItemEditorElement.class,
                 consumes -> consumes.element.showTooltip,
                 (itemEditorElement, aBoolean) -> itemEditorElement.element.showTooltip = aBoolean,
-                "fancymenu.elements.item.show_tooltip");
+                "fancymenu.elements.item.show_tooltip")
+                .setIcon(MaterialIcons.INFO);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_nbt");
 
@@ -98,7 +106,8 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
                         (itemEditorElement, s) -> itemEditorElement.element.nbtData = s,
                         null, false, true, Component.translatable("fancymenu.elements.item.nbt"),
                         true, null, null, null)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.nbt.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.nbt.desc")))
+                .setIcon(MaterialIcons.DATA_OBJECT);
 
     }
 

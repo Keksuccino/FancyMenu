@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
@@ -158,7 +159,8 @@ public class Property<T> {
                     StringProperty resolved = (StringProperty) b.getProperty(key);
                     if (resolved != null) resolved.set(s);
                 },
-                null, multiLine, placeholders, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, property.getDefault(), property.userInputTextValidator, null);
+                null, multiLine, placeholders, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, property.getDefault(), property.userInputTextValidator, null)
+                .setIcon(MaterialIcons.TEXT_FIELDS);
         return p;
     }
 
@@ -212,7 +214,8 @@ public class Property<T> {
                         Property<Integer> resolved = (Property<Integer>) b.getProperty(key);
                         if (resolved != null) resolved.set(value);
                     },
-                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
+                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null)
+                    .setIcon(MaterialIcons.NUMBERS);
         };
         return p;
     }
@@ -267,7 +270,8 @@ public class Property<T> {
                         Property<Double> resolved = (Property<Double>) b.getProperty(key);
                         if (resolved != null) resolved.set(value);
                     },
-                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
+                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null)
+                    .setIcon(MaterialIcons.FUNCTIONS);
         };
         return p;
     }
@@ -322,7 +326,8 @@ public class Property<T> {
                         Property<Long> resolved = (Property<Long>) b.getProperty(key);
                         if (resolved != null) resolved.set(value);
                     },
-                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
+                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null)
+                    .setIcon(MaterialIcons.NUMBERS);
         };
         return p;
     }
@@ -377,7 +382,8 @@ public class Property<T> {
                         Property<Float> resolved = (Property<Float>) b.getProperty(key);
                         if (resolved != null) resolved.set(value);
                     },
-                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null);
+                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, resolvedDefault, property.userInputTextValidator, null)
+                    .setIcon(MaterialIcons.FUNCTIONS);
         };
         return p;
     }
@@ -437,7 +443,8 @@ public class Property<T> {
                         resolved.set(value);
                     }
                 },
-                property.getContextMenuEntryLocalizationKeyBase());
+                property.getContextMenuEntryLocalizationKeyBase())
+                .setIcon(MaterialIcons.TOGGLE_ON);
         return p;
     }
 
@@ -520,7 +527,8 @@ public class Property<T> {
                             resolved.set(ResourceSource.of(supplier.getSourceWithPrefix()));
                         }
                     },
-                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb);
+                    Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb)
+                    .setIcon(MaterialIcons.FOLDER_OPEN);
         };
         return p;
     }
@@ -606,7 +614,8 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
+                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb)
+                        .setIcon(MaterialIcons.IMAGE);
             }
             if (IAudio.class.isAssignableFrom(resourceType)) {
                 return builder.buildAudioResourceChooserContextMenuEntry(menu, "menu_entry_" + key, consumes -> consumes.getProperty(key) != null,
@@ -620,7 +629,8 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
+                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb)
+                        .setIcon(MaterialIcons.MUSIC_NOTE);
             }
             if (IVideo.class.isAssignableFrom(resourceType)) {
                 return builder.buildVideoResourceChooserContextMenuEntry(menu, "menu_entry_" + key, consumes -> consumes.getProperty(key) != null,
@@ -634,7 +644,8 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
+                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb)
+                        .setIcon(MaterialIcons.VIDEOCAM);
             }
             if (IText.class.isAssignableFrom(resourceType)) {
                 return builder.buildTextResourceChooserContextMenuEntry(menu, "menu_entry_" + key, consumes -> consumes.getProperty(key) != null,
@@ -648,7 +659,8 @@ public class Property<T> {
                             Property<ResourceSupplier<R>> resolved = (Property<ResourceSupplier<R>>) b.getProperty(key);
                             if (resolved != null) resolved.set((ResourceSupplier<R>) supplier);
                         },
-                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb);
+                        Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, fileFilter, allowLocation, allowLocal, allowWeb)
+                        .setIcon(MaterialIcons.TEXT_FIELDS);
             }
             throw new IllegalArgumentException("Unknown resource format! Unable to build ResourceSupplier context menu entry!");
         };
@@ -748,7 +760,7 @@ public class Property<T> {
                             ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
                             if (resolved != null) resolved.set(call);
                         })
-                        .setIcon(ContextMenu.IconFactory.getIcon("text"));
+                        .setIcon(MaterialIcons.TEXT_FIELDS);
 
             }
 
@@ -820,7 +832,7 @@ public class Property<T> {
                         ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
                         if (resolved != null) resolved.set(call);
                     })
-                    .setIcon(ContextMenu.IconFactory.getIcon("pipette"));
+                    .setIcon(MaterialIcons.DROPPER_EYE);
 
             subMenu.addSeparatorEntry("separator_before_reset");
 
@@ -838,7 +850,7 @@ public class Property<T> {
                         ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
                         if (resolved != null) resolved.set(property.getDefault());
                     })
-                    .setIcon(ContextMenu.IconFactory.getIcon("undo"));
+                    .setIcon(MaterialIcons.UNDO);
 
             subMenu.addSeparatorEntry("separator_before_current_value_display")
                     .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1);
@@ -867,10 +879,10 @@ public class Property<T> {
                     .setClickSoundEnabled(false)
                     .setChangeBackgroundColorOnHover(false)
                     .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
-                    .setIcon(ContextMenu.IconFactory.getIcon("info"));
+                    .setIcon(MaterialIcons.INFO);
 
             return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
-                    .setIcon(ContextMenu.IconFactory.getIcon("color_palette"))
+                    .setIcon(MaterialIcons.PALETTE)
                     .setStackable(true);
         };
         return p;
@@ -1010,7 +1022,7 @@ public class Property<T> {
                     });
                 }
             }
-        }).setStackable(true);
+        }).setIcon(MaterialIcons.RULE).setStackable(true);
         p.serializationCodec = consumes -> (consumes == null) ? null : consumes.identifier;
         return p;
     }
@@ -1159,7 +1171,7 @@ public class Property<T> {
                     });
                 }
             }
-        }).setStackable(true);
+        }).setIcon(MaterialIcons.CODE).setStackable(true);
         p.serializationCodec = consumes -> (consumes == null) ? null : consumes.getIdentifier();
         return p;
     }

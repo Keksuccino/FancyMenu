@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
@@ -64,7 +65,8 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
 
         ContextMenu menu = new ContextMenu();
 
-        this.showOverlay.buildContextMenuEntryAndAddTo(menu, this);
+        this.showOverlay.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.VISIBILITY);
 
         menu.addSeparatorEntry("separator_after_show_overlay_toggle");
 

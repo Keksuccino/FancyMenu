@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
@@ -741,7 +742,7 @@ public interface ContextMenuBuilder<O> {
                             }
                             chooserScreen.openInWindow(null);
                         }).setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("file"))
+                .setIcon(MaterialIcons.FILE_OPEN)
                 .setStackApplier((stackEntry, value) -> {
                     if (!(value instanceof String source)) {
                         return;
@@ -759,7 +760,7 @@ public interface ContextMenuBuilder<O> {
                                 this.saveSnapshot();
                                 this.applyStackAppliers(entry, null);
                             }).setStackable(true)
-                    .setIcon(ContextMenu.IconFactory.getIcon("undo"))
+                    .setIcon(MaterialIcons.UNDO)
                     .setStackApplier((stackEntry, value) -> {
                         targetFieldSetter.accept(this.self(), defaultValue);
                     });
@@ -793,9 +794,11 @@ public interface ContextMenuBuilder<O> {
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)
                 .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1)
-                .setIcon(ContextMenu.IconFactory.getIcon("info"));
+                .setIcon(MaterialIcons.INFO);
 
-        return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu).setStackable(true);
+        return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu)
+                .setStackable(true)
+                .setIcon(MaterialIcons.FOLDER_OPEN);
 
     }
 
@@ -834,6 +837,7 @@ public interface ContextMenuBuilder<O> {
                             .setSize(RangeSliderWindowBody.PIP_WINDOW_WIDTH, RangeSliderWindowBody.PIP_WINDOW_HEIGHT);
                     PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
                 }).setStackable(true)
+                .setIcon(MaterialIcons.SLIDERS)
                 .setStackApplier((stackEntry, value) -> {
                     if (!(value instanceof Number number)) {
                         return;
@@ -851,7 +855,7 @@ public interface ContextMenuBuilder<O> {
                         this.applyStackAppliers(entry, null);
                     }).setStackable(true)
                     .setStackApplier((stackEntry, value) -> targetFieldSetter.accept(this.self(), defaultValue))
-                    .setIcon(ContextMenu.IconFactory.getIcon("undo"));
+                    .setIcon(MaterialIcons.UNDO);
         }
 
         subMenu.addSeparatorEntry("separator_before_current_value_display")
@@ -881,9 +885,11 @@ public interface ContextMenuBuilder<O> {
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)
                 .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1)
-                .setIcon(ContextMenu.IconFactory.getIcon("info"));
+                .setIcon(MaterialIcons.INFO);
 
-        return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu).setStackable(true);
+        return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu)
+                .setStackable(true)
+                .setIcon(MaterialIcons.SLIDERS);
     }
 
     /**
@@ -960,7 +966,7 @@ public interface ContextMenuBuilder<O> {
                     }
                     targetFieldSetter.accept(this.self(), call);
                 })
-                .setIcon(ContextMenu.IconFactory.getIcon("text"));
+                .setIcon(MaterialIcons.TEXT_FIELDS);
 
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"), (menu, entry) -> {
@@ -974,7 +980,7 @@ public interface ContextMenuBuilder<O> {
                     .setStackApplier((stackEntry, value) -> {
                         targetFieldSetter.accept(this.self(), defaultValue);
                     })
-                    .setIcon(ContextMenu.IconFactory.getIcon("undo"));
+                    .setIcon(MaterialIcons.UNDO);
         }
 
         subMenu.addSeparatorEntry("separator_before_current_value_display")
@@ -1004,9 +1010,11 @@ public interface ContextMenuBuilder<O> {
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)
                 .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1)
-                .setIcon(ContextMenu.IconFactory.getIcon("info"));
+                .setIcon(MaterialIcons.INFO);
 
-        return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu).setStackable(true);
+        return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu)
+                .setStackable(true)
+                .setIcon(MaterialIcons.EDIT);
 
     }
 
@@ -1300,6 +1308,7 @@ public interface ContextMenuBuilder<O> {
         entry.setStackValueSupplier(stackEntry -> targetFieldGetter.get(this.self()));
         entry.setStackable(true);
         entry.setStackGroupKey(this.self().getClass());
+        entry.setIcon(MaterialIcons.REPEAT);
         return entry;
     }
 
@@ -1349,14 +1358,16 @@ public interface ContextMenuBuilder<O> {
     default ContextMenu.ClickableContextMenuEntry<?> buildGenericToggleContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier <O, Boolean> targetFieldGetter, @NotNull BiConsumer <O, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
         ConsumingSupplier<O, Boolean> getter = (ConsumingSupplier<O, Boolean>) targetFieldGetter;
         BiConsumer<O, Boolean> setter = (BiConsumer<O, Boolean>) targetFieldSetter;
-        return buildGenericCycleContextMenuEntry(parentMenu, entryIdentifier, ListUtils.of(false, true), selectedObjectsFilter, getter, setter, (menu, entry, switcherValue) -> {
-            if (switcherValue && entry.isActive()) {
+        ContextMenu.ClickableContextMenuEntry<?> entry = buildGenericCycleContextMenuEntry(parentMenu, entryIdentifier, ListUtils.of(false, true), selectedObjectsFilter, getter, setter, (menu, entryRef, switcherValue) -> {
+            if (switcherValue && entryRef.isActive()) {
                 MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
                 return Component.translatable(labelLocalizationKeyBase, enabled);
             }
             MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
             return Component.translatable(labelLocalizationKeyBase, disabled);
         });
+        entry.setIcon(MaterialIcons.TOGGLE_ON);
+        return entry;
     }
 
     /**

@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.image;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.ListUtils;
 import net.minecraft.network.chat.Component;
@@ -20,30 +21,35 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
         super.init();
 
         this.element.textureSupplier.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setIcon(ContextMenu.IconFactory.getIcon("image"));
+                .setIcon(MaterialIcons.IMAGE);
 
         this.element.imageTint.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setIcon(ContextMenu.IconFactory.getIcon("color_palette"));
+                .setIcon(MaterialIcons.PALETTE);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_repeat_texture");
 
         this.element.repeat.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .addIsActiveSupplier((menu, entry) -> !this.element.nineSlice.tryGetNonNull());
+                .addIsActiveSupplier((menu, entry) -> !this.element.nineSlice.tryGetNonNull())
+                .setIcon(MaterialIcons.REPEAT);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_nine_slice_settings");
 
         this.element.nineSlice.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull());
+                .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull())
+                .setIcon(MaterialIcons.GRID_GUIDES);
 
         this.element.nineSliceBorderX.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull());
+                .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull())
+                .setIcon(MaterialIcons.BORDER_HORIZONTAL);
 
         this.element.nineSliceBorderY.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull());
+                .addIsActiveSupplier((menu, entry) -> !this.element.repeat.tryGetNonNull())
+                .setIcon(MaterialIcons.BORDER_VERTICAL);
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 
-        this.element.restartAnimatedOnMenuLoad.buildContextMenuEntryAndAddTo(this.rightClickMenu, this);
+        this.element.restartAnimatedOnMenuLoad.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.REPLAY);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_restart_animated");
 
@@ -53,7 +59,7 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
                     for (AbstractEditorElement<?, ?> e : selectedElements) {
                         ((ImageElement)e.element).restoreAspectRatio();
                     }
-                }).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
+                }).setIcon(MaterialIcons.ASPECT_RATIO);
 
     }
 

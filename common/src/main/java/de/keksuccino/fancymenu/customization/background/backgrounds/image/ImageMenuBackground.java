@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -74,32 +75,41 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        this.textureSupplier.buildContextMenuEntryAndAddTo(menu, this);
+        this.textureSupplier.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.IMAGE);
         this.fallbackTextureSupplier.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.type.web.fallback.desc")));
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.type.web.fallback.desc")))
+                .setIcon(MaterialIcons.BROKEN_IMAGE);
 
         menu.addSeparatorEntry("separator_after_image_sources");
 
-        this.restartAnimatedOnMenuLoad.buildContextMenuEntryAndAddTo(menu, this);
+        this.restartAnimatedOnMenuLoad.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.RESTART_ALT);
 
         menu.addSeparatorEntry("separator_after_restart_animated");
 
         this.repeat.buildContextMenuEntryAndAddTo(menu, this)
-                .addIsActiveSupplier((m, entry) -> !this.slideLeftRight.tryGetNonNull());
+                .addIsActiveSupplier((m, entry) -> !this.slideLeftRight.tryGetNonNull())
+                .setIcon(MaterialIcons.REPEAT);
 
         this.slideLeftRight.buildContextMenuEntryAndAddTo(menu, this)
-                .addIsActiveSupplier((m, entry) -> !this.repeat.tryGetNonNull() && !this.parallaxEnabled.tryGetNonNull());
+                .addIsActiveSupplier((m, entry) -> !this.repeat.tryGetNonNull() && !this.parallaxEnabled.tryGetNonNull())
+                .setIcon(MaterialIcons.SWIPE);
 
         menu.addSeparatorEntry("separator_before_parallax");
 
         this.parallaxEnabled.buildContextMenuEntryAndAddTo(menu, this)
-                .addIsActiveSupplier((m, entry) -> !this.slideLeftRight.tryGetNonNull());
+                .addIsActiveSupplier((m, entry) -> !this.slideLeftRight.tryGetNonNull())
+                .setIcon(MaterialIcons._3D);
         this.parallaxIntensityXString.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")));
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")))
+                .setIcon(MaterialIcons.SPLITSCREEN_LANDSCAPE);
         this.parallaxIntensityYString.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")));
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")))
+                .setIcon(MaterialIcons.SPLITSCREEN_PORTRAIT);
         this.invertParallax.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")));
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")))
+                .setIcon(MaterialIcons.SWAP_HORIZ);
 
     }
 

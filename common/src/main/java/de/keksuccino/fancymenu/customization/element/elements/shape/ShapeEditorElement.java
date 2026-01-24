@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.shape;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -20,7 +21,7 @@ public class ShapeEditorElement extends AbstractEditorElement<ShapeEditorElement
 
         this.element.color.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.shape.color.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("color_palette"));
+                .setIcon(MaterialIcons.PALETTE);
 
     }
 

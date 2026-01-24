@@ -32,6 +32,7 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -569,6 +570,15 @@ public class CustomizationOverlayUI {
                                     FancyMenu.getOptions().devShowPipWindowDebug.setValue(cycle.getAsBoolean());
                                 }))
                 .setIcon(MaterialIcons.DEVELOPER_BOARD);
+
+        developerMenu.addValueCycleEntry("smooth_font_multiline_rendering",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.developer.smooth_font_multiline_rendering", FancyMenu.getOptions().smoothFontMultilineRendering.getValue())
+                                .addCycleListener(cycle -> {
+                                    FancyMenu.getOptions().smoothFontMultilineRendering.setValue(cycle.getAsBoolean());
+                                    SmoothTextRenderer.clearCaches();
+                                }))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.developer.smooth_font_multiline_rendering.desc")))
+                .setIcon(MaterialIcons.FORMAT_TEXT_WRAP);
 
         return customizationSettingsMenu;
 

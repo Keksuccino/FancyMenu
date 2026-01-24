@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -51,7 +52,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement<VanillaWidge
                         menu.closeMenu();
                     })
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.vanilla_button.copy_locator.desc")))
-                    .setIcon(ContextMenu.IconFactory.getIcon("notes"));
+                    .setIcon(MaterialIcons.CONTENT_COPY);
 
         }
 
@@ -73,7 +74,8 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement<VanillaWidge
                             consumes -> consumes.element.sliderBackgroundTextureNormal,
                             (buttonEditorElement, iTextureResourceSupplier) -> {
                                 buttonEditorElement.element.sliderBackgroundTextureNormal = iTextureResourceSupplier;
-                            }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.normal"), true, null, true, true, true);
+                            }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.normal"), true, null, true, true, true)
+                            .setIcon(MaterialIcons.IMAGE);
 
                     this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "highlighted_slider_background_texture",
                                     VanillaWidgetEditorElement.class,
@@ -82,7 +84,8 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement<VanillaWidge
                                     (buttonEditorElement, iTextureResourceSupplier) -> {
                                         buttonEditorElement.element.sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
                                     }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
-                            .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")));
+                            .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")))
+                            .setIcon(MaterialIcons.IMAGE);
 
                 }
 
@@ -91,17 +94,20 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement<VanillaWidge
                 this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle", VanillaWidgetEditorElement.class,
                         consumes -> consumes.element.nineSliceSliderHandle,
                         (buttonEditorElement, aBoolean) -> buttonEditorElement.element.nineSliceSliderHandle = aBoolean,
-                        "fancymenu.elements.slider.v2.handle.textures.nine_slice");
+                        "fancymenu.elements.slider.v2.handle.textures.nine_slice")
+                        .setIcon(MaterialIcons.DRAG_HANDLE);
 
                 this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_x", VanillaWidgetEditorElement.class,
                         consumes -> consumes.element.nineSliceSliderHandleBorderX,
                         (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceSliderHandleBorderX = integer,
-                        Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"), true, 5, null, null);
+                        Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"), true, 5, null, null)
+                        .setIcon(MaterialIcons.BORDER_HORIZONTAL);
 
                 this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_y", VanillaWidgetEditorElement.class,
                         consumes -> consumes.element.nineSliceSliderHandleBorderY,
                         (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceSliderHandleBorderY = integer,
-                        Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null);
+                        Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null)
+                        .setIcon(MaterialIcons.BORDER_VERTICAL);
 
             }
 

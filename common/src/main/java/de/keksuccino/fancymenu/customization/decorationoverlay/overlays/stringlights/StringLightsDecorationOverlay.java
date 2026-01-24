@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.StringLightsOverlay;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphics;
@@ -55,18 +56,23 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
         this.stringLightsScale.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.STRAIGHTEN)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.scale.desc")));
 
         this.stringLightsWindStrength.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.AIR)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.wind_strength.desc")));
 
         this.stringLightsFlickerSpeed.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.SHUTTER_SPEED)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.string_lights.flicker_speed.desc")));
 
         menu.addSeparatorEntry("separator_before_string_light_strings");
 
         ContextMenu stringsMenu = new ContextMenu();
-        menu.addSubMenuEntry("string_lights_strings", Component.translatable("fancymenu.decoration_overlays.string_lights.strings"), stringsMenu).setStackable(true);
+        menu.addSubMenuEntry("string_lights_strings", Component.translatable("fancymenu.decoration_overlays.string_lights.strings"), stringsMenu)
+                .setIcon(MaterialIcons.LIGHTBULB)
+                .setStackable(true);
 
         addStringLightSubMenu(stringsMenu,
                 "string_lights_left_center_to_top_center",
@@ -239,15 +245,20 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
                                        @NotNull Property.ColorProperty colorProperty,
                                        @NotNull String showTooltipKey, @NotNull String christmasTooltipKey, @NotNull String colorTooltipKey) {
         ContextMenu subMenu = new ContextMenu();
-        addTo.addSubMenuEntry(entryIdentifier + "_menu", label, subMenu).setStackable(true);
+        addTo.addSubMenuEntry(entryIdentifier + "_menu", label, subMenu)
+                .setIcon(MaterialIcons.LIGHT)
+                .setStackable(true);
 
         showProperty.buildContextMenuEntryAndAddTo(subMenu, this)
+                .setIcon(MaterialIcons.VISIBILITY)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(showTooltipKey)));
 
         christmasProperty.buildContextMenuEntryAndAddTo(subMenu, this)
+                .setIcon(MaterialIcons.CELEBRATION)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(christmasTooltipKey)));
 
         colorProperty.buildContextMenuEntryAndAddTo(subMenu, this)
+                .setIcon(MaterialIcons.PALETTE)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable(colorTooltipKey)));
     }
 
