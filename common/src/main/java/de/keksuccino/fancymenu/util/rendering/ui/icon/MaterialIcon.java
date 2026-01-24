@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui;
+package de.keksuccino.fancymenu.util.rendering.ui.icon;
 
 import net.minecraft.resources.ResourceLocation;
 

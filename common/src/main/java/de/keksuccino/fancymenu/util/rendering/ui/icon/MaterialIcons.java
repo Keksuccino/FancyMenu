@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui;
+package de.keksuccino.fancymenu.util.rendering.ui.icon;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
