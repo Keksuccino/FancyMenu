@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcon;
+import de.keksuccino.fancymenu.util.rendering.ui.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -40,10 +41,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ResourceLocation SUB_CONTEXT_MENU_ARROW_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/context_menu_sub_arrow.png");
-    private static final ResourceLocation CONTEXT_MENU_TOOLTIP_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/context_menu_tooltip.png");
+    private static final MaterialIcon SUB_CONTEXT_MENU_ARROW_ICON = MaterialIcons.CHEVRON_RIGHT;
     private static final ResourceLocation SCROLL_UP_ARROW = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_up_arrow.png");
     private static final ResourceLocation SCROLL_DOWN_ARROW = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_down_arrow.png");
+    private static final MaterialIcon CONTEXT_MENU_TOOLTIP_ICON = MaterialIcons.INFO;
     private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
     private static final int SCROLL_INDICATOR_HEIGHT = 12; // Space reserved for arrows
     private static final int MATERIAL_ICON_SIZE_SMALL = 50;
@@ -1651,8 +1652,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             this.renderBackground(graphics);
 
-            int labelX = (int) (this.x + ICON_PADDING_LEFT);
-            if (this.hasIconAssigned() || this.addSpaceForIcon) labelX += ICON_LABEL_SPACING;
+            int labelX = this.getLabelX();
             int labelY = (int) (this.y + (this.height / 2) - (UIBase.getUITextHeightNormal() / 2));
             UIBase.renderText(graphics, this.getLabel(), labelX, labelY, this.getLabelColor());
 
@@ -1745,7 +1745,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
                 RenderSystem.enableBlend();
                 UIBase.getUITheme().ui_icon_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
-                graphics.blit(CONTEXT_MENU_TOOLTIP_ICON, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
+                IconRenderData iconData = this.resolveTooltipIconData();
+                if (iconData != null) {
+                    this.blitScaledIcon(graphics, iconData, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+                }
                 RenderingUtils.resetShaderColor(graphics);
 
                 if (this.tooltipActive) {
@@ -1760,15 +1763,41 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected boolean isTooltipIconHovered(int mouseX, int mouseY, int offsetX) {
-            return UIBase.isXYInArea(mouseX, mouseY, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 10, 10);
+            return UIBase.isXYInArea(mouseX, mouseY, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+        }
+
+        protected int getLabelX() {
+            int labelX = (int) (this.x + ICON_PADDING_LEFT);
+            if (this.hasIconAssigned() || this.addSpaceForIcon) {
+                labelX += ICON_LABEL_SPACING;
+            }
+            return labelX;
         }
 
         protected int getTooltipIconX() {
-            return (int) (this.x + this.width - 20);
+            int labelX = this.getLabelX();
+            int labelWidth = (int) UIBase.getUITextWidthNormal(this.getLabel());
+            int gap = Math.round(ICON_WIDTH_HEIGHT * (2.0F / 3.0F));
+            return labelX + labelWidth + gap;
         }
 
         protected int getTooltipIconY() {
             return (int) (this.y + 5);
+        }
+
+        @Nullable
+        protected IconRenderData resolveTooltipIconData() {
+            int iconSize = MATERIAL_ICON_SIZE.get();
+            ResourceLocation location = CONTEXT_MENU_TOOLTIP_ICON.getTextureLocation(iconSize);
+            if (location == null) {
+                return null;
+            }
+            int width = CONTEXT_MENU_TOOLTIP_ICON.getWidth(iconSize);
+            int height = CONTEXT_MENU_TOOLTIP_ICON.getHeight(iconSize);
+            if (width <= 0 || height <= 0) {
+                return null;
+            }
+            return new IconRenderData(location, width, height);
         }
 
         protected void renderBackground(@NotNull GuiGraphics graphics) {
@@ -2009,13 +2038,26 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected void renderSubMenuArrow(GuiGraphics graphics) {
             RenderSystem.enableBlend();
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-            graphics.blit(SUB_CONTEXT_MENU_ARROW_ICON, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10);
+            IconRenderData iconData = this.resolveSubMenuArrowIconData();
+            if (iconData != null) {
+                this.blitScaledIcon(graphics, iconData, (int) (this.x + this.width - 20), (int) (this.y + 5), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+            }
             RenderingUtils.resetShaderColor(graphics);
         }
 
-        @Override
-        protected int getTooltipIconX() {
-            return super.getTooltipIconX() - 15;
+        @Nullable
+        protected IconRenderData resolveSubMenuArrowIconData() {
+            int iconSize = MATERIAL_ICON_SIZE.get();
+            ResourceLocation location = SUB_CONTEXT_MENU_ARROW_ICON.getTextureLocation(iconSize);
+            if (location == null) {
+                return null;
+            }
+            int width = SUB_CONTEXT_MENU_ARROW_ICON.getWidth(iconSize);
+            int height = SUB_CONTEXT_MENU_ARROW_ICON.getHeight(iconSize);
+            if (width <= 0 || height <= 0) {
+                return null;
+            }
+            return new IconRenderData(location, width, height);
         }
 
         @Override
