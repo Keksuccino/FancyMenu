@@ -68,16 +68,21 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
         this.renderWidgetOverlays(graphics, Minecraft.getInstance().screen, mouseX, mouseY, partial);
 
-        int leftX = 0;
-        int rightX = Minecraft.getInstance().screen.width;
+        float uiScale = UIBase.getFixedUIScale();
+        int scaledMouseX = (int)((float)mouseX / uiScale);
+        int scaledMouseY = (int)((float)mouseY / uiScale);
 
-        int topLeftY = this.topYOffsetSupplier.get();
-        int topRightY = this.topYOffsetSupplier.get();
-        int bottomLeftY = this.bottomYOffsetSupplier.get();
-        int bottomRightY = this.bottomYOffsetSupplier.get();
+        int leftX = 0;
+        int rightX = (int)((float)Minecraft.getInstance().screen.width / uiScale);
+
+        int topLeftY = (int)((float)this.topYOffsetSupplier.get() / uiScale);
+        int topRightY = (int)((float)this.topYOffsetSupplier.get() / uiScale);
+        int bottomLeftY = (int)((float)this.bottomYOffsetSupplier.get() / uiScale);
+        int bottomRightY = (int)((float)this.bottomYOffsetSupplier.get() / uiScale);
 
         RenderSystem.enableBlend();
         graphics.pose().pushPose();
+        graphics.pose().scale(uiScale, uiScale, uiScale);
 
         for (DebugOverlayLine line : this.lines) {
 
@@ -106,7 +111,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
             line.lastY = y;
             line.lastWidth = width;
             line.lastHeight = height;
-            line.hovered = line.isMouseOver(mouseX, mouseY);
+            line.hovered = line.isMouseOver(scaledMouseX, scaledMouseY);
 
             if (line instanceof DebugOverlayGraphLine graphLine) {
                 this.renderGraphLine(graphics, graphLine, x, y, width, height);
@@ -436,8 +441,11 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (ContainerEventHandler.super.mouseClicked(mouseX, mouseY, button)) return true;
         this.closeRightClickContextMenu();
+        float uiScale = UIBase.getFixedUIScale();
+        int scaledMouseX = (int)(mouseX / uiScale);
+        int scaledMouseY = (int)(mouseY / uiScale);
         for (DebugOverlayLine line : this.lines) {
-            if (line.onClick(button, (int) mouseX, (int) mouseY)) return true;
+            if (line.onClick(button, scaledMouseX, scaledMouseY)) return true;
         }
         if (button == 1) {
             for (AbstractElement e : this.currentScreenElements) {
