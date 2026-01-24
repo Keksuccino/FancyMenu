@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
@@ -95,7 +96,8 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
             });
             Dialogs.openGeneric(s,
                     Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name"),
-                    ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                    null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                    .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
         });
         this.addRenderableWidget(addVariableButton);
         UIBase.applyDefaultWidgetSkinTo(addVariableButton, blur);
@@ -111,7 +113,8 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
                 });
                 Dialogs.openGeneric(s,
                         Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"),
-                        ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                        null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                        .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                 s.setText(e.variable.getValue());
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));

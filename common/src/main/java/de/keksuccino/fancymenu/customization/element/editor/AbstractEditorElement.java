@@ -289,7 +289,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                         }
                                         Dialogs.openGeneric(s,
                                                 Component.translatable("fancymenu.elements.anchor_points.element.setidentifier"),
-                                                ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                                                null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT).getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                                         menu.closeMenuChain();
                                     }
                                 })

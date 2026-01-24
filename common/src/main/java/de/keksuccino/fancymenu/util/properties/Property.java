@@ -744,7 +744,9 @@ public class Property<T> {
                                     s.setMultilineMode(false);
                                     s.setPlaceholdersAllowed(true);
                                     contextMenu.closeMenuChain();
-                                    Dialogs.openGeneric(s, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), ContextMenu.IconFactory.getIcon("text"), TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+                                    Dialogs.openGeneric(s, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null,
+                                            TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                                            .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                                 })
                         .setStackable(true)
                         .setStackApplier((stackEntry, value) -> {

@@ -471,7 +471,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 });
                 Dialogs.openGeneric(s,
                         Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"),
-                        ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                        null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                        .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                 menu1.closeMenuChain();
             }).setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")))
                     .setIcon(MaterialIcons.BLOCK);
@@ -514,7 +515,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 });
                 Dialogs.openGeneric(s,
                         Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"),
-                        ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                        null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                        .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                 menu1.closeMenuChain();
             }).setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")))
                     .setIcon(MaterialIcons.CHECK_CIRCLE);
@@ -594,7 +596,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     s.setTextValidator(consumes -> TextValidators.INTEGER_TEXT_VALIDATOR.get(consumes.getText()));
                     Dialogs.openGeneric(s,
                             Component.translatable("fancymenu.editor.layout.index"),
-                            ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                            null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                            .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                     s.setText("" + editor.layout.layoutIndex);
                     menu1.closeMenuChain();
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.editor.layout.index.desc")))
@@ -620,7 +623,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     });
                     Dialogs.openGeneric(s,
                             Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"),
-                            ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                            null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                            .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                     s.setText(editor.layout.randomGroup);
                     menu1.closeMenuChain();
                 }).addIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)

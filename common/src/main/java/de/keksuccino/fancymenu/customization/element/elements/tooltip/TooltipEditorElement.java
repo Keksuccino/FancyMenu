@@ -72,7 +72,8 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                                 s.setMultilineMode(true);
                                 s.setPlaceholdersAllowed(true);
                                 menu.closeMenuChain();
-                                Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.text.v2.source.input"), ContextMenu.IconFactory.getIcon("text"), TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+                                Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.text.v2.source.input"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                                        .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                             }
                         })
                 .setStackable(true)

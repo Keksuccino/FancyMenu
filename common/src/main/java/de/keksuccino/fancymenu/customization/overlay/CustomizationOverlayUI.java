@@ -1182,7 +1182,8 @@ public class CustomizationOverlayUI {
             });
             Dialogs.openGeneric(inputScreen,
                     Component.translatable("fancymenu.layout.manage.rename"),
-                    ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                    null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                    .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
             inputScreen.setText(layout.getLayoutName());
             menu1.closeMenuChain();
         }).setIcon(MaterialIcons.DRIVE_FILE_RENAME_OUTLINE);

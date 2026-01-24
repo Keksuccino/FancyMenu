@@ -304,7 +304,8 @@ public class ContextMenuUtils {
                         return textValidator.get(consumes.getText());
                     });
                 }
-                Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                Dialogs.openGeneric(s, label, null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                        .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                 s.setText(getter.get());
                 inputScreen = null;
             } else {
@@ -325,7 +326,8 @@ public class ContextMenuUtils {
                 s.setMultilineMode(multiLineInput);
                 s.setPlaceholdersAllowed(allowPlaceholders);
                 s.setText(getter.get());
-                Dialogs.openGeneric(s, label, ContextMenu.IconFactory.getIcon("text"), TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+                Dialogs.openGeneric(s, label, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                        .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                 inputScreen = null;
             }
             if (inputScreen != null) {

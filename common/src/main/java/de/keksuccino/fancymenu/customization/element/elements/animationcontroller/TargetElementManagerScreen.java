@@ -5,9 +5,9 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import net.minecraft.client.Minecraft;
@@ -55,7 +55,7 @@ public class TargetElementManagerScreen extends CellScreen {
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())));
         } else {
             for (AnimationControllerElement.TargetElement target : this.targets) {
-                AbstractEditorElement e = this.parentLayoutEditor.getElementByInstanceIdentifier(target.targetElementId);
+                AbstractEditorElement<?,?> e = this.parentLayoutEditor.getElementByInstanceIdentifier(target.targetElementId);
                 MutableComponent label = (e != null) ? e.element.getDisplayName().copy() : Component.literal("---");
                 label = label.setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
                 label = label.append(Component.literal(" [" + target.targetElementId + "]").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_generic_text_color.getColorInt())));
@@ -107,9 +107,7 @@ public class TargetElementManagerScreen extends CellScreen {
                     if (!trimmed.isEmpty()) {
                         try {
                             offsetMs = Integer.parseInt(trimmed);
-                        } catch (NumberFormatException ignored) {
-                            offsetMs = 0;
-                        }
+                        } catch (NumberFormatException ignored) {}
                     }
                     target.timingOffsetMs = offsetMs;
                 }
@@ -117,7 +115,7 @@ public class TargetElementManagerScreen extends CellScreen {
             });
             Dialogs.openGeneric(inputScreen,
                     Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.input"),
-                    ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                    null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT).getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
             inputScreen.setText("" + target.timingOffsetMs);
         }).setIsActiveSupplier(consumes -> (this.getSelectedTarget() != null));
         this.addRightSideDefaultSpacer();
@@ -145,7 +143,7 @@ public class TargetElementManagerScreen extends CellScreen {
             });
             Dialogs.openGeneric(inputScreen,
                     Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id.input"),
-                    ContextMenu.IconFactory.getIcon("text"), TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT);
+                    null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT).getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
         });
         this.addRightSideDefaultSpacer();
     }
@@ -189,7 +187,7 @@ public class TargetElementManagerScreen extends CellScreen {
         protected TargetEntryCell(@NotNull AnimationControllerElement.TargetElement targetElement, @NotNull Component label) {
             this.targetElement = targetElement;
             this.label = label;
-            this.setSearchStringSupplier(() -> this.label.getString());
+            this.setSearchStringSupplier(this.label::getString);
             this.putMemoryValue("target_id", targetElement.targetElementId);
             this.setSelectable(true);
         }
