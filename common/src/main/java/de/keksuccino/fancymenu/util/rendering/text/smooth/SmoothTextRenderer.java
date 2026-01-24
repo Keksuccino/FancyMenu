@@ -447,7 +447,7 @@ public final class SmoothTextRenderer {
     }
 
     private static void drawLineIfNeeded(GuiGraphics graphics, boolean enabled, float startX, float endX, float y, int color, float thickness) {
-        if (!enabled || endX <= startX) return;
+        if (!enabled || endX <= startX || thickness <= 0.0F) return;
         RenderingUtils.fillF(graphics, startX, y, endX, y + thickness, color);
     }
 

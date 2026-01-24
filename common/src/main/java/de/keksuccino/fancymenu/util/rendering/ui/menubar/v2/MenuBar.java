@@ -49,8 +49,10 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     protected final List<MenuBarEntry> leftEntries = new ArrayList<>();
     protected final List<MenuBarEntry> rightEntries = new ArrayList<>();
     protected final List<MenuBarClickListener> clickListeners = new ArrayList<>();
+    protected final List<PendingContextMenuOpen> pendingContextMenuOpens = new ArrayList<>();
     protected boolean hovered = false;
     protected boolean expanded = true;
+    protected boolean layoutReady = false;
     protected ClickableMenuBarEntry collapseOrExpandEntry;
     protected ResourceSupplier<ITexture> collapseExpandTextureSupplier = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/collapse_expand.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
     protected boolean clickActive = false;
@@ -96,6 +98,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             this.renderBackground(graphics, this.collapseOrExpandEntry.x, y, this.collapseOrExpandEntry.x + this.collapseOrExpandEntry.getWidth(), HEIGHT, partial, scale);
         }
 
+        this.layoutReady = false;
         if (this.expanded) {
             //Render all visible entries
             int leftX = 0;
@@ -124,9 +127,12 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 }
                 rightX -= e.getWidth();
             }
+            this.layoutReady = true;
         } else {
             this.collapseOrExpandEntry.render(graphics, scaledMouseX, scaledMouseY, partial);
         }
+
+        this.flushPendingContextMenuOpens();
 
         if (this.expanded) {
             this.renderBottomLine(graphics, scaledWidth);
@@ -334,6 +340,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             if (side == Side.RIGHT) {
                 this.rightEntries.add(Math.max(0, Math.min(index, this.rightEntries.size())), entry);
             }
+            this.markLayoutDirty();
         }
         return entry;
     }
@@ -343,23 +350,27 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         if (e != null) {
             this.leftEntries.remove(e);
             this.rightEntries.remove(e);
+            this.markLayoutDirty();
         }
         return this;
     }
 
     public MenuBar clearLeftEntries() {
         this.leftEntries.clear();
+        this.markLayoutDirty();
         return this;
     }
 
     public MenuBar clearRightEntries() {
         this.rightEntries.clear();
+        this.markLayoutDirty();
         return this;
     }
 
     public MenuBar clearEntries() {
         this.leftEntries.clear();
         this.rightEntries.clear();
+        this.markLayoutDirty();
         return this;
     }
 
@@ -469,6 +480,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     public MenuBar setExpanded(boolean expanded) {
         this.expanded = expanded;
         if (!this.expanded) this.closeAllContextMenus();
+        this.markLayoutDirty();
         return this;
     }
 
@@ -597,6 +609,38 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
     public static float getRenderScale() {
         return UIBase.calculateFixedScale(getBaseScale());
+    }
+
+    protected void markLayoutDirty() {
+        this.layoutReady = false;
+    }
+
+    protected boolean shouldDeferContextMenuOpen() {
+        return !this.layoutReady;
+    }
+
+    protected void queueContextMenuOpen(@NotNull ContextMenuBarEntry entry, @Nullable List<String> entryPath) {
+        for (int i = 0; i < this.pendingContextMenuOpens.size(); i++) {
+            PendingContextMenuOpen pending = this.pendingContextMenuOpens.get(i);
+            if (pending.entry == entry) {
+                this.pendingContextMenuOpens.set(i, new PendingContextMenuOpen(entry, entryPath));
+                return;
+            }
+        }
+        this.pendingContextMenuOpens.add(new PendingContextMenuOpen(entry, entryPath));
+    }
+
+    protected void flushPendingContextMenuOpens() {
+        if (!this.layoutReady || this.pendingContextMenuOpens.isEmpty()) {
+            return;
+        }
+        List<PendingContextMenuOpen> pending = new ArrayList<>(this.pendingContextMenuOpens);
+        this.pendingContextMenuOpens.clear();
+        for (PendingContextMenuOpen open : pending) {
+            if (this.hasEntry(open.entry.identifier)) {
+                open.entry.openContextMenuInternal(open.entryPath);
+            }
+        }
     }
 
     public static abstract class MenuBarEntry implements Renderable, GuiEventListener {
@@ -909,6 +953,14 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
          * @param entryPath The {@link ContextMenu.SubMenuContextMenuEntry} path of menus to open.
          */
         public void openContextMenu(@Nullable List<String> entryPath) {
+            if (this.parent.shouldDeferContextMenuOpen()) {
+                this.parent.queueContextMenuOpen(this, entryPath);
+                return;
+            }
+            this.openContextMenuInternal(entryPath);
+        }
+
+        private void openContextMenuInternal(@Nullable List<String> entryPath) {
             this.contextMenu.setScale(getBaseScale());
             float scale = getRenderScale();
             float scaledX = (float)this.x * scale;
@@ -1120,6 +1172,18 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     public enum Side {
         LEFT,
         RIGHT
+    }
+
+    protected static final class PendingContextMenuOpen {
+
+        private final ContextMenuBarEntry entry;
+        @Nullable
+        private final List<String> entryPath;
+
+        private PendingContextMenuOpen(@NotNull ContextMenuBarEntry entry, @Nullable List<String> entryPath) {
+            this.entry = entry;
+            this.entryPath = entryPath;
+        }
     }
 
 }

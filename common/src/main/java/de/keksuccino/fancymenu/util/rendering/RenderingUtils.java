@@ -439,7 +439,6 @@ public class RenderingUtils {
         vertexConsumer.addVertex(matrix4f, (float)minX, (float)maxY, (float)z).setColor(color);
         vertexConsumer.addVertex(matrix4f, (float)maxX, (float)maxY, (float)z).setColor(color);
         vertexConsumer.addVertex(matrix4f, (float)maxX, (float)minY, (float)z).setColor(color);
-        graphics.flush();
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, ResourceLocation location, float x, float y, float f3, float f4, float width, float height, float width2, float height2, int color) {

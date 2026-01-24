@@ -120,6 +120,10 @@ public class DebugOverlayBuilder {
             if (fps < 10) fpsComp = fpsComp.setStyle(Style.EMPTY.withColor(ChatFormatting.RED));
             return Component.translatable("fancymenu.overlay.debug.fps", fpsComp);
         });
+        overlay.addGraphLine("frames_per_second_graph", DebugOverlay.LinePosition.TOP_LEFT,
+                        () -> (double)Minecraft.getInstance().getFps(),
+                        0.0D, 240.0D)
+                .setInvertColorGradient(true);
         overlay.addLine("ram_usage", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
             long max = Runtime.getRuntime().maxMemory();
             long total = Runtime.getRuntime().totalMemory();
@@ -132,6 +136,14 @@ public class DebugOverlayBuilder {
             if (percent >= 80) percentString = ChatFormatting.RED + "" + percent + "%" + ChatFormatting.RESET;
             return Component.translatable("fancymenu.overlay.debug.memory", ramString, percentString);
         });
+        overlay.addGraphLine("ram_usage_graph", DebugOverlay.LinePosition.TOP_LEFT, () -> {
+            long max = Runtime.getRuntime().maxMemory();
+            long total = Runtime.getRuntime().totalMemory();
+            long free = Runtime.getRuntime().freeMemory();
+            long used = total - free;
+            if (max <= 0L) return 0.0D;
+            return (double)(used * 100L) / (double)max;
+        }, 0.0D, 100.0D);
         overlay.addLine("cpu_jvm_usage", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
             double usage = PerformanceUtils.getJvmCpuUsage();
             if (usage < 0D) usage = 0D;
@@ -142,6 +154,11 @@ public class DebugOverlayBuilder {
             if (usage >= 80) usageString = ChatFormatting.RED + "" + usage + "%" + ChatFormatting.RESET;
             return Component.translatable("fancymenu.overlay.debug.cpu_usage.jvm", usageString);
         });
+        overlay.addGraphLine("cpu_jvm_usage_graph", DebugOverlay.LinePosition.TOP_LEFT, () -> {
+            double usage = PerformanceUtils.getJvmCpuUsage();
+            if (usage < 0D) usage = 0D;
+            return usage * 100.0D;
+        }, 0.0D, 100.0D);
         overlay.addLine("cpu_os_usage", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
             double usage = PerformanceUtils.getOsCpuUsage();
             if (usage < 0D) usage = 0D;
@@ -152,6 +169,11 @@ public class DebugOverlayBuilder {
             if (usage >= 80) usageString = ChatFormatting.RED + "" + usage + "%" + ChatFormatting.RESET;
             return Component.translatable("fancymenu.overlay.debug.cpu_usage.os", usageString);
         });
+        overlay.addGraphLine("cpu_os_usage_graph", DebugOverlay.LinePosition.TOP_LEFT, () -> {
+            double usage = PerformanceUtils.getOsCpuUsage();
+            if (usage < 0D) usage = 0D;
+            return usage * 100.0D;
+        }, 0.0D, 100.0D);
         overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.cpu", GlUtil.getCpuInfo()));
         overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.gpu", GlUtil.getRenderer(), GlUtil.getOpenGLVersion()));
 
