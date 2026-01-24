@@ -82,8 +82,10 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
             boolean isLeft = (line.linePosition == LinePosition.TOP_LEFT) || (line.linePosition == LinePosition.BOTTOM_LEFT);
             Component text = line.textSupplier.get(line);
-            int width = this.font.width(text) + (this.lineBorderWidth*2);
-            int height = this.font.lineHeight + (this.lineSpacerHeight*2);
+            float textWidth = UIBase.getUITextWidthNormal(text);
+            float textHeight = UIBase.getUITextHeightNormal();
+            int width = (int)Math.ceil(textWidth) + (this.lineBorderWidth * 2);
+            int height = (int)Math.ceil(textHeight) + (this.lineSpacerHeight * 2);
             if (line instanceof DebugOverlaySpacerLine s) height = s.height;
             int x = isLeft ? leftX : rightX - width;
             int y = topLeftY;
@@ -101,7 +103,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
                 this.renderLineBackground(graphics, x, y, width, height);
 
-                graphics.drawString(this.font, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt(), this.lineTextShadow);
+                UIBase.renderText(graphics, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt(), UIBase.getUITextSizeNormal(), this.lineTextShadow);
 
             }
 

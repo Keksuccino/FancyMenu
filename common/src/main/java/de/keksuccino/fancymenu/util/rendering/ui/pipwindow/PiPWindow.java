@@ -473,7 +473,6 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private void renderDebugOverlay(@NotNull GuiGraphics graphics) {
-        Font font = this.minecraft.font;
         List<String> lines = new ArrayList<>();
         double renderScale = getScreenRenderScaleFactor();
         if (!Double.isFinite(renderScale) || renderScale <= 0.0) {
@@ -505,22 +504,23 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             lines.add("max_size: raw " + rawMaxWidth + "x" + rawMaxHeight + " | scaled " + maxWidth + "x" + maxHeight);
         }
         int padding = 2;
-        int maxTextWidth = 0;
+        float maxTextWidth = 0.0F;
         for (String line : lines) {
-            maxTextWidth = Math.max(maxTextWidth, font.width(line));
+            maxTextWidth = Math.max(maxTextWidth, UIBase.getUITextWidth(line));
         }
-        int boxWidth = maxTextWidth + padding * 2;
-        int boxHeight = lines.size() * font.lineHeight + padding * 2;
+        float lineHeight = UIBase.getUITextHeightNormal();
+        int boxWidth = (int)Math.ceil(maxTextWidth + padding * 2);
+        int boxHeight = (int)Math.ceil(lines.size() * lineHeight + padding * 2);
         int x = getBodyX() + padding;
         int y = getBodyY() + padding;
         int backgroundColor = 0x88000000;
         graphics.fill(x, y, x + boxWidth, y + boxHeight, backgroundColor);
         int textColor = 0xFFFF0000;
-        int textX = x + padding;
-        int textY = y + padding;
+        float textX = x + padding;
+        float textY = y + padding;
         for (String line : lines) {
-            graphics.drawString(font, line, textX, textY, textColor, false);
-            textY += font.lineHeight;
+            UIBase.renderText(graphics, line, textX, textY, textColor);
+            textY += lineHeight;
         }
     }
 
