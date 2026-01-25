@@ -30,8 +30,6 @@ public class DebugOverlayBuilder {
 
         DebugOverlay overlay = new DebugOverlay();
 
-        overlay.setLineTextShadow(false);
-
         int menuBarHeight = (int)((float)MenuBar.HEIGHT * MenuBar.getRenderScale());
         overlay.setTopYOffsetSupplier(() -> menuBarHeight + 10);
         overlay.setBottomYOffsetSupplier(() -> -10);

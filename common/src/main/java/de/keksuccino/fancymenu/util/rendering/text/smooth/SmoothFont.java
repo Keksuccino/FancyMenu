@@ -1,7 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -14,6 +17,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class SmoothFont implements AutoCloseable {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     // Thresholds for switching LODs (in effective screen pixel size)
     // Screen size = logical size * render scale
@@ -52,10 +57,14 @@ public final class SmoothFont implements AutoCloseable {
     private final int fallbackSourceIndex;
 
     SmoothFont(@Nonnull String debugName, @Nonnull Font baseFont, float baseSize, float sdfRange) {
-        this(debugName, List.of(baseFont), baseSize, sdfRange, null, null);
+        this(debugName, List.of(baseFont), baseSize, sdfRange, 1.0F, null, null);
     }
 
     SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float sdfRange, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
+        this(debugName, baseFonts, baseSize, sdfRange, 1.0F, languageOrders, sourceLabels);
+    }
+
+    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float sdfRange, float lineHeightMultiplier, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
         this.debugName = Objects.requireNonNull(debugName);
         Objects.requireNonNull(baseFonts);
         if (baseFonts.isEmpty()) {
@@ -70,7 +79,8 @@ public final class SmoothFont implements AutoCloseable {
         LineMetrics metrics = logicalFont.getLineMetrics("Hg", this.fontRenderContext);
         this.ascent = metrics.getAscent();
         this.descent = metrics.getDescent();
-        this.lineHeight = metrics.getHeight();
+        float resolvedLineHeightMultiplier = (lineHeightMultiplier > 0.0F) ? lineHeightMultiplier : 1.0F;
+        this.lineHeight = metrics.getHeight() * resolvedLineHeightMultiplier;
         this.underlineOffset = metrics.getUnderlineOffset();
         this.underlineThickness = metrics.getUnderlineThickness();
         this.strikethroughOffset = metrics.getStrikethroughOffset();
@@ -102,23 +112,19 @@ public final class SmoothFont implements AutoCloseable {
      * @return LOD index (0 = Micro, 1 = Tiny, 2 = Small, 3 = Medium, 4 = Large)
      */
     public int getLodLevel(float size, float renderScale) {
-        float screenSize = size * renderScale;
-        if (screenSize <= LOD_MICRO_LIMIT) return 0;
-        if (screenSize <= LOD_TINY_LIMIT) return 1;
-        if (screenSize <= LOD_SMALL_LIMIT) return 2;
-        if (screenSize <= LOD_MEDIUM_LIMIT) return 3;
-        return 4;
+        int lod = this._getLodLevel(size, renderScale);
+        float renderSize = size * renderScale;
+        LOGGER.info("############### LOD LEVEL: " + lod + " | SIZE: " + size + " | RENDER_SCALE: " + renderScale + " | RENDER_SIZE: " + renderSize + " | ACTUAL WINDOW SCALE: " + Minecraft.getInstance().getWindow().getGuiScale() + " | FANCYMENU UI SCALE: " + UIBase.getUIScale() + " | FANCYMENU UI RENDER SCALE: " + UIBase.getFixedUIScale());
+        return lod;
     }
 
-    /**
-     * Selects the appropriate LOD level assuming render scale of 1.0.
-     * For accurate LOD selection, prefer {@link #getLodLevel(float, float)} with actual render scale.
-     *
-     * @param size logical text size
-     * @return LOD index
-     */
-    public int getLodLevel(float size) {
-        return getLodLevel(size, 1.0F);
+    private int _getLodLevel(float size, float renderScale) {
+        float renderSize = size * renderScale;
+        if (renderSize <= LOD_MICRO_LIMIT) return 0;
+        if (renderSize <= LOD_TINY_LIMIT) return 1;
+        if (renderSize <= LOD_SMALL_LIMIT) return 2;
+        if (renderSize <= LOD_MEDIUM_LIMIT) return 3;
+        return 4;
     }
 
     public float getBaseSize() {

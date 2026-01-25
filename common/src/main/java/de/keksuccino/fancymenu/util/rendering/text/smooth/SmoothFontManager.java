@@ -39,16 +39,31 @@ public final class SmoothFontManager {
 
     @Nullable
     public static SmoothFont getFont(@Nonnull ResourceLocation fontLocation, float baseSize) {
-        return getFont(List.of(fontLocation), baseSize, null);
+        return getFont(List.of(fontLocation), baseSize, null, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFont(@Nonnull ResourceLocation fontLocation, float baseSize, float lineHeightMultiplier) {
+        return getFont(List.of(fontLocation), baseSize, null, lineHeightMultiplier);
     }
 
     @Nullable
     public static SmoothFont getFont(@Nonnull List<ResourceLocation> fontLocations, float baseSize) {
-        return getFont(fontLocations, baseSize, null);
+        return getFont(fontLocations, baseSize, null, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFont(@Nonnull List<ResourceLocation> fontLocations, float baseSize, float lineHeightMultiplier) {
+        return getFont(fontLocations, baseSize, null, lineHeightMultiplier);
     }
 
     @Nullable
     public static SmoothFont getFont(@Nonnull List<ResourceLocation> fontLocations, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides) {
+        return getFont(fontLocations, baseSize, languageOverrides, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFont(@Nonnull List<ResourceLocation> fontLocations, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightMultiplier) {
         Objects.requireNonNull(fontLocations);
         registerReloadListener();
         List<ResourceLocation> uniqueLocations = dedupe(fontLocations);
@@ -56,7 +71,8 @@ public final class SmoothFontManager {
             LOGGER.error("[FANCYMENU] No smooth fonts provided.");
             return null;
         }
-        String key = buildResourceKey("reslist", uniqueLocations, baseSize, languageOverrides);
+        float resolvedMultiplier = sanitizeLineHeightMultiplier(lineHeightMultiplier);
+        String key = buildResourceKey("reslist", uniqueLocations, baseSize, languageOverrides, resolvedMultiplier);
         SmoothFont cached = FONT_CACHE.get(key);
         if (cached != null) {
             return cached;
@@ -86,7 +102,7 @@ public final class SmoothFontManager {
 
         Map<String, int[]> languageOrders = buildLanguageOrders(loadedLocations, languageOverrides);
         List<String> sourceLabels = buildLabelsForLocations(loadedLocations);
-        SmoothFont created = buildFont(key, fontBytes, baseSize, languageOrders, sourceLabels);
+        SmoothFont created = buildFont(key, fontBytes, baseSize, resolvedMultiplier, languageOrders, sourceLabels);
         if (created != null) {
             FONT_CACHE.put(key, created);
         }
@@ -95,11 +111,21 @@ public final class SmoothFontManager {
 
     @Nullable
     public static SmoothFont getFontByPrefix(@Nonnull ResourceLocation folder, @Nonnull String filenamePrefix, float baseSize) {
-        return getFontByPrefix(folder, filenamePrefix, baseSize, null);
+        return getFontByPrefix(folder, filenamePrefix, baseSize, null, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFontByPrefix(@Nonnull ResourceLocation folder, @Nonnull String filenamePrefix, float baseSize, float lineHeightMultiplier) {
+        return getFontByPrefix(folder, filenamePrefix, baseSize, null, lineHeightMultiplier);
     }
 
     @Nullable
     public static SmoothFont getFontByPrefix(@Nonnull ResourceLocation folder, @Nonnull String filenamePrefix, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides) {
+        return getFontByPrefix(folder, filenamePrefix, baseSize, languageOverrides, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFontByPrefix(@Nonnull ResourceLocation folder, @Nonnull String filenamePrefix, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightMultiplier) {
         Objects.requireNonNull(folder);
         Objects.requireNonNull(filenamePrefix);
         ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
@@ -115,16 +141,26 @@ public final class SmoothFontManager {
         }
         List<ResourceLocation> locations = new ArrayList<>(resources.keySet());
         locations.sort(Comparator.comparing(ResourceLocation::toString));
-        return getFont(locations, baseSize, languageOverrides);
+        return getFont(locations, baseSize, languageOverrides, lineHeightMultiplier);
     }
 
     @Nullable
     public static SmoothFont getFontFromFolder(@Nonnull ResourceLocation folder, float baseSize) {
-        return getFontFromFolder(folder, baseSize, null);
+        return getFontFromFolder(folder, baseSize, null, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFontFromFolder(@Nonnull ResourceLocation folder, float baseSize, float lineHeightMultiplier) {
+        return getFontFromFolder(folder, baseSize, null, lineHeightMultiplier);
     }
 
     @Nullable
     public static SmoothFont getFontFromFolder(@Nonnull ResourceLocation folder, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides) {
+        return getFontFromFolder(folder, baseSize, languageOverrides, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFontFromFolder(@Nonnull ResourceLocation folder, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightMultiplier) {
         Objects.requireNonNull(folder);
         ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
         String folderPath = folder.getPath();
@@ -139,16 +175,26 @@ public final class SmoothFontManager {
         }
         List<ResourceLocation> locations = new ArrayList<>(resources.keySet());
         locations.sort(Comparator.comparing(ResourceLocation::toString));
-        return getFont(locations, baseSize, languageOverrides);
+        return getFont(locations, baseSize, languageOverrides, lineHeightMultiplier);
     }
 
     @Nullable
     public static SmoothFont getFontFromFolder(@Nonnull Path folder, float baseSize) {
-        return getFontFromFolder(folder, baseSize, null);
+        return getFontFromFolder(folder, baseSize, null, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFontFromFolder(@Nonnull Path folder, float baseSize, float lineHeightMultiplier) {
+        return getFontFromFolder(folder, baseSize, null, lineHeightMultiplier);
     }
 
     @Nullable
     public static SmoothFont getFontFromFolder(@Nonnull Path folder, float baseSize, @Nullable Map<String, List<Path>> languageOverrides) {
+        return getFontFromFolder(folder, baseSize, languageOverrides, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFontFromFolder(@Nonnull Path folder, float baseSize, @Nullable Map<String, List<Path>> languageOverrides, float lineHeightMultiplier) {
         Objects.requireNonNull(folder);
         registerReloadListener();
         if (!Files.exists(folder) || !Files.isDirectory(folder)) {
@@ -162,7 +208,8 @@ public final class SmoothFontManager {
         }
         locations.sort(Comparator.comparing(Path::toString));
         List<Path> uniqueLocations = dedupePaths(locations);
-        String key = buildFileFolderKey(folder, uniqueLocations, baseSize, languageOverrides);
+        float resolvedMultiplier = sanitizeLineHeightMultiplier(lineHeightMultiplier);
+        String key = buildFileFolderKey(folder, uniqueLocations, baseSize, languageOverrides, resolvedMultiplier);
         SmoothFont cached = FONT_CACHE.get(key);
         if (cached != null) {
             return cached;
@@ -183,7 +230,7 @@ public final class SmoothFontManager {
         }
         Map<String, int[]> languageOrders = buildLanguageOrdersForPaths(loadedLocations, languageOverrides);
         List<String> sourceLabels = buildLabelsForPaths(loadedLocations);
-        SmoothFont created = buildFont(key, fontBytes, baseSize, languageOrders, sourceLabels);
+        SmoothFont created = buildFont(key, fontBytes, baseSize, resolvedMultiplier, languageOrders, sourceLabels);
         if (created != null) {
             FONT_CACHE.put(key, created);
         }
@@ -192,16 +239,22 @@ public final class SmoothFontManager {
 
     @Nullable
     public static SmoothFont getFont(@Nonnull Path fontPath, float baseSize) {
+        return getFont(fontPath, baseSize, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFont(@Nonnull Path fontPath, float baseSize, float lineHeightMultiplier) {
         Objects.requireNonNull(fontPath);
         registerReloadListener();
-        String key = "file:" + fontPath.toAbsolutePath() + ":" + baseSize;
+        float resolvedMultiplier = sanitizeLineHeightMultiplier(lineHeightMultiplier);
+        String key = "file:" + fontPath.toAbsolutePath() + ":" + baseSize + ":" + Float.floatToIntBits(resolvedMultiplier);
         SmoothFont cached = FONT_CACHE.get(key);
         if (cached != null) {
             return cached;
         }
         try {
             byte[] bytes = Files.readAllBytes(fontPath);
-            SmoothFont created = buildFont(key, List.of(bytes), baseSize, null, List.of(fontPath.getFileName().toString()));
+            SmoothFont created = buildFont(key, List.of(bytes), baseSize, resolvedMultiplier, null, List.of(fontPath.getFileName().toString()));
             if (created != null) {
                 FONT_CACHE.put(key, created);
             }
@@ -214,6 +267,11 @@ public final class SmoothFontManager {
 
     @Nullable
     public static SmoothFont getFontFromPaths(@Nonnull List<Path> fontPaths, float baseSize) {
+        return getFontFromPaths(fontPaths, baseSize, 1.0F);
+    }
+
+    @Nullable
+    public static SmoothFont getFontFromPaths(@Nonnull List<Path> fontPaths, float baseSize, float lineHeightMultiplier) {
         Objects.requireNonNull(fontPaths);
         registerReloadListener();
         List<Path> uniquePaths = dedupePaths(fontPaths);
@@ -221,7 +279,8 @@ public final class SmoothFontManager {
             LOGGER.error("[FANCYMENU] No smooth font paths provided.");
             return null;
         }
-        String key = "filelist:" + baseSize + ":" + uniquePaths;
+        float resolvedMultiplier = sanitizeLineHeightMultiplier(lineHeightMultiplier);
+        String key = "filelist:" + baseSize + ":" + Float.floatToIntBits(resolvedMultiplier) + ":" + uniquePaths;
         SmoothFont cached = FONT_CACHE.get(key);
         if (cached != null) {
             return cached;
@@ -240,7 +299,7 @@ public final class SmoothFontManager {
         if (fontBytes.isEmpty()) {
             return null;
         }
-        SmoothFont created = buildFont(key, fontBytes, baseSize, null, sourceLabels);
+        SmoothFont created = buildFont(key, fontBytes, baseSize, resolvedMultiplier, null, sourceLabels);
         if (created != null) {
             FONT_CACHE.put(key, created);
         }
@@ -253,7 +312,7 @@ public final class SmoothFontManager {
     }
 
     @Nullable
-    private static SmoothFont buildFont(String key, List<byte[]> fontBytesList, float baseSize, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
+    private static SmoothFont buildFont(String key, List<byte[]> fontBytesList, float baseSize, float lineHeightMultiplier, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
         List<Font> fonts = new ArrayList<>();
         List<String> resolvedLabels = new ArrayList<>();
         for (int i = 0; i < fontBytesList.size(); i++) {
@@ -270,11 +329,15 @@ public final class SmoothFontManager {
         }
         // SDF range is 1.0 for all LODs to ensure consistent raster-like behavior in the shader
         float sdfRange = 1.0F;
-        return new SmoothFont(sanitizeKey(key), fonts, baseSize, sdfRange, languageOrders, resolvedLabels);
+        return new SmoothFont(sanitizeKey(key), fonts, baseSize, sdfRange, lineHeightMultiplier, languageOrders, resolvedLabels);
     }
 
     private static String sanitizeKey(String key) {
         return key.toLowerCase().replaceAll("[^a-z0-9._-]", "_");
+    }
+
+    private static float sanitizeLineHeightMultiplier(float lineHeightMultiplier) {
+        return lineHeightMultiplier > 0.0F ? lineHeightMultiplier : 1.0F;
     }
 
     public static void registerReloadListener() {
@@ -303,9 +366,11 @@ public final class SmoothFontManager {
         return new ArrayList<>(unique);
     }
 
-    private static String buildFileFolderKey(Path folder, List<Path> locations, float baseSize, @Nullable Map<String, List<Path>> languageOverrides) {
+    private static String buildFileFolderKey(Path folder, List<Path> locations, float baseSize, @Nullable Map<String, List<Path>> languageOverrides, float lineHeightMultiplier) {
         StringBuilder builder = new StringBuilder("filefolder:")
                 .append(baseSize)
+                .append(":")
+                .append(Float.floatToIntBits(lineHeightMultiplier))
                 .append(":")
                 .append(folder.toAbsolutePath())
                 .append(":");
@@ -340,10 +405,12 @@ public final class SmoothFontManager {
         return results;
     }
 
-    private static String buildResourceKey(String prefix, List<ResourceLocation> locations, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides) {
+    private static String buildResourceKey(String prefix, List<ResourceLocation> locations, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightMultiplier) {
         StringBuilder builder = new StringBuilder(prefix)
                 .append(":")
                 .append(baseSize)
+                .append(":")
+                .append(Float.floatToIntBits(lineHeightMultiplier))
                 .append(":");
         for (ResourceLocation location : locations) {
             builder.append(location).append(';');

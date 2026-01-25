@@ -35,7 +35,6 @@ public class UITooltip implements Renderable {
     protected Integer y = null;
     protected int textBorderSize = 5;
     protected int mouseOffset = 12;
-    protected boolean textShadow = false;
     protected TooltipTextAlignment textAlignment = TooltipTextAlignment.LEFT;
 
     @NotNull
@@ -111,7 +110,7 @@ public class UITooltip implements Renderable {
             if (this.textAlignment == TooltipTextAlignment.CENTERED) {
                 x2 = x + Math.max(0.0F, (this.getWidth() / 2.0F) - (w / 2.0F));
             }
-            UIBase.renderText(graphics, c, x2, y2, baseColor, UIBase.getUITextSizeNormal(), this.hasTextShadow());
+            UIBase.renderText(graphics, c, x2, y2, baseColor, UIBase.getUITextSizeNormal());
             yLine += lineHeight + 2.0F;
         }
     }
@@ -307,15 +306,6 @@ public class UITooltip implements Renderable {
 
     public int getMouseOffset() {
         return this.mouseOffset;
-    }
-
-    public UITooltip setTextShadow(boolean textShadow) {
-        this.textShadow = textShadow;
-        return this;
-    }
-
-    public boolean hasTextShadow() {
-        return textShadow;
     }
 
     public UITooltip setTextAlignment(TooltipTextAlignment textAlignment) {

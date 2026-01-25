@@ -1,12 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
@@ -15,8 +10,6 @@ import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatterRegis
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FastColor;
@@ -38,7 +31,27 @@ public final class SmoothTextRenderer {
     private static final MeasureCache<LegacyMeasureKey> LEGACY_MEASURE_CACHE = new MeasureCache<>(MEASURE_CACHE_LIMIT);
     private static final MeasureCache<FormattedMeasureKey> FORMATTED_MEASURE_CACHE = new MeasureCache<>(MEASURE_CACHE_LIMIT);
 
+    private static float overriddenRenderScale = -1F;
+
     private SmoothTextRenderer() {
+    }
+
+    public static float getRenderScale() {
+        float overridden = getOverriddenRenderScale();
+        if (overridden != -1F) return overridden;
+        return (float) Minecraft.getInstance().getWindow().getGuiScale();
+    }
+
+    public static float getOverriddenRenderScale() {
+        return overriddenRenderScale;
+    }
+
+    public static void setOverriddenRenderScale(float overriddenRenderScale) {
+        SmoothTextRenderer.overriddenRenderScale = overriddenRenderScale;
+    }
+
+    public static void resetOverriddenRenderScale() {
+        SmoothTextRenderer.overriddenRenderScale = -1F;
     }
 
     public static void clearCaches() {
@@ -53,7 +66,7 @@ public final class SmoothTextRenderer {
     public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float x, float y, int color, float size, boolean shadow) {
         if (text.isEmpty() || size <= 0.0F) return EMPTY_DIMENSION;
         TextDimensions dimension = measureLegacyText(font, text, size);
-        
+
         if (shadow) {
             renderTextInternal(graphics, font, text, x + 1.0F, y + 1.0F, darkenColor(color), size);
         }
@@ -129,7 +142,7 @@ public final class SmoothTextRenderer {
 
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
         // Select the LOD atlas set for this size, accounting for current render scale.
-        float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        float renderScale = getRenderScale();
         int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
         boolean allowMultiline = isMultilineEnabled();
@@ -158,8 +171,13 @@ public final class SmoothTextRenderer {
             char c = text.charAt(index);
             if (c == '\n') {
                 if (allowMultiline) {
-                    drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
-                    drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
+                    boolean drewLine = false;
+                    drewLine |= drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
+                    drewLine |= drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
+                    if (drewLine) {
+                        consumer = null;
+                        currentAtlas = null;
+                    }
                     penX = x;
                     lineY += lineHeight;
                     baseline = lineY + ascent;
@@ -198,7 +216,10 @@ public final class SmoothTextRenderer {
                 int consumed = applyFormatting(text, index + 1, style, baseColor);
                 if (consumed > 0) {
                     if (wasUnderline && (!style.underline || previousColor != style.color)) {
-                        drawLineIfNeeded(graphics, true, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
+                        if (drawLineIfNeeded(graphics, true, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness)) {
+                            consumer = null;
+                            currentAtlas = null;
+                        }
                         underlineStartX = penX;
                         underlineColor = style.color;
                     } else if (!wasUnderline && style.underline) {
@@ -206,7 +227,10 @@ public final class SmoothTextRenderer {
                         underlineColor = style.color;
                     }
                     if (wasStrikethrough && (!style.strikethrough || previousColor != style.color)) {
-                        drawLineIfNeeded(graphics, true, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
+                        if (drawLineIfNeeded(graphics, true, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness)) {
+                            consumer = null;
+                            currentAtlas = null;
+                        }
                         strikeStartX = penX;
                         strikeColor = style.color;
                     } else if (!wasStrikethrough && style.strikethrough) {
@@ -245,7 +269,7 @@ public final class SmoothTextRenderer {
     }
 
     private static void renderFormattedTextInternal(GuiGraphics graphics, SmoothFont font, FormattedCharSequence text, float x, float y, int baseColor, float size) {
-        float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        float renderScale = getRenderScale();
         int lod = font.getLodLevel(size, renderScale);
         float scale = font.getScaleForLod(lod, size);
         boolean allowMultiline = isMultilineEnabled();
@@ -265,17 +289,17 @@ public final class SmoothTextRenderer {
         if (dimension.width() <= 0.0F && dimension.height() <= 0.0F) {
             return dimension;
         }
-        
+
         if (shadow) {
             renderFormattedTextInternal(graphics, font, text, x + 1.0F, y + 1.0F, darkenColor(color), size);
         }
         renderFormattedTextInternal(graphics, font, text, x, y, color, size);
-        
+
         return dimension;
     }
 
     private static TextDimensions measureFormattedText(SmoothFont font, FormattedCharSequence text, float size) {
-        float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        float renderScale = getRenderScale();
         boolean allowMultiline = isMultilineEnabled();
         FormattedMeasureKey key = new FormattedMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(renderScale), allowMultiline);
         TextDimensions cached = FORMATTED_MEASURE_CACHE.get(key);
@@ -297,7 +321,7 @@ public final class SmoothTextRenderer {
             return EMPTY_DIMENSION;
         }
 
-        float renderScale = RenderScaleUtil.getCurrentRenderScale();
+        float renderScale = getRenderScale();
         boolean allowMultiline = isMultilineEnabled();
         LegacyMeasureKey key = new LegacyMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(renderScale), allowMultiline);
         TextDimensions cached = LEGACY_MEASURE_CACHE.get(key);
@@ -446,9 +470,10 @@ public final class SmoothTextRenderer {
         return FastColor.ARGB32.color(alpha, red, green, blue);
     }
 
-    private static void drawLineIfNeeded(GuiGraphics graphics, boolean enabled, float startX, float endX, float y, int color, float thickness) {
-        if (!enabled || endX <= startX || thickness <= 0.0F) return;
+    private static boolean drawLineIfNeeded(GuiGraphics graphics, boolean enabled, float startX, float endX, float y, int color, float thickness) {
+        if (!enabled || endX <= startX || thickness <= 0.0F) return false;
         RenderingUtils.fillF(graphics, startX, y, endX, y + thickness, color);
+        return true;
     }
 
     private static final class StyleState {
@@ -600,7 +625,9 @@ public final class SmoothTextRenderer {
 
         private void applyStyleTransition() {
             if (style.underline && (!nextStyle.underline || style.color != nextStyle.color)) {
-                drawLineIfNeeded(graphics, true, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
+                if (drawLineIfNeeded(graphics, true, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness)) {
+                    resetConsumer();
+                }
                 if (nextStyle.underline) {
                     underlineStartX = penX;
                     underlineColor = nextStyle.color;
@@ -611,7 +638,9 @@ public final class SmoothTextRenderer {
             }
 
             if (style.strikethrough && (!nextStyle.strikethrough || style.color != nextStyle.color)) {
-                drawLineIfNeeded(graphics, true, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
+                if (drawLineIfNeeded(graphics, true, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness)) {
+                    resetConsumer();
+                }
                 if (nextStyle.strikethrough) {
                     strikeStartX = penX;
                     strikeColor = nextStyle.color;
@@ -623,8 +652,12 @@ public final class SmoothTextRenderer {
         }
 
         private void handleNewLine() {
-            drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
-            drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
+            boolean drewLine = false;
+            drewLine |= drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
+            drewLine |= drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
+            if (drewLine) {
+                resetConsumer();
+            }
             penX = startX;
             lineY += lineHeight;
             baseline = lineY + ascent;
@@ -641,6 +674,11 @@ public final class SmoothTextRenderer {
         private void finish() {
             drawLineIfNeeded(graphics, style.underline, underlineStartX, penX, baseline + font.getUnderlineOffset(size), underlineColor, underlineThickness);
             drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
+        }
+
+        private void resetConsumer() {
+            this.consumer = null;
+            this.currentAtlas = null;
         }
     }
 

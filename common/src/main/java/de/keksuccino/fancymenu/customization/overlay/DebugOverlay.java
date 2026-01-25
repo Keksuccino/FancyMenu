@@ -55,7 +55,6 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
     protected DrawableColor lineBackgroundColor = DrawableColor.of(new Color(0, 0, 0, 230));
     @NotNull
     protected DrawableColor lineTextColor = DrawableColor.WHITE;
-    protected boolean lineTextShadow = true;
     protected List<AbstractElement> currentScreenElements = new ArrayList<>();
     @Nullable
     protected ContextMenu rightClickMenu = null;
@@ -119,7 +118,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
                 this.renderLineBackground(graphics, x, y, width, height);
 
-                UIBase.renderText(graphics, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt(), UIBase.getUITextSizeNormal(), this.lineTextShadow);
+                UIBase.renderText(graphics, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt(), UIBase.getUITextSizeNormal());
 
             }
 
@@ -238,11 +237,6 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         }
 
         RenderingUtils.resetShaderColor(graphics);
-    }
-
-    public DebugOverlay setLineTextShadow(boolean shadow) {
-        this.lineTextShadow = shadow;
-        return this;
     }
 
     public DebugOverlay setLineTextColor(@NotNull DrawableColor color) {

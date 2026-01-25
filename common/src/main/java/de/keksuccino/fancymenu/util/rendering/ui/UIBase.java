@@ -53,53 +53,123 @@ public class UIBase extends RenderingUtils {
     }
 
     public static float getUITextHeightNormal() {
+        return getUITextHeightNormal(true);
+    }
+
+    public static float getUITextHeightNormal(boolean forUIScale) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.lineHeight;
-        return getUIFont().getLineHeight(getUITextSizeNormal());
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        float height = getUIFont().getLineHeight(getUITextSizeNormal());
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return height;
     }
 
     public static float getUITextHeightLarge() {
+        return getUITextHeightLarge(true);
+    }
+
+    public static float getUITextHeightLarge(boolean forUIScale) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.lineHeight;
-        return getUIFont().getLineHeight(getUITextSizeLarge());
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        float height = getUIFont().getLineHeight(getUITextSizeLarge());
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return height;
     }
 
     public static float getUITextHeightSmall() {
+        return getUITextHeightSmall(true);
+    }
+
+    public static float getUITextHeightSmall(boolean forUIScale) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.lineHeight;
-        return getUIFont().getLineHeight(getUITextSizeSmall());
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        float height = getUIFont().getLineHeight(getUITextSizeSmall());
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return height;
     }
 
     public static float getUITextHeight(float textSize) {
+        return getUITextHeight(textSize, true);
+    }
+
+    public static float getUITextHeight(float textSize, boolean forUIScale) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.lineHeight;
-        return getUIFont().getLineHeight(textSize);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        float height = getUIFont().getLineHeight(textSize);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return height;
     }
 
     public static float getUITextWidthNormal(@NotNull Component text) {
+        return getUITextWidthNormal(text, true);
+    }
+
+    public static float getUITextWidthNormal(@NotNull Component text, boolean forUIScale) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return width;
     }
 
     public static float getUITextWidthLarge(@NotNull Component text) {
+        return getUITextWidthLarge(text, true);
+    }
+
+    public static float getUITextWidthLarge(@NotNull Component text, boolean forUIScale) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeLarge());
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeLarge());
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return width;
     }
 
     public static float getUITextWidthSmall(@NotNull Component text) {
+        return getUITextWidthSmall(text, true);
+    }
+
+    public static float getUITextWidthSmall(@NotNull Component text, boolean forUIScale) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeSmall());
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeSmall());
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return width;
     }
 
     public static float getUITextWidth(@NotNull String text) {
+        return getUITextWidth(text, true);
+    }
+
+    public static float getUITextWidth(@NotNull String text, boolean forUIScale) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return width;
     }
 
     public static float getUITextWidth(@NotNull Component text, float textSize) {
+        return getUITextWidth(text, textSize, true);
+    }
+
+    public static float getUITextWidth(@NotNull Component text, float textSize, boolean forUIScale) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return width;
     }
 
     public static float getUITextWidth(@NotNull String text, float textSize) {
+        return getUITextWidth(text, textSize, true);
+    }
+
+    public static float getUITextWidth(@NotNull String text, float textSize, boolean forUIScale) {
         if (useMinecraftFont()) return Minecraft.getInstance().font.width(text);
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return width;
     }
 
     /**
@@ -107,8 +177,19 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull List<C> lines, float maxWidth) {
+        return lineWrapUIComponentsNormal(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the normal UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
         if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
     }
 
     /**
@@ -116,8 +197,19 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull C lines, float maxWidth) {
+        return lineWrapUIComponentsNormal(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the normal UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull C lines, float maxWidth, boolean forUIScale) {
         if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
     }
 
     /**
@@ -125,8 +217,19 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull List<C> lines, float maxWidth) {
+        return lineWrapUIComponentsSmall(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the small UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
         if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
     }
 
     /**
@@ -134,8 +237,19 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull C lines, float maxWidth) {
+        return lineWrapUIComponentsSmall(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the small UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull C lines, float maxWidth, boolean forUIScale) {
         if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
     }
 
     /**
@@ -143,8 +257,19 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull List<C> lines, float maxWidth) {
+        return lineWrapUIComponentsLarge(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the large UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
         if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
     }
 
     /**
@@ -152,8 +277,19 @@ public class UIBase extends RenderingUtils {
      */
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull C lines, float maxWidth) {
+        return lineWrapUIComponentsLarge(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the large UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull C lines, float maxWidth, boolean forUIScale) {
         if (useMinecraftFont()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
     }
 
     /**
@@ -416,48 +552,76 @@ public class UIBase extends RenderingUtils {
      * Draws a default-colored label component at integer coordinates.
      */
     public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y) {
-        return renderText(graphics, text, x, y, getUITheme().ui_interface_widget_label_color_normal.getColorInt());
+        return renderText(graphics, text, x, y, true);
+    }
+
+    /**
+     * Draws a default-colored label component at integer coordinates.
+     */
+    public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, boolean forUIScale) {
+        return renderText(graphics, text, x, y, getUITheme().ui_interface_widget_label_color_normal.getColorInt(), forUIScale);
     }
 
     /**
      * Draws a default-colored label string at integer coordinates.
      */
     public static TextDimensions renderText(GuiGraphics graphics, String text, float x, float y) {
-        return renderText(graphics, Component.literal(text), x, y, getUITheme().ui_interface_widget_label_color_normal.getColorInt());
+        return renderText(graphics, text, x, y, true);
+    }
+
+    /**
+     * Draws a default-colored label string at integer coordinates.
+     */
+    public static TextDimensions renderText(GuiGraphics graphics, String text, float x, float y, boolean forUIScale) {
+        return renderText(graphics, Component.literal(text), x, y, getUITheme().ui_interface_widget_label_color_normal.getColorInt(), forUIScale);
     }
 
     /**
      * Draws a label string with the given base color.
      */
     public static TextDimensions renderText(GuiGraphics graphics, String text, float x, float y, int baseColor) {
-        return renderText(graphics, Component.literal(text), x, y, baseColor);
+        return renderText(graphics, text, x, y, baseColor, true);
+    }
+
+    /**
+     * Draws a label string with the given base color.
+     */
+    public static TextDimensions renderText(GuiGraphics graphics, String text, float x, float y, int baseColor, boolean forUIScale) {
+        return renderText(graphics, Component.literal(text), x, y, baseColor, forUIScale);
     }
 
     /**
      * Draws a label component with the given base color.
      */
     public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor) {
-        return renderText(graphics, text, x, y, baseColor, getUITextSizeNormal());
+        return renderText(graphics, text, x, y, baseColor, true);
+    }
+
+    /**
+     * Draws a label component with the given base color.
+     */
+    public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, boolean forUIScale) {
+        return renderText(graphics, text, x, y, baseColor, getUITextSizeNormal(), forUIScale);
     }
 
     /**
      * Draws a label component with the given base color and text size.
      */
     public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, float textSize) {
-        return renderText(graphics, text, x, y, baseColor, textSize, false);
+        return renderText(graphics, text, x, y, baseColor, textSize, true);
     }
 
-    /**
-     * Draws a label component with the given base color, text size, and shadow state.
-     */
-    public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, float textSize, boolean shadow) {
+    public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, float textSize, boolean forUIScale) {
         if (useMinecraftFont()) {
-            int width = (int)getUITextWidthNormal(text);
+            int width = (int)getUITextWidthNormal(text, false); // we use "false" here, to not call the scale override methods twice
             TextDimensions dimensions = new TextDimensions(width, Minecraft.getInstance().font.lineHeight);
-            graphics.drawString(Minecraft.getInstance().font, text, (int)x, (int)y, baseColor, shadow);
+            graphics.drawString(Minecraft.getInstance().font, text, (int)x, (int)y, baseColor, false);
             return dimensions;
         }
-        return SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, shadow);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        TextDimensions dimensions = SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, false);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return dimensions;
     }
 
     private static boolean useMinecraftFont() {
