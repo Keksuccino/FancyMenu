@@ -20,14 +20,6 @@ public final class SmoothFont implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    // Thresholds for switching LODs (in effective screen pixel size)
-    // Screen size = logical size * render scale
-    // <= 12px: Use Micro LOD (1x gen) - for very small screen sizes
-    // <= 20px: Use Tiny LOD (2x gen)
-    // <= 40px: Use Small LOD (4x gen)
-    // <= 72px: Use Medium LOD (6x gen)
-    // > 72px: Use Large LOD (8x gen)
-    private static final float LOD_MICRO_LIMIT = 12.0F;
     private static final float LOD_TINY_LIMIT = 20.0F;
     private static final float LOD_SMALL_LIMIT = 40.0F;
     private static final float LOD_MEDIUM_LIMIT = 72.0F;
@@ -109,7 +101,7 @@ public final class SmoothFont implements AutoCloseable {
      *
      * @param size logical text size
      * @param renderScale current render scale (GUI scale * any additional pose scaling)
-     * @return LOD index (0 = Micro, 1 = Tiny, 2 = Small, 3 = Medium, 4 = Large)
+     * @return LOD index (0 = Tiny, 1 = Small, 2 = Medium, 3 = Large)
      */
     public int getLodLevel(float size, float renderScale) {
         int lod = this._getLodLevel(size, renderScale);
@@ -120,11 +112,10 @@ public final class SmoothFont implements AutoCloseable {
 
     private int _getLodLevel(float size, float renderScale) {
         float renderSize = size * renderScale;
-        if (renderSize <= LOD_MICRO_LIMIT) return 0;
-        if (renderSize <= LOD_TINY_LIMIT) return 1;
-        if (renderSize <= LOD_SMALL_LIMIT) return 2;
-        if (renderSize <= LOD_MEDIUM_LIMIT) return 3;
-        return 4;
+        if (renderSize <= LOD_TINY_LIMIT) return 0;
+        if (renderSize <= LOD_SMALL_LIMIT) return 1;
+        if (renderSize <= LOD_MEDIUM_LIMIT) return 2;
+        return 3;
     }
 
     public float getBaseSize() {
@@ -317,16 +308,14 @@ public final class SmoothFont implements AutoCloseable {
 
         private LodLevel createLodLevel(int lodIndex) {
             return switch (lodIndex) {
-                // LOD 0: Micro (1x scale, starts with 256px atlas) - for very small screen sizes
-                case 0 -> new LodLevel(parent, rawFont, baseSize * 1.0F, 256, debugName, "_micro", "micro", sourceLabel, sourceIndex);
-                // LOD 1: Tiny (2x scale, starts with 512px atlas)
-                case 1 -> new LodLevel(parent, rawFont, baseSize * 2.0F, 512, debugName, "_tiny", "tiny", sourceLabel, sourceIndex);
-                // LOD 2: Small (4x scale, starts with 1024px atlas)
-                case 2 -> new LodLevel(parent, rawFont, baseSize * 4.0F, 1024, debugName, "_small", "small", sourceLabel, sourceIndex);
-                // LOD 3: Medium (6x scale, starts with 1024px atlas)
-                case 3 -> new LodLevel(parent, rawFont, baseSize * 6.0F, 1024, debugName, "_medium", "medium", sourceLabel, sourceIndex);
-                // LOD 4: Large (8x scale, starts with 1024px atlas)
-                case 4 -> new LodLevel(parent, rawFont, baseSize * 8.0F, 1024, debugName, "_large", "large", sourceLabel, sourceIndex);
+                // LOD 0: Tiny (2x scale, starts with 512px atlas)
+                case 0 -> new LodLevel(parent, rawFont, baseSize * 2.0F, 512, debugName, "_tiny", "tiny", sourceLabel, sourceIndex);
+                // LOD 1: Small (4x scale, starts with 1024px atlas)
+                case 1 -> new LodLevel(parent, rawFont, baseSize * 4.0F, 1024, debugName, "_small", "small", sourceLabel, sourceIndex);
+                // LOD 2: Medium (6x scale, starts with 1024px atlas)
+                case 2 -> new LodLevel(parent, rawFont, baseSize * 6.0F, 1024, debugName, "_medium", "medium", sourceLabel, sourceIndex);
+                // LOD 3: Large (8x scale, starts with 1024px atlas)
+                case 3 -> new LodLevel(parent, rawFont, baseSize * 8.0F, 1024, debugName, "_large", "large", sourceLabel, sourceIndex);
                 default -> throw new IllegalArgumentException("Invalid LOD index: " + lodIndex);
             };
         }
