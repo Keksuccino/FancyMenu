@@ -37,36 +37,158 @@ public final class SmoothFontManager {
     private SmoothFontManager() {
     }
 
+    /**
+     * Starts a resource-based font builder from a single resource location.
+     * <p>
+     * The {@code baseSize} sets the scale reference used for all metric corrections
+     * (line height override/offset and y-offset). Values you pass later are interpreted
+     * in this base-size space and are automatically scaled with the final text size.
+     * </p>
+     * <p>
+     * Example:
+     * </p>
+     * <pre>{@code
+     * SmoothFont font = SmoothFontManager
+     *         .fontBuilder(ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans.ttf"), 32.0F)
+     *         .lineHeightOffset(-2.0F)
+     *         .yOffset(-3.0F)
+     *         .build();
+     * }</pre>
+     *
+     * @param fontLocation font file resource location
+     * @param baseSize base font size used for scaling metrics
+     * @return builder configured for the provided resource
+     */
     @Nonnull
     public static ResourceFontBuilder fontBuilder(@Nonnull ResourceLocation fontLocation, float baseSize) {
         return new ResourceFontBuilder(ResourceSourceType.LIST, baseSize, List.of(fontLocation), null, null);
     }
 
+    /**
+     * Starts a resource-based font builder from an explicit list of resource locations.
+     * <p>
+     * Example:
+     * </p>
+     * <pre>{@code
+     * List<ResourceLocation> fonts = List.of(
+     *         ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans.ttf"),
+     *         ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans_jp.ttf")
+     * );
+     * SmoothFont font = SmoothFontManager
+     *         .fontBuilderFromResources(fonts, 32.0F)
+     *         .build();
+     * }</pre>
+     *
+     * @param fontLocations font file resource locations
+     * @param baseSize base font size used for scaling metrics
+     * @return builder configured for the provided resources
+     */
     @Nonnull
     public static ResourceFontBuilder fontBuilderFromResources(@Nonnull List<ResourceLocation> fontLocations, float baseSize) {
         return new ResourceFontBuilder(ResourceSourceType.LIST, baseSize, fontLocations, null, null);
     }
 
+    /**
+     * Starts a resource-based font builder from a folder that contains .ttf files.
+     * <p>
+     * Example:
+     * </p>
+     * <pre>{@code
+     * SmoothFont font = SmoothFontManager
+     *         .fontBuilderFromFolder(ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans"), 32.0F)
+     *         .build();
+     * }</pre>
+     *
+     * @param folder folder resource location
+     * @param baseSize base font size used for scaling metrics
+     * @return builder configured for the provided folder
+     */
     @Nonnull
     public static ResourceFontBuilder fontBuilderFromFolder(@Nonnull ResourceLocation folder, float baseSize) {
         return new ResourceFontBuilder(ResourceSourceType.FOLDER, baseSize, null, folder, null);
     }
 
+    /**
+     * Starts a resource-based font builder from a folder and filename prefix.
+     * <p>
+     * Example:
+     * </p>
+     * <pre>{@code
+     * SmoothFont font = SmoothFontManager
+     *         .fontBuilderFromPrefix(ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans"), "noto_sans_", 32.0F)
+     *         .build();
+     * }</pre>
+     *
+     * @param folder folder resource location
+     * @param filenamePrefix filename prefix filter
+     * @param baseSize base font size used for scaling metrics
+     * @return builder configured for the provided prefix
+     */
     @Nonnull
     public static ResourceFontBuilder fontBuilderFromPrefix(@Nonnull ResourceLocation folder, @Nonnull String filenamePrefix, float baseSize) {
         return new ResourceFontBuilder(ResourceSourceType.PREFIX, baseSize, null, folder, filenamePrefix);
     }
 
+    /**
+     * Starts a path-based font builder from a single font file.
+     * <p>
+     * Example:
+     * </p>
+     * <pre>{@code
+     * SmoothFont font = SmoothFontManager
+     *         .fontBuilder(Path.of("config/fancymenu/assets/fonts/myfont.ttf"), 32.0F)
+     *         .lineHeightOverride(12.0F)
+     *         .build();
+     * }</pre>
+     *
+     * @param fontPath font file path
+     * @param baseSize base font size used for scaling metrics
+     * @return builder configured for the provided path
+     */
     @Nonnull
     public static PathFontBuilder fontBuilder(@Nonnull Path fontPath, float baseSize) {
         return new PathFontBuilder(PathSourceType.LIST, baseSize, List.of(fontPath), null);
     }
 
+    /**
+     * Starts a path-based font builder from an explicit list of font file paths.
+     * <p>
+     * Example:
+     * </p>
+     * <pre>{@code
+     * List<Path> fonts = List.of(
+     *         Path.of("config/fancymenu/assets/fonts/font_a.ttf"),
+     *         Path.of("config/fancymenu/assets/fonts/font_b.ttf")
+     * );
+     * SmoothFont font = SmoothFontManager
+     *         .fontBuilderFromPaths(fonts, 32.0F)
+     *         .build();
+     * }</pre>
+     *
+     * @param fontPaths font file paths
+     * @param baseSize base font size used for scaling metrics
+     * @return builder configured for the provided paths
+     */
     @Nonnull
     public static PathFontBuilder fontBuilderFromPaths(@Nonnull List<Path> fontPaths, float baseSize) {
         return new PathFontBuilder(PathSourceType.LIST, baseSize, fontPaths, null);
     }
 
+    /**
+     * Starts a path-based font builder from a folder that contains .ttf files.
+     * <p>
+     * Example:
+     * </p>
+     * <pre>{@code
+     * SmoothFont font = SmoothFontManager
+     *         .fontBuilderFromFolder(Path.of("config/fancymenu/assets/fonts"), 32.0F)
+     *         .build();
+     * }</pre>
+     *
+     * @param folder font folder path
+     * @param baseSize base font size used for scaling metrics
+     * @return builder configured for the provided folder
+     */
     @Nonnull
     public static PathFontBuilder fontBuilderFromFolder(@Nonnull Path folder, float baseSize) {
         return new PathFontBuilder(PathSourceType.FOLDER, baseSize, null, folder);
@@ -108,6 +230,30 @@ public final class SmoothFontManager {
         private float lineHeightOffset = 0.0F;
         private float yOffset = 0.0F;
 
+        /**
+         * Creates a resource-based smooth font builder for the given source type.
+         * <p>
+         * This is an internal constructor used by the static factory methods on
+         * {@link SmoothFontManager}. It captures the source selector and base size
+         * so all later configuration values can be applied consistently.
+         * </p>
+         * <p>
+         * Example (via factory method):
+         * </p>
+         * <pre>{@code
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilderFromFolder(ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans"), 32.0F)
+         *         .lineHeightOffset(-2.0F)
+         *         .yOffset(-3.0F)
+         *         .build();
+         * }</pre>
+         *
+         * @param sourceType source selector (list, folder, or prefix)
+         * @param baseSize base font size used for scaling metrics
+         * @param locations explicit font locations (for list sources)
+         * @param folder folder root (for folder/prefix sources)
+         * @param filenamePrefix prefix filter (for prefix sources)
+         */
         private ResourceFontBuilder(ResourceSourceType sourceType, float baseSize, @Nullable List<ResourceLocation> locations, @Nullable ResourceLocation folder, @Nullable String filenamePrefix) {
             this.sourceType = sourceType;
             this.baseSize = baseSize;
@@ -116,26 +262,122 @@ public final class SmoothFontManager {
             this.filenamePrefix = filenamePrefix;
         }
 
+        /**
+         * Sets language-specific font order overrides.
+         * <p>
+         * The map key must be a Minecraft language code (e.g. {@code ja_jp}, {@code zh_cn}).
+         * The list defines a preferred order of font resources to use when rendering for that language.
+         * </p>
+         * <p>
+         * Example:
+         * </p>
+         * <pre>{@code
+         * Map<String, List<ResourceLocation>> overrides = Map.of(
+         *         "ja_jp", List.of(base, jp, sc, tc),
+         *         "zh_cn", List.of(base, sc, tc, jp)
+         * );
+         *
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilderFromResources(List.of(base, jp, sc, tc), 32.0F)
+         *         .languageOverrides(overrides)
+         *         .build();
+         * }</pre>
+         *
+         * @param languageOverrides map of language code to font order list
+         * @return this builder for chaining
+         */
         public ResourceFontBuilder languageOverrides(@Nullable Map<String, List<ResourceLocation>> languageOverrides) {
             this.languageOverrides = languageOverrides;
             return this;
         }
 
+        /**
+         * Overrides the computed line height (base-size units).
+         * <p>
+         * Use this to force a specific line height at the base size. The value
+         * scales with text size at render time.
+         * </p>
+         * <p>
+         * Example:
+         * </p>
+         * <pre>{@code
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilder(ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans/noto_sans.ttf"), 32.0F)
+         *         .lineHeightOverride(12.0F)
+         *         .build();
+         * }</pre>
+         *
+         * @param lineHeightOverride line height at base size, or &lt;= 0 to disable
+         * @return this builder for chaining
+         */
         public ResourceFontBuilder lineHeightOverride(float lineHeightOverride) {
             this.lineHeightOverride = lineHeightOverride;
             return this;
         }
 
+        /**
+         * Applies an additive line-height correction (base-size units).
+         * <p>
+         * Positive values increase the line height; negative values decrease it.
+         * The correction is applied after any override and scales with text size.
+         * </p>
+         * <p>
+         * Example:
+         * </p>
+         * <pre>{@code
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilderFromFolder(ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans"), 32.0F)
+         *         .lineHeightOffset(-1.5F)
+         *         .build();
+         * }</pre>
+         *
+         * @param lineHeightOffset amount to add to line height (can be negative)
+         * @return this builder for chaining
+         */
         public ResourceFontBuilder lineHeightOffset(float lineHeightOffset) {
             this.lineHeightOffset = lineHeightOffset;
             return this;
         }
 
+        /**
+         * Applies a vertical glyph offset (base-size units).
+         * <p>
+         * This shifts glyphs within the line box without changing line height.
+         * Positive values move glyphs down; negative values move them up.
+         * </p>
+         * <p>
+         * Example:
+         * </p>
+         * <pre>{@code
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilderFromFolder(ResourceLocation.fromNamespaceAndPath("fancymenu", "fonts/noto_sans"), 32.0F)
+         *         .yOffset(-2.0F)
+         *         .build();
+         * }</pre>
+         *
+         * @param yOffset vertical offset for glyphs; positive moves down
+         * @return this builder for chaining
+         */
         public ResourceFontBuilder yOffset(float yOffset) {
             this.yOffset = yOffset;
             return this;
         }
 
+        /**
+         * Builds (and caches) the smooth font instance.
+         * <p>
+         * Example:
+         * </p>
+         * <pre>{@code
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilderFromResources(List.of(base, jp, sc), 32.0F)
+         *         .lineHeightOffset(-1.0F)
+         *         .yOffset(-2.0F)
+         *         .build();
+         * }</pre>
+         *
+         * @return built font, or null if loading fails
+         */
         @Nullable
         public SmoothFont build() {
             return switch (sourceType) {
@@ -159,6 +401,29 @@ public final class SmoothFontManager {
         private float lineHeightOffset = 0.0F;
         private float yOffset = 0.0F;
 
+        /**
+         * Creates a path-based smooth font builder for the given source type.
+         * <p>
+         * This is an internal constructor used by the static factory methods on
+         * {@link SmoothFontManager}. It captures the source selector and base size
+         * so all later configuration values can be applied consistently.
+         * </p>
+         * <p>
+         * Example (via factory method):
+         * </p>
+         * <pre>{@code
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilderFromFolder(Path.of("config/fancymenu/assets/fonts"), 32.0F)
+         *         .lineHeightOffset(-1.0F)
+         *         .yOffset(-2.0F)
+         *         .build();
+         * }</pre>
+         *
+         * @param sourceType source selector (list or folder)
+         * @param baseSize base font size used for scaling metrics
+         * @param paths explicit font paths (for list sources)
+         * @param folder folder root (for folder sources)
+         */
         private PathFontBuilder(PathSourceType sourceType, float baseSize, @Nullable List<Path> paths, @Nullable Path folder) {
             this.sourceType = sourceType;
             this.baseSize = baseSize;
@@ -166,26 +431,122 @@ public final class SmoothFontManager {
             this.folder = folder;
         }
 
+        /**
+         * Sets language-specific font order overrides.
+         * <p>
+         * The map key must be a Minecraft language code (e.g. {@code ja_jp}, {@code zh_cn}).
+         * The list defines a preferred order of font files to use when rendering for that language.
+         * </p>
+         * <p>
+         * Example:
+         * </p>
+         * <pre>{@code
+         * Map<String, List<Path>> overrides = Map.of(
+         *         "ja_jp", List.of(basePath, jpPath, scPath),
+         *         "zh_cn", List.of(basePath, scPath, tcPath)
+         * );
+         *
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilderFromPaths(List.of(basePath, jpPath, scPath, tcPath), 32.0F)
+         *         .languageOverrides(overrides)
+         *         .build();
+         * }</pre>
+         *
+         * @param languageOverrides map of language code to font order list
+         * @return this builder for chaining
+         */
         public PathFontBuilder languageOverrides(@Nullable Map<String, List<Path>> languageOverrides) {
             this.languageOverrides = languageOverrides;
             return this;
         }
 
+        /**
+         * Overrides the computed line height (base-size units).
+         * <p>
+         * Use this to force a specific line height at the base size. The value
+         * scales with text size at render time.
+         * </p>
+         * <p>
+         * Example:
+         * </p>
+         * <pre>{@code
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilder(Path.of("config/fancymenu/assets/fonts/myfont.ttf"), 32.0F)
+         *         .lineHeightOverride(12.0F)
+         *         .build();
+         * }</pre>
+         *
+         * @param lineHeightOverride line height at base size, or &lt;= 0 to disable
+         * @return this builder for chaining
+         */
         public PathFontBuilder lineHeightOverride(float lineHeightOverride) {
             this.lineHeightOverride = lineHeightOverride;
             return this;
         }
 
+        /**
+         * Applies an additive line-height correction (base-size units).
+         * <p>
+         * Positive values increase the line height; negative values decrease it.
+         * The correction is applied after any override and scales with text size.
+         * </p>
+         * <p>
+         * Example:
+         * </p>
+         * <pre>{@code
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilderFromFolder(Path.of("config/fancymenu/assets/fonts"), 32.0F)
+         *         .lineHeightOffset(-1.5F)
+         *         .build();
+         * }</pre>
+         *
+         * @param lineHeightOffset amount to add to line height (can be negative)
+         * @return this builder for chaining
+         */
         public PathFontBuilder lineHeightOffset(float lineHeightOffset) {
             this.lineHeightOffset = lineHeightOffset;
             return this;
         }
 
+        /**
+         * Applies a vertical glyph offset (base-size units).
+         * <p>
+         * This shifts glyphs within the line box without changing line height.
+         * Positive values move glyphs down; negative values move them up.
+         * </p>
+         * <p>
+         * Example:
+         * </p>
+         * <pre>{@code
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilder(Path.of("config/fancymenu/assets/fonts/myfont.ttf"), 32.0F)
+         *         .yOffset(-2.0F)
+         *         .build();
+         * }</pre>
+         *
+         * @param yOffset vertical offset for glyphs; positive moves down
+         * @return this builder for chaining
+         */
         public PathFontBuilder yOffset(float yOffset) {
             this.yOffset = yOffset;
             return this;
         }
 
+        /**
+         * Builds (and caches) the smooth font instance.
+         * <p>
+         * Example:
+         * </p>
+         * <pre>{@code
+         * SmoothFont font = SmoothFontManager
+         *         .fontBuilderFromPaths(List.of(basePath, jpPath), 32.0F)
+         *         .lineHeightOffset(-1.0F)
+         *         .yOffset(-2.0F)
+         *         .build();
+         * }</pre>
+         *
+         * @return built font, or null if loading fails
+         */
         @Nullable
         public SmoothFont build() {
             return switch (sourceType) {
