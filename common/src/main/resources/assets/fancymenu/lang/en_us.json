@@ -2599,5 +2599,7 @@
   "fancymenu.actions.blocks.execute_later": "EXECUTE LATER (%s ms)",
   "fancymenu.actions.blocks.execute_later.edit": "Edit Execute Later Delay (ms)",
   "fancymenu.overlay.menu_bar.customization.settings.developer.smooth_font_multiline_rendering": "Smooth Font Multiline: %s",
-  "fancymenu.overlay.menu_bar.customization.settings.developer.smooth_font_multiline_rendering.desc": "If smooth font rendering should treat new lines as line breaks. When disabled, new lines are rendered as spaces."
+  "fancymenu.overlay.menu_bar.customization.settings.developer.smooth_font_multiline_rendering.desc": "If smooth font rendering should treat new lines as line breaks. When disabled, new lines are rendered as spaces.",
+  "fancymenu.actions.blocks.add.comment": "Add Comment",
+  "fancymenu.actions.blocks.comment.display": "Comment: %s"
 }

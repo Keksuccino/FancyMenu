@@ -111,6 +111,7 @@ public class ExecutableBlockDeserializer {
         if (type.equals("delay")) return DelayExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("execute-later")) return ExecuteLaterExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("folder")) return FolderExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
+        if (type.equals("comment")) return CommentExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         return null;
     }
 

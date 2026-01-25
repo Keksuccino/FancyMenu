@@ -168,7 +168,9 @@ public class Test {
         if (!enabled) {
             return startY;
         }
-        SmoothFont font = SmoothFontManager.getFontFromFolder(FOLDER, SMOOTH_FONT_BASE_SIZE, OVERRIDES);
+        SmoothFont font = SmoothFontManager.fontBuilderFromFolder(FOLDER, SMOOTH_FONT_BASE_SIZE)
+                .languageOverrides(OVERRIDES)
+                .build();
         if (font == null) {
             return startY;
         }
@@ -197,7 +199,8 @@ public class Test {
             return startY;
         }
         Path fontPath = getFontDirectory().resolve(fontFile);
-        SmoothFont font = SmoothFontManager.getFont(fontPath, SMOOTH_FONT_BASE_SIZE);
+        SmoothFont font = SmoothFontManager.fontBuilder(fontPath, SMOOTH_FONT_BASE_SIZE)
+                .build();
         if (font == null) {
             return startY;
         }

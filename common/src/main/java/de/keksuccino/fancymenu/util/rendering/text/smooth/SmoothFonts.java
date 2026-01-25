@@ -42,7 +42,11 @@ public class SmoothFonts {
             if (cached != null) {
                 return cached;
             }
-            SmoothFont created = SmoothFontManager.getFontFromFolder(NOTO_SANS_FOLDER, SMOOTH_FONT_BASE_SIZE, NOTO_SANS_ORDER_OVERRIDES, 10);
+            SmoothFont created = SmoothFontManager.fontBuilderFromFolder(NOTO_SANS_FOLDER, SMOOTH_FONT_BASE_SIZE)
+                    .languageOverrides(NOTO_SANS_ORDER_OVERRIDES)
+                    .yOffset(-10)
+                    .lineHeightOffset(-20)
+                    .build();
             if (created != null) {
                 cachedNotoSans = created;
             }

@@ -37,23 +37,177 @@ public final class SmoothFontManager {
     private SmoothFontManager() {
     }
 
-    @Nullable
-    public static SmoothFont getFont(@Nonnull ResourceLocation fontLocation, float baseSize) {
-        return getFont(List.of(fontLocation), baseSize, null, -1.0F);
+    @Nonnull
+    public static ResourceFontBuilder fontBuilder(@Nonnull ResourceLocation fontLocation, float baseSize) {
+        return new ResourceFontBuilder(ResourceSourceType.LIST, baseSize, List.of(fontLocation), null, null);
+    }
+
+    @Nonnull
+    public static ResourceFontBuilder fontBuilderFromResources(@Nonnull List<ResourceLocation> fontLocations, float baseSize) {
+        return new ResourceFontBuilder(ResourceSourceType.LIST, baseSize, fontLocations, null, null);
+    }
+
+    @Nonnull
+    public static ResourceFontBuilder fontBuilderFromFolder(@Nonnull ResourceLocation folder, float baseSize) {
+        return new ResourceFontBuilder(ResourceSourceType.FOLDER, baseSize, null, folder, null);
+    }
+
+    @Nonnull
+    public static ResourceFontBuilder fontBuilderFromPrefix(@Nonnull ResourceLocation folder, @Nonnull String filenamePrefix, float baseSize) {
+        return new ResourceFontBuilder(ResourceSourceType.PREFIX, baseSize, null, folder, filenamePrefix);
+    }
+
+    @Nonnull
+    public static PathFontBuilder fontBuilder(@Nonnull Path fontPath, float baseSize) {
+        return new PathFontBuilder(PathSourceType.LIST, baseSize, List.of(fontPath), null);
+    }
+
+    @Nonnull
+    public static PathFontBuilder fontBuilderFromPaths(@Nonnull List<Path> fontPaths, float baseSize) {
+        return new PathFontBuilder(PathSourceType.LIST, baseSize, fontPaths, null);
+    }
+
+    @Nonnull
+    public static PathFontBuilder fontBuilderFromFolder(@Nonnull Path folder, float baseSize) {
+        return new PathFontBuilder(PathSourceType.FOLDER, baseSize, null, folder);
+    }
+
+    public static void clear() {
+        FONT_CACHE.values().forEach(SmoothFont::close);
+        FONT_CACHE.clear();
+    }
+
+    public static void registerReloadListener() {
+        if (reloadListenerRegistered) {
+            return;
+        }
+        reloadListenerRegistered = true;
+        MinecraftResourceReloadObserver.addReloadListener(action -> {
+            if (action == MinecraftResourceReloadObserver.ReloadAction.STARTING) {
+                RenderSystem.recordRenderCall(() -> {
+                    clear();
+                    SmoothFonts.clearCache();
+                    SmoothTextRenderer.clearCaches();
+                });
+            }
+        });
+    }
+
+    public static final class ResourceFontBuilder {
+        private final ResourceSourceType sourceType;
+        private final float baseSize;
+        @Nullable
+        private final List<ResourceLocation> locations;
+        @Nullable
+        private final ResourceLocation folder;
+        @Nullable
+        private final String filenamePrefix;
+        @Nullable
+        private Map<String, List<ResourceLocation>> languageOverrides;
+        private float lineHeightOverride = -1.0F;
+        private float lineHeightOffset = 0.0F;
+        private float yOffset = 0.0F;
+
+        private ResourceFontBuilder(ResourceSourceType sourceType, float baseSize, @Nullable List<ResourceLocation> locations, @Nullable ResourceLocation folder, @Nullable String filenamePrefix) {
+            this.sourceType = sourceType;
+            this.baseSize = baseSize;
+            this.locations = locations;
+            this.folder = folder;
+            this.filenamePrefix = filenamePrefix;
+        }
+
+        public ResourceFontBuilder languageOverrides(@Nullable Map<String, List<ResourceLocation>> languageOverrides) {
+            this.languageOverrides = languageOverrides;
+            return this;
+        }
+
+        public ResourceFontBuilder lineHeightOverride(float lineHeightOverride) {
+            this.lineHeightOverride = lineHeightOverride;
+            return this;
+        }
+
+        public ResourceFontBuilder lineHeightOffset(float lineHeightOffset) {
+            this.lineHeightOffset = lineHeightOffset;
+            return this;
+        }
+
+        public ResourceFontBuilder yOffset(float yOffset) {
+            this.yOffset = yOffset;
+            return this;
+        }
+
+        @Nullable
+        public SmoothFont build() {
+            return switch (sourceType) {
+                case LIST -> buildFromResourceList(locations, baseSize, languageOverrides, lineHeightOverride, lineHeightOffset, yOffset);
+                case FOLDER -> buildFromResourceFolder(folder, baseSize, languageOverrides, lineHeightOverride, lineHeightOffset, yOffset);
+                case PREFIX -> buildFromResourcePrefix(folder, filenamePrefix, baseSize, languageOverrides, lineHeightOverride, lineHeightOffset, yOffset);
+            };
+        }
+    }
+
+    public static final class PathFontBuilder {
+        private final PathSourceType sourceType;
+        private final float baseSize;
+        @Nullable
+        private final List<Path> paths;
+        @Nullable
+        private final Path folder;
+        @Nullable
+        private Map<String, List<Path>> languageOverrides;
+        private float lineHeightOverride = -1.0F;
+        private float lineHeightOffset = 0.0F;
+        private float yOffset = 0.0F;
+
+        private PathFontBuilder(PathSourceType sourceType, float baseSize, @Nullable List<Path> paths, @Nullable Path folder) {
+            this.sourceType = sourceType;
+            this.baseSize = baseSize;
+            this.paths = paths;
+            this.folder = folder;
+        }
+
+        public PathFontBuilder languageOverrides(@Nullable Map<String, List<Path>> languageOverrides) {
+            this.languageOverrides = languageOverrides;
+            return this;
+        }
+
+        public PathFontBuilder lineHeightOverride(float lineHeightOverride) {
+            this.lineHeightOverride = lineHeightOverride;
+            return this;
+        }
+
+        public PathFontBuilder lineHeightOffset(float lineHeightOffset) {
+            this.lineHeightOffset = lineHeightOffset;
+            return this;
+        }
+
+        public PathFontBuilder yOffset(float yOffset) {
+            this.yOffset = yOffset;
+            return this;
+        }
+
+        @Nullable
+        public SmoothFont build() {
+            return switch (sourceType) {
+                case LIST -> buildFromPathList(paths, baseSize, languageOverrides, lineHeightOverride, lineHeightOffset, yOffset);
+                case FOLDER -> buildFromPathFolder(folder, baseSize, languageOverrides, lineHeightOverride, lineHeightOffset, yOffset);
+            };
+        }
+    }
+
+    private enum ResourceSourceType {
+        LIST,
+        FOLDER,
+        PREFIX
+    }
+
+    private enum PathSourceType {
+        LIST,
+        FOLDER
     }
 
     @Nullable
-    public static SmoothFont getFont(@Nonnull List<ResourceLocation> fontLocations, float baseSize) {
-        return getFont(fontLocations, baseSize, null, -1.0F);
-    }
-
-    @Nullable
-    public static SmoothFont getFont(@Nonnull List<ResourceLocation> fontLocations, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides) {
-        return getFont(fontLocations, baseSize, languageOverrides, -1.0F);
-    }
-
-    @Nullable
-    public static SmoothFont getFont(@Nonnull List<ResourceLocation> fontLocations, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightOverride) {
+    private static SmoothFont buildFromResourceList(@Nullable List<ResourceLocation> fontLocations, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightOverride, float lineHeightOffset, float yOffset) {
         Objects.requireNonNull(fontLocations);
         registerReloadListener();
         List<ResourceLocation> uniqueLocations = dedupe(fontLocations);
@@ -62,7 +216,9 @@ public final class SmoothFontManager {
             return null;
         }
         float resolvedOverride = sanitizeLineHeightOverride(lineHeightOverride);
-        String key = buildResourceKey("reslist", uniqueLocations, baseSize, languageOverrides, resolvedOverride);
+        float resolvedOffset = sanitizeLineHeightOffset(lineHeightOffset);
+        float resolvedYOffset = sanitizeYOffset(yOffset);
+        String key = buildResourceKey("reslist", uniqueLocations, baseSize, languageOverrides, resolvedOverride, resolvedOffset, resolvedYOffset);
         SmoothFont cached = FONT_CACHE.get(key);
         if (cached != null) {
             return cached;
@@ -92,7 +248,7 @@ public final class SmoothFontManager {
 
         Map<String, int[]> languageOrders = buildLanguageOrders(loadedLocations, languageOverrides);
         List<String> sourceLabels = buildLabelsForLocations(loadedLocations);
-        SmoothFont created = buildFont(key, fontBytes, baseSize, resolvedOverride, languageOrders, sourceLabels);
+        SmoothFont created = buildFont(key, fontBytes, baseSize, resolvedOverride, resolvedOffset, resolvedYOffset, languageOrders, sourceLabels);
         if (created != null) {
             FONT_CACHE.put(key, created);
         }
@@ -100,17 +256,26 @@ public final class SmoothFontManager {
     }
 
     @Nullable
-    public static SmoothFont getFontByPrefix(@Nonnull ResourceLocation folder, @Nonnull String filenamePrefix, float baseSize) {
-        return getFontByPrefix(folder, filenamePrefix, baseSize, null, -1.0F);
+    private static SmoothFont buildFromResourceFolder(@Nullable ResourceLocation folder, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightOverride, float lineHeightOffset, float yOffset) {
+        Objects.requireNonNull(folder);
+        ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
+        String folderPath = folder.getPath();
+        String prefix = folderPath.endsWith("/") ? folderPath : (folderPath + "/");
+        Map<ResourceLocation, Resource> resources = resourceManager.listResources(folderPath, location ->
+                location.getNamespace().equals(folder.getNamespace())
+                        && location.getPath().startsWith(prefix)
+                        && location.getPath().endsWith(".ttf"));
+        if (resources.isEmpty()) {
+            LOGGER.error("[FANCYMENU] No smooth fonts found in folder {}.", folder);
+            return null;
+        }
+        List<ResourceLocation> locations = new ArrayList<>(resources.keySet());
+        locations.sort(Comparator.comparing(ResourceLocation::toString));
+        return buildFromResourceList(locations, baseSize, languageOverrides, lineHeightOverride, lineHeightOffset, yOffset);
     }
 
     @Nullable
-    public static SmoothFont getFontByPrefix(@Nonnull ResourceLocation folder, @Nonnull String filenamePrefix, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides) {
-        return getFontByPrefix(folder, filenamePrefix, baseSize, languageOverrides, -1.0F);
-    }
-
-    @Nullable
-    public static SmoothFont getFontByPrefix(@Nonnull ResourceLocation folder, @Nonnull String filenamePrefix, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightOverride) {
+    private static SmoothFont buildFromResourcePrefix(@Nullable ResourceLocation folder, @Nullable String filenamePrefix, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightOverride, float lineHeightOffset, float yOffset) {
         Objects.requireNonNull(folder);
         Objects.requireNonNull(filenamePrefix);
         ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
@@ -126,50 +291,51 @@ public final class SmoothFontManager {
         }
         List<ResourceLocation> locations = new ArrayList<>(resources.keySet());
         locations.sort(Comparator.comparing(ResourceLocation::toString));
-        return getFont(locations, baseSize, languageOverrides, lineHeightOverride);
+        return buildFromResourceList(locations, baseSize, languageOverrides, lineHeightOverride, lineHeightOffset, yOffset);
     }
 
     @Nullable
-    public static SmoothFont getFontFromFolder(@Nonnull ResourceLocation folder, float baseSize) {
-        return getFontFromFolder(folder, baseSize, null, -1.0F);
-    }
-
-    @Nullable
-    public static SmoothFont getFontFromFolder(@Nonnull ResourceLocation folder, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides) {
-        return getFontFromFolder(folder, baseSize, languageOverrides, -1.0F);
-    }
-
-    @Nullable
-    public static SmoothFont getFontFromFolder(@Nonnull ResourceLocation folder, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightOverride) {
-        Objects.requireNonNull(folder);
-        ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
-        String folderPath = folder.getPath();
-        String prefix = folderPath.endsWith("/") ? folderPath : (folderPath + "/");
-        Map<ResourceLocation, Resource> resources = resourceManager.listResources(folderPath, location ->
-                location.getNamespace().equals(folder.getNamespace())
-                        && location.getPath().startsWith(prefix)
-                        && location.getPath().endsWith(".ttf"));
-        if (resources.isEmpty()) {
-            LOGGER.error("[FANCYMENU] No smooth fonts found in folder {}.", folder);
+    private static SmoothFont buildFromPathList(@Nullable List<Path> fontPaths, float baseSize, @Nullable Map<String, List<Path>> languageOverrides, float lineHeightOverride, float lineHeightOffset, float yOffset) {
+        Objects.requireNonNull(fontPaths);
+        registerReloadListener();
+        List<Path> uniquePaths = dedupePaths(fontPaths);
+        if (uniquePaths.isEmpty()) {
+            LOGGER.error("[FANCYMENU] No smooth font paths provided.");
             return null;
         }
-        List<ResourceLocation> locations = new ArrayList<>(resources.keySet());
-        locations.sort(Comparator.comparing(ResourceLocation::toString));
-        return getFont(locations, baseSize, languageOverrides, lineHeightOverride);
+        float resolvedOverride = sanitizeLineHeightOverride(lineHeightOverride);
+        float resolvedOffset = sanitizeLineHeightOffset(lineHeightOffset);
+        float resolvedYOffset = sanitizeYOffset(yOffset);
+        String key = buildFileListKey(uniquePaths, baseSize, languageOverrides, resolvedOverride, resolvedOffset, resolvedYOffset);
+        SmoothFont cached = FONT_CACHE.get(key);
+        if (cached != null) {
+            return cached;
+        }
+
+        List<byte[]> fontBytes = new ArrayList<>();
+        List<Path> loadedPaths = new ArrayList<>();
+        for (Path path : uniquePaths) {
+            try {
+                fontBytes.add(Files.readAllBytes(path));
+                loadedPaths.add(path);
+            } catch (IOException ex) {
+                LOGGER.error("[FANCYMENU] Failed to read smooth font from path: {}", path, ex);
+            }
+        }
+        if (fontBytes.isEmpty()) {
+            return null;
+        }
+        Map<String, int[]> languageOrders = buildLanguageOrdersForPaths(loadedPaths, languageOverrides);
+        List<String> sourceLabels = buildLabelsForPaths(loadedPaths);
+        SmoothFont created = buildFont(key, fontBytes, baseSize, resolvedOverride, resolvedOffset, resolvedYOffset, languageOrders, sourceLabels);
+        if (created != null) {
+            FONT_CACHE.put(key, created);
+        }
+        return created;
     }
 
     @Nullable
-    public static SmoothFont getFontFromFolder(@Nonnull Path folder, float baseSize) {
-        return getFontFromFolder(folder, baseSize, null, -1.0F);
-    }
-
-    @Nullable
-    public static SmoothFont getFontFromFolder(@Nonnull Path folder, float baseSize, @Nullable Map<String, List<Path>> languageOverrides) {
-        return getFontFromFolder(folder, baseSize, languageOverrides, -1.0F);
-    }
-
-    @Nullable
-    public static SmoothFont getFontFromFolder(@Nonnull Path folder, float baseSize, @Nullable Map<String, List<Path>> languageOverrides, float lineHeightOverride) {
+    private static SmoothFont buildFromPathFolder(@Nullable Path folder, float baseSize, @Nullable Map<String, List<Path>> languageOverrides, float lineHeightOverride, float lineHeightOffset, float yOffset) {
         Objects.requireNonNull(folder);
         registerReloadListener();
         if (!Files.exists(folder) || !Files.isDirectory(folder)) {
@@ -182,112 +348,11 @@ public final class SmoothFontManager {
             return null;
         }
         locations.sort(Comparator.comparing(Path::toString));
-        List<Path> uniqueLocations = dedupePaths(locations);
-        float resolvedOverride = sanitizeLineHeightOverride(lineHeightOverride);
-        String key = buildFileFolderKey(folder, uniqueLocations, baseSize, languageOverrides, resolvedOverride);
-        SmoothFont cached = FONT_CACHE.get(key);
-        if (cached != null) {
-            return cached;
-        }
-
-        List<byte[]> fontBytes = new ArrayList<>();
-        List<Path> loadedLocations = new ArrayList<>();
-        for (Path path : uniqueLocations) {
-            try {
-                fontBytes.add(Files.readAllBytes(path));
-                loadedLocations.add(path);
-            } catch (IOException ex) {
-                LOGGER.error("[FANCYMENU] Failed to read smooth font from path: {}", path, ex);
-            }
-        }
-        if (fontBytes.isEmpty()) {
-            return null;
-        }
-        Map<String, int[]> languageOrders = buildLanguageOrdersForPaths(loadedLocations, languageOverrides);
-        List<String> sourceLabels = buildLabelsForPaths(loadedLocations);
-        SmoothFont created = buildFont(key, fontBytes, baseSize, resolvedOverride, languageOrders, sourceLabels);
-        if (created != null) {
-            FONT_CACHE.put(key, created);
-        }
-        return created;
+        return buildFromPathList(locations, baseSize, languageOverrides, lineHeightOverride, lineHeightOffset, yOffset);
     }
 
     @Nullable
-    public static SmoothFont getFont(@Nonnull Path fontPath, float baseSize) {
-        return getFont(fontPath, baseSize, -1.0F);
-    }
-
-    @Nullable
-    public static SmoothFont getFont(@Nonnull Path fontPath, float baseSize, float lineHeightOverride) {
-        Objects.requireNonNull(fontPath);
-        registerReloadListener();
-        float resolvedOverride = sanitizeLineHeightOverride(lineHeightOverride);
-        String key = "file:" + fontPath.toAbsolutePath() + ":" + baseSize + ":" + Float.floatToIntBits(resolvedOverride);
-        SmoothFont cached = FONT_CACHE.get(key);
-        if (cached != null) {
-            return cached;
-        }
-        try {
-            byte[] bytes = Files.readAllBytes(fontPath);
-            SmoothFont created = buildFont(key, List.of(bytes), baseSize, resolvedOverride, null, List.of(fontPath.getFileName().toString()));
-            if (created != null) {
-                FONT_CACHE.put(key, created);
-            }
-            return created;
-        } catch (IOException ex) {
-            LOGGER.error("[FANCYMENU] Failed to read smooth font from path: {}", fontPath, ex);
-            return null;
-        }
-    }
-
-    @Nullable
-    public static SmoothFont getFontFromPaths(@Nonnull List<Path> fontPaths, float baseSize) {
-        return getFontFromPaths(fontPaths, baseSize, -1.0F);
-    }
-
-    @Nullable
-    public static SmoothFont getFontFromPaths(@Nonnull List<Path> fontPaths, float baseSize, float lineHeightOverride) {
-        Objects.requireNonNull(fontPaths);
-        registerReloadListener();
-        List<Path> uniquePaths = dedupePaths(fontPaths);
-        if (uniquePaths.isEmpty()) {
-            LOGGER.error("[FANCYMENU] No smooth font paths provided.");
-            return null;
-        }
-        float resolvedOverride = sanitizeLineHeightOverride(lineHeightOverride);
-        String key = "filelist:" + baseSize + ":" + Float.floatToIntBits(resolvedOverride) + ":" + uniquePaths;
-        SmoothFont cached = FONT_CACHE.get(key);
-        if (cached != null) {
-            return cached;
-        }
-        List<byte[]> fontBytes = new ArrayList<>();
-        List<String> sourceLabels = new ArrayList<>();
-        for (Path path : uniquePaths) {
-            try {
-                fontBytes.add(Files.readAllBytes(path));
-                Path filename = path.getFileName();
-                sourceLabels.add(filename == null ? "unknown" : filename.toString());
-            } catch (IOException ex) {
-                LOGGER.error("[FANCYMENU] Failed to read smooth font from path: {}", path, ex);
-            }
-        }
-        if (fontBytes.isEmpty()) {
-            return null;
-        }
-        SmoothFont created = buildFont(key, fontBytes, baseSize, resolvedOverride, null, sourceLabels);
-        if (created != null) {
-            FONT_CACHE.put(key, created);
-        }
-        return created;
-    }
-
-    public static void clear() {
-        FONT_CACHE.values().forEach(SmoothFont::close);
-        FONT_CACHE.clear();
-    }
-
-    @Nullable
-    private static SmoothFont buildFont(String key, List<byte[]> fontBytesList, float baseSize, float lineHeightOverride, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
+    private static SmoothFont buildFont(String key, List<byte[]> fontBytesList, float baseSize, float lineHeightOverride, float lineHeightOffset, float yOffset, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
         List<Font> fonts = new ArrayList<>();
         List<String> resolvedLabels = new ArrayList<>();
         for (int i = 0; i < fontBytesList.size(); i++) {
@@ -304,7 +369,7 @@ public final class SmoothFontManager {
         }
         // Keep the base SDF range small; per-LOD scaling is handled in SmoothFont.
         float sdfRange = 1.0F;
-        return new SmoothFont(sanitizeKey(key), fonts, baseSize, sdfRange, lineHeightOverride, languageOrders, resolvedLabels);
+        return new SmoothFont(sanitizeKey(key), fonts, baseSize, sdfRange, lineHeightOverride, lineHeightOffset, yOffset, languageOrders, resolvedLabels);
     }
 
     private static String sanitizeKey(String key) {
@@ -315,20 +380,12 @@ public final class SmoothFontManager {
         return lineHeightOverride > 0.0F ? lineHeightOverride : -1.0F;
     }
 
-    public static void registerReloadListener() {
-        if (reloadListenerRegistered) {
-            return;
-        }
-        reloadListenerRegistered = true;
-        MinecraftResourceReloadObserver.addReloadListener(action -> {
-            if (action == MinecraftResourceReloadObserver.ReloadAction.STARTING) {
-                RenderSystem.recordRenderCall(() -> {
-                    clear();
-                    SmoothFonts.clearCache();
-                    SmoothTextRenderer.clearCaches();
-                });
-            }
-        });
+    private static float sanitizeLineHeightOffset(float lineHeightOffset) {
+        return lineHeightOffset;
+    }
+
+    private static float sanitizeYOffset(float yOffset) {
+        return yOffset;
     }
 
     private static List<ResourceLocation> dedupe(List<ResourceLocation> locations) {
@@ -341,13 +398,15 @@ public final class SmoothFontManager {
         return new ArrayList<>(unique);
     }
 
-    private static String buildFileFolderKey(Path folder, List<Path> locations, float baseSize, @Nullable Map<String, List<Path>> languageOverrides, float lineHeightOverride) {
-        StringBuilder builder = new StringBuilder("filefolder:")
+    private static String buildFileListKey(List<Path> locations, float baseSize, @Nullable Map<String, List<Path>> languageOverrides, float lineHeightOverride, float lineHeightOffset, float yOffset) {
+        StringBuilder builder = new StringBuilder("filelist:")
                 .append(baseSize)
                 .append(":")
                 .append(Float.floatToIntBits(lineHeightOverride))
                 .append(":")
-                .append(folder.toAbsolutePath())
+                .append(Float.floatToIntBits(lineHeightOffset))
+                .append(":")
+                .append(Float.floatToIntBits(yOffset))
                 .append(":");
         for (Path location : locations) {
             builder.append(location.toAbsolutePath()).append(';');
@@ -380,12 +439,16 @@ public final class SmoothFontManager {
         return results;
     }
 
-    private static String buildResourceKey(String prefix, List<ResourceLocation> locations, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightOverride) {
+    private static String buildResourceKey(String prefix, List<ResourceLocation> locations, float baseSize, @Nullable Map<String, List<ResourceLocation>> languageOverrides, float lineHeightOverride, float lineHeightOffset, float yOffset) {
         StringBuilder builder = new StringBuilder(prefix)
                 .append(":")
                 .append(baseSize)
                 .append(":")
                 .append(Float.floatToIntBits(lineHeightOverride))
+                .append(":")
+                .append(Float.floatToIntBits(lineHeightOffset))
+                .append(":")
+                .append(Float.floatToIntBits(yOffset))
                 .append(":");
         for (ResourceLocation location : locations) {
             builder.append(location).append(';');
@@ -494,7 +557,7 @@ public final class SmoothFontManager {
                 for (Path location : overrideList) {
                     Integer index = lookup.get(location);
                     if (index == null) {
-                        LOGGER.warn("[FANCYMENU] Language override '{}' references missing font path: {}", entry.getKey(), location);
+                        LOGGER.warn("[FANCYMENU] Language override '{}' references missing font: {}", entry.getKey(), location);
                         continue;
                     }
                     if (seen.add(index)) {
@@ -512,5 +575,4 @@ public final class SmoothFontManager {
         }
         return result;
     }
-
 }

@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.action.ActionFavoritesManager;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.CommentExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.FolderExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecutableBlock;
@@ -427,6 +428,13 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             this.onAddFolder(target);
         }).setIcon(MaterialIcons.CREATE_NEW_FOLDER);
 
+        this.rightClickContextMenu.addClickableEntry("add_comment", Component.translatable("fancymenu.actions.blocks.add.comment"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
+            menu.closeMenu();
+            this.onAddComment(target);
+        }).setIcon(MaterialIcons.COMMENT);
+
         this.rightClickContextMenu.addSeparatorEntry("separator_after_add");
 
         this.rightClickContextMenu.addClickableEntry("append_else_if", Component.translatable("fancymenu.actions.blocks.add.else_if"), (menu, entry) -> {
@@ -792,6 +800,12 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     protected void onAddFolder(@Nullable ExecutableEntry selectionReference) {
         ExecutableEntry resolvedReference = (selectionReference != null) ? this.findEntryForExecutable(selectionReference.executable) : null;
         FolderExecutableBlock block = new FolderExecutableBlock();
+        this.finalizeExecutableAddition(block, resolvedReference, true);
+    }
+
+    protected void onAddComment(@Nullable ExecutableEntry selectionReference) {
+        ExecutableEntry resolvedReference = (selectionReference != null) ? this.findEntryForExecutable(selectionReference.executable) : null;
+        CommentExecutableBlock block = new CommentExecutableBlock();
         this.finalizeExecutableAddition(block, resolvedReference, true);
     }
 
@@ -1622,7 +1636,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             this.startInlineValueEditing(selected);
             return true;
         }
-        if (selected.executable instanceof FolderExecutableBlock) {
+        if ((selected.executable instanceof FolderExecutableBlock) || (selected.executable instanceof CommentExecutableBlock)) {
             this.startInlineNameEditing(selected);
             return true;
         }
@@ -1808,17 +1822,22 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     }
 
     protected void startInlineNameEditing(@NotNull ExecutableEntry entry) {
-        if (!(entry.executable instanceof FolderExecutableBlock folder)) {
+        String initialText;
+        if (entry.executable instanceof FolderExecutableBlock folder) {
+            initialText = folder.getName();
+        } else if (entry.executable instanceof CommentExecutableBlock comment) {
+            initialText = comment.getComment();
+        } else {
             return;
         }
         this.finishInlineNameEditing(true);
         this.finishInlineValueEditing(true);
         this.inlineNameEntry = entry;
-        this.inlineNameOriginal = folder.getName();
+        this.inlineNameOriginal = initialText;
         this.inlineNameEditBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 10, 10, Component.empty());
         this.inlineNameEditBox.setHeight(10);
         this.inlineNameEditBox.setMaxLength(256);
-        this.inlineNameEditBox.setValue(folder.getName());
+        this.inlineNameEditBox.setValue(initialText);
         this.inlineNameEditBox.setCursorPosition(this.inlineNameEditBox.getValue().length());
         this.inlineNameEditBox.setHighlightPos(0);
         UIBase.applyDefaultWidgetSkinTo(this.inlineNameEditBox, UIBase.shouldBlur());
@@ -1840,8 +1859,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         this.inlineNameEntry = null;
         this.inlineNameEditBox = null;
         this.setFocused(null);
+        String result = Objects.requireNonNullElse(editBox.getValue(), "");
         if (entry.executable instanceof FolderExecutableBlock folder) {
-            String result = Objects.requireNonNullElse(editBox.getValue(), "");
             if (!save) {
                 folder.setName(this.inlineNameOriginal != null ? this.inlineNameOriginal : FolderExecutableBlock.DEFAULT_NAME);
             } else {
@@ -1852,6 +1871,22 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 if (!Objects.equals(folder.getName(), normalized)) {
                     this.createUndoPoint();
                     folder.setName(normalized);
+                }
+            }
+            entry.rebuildComponents();
+            entry.setWidth(entry.calculateWidth());
+            entry.resetNameClickTimer();
+        } else if (entry.executable instanceof CommentExecutableBlock comment) {
+            if (!save) {
+                comment.setComment(this.inlineNameOriginal != null ? this.inlineNameOriginal : CommentExecutableBlock.DEFAULT_COMMENT);
+            } else {
+                String normalized = result.trim();
+                if (normalized.isEmpty()) {
+                    normalized = CommentExecutableBlock.DEFAULT_COMMENT;
+                }
+                if (!Objects.equals(comment.getComment(), normalized)) {
+                    this.createUndoPoint();
+                    comment.setComment(normalized);
                 }
             }
             entry.rebuildComponents();
@@ -2314,7 +2349,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         } else if (moveAfter == AFTER_LAST) {
             targetParent = this.executableBlock;
             targetIndex = this.executableBlock.getExecutables().size();
-        } else if (moveAfter.executable instanceof AbstractExecutableBlock block) {
+        } else if ((moveAfter.executable instanceof AbstractExecutableBlock block) && !(block instanceof CommentExecutableBlock)) {
             targetParent = block;
             targetIndex = 0;
         } else {
@@ -2681,7 +2716,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             this.executableBlock.addExecutable(executable);
             return;
         }
-        if (selectionReference.executable instanceof AbstractExecutableBlock block) {
+        if ((selectionReference.executable instanceof AbstractExecutableBlock block) && !(block instanceof CommentExecutableBlock)) {
             block.addExecutable(executable);
             return;
         }
@@ -2805,6 +2840,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             return false;
         }
         if (entry.executable instanceof FolderExecutableBlock) {
+            return false;
+        }
+        if (entry.executable instanceof CommentExecutableBlock) {
             return false;
         }
         if ((entry.executable instanceof ActionInstance i) && !i.action.hasValue()) {
@@ -3024,6 +3062,10 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         @Nullable
         private MutableComponent folderCollapsedSuffixComponent;
         @Nullable
+        private MutableComponent commentLabelComponent;
+        @Nullable
+        private MutableComponent commentTextComponent;
+        @Nullable
         private MutableComponent valueLabelComponent;
         @Nullable
         private MutableComponent valueOnlyComponent;
@@ -3100,6 +3142,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             this.folderLabelComponent = null;
             this.folderNameComponent = null;
             this.folderCollapsedSuffixComponent = null;
+            this.commentLabelComponent = null;
+            this.commentTextComponent = null;
             this.valueLabelComponent = null;
             this.valueOnlyComponent = null;
             if (this.executable instanceof ActionInstance i) {
@@ -3178,6 +3222,13 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     display = display.append(collapsedComponent.copy());
                 }
                 this.displayNameComponent = display;
+                this.valueComponent = Component.empty();
+            } else if (this.executable instanceof CommentExecutableBlock comment) {
+                MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.actions.blocks.comment.display", "")).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
+                MutableComponent textComponent = Component.literal(comment.getComment()).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
+                this.commentLabelComponent = labelComponent;
+                this.commentTextComponent = textComponent;
+                this.displayNameComponent = labelComponent.copy().append(textComponent.copy());
                 this.valueComponent = Component.empty();
             } else {
                 this.displayNameComponent = Component.literal("[UNKNOWN EXECUTABLE]").withStyle(ChatFormatting.RED);
@@ -3304,6 +3355,17 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                         UIBase.renderText(graphics, this.folderCollapsedSuffixComponent, suffixX, textY, -1);
                     }
                 }
+            } else if (this.executable instanceof CommentExecutableBlock) {
+                int indicatorX = renderX + 5;
+                int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
+                this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.bullet_list_dot_color_2.getColor());
+                int textX = indicatorX + COLLAPSE_TOGGLE_SIZE + 3;
+                float textY = centerYLine1 - textOffset;
+                if (ActionScriptEditorWindowBody.this.inlineNameEntry != this) {
+                    UIBase.renderText(graphics, this.displayNameComponent, textX, textY, -1);
+                } else if (this.commentLabelComponent != null) {
+                    UIBase.renderText(graphics, this.commentLabelComponent, textX, textY, -1);
+                }
             } else if (this.executable instanceof IfExecutableBlock ifBlock) {
                 int toggleX = renderX + 5;
                 int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
@@ -3388,7 +3450,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if (this.leftMouseDownDragging) {
                 if ((this.leftMouseDownDraggingPosX != getRenderMouseX()) || (this.leftMouseDownDraggingPosY != getRenderMouseY())) {
                     // Only allow dragging for specific entries
-                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock) || (this.executable instanceof FolderExecutableBlock)) {
+                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock) || (this.executable instanceof FolderExecutableBlock) || (this.executable instanceof CommentExecutableBlock)) {
                         this.dragging = true;
                     }
                 }
@@ -3412,7 +3474,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         private int calculateWidth() {
             int w;
-            if ((this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock) || (this.executable instanceof ElseIfExecutableBlock) || (this.executable instanceof ElseExecutableBlock)) {
+            if ((this.executable instanceof FolderExecutableBlock) || (this.executable instanceof CommentExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock) || (this.executable instanceof ElseIfExecutableBlock) || (this.executable instanceof ElseExecutableBlock)) {
                 int textWidth = this.font.width(this.displayNameComponent);
                 w = 5 + COLLAPSE_TOGGLE_SIZE + 3 + textWidth + 5;
             } else {
@@ -3460,7 +3522,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         protected boolean canInlineEditName() {
-            return this.executable instanceof FolderExecutableBlock;
+            return (this.executable instanceof FolderExecutableBlock) || (this.executable instanceof CommentExecutableBlock);
         }
 
         protected boolean isMouseOverName(int mouseX, int mouseY) {
@@ -3471,7 +3533,13 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             int nameX = this.getNameFieldX();
             int nameY = this.getNameFieldY();
             int height = this.font.lineHeight;
-            int width = (this.folderNameComponent != null) ? this.font.width(this.folderNameComponent) : 0;
+            MutableComponent textComponent = null;
+            if (this.executable instanceof FolderExecutableBlock) {
+                textComponent = this.folderNameComponent;
+            } else if (this.executable instanceof CommentExecutableBlock) {
+                textComponent = this.commentTextComponent;
+            }
+            int width = (textComponent != null) ? this.font.width(textComponent) : 0;
             return UIBase.isXYInArea(mouseX, mouseY, nameX, nameY, Math.max(width, 6), height);
         }
 
@@ -3498,6 +3566,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             int nameX = baseX + 5 + COLLAPSE_TOGGLE_SIZE + 3;
             if (this.folderLabelComponent != null) {
                 nameX += this.font.width(this.folderLabelComponent);
+            } else if (this.commentLabelComponent != null) {
+                nameX += this.font.width(this.commentLabelComponent);
             }
             return nameX;
         }

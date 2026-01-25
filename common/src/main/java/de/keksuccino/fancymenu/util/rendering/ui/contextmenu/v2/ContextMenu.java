@@ -1667,7 +1667,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             this.renderIcon(graphics);
 
-            this.renderTooltipIconAndRegisterTooltip(graphics, mouseX, mouseY, (shortcutTextWidth > 0) ? -(shortcutTextWidth + 8) : 0);
+            this.renderTooltipIconAndRegisterTooltip(graphics, mouseX, mouseY);
 
         }
 
@@ -1727,13 +1727,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return this.icon != null || this.materialIcon != null;
         }
 
-        protected void renderTooltipIconAndRegisterTooltip(GuiGraphics graphics, int mouseX, int mouseY, int offsetX) {
+        protected void renderTooltipIconAndRegisterTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
 
             UITooltip tooltip = this.getTooltip();
 
             if (tooltip != null) {
 
-                this.tooltipIconHovered = this.isTooltipIconHovered(mouseX, mouseY, offsetX);
+                this.tooltipIconHovered = this.isTooltipIconHovered(mouseX, mouseY);
                 if (this.tooltipIconHovered) {
                     if (this.tooltipIconHoverStart == -1) {
                         this.tooltipIconHoverStart = System.currentTimeMillis();
@@ -1747,7 +1747,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 UIBase.getUITheme().ui_icon_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
                 IconRenderData iconData = this.resolveTooltipIconData();
                 if (iconData != null) {
-                    this.blitScaledIcon(graphics, iconData, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+                    this.blitScaledIcon(graphics, iconData, this.getTooltipIconX(), this.getTooltipIconY(), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
                 }
                 RenderingUtils.resetShaderColor(graphics);
 
@@ -1762,8 +1762,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         }
 
-        protected boolean isTooltipIconHovered(int mouseX, int mouseY, int offsetX) {
-            return UIBase.isXYInArea(mouseX, mouseY, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+        protected boolean isTooltipIconHovered(int mouseX, int mouseY) {
+            return UIBase.isXYInArea(mouseX, mouseY, this.getTooltipIconX(), this.getTooltipIconY(), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
         }
 
         protected int getLabelX() {

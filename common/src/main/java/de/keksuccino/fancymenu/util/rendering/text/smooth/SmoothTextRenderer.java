@@ -131,10 +131,11 @@ public final class SmoothTextRenderer {
         boolean allowMultiline = isMultilineEnabled();
 
         float ascent = font.getAscent(size);
+        float yOffset = font.getYOffset(size);
         float lineHeight = font.getLineHeight(size);
         float penX = x;
         float lineY = y;
-        float baseline = lineY + ascent;
+        float baseline = lineY + ascent + yOffset;
 
         StyleState style = new StyleState(baseColor);
 
@@ -163,7 +164,7 @@ public final class SmoothTextRenderer {
                     }
                     penX = x;
                     lineY += lineHeight;
-                    baseline = lineY + ascent;
+                    baseline = lineY + ascent + yOffset;
                     if (style.underline) {
                         underlineStartX = penX;
                         underlineColor = style.color;
@@ -258,9 +259,10 @@ public final class SmoothTextRenderer {
         boolean allowMultiline = isMultilineEnabled();
 
         float ascent = font.getAscent(size);
+        float yOffset = font.getYOffset(size);
         float lineHeight = font.getLineHeight(size);
 
-        ComponentRenderState state = new ComponentRenderState(graphics, font, baseColor, size, lod, scale, ascent, lineHeight, x, y, allowMultiline);
+        ComponentRenderState state = new ComponentRenderState(graphics, font, baseColor, size, lod, scale, ascent, yOffset, lineHeight, x, y, allowMultiline);
         text.accept(state);
         state.finish();
 
@@ -533,6 +535,7 @@ public final class SmoothTextRenderer {
         private final int lod;
         private final float scale;
         private final float ascent;
+        private final float yOffset;
         private final float lineHeight;
         private final float startX;
         private final boolean allowMultiline;
@@ -551,7 +554,7 @@ public final class SmoothTextRenderer {
         private VertexConsumer consumer;
         private SmoothFontAtlas currentAtlas;
 
-        private ComponentRenderState(GuiGraphics graphics, SmoothFont font, int baseColor, float size, int lod, float scale, float ascent, float lineHeight, float x, float y, boolean allowMultiline) {
+        private ComponentRenderState(GuiGraphics graphics, SmoothFont font, int baseColor, float size, int lod, float scale, float ascent, float yOffset, float lineHeight, float x, float y, boolean allowMultiline) {
             this.graphics = graphics;
             this.font = font;
             this.baseColor = baseColor;
@@ -559,12 +562,13 @@ public final class SmoothTextRenderer {
             this.lod = lod;
             this.scale = scale;
             this.ascent = ascent;
+            this.yOffset = yOffset;
             this.lineHeight = lineHeight;
             this.startX = x;
             this.allowMultiline = allowMultiline;
             this.penX = x;
             this.lineY = y;
-            this.baseline = y + ascent;
+            this.baseline = y + ascent + yOffset;
             this.matrix = graphics.pose().last().pose();
             this.style = new StyleState(baseColor);
             this.nextStyle = new StyleState(baseColor);
@@ -643,7 +647,7 @@ public final class SmoothTextRenderer {
             }
             penX = startX;
             lineY += lineHeight;
-            baseline = lineY + ascent;
+            baseline = lineY + ascent + yOffset;
             if (style.underline) {
                 underlineStartX = penX;
                 underlineColor = style.color;
