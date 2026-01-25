@@ -66,6 +66,8 @@
 - Added "Is Cursor Holding Inventory Item" requirement to check if the user is holding an item with the mouse in any inventory screen (main inventory, chests, etc.) (#1427)
 - Added "Is Camera Perspective" requirement to check for the user's current perspective (first person, third person, front view) (#1375)
 - Added "Is Active Cursor Type" requirement that checks if a specific standard cursor type (normal, pointing hand, writing cursor, etc.) is currently the active cursor (#1430)
+- Added "Is Modpack Mode Enabled" requirement that checks if FancyMenu's Modpack Mode is enabled (useful for showing "in-dev" debug stuff)
+- Added "Is Customization Menu Bar Visible" requirement that checks if FancyMenu's menu bar is visible
 - Added "EXECUTE LATER" block to the action script system that can hold actions and execute them with a delay in milliseconds (#1497)
   - The block gets queued for that and executed in the main thread after the delay
 - Added "Comment" object to the action script system that lets you add comments to your scripts for easier organization and logic explaination (#1465)
