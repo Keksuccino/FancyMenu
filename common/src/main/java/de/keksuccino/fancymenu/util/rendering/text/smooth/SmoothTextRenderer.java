@@ -123,23 +123,6 @@ public final class SmoothTextRenderer {
         return measureFormattedText(font, text, size).width();
     }
 
-    public static float getTextHeight(@Nonnull SmoothFont font, @Nonnull String text, float size) {
-        if (text.isEmpty() || size <= 0.0F) return 0.0F;
-        return measureLegacyText(font, text, size).height();
-    }
-
-    public static float getTextHeight(@Nonnull SmoothFont font, @Nonnull Component text, float size) {
-        if (size <= 0.0F) return 0.0F;
-        FormattedCharSequence sequence = text.getVisualOrderText();
-        if (sequence == FormattedCharSequence.EMPTY) return 0.0F;
-        return getTextHeight(font, sequence, size);
-    }
-
-    public static float getTextHeight(@Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float size) {
-        if (size <= 0.0F) return 0.0F;
-        return measureFormattedText(font, text, size).height();
-    }
-
     private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
         // Select the LOD atlas set for this size, accounting for current render scale.
         float renderScale = getRenderScale();

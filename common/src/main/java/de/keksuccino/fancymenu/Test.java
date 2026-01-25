@@ -181,13 +181,13 @@ public class Test {
         y += font.getLineHeight(SAMPLE_SIZE_MEDIUM) + 2.0F;
 
         SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_SMALL, false);
-        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_SMALL) + 4.0F;
+        y += font.getLineHeight(SAMPLE_SIZE_SMALL) + 4.0F;
 
         SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_MEDIUM, false);
-        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_MEDIUM) + 4.0F;
+        y += font.getLineHeight(SAMPLE_SIZE_MEDIUM) + 4.0F;
 
         SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_LARGE, false);
-        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_LARGE) + 12.0F;
+        y += font.getLineHeight(SAMPLE_SIZE_LARGE) + 12.0F;
 
         return y;
     }
@@ -210,13 +210,13 @@ public class Test {
         y += font.getLineHeight(SAMPLE_SIZE_MEDIUM) + 2.0F;
 
         SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_SMALL, false);
-        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_SMALL) + 4.0F;
+        y += font.getLineHeight(SAMPLE_SIZE_SMALL) + 4.0F;
 
         SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_MEDIUM, false);
-        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_MEDIUM) + 4.0F;
+        y += font.getLineHeight(SAMPLE_SIZE_MEDIUM) + 4.0F;
 
         SmoothTextRenderer.renderText(e.getGraphics(), font, buildSampleText(), x, y, white, SAMPLE_SIZE_LARGE, false);
-        y += SmoothTextRenderer.getTextHeight(font, buildSampleText(), SAMPLE_SIZE_LARGE) + 12.0F;
+        y += font.getLineHeight(SAMPLE_SIZE_LARGE) + 12.0F;
 
         return y;
     }

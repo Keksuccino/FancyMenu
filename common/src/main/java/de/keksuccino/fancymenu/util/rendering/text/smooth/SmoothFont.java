@@ -28,6 +28,7 @@ public final class SmoothFont implements AutoCloseable {
     private final float ascent;
     private final float descent;
     private final float lineHeight;
+    private final float lineHeightOverride;
     private final float underlineOffset;
     private final float underlineThickness;
     private final float strikethroughOffset;
@@ -43,14 +44,14 @@ public final class SmoothFont implements AutoCloseable {
     private final int fallbackSourceIndex;
 
     SmoothFont(@Nonnull String debugName, @Nonnull Font baseFont, float baseSize, float sdfRange) {
-        this(debugName, List.of(baseFont), baseSize, sdfRange, 1.0F, null, null);
+        this(debugName, List.of(baseFont), baseSize, sdfRange, -1.0F, null, null);
     }
 
     SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float sdfRange, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
-        this(debugName, baseFonts, baseSize, sdfRange, 1.0F, languageOrders, sourceLabels);
+        this(debugName, baseFonts, baseSize, sdfRange, -1.0F, languageOrders, sourceLabels);
     }
 
-    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float sdfRange, float lineHeightMultiplier, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
+    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float sdfRange, float lineHeightOverride, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
         this.debugName = Objects.requireNonNull(debugName);
         Objects.requireNonNull(baseFonts);
         if (baseFonts.isEmpty()) {
@@ -65,8 +66,9 @@ public final class SmoothFont implements AutoCloseable {
         LineMetrics metrics = logicalFont.getLineMetrics("Hg", this.fontRenderContext);
         this.ascent = metrics.getAscent();
         this.descent = metrics.getDescent();
-        float resolvedLineHeightMultiplier = (lineHeightMultiplier > 0.0F) ? lineHeightMultiplier : 1.0F;
-        this.lineHeight = metrics.getHeight() * resolvedLineHeightMultiplier;
+        float minHeight = this.ascent + this.descent;
+        this.lineHeight = Math.max(1.0F, minHeight);
+        this.lineHeightOverride = lineHeightOverride > 0.0F ? lineHeightOverride : -1.0F;
         this.underlineOffset = metrics.getUnderlineOffset();
         this.underlineThickness = metrics.getUnderlineThickness();
         this.strikethroughOffset = metrics.getStrikethroughOffset();
@@ -126,7 +128,8 @@ public final class SmoothFont implements AutoCloseable {
     }
 
     public float getLineHeight(float size) {
-        return lineHeight * (size / baseSize);
+        float resolved = (lineHeightOverride > 0.0F) ? lineHeightOverride : lineHeight;
+        return resolved * (size / baseSize);
     }
 
     public float getAscent(float size) {
