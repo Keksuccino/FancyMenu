@@ -97,6 +97,8 @@ public class Requirements {
     public static final IsMcefLoadedRequirement IS_MCEF_LOADED = new IsMcefLoadedRequirement();
     public static final IsAnyScreenOpenRequirement IS_ANY_SCREEN_OPEN = new IsAnyScreenOpenRequirement();
     public static final IsDebugOverlayEnabledRequirement IS_DEBUG_OVERLAY_ENABLED = new IsDebugOverlayEnabledRequirement();
+    public static final IsCustomizationMenuBarVisibleRequirement IS_CUSTOMIZATION_MENU_BAR_VISIBLE = new IsCustomizationMenuBarVisibleRequirement();
+    public static final IsModpackModeEnabledRequirement IS_MODPACK_MODE_ENABLED = new IsModpackModeEnabledRequirement();
     public static final IsItemHoveredInInventoryRequirement IS_ITEM_HOVERED_IN_INVENTORY = new IsItemHoveredInInventoryRequirement();
     public static final IsCursorHoldingInventoryItemRequirement IS_CURSOR_HOLDING_INVENTORY_ITEM = new IsCursorHoldingInventoryItemRequirement();
     public static final IsCameraPerspectiveRequirement IS_CAMERA_PERSPECTIVE = new IsCameraPerspectiveRequirement();
@@ -117,6 +119,8 @@ public class Requirements {
         RequirementRegistry.register(IS_KEY_PRESSED);
         RequirementRegistry.register(IS_ANY_SCREEN_OPEN);
         RequirementRegistry.register(IS_DEBUG_OVERLAY_ENABLED);
+        RequirementRegistry.register(IS_CUSTOMIZATION_MENU_BAR_VISIBLE);
+        RequirementRegistry.register(IS_MODPACK_MODE_ENABLED);
         RequirementRegistry.register(IS_ITEM_HOVERED_IN_INVENTORY);
         RequirementRegistry.register(IS_CURSOR_HOLDING_INVENTORY_ITEM);
         RequirementRegistry.register(IS_CAMERA_PERSPECTIVE);
