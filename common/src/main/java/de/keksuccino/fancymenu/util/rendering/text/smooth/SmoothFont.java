@@ -20,17 +20,9 @@ public final class SmoothFont implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    // Thresholds for switching LODs (in effective screen pixel size)
-    // Screen size = logical size * render scale
-    // <= 12px: Use Micro LOD (1x gen) - for very small screen sizes
-    // <= 20px: Use Tiny LOD (2x gen)
-    // <= 40px: Use Small LOD (4x gen)
-    // <= 72px: Use Medium LOD (6x gen)
-    // > 72px: Use Large LOD (8x gen)
-    private static final float LOD_MICRO_LIMIT = 12.0F;
-    private static final float LOD_TINY_LIMIT = 20.0F;
-    private static final float LOD_SMALL_LIMIT = 40.0F;
-    private static final float LOD_MEDIUM_LIMIT = 72.0F;
+    // Select LODs based on how much the generated atlas would be downscaled on screen.
+    // Keeping the on-screen scale at >= 0.5 avoids excessive minification artifacts.
+    private static final float MIN_SCREEN_SCALE_FOR_LOD = 0.5F;
 
     private final String debugName;
     private final float baseSize;
@@ -120,11 +112,14 @@ public final class SmoothFont implements AutoCloseable {
 
     private int _getLodLevel(float size, float renderScale) {
         float renderSize = size * renderScale;
-        //if (renderSize <= LOD_MICRO_LIMIT) return 0;
-        if (renderSize <= LOD_TINY_LIMIT) return 1;
-        if (renderSize <= LOD_SMALL_LIMIT) return 2;
-        if (renderSize <= LOD_MEDIUM_LIMIT) return 3;
-        return 4;
+        // Choose the highest LOD that doesn't downscale too aggressively.
+        for (int lod = lodGenerationSizes.length - 1; lod >= 1; lod--) {
+            float genSize = lodGenerationSizes[lod];
+            if (renderSize / genSize >= MIN_SCREEN_SCALE_FOR_LOD) {
+                return lod;
+            }
+        }
+        return 1;
     }
 
     public float getBaseSize() {
@@ -357,10 +352,11 @@ public final class SmoothFont implements AutoCloseable {
             this.sourceLabel = sourceLabel;
             this.sourceIndex = sourceIndex;
 
-            // Scale SDF range based on LOD size.
-            // This ensures we have a consistent "relative" softness across all LODs.
+            // Scale SDF range based on LOD size, but cap it to avoid over-blurring
+            // on higher LODs (which can cause thin strokes to drop out).
             float scale = genSize / parent.getBaseSize();
-            this.lodSdfRange = Math.max(1.0F, parent.getSdfRange() * scale);
+            float sdfScale = Math.min(scale, 2.0F);
+            this.lodSdfRange = Math.max(1.0F, parent.getSdfRange() * sdfScale);
         }
 
         SmoothFontAtlas getAtlas(boolean bold, boolean italic) {

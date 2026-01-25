@@ -327,7 +327,7 @@ public final class SmoothFontManager {
         if (fonts.isEmpty()) {
             return null;
         }
-        // SDF range is 1.0 for all LODs to ensure consistent raster-like behavior in the shader
+        // Keep the base SDF range small; per-LOD scaling is handled in SmoothFont.
         float sdfRange = 1.0F;
         return new SmoothFont(sanitizeKey(key), fonts, baseSize, sdfRange, lineHeightMultiplier, languageOrders, resolvedLabels);
     }
