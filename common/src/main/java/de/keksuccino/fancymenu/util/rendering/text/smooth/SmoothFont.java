@@ -1,11 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.Font;
@@ -17,8 +13,6 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class SmoothFont implements AutoCloseable {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     // Select LODs based on how much the generated atlas would be downscaled on screen.
     // Keeping the on-screen scale at >= 0.5 avoids excessive minification artifacts.
@@ -78,7 +72,7 @@ public final class SmoothFont implements AutoCloseable {
         this.strikethroughOffset = metrics.getStrikethroughOffset();
         this.strikethroughThickness = metrics.getStrikethroughThickness();
 
-        this.lodGenerationSizes = new float[] {this.baseSize * 1.0F, this.baseSize * 2.0F, this.baseSize * 4.0F, this.baseSize * 6.0F, this.baseSize * 8.0F};
+        this.lodGenerationSizes = new float[] {this.baseSize * 2.0F, this.baseSize * 4.0F, this.baseSize * 6.0F, this.baseSize * 8.0F};
         this.sources = new FontSource[baseFonts.size()];
         this.sourceLabels = normalizeLabels(sourceLabels, baseFonts.size());
         for (int i = 0; i < baseFonts.size(); i++) {
@@ -101,22 +95,19 @@ public final class SmoothFont implements AutoCloseable {
      *
      * @param size logical text size
      * @param renderScale current render scale (GUI scale * any additional pose scaling)
-     * @return LOD index (0 = Micro, 1 = Tiny, 2 = Small, 3 = Medium, 4 = Large)
+     * @return LOD index (1 = Tiny, 2 = Small, 3 = Medium, 4 = Large)
      */
     public int getLodLevel(float size, float renderScale) {
-        int lod = this._getLodLevel(size, renderScale);
-        float renderSize = size * renderScale;
-        LOGGER.info("############### LOD LEVEL: " + lod + " | SIZE: " + size + " | RENDER_SCALE: " + renderScale + " | RENDER_SIZE: " + renderSize + " | ACTUAL WINDOW SCALE: " + Minecraft.getInstance().getWindow().getGuiScale() + " | FANCYMENU UI SCALE: " + UIBase.getUIScale() + " | FANCYMENU UI RENDER SCALE: " + UIBase.getFixedUIScale());
-        return lod;
+        return this._getLodLevel(size, renderScale);
     }
 
     private int _getLodLevel(float size, float renderScale) {
         float renderSize = size * renderScale;
         // Choose the highest LOD that doesn't downscale too aggressively.
-        for (int lod = lodGenerationSizes.length - 1; lod >= 1; lod--) {
-            float genSize = lodGenerationSizes[lod];
+        for (int index = lodGenerationSizes.length - 1; index >= 0; index--) {
+            float genSize = lodGenerationSizes[index];
             if (renderSize / genSize >= MIN_SCREEN_SCALE_FOR_LOD) {
-                return lod;
+                return index + 1;
             }
         }
         return 1;
@@ -129,7 +120,8 @@ public final class SmoothFont implements AutoCloseable {
     // Calculates the rendering scale factor for a specific LOD level.
     // This bridges the gap between the requested size and the huge internal texture.
     float getScaleForLod(int lodIndex, float size) {
-        float genSize = lodGenerationSizes[lodIndex];
+        int resolvedLod = Math.min(Math.max(lodIndex, 1), lodGenerationSizes.length);
+        float genSize = lodGenerationSizes[resolvedLod - 1];
         return size / genSize;
     }
 
@@ -271,7 +263,7 @@ public final class SmoothFont implements AutoCloseable {
             this.debugName = debugName;
             this.sourceLabel = sourceLabel;
             this.sourceIndex = sourceIndex;
-            this.lodLevels = new LodLevel[5];
+            this.lodLevels = new LodLevel[4];
         }
 
         boolean canDisplay(int codepoint) {
@@ -296,30 +288,36 @@ public final class SmoothFont implements AutoCloseable {
         }
 
         private LodLevel getLodLevel(int lodIndex) {
-            LodLevel lod = lodLevels[lodIndex];
+            int resolvedIndex = resolveLodIndex(lodIndex);
+            LodLevel lod = lodLevels[resolvedIndex];
             if (lod != null) {
                 return lod;
             }
             synchronized (this) {
-                lod = lodLevels[lodIndex];
+                lod = lodLevels[resolvedIndex];
                 if (lod == null) {
-                    lod = createLodLevel(lodIndex);
-                    lodLevels[lodIndex] = lod;
+                    lod = createLodLevel(resolvedIndex);
+                    lodLevels[resolvedIndex] = lod;
                 }
                 return lod;
             }
         }
 
+        private int resolveLodIndex(int lodIndex) {
+            int resolved = Math.min(Math.max(lodIndex, 1), lodLevels.length);
+            return resolved - 1;
+        }
+
         private LodLevel createLodLevel(int lodIndex) {
             return switch (lodIndex) {
                 // LOD 1: Tiny (2x scale, starts with 512px atlas)
-                case 1 -> new LodLevel(parent, rawFont, baseSize * 2.0F, 512, debugName, "_tiny", "tiny", sourceLabel, sourceIndex);
+                case 0 -> new LodLevel(parent, rawFont, baseSize * 2.0F, 512, debugName, "_tiny", "tiny", sourceLabel, sourceIndex);
                 // LOD 2: Small (4x scale, starts with 1024px atlas)
-                case 2 -> new LodLevel(parent, rawFont, baseSize * 4.0F, 1024, debugName, "_small", "small", sourceLabel, sourceIndex);
+                case 1 -> new LodLevel(parent, rawFont, baseSize * 4.0F, 1024, debugName, "_small", "small", sourceLabel, sourceIndex);
                 // LOD 3: Medium (6x scale, starts with 1024px atlas)
-                case 3 -> new LodLevel(parent, rawFont, baseSize * 6.0F, 1024, debugName, "_medium", "medium", sourceLabel, sourceIndex);
+                case 2 -> new LodLevel(parent, rawFont, baseSize * 6.0F, 1024, debugName, "_medium", "medium", sourceLabel, sourceIndex);
                 // LOD 4: Large (8x scale, starts with 1024px atlas)
-                case 4 -> new LodLevel(parent, rawFont, baseSize * 8.0F, 1024, debugName, "_large", "large", sourceLabel, sourceIndex);
+                case 3 -> new LodLevel(parent, rawFont, baseSize * 8.0F, 1024, debugName, "_large", "large", sourceLabel, sourceIndex);
                 default -> throw new IllegalArgumentException("Invalid LOD index: " + lodIndex);
             };
         }
