@@ -68,6 +68,7 @@
 - Added "Is Active Cursor Type" requirement that checks if a specific standard cursor type (normal, pointing hand, writing cursor, etc.) is currently the active cursor (#1430)
 - Added "EXECUTE LATER" block to the action script system that can hold actions and execute them with a delay in milliseconds (#1497)
   - The block gets queued for that and executed in the main thread after the delay
+- Added "Comment" object to the action script system that lets you add comments to your scripts for easier organization and logic explaination (#1465)
 - Ported "Is Player Using Item" requirement from Spiffy (#1401)
 - Ported "Is Player In Structure" requirement from Spiffy (#1402)
 - The file browser screens (choose/save file) got a little glow-up
