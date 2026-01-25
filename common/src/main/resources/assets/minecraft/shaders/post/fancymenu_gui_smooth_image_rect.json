@@ -1,0 +1,20 @@
+{
+  "targets": [
+    "fancymenu_gui_smooth_image_rect_final"
+  ],
+  "passes": [
+    {
+      "name": "fancymenu_gui_smooth_image_rect",
+      "intarget": "minecraft:main",
+      "outtarget": "fancymenu_gui_smooth_image_rect_final",
+      "use_linear_filter": true,
+      "uniforms": [
+        { "name": "Rect", "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+        { "name": "CornerRadii", "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+        { "name": "UvMin", "values": [ 0.0, 0.0 ] },
+        { "name": "UvMax", "values": [ 1.0, 1.0 ] },
+        { "name": "Color", "values": [ 1.0, 1.0, 1.0, 1.0 ] }
+      ]
+    }
+  ]
+}

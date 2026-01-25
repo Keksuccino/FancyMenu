@@ -4,16 +4,16 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.SmoothCircleRenderer;
-import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
+import de.keksuccino.fancymenu.util.rendering.*;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFont;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFontManager;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,6 +52,8 @@ public class Test {
             "zh_hk", List.of(BASE, TC, SC, JP, KR)
     );
 
+    private static final ResourceLocation TEST_IMAGE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
+
     private boolean blurFirst = false;
     private boolean blurSecond = false;
     private boolean blurThird = false;
@@ -67,6 +69,17 @@ public class Test {
 
     @EventListener(priority = EventPriority.VERY_LOW)
     public void onRenderPost(RenderScreenEvent.Post e) {
+
+        Component c = Component.literal("This is a test text to check font size.");
+        float cWidth = UIBase.getUITextWidthNormal(c, false);
+        float cHeight = UIBase.getUITextHeightNormal(false);
+
+        SmoothRectangleRenderer.renderSmoothRectScaled(e.getGraphics(), 20, 50, cWidth, cHeight, 0, DrawableColor.BLACK.getColorInt(), e.getPartial());
+        UIBase.renderText(e.getGraphics(), c, 20, 50, -1, UIBase.getUITextSizeNormal(), false);
+
+        SmoothImageRectangleRenderer.renderSmoothImageRectScaled(e.getGraphics(), TEST_IMAGE, 50, 100, 150, 150, 4.0F, -1, e.getPartial());
+
+        SmoothImageCircleRenderer.renderSmoothImageCircleScaled(e.getGraphics(), TEST_IMAGE, 50, 300, 150, 150, 2.0F, -1, e.getPartial());
 
         if (blurFirst) {
             SmoothRectangleRenderer.renderSmoothRect(e.getGraphics(), 50, 40, 300, 300, 4, TINT.getColorInt(), e.getPartial());

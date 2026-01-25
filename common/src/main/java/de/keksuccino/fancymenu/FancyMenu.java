@@ -30,6 +30,8 @@ public class FancyMenu {
 
     //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren
 
+    //TODO Font ist wird noch etwas zu weit unten gerendert (oben mehr freier platz and Glyph als unten??)
+
 
 
 	private static final Logger LOGGER = LogManager.getLogger();
