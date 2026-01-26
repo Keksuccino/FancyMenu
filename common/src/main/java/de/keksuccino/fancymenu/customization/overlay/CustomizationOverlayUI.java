@@ -1043,7 +1043,7 @@ public class CustomizationOverlayUI {
         if ((preSelectedUiScale != 1) && (preSelectedUiScale != 2) && (preSelectedUiScale != 3) && (preSelectedUiScale != 4)) {
             preSelectedUiScale = 4;
         }
-        userInterfaceMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.ui_scale", ListUtils.of("1","2","3","4"), "" + preSelectedUiScale)
+        userInterfaceMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.ui_scale", ListUtils.of("1","1.5","2","2.5","3","3.5","4"), "" + preSelectedUiScale)
                 .addCycleListener(scaleString -> {
                     if (!MathUtils.isFloat(scaleString)) {
                         scaleString = "4";

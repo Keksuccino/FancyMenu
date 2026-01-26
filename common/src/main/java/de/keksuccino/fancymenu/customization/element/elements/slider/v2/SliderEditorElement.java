@@ -267,6 +267,14 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_set_texture").setStackable(true);
 
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "transparent_background",
+                        SliderEditorElement.class,
+                        consumes -> consumes.element.transparentBackground,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.element.transparentBackground = aBoolean,
+                        "fancymenu.elements.buttons.textures.transparent_background")
+                .setStackable(true)
+                .setIcon(MaterialIcons.BACKGROUND_REPLACE);
+
         this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "restart_animated_on_hover",
                         SliderEditorElement.class,
                         consumes -> consumes.element.restartBackgroundAnimationsOnHover,

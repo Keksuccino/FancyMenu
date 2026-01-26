@@ -263,6 +263,13 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_set_background").setStackable(true);
 
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "transparent_background", this.selfClass(),
+                        consumes -> consumes.element.transparentBackground,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.element.transparentBackground = aBoolean,
+                        "fancymenu.elements.buttons.textures.transparent_background")
+                .setStackable(true)
+                .setIcon(MaterialIcons.BACKGROUND_REPLACE);
+
         this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "restart_animated_on_hover",
                         this.selfClass(),
                         consumes -> consumes.element.restartBackgroundAnimationsOnHover,
@@ -354,6 +361,13 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                 .setIcon(MaterialIcons.IMAGE);
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_set_texture").setStackable(true);
+
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "transparent_background", this.selfClass(),
+                        consumes -> consumes.element.transparentBackground,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.element.transparentBackground = aBoolean,
+                        "fancymenu.elements.buttons.textures.transparent_background")
+                .setStackable(true)
+                .setIcon(MaterialIcons.BACKGROUND_REPLACE);
 
         this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "restart_animated_on_hover",
                 this.selfClass(),

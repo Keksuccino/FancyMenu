@@ -2649,5 +2649,6 @@
   "fancymenu.elements.shape.corner_radius.bottom_right": "Bottom Right Radius",
   "fancymenu.elements.shape.corner_radius.bottom_right.desc": "Set the bottom-right shape corner radius in pixels.\nSupports placeholders.\nRecommended: 0-8.",
   "fancymenu.elements.shape.corner_radius.bottom_left": "Bottom Left Radius",
-  "fancymenu.elements.shape.corner_radius.bottom_left.desc": "Set the bottom-left shape corner radius in pixels.\nSupports placeholders.\nRecommended: 0-8."
+  "fancymenu.elements.shape.corner_radius.bottom_left.desc": "Set the bottom-left shape corner radius in pixels.\nSupports placeholders.\nRecommended: 0-8.",
+  "fancymenu.elements.buttons.textures.transparent_background": "Transparent Background: %s"
 }

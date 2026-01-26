@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
@@ -52,6 +53,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public ResourceSupplier<ITexture> handleTextureInactive;
     public ResourceSupplier<ITexture> sliderBackgroundTextureNormal;
     public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
+    public boolean transparentBackground = false;
     public boolean restartBackgroundAnimationsOnHover = true;
     public boolean nineSliceCustomBackground = false;
     public int nineSliceBorderX = 5;
@@ -219,6 +221,8 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
         RenderableResource sliderBackNormal = null;
         RenderableResource sliderBackHighlighted = null;
+        boolean transparentBackground = this.isTransparentBackground();
+        RenderableResource transparentResource = null;
 
         //Normal Slider Background
         if (this.getSliderBackgroundTextureNormal() != null) {
@@ -227,6 +231,11 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         //Highlighted Slider Background
         if (this.getSliderBackgroundTextureHighlighted() != null) {
             sliderBackHighlighted = this.getSliderBackgroundTextureHighlighted().get();
+        }
+        if (transparentBackground) {
+            transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
+            sliderBackNormal = transparentResource;
+            sliderBackHighlighted = transparentResource;
         }
 
         if (this.slider instanceof CustomizableSlider w) {
@@ -249,6 +258,14 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         //Inactive
         if (this.getHandleTextureInactive() != null) {
             handleTextureInactive = this.getHandleTextureInactive().get();
+        }
+        if (transparentBackground) {
+            if (transparentResource == null) {
+                transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
+            }
+            handleTextureNormal = transparentResource;
+            handleTextureHover = transparentResource;
+            handleTextureInactive = transparentResource;
         }
 
         if (this.slider instanceof CustomizableWidget w) {
@@ -344,6 +361,10 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
     public ResourceSupplier<ITexture> getSliderBackgroundTextureHighlighted() {
         return this.getTemplateProperty(template -> template.sliderBackgroundTextureHighlighted, this.sliderBackgroundTextureHighlighted);
+    }
+
+    public boolean isTransparentBackground() {
+        return this.getTemplateProperty(template -> template.transparentBackground, this.transparentBackground);
     }
 
     public boolean isRestartBackgroundAnimationsOnHover() {

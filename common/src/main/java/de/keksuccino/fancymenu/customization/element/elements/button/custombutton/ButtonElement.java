@@ -20,6 +20,7 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
@@ -52,6 +53,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public ResourceSupplier<ITexture> backgroundTextureNormal;
     public ResourceSupplier<ITexture> backgroundTextureHover;
     public ResourceSupplier<ITexture> backgroundTextureInactive;
+    public boolean transparentBackground = false;
     public boolean restartBackgroundAnimationsOnHover = true;
     public boolean nineSliceCustomBackground = false;
     public int nineSliceBorderX = 5;
@@ -289,6 +291,8 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         RenderableResource backNormal = null;
         RenderableResource backHover = null;
         RenderableResource backInactive = null;
+        boolean transparentBackground = this.getPropertySource().transparentBackground;
+        RenderableResource transparentResource = null;
 
         //Normal
         if (this.getPropertySource().backgroundTextureNormal != null) {
@@ -301,6 +305,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         //Inactive
         if (this.getPropertySource().backgroundTextureInactive != null) {
             backInactive = this.getPropertySource().backgroundTextureInactive.get();
+        }
+        if (transparentBackground) {
+            transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
+            backNormal = transparentResource;
+            backHover = transparentResource;
+            backInactive = transparentResource;
         }
 
         if (this.getWidget() instanceof CustomizableWidget w) {
@@ -331,6 +341,13 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         //Highlighted
         if (this.getPropertySource().sliderBackgroundTextureHighlighted != null) {
             sliderBackHighlighted = this.getPropertySource().sliderBackgroundTextureHighlighted.get();
+        }
+        if (transparentBackground) {
+            if (transparentResource == null) {
+                transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
+            }
+            sliderBackNormal = transparentResource;
+            sliderBackHighlighted = transparentResource;
         }
 
         if (this.getWidget() instanceof CustomizableSlider w) {
