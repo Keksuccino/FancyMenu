@@ -124,9 +124,9 @@ public final class SmoothImageCircleRenderer {
         float blue = (float) FastColor.ARGB32.blue(area.color) / 255.0F;
         float alpha = (float) FastColor.ARGB32.alpha(area.color) / 255.0F;
 
-        RenderRotationUtil.Rotation2D invRotation = RenderRotationUtil.getCurrentAdditionalRenderInverseRotation2D();
+        RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
         int textureId = minecraft.getTextureManager().getTexture(area.texture).getId();
-        applyUniforms(postChain, area.textureRegion, scaledX, scaledY, scaledWidth, scaledHeight, scaledRoundness, invRotation, red, green, blue, alpha, textureId);
+        applyUniforms(postChain, area.textureRegion, scaledX, scaledY, scaledWidth, scaledHeight, scaledRoundness, rotation, red, green, blue, alpha, textureId);
 
         graphics.flush();
         RenderSystem.disableBlend();
@@ -173,7 +173,7 @@ public final class SmoothImageCircleRenderer {
         }
     }
 
-    private static void applyUniforms(PostChain postChain, TextureRegion textureRegion, float x, float y, float width, float height, float roundness, RenderRotationUtil.Rotation2D invRotation, float red, float green, float blue, float alpha, int textureId) {
+    private static void applyUniforms(PostChain postChain, TextureRegion textureRegion, float x, float y, float width, float height, float roundness, RenderRotationUtil.Rotation2D rotation, float red, float green, float blue, float alpha, int textureId) {
         List<PostPass> passes = ((IMixinPostChain) postChain).getPasses_FancyMenu();
         for (PostPass pass : passes) {
             if (!"fancymenu_gui_smooth_image_circle".equals(pass.getName())) {
@@ -181,7 +181,7 @@ public final class SmoothImageCircleRenderer {
             }
             pass.getEffect().safeGetUniform("Rect").set(x, y, width, height);
             pass.getEffect().safeGetUniform("Roundness").set(roundness);
-            pass.getEffect().safeGetUniform("InvRotation").set(invRotation.m00(), invRotation.m01(), invRotation.m10(), invRotation.m11());
+            pass.getEffect().safeGetUniform("Rotation").set(rotation.m00(), rotation.m01(), rotation.m10(), rotation.m11());
             pass.getEffect().safeGetUniform("UvMin").set(textureRegion.minU(), textureRegion.minV());
             pass.getEffect().safeGetUniform("UvMax").set(textureRegion.maxU(), textureRegion.maxV());
             pass.getEffect().safeGetUniform("Color").set(red, green, blue, alpha);

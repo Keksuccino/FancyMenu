@@ -140,8 +140,8 @@ public final class SmoothCircleRenderer {
         float blue = (float) FastColor.ARGB32.blue(area.color) / 255.0F;
         float alpha = (float) FastColor.ARGB32.alpha(area.color) / 255.0F;
 
-        RenderRotationUtil.Rotation2D invRotation = RenderRotationUtil.getCurrentAdditionalRenderInverseRotation2D();
-        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, scaledBorderThickness, scaledRoundness, invRotation, red, green, blue, alpha);
+        RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
+        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, scaledBorderThickness, scaledRoundness, rotation, red, green, blue, alpha);
 
         graphics.flush();
         RenderSystem.disableBlend();
@@ -188,7 +188,7 @@ public final class SmoothCircleRenderer {
         }
     }
 
-    private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float borderThickness, float roundness, RenderRotationUtil.Rotation2D invRotation, float red, float green, float blue, float alpha) {
+    private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float borderThickness, float roundness, RenderRotationUtil.Rotation2D rotation, float red, float green, float blue, float alpha) {
         List<PostPass> passes = ((IMixinPostChain) postChain).getPasses_FancyMenu();
         for (PostPass pass : passes) {
             if (!"fancymenu_gui_smooth_circle".equals(pass.getName())) {
@@ -197,7 +197,7 @@ public final class SmoothCircleRenderer {
             pass.getEffect().safeGetUniform("Rect").set(x, y, width, height);
             pass.getEffect().safeGetUniform("BorderThickness").set(borderThickness);
             pass.getEffect().safeGetUniform("Roundness").set(roundness);
-            pass.getEffect().safeGetUniform("InvRotation").set(invRotation.m00(), invRotation.m01(), invRotation.m10(), invRotation.m11());
+            pass.getEffect().safeGetUniform("Rotation").set(rotation.m00(), rotation.m01(), rotation.m10(), rotation.m11());
             pass.getEffect().safeGetUniform("Color").set(red, green, blue, alpha);
         }
     }

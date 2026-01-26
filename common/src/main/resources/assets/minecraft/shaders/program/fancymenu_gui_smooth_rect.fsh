@@ -2,7 +2,7 @@
 
 uniform vec2 OutSize;
 uniform vec4 Rect;
-uniform vec4 InvRotation; // m00, m01, m10, m11
+uniform vec4 Rotation; // m00, m01, m10, m11
 uniform vec4 CornerRadii; // BL, BR, TR, TL (matches Java flipVertical)
 uniform float BorderThickness;
 uniform vec4 Color;
@@ -40,7 +40,7 @@ void main() {
 
     // Position relative to center
     vec2 p = pixel - center;
-    p = vec2(InvRotation.x * p.x + InvRotation.y * p.y, InvRotation.z * p.x + InvRotation.w * p.y);
+    p = vec2(Rotation.x * p.x + Rotation.y * p.y, Rotation.z * p.x + Rotation.w * p.y);
 
     // 1. Calculate Outer Distance (Negative = inside, Positive = outside)
     float dist = sdRoundedBox(p, halfSize, CornerRadii);

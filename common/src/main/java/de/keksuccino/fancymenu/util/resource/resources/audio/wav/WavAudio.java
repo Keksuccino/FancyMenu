@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracke
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
+import de.keksuccino.melody.resources.audio.openal.ALErrorHandler;
 import de.keksuccino.melody.resources.audio.openal.ALUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -18,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.openal.AL10;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import java.io.*;
@@ -237,6 +239,7 @@ public class WavAudio implements IAudio, ALAudio {
             LOGGER.error("[FANCYMENU] Failed to read WAV audio! Clip was NULL: " + name);
             return audio;
         }
+        audio.configureNonPositionalSource();
 
         new Thread(() -> {
             AudioInputStream stream = null;
@@ -450,6 +453,19 @@ public class WavAudio implements IAudio, ALAudio {
             LOGGER.error("[FANCYMENU] Failed to get AL source in WavAudio!", ex);
         }
         return 0;
+    }
+
+    private void configureNonPositionalSource() {
+        int source = this.getALSource();
+        if (source == 0) return;
+        try {
+            AL10.alSourcei(source, AL10.AL_SOURCE_RELATIVE, AL10.AL_TRUE);
+            AL10.alSource3f(source, AL10.AL_POSITION, 0.0F, 0.0F, 0.0F);
+            AL10.alSourcef(source, AL10.AL_ROLLOFF_FACTOR, 0.0F);
+            ALErrorHandler.checkOpenAlError();
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to configure WAV audio source for non-positional playback!", ex);
+        }
     }
 
     @Override

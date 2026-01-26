@@ -6,7 +6,7 @@ uniform vec4 Rect;
 uniform vec4 CornerRadii; // BL, BR, TR, TL (matches Java flipVertical)
 uniform float ShapeType; // 0.0 = rounded rect, 1.0 = superellipse
 uniform float Roundness;
-uniform vec4 InvRotation; // m00, m01, m10, m11
+uniform vec4 Rotation; // m00, m01, m10, m11
 uniform vec4 Tint;
 
 in vec2 texCoord;
@@ -50,7 +50,7 @@ void main() {
     vec2 halfSize = Rect.zw * 0.5;
     vec2 center = Rect.xy + halfSize;
     vec2 p = pixel - center;
-    vec2 local = vec2(InvRotation.x * p.x + InvRotation.y * p.y, InvRotation.z * p.x + InvRotation.w * p.y);
+    vec2 local = vec2(Rotation.x * p.x + Rotation.y * p.y, Rotation.z * p.x + Rotation.w * p.y);
     vec2 localPixel = local + center;
 
     float mask;

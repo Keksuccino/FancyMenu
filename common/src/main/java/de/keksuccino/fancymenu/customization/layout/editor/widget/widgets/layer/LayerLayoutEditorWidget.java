@@ -62,6 +62,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         this.scrollArea.backgroundColor = () -> null;
         this.scrollArea.borderColor = () -> null;
+        this.scrollArea.setRenderOnlyEntriesInArea(false);
 
         this.updateList(false);
 

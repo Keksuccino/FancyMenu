@@ -19,14 +19,32 @@ public final class RenderRotationUtil {
     }
 
     /**
-     * Returns the inverse 2x2 rotation/tilt matrix for GUI space.
-     * This is suitable for mapping screen pixels back into un-rotated element space.
+     * Returns the forward 2x2 rotation/tilt matrix for GUI space.
      */
-    public static Rotation2D getCurrentAdditionalRenderInverseRotation2D() {
+    public static Rotation2D getCurrentAdditionalRenderRotation2D() {
         RotationState rotation = ACTIVE_RENDER_ROTATION_FANCYMENU.get();
         float x = rotation.x;
         float y = rotation.y;
         float z = rotation.z;
+        float w = rotation.w;
+
+        float m00 = 1.0F - 2.0F * y * y - 2.0F * z * z;
+        float m01 = 2.0F * x * y - 2.0F * z * w;
+        float m10 = 2.0F * x * y + 2.0F * z * w;
+        float m11 = 1.0F - 2.0F * x * x - 2.0F * z * z;
+
+        return new Rotation2D(m00, m01, m10, m11);
+    }
+
+    /**
+     * Returns the 2x2 matrix used for masking rotated/tilted GUI elements.
+     * This inverts the rotation/tilt and flips the Z component to match GUI rotation direction.
+     */
+    public static Rotation2D getCurrentAdditionalRenderMaskRotation2D() {
+        RotationState rotation = ACTIVE_RENDER_ROTATION_FANCYMENU.get();
+        float x = rotation.x;
+        float y = rotation.y;
+        float z = -rotation.z;
         float w = rotation.w;
 
         float m00 = 1.0F - 2.0F * y * y - 2.0F * z * z;
@@ -40,6 +58,20 @@ public final class RenderRotationUtil {
         }
         float invDet = 1.0F / det;
         return new Rotation2D(m11 * invDet, -m01 * invDet, -m10 * invDet, m00 * invDet);
+    }
+
+    /**
+     * Returns the inverse 2x2 rotation/tilt matrix for GUI space.
+     * This is suitable for mapping screen pixels back into un-rotated element space.
+     */
+    public static Rotation2D getCurrentAdditionalRenderInverseRotation2D() {
+        Rotation2D rotation = getCurrentAdditionalRenderRotation2D();
+        float det = rotation.m00() * rotation.m11() - rotation.m01() * rotation.m10();
+        if (!Float.isFinite(det) || Math.abs(det) < 1.0E-6F) {
+            return Rotation2D.identity();
+        }
+        float invDet = 1.0F / det;
+        return new Rotation2D(rotation.m11() * invDet, -rotation.m01() * invDet, -rotation.m10() * invDet, rotation.m00() * invDet);
     }
 
     @ApiStatus.Internal
