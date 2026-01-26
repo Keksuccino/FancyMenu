@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
@@ -47,6 +48,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public int roundingDecimalPlace = 2;
     @Nullable
     public String label;
+    public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
     public String tooltip;
     public ResourceSupplier<ITexture> handleTextureNormal;
     public ResourceSupplier<ITexture> handleTextureHover;
@@ -191,6 +193,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTooltip();
         this.updateWidgetTexture();
         this.updateWidgetLabelUnderline();
+        this.updateWidgetLabelHoverColor();
         this.slider.updateMessage();
     }
 
@@ -362,6 +365,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
     }
 
+    public void updateWidgetLabelHoverColor() {
+        if (this.slider instanceof CustomizableWidget w) {
+            w.setLabelHoverColorFancyMenu(this.getLabelHoverColor());
+        }
+    }
+
     public boolean isTransparentBackground() {
         return this.getTemplateProperty(template -> template.transparentBackground, this.transparentBackground);
     }
@@ -411,6 +420,15 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         ButtonElement template = this.getPropertySource();
         if ((template != null) && template.templateApplyLabel) return template.underlineLabelOnHover;
         return this.underlineLabelOnHover;
+    }
+
+    @Nullable
+    public DrawableColor getLabelHoverColor() {
+        ButtonElement template = this.getPropertySource();
+        if ((template != null) && template.templateApplyLabel) {
+            return (template.labelHoverColor.get() != null) ? template.labelHoverColor.getDrawable() : null;
+        }
+        return (this.labelHoverColor.get() != null) ? this.labelHoverColor.getDrawable() : null;
     }
 
     protected <T> T getTemplateProperty(@NotNull TemplatePropertyGetter<T> templatePropertyGetter, @Nullable T defaultProperty) {

@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -58,6 +59,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private boolean hiddenFancyMenu = false;
 	@Unique
 	private boolean underlineLabelOnHoverFancyMenu = false;
+	@Unique @Nullable
+	private DrawableColor labelHoverColorFancyMenu;
 	@Unique @Nullable
 	private RenderableResource customBackgroundNormalFancyMenu;
 	@Unique @Nullable
@@ -173,13 +176,24 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private void onGetMessageFancyMenu(CallbackInfoReturnable<Component> info) {
 		AbstractWidget w = this.getWidgetFancyMenu();
 		Component result = info.getReturnValue();
-		if (w.isHoveredOrFocused() && w.visible && w.active && (this.hoverLabelFancyMenu != null)) {
+		boolean hovered = w.isHoveredOrFocused() && w.visible && w.active;
+		if (hovered && (this.hoverLabelFancyMenu != null)) {
 			result = this.hoverLabelFancyMenu;
 		} else if (this.customLabelFancyMenu != null) {
 			result = this.customLabelFancyMenu;
 		}
-		if ((result != null) && this.underlineLabelOnHoverFancyMenu && w.isHoveredOrFocused() && w.visible && w.active) {
-			result = result.copy().withStyle(style -> style.withUnderlined(true));
+		if ((result != null) && hovered) {
+			boolean underline = this.underlineLabelOnHoverFancyMenu;
+			DrawableColor hoverColor = this.labelHoverColorFancyMenu;
+			if (underline || (hoverColor != null)) {
+				int hoverColorRgb = (hoverColor != null) ? (hoverColor.getColorInt() & 0xFFFFFF) : 0;
+				result = result.copy().withStyle(style -> {
+					var updated = style;
+					if (underline) updated = updated.withUnderlined(true);
+					if (hoverColor != null) updated = updated.withColor(hoverColorRgb);
+					return updated;
+				});
+			}
 		}
 		info.setReturnValue(result);
 	}
@@ -389,6 +403,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setCustomLabelFancyMenu(null);
 		this.setHoverLabelFancyMenu(null);
 		this.setUnderlineLabelOnHoverFancyMenu(false);
+		this.setLabelHoverColorFancyMenu(null);
 		this.setCustomWidthFancyMenu(null);
 		this.setCustomHeightFancyMenu(null);
 		this.setCustomXFancyMenu(null);
@@ -458,6 +473,18 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public boolean isUnderlineLabelOnHoverFancyMenu() {
 		return this.underlineLabelOnHoverFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setLabelHoverColorFancyMenu(@Nullable DrawableColor color) {
+		this.labelHoverColorFancyMenu = color;
+	}
+
+	@Unique
+	@Override
+	public @Nullable DrawableColor getLabelHoverColorFancyMenu() {
+		return this.labelHoverColorFancyMenu;
 	}
 
 	@Unique

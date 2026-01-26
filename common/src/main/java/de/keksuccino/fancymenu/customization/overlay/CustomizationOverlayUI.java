@@ -1039,9 +1039,9 @@ public class CustomizationOverlayUI {
         ContextMenu userInterfaceMenu = new ContextMenu();
         menuBar.addContextMenuEntry("user_interface", Component.translatable("fancymenu.overlay.menu_bar.user_interface"), userInterfaceMenu);
 
-        int preSelectedUiScale = (int)FancyMenu.getOptions().uiScale.getValue().floatValue();
-        if ((preSelectedUiScale != 1) && (preSelectedUiScale != 2) && (preSelectedUiScale != 3) && (preSelectedUiScale != 4)) {
-            preSelectedUiScale = 4;
+        float preSelectedUiScale = FancyMenu.getOptions().uiScale.getValue();
+        if ((preSelectedUiScale != 1F) && (preSelectedUiScale != 1.5F) && (preSelectedUiScale != 2F) && (preSelectedUiScale != 2.5F) && (preSelectedUiScale != 3F) && (preSelectedUiScale != 3.5F) && (preSelectedUiScale != 4F)) {
+            preSelectedUiScale = 4F;
         }
         userInterfaceMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.ui_scale", ListUtils.of("1","1.5","2","2.5","3","3.5","4"), "" + preSelectedUiScale)
                 .addCycleListener(scaleString -> {

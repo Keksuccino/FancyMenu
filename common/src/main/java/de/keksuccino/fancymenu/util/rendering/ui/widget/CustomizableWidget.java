@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ClassExtender;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
@@ -152,6 +153,11 @@ public interface CustomizableWidget {
 
     @Nullable
     Component getHoverLabelFancyMenu();
+
+    void setLabelHoverColorFancyMenu(@Nullable DrawableColor color);
+
+    @Nullable
+    DrawableColor getLabelHoverColorFancyMenu();
 
     void setUnderlineLabelOnHoverFancyMenu(boolean underline);
 

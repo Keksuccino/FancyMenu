@@ -87,16 +87,19 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                     .setStackable(true)
                     .setIcon(MaterialIcons.TEXT_FIELDS);
 
-            this.addToggleContextMenuEntryTo(this.rightClickMenu, "underline_label_on_hover", this.selfClass(),
-                            consumes -> consumes.element.underlineLabelOnHover,
-                            (buttonEditorElement, aBoolean) -> buttonEditorElement.element.underlineLabelOnHover = aBoolean,
-                            "fancymenu.elements.widgets.label.underline_on_hover")
-                    .setStackable(true)
-                    .setIcon(MaterialIcons.FORMAT_UNDERLINED);
-
-            this.rightClickMenu.addSeparatorEntry("button_separator_3").setStackable(true);
-
         }
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "underline_label_on_hover", this.selfClass(),
+                        consumes -> consumes.element.underlineLabelOnHover,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.element.underlineLabelOnHover = aBoolean,
+                        "fancymenu.elements.widgets.label.underline_on_hover")
+                .setStackable(true)
+                .setIcon(MaterialIcons.FORMAT_UNDERLINED);
+
+        this.element.labelHoverColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.PALETTE);
+
+        this.rightClickMenu.addSeparatorEntry("button_separator_3").setStackable(true);
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "hover_sound",
                         this.selfClass(),

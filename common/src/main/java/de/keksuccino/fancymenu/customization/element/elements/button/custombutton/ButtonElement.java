@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -49,6 +50,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public String label;
     @Nullable
     public String hoverLabel;
+    public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
     public String tooltip;
     public ResourceSupplier<ITexture> backgroundTextureNormal;
     public ResourceSupplier<ITexture> backgroundTextureHover;
@@ -205,6 +207,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTooltip();
         this.updateWidgetLabels();
         this.updateWidgetLabelUnderline();
+        this.updateWidgetLabelHoverColor();
         this.updateWidgetHoverSound();
         this.updateWidgetUnhoverSound();
         this.updateWidgetClickSound();
@@ -272,6 +275,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public void updateWidgetLabelUnderline() {
         if (this.getWidget() instanceof CustomizableWidget w) {
             w.setUnderlineLabelOnHoverFancyMenu(this.isUnderlineLabelOnHover());
+        }
+    }
+
+    public void updateWidgetLabelHoverColor() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            w.setLabelHoverColorFancyMenu(this.getLabelHoverColor());
         }
     }
 
@@ -421,6 +430,18 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         ButtonElement template = getTopActiveTemplateElement(this.isSlider());
         if ((template != null) && template.templateApplyLabel) return template.underlineLabelOnHover;
         return this.underlineLabelOnHover;
+    }
+
+    @Nullable
+    public DrawableColor getLabelHoverColor() {
+        if (this.isTemplate) {
+            return (this.labelHoverColor.get() != null) ? this.labelHoverColor.getDrawable() : null;
+        }
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) {
+            return (template.labelHoverColor.get() != null) ? template.labelHoverColor.getDrawable() : null;
+        }
+        return (this.labelHoverColor.get() != null) ? this.labelHoverColor.getDrawable() : null;
     }
 
     @NotNull

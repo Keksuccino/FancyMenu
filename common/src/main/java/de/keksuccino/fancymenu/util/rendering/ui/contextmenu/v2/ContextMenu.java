@@ -2219,7 +2219,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             float renderScale = UIBase.calculateFixedScale(this.parent.getScale());
-            float lineThickness = renderScale > 0.0F ? (1.0F / renderScale) : 1.0F;
+            float lineThickness = renderScale > 0.0F ? (0.5F / renderScale) : 0.5F;
             float uiScale = UIBase.getUIScale();
             float thinnessT = (uiScale - 1.0F) / 1.5F;
             thinnessT = Math.min(1.0F, Math.max(0.0F, thinnessT));
