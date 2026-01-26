@@ -75,6 +75,7 @@
 - Added "Is Active Cursor Type" requirement that checks if a specific standard cursor type (normal, pointing hand, writing cursor, etc.) is currently the active cursor (#1430)
 - Added "Is Modpack Mode Enabled" requirement that checks if FancyMenu's Modpack Mode is enabled (useful for showing "in-dev" debug stuff)
 - Added "Is Customization Menu Bar Visible" requirement that checks if FancyMenu's menu bar is visible
+- Added "Circle Shape" element, which works similar to the "Rectangle Shape" element (with blur and color support)
 - Added "EXECUTE LATER" block to the action script system that can hold actions and execute them with a delay in milliseconds (#1497)
   - The block gets queued for that and executed in the main thread after the delay
 - Added "Comment" object to the action script system that lets you add comments to your scripts for easier organization and logic explaination (#1465)
@@ -104,6 +105,9 @@
 - The Book button in the Inventory screen now has a persistent identifier ("inventory_screen_book_button") to hopefully improve how the customization engine can interact with it (#1098)
 - The "Progress Bar" element now supports nine-slicing for bar and background textures (#1444)
 - The "Video" element now has an option to disable its aspect ratio preserving behavior, to make it stretch the video frame to the size of the element (#1453)
+- The "Image" element how has support for rounding image corners of non-nine-sliced and not-repeated images
+- The "Rectangle Shape" element now has support for rounding the shape corners (#1484)
+- The "Rectangle Shape" element now has support for enabling blurring, so the shape can be used as a blur background for menu areas, etc. (#1484)
 - You can now set an "Unhover Sound" for buttons, sliders and checkboxes, similar to the hover sound, but for unhover (duh) (#1415)
 - The "Input Field" element now has support for setting hover, unhover and click sounds
 - Most of FancyMenu's simple text inputs (input fields) now allow for selecting text by holding down the mouse and moving over the text
