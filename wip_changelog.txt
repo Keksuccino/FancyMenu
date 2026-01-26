@@ -19,7 +19,7 @@
       - Firefly groups will follow the mouse when you get close to them with the cursor
     - String Lights, to have lots of possible string lights hang in the menu (it's possible to enable/disable each possible string light to create unique combinations with custom light color support, etc.)
     - Leaves, to show colorful leaves falling down and landing on buttons and the bottom of the menu (lots of customization options!)
-    - Fireworks, for..well, fireworks or course! Loooots of fireworks!
+    - Fireworks, for, well, fireworks of course! Loooots of fireworks!
     - Confetti, to make confetti rain in the menu (with an option to make confetti come out of your mouse cursor on click instead of confetti rain)
 - Added a file browser for Minecraft resources to the "Choose Resource" screen, so you can now browse nearly all resources loaded via resource packs like a normal directory
 - Added click events to Markdown, which let's you use a listener to listen for specific text clicks in Markdown text (used for the Text element, etc.) (#1366)
