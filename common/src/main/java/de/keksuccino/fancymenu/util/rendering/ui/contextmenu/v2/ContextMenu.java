@@ -2220,6 +2220,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             float renderScale = UIBase.calculateFixedScale(this.parent.getScale());
             float lineThickness = renderScale > 0.0F ? (1.0F / renderScale) : 1.0F;
+            float uiScale = UIBase.getUIScale();
+            float thinnessT = (uiScale - 1.0F) / 1.5F;
+            thinnessT = Math.min(1.0F, Math.max(0.0F, thinnessT));
+            float alphaFactor = 0.55F + (0.45F * thinnessT);
             float minX = this.x + 10.0F;
             float maxX = this.x + this.width - 10.0F;
             float minY = this.y + 4.0F;
@@ -2228,7 +2232,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 minY = snappedPixelY / renderScale;
             }
             float maxY = minY + lineThickness;
-            RenderingUtils.fillF(graphics, minX, minY, maxX, maxY, UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_border_color.getColorInt() : UIBase.getUITheme().ui_overlay_border_color.getColorInt());
+            int lineColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_border_color.getColorInt() : UIBase.getUITheme().ui_overlay_border_color.getColorInt();
+            if (alphaFactor < 0.999F) {
+                int baseAlpha = (lineColor >>> 24) & 0xFF;
+                int adjustedAlpha = Math.round(baseAlpha * alphaFactor);
+                lineColor = RenderingUtils.replaceAlphaInColor(lineColor, adjustedAlpha);
+            }
+            RenderingUtils.fillF(graphics, minX, minY, maxX, maxY, lineColor);
         }
 
         @Override

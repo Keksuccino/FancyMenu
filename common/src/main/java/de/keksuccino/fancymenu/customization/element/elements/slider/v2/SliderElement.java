@@ -261,15 +261,6 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         if (this.getHandleTextureInactive() != null) {
             handleTextureInactive = this.getHandleTextureInactive().get();
         }
-        if (transparentBackground) {
-            if (transparentResource == null) {
-                transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
-            }
-            handleTextureNormal = transparentResource;
-            handleTextureHover = transparentResource;
-            handleTextureInactive = transparentResource;
-        }
-
         if (this.slider instanceof CustomizableWidget w) {
             if (this.slider instanceof CustomizableSlider s) {
                 s.setNineSliceCustomSliderBackground_FancyMenu(this.isNineSliceCustomBackground());

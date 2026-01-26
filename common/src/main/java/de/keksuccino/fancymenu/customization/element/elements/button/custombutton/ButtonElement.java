@@ -314,7 +314,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (this.getPropertySource().backgroundTextureInactive != null) {
             backInactive = this.getPropertySource().backgroundTextureInactive.get();
         }
-        if (transparentBackground) {
+        if (transparentBackground && !(this.getWidget() instanceof CustomizableSlider)) {
             transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
             backNormal = transparentResource;
             backHover = transparentResource;
@@ -350,7 +350,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (this.getPropertySource().sliderBackgroundTextureHighlighted != null) {
             sliderBackHighlighted = this.getPropertySource().sliderBackgroundTextureHighlighted.get();
         }
-        if (transparentBackground) {
+        if (transparentBackground && (this.getWidget() instanceof CustomizableSlider)) {
             if (transparentResource == null) {
                 transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
             }
