@@ -81,6 +81,8 @@
 - Added "Comment" object to the action script system that lets you add comments to your scripts for easier organization and logic explaination (#1465)
 - Ported "Is Player Using Item" requirement from Spiffy (#1401)
 - Ported "Is Player In Structure" requirement from Spiffy (#1402)
+- You can now set buttons and sliders to have transparent backgrounds (without the need to set transparent textures)
+- You can now set buttons and sliders to underline their label on hover (without setting a "hover label")
 - The file browser screens (choose/save file) got a little glow-up
   - They have a new set of icons and show different icons for audio, video, image and text files now
   - There is a Search bar now to search for files
