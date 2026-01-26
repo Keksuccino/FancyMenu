@@ -2605,5 +2605,7 @@
   "fancymenu.requirements.is_modpack_mode_enabled": "Is Modpack Mode Enabled",
   "fancymenu.requirements.is_modpack_mode_enabled.desc": "Returns true when FancyMenu's Modpack Mode is enabled.",
   "fancymenu.requirements.is_customization_menu_bar_visible": "Is Customization Menu Bar Visible",
-  "fancymenu.requirements.is_customization_menu_bar_visible.desc": "Returns true when the customization menu bar is visible.\nReturns false if Modpack Mode is enabled or the menu bar is disabled."
+  "fancymenu.requirements.is_customization_menu_bar_visible.desc": "Returns true when the customization menu bar is visible.\nReturns false if Modpack Mode is enabled or the menu bar is disabled.",
+  "fancymenu.overlay.menu_bar.customization.settings.developer.reset_welcome_screen": "Reset Welcome Screen",
+  "fancymenu.overlay.menu_bar.customization.settings.developer.reset_welcome_screen.desc": "Makes the welcome screen show again the next time the Title Screen opens."
 }

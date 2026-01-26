@@ -46,6 +46,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
     protected boolean roundedStyle = true;
     protected boolean setupForBlurInterface = false;
     protected boolean scissorEnabled = true;
+    protected boolean renderOnlyEntriesInArea = true;
     private int renderFrameId = 0;
 
     public ScrollArea(float x, float y, float width, float height) {
@@ -129,7 +130,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
             if (this.minimumEntryWidthIsAreaWidth && (entry.getWidth() < this.getInnerWidth())) {
                 entry.setWidth(this.getInnerWidth());
             }
-            if (this.isEntryVisible(entry)) {
+            if (!this.renderOnlyEntriesInArea || this.isEntryVisible(entry)) {
                 entry.render(graphics, mouseX, mouseY, partial);
             }
         });
@@ -190,7 +191,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
     }
 
     private void updateEntriesForRender(@NotNull Consumer<ScrollAreaEntry> doAfterEachEntryUpdate) {
-        this.updateEntriesInternal(doAfterEachEntryUpdate, true);
+        this.updateEntriesInternal(doAfterEachEntryUpdate, this.renderOnlyEntriesInArea);
     }
 
     private void updateEntriesInternal(@Nullable Consumer<ScrollAreaEntry> doAfterEachEntryUpdate, boolean stopAfterVisibleRange) {
@@ -414,6 +415,15 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
 
     public boolean isScissorEnabled() {
         return this.scissorEnabled;
+    }
+
+    public ScrollArea setRenderOnlyEntriesInArea(boolean renderOnlyEntriesInArea) {
+        this.renderOnlyEntriesInArea = renderOnlyEntriesInArea;
+        return this;
+    }
+
+    public boolean isRenderOnlyEntriesInArea() {
+        return this.renderOnlyEntriesInArea;
     }
 
     public boolean isMouseOverInnerArea(double mouseX, double mouseY) {

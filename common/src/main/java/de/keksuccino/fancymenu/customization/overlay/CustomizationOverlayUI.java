@@ -580,6 +580,12 @@ public class CustomizationOverlayUI {
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.developer.smooth_font_multiline_rendering.desc")))
                 .setIcon(MaterialIcons.FORMAT_TEXT_WRAP);
 
+        developerMenu.addClickableEntry("reset_welcome_screen",
+                        Component.translatable("fancymenu.overlay.menu_bar.customization.settings.developer.reset_welcome_screen"),
+                        (menu, entry) -> FancyMenu.getOptions().showWelcomeScreen.setValue(true))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.developer.reset_welcome_screen.desc")))
+                .setIcon(MaterialIcons.RESET_SETTINGS);
+
         return customizationSettingsMenu;
 
     }

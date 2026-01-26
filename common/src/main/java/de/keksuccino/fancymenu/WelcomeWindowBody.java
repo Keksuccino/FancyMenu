@@ -26,8 +26,8 @@ public class WelcomeWindowBody extends PiPWindowBody {
     private static final Component TITLE = Component.translatable("fancymenu.welcome.screen.title");
     private static final Component HEADLINE = Component.translatable("fancymenu.welcome.screen.headline").withStyle(Style.EMPTY.withBold(true));
 
-    public static final int PIP_WINDOW_WIDTH = 600;
-    public static final int PIP_WINDOW_HEIGHT = 420;
+    public static final int PIP_WINDOW_WIDTH = 490;
+    public static final int PIP_WINDOW_HEIGHT = 294;
 
     private ScrollableMarkdownRenderer markdownRenderer;
 
@@ -37,6 +37,7 @@ public class WelcomeWindowBody extends PiPWindowBody {
                 .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
                 .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
                 .setAlwaysOnTop(true)
+                .setForceFocus(true)
                 .setBlockMinecraftScreenInputs(true)
                 .setTitle(TITLE);
         PiPWindowHandler.INSTANCE.openWindowCentered(window, null);

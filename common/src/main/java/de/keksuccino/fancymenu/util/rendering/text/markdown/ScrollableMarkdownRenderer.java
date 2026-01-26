@@ -65,6 +65,8 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
 
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
 
+        this.scrollArea.setRenderOnlyEntriesInArea(false);
+
         //Don't render markdown lines outside visible area (for performance reasons)
         this.markdownRenderer.addLineRenderValidator(line -> {
             if ((line.parent.getY() + line.offsetY + line.getLineHeight()) < this.scrollArea.getInnerY()) {
