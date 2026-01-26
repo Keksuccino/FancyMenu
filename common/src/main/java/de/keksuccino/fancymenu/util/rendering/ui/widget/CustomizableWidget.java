@@ -153,6 +153,10 @@ public interface CustomizableWidget {
     @Nullable
     Component getHoverLabelFancyMenu();
 
+    void setUnderlineLabelOnHoverFancyMenu(boolean underline);
+
+    boolean isUnderlineLabelOnHoverFancyMenu();
+
     void setCustomClickSoundFancyMenu(@Nullable IAudio sound);
 
     @Nullable

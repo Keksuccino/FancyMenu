@@ -53,6 +53,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public ResourceSupplier<ITexture> backgroundTextureNormal;
     public ResourceSupplier<ITexture> backgroundTextureHover;
     public ResourceSupplier<ITexture> backgroundTextureInactive;
+    public boolean underlineLabelOnHover = false;
     public boolean transparentBackground = false;
     public boolean restartBackgroundAnimationsOnHover = true;
     public boolean nineSliceCustomBackground = false;
@@ -203,6 +204,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetAlpha();
         this.updateWidgetTooltip();
         this.updateWidgetLabels();
+        this.updateWidgetLabelUnderline();
         this.updateWidgetHoverSound();
         this.updateWidgetUnhoverSound();
         this.updateWidgetClickSound();
@@ -264,6 +266,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         }
         if ((h != null) && this.getWidget().isHoveredOrFocused() && this.getWidget().active) {
             this.getWidget().setMessage(buildComponent(h));
+        }
+    }
+
+    public void updateWidgetLabelUnderline() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            w.setUnderlineLabelOnHoverFancyMenu(this.isUnderlineLabelOnHover());
         }
     }
 
@@ -406,6 +414,13 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         ButtonElement template = getTopActiveTemplateElement(this.isSlider());
         if ((template != null) && template.templateApplyLabel) return template.hoverLabel;
         return this.hoverLabel;
+    }
+
+    public boolean isUnderlineLabelOnHover() {
+        if (this.isTemplate) return this.underlineLabelOnHover;
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) return template.underlineLabelOnHover;
+        return this.underlineLabelOnHover;
     }
 
     @NotNull

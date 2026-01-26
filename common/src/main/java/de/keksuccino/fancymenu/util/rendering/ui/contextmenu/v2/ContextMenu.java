@@ -2218,7 +2218,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_border_color.getColorInt() : UIBase.getUITheme().ui_overlay_border_color.getColorInt());
+            float renderScale = UIBase.calculateFixedScale(this.parent.getScale());
+            float lineThickness = renderScale > 0.0F ? (1.0F / renderScale) : 1.0F;
+            float minX = this.x + 10.0F;
+            float maxX = this.x + this.width - 10.0F;
+            float minY = this.y + 4.0F;
+            if (renderScale > 0.0F) {
+                float snappedPixelY = (float) Math.round(minY * renderScale);
+                minY = snappedPixelY / renderScale;
+            }
+            float maxY = minY + lineThickness;
+            RenderingUtils.fillF(graphics, minX, minY, maxX, maxY, UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_border_color.getColorInt() : UIBase.getUITheme().ui_overlay_border_color.getColorInt());
         }
 
         @Override

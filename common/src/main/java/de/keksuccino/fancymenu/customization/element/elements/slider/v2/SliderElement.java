@@ -53,6 +53,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public ResourceSupplier<ITexture> handleTextureInactive;
     public ResourceSupplier<ITexture> sliderBackgroundTextureNormal;
     public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
+    public boolean underlineLabelOnHover = false;
     public boolean transparentBackground = false;
     public boolean restartBackgroundAnimationsOnHover = true;
     public boolean nineSliceCustomBackground = false;
@@ -189,6 +190,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetActiveState();
         this.updateWidgetTooltip();
         this.updateWidgetTexture();
+        this.updateWidgetLabelUnderline();
         this.slider.updateMessage();
     }
 
@@ -363,6 +365,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         return this.getTemplateProperty(template -> template.sliderBackgroundTextureHighlighted, this.sliderBackgroundTextureHighlighted);
     }
 
+    public void updateWidgetLabelUnderline() {
+        if (this.slider instanceof CustomizableWidget w) {
+            w.setUnderlineLabelOnHoverFancyMenu(this.isUnderlineLabelOnHover());
+        }
+    }
+
     public boolean isTransparentBackground() {
         return this.getTemplateProperty(template -> template.transparentBackground, this.transparentBackground);
     }
@@ -406,6 +414,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         ButtonElement template = this.getPropertySource();
         if ((template != null) && template.templateApplyLabel) return template.label;
         return this.label;
+    }
+
+    public boolean isUnderlineLabelOnHover() {
+        ButtonElement template = this.getPropertySource();
+        if ((template != null) && template.templateApplyLabel) return template.underlineLabelOnHover;
+        return this.underlineLabelOnHover;
     }
 
     protected <T> T getTemplateProperty(@NotNull TemplatePropertyGetter<T> templatePropertyGetter, @Nullable T defaultProperty) {

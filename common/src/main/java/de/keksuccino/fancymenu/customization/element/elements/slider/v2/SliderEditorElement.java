@@ -161,6 +161,14 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.label.desc")))
                 .setIcon(MaterialIcons.TEXT_FIELDS);
 
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "underline_label_on_hover",
+                        SliderEditorElement.class,
+                        consumes -> consumes.element.underlineLabelOnHover,
+                        (sliderEditorElement, aBoolean) -> sliderEditorElement.element.underlineLabelOnHover = aBoolean,
+                        "fancymenu.elements.widgets.label.underline_on_hover")
+                .setStackable(true)
+                .setIcon(MaterialIcons.FORMAT_UNDERLINED);
+
         this.rightClickMenu.addSeparatorEntry("separator_after_set_label").setStackable(true);
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "hover_sound",

@@ -81,6 +81,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.backgroundTextureInactive = deserializeImageResourceSupplier(serialized.getValue("background_texture_inactive"));
 
+        element.underlineLabelOnHover = deserializeBoolean(element.underlineLabelOnHover, serialized.getValue("underline_label_on_hover"));
+
         element.transparentBackground = deserializeBoolean(element.transparentBackground, serialized.getValue("transparent_background"));
 
         String restartBackAnimationsOnHover = serialized.getValue("restartbackgroundanimations");
@@ -138,6 +140,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         if (element.backgroundTextureInactive != null) {
             serializeTo.putProperty("background_texture_inactive", element.backgroundTextureInactive.getSourceWithPrefix());
         }
+        serializeTo.putProperty("underline_label_on_hover", "" + element.underlineLabelOnHover);
         serializeTo.putProperty("transparent_background", "" + element.transparentBackground);
         serializeTo.putProperty("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
         serializeTo.putProperty("nine_slice_custom_background", "" + element.nineSliceCustomBackground);

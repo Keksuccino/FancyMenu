@@ -56,6 +56,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private IAudio unhoverSoundFancyMenu;
 	@Unique
 	private boolean hiddenFancyMenu = false;
+	@Unique
+	private boolean underlineLabelOnHoverFancyMenu = false;
 	@Unique @Nullable
 	private RenderableResource customBackgroundNormalFancyMenu;
 	@Unique @Nullable
@@ -170,11 +172,16 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Inject(method = "getMessage", at = @At("RETURN"), cancellable = true)
 	private void onGetMessageFancyMenu(CallbackInfoReturnable<Component> info) {
 		AbstractWidget w = this.getWidgetFancyMenu();
+		Component result = info.getReturnValue();
 		if (w.isHoveredOrFocused() && w.visible && w.active && (this.hoverLabelFancyMenu != null)) {
-			info.setReturnValue(this.hoverLabelFancyMenu);
-			return;
+			result = this.hoverLabelFancyMenu;
+		} else if (this.customLabelFancyMenu != null) {
+			result = this.customLabelFancyMenu;
 		}
-		if (this.customLabelFancyMenu != null) info.setReturnValue(this.customLabelFancyMenu);
+		if ((result != null) && this.underlineLabelOnHoverFancyMenu && w.isHoveredOrFocused() && w.visible && w.active) {
+			result = result.copy().withStyle(style -> style.withUnderlined(true));
+		}
+		info.setReturnValue(result);
 	}
 
 	@Inject(method = "isMouseOver", at = @At("HEAD"), cancellable = true)
@@ -381,6 +388,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setHiddenFancyMenu(false);
 		this.setCustomLabelFancyMenu(null);
 		this.setHoverLabelFancyMenu(null);
+		this.setUnderlineLabelOnHoverFancyMenu(false);
 		this.setCustomWidthFancyMenu(null);
 		this.setCustomHeightFancyMenu(null);
 		this.setCustomXFancyMenu(null);
@@ -438,6 +446,18 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public Component getHoverLabelFancyMenu() {
 		return this.hoverLabelFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setUnderlineLabelOnHoverFancyMenu(boolean underline) {
+		this.underlineLabelOnHoverFancyMenu = underline;
+	}
+
+	@Unique
+	@Override
+	public boolean isUnderlineLabelOnHoverFancyMenu() {
+		return this.underlineLabelOnHoverFancyMenu;
 	}
 
 	@Unique

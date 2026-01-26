@@ -93,6 +93,8 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         element.sliderBackgroundTextureNormal = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_normal"));
         element.sliderBackgroundTextureHighlighted = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_highlighted"));
 
+        element.underlineLabelOnHover = deserializeBoolean(element.underlineLabelOnHover, serialized.getValue("underline_label_on_hover"));
+
         element.transparentBackground = deserializeBoolean(element.transparentBackground, serialized.getValue("transparent_background"));
 
         element.restartBackgroundAnimationsOnHover = deserializeBoolean(element.restartBackgroundAnimationsOnHover, serialized.getValue("restart_background_animations"));
@@ -165,6 +167,7 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
             serializeTo.putProperty("handle_texture_inactive", element.handleTextureInactive.getSourceWithPrefix());
         }
 
+        serializeTo.putProperty("underline_label_on_hover", "" + element.underlineLabelOnHover);
         serializeTo.putProperty("transparent_background", "" + element.transparentBackground);
         serializeTo.putProperty("restart_background_animations", "" + element.restartBackgroundAnimationsOnHover);
 
