@@ -135,5 +135,6 @@
 - Fixed textures of Checkbox element not showing transparency
 - Fixed line numbers not rendering in Text Editor screen
 - Fixed/Improved some listeners being very heavy on performance (#1490)
+- Fixed audio files loaded via resource pack stop working (or play really quiet) when joining a world (#1463)
 
 %changelog:end%
