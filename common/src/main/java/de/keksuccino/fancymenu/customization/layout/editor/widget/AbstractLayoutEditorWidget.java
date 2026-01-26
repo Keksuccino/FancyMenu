@@ -222,6 +222,19 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     }
 
+    protected void renderBodyWithScissor(@NotNull GuiGraphics graphics, @NotNull Runnable renderTask) {
+        int scissorWidth = Math.max(0, Math.round(this.getBodyWidth()));
+        int scissorHeight = Math.max(0, Math.round(this.getBodyHeight()));
+        if (scissorWidth <= 0 || scissorHeight <= 0) {
+            return;
+        }
+        int scissorX = Math.round(this.getRealBodyX());
+        int scissorY = Math.round(this.getRealBodyY());
+        this.enableComponentScissor(graphics, scissorX, scissorY, scissorWidth, scissorHeight, true);
+        renderTask.run();
+        this.disableComponentScissor(graphics);
+    }
+
     protected void renderTitleBar(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
         //Background

@@ -445,10 +445,9 @@ public class RenderingUtils {
         float red = (float)FastColor.ARGB32.red(color) / 255.0F;
         float green = (float)FastColor.ARGB32.green(color) / 255.0F;
         float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
-        float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
-        graphics.setColor(red, green, blue, alpha);
-        blit(graphics, location, x, y, width, height, f3, f4, width, height, width2, height2);
+        float alpha = (float)FastColor.ARGB32.alpha(color) / 255.0F;
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        blit(graphics, location, x, y, width, height, f3, f4, width, height, width2, height2, red, green, blue, alpha);
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, ResourceLocation location, float x, float y, float f3, float f4, float width, float height, float width2, float height2) {
@@ -457,6 +456,10 @@ public class RenderingUtils {
 
     private static void blit(GuiGraphics $$0, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10) {
         blit($$0, location, $$1, $$1 + $$3, $$2, $$2 + $$4, 0, $$7, $$8, $$5, $$6, $$9, $$10);
+    }
+
+    private static void blit(GuiGraphics $$0, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float red, float green, float blue, float alpha) {
+        blit($$0, location, $$1, $$1 + $$3, $$2, $$2 + $$4, 0, $$7, $$8, $$5, $$6, $$9, $$10, red, green, blue, alpha);
     }
 
     private static void blit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11) {
@@ -475,6 +478,26 @@ public class RenderingUtils {
         );
     }
 
+    private static void blit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11, float red, float green, float blue, float alpha) {
+        innerBlit(
+                graphics,
+                location,
+                $$1,
+                $$2,
+                $$3,
+                $$4,
+                $$5,
+                ($$8 + 0.0F) / (float)$$10,
+                ($$8 + (float)$$6) / (float)$$10,
+                ($$9 + 0.0F) / (float)$$11,
+                ($$9 + (float)$$7) / (float)$$11,
+                red,
+                green,
+                blue,
+                alpha
+        );
+    }
+
     private static void innerBlit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
         RenderSystem.setShaderTexture(0, location);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
@@ -485,6 +508,22 @@ public class RenderingUtils {
         $$11.addVertex($$10, $$2, $$4, $$5).setUv($$7, $$9);
         $$11.addVertex($$10, $$2, $$3, $$5).setUv($$7, $$8);
         BufferUploader.drawWithShader(Objects.requireNonNull($$11.build()));
+        graphics.flush();
+    }
+
+    private static void innerBlit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float red, float green, float blue, float alpha) {
+        RenderSystem.setShaderTexture(0, location);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        Matrix4f $$10 = graphics.pose().last().pose();
+        BufferBuilder $$11 = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        $$11.addVertex($$10, $$1, $$3, $$5).setUv($$6, $$8).setColor(red, green, blue, alpha);
+        $$11.addVertex($$10, $$1, $$4, $$5).setUv($$6, $$9).setColor(red, green, blue, alpha);
+        $$11.addVertex($$10, $$2, $$4, $$5).setUv($$7, $$9).setColor(red, green, blue, alpha);
+        $$11.addVertex($$10, $$2, $$3, $$5).setUv($$7, $$8).setColor(red, green, blue, alpha);
+        BufferUploader.drawWithShader(Objects.requireNonNull($$11.build()));
+        RenderSystem.disableBlend();
         graphics.flush();
     }
 

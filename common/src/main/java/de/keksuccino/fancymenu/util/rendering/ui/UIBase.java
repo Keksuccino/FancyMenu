@@ -34,6 +34,16 @@ public class UIBase extends RenderingUtils {
     public static final int HORIZONTAL_SCROLL_BAR_WIDTH = 40;
     public static final int HORIZONTAL_SCROLL_BAR_HEIGHT = 5;
 
+    private static final int MATERIAL_ICON_SIZE_SMALL = 50;
+    private static final int MATERIAL_ICON_SIZE_NORMAL = 100;
+    private static final int MATERIAL_ICON_SIZE_LARGE = 200;
+
+    public static int getUIMaterialIconSize() {
+        if (getUIScale() <= 1) return MATERIAL_ICON_SIZE_SMALL;
+        if (getUIScale() <= 2) return MATERIAL_ICON_SIZE_NORMAL;
+        return MATERIAL_ICON_SIZE_LARGE;
+    }
+
     @NotNull
     public static SmoothFont getUIFont() {
         return Objects.requireNonNull(SmoothFonts.NOTO_SANS.get());

@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import net.minecraft.network.chat.Component;
@@ -27,8 +28,25 @@ public class ImageEditorElement extends AbstractEditorElement<ImageEditorElement
         this.element.imageTint.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.PALETTE);
 
-        this.element.roundingRadius.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+        ContextMenu roundingMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("rounding_radius", Component.translatable("fancymenu.elements.image.rounding_radius"), roundingMenu)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.image.rounding_radius.desc")))
+                .setIcon(MaterialIcons.ROUNDED_CORNER);
+
+        this.element.roundingRadiusTopLeft.buildContextMenuEntryAndAddTo(roundingMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.image.rounding_radius.top_left.desc")))
+                .setIcon(MaterialIcons.ROUNDED_CORNER);
+
+        this.element.roundingRadiusTopRight.buildContextMenuEntryAndAddTo(roundingMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.image.rounding_radius.top_right.desc")))
+                .setIcon(MaterialIcons.ROUNDED_CORNER);
+
+        this.element.roundingRadiusBottomRight.buildContextMenuEntryAndAddTo(roundingMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.image.rounding_radius.bottom_right.desc")))
+                .setIcon(MaterialIcons.ROUNDED_CORNER);
+
+        this.element.roundingRadiusBottomLeft.buildContextMenuEntryAndAddTo(roundingMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.image.rounding_radius.bottom_left.desc")))
                 .setIcon(MaterialIcons.ROUNDED_CORNER);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_repeat_texture");

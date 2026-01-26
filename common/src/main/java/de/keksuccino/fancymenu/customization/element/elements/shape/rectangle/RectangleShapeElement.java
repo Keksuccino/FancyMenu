@@ -18,7 +18,10 @@ public class RectangleShapeElement extends AbstractElement {
     public final Property.ColorProperty color = putProperty(Property.hexColorProperty("color", "#FFFFFF", true, "fancymenu.elements.shape.color"));
     public final Property<Boolean> blurEnabled = putProperty(Property.booleanProperty("blur_enabled", false, "fancymenu.elements.shape.blur"));
     public final Property.StringProperty blurRadius = putProperty(Property.stringProperty("blur_radius", "3", false, true, "fancymenu.elements.shape.blur.radius"));
-    public final Property.StringProperty cornerRadius = putProperty(Property.stringProperty("corner_radius", "0", false, true, "fancymenu.elements.shape.corner_radius"));
+    public final Property.StringProperty cornerRadiusTopLeft = putProperty(Property.stringProperty("corner_radius_top_left", "0", false, true, "fancymenu.elements.shape.corner_radius.top_left"));
+    public final Property.StringProperty cornerRadiusTopRight = putProperty(Property.stringProperty("corner_radius_top_right", "0", false, true, "fancymenu.elements.shape.corner_radius.top_right"));
+    public final Property.StringProperty cornerRadiusBottomRight = putProperty(Property.stringProperty("corner_radius_bottom_right", "0", false, true, "fancymenu.elements.shape.corner_radius.bottom_right"));
+    public final Property.StringProperty cornerRadiusBottomLeft = putProperty(Property.stringProperty("corner_radius_bottom_left", "0", false, true, "fancymenu.elements.shape.corner_radius.bottom_left"));
 
     public RectangleShapeElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -31,7 +34,10 @@ public class RectangleShapeElement extends AbstractElement {
         if (!this.shouldRender()) return;
 
         float resolvedBlurRadius = resolveFloat(this.blurRadius.getString(), 3.0F);
-        float resolvedCornerRadius = resolveFloat(this.cornerRadius.getString(), 0.0F);
+        float resolvedCornerRadiusTopLeft = resolveFloat(this.cornerRadiusTopLeft.getString(), 0.0F);
+        float resolvedCornerRadiusTopRight = resolveFloat(this.cornerRadiusTopRight.getString(), 0.0F);
+        float resolvedCornerRadiusBottomRight = resolveFloat(this.cornerRadiusBottomRight.getString(), 0.0F);
+        float resolvedCornerRadiusBottomLeft = resolveFloat(this.cornerRadiusBottomLeft.getString(), 0.0F);
 
         DrawableColor colorResolved = this.color.getDrawable();
 
@@ -50,10 +56,10 @@ public class RectangleShapeElement extends AbstractElement {
                     this.getAbsoluteWidth(),
                     this.getAbsoluteHeight(),
                     appliedBlurRadius,
-                    resolvedCornerRadius,
-                    resolvedCornerRadius,
-                    resolvedCornerRadius,
-                    resolvedCornerRadius,
+                    resolvedCornerRadiusTopLeft,
+                    resolvedCornerRadiusTopRight,
+                    resolvedCornerRadiusBottomRight,
+                    resolvedCornerRadiusBottomLeft,
                     tint,
                     partial
             );
@@ -64,10 +70,10 @@ public class RectangleShapeElement extends AbstractElement {
                     this.getAbsoluteY(),
                     this.getAbsoluteWidth(),
                     this.getAbsoluteHeight(),
-                    resolvedCornerRadius,
-                    resolvedCornerRadius,
-                    resolvedCornerRadius,
-                    resolvedCornerRadius,
+                    resolvedCornerRadiusTopLeft,
+                    resolvedCornerRadiusTopRight,
+                    resolvedCornerRadiusBottomRight,
+                    resolvedCornerRadiusBottomLeft,
                     c,
                     partial
             );

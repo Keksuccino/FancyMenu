@@ -33,11 +33,17 @@ public class ImageElement extends AbstractElement {
     public final Property<Integer> nineSliceBorderY = putProperty(Property.integerProperty("nine_slice_texture_border_y", 5, "fancymenu.elements.image.nine_slice.border_y"));
     public final Property<Boolean> restartAnimatedOnMenuLoad = putProperty(Property.booleanProperty("restart_animated_on_menu_load", false, "fancymenu.elements.image.restart_animated_on_menu_load"));
     public final Property.ColorProperty imageTint = putProperty(Property.hexColorProperty("image_tint", "#FFFFFF", true, "fancymenu.elements.image.tint"));
-    public final Property.StringProperty roundingRadius = putProperty(Property.stringProperty("rounding_radius", "0", false, true, "fancymenu.elements.image.rounding_radius"));
+    public final Property.StringProperty roundingRadiusTopLeft = putProperty(Property.stringProperty("rounding_radius_top_left", "0", false, true, "fancymenu.elements.image.rounding_radius.top_left"));
+    public final Property.StringProperty roundingRadiusTopRight = putProperty(Property.stringProperty("rounding_radius_top_right", "0", false, true, "fancymenu.elements.image.rounding_radius.top_right"));
+    public final Property.StringProperty roundingRadiusBottomRight = putProperty(Property.stringProperty("rounding_radius_bottom_right", "0", false, true, "fancymenu.elements.image.rounding_radius.bottom_right"));
+    public final Property.StringProperty roundingRadiusBottomLeft = putProperty(Property.stringProperty("rounding_radius_bottom_left", "0", false, true, "fancymenu.elements.image.rounding_radius.bottom_left"));
 
     @Nullable
     protected DrawableColor currentImageTint;
-    protected float resolvedRoundingRadius;
+    protected float resolvedRoundingRadiusTopLeft;
+    protected float resolvedRoundingRadiusTopRight;
+    protected float resolvedRoundingRadiusBottomRight;
+    protected float resolvedRoundingRadiusBottomLeft;
 
     public ImageElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -68,7 +74,10 @@ public class ImageElement extends AbstractElement {
     }
 
     protected void tickRoundingRadius() {
-        this.resolvedRoundingRadius = resolveRoundingRadius(this.roundingRadius.getString());
+        this.resolvedRoundingRadiusTopLeft = resolveRoundingRadius(this.roundingRadiusTopLeft.getString());
+        this.resolvedRoundingRadiusTopRight = resolveRoundingRadius(this.roundingRadiusTopRight.getString());
+        this.resolvedRoundingRadiusBottomRight = resolveRoundingRadius(this.roundingRadiusBottomRight.getString());
+        this.resolvedRoundingRadiusBottomLeft = resolveRoundingRadius(this.roundingRadiusBottomLeft.getString());
     }
 
     @Override
@@ -101,14 +110,17 @@ public class ImageElement extends AbstractElement {
                         this.currentImageTint.resetShaderColor(graphics);
                     } else {
                         int color = resolveTintColor(this.currentImageTint, this.opacity);
-                        SmoothImageRectangleRenderer.renderSmoothImageRectScaled(
+                        SmoothImageRectangleRenderer.renderSmoothImageRectRoundAllCornersScaled(
                                 graphics,
                                 loc,
                                 x,
                                 y,
                                 this.getAbsoluteWidth(),
                                 this.getAbsoluteHeight(),
-                                this.resolvedRoundingRadius,
+                                this.resolvedRoundingRadiusTopLeft,
+                                this.resolvedRoundingRadiusTopRight,
+                                this.resolvedRoundingRadiusBottomRight,
+                                this.resolvedRoundingRadiusBottomLeft,
                                 color,
                                 partial
                         );

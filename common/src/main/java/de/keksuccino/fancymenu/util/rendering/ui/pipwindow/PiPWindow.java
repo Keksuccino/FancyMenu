@@ -42,14 +42,6 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     public static final int DEFAULT_RESIZE_MARGIN = 4;
     private static final long TITLE_BAR_DOUBLE_CLICK_TIME_MS = 500;
     private static final int DEFAULT_ICON_TEXTURE_SIZE = 8;
-    private static final int MATERIAL_ICON_SIZE_SMALL = 50;
-    private static final int MATERIAL_ICON_SIZE_NORMAL = 100;
-    private static final int MATERIAL_ICON_SIZE_LARGE = 200;
-    private static final java.util.function.Supplier<Integer> MATERIAL_ICON_SIZE = () -> {
-        if (UIBase.getUIScale() <= 1) return MATERIAL_ICON_SIZE_SMALL;
-        if (UIBase.getUIScale() <= 2) return MATERIAL_ICON_SIZE_NORMAL;
-        return MATERIAL_ICON_SIZE_LARGE;
-    };
     private static final ResourceLocation DEFAULT_CLOSE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_close.png");
     private static final ResourceLocation DEFAULT_MAXIMIZE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_maximize.png");
     private static final ResourceLocation DEFAULT_NORMALIZE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_restore.png");
@@ -586,7 +578,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (icon == null) {
             return null;
         }
-        int size = MATERIAL_ICON_SIZE.get();
+        int size = UIBase.getUIMaterialIconSize();
         ResourceLocation location = icon.getTextureLocation(size);
         if (location == null) {
             return null;
@@ -610,7 +602,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (icon == null) {
             return null;
         }
-        return icon.getTextureLocation(MATERIAL_ICON_SIZE.get());
+        return icon.getTextureLocation(UIBase.getUIMaterialIconSize());
     }
 
     private void drawScaledString(@NotNull GuiGraphics graphics, @NotNull Font font, @NotNull FormattedCharSequence text, int x, int y, int color, float scale) {

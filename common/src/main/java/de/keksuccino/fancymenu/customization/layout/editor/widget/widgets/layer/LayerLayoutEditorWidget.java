@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayout
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidgetBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.input.InputConstants;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -62,7 +61,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         this.scrollArea.backgroundColor = () -> null;
         this.scrollArea.borderColor = () -> null;
-        this.scrollArea.setRenderOnlyEntriesInArea(false);
+        this.scrollArea.setScissorEnabled(false);
+        this.scrollArea.setRenderOnlyEntriesInArea(true);
+        this.scrollArea.setSetupForBlurInterface(true);
 
         this.updateList(false);
 
@@ -115,43 +116,41 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.scrollArea.makeEntriesWidthOfArea = true;
         this.scrollArea.makeAllEntriesWidthOfWidestEntry = false;
 
-        RenderingUtils.enableScissor(graphics, (int) this.getRealBodyX(), (int) this.getRealBodyY(), (int) (this.getRealBodyX() + this.getBodyWidth()), (int) (this.getRealBodyY() + this.getBodyHeight()));
+        this.renderBodyWithScissor(graphics, () -> {
+            graphics.pose().pushPose();
 
-        graphics.pose().pushPose();
+            this.scrollArea.render(graphics, (int) mouseX, (int) mouseY, partial);
 
-        this.scrollArea.render(graphics, (int) mouseX, (int) mouseY, partial);
+            // Render the drop indicator if currently dragging
+            if (isDragging && dragTargetIndex >= 0 && dragTargetIndex <= this.scrollArea.getEntries().size()) {
+                float indicatorY;
 
-        // Render the drop indicator if currently dragging
-        if (isDragging && dragTargetIndex >= 0 && dragTargetIndex <= this.scrollArea.getEntries().size()) {
-            float indicatorY;
-
-            // This is the key change - make the indicator position clearer
-            if (dragTargetIndex == this.scrollArea.getEntries().size()) {
-                // If dropping at the end of the list, show indicator below the last entry
-                if (!this.scrollArea.getEntries().isEmpty()) {
-                    ScrollAreaEntry lastEntry = this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1);
-                    indicatorY = lastEntry.getY() + lastEntry.getHeight();
+                // This is the key change - make the indicator position clearer
+                if (dragTargetIndex == this.scrollArea.getEntries().size()) {
+                    // If dropping at the end of the list, show indicator below the last entry
+                    if (!this.scrollArea.getEntries().isEmpty()) {
+                        ScrollAreaEntry lastEntry = this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1);
+                        indicatorY = lastEntry.getY() + lastEntry.getHeight();
+                    } else {
+                        indicatorY = this.scrollArea.getInnerY();
+                    }
                 } else {
-                    indicatorY = this.scrollArea.getInnerY();
+                    // This is important: We always draw the indicator at the TOP of the target entry
+                    // This ensures the visual position matches where the item will be placed
+                    ScrollAreaEntry targetEntry = this.scrollArea.getEntries().get(dragTargetIndex);
+                    indicatorY = targetEntry.getY();
                 }
-            } else {
-                // This is important: We always draw the indicator at the TOP of the target entry
-                // This ensures the visual position matches where the item will be placed
-                ScrollAreaEntry targetEntry = this.scrollArea.getEntries().get(dragTargetIndex);
-                indicatorY = targetEntry.getY();
+
+                // Draw thicker drop indicator line
+                fillF(graphics, this.scrollArea.getInnerX(), indicatorY - DROP_INDICATOR_THICKNESS / 2f,
+                        this.scrollArea.getInnerX() + this.scrollArea.getInnerWidth(),
+                        indicatorY + DROP_INDICATOR_THICKNESS / 2f,
+                        UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_border_color.getColorInt() : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt());
+
             }
 
-            // Draw thicker drop indicator line
-            fillF(graphics, this.scrollArea.getInnerX(), indicatorY - DROP_INDICATOR_THICKNESS/2f,
-                    this.scrollArea.getInnerX() + this.scrollArea.getInnerWidth(),
-                    indicatorY + DROP_INDICATOR_THICKNESS/2f,
-                    UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_border_color.getColorInt() : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt());
-
-        }
-
-        graphics.pose().popPose();
-
-        graphics.disableScissor();
+            graphics.pose().popPose();
+        });
     }
 
     @Override
