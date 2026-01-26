@@ -309,6 +309,11 @@ public final class GlobalCustomizationHandler {
         }
     }
 
+    public static void resetMenuMusicAfterSoundEngineReload() {
+        stopCurrentMenuMusic(true);
+        lastMenuMusicIndex = -1;
+    }
+
     private static final class CachedSupplier<R extends de.keksuccino.fancymenu.util.resource.Resource> {
         @Nullable
         private String lastSource;

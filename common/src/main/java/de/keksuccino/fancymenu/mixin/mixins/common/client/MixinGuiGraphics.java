@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -26,6 +27,7 @@ public class MixinGuiGraphics {
     private void after_init_FancyMenu(Minecraft minecraft, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, CallbackInfo info) {
         RenderScaleUtil.resetActiveRenderScale_FancyMenu();
         RenderTranslationUtil.resetActiveRenderTranslation_FancyMenu();
+        RenderRotationUtil.resetActiveRenderRotation_FancyMenu();
     }
 
     @Inject(method = "renderTooltipInternal", at = @At("HEAD"), cancellable = true)

@@ -50,4 +50,21 @@ public class MixinChatListener {
 
         Listeners.ON_CHAT_MESSAGE_RECEIVED.onChatMessageReceived(component, senderUuid, senderNameComponent);
     }
+
+    /** @reason Capture command feedback/system messages shown to the local client. */
+    @WrapOperation(
+        method = "handleSystemMessage",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/components/ChatComponent;addMessage(Lnet/minecraft/network/chat/Component;)V"
+        )
+    )
+    private void wrap_addMessage_handleSystemMessage_FancyMenu(
+        ChatComponent instance,
+        Component component,
+        Operation<Void> operation
+    ) {
+        operation.call(instance, component);
+        Listeners.ON_SYSTEM_MESSAGE_RECEIVED_IN_CHAT.onSystemMessageReceivedInChat(component);
+    }
 }

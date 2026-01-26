@@ -4,6 +4,7 @@ uniform vec2 OutSize;
 uniform vec4 Rect;
 uniform float BorderThickness;
 uniform float Roundness;
+uniform vec4 InvRotation; // m00, m01, m10, m11
 uniform vec4 Color;
 
 in vec2 texCoord;
@@ -47,8 +48,14 @@ void main() {
     // Clamp roundness to be safe (matching Java)
     float n = max(0.1, Roundness);
 
+    vec2 halfSize = Rect.zw * 0.5;
+    vec2 center = Rect.xy + halfSize;
+    vec2 p = pixel - center;
+    vec2 local = vec2(InvRotation.x * p.x + InvRotation.y * p.y, InvRotation.z * p.x + InvRotation.w * p.y);
+    vec2 localPixel = local + center;
+
     // Calculate Outer Shape
-    float alpha = getShapeAlpha(pixel, Rect.xy, Rect.zw, n);
+    float alpha = getShapeAlpha(localPixel, Rect.xy, Rect.zw, n);
 
     // Calculate Inner Hole (Border)
     if (BorderThickness > 0.0) {
@@ -57,7 +64,7 @@ void main() {
 
         // Only cut the hole if there is space for it
         if (innerSize.x > 0.0 && innerSize.y > 0.0) {
-            float innerAlpha = getShapeAlpha(pixel, innerPos, innerSize, n);
+            float innerAlpha = getShapeAlpha(localPixel, innerPos, innerSize, n);
             // Cut inner from outer
             alpha = clamp(alpha - innerAlpha, 0.0, 1.0);
         }

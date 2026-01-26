@@ -4,6 +4,7 @@ uniform sampler2D ImageSampler;
 uniform vec2 OutSize;
 uniform vec4 Rect;
 uniform float Roundness;
+uniform vec4 InvRotation; // m00, m01, m10, m11
 uniform vec2 UvMin;
 uniform vec2 UvMax;
 uniform vec4 Color;
@@ -38,13 +39,18 @@ void main() {
     vec2 pixel = texCoord * OutSize;
 
     float n = max(0.1, Roundness);
-    float mask = getShapeAlpha(pixel, Rect.xy, Rect.zw, n);
+    vec2 halfSize = Rect.zw * 0.5;
+    vec2 center = Rect.xy + halfSize;
+    vec2 p = pixel - center;
+    vec2 local = vec2(InvRotation.x * p.x + InvRotation.y * p.y, InvRotation.z * p.x + InvRotation.w * p.y);
+    vec2 localPixel = local + center;
+    float mask = getShapeAlpha(localPixel, Rect.xy, Rect.zw, n);
 
     if (mask <= 0.0) {
         discard;
     }
 
-    vec2 uv = (pixel - Rect.xy) / Rect.zw;
+    vec2 uv = (localPixel - Rect.xy) / Rect.zw;
     uv.y = 1.0 - uv.y;
 
     vec2 uvMin = min(UvMin, UvMax);

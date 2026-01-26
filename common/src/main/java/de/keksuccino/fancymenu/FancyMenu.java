@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFontManager;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
+import de.keksuccino.fancymenu.util.resource.resources.audio.AudioEngineReloadHandler;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
@@ -61,16 +62,17 @@ public class FancyMenu {
 
 		if (Services.PLATFORM.isOnClient()) {
 
-			FileTypes.registerAll();
+            FileTypes.registerAll();
 
-			if (MCEFUtil.isMCEFLoaded()) {
-				BrowserHandler.init();
-				MCEFVideoManager.getInstance().initialize();
-			}
+            if (MCEFUtil.isMCEFLoaded()) {
+                BrowserHandler.init();
+                MCEFVideoManager.getInstance().initialize();
+            }
 
-			TextColorFormatters.registerAll();
+            TextColorFormatters.registerAll();
 
             SmoothFontManager.registerReloadListener();
+            AudioEngineReloadHandler.register();
 
 			EventHandler.INSTANCE.registerListenersOf(new Test());
 

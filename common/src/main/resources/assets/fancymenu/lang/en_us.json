@@ -2619,5 +2619,19 @@
   "fancymenu.elements.shape.circle.roundness": "Roundness",
   "fancymenu.elements.shape.circle.roundness.desc": "Set the circle roundness/exponent.\nSupports placeholders.\nRecommended: 2-4.",
   "fancymenu.elements.image.rounding_radius": "Rounding Radius",
-  "fancymenu.elements.image.rounding_radius.desc": "Set the image corner radius in pixels.\nSupports placeholders.\nRecommended: 0-8."
+  "fancymenu.elements.image.rounding_radius.desc": "Set the image corner radius in pixels.\nSupports placeholders.\nRecommended: 0-8.",
+  "fancymenu.placeholders.title_case_text": "Title Case Text",
+  "fancymenu.placeholders.title_case_text.desc": "Converts the input text to Title Case.\n\nExample:\nInput: hello world\nOutput: Hello World",
+  "fancymenu.placeholders.sentence_case_text": "Sentence Case Text",
+  "fancymenu.placeholders.sentence_case_text.desc": "Converts the input text to sentence case.\n\nExample:\nInput: hello world. this is fancymenu!\nOutput: Hello world. This is fancymenu!",
+  "fancymenu.placeholders.snake_case_text": "Snake Case Text",
+  "fancymenu.placeholders.snake_case_text.desc": "Converts the input text to snake_case.\n\nExample:\nInput: Hello World\nOutput: hello_world",
+  "fancymenu.placeholders.kebab_case_text": "Kebab Case Text",
+  "fancymenu.placeholders.kebab_case_text.desc": "Converts the input text to kebab-case.\n\nExample:\nInput: Hello World\nOutput: hello-world",
+  "fancymenu.placeholders.alternating_case_text": "Alternating Case Text",
+  "fancymenu.placeholders.alternating_case_text.desc": "Converts the input text to alternating case.\n\nExample:\nInput: alternating case\nOutput: aLtErNaTiNg CaSe",
+  "fancymenu.placeholders.toggle_case_text": "Toggle Case Text",
+  "fancymenu.placeholders.toggle_case_text.desc": "Toggles the case of each letter in the input text.\n\nExample:\nInput: Toggle Case\nOutput: tOGGLE cASE",
+  "fancymenu.listeners.on_system_message_received_in_chat": "On System Message Received in Chat",
+  "fancymenu.listeners.on_system_message_received_in_chat.desc": "Triggers whenever the client displays a system message in chat.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$system_message_string §r= Plain text version of the received message\n- §z$$system_message_component §r= Full component JSON of the received message"
 }

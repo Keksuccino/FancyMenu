@@ -261,7 +261,8 @@ public final class GuiBlurRenderer {
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
-        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, tint);
+        RenderRotationUtil.Rotation2D invRotation = RenderRotationUtil.getCurrentAdditionalRenderInverseRotation2D();
+        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, invRotation, tint);
 
         graphics.flush();
         // Run the post chain with blending off; otherwise each full-screen pass would multiply existing alpha,
@@ -312,7 +313,7 @@ public final class GuiBlurRenderer {
         }
     }
 
-    private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, DrawableColor.FloatColor tint) {
+    private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, RenderRotationUtil.Rotation2D invRotation, DrawableColor.FloatColor tint) {
         List<PostPass> passes = ((IMixinPostChain) postChain).getPasses_FancyMenu();
         float[] blurMultipliers = new float[]{1.0F, 1.0F, 0.5F, 0.5F, 0.25F, 0.25F};
         int blurIndex = 0;
@@ -331,6 +332,7 @@ public final class GuiBlurRenderer {
             pass.getEffect().safeGetUniform("CornerRadii").set(cornerRadii.topLeft(), cornerRadii.topRight(), cornerRadii.bottomRight(), cornerRadii.bottomLeft());
             pass.getEffect().safeGetUniform("ShapeType").set(shapeType);
             pass.getEffect().safeGetUniform("Roundness").set(roundness);
+            pass.getEffect().safeGetUniform("InvRotation").set(invRotation.m00(), invRotation.m01(), invRotation.m10(), invRotation.m11());
             pass.getEffect().safeGetUniform("Tint").set(tint.red(), tint.green(), tint.blue(), tint.alpha());
         }
     }

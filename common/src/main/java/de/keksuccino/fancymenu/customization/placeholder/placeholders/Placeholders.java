@@ -155,6 +155,12 @@ public class Placeholders {
     public static final TrimTextPlaceholder TRIM_TEXT = new TrimTextPlaceholder();
     public static final UppercaseTextPlaceholder UPPERCASE_TEXT = new UppercaseTextPlaceholder();
     public static final LowercaseTextPlaceholder LOWERCASE_TEXT = new LowercaseTextPlaceholder();
+    public static final TitleCaseTextPlaceholder TITLE_CASE_TEXT = new TitleCaseTextPlaceholder();
+    public static final SentenceCaseTextPlaceholder SENTENCE_CASE_TEXT = new SentenceCaseTextPlaceholder();
+    public static final SnakeCaseTextPlaceholder SNAKE_CASE_TEXT = new SnakeCaseTextPlaceholder();
+    public static final KebabCaseTextPlaceholder KEBAB_CASE_TEXT = new KebabCaseTextPlaceholder();
+    public static final AlternatingCaseTextPlaceholder ALTERNATING_CASE_TEXT = new AlternatingCaseTextPlaceholder();
+    public static final ToggleCaseTextPlaceholder TOGGLE_CASE_TEXT = new ToggleCaseTextPlaceholder();
     public static final CropTextPlaceholder CROP_TEXT = new CropTextPlaceholder();
     public static final MathCeilPlaceholder MATH_CEIL = new MathCeilPlaceholder();
     public static final MathFloorPlaceholder MATH_FLOOR = new MathFloorPlaceholder();
@@ -322,6 +328,12 @@ public class Placeholders {
         PlaceholderRegistry.register(TRIM_TEXT);
         PlaceholderRegistry.register(UPPERCASE_TEXT);
         PlaceholderRegistry.register(LOWERCASE_TEXT);
+        PlaceholderRegistry.register(TITLE_CASE_TEXT);
+        PlaceholderRegistry.register(SENTENCE_CASE_TEXT);
+        PlaceholderRegistry.register(SNAKE_CASE_TEXT);
+        PlaceholderRegistry.register(KEBAB_CASE_TEXT);
+        PlaceholderRegistry.register(ALTERNATING_CASE_TEXT);
+        PlaceholderRegistry.register(TOGGLE_CASE_TEXT);
         PlaceholderRegistry.register(CROP_TEXT);
         PlaceholderRegistry.register(MATH_CEIL);
         PlaceholderRegistry.register(MATH_FLOOR);
