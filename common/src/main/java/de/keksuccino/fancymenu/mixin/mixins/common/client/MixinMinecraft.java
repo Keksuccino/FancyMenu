@@ -1,9 +1,8 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.WelcomeScreen;
+import de.keksuccino.fancymenu.WelcomeWindowBody;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
@@ -236,16 +235,16 @@ public class MixinMinecraft {
 
 		this.lastScreen_FancyMenu = this.screen;
 
-		//Reset GUI scale in case some layout changed it
+		// Reset GUI scale in case some layout changed it
 		RenderingUtils.resetGuiScale();
 
-		if (FancyMenu.getOptions().showWelcomeScreen.getValue() && (screen instanceof TitleScreen)) {
-			info.cancel();
-			Minecraft.getInstance().setScreen(new WelcomeScreen(screen));
-			return;
+        // Open Welcome window
+		if (FancyMenu.getOptions().showWelcomeScreen.getValue() && !FancyMenu.getOptions().modpackMode.getValue() && (screen instanceof TitleScreen)) {
+            FancyMenu.getOptions().showWelcomeScreen.setValue(false);
+			WelcomeWindowBody.openInWindow();
 		}
 
-		//Handle Overrides
+		// Handle Overrides
 		Screen overrideWith = CustomGuiHandler.beforeSetScreen(screen);
 		if (overrideWith != null) {
 			info.cancel();

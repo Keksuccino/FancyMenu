@@ -2398,7 +2398,7 @@
   "fancymenu.welcome.screen.open_docs": "Open Documentation",
   "fancymenu.welcome.screen.open_docs.tooltip": "The Welcome screen will not show up again\nafter clicking this button.\nYou don't need to manually edit any config files.",
   "fancymenu.welcome.screen.text": "Before you begin customizing with FancyMenu, please make sure to **read the documentation** thoroughly. While FancyMenu can seem overwhelming initially, the documentation will guide you step-by-step.\n\nStart with the [Getting Started](https://docs.fancymenu.net) page for the basics of menu customization. Don’t forget to explore the other sections as they offer valuable insights and tips!\n\nYou can also join the official [Discord](https://discord.gg/rhayah27GC) if you have any questions!\n\n**I hope you have a fantastic time with FancyMenu!**",
-  "fancymenu.welcome.screen.title": "FancyMenu Welcome Screen",
+  "fancymenu.welcome.screen.title": "Welcome to Fancymenu!",
   "fancymenu.widgetified_screens.title_screen.branding": "Branding",
   "fancymenu.widgetified_screens.title_screen.forge.copyright": "Forge Copyright Notification",
   "fancymenu.widgetified_screens.title_screen.forge.copyright.example.line1": "< Forge Copyright Notification Text Example >",
