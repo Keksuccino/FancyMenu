@@ -25,7 +25,7 @@ import de.keksuccino.fancymenu.customization.element.elements.Elements;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElement;
-import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElement;
+import de.keksuccino.fancymenu.customization.element.elements.shape.rectangle.RectangleShapeElement;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElement;
 import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElement;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
@@ -682,7 +682,7 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("addshape")) {
-                    ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));
+                    RectangleShapeElement e = Elements.SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
                         String c = sec.getValue("color");

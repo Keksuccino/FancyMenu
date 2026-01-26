@@ -30,8 +30,6 @@ public class FancyMenu {
 
     //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren
 
-    //TODO Welcome Screen als popup in Layout Editor öffnen, wenn zum ersten Mal aufgemacht (statt als screen beim starten des Games)
-
 
 
 	private static final Logger LOGGER = LogManager.getLogger();

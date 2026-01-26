@@ -2607,5 +2607,11 @@
   "fancymenu.requirements.is_customization_menu_bar_visible": "Is Customization Menu Bar Visible",
   "fancymenu.requirements.is_customization_menu_bar_visible.desc": "Returns true when the customization menu bar is visible.\nReturns false if Modpack Mode is enabled or the menu bar is disabled.",
   "fancymenu.overlay.menu_bar.customization.settings.developer.reset_welcome_screen": "Reset Welcome Screen",
-  "fancymenu.overlay.menu_bar.customization.settings.developer.reset_welcome_screen.desc": "Makes the welcome screen show again the next time the Title Screen opens."
+  "fancymenu.overlay.menu_bar.customization.settings.developer.reset_welcome_screen.desc": "Makes the welcome screen show again the next time the Title Screen opens.",
+  "fancymenu.elements.shape.corner_radius": "Corner Radius",
+  "fancymenu.elements.shape.corner_radius.desc": "Set the rectangle corner radius in pixels.\nSupports placeholders.\nRecommended: 0-8.",
+  "fancymenu.elements.shape.blur": "Blur: %s",
+  "fancymenu.elements.shape.blur.desc": "Toggle background blur for the rectangle.",
+  "fancymenu.elements.shape.blur.radius": "Blur Intensity",
+  "fancymenu.elements.shape.blur.radius.desc": "Set the blur intensity/radius in pixels.\nSupports placeholders.\nRecommended: 3-6."
 }
