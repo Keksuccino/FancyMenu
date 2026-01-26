@@ -18,6 +18,8 @@ import java.util.Objects;
 public final class GuiBlurRenderer {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final float SHAPE_TYPE_ROUNDED_RECT = 0.0F;
+    private static final float SHAPE_TYPE_SUPERELLIPSE = 1.0F;
     // Keep shader files in the default 'minecraft' namespace so the vanilla resource manager finds them for every loader.
     private static final ResourceLocation GUI_BLUR_POST_CHAIN = ResourceLocation.withDefaultNamespace("shaders/post/fancymenu_gui_blur.json");
 
@@ -111,6 +113,25 @@ public final class GuiBlurRenderer {
     }
 
     /**
+     * Renders a blur area as a smooth superellipse (circle/oval) using the provided bounding rectangle.
+     *
+     * <p>Roundness examples:
+     * <br>- Perfect circle/ellipse: {@code roundness = 2.0}
+     * <br>- Squircle-like (boxier): {@code roundness = 4.0}
+     * <br>- Diamond-like (pointier): {@code roundness = 1.0}
+     */
+    public static void renderBlurAreaCircle(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float roundness, @Nonnull DrawableColor tint, float partial) {
+        renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, CornerRadii.uniform(0.0F), SHAPE_TYPE_SUPERELLIPSE, roundness, tint, partial);
+    }
+
+    public static void renderBlurAreaCircleScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float roundness, @Nonnull DrawableColor tint, float partial) {
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        renderBlurAreaCircle(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, blurRadius * additionalScale, roundness, tint, partial);
+    }
+
+    /**
      * Renders a blur area using FancyMenu's blur intensity setting (a normalized multiplier, e.g., 0.25–3.0).
      * Callers provide the base radius they would normally use; this helper applies the current intensity
      * and renders the blur so UI code doesn’t need to recompute the radius everywhere.
@@ -186,13 +207,17 @@ public final class GuiBlurRenderer {
     }
 
     private static void renderBlurAreaInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, @Nonnull CornerRadii cornerRadii, @Nonnull DrawableColor tint, float partial) {
+        renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, cornerRadii, SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, partial);
+    }
+
+    private static void renderBlurAreaInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, @Nonnull CornerRadii cornerRadii, float shapeType, float roundness, @Nonnull DrawableColor tint, float partial) {
         Objects.requireNonNull(graphics);
         Objects.requireNonNull(cornerRadii);
         Objects.requireNonNull(tint);
         if (width <= 0.0F || height <= 0.0F) {
             return;
         }
-        _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, blurRadius, cornerRadii, tint));
+        _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, blurRadius, cornerRadii, shapeType, clampRoundness(roundness), tint));
     }
 
     private static float resolveAdditionalRenderScale() {
@@ -236,7 +261,7 @@ public final class GuiBlurRenderer {
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
-        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, tint);
+        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, tint);
 
         graphics.flush();
         // Run the post chain with blending off; otherwise each full-screen pass would multiply existing alpha,
@@ -287,7 +312,7 @@ public final class GuiBlurRenderer {
         }
     }
 
-    private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, DrawableColor.FloatColor tint) {
+    private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, DrawableColor.FloatColor tint) {
         List<PostPass> passes = ((IMixinPostChain) postChain).getPasses_FancyMenu();
         float[] blurMultipliers = new float[]{1.0F, 1.0F, 0.5F, 0.5F, 0.25F, 0.25F};
         int blurIndex = 0;
@@ -304,6 +329,8 @@ public final class GuiBlurRenderer {
             // preventing the blur pass from writing over the whole screen.
             pass.getEffect().safeGetUniform("Rect").set(x, y, width, height);
             pass.getEffect().safeGetUniform("CornerRadii").set(cornerRadii.topLeft(), cornerRadii.topRight(), cornerRadii.bottomRight(), cornerRadii.bottomLeft());
+            pass.getEffect().safeGetUniform("ShapeType").set(shapeType);
+            pass.getEffect().safeGetUniform("Roundness").set(roundness);
             pass.getEffect().safeGetUniform("Tint").set(tint.red(), tint.green(), tint.blue(), tint.alpha());
         }
     }
@@ -319,7 +346,7 @@ public final class GuiBlurRenderer {
         return null;
     }
 
-    private record BlurArea(float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, DrawableColor tint) {
+    private record BlurArea(float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, DrawableColor tint) {
     }
 
     private record CornerRadii(float topLeft, float topRight, float bottomRight, float bottomLeft) {
@@ -359,6 +386,13 @@ public final class GuiBlurRenderer {
             }
             return value > max ? max : value;
         }
+    }
+
+    private static float clampRoundness(float roundness) {
+        if (!Float.isFinite(roundness)) {
+            return 2.0F;
+        }
+        return Math.max(0.1F, roundness);
     }
 
 }

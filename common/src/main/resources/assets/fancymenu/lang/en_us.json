@@ -2611,7 +2611,13 @@
   "fancymenu.elements.shape.corner_radius": "Corner Radius",
   "fancymenu.elements.shape.corner_radius.desc": "Set the rectangle corner radius in pixels.\nSupports placeholders.\nRecommended: 0-8.",
   "fancymenu.elements.shape.blur": "Blur: %s",
-  "fancymenu.elements.shape.blur.desc": "Toggle background blur for the rectangle.",
+  "fancymenu.elements.shape.blur.desc": "Toggle background blur for the shape.",
   "fancymenu.elements.shape.blur.radius": "Blur Intensity",
-  "fancymenu.elements.shape.blur.radius.desc": "Set the blur intensity/radius in pixels.\nSupports placeholders.\nRecommended: 3-6."
+  "fancymenu.elements.shape.blur.radius.desc": "Set the blur intensity/radius in pixels.\nSupports placeholders.\nRecommended: 3-6.",
+  "fancymenu.elements.shape.circle": "Circle Shape",
+  "fancymenu.elements.shape.circle.desc": "A circular/oval shape.\nSupports custom HEX RGBA colors.",
+  "fancymenu.elements.shape.circle.roundness": "Roundness",
+  "fancymenu.elements.shape.circle.roundness.desc": "Set the circle roundness/exponent.\nSupports placeholders.\nRecommended: 2-4.",
+  "fancymenu.elements.image.rounding_radius": "Rounding Radius",
+  "fancymenu.elements.image.rounding_radius.desc": "Set the image corner radius in pixels.\nSupports placeholders.\nRecommended: 0-8."
 }

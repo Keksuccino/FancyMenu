@@ -4,6 +4,8 @@ uniform sampler2D BlurSampler;
 uniform vec2 OutSize;
 uniform vec4 Rect;
 uniform vec4 CornerRadii; // BL, BR, TR, TL (matches Java flipVertical)
+uniform float ShapeType; // 0.0 = rounded rect, 1.0 = superellipse
+uniform float Roundness;
 uniform vec4 Tint;
 
 in vec2 texCoord;
@@ -22,21 +24,41 @@ float sdRoundedBox(vec2 p, vec2 b, vec4 r) {
     return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - rad;
 }
 
+// Calculates the alpha mask (0.0 to 1.0) for a Superellipse.
+// It uses the n-th root method to linearize the distance field,
+// ensuring smooth AA regardless of shape.
+float getShapeAlpha(vec2 pixel, vec2 pos, vec2 size, float n) {
+    vec2 halfSize = size * 0.5;
+    vec2 center = pos + halfSize;
+
+    vec2 p = abs(pixel - center);
+    vec2 uv = p / (halfSize + vec2(1e-6));
+
+    float raw = pow(uv.x, n) + pow(uv.y, n);
+    float d = pow(raw, 1.0 / n);
+
+    float fw = fwidth(d);
+    return 1.0 - smoothstep(1.0 - fw, 1.0 + fw, d);
+}
+
 void main() {
     vec2 uv = texCoord;
     vec2 pixel = uv * OutSize;
 
-    // --- Mask Calculation (SDF Method) ---
-    vec2 halfSize = Rect.zw * 0.5;
-    vec2 center = Rect.xy + halfSize;
-    vec2 p = pixel - center;
+    // --- Mask Calculation ---
+    float mask;
+    if (ShapeType < 0.5) {
+        vec2 halfSize = Rect.zw * 0.5;
+        vec2 center = Rect.xy + halfSize;
+        vec2 p = pixel - center;
 
-    // Calculate distance (negative = inside, positive = outside)
-    float dist = sdRoundedBox(p, halfSize, CornerRadii);
-
-    // Smooth Anti-Aliasing
-    float aa = fwidth(dist);
-    float mask = 1.0 - smoothstep(-aa, aa, dist);
+        float dist = sdRoundedBox(p, halfSize, CornerRadii);
+        float aa = fwidth(dist);
+        mask = 1.0 - smoothstep(-aa, aa, dist);
+    } else {
+        float n = max(0.1, Roundness);
+        mask = getShapeAlpha(pixel, Rect.xy, Rect.zw, n);
+    }
 
     // Discard outside pixels immediately
     if (mask <= 0.0) {

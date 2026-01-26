@@ -12,6 +12,8 @@
     { "name": "OutSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
     { "name": "Rect", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] },
     { "name": "CornerRadii", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+    { "name": "ShapeType", "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "Roundness", "type": "float", "count": 1, "values": [ 2.0 ] },
     { "name": "Tint", "type": "float", "count": 4, "values": [ 1.0, 1.0, 1.0, 0.0 ] }
   ]
 }

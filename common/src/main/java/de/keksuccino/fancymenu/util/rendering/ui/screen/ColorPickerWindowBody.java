@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 
 public class ColorPickerWindowBody extends PiPWindowBody {
 
-    public static final int PIP_WINDOW_WIDTH = 391;
+    public static final int PIP_WINDOW_WIDTH = 401;
     public static final int PIP_WINDOW_HEIGHT = 328;
 
     private static final int MIN_PICKER_SIZE = 80;
@@ -190,21 +190,15 @@ public class ColorPickerWindowBody extends PiPWindowBody {
         int availableHeight = this.height - top - bottom;
         int labelHeight = (int)UIBase.getUITextHeightNormal();
         int extraHeight = (labelHeight + SLIDER_HEIGHT + 2) * 2 + (SLIDER_GAP * 3);
+        int minInfoWidth = 160;
 
         this.pickerSize = Math.min(MAX_PICKER_SIZE, Math.max(MIN_PICKER_SIZE, availableHeight - extraHeight));
 
-        int infoCandidateWidth = availableWidth - this.pickerSize - COLUMN_GAP;
-        boolean stackedLayout = infoCandidateWidth < 160;
+        int maxPickerSizeByWidth = Math.max(MIN_PICKER_SIZE, availableWidth - COLUMN_GAP - minInfoWidth);
+        this.pickerSize = Math.min(this.pickerSize, maxPickerSizeByWidth);
 
-        if (stackedLayout) {
-            int infoHeightEstimate = 150 + (labelHeight * 2);
-            int maxPickerSize = availableHeight - extraHeight - infoHeightEstimate - 12;
-            if (maxPickerSize > MIN_PICKER_SIZE) {
-                this.pickerSize = Math.min(this.pickerSize, maxPickerSize);
-            }
-        }
-
-        int totalWidth = stackedLayout ? this.pickerSize : (this.pickerSize + COLUMN_GAP + infoCandidateWidth);
+        int infoCandidateWidth = Math.max(0, availableWidth - this.pickerSize - COLUMN_GAP);
+        int totalWidth = this.pickerSize + COLUMN_GAP + infoCandidateWidth;
         int startX = (this.width - totalWidth) / 2;
 
         this.pickerX = startX;
@@ -224,17 +218,10 @@ public class ColorPickerWindowBody extends PiPWindowBody {
 
         int leftPanelHeight = (this.alphaY + this.alphaHeight) - this.pickerY;
 
-        if (stackedLayout) {
-            this.infoX = startX;
-            this.infoY = this.alphaY + this.alphaHeight + SLIDER_GAP + labelHeight;
-            this.infoWidth = this.pickerSize;
-            this.infoHeight = Math.max(140, (labelHeight * 6) + PREVIEW_SIZE + 36);
-        } else {
-            this.infoX = this.pickerX + this.pickerSize + COLUMN_GAP;
-            this.infoY = this.pickerY;
-            this.infoWidth = infoCandidateWidth;
-            this.infoHeight = leftPanelHeight;
-        }
+        this.infoX = this.pickerX + this.pickerSize + COLUMN_GAP;
+        this.infoY = this.pickerY;
+        this.infoWidth = infoCandidateWidth;
+        this.infoHeight = leftPanelHeight;
     }
 
     private void renderLeftPanel(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {

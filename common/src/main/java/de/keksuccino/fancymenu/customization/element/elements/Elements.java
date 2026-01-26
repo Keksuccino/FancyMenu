@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.customization.element.elements.item.ItemElementBu
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.shape.circle.CircleShapeElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.rectangle.RectangleShapeElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElementBuilder;
@@ -38,7 +39,8 @@ public class Elements {
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
     public static final SplashTextElementBuilder SPLASH_TEXT = new SplashTextElementBuilder();
     public static final SlideshowElementBuilder SLIDESHOW = new SlideshowElementBuilder();
-    public static final RectangleShapeElementBuilder SHAPE = new RectangleShapeElementBuilder();
+    public static final RectangleShapeElementBuilder RECTANGLE_SHAPE = new RectangleShapeElementBuilder();
+    public static final CircleShapeElementBuilder CIRCLE_SHAPE = new CircleShapeElementBuilder();
     public static final CursorElementBuilder CURSOR = new CursorElementBuilder();
     public static final ProgressBarElementBuilder PROGRESS_BAR = new ProgressBarElementBuilder();
     public static final AudioElementBuilder AUDIO_V2 = new AudioElementBuilder();
@@ -66,7 +68,8 @@ public class Elements {
         ElementRegistry.register(IMAGE);
         ElementRegistry.register(SPLASH_TEXT);
         ElementRegistry.register(SLIDESHOW);
-        ElementRegistry.register(SHAPE);
+        ElementRegistry.register(RECTANGLE_SHAPE);
+        ElementRegistry.register(CIRCLE_SHAPE);
         ElementRegistry.register(CURSOR);
         ElementRegistry.register(PROGRESS_BAR);
         ElementRegistry.register(AUDIO_V2);

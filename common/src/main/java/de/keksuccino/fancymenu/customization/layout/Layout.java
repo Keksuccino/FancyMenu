@@ -682,12 +682,12 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("addshape")) {
-                    RectangleShapeElement e = Elements.SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));
+                    RectangleShapeElement e = Elements.RECTANGLE_SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
                         String c = sec.getValue("color");
                         if (c != null) e.color.set(DrawableColor.of(c).getHex());
-                        elements.add(Elements.SHAPE.serializeElementInternal(e));
+                        elements.add(Elements.RECTANGLE_SHAPE.serializeElementInternal(e));
                         elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
