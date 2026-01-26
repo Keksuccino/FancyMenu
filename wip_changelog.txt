@@ -32,6 +32,12 @@
   - There's also a "random timing offset" mode that randomly applies offsets in a specified range to all controlled elements
 - Added a "Delay" block to the action script system that waits for the specified time before running its contained actions (The rest of the script keeps running while the delay counts down) (#1397)
 - Added a "Variable Mode" for the "Checkbox" element that lets you link checkboxes directly to a FancyMenu variable (#1256)
+- Added "Title Case Text" placeholder that converts the input text to "Title Case" (#1502)
+- Added "Sentence Case Text" placeholder that converts the input text to "Sentence case" (#1502)
+- Added "Snake Case Text" placeholder that converts the input text to "snake_case" (#1502)
+- Added "Kebab Case Text" placeholder that converts the input text to "kebab-case" (#1502)
+- Added "Alternating Case Text" placeholder that converts the input text to "aLtErNaTiNg CaSe" (#1502)
+- Added "Toggle Case Text" placeholder that toggles the case of each letter in the input text, like this: "tOGGLE cASE" (#1502)
 - Added "Encode To Base64" placeholder to encode the given text to Base64 (#1473)
 - Added "Decode From Base64" placeholder to decode a Base64 string back to plain text (#1473)
 - Added "Text Input Field Value" placeholder that returns the current value of an input field (text box) by its element identifier (#1391)
