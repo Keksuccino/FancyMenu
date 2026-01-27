@@ -2663,7 +2663,7 @@
   "fancymenu.schedulers.manage.desc": "Schedulers let you execute action scripts on a timed basis.\nThey can run in the background, even when no screen is open.",
   "fancymenu.schedulers.manage.cancel_warning": "Do you really want to cancel?\n§xThis will undo everything you've done in here!",
   "fancymenu.schedulers.manage.delete_warning": "Do you really want to §xdelete§r the selected scheduler?\n§xThis action cannot be undone!",
-  "fancymenu.schedulers.manage.rename_tip": "Rename schedulers by double-clicking their display name.",
+  "fancymenu.schedulers.manage.rename_tip": "Rename schedulers by double-clicking their ID.",
   "fancymenu.schedulers.manage.quick_edit_tip": "Right-click schedulers to quick-edit their actions.",
   "fancymenu.schedulers.manage.invalid_id": "Invalid scheduler ID!",
   "fancymenu.schedulers.manage.id_in_use": "Scheduler ID already in use!",

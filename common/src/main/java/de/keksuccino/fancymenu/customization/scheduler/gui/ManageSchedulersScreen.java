@@ -621,21 +621,13 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
             this.instance = instance;
             this.updateLabelComponent();
             this.setSearchStringSupplier(() -> {
-                if (this.instance.getDisplayName() != null) {
-                    return this.instance.getDisplayName() + " " + this.instance.getIdentifier();
-                }
                 return this.instance.getIdentifier();
             });
         }
-
+        
         protected void updateLabelComponent() {
-            if (this.instance.getDisplayName() != null && !this.instance.getDisplayName().isBlank()) {
-                this.labelComponent = Component.literal(this.instance.getDisplayName())
-                        .setStyle(Style.EMPTY.withColor(ManageSchedulersScreen.this.getLabelTextColor()));
-            } else {
-                this.labelComponent = Component.literal(this.instance.getIdentifier())
-                        .setStyle(Style.EMPTY.withColor(ManageSchedulersScreen.this.getLabelTextColor()));
-            }
+            this.labelComponent = Component.literal(this.instance.getIdentifier())
+                    .setStyle(Style.EMPTY.withColor(ManageSchedulersScreen.this.getLabelTextColor()));
         }
 
         @Override
@@ -732,12 +724,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
             UIBase.applyDefaultWidgetSkinTo(this.editBox, UIBase.shouldBlur());
             this.editBox.setMaxLength(100000);
 
-            String currentName = this.instance.getDisplayName();
-            if (currentName != null) {
-                this.editBox.setValue(currentName);
-            } else {
-                this.editBox.setValue("");
-            }
+            this.editBox.setValue(this.instance.getIdentifier());
 
             this.editBox.setFocused(true);
             this.editBox.setCursorPosition(this.editBox.getValue().length());
@@ -751,11 +738,19 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
             if (!this.editMode || this.editBox == null) return;
 
             if (save) {
-                String newName = this.editBox.getValue();
-                if (newName.isBlank()) {
-                    this.instance.setDisplayName(null);
-                } else {
-                    this.instance.setDisplayName(newName);
+                String newIdentifier = this.editBox.getValue().trim();
+                String oldIdentifier = this.instance.getIdentifier();
+                if (!newIdentifier.isBlank() && SchedulerHandler.isIdentifierValid(newIdentifier) && ManageSchedulersScreen.this.isIdentifierAvailable(this.instance, newIdentifier)) {
+                    if (!oldIdentifier.equals(newIdentifier)) {
+                        SchedulerHandler.stopScheduler(oldIdentifier);
+                        this.instance.setIdentifier(newIdentifier);
+                    }
+                } else if (!newIdentifier.equals(oldIdentifier)) {
+                    if (!SchedulerHandler.isIdentifierValid(newIdentifier) || newIdentifier.isBlank()) {
+                        Dialogs.openMessage(Component.translatable("fancymenu.schedulers.manage.invalid_id"), MessageDialogStyle.ERROR);
+                    } else {
+                        Dialogs.openMessage(Component.translatable("fancymenu.schedulers.manage.id_in_use"), MessageDialogStyle.ERROR);
+                    }
                 }
                 this.updateLabelComponent();
                 if (ManageSchedulersScreen.this.selectedInstance == this.instance) {

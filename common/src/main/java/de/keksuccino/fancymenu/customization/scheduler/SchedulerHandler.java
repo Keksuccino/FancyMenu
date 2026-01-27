@@ -152,8 +152,16 @@ public class SchedulerHandler {
     }
 
     public static boolean isRunning(@NotNull String identifier) {
+        SchedulerInstance instance = INSTANCES.get(identifier);
+        if (instance != null) {
+            return isRunning(instance);
+        }
         SchedulerRunState state = RUNNING.get(identifier);
         return (state != null) && state.active.get();
+    }
+
+    public static boolean isRunning(@NotNull SchedulerInstance instance) {
+        return findStateByInstance(instance) != null;
     }
 
     private static void stopSchedulerInternal(@NotNull String identifier) {
@@ -164,6 +172,16 @@ public class SchedulerHandler {
                 state.future.cancel(false);
             }
         }
+    }
+
+    @Nullable
+    private static SchedulerRunState findStateByInstance(@NotNull SchedulerInstance instance) {
+        for (SchedulerRunState state : RUNNING.values()) {
+            if (state.active.get() && (state.instance == instance)) {
+                return state;
+            }
+        }
+        return null;
     }
 
     private static void runSchedulerTick(@NotNull String identifier, @NotNull SchedulerRunState state) {

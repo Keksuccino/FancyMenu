@@ -106,7 +106,8 @@ public class ManageSchedulerSettingsScreen extends PiPCellWindowBody {
 
     private boolean applyChanges() {
 
-        String newIdentifier = (this.identifierCell != null) ? this.identifierCell.getText() : this.instance.getIdentifier();
+        String previousIdentifier = this.instance.getIdentifier();
+        String newIdentifier = (this.identifierCell != null) ? this.identifierCell.getText() : previousIdentifier;
         if (newIdentifier == null) newIdentifier = "";
         newIdentifier = newIdentifier.trim();
 
@@ -128,7 +129,10 @@ public class ManageSchedulerSettingsScreen extends PiPCellWindowBody {
             return false;
         }
 
-        this.instance.setIdentifier(newIdentifier);
+        if (!previousIdentifier.equals(newIdentifier)) {
+            SchedulerHandler.stopScheduler(previousIdentifier);
+            this.instance.setIdentifier(newIdentifier);
+        }
         this.instance.setStartDelayMs(Math.max(0L, startDelay));
         this.instance.setTickDelayMs(Math.max(0L, tickDelay));
         this.instance.setTicksToRun(Math.max(0L, ticksToRun));

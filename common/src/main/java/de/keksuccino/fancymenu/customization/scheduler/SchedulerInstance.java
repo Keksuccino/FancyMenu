@@ -17,8 +17,6 @@ public class SchedulerInstance {
     protected String schedulerIdentifier;
     @NotNull
     protected GenericExecutableBlock actionScript;
-    @Nullable
-    protected String displayName = null;
     protected boolean startOnLaunch = false;
     protected long startDelayMs = 0;
     protected long tickDelayMs = 0;
@@ -43,14 +41,6 @@ public class SchedulerInstance {
 
     public void setActionScript(@NotNull GenericExecutableBlock actionScript) {
         this.actionScript = actionScript;
-    }
-
-    public @Nullable String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(@Nullable String displayName) {
-        this.displayName = displayName;
     }
 
     public boolean isStartOnLaunch() {
@@ -91,7 +81,6 @@ public class SchedulerInstance {
 
         serialized.putProperty("scheduler_identifier", this.schedulerIdentifier);
         serialized.putProperty("scheduler_action_script_identifier", this.actionScript.getIdentifier());
-        if (this.displayName != null) serialized.putProperty("scheduler_display_name", this.displayName);
         serialized.putProperty("scheduler_start_on_launch", "" + this.startOnLaunch);
         serialized.putProperty("scheduler_start_delay_ms", "" + this.startDelayMs);
         serialized.putProperty("scheduler_tick_delay_ms", "" + this.tickDelayMs);
@@ -117,8 +106,6 @@ public class SchedulerInstance {
         }
 
         SchedulerInstance instance = new SchedulerInstance(identifier);
-
-        instance.displayName = serialized.getValue("scheduler_display_name");
 
         String startOnLaunch = serialized.getValue("scheduler_start_on_launch");
         if ((startOnLaunch != null) && startOnLaunch.equalsIgnoreCase("true")) {
