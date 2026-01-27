@@ -11,7 +11,7 @@
   - Many of the customization options previously located in "menu bar -> Customization -> Settings" (like custom window icon/title, etc.) are now located in the new "Global Customizations" menu
 - Added a new system: Schedulers (#1498)
   - Schedulers run action scripts automatically and can constantly repeat them with customizable tick delay
-  - Schedulers work independent of screens, so they can run constantly, even when no screen is open (in a world/server)
+  - Schedulers work independent of screens, so they can run the whole time, even when no screen is open (in a world/server)
   - Schedulers can get set to start automatically on game launch
   - There are actions to start and stop schedulers by its ID
   - There is a requirement that checks if a scheduler is running by its ID
