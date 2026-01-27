@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -289,7 +289,7 @@ public class PlayAudioAction extends Action {
 
     }
 
-    public static class PlayAudioActionValueScreen extends CellScreen {
+    public static class PlayAudioActionValueScreen extends PiPCellWindowBody {
 
         protected final PlayAudioConfig config;
         protected final Consumer<String> callback;

@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -130,7 +130,7 @@ public class PasteToChatAction extends Action {
         });
     }
 
-    public static class PasteToChatActionValueScreen extends StringBuilderScreen {
+    public static class PasteToChatActionValueScreen extends PiPCellStringBuilderWindowBody {
 
         protected boolean append = false;
         protected String msg = "";

@@ -8,8 +8,11 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidgetBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -26,6 +29,7 @@ import net.minecraft.sounds.SoundEvents;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 
 @SuppressWarnings("all")
 public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
@@ -37,6 +41,18 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private int dragTargetIndex = -1;
     private boolean isDragging = false;
     private static final int DROP_INDICATOR_THICKNESS = 3;
+    private static final int TITLE_BAR_ICON_BASE_SIZE = 8;
+    private static final MaterialIcon TITLE_BAR_HIDE_ICON = MaterialIcons.CLOSE;
+    private static final MaterialIcon TITLE_BAR_EXPAND_ICON = MaterialIcons.EXPAND_MORE;
+    private static final MaterialIcon TITLE_BAR_COLLAPSE_ICON = MaterialIcons.EXPAND_LESS;
+    private static final MaterialIcon MOVE_UP_ICON = MaterialIcons.ARROW_UPWARD;
+    private static final MaterialIcon MOVE_DOWN_ICON = MaterialIcons.ARROW_DOWNWARD;
+    private static final MaterialIcon EYE_ICON = MaterialIcons.VISIBILITY;
+    private static final MaterialIcon MOVE_TO_TOP_ICON = MaterialIcons.VERTICAL_ALIGN_TOP;
+    private static final MaterialIcon MOVE_BEHIND_ICON = MaterialIcons.VERTICAL_ALIGN_BOTTOM;
+    private static final float LAYER_MOVE_ICON_PADDING = 2.0f;
+    private static final float LAYER_EYE_ICON_PADDING = 4.0f;
+    private static final float LAYER_EYE_ICON_SHIFT_LEFT = 3.0f;
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
 
@@ -67,6 +83,20 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         this.updateList(false);
 
+    }
+
+    @Override
+    protected void init() {
+        this.children.clear();
+        this.titleBarButtons.clear();
+
+        this.addTitleBarButton(new MaterialTitleBarButton(this, button -> TITLE_BAR_HIDE_ICON, button -> {
+            this.setVisible(false);
+        }));
+
+        this.addTitleBarButton(new MaterialTitleBarButton(this, button -> this.isExpanded() ? TITLE_BAR_COLLAPSE_ICON : TITLE_BAR_EXPAND_ICON, button -> {
+            this.setExpanded(!this.isExpanded());
+        }));
     }
 
     @Override
@@ -629,11 +659,112 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.updateList(false);
     }
 
-    private class LayerElementEntry extends ScrollAreaEntry {
+    @Nullable
+    private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon) {
+        if (icon == null) {
+            return null;
+        }
+        int size = UIBase.getUIMaterialIconSize();
+        ResourceLocation location = icon.getTextureLocation(size);
+        if (location == null) {
+            return null;
+        }
+        int width = icon.getWidth(size);
+        int height = icon.getHeight(size);
+        if (width <= 0 || height <= 0) {
+            return null;
+        }
+        return new IconRenderData(location, width, height);
+    }
 
-        protected static final ResourceLocation MOVE_UP_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_up.png");
-        protected static final ResourceLocation MOVE_DOWN_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_down.png");
-        protected static final ResourceLocation EYE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/eye_icon.png"); // 30x26 pixels
+    private static void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+        if (areaWidth <= 0.0F || areaHeight <= 0.0F || iconData.width <= 0 || iconData.height <= 0) {
+            return;
+        }
+        float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return;
+        }
+        float scaledWidth = iconData.width * scale;
+        float scaledHeight = iconData.height * scale;
+        float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
+        float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
+        graphics.pose().pushPose();
+        graphics.pose().translate(drawX, drawY, 0.0F);
+        graphics.pose().scale(scale, scale, 1.0F);
+        graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+        graphics.pose().popPose();
+    }
+
+    private void renderMaterialIcon(@NotNull GuiGraphics graphics, @NotNull MaterialIcon icon, float x, float y, float width, float height, float alpha) {
+        IconRenderData iconData = resolveMaterialIconData(icon);
+        if (iconData == null) {
+            return;
+        }
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        UIBase.getUITheme().setUITextureShaderColor(graphics, alpha);
+        blitScaledIcon(graphics, iconData, x, y, width, height);
+        resetShaderColor(graphics);
+    }
+
+    private static float getIconSize(float areaWidth, float areaHeight, float padding) {
+        float size = Math.min(areaWidth, areaHeight) - (padding * 2.0f);
+        return Math.max(1.0f, size);
+    }
+
+    private static final class IconRenderData {
+        private final ResourceLocation texture;
+        private final int width;
+        private final int height;
+
+        private IconRenderData(@NotNull ResourceLocation texture, int width, int height) {
+            this.texture = texture;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
+    private class MaterialTitleBarButton extends TitleBarButton {
+
+        @NotNull
+        private final ConsumingSupplier<MaterialTitleBarButton, MaterialIcon> materialIconSupplier;
+
+        private MaterialTitleBarButton(@NotNull AbstractLayoutEditorWidget parent, @NotNull ConsumingSupplier<MaterialTitleBarButton, MaterialIcon> materialIconSupplier, @NotNull Consumer<TitleBarButton> clickAction) {
+            super(parent, button -> null, clickAction);
+            this.materialIconSupplier = materialIconSupplier;
+        }
+
+        @Override
+        public void render(@NotNull GuiGraphics graphics, float partial) {
+            this.hovered = this.isMouseOver();
+
+            this.renderHoverBackground(graphics, partial);
+
+            MaterialIcon icon = this.materialIconSupplier.get(this);
+            if (icon == null) {
+                return;
+            }
+            IconRenderData iconData = resolveMaterialIconData(icon);
+            if (iconData == null) {
+                return;
+            }
+            float scale = this.parent.getFixedComponentScale();
+            float iconPadding = Math.max(0.0F, 4.0F * scale);
+            float maxIconSize = Math.max(1.0F, TITLE_BAR_ICON_BASE_SIZE * scale);
+            float iconSize = Math.max(1.0F, Math.min(this.width - iconPadding, maxIconSize));
+            iconSize = Math.min(iconSize, Math.min(this.width, this.parent.getTitleBarHeight()));
+            float iconX = this.x + (this.width - iconSize) * 0.5F;
+            float iconY = this.y + (this.parent.getTitleBarHeight() - iconSize) * 0.5F;
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+            blitScaledIcon(graphics, iconData, iconX, iconY, iconSize, iconSize);
+            resetShaderColor(graphics);
+        }
+    }
+
+    private class LayerElementEntry extends ScrollAreaEntry {
 
         protected AbstractEditorElement element;
         protected LayerLayoutEditorWidget layerWidget;
@@ -689,11 +820,21 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
             }
 
-            blitF(graphics, MOVE_UP_TEXTURE, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUITheme().ui_icon_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f));
+            float moveIconSize = getIconSize(this.getButtonWidth(), this.getButtonHeight(), LAYER_MOVE_ICON_PADDING);
+            float moveIconX = this.x + (this.getButtonWidth() - moveIconSize) * 0.5f;
+            float moveUpIconY = this.y + (this.getButtonHeight() - moveIconSize) * 0.5f;
+            float moveUpAlpha = this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f;
+            this.layerWidget.renderMaterialIcon(graphics, MOVE_UP_ICON, moveIconX, moveUpIconY, moveIconSize, moveIconSize, moveUpAlpha);
 
-            blitF(graphics, MOVE_DOWN_TEXTURE, this.x, this.y + this.getButtonHeight(), 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUITheme().ui_icon_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerDown(this.element) ? 1.0f : 0.3f));
+            float moveDownIconY = this.y + this.getButtonHeight() + (this.getButtonHeight() - moveIconSize) * 0.5f;
+            float moveDownAlpha = this.layerWidget.editor.canMoveLayerDown(this.element) ? 1.0f : 0.3f;
+            this.layerWidget.renderMaterialIcon(graphics, MOVE_DOWN_ICON, moveIconX, moveDownIconY, moveIconSize, moveIconSize, moveDownAlpha);
 
-            blitF(graphics, EYE_ICON_TEXTURE, this.getEyeButtonX(), this.getEyeButtonY(), 0.0F, 0.0F, this.getEyeButtonWidth(), this.getEyeButtonHeight(), this.getEyeButtonWidth(), this.getEyeButtonHeight(), UIBase.getUITheme().ui_icon_texture_color.getColorIntWithAlpha(!this.element.element.layerHiddenInEditor ? 1.0f : 0.3f));
+            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f - LAYER_EYE_ICON_SHIFT_LEFT;
+            float eyeIconY = this.getEyeButtonY() + (this.getEyeButtonHeight() - eyeIconSize) * 0.5f;
+            float eyeAlpha = !this.element.element.layerHiddenInEditor ? 1.0f : 0.3f;
+            this.layerWidget.renderMaterialIcon(graphics, EYE_ICON, eyeIconX, eyeIconY, eyeIconSize, eyeIconSize, eyeAlpha);
 
             if (!this.displayEditLayerNameBox) {
                 UIBase.renderText(graphics, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
@@ -937,9 +1078,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     private class VanillaLayerElementEntry extends ScrollAreaEntry {
 
-        protected static final ResourceLocation MOVE_TO_TOP_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_top.png");
-        protected static final ResourceLocation MOVE_BEHIND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_bottom.png");
-
         protected LayerLayoutEditorWidget layerWidget;
         protected boolean moveTopBottomButtonHovered = false;
         protected Font font = Minecraft.getInstance().font;
@@ -961,8 +1099,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
             RenderSystem.enableBlend();
 
-            ResourceLocation loc = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE;
-            blitF(graphics, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUITheme().ui_icon_texture_color.getColorInt());
+            MaterialIcon icon = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_ICON : MOVE_TO_TOP_ICON;
+            float vanillaIconSize = getIconSize(this.getButtonWidth(), this.getButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float vanillaIconX = this.x + (this.getButtonWidth() - vanillaIconSize) * 0.5f;
+            float vanillaIconY = this.y + (this.getButtonHeight() - vanillaIconSize) * 0.5f;
+            this.layerWidget.renderMaterialIcon(graphics, icon, vanillaIconX, vanillaIconY, vanillaIconSize, vanillaIconSize, 1.0f);
 
             UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f)));
 

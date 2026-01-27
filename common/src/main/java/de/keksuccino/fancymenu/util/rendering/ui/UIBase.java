@@ -37,11 +37,16 @@ public class UIBase extends RenderingUtils {
     private static final int MATERIAL_ICON_SIZE_SMALL = 50;
     private static final int MATERIAL_ICON_SIZE_NORMAL = 100;
     private static final int MATERIAL_ICON_SIZE_LARGE = 200;
+    private static final int MATERIAL_ICON_SIZE_CORRECTION_FOR_BIG_ICONS = 50;
 
     public static int getUIMaterialIconSize() {
         if (getUIScale() < 2) return MATERIAL_ICON_SIZE_SMALL;
         if (getUIScale() < 3) return MATERIAL_ICON_SIZE_NORMAL;
         return MATERIAL_ICON_SIZE_LARGE;
+    }
+
+    public static int getUIMaterialIconSizeBig() {
+        return getUIMaterialIconSize() + MATERIAL_ICON_SIZE_CORRECTION_FOR_BIG_ICONS;
     }
 
     @NotNull

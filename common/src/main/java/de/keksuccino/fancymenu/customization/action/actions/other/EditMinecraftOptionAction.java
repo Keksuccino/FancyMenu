@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.minecraftoptions.MinecraftOption;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.Minecraft;
@@ -134,7 +134,7 @@ public class EditMinecraftOptionAction extends Action {
         });
     }
 
-    public static class EditMinecraftOptionActionValueScreen extends StringBuilderScreen {
+    public static class EditMinecraftOptionActionValueScreen extends PiPCellStringBuilderWindowBody {
 
         @NotNull
         protected String name = "";
@@ -194,8 +194,7 @@ public class EditMinecraftOptionAction extends Action {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            super.render(graphics, mouseX, mouseY, partial);
+        public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.optionNameSuggestions.render(graphics, mouseX, mouseY);
         }
 

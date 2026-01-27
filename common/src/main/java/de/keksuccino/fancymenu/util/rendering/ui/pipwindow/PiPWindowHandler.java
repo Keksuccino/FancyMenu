@@ -43,6 +43,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             bringToFront(window);
             return window;
         }
+        inheritTopLayerSettings(window);
         windows.add(window);
         window.addCloseCallback(() -> closeWindow(window));
         bringToFront(window);
@@ -556,6 +557,31 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             return 1;
         }
         return 0;
+    }
+
+    private void inheritTopLayerSettings(@NotNull PiPWindow window) {
+        boolean shouldForceFocus = false;
+        boolean shouldAlwaysOnTop = false;
+        for (PiPWindow openWindow : windows) {
+            if (!openWindow.isVisible()) {
+                continue;
+            }
+            if (openWindow.isForceFocusEnabled()) {
+                shouldForceFocus = true;
+            }
+            if (openWindow.isAlwaysOnTop()) {
+                shouldAlwaysOnTop = true;
+            }
+            if (shouldForceFocus && shouldAlwaysOnTop) {
+                break;
+            }
+        }
+        if (shouldForceFocus) {
+            window.setForceFocus(true);
+        }
+        if (shouldAlwaysOnTop) {
+            window.setAlwaysOnTop(true);
+        }
     }
 
     private void enforceForceFocus() {

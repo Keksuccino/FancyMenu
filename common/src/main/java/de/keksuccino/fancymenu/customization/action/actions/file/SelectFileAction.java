@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -316,7 +316,7 @@ public class SelectFileAction extends Action {
         }
     }
 
-    public static class SelectFileActionValueScreen extends CellScreen {
+    public static class SelectFileActionValueScreen extends PiPCellWindowBody {
 
         protected SelectFileConfig config;
         protected final Consumer<String> callback;

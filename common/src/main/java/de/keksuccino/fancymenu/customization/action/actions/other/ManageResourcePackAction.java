@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.enums.LocalizedEnum;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.Minecraft;
@@ -257,7 +257,7 @@ public class ManageResourcePackAction extends Action {
 
     }
 
-    public static class ManageResourcePackActionValueScreen extends StringBuilderScreen {
+    public static class ManageResourcePackActionValueScreen extends PiPCellStringBuilderWindowBody {
 
         protected ResourcePackConfig config;
 
@@ -407,4 +407,3 @@ public class ManageResourcePackAction extends Action {
     }
 
 }
-

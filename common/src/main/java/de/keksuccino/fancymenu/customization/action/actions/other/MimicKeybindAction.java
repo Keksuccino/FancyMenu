@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -262,7 +262,7 @@ public class MimicKeybindAction extends Action {
         return names;
     }
 
-    public static class MimicKeybindActionValueScreen extends StringBuilderScreen {
+    public static class MimicKeybindActionValueScreen extends PiPCellStringBuilderWindowBody {
 
         protected MimicKeybindConfig config;
         protected EditBoxSuggestions suggestions;
@@ -359,8 +359,7 @@ public class MimicKeybindAction extends Action {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            super.render(graphics, mouseX, mouseY, partialTick);
+        public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             this.suggestions.render(graphics, mouseX, mouseY);
         }
 
@@ -446,6 +445,4 @@ public class MimicKeybindAction extends Action {
     }
 
 }
-
-
 

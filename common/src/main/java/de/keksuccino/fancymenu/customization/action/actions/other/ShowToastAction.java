@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -173,7 +173,7 @@ public class ShowToastAction extends Action {
         }
     }
 
-    public static class ShowToastActionValueScreen extends CellScreen {
+    public static class ShowToastActionValueScreen extends PiPCellWindowBody {
 
         private final Consumer<String> callback;
         private ToastConfig config;
