@@ -921,7 +921,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getLayerNameX() {
-            return this.getEyeButtonX() + this.getEyeButtonWidth() + 4f;
+            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f - LAYER_EYE_ICON_SHIFT_LEFT;
+            return eyeIconX + eyeIconSize + this.getArrowEyeGap();
         }
 
         public float getLayerNameY() {
@@ -994,6 +996,15 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         public float getButtonWidth() {
             return 30f;
+        }
+
+        private float getArrowEyeGap() {
+            float moveIconSize = getIconSize(this.getButtonWidth(), this.getButtonHeight(), LAYER_MOVE_ICON_PADDING);
+            float moveIconX = this.x + (this.getButtonWidth() - moveIconSize) * 0.5f;
+            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f - LAYER_EYE_ICON_SHIFT_LEFT;
+            float gap = eyeIconX - (moveIconX + moveIconSize);
+            return Math.max(1.0f, gap);
         }
 
         @Override
