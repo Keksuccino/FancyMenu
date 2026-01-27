@@ -27,6 +27,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+
+    //TODO NumberPicker laggt, wenn 4 auf einmal offen in ImageElement (rounding radius values)
+
+
+
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final String VERSION = "3.9.0";
