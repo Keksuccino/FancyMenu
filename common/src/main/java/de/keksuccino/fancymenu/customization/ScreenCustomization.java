@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.customization.element.elements.animationcontrolle
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.LayoutEditorWidgets;
 import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
+import de.keksuccino.fancymenu.customization.scheduler.SchedulerHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.overlay.ScreenOverlays;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreens;
@@ -126,6 +127,7 @@ public class ScreenCustomization {
 
 		Listeners.registerAll();
 		ListenerHandler.init();
+		SchedulerHandler.init();
 
 		initialized = true;
 

@@ -172,7 +172,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
                 ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
                 : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
         int searchBarTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
-        float labelY = searchBarTop - UIBase.getUITextHeightNormal() - 10.0F;
+        float labelY = searchBarTop - UIBase.getUITextHeightNormal() - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(graphics, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, labelY, textColor);
 
     }

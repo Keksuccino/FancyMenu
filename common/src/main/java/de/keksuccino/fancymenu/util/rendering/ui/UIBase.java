@@ -643,4 +643,8 @@ public class UIBase extends RenderingUtils {
         return dimensions;
     }
 
+    public static float getAreaLabelVerticalPadding() {
+        return 10.0F;
+    }
+
 }

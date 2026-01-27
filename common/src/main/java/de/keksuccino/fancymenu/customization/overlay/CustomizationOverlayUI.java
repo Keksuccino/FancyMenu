@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen;
 import de.keksuccino.fancymenu.customization.listener.gui.ManageListenersScreen;
+import de.keksuccino.fancymenu.customization.scheduler.gui.ManageSchedulersScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenBuilder;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenRegistry;
@@ -398,6 +399,15 @@ public class CustomizationOverlayUI {
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.listeners.manage.desc")))
                 .setIcon(MaterialIcons.HEARING);
+
+        customizationMenu.addClickableEntry("manage_schedulers", Component.translatable("fancymenu.schedulers.manage"), (menu, entry) -> {
+                    ManageSchedulersScreen s = new ManageSchedulersScreen(call -> {
+                    });
+                    ManageSchedulersScreen.openInWindow(s);
+                    menu.closeMenuChain();
+                })
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.schedulers.manage.desc")))
+                .setIcon(MaterialIcons.TIMER);
 
         customizationMenu.addClickableEntry("pre_load_resources", Component.translatable("fancymenu.resources.pre_loading"),
                         (menu, entry) -> {

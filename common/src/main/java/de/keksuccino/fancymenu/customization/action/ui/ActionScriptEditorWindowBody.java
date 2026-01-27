@@ -955,7 +955,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         // "Script Body" label
         int scrollAreaTop = 50 + 15;
-        float labelY = scrollAreaTop - UIBase.getUITextHeightNormal() - 3.0F;
+        float labelY = scrollAreaTop - UIBase.getUITextHeightNormal() - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(graphics, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, labelY, theme.ui_interface_generic_text_color.getColorInt());
 
         int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - MINIMAP_WIDTH - MINIMAP_GAP);
