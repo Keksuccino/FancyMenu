@@ -9,6 +9,13 @@
   - Allows you to change Vanilla button textures globally for all screens without using a resource pack
   - Allows you to change Vanilla menu music globally for all screens without using a resource pack
   - Many of the customization options previously located in "menu bar -> Customization -> Settings" (like custom window icon/title, etc.) are now located in the new "Global Customizations" menu
+- Added a new system: Schedulers (#1498)
+  - Schedulers run action scripts automatically and can constantly repeat them with customizable tick delay
+  - Schedulers work independent of screens, so they can run constantly, even when no screen is open (in a world/server)
+  - Schedulers can get set to start automatically on game launch
+  - There are actions to start and stop schedulers by its ID
+  - There is a requirement that checks if a scheduler is running by its ID
+  - To access listeners, click on "menu bar -> Customization -> Manage Schedulers" while not in the layout editor
 - Added a new type of fullscreen customization: Decoration Overlays
   - These overlays have pre-defined overlay types, similar to menu background types and they can be toggled on/off for each overlay type
   - Decoration overlays can be accessed via right-clicking the layout editor background -> Decoration Overlays
