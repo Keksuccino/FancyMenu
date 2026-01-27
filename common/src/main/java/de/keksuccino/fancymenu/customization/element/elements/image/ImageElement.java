@@ -11,7 +11,6 @@ import de.keksuccino.fancymenu.util.rendering.SmoothImageRectangleRenderer;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
@@ -29,14 +28,14 @@ public class ImageElement extends AbstractElement {
     public final Property<ResourceSupplier<ITexture>> textureSupplier = putProperty(Property.resourceSupplierProperty(ITexture.class, "source", null, "fancymenu.elements.image.set_source", true, true, true, null));
     public final Property<Boolean> repeat = putProperty(Property.booleanProperty("repeat_texture", false, "fancymenu.elements.image.repeat"));
     public final Property<Boolean> nineSlice = putProperty(Property.booleanProperty("nine_slice_texture", false, "fancymenu.elements.image.nine_slice"));
-    public final Property<Integer> nineSliceBorderX = putProperty(Property.integerProperty("nine_slice_texture_border_x", 5, "fancymenu.elements.image.nine_slice.border_x"));
-    public final Property<Integer> nineSliceBorderY = putProperty(Property.integerProperty("nine_slice_texture_border_y", 5, "fancymenu.elements.image.nine_slice.border_y"));
+    public final Property.IntegerProperty nineSliceBorderX = putProperty(Property.integerProperty("nine_slice_texture_border_x", 5, "fancymenu.elements.image.nine_slice.border_x", Property.NumericInputBehavior.<Integer>builder().rangeInput(1, 100).build()));
+    public final Property.IntegerProperty nineSliceBorderY = putProperty(Property.integerProperty("nine_slice_texture_border_y", 5, "fancymenu.elements.image.nine_slice.border_y", Property.NumericInputBehavior.<Integer>builder().rangeInput(1, 100).build()));
     public final Property<Boolean> restartAnimatedOnMenuLoad = putProperty(Property.booleanProperty("restart_animated_on_menu_load", false, "fancymenu.elements.image.restart_animated_on_menu_load"));
     public final Property.ColorProperty imageTint = putProperty(Property.hexColorProperty("image_tint", "#FFFFFF", true, "fancymenu.elements.image.tint"));
-    public final Property.StringProperty roundingRadiusTopLeft = putProperty(Property.stringProperty("rounding_radius_top_left", "0", false, true, "fancymenu.elements.image.rounding_radius.top_left"));
-    public final Property.StringProperty roundingRadiusTopRight = putProperty(Property.stringProperty("rounding_radius_top_right", "0", false, true, "fancymenu.elements.image.rounding_radius.top_right"));
-    public final Property.StringProperty roundingRadiusBottomRight = putProperty(Property.stringProperty("rounding_radius_bottom_right", "0", false, true, "fancymenu.elements.image.rounding_radius.bottom_right"));
-    public final Property.StringProperty roundingRadiusBottomLeft = putProperty(Property.stringProperty("rounding_radius_bottom_left", "0", false, true, "fancymenu.elements.image.rounding_radius.bottom_left"));
+    public final Property.FloatProperty roundingRadiusTopLeft = putProperty(Property.floatProperty("rounding_radius_top_left", 0, "fancymenu.elements.image.rounding_radius.top_left", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 2000.0F).build()));
+    public final Property.FloatProperty roundingRadiusTopRight = putProperty(Property.floatProperty("rounding_radius_top_right", 0, "fancymenu.elements.image.rounding_radius.top_right", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 2000.0F).build()));
+    public final Property.FloatProperty roundingRadiusBottomRight = putProperty(Property.floatProperty("rounding_radius_bottom_right", 0, "fancymenu.elements.image.rounding_radius.bottom_right", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 2000.0F).build()));
+    public final Property.FloatProperty roundingRadiusBottomLeft = putProperty(Property.floatProperty("rounding_radius_bottom_left", 0, "fancymenu.elements.image.rounding_radius.bottom_left", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 2000.0F).build()));
 
     @Nullable
     protected DrawableColor currentImageTint;
@@ -74,10 +73,10 @@ public class ImageElement extends AbstractElement {
     }
 
     protected void tickRoundingRadius() {
-        this.resolvedRoundingRadiusTopLeft = resolveRoundingRadius(this.roundingRadiusTopLeft.getString());
-        this.resolvedRoundingRadiusTopRight = resolveRoundingRadius(this.roundingRadiusTopRight.getString());
-        this.resolvedRoundingRadiusBottomRight = resolveRoundingRadius(this.roundingRadiusBottomRight.getString());
-        this.resolvedRoundingRadiusBottomLeft = resolveRoundingRadius(this.roundingRadiusBottomLeft.getString());
+        this.resolvedRoundingRadiusTopLeft = this.roundingRadiusTopLeft.getFloat();
+        this.resolvedRoundingRadiusTopRight = this.roundingRadiusTopRight.getFloat();
+        this.resolvedRoundingRadiusBottomRight = this.roundingRadiusBottomRight.getFloat();
+        this.resolvedRoundingRadiusBottomLeft = this.roundingRadiusBottomLeft.getFloat();
     }
 
     @Override
@@ -104,8 +103,8 @@ public class ImageElement extends AbstractElement {
                         this.currentImageTint.resetShaderColor(graphics);
                     } else if (this.nineSlice.tryGetNonNull()) {
                         this.currentImageTint.setAsShaderColor(graphics, this.opacity);
-                        int borderX = this.nineSliceBorderX.tryGetNonNull();
-                        int borderY = this.nineSliceBorderY.tryGetNonNull();
+                        int borderX = this.nineSliceBorderX.getInteger();
+                        int borderY = this.nineSliceBorderY.getInteger();
                         RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), borderY, borderX, borderY, borderX);
                         this.currentImageTint.resetShaderColor(graphics);
                     } else {
@@ -146,16 +145,6 @@ public class ImageElement extends AbstractElement {
         ITexture t = this.getTextureResource();
         AspectRatio ratio = (t != null) ? t.getAspectRatio() : new AspectRatio(10, 10);
         this.baseWidth = ratio.getAspectRatioWidth(this.getAbsoluteHeight());
-    }
-
-    private static float resolveRoundingRadius(@Nullable String value) {
-        if (value == null) return 0.0F;
-        String cleaned = value.replace(" ", "");
-        if (MathUtils.isFloat(cleaned)) {
-            float parsed = Float.parseFloat(cleaned);
-            return Math.max(0.0F, parsed);
-        }
-        return 0.0F;
     }
 
     private static int resolveTintColor(@NotNull DrawableColor tint, float opacity) {

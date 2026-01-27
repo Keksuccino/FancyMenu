@@ -2704,5 +2704,22 @@
   "fancymenu.schedulers.manage.description.status.not_running": "Not Running",
   "fancymenu.requirements.is_scheduler_running": "Scheduler Is Running",
   "fancymenu.requirements.is_scheduler_running.desc": "Checks whether a scheduler with the given identifier is currently running.",
-  "fancymenu.requirements.is_scheduler_running.value.desc": "Scheduler Identifier"
+  "fancymenu.requirements.is_scheduler_running.value.desc": "Scheduler Identifier",
+  "fancymenu.actions.spawn_element_instance": "Spawn Element Instance",
+  "fancymenu.actions.spawn_element_instance.desc": "Spawns a new element instance by deserializing an element body and injecting it into the active customization layer.\nSpawned elements are not saved and disappear when the screen or layout reloads.",
+  "fancymenu.actions.spawn_element_instance.edit_value": "Configure Spawn Element Instance Action",
+  "fancymenu.actions.spawn_element_instance.edit.element_type": "Element Type: %s",
+  "fancymenu.actions.spawn_element_instance.edit.element_type.desc": "The element type to spawn.\nChanging this will reset the body to a default preset for the selected type.",
+  "fancymenu.actions.spawn_element_instance.edit.element_identifier": "Element Identifier",
+  "fancymenu.actions.spawn_element_instance.edit.element_identifier.desc": "The identifier assigned to the spawned element.\nLeave blank to auto-generate one.\nPlaceholders are supported.",
+  "fancymenu.actions.spawn_element_instance.edit.element_body": "Element Body",
+  "fancymenu.actions.spawn_element_instance.edit.element_body.desc": "The serialized element body (single element container).\nPaste the element block from a layout file if needed.\nPlaceholders are supported.",
+  "fancymenu.actions.spawn_element_instance.edit.replace_placeholders": "Replace Placeholders in Body: %s",
+  "fancymenu.actions.spawn_element_instance.edit.replace_placeholders.desc": "If disabled, placeholders inside the element body are not replaced before deserialization.",
+  "fancymenu.actions.spawn_element_instance.edit.no_elements": "No element types are currently available.",
+  "fancymenu.listeners.on_element_spawned": "On Element Spawned via Action",
+  "fancymenu.listeners.on_element_spawned.desc": "This listener triggers when an element instance is spawned via the 'Spawn Element Instance' action.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$element_type §r= The spawned element type identifier\n- §z$$element_identifier §r= The spawned element's identifier\n- §z$$target_screen §r= The target screen identifier",
+  "fancymenu.context_menu.entries.number.input_via_number_picker": "Number Picker",
+  "fancymenu.context_menu.entries.number.input_as_string": "Plain Text",
+  "fancymenu.general.cycle.enabled_disabled.manual": "Manual"
 }

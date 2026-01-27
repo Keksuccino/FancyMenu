@@ -27,12 +27,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-    //TODO Scroll bar grabber wird in LayerLayoutEditorWidget nicht richtig angezeigt (+ grabber runden, wenn gefixt)
-
-    //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren
-
-
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final String VERSION = "3.9.0";

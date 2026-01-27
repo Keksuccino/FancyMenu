@@ -21,6 +21,7 @@ public class Listeners {
     public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
     public static final OnFileSelectedListener ON_FILE_SELECTED = new OnFileSelectedListener();
     public static final OnZipExtractedListener ON_ZIP_EXTRACTED = new OnZipExtractedListener();
+    public static final OnElementSpawnedListener ON_ELEMENT_SPAWNED = new OnElementSpawnedListener();
     public static final OnAnimatedTextureStartedPlayingListener ON_ANIMATED_TEXTURE_STARTED_PLAYING = new OnAnimatedTextureStartedPlayingListener();
     public static final OnAnimatedTextureFinishedPlayingListener ON_ANIMATED_TEXTURE_FINISHED_PLAYING = new OnAnimatedTextureFinishedPlayingListener();
     public static final OnChatMessageReceivedListener ON_CHAT_MESSAGE_RECEIVED = new OnChatMessageReceivedListener();
@@ -102,6 +103,7 @@ public class Listeners {
         ListenerRegistry.register(ON_FILE_DOWNLOADED);
         ListenerRegistry.register(ON_FILE_SELECTED);
         ListenerRegistry.register(ON_ZIP_EXTRACTED);
+        ListenerRegistry.register(ON_ELEMENT_SPAWNED);
         ListenerRegistry.register(ON_ANIMATED_TEXTURE_STARTED_PLAYING);
         ListenerRegistry.register(ON_ANIMATED_TEXTURE_FINISHED_PLAYING);
         ListenerRegistry.register(ON_CHAT_MESSAGE_RECEIVED);

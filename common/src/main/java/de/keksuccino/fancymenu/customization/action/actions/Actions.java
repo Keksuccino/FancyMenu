@@ -56,6 +56,7 @@ public class Actions {
     public static final MimicKeybindAction MIMIC_KEYBIND = new MimicKeybindAction();
     public static final EditMinecraftOptionAction EDIT_MINECRAFT_OPTION = new EditMinecraftOptionAction();
     public static final SetTextInputFieldValueAction SET_TEXT_INPUT_FIELD_VALUE = new SetTextInputFieldValueAction();
+    public static final SpawnElementInstanceAction SPAWN_ELEMENT_INSTANCE = new SpawnElementInstanceAction();
     public static final SetAudioElementVolumeAction SET_AUDIO_ELEMENT_VOLUME = new SetAudioElementVolumeAction();
     public static final NextTrackAction NEXT_AUDIO_ELEMENT_TRACK = new NextTrackAction();
     public static final PreviousTrackAction PREVIOUS_AUDIO_ELEMENT_TRACK = new PreviousTrackAction();
@@ -115,6 +116,7 @@ public class Actions {
         ActionRegistry.register(MIMIC_KEYBIND);
         ActionRegistry.register(EDIT_MINECRAFT_OPTION);
         ActionRegistry.register(SET_TEXT_INPUT_FIELD_VALUE);
+        ActionRegistry.register(SPAWN_ELEMENT_INSTANCE);
         ActionRegistry.register(SET_AUDIO_ELEMENT_VOLUME);
         ActionRegistry.register(NEXT_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(PREVIOUS_AUDIO_ELEMENT_TRACK);
