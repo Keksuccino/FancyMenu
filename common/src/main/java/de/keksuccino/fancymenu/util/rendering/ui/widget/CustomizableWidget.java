@@ -159,6 +159,11 @@ public interface CustomizableWidget {
     @Nullable
     DrawableColor getLabelHoverColorFancyMenu();
 
+    void setLabelBaseColorFancyMenu(@Nullable DrawableColor color);
+
+    @Nullable
+    DrawableColor getLabelBaseColorFancyMenu();
+
     void setUnderlineLabelOnHoverFancyMenu(boolean underline);
 
     boolean isUnderlineLabelOnHoverFancyMenu();

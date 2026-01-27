@@ -62,6 +62,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique @Nullable
 	private DrawableColor labelHoverColorFancyMenu;
 	@Unique @Nullable
+	private DrawableColor labelBaseColorFancyMenu;
+	@Unique @Nullable
 	private RenderableResource customBackgroundNormalFancyMenu;
 	@Unique @Nullable
 	private RenderableResource customBackgroundHoverFancyMenu;
@@ -185,14 +187,22 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if ((result != null) && hovered) {
 			boolean underline = this.underlineLabelOnHoverFancyMenu;
 			DrawableColor hoverColor = this.labelHoverColorFancyMenu;
-			if (underline || (hoverColor != null)) {
-				int hoverColorRgb = (hoverColor != null) ? (hoverColor.getColorInt() & 0xFFFFFF) : 0;
+			DrawableColor baseColor = this.labelBaseColorFancyMenu;
+			DrawableColor appliedColor = (hoverColor != null) ? hoverColor : baseColor;
+			if (underline || (appliedColor != null)) {
+				int appliedColorRgb = (appliedColor != null) ? (appliedColor.getColorInt() & 0xFFFFFF) : 0;
 				result = result.copy().withStyle(style -> {
 					var updated = style;
 					if (underline) updated = updated.withUnderlined(true);
-					if (hoverColor != null) updated = updated.withColor(hoverColorRgb);
+					if (appliedColor != null) updated = updated.withColor(appliedColorRgb);
 					return updated;
 				});
+			}
+		} else if (result != null) {
+			DrawableColor baseColor = this.labelBaseColorFancyMenu;
+			if (baseColor != null) {
+				int baseColorRgb = baseColor.getColorInt() & 0xFFFFFF;
+				result = result.copy().withStyle(style -> style.withColor(baseColorRgb));
 			}
 		}
 		info.setReturnValue(result);
@@ -404,6 +414,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setHoverLabelFancyMenu(null);
 		this.setUnderlineLabelOnHoverFancyMenu(false);
 		this.setLabelHoverColorFancyMenu(null);
+		this.setLabelBaseColorFancyMenu(null);
 		this.setCustomWidthFancyMenu(null);
 		this.setCustomHeightFancyMenu(null);
 		this.setCustomXFancyMenu(null);
@@ -485,6 +496,18 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public @Nullable DrawableColor getLabelHoverColorFancyMenu() {
 		return this.labelHoverColorFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setLabelBaseColorFancyMenu(@Nullable DrawableColor color) {
+		this.labelBaseColorFancyMenu = color;
+	}
+
+	@Unique
+	@Override
+	public @Nullable DrawableColor getLabelBaseColorFancyMenu() {
+		return this.labelBaseColorFancyMenu;
 	}
 
 	@Unique

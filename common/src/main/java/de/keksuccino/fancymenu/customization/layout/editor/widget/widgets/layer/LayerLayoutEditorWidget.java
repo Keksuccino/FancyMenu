@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayout
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
@@ -52,7 +53,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final MaterialIcon MOVE_BEHIND_ICON = MaterialIcons.VERTICAL_ALIGN_BOTTOM;
     private static final float LAYER_MOVE_ICON_PADDING = 2.0f;
     private static final float LAYER_EYE_ICON_PADDING = 4.0f;
-    private static final float LAYER_EYE_ICON_SHIFT_LEFT = 3.0f;
+    private static final float LAYER_EYE_ICON_SHIFT_LEFT = 5.0f;
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
 
@@ -762,6 +763,46 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             blitScaledIcon(graphics, iconData, iconX, iconY, iconSize, iconSize);
             resetShaderColor(graphics);
         }
+
+        @Override
+        protected void renderHoverBackground(GuiGraphics graphics, float partial) {
+            if (!this.isMouseOver()) {
+                return;
+            }
+            resetShaderColor(graphics);
+            float radius = UIBase.getInterfaceCornerRoundingRadius();
+            float topLeft = 0.0F;
+            float topRight = 0.0F;
+            float bottomRight = 0.0F;
+            float bottomLeft = 0.0F;
+            float rightEdge = this.parent.getBorderThickness() + this.parent.getBodyWidth();
+            boolean isRightmost = Math.abs((this.x + this.width) - rightEdge) <= 0.01F;
+            if (isRightmost) {
+                topRight = radius;
+                if (!this.parent.isExpanded()) {
+                    bottomRight = radius;
+                }
+            }
+            float renderScale = this.parent.getFixedComponentScale();
+            float smoothX = (this.parent.getTranslatedX() + this.x) * renderScale;
+            float smoothY = (this.parent.getTranslatedY() + this.y) * renderScale;
+            float smoothWidth = this.width * renderScale;
+            float smoothHeight = this.parent.getTitleBarHeight() * renderScale;
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                    graphics,
+                    smoothX,
+                    smoothY,
+                    smoothWidth,
+                    smoothHeight,
+                    topLeft * renderScale,
+                    topRight * renderScale,
+                    bottomRight * renderScale,
+                    bottomLeft * renderScale,
+                    getElementHoverColor().getColorInt(),
+                    partial
+            );
+            resetShaderColor(graphics);
+        }
     }
 
     private class LayerElementEntry extends ScrollAreaEntry {
@@ -818,6 +859,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
             if (this.element.isSelected() || this.element.isMultiSelected()) {
                 fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
+                graphics.flush();
             }
 
             float moveIconSize = getIconSize(this.getButtonWidth(), this.getButtonHeight(), LAYER_MOVE_ICON_PADDING);

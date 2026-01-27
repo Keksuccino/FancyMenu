@@ -2652,5 +2652,6 @@
   "fancymenu.elements.shape.corner_radius.bottom_left.desc": "Set the bottom-left shape corner radius in pixels.\nSupports placeholders.\nRecommended: 0-8.",
   "fancymenu.elements.buttons.textures.transparent_background": "Transparent Background: %s",
   "fancymenu.elements.widgets.label.underline_on_hover": "Underline Label On Hover: %s",
-  "fancymenu.elements.widgets.label.hover_color": "Label Hover Color"
+  "fancymenu.elements.widgets.label.hover_color": "Label Hover Color",
+  "fancymenu.elements.widgets.label.base_color": "Label Base Color"
 }

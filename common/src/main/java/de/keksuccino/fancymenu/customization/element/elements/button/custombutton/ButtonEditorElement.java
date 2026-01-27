@@ -99,6 +99,9 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
         this.element.labelHoverColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.PALETTE);
 
+        this.element.labelBaseColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.PALETTE);
+
         this.rightClickMenu.addSeparatorEntry("button_separator_3").setStackable(true);
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "hover_sound",

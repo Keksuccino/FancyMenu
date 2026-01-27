@@ -48,6 +48,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public int roundingDecimalPlace = 2;
     @Nullable
     public String label;
+    public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
     public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
     public String tooltip;
     public ResourceSupplier<ITexture> handleTextureNormal;
@@ -193,6 +194,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTooltip();
         this.updateWidgetTexture();
         this.updateWidgetLabelUnderline();
+        this.updateWidgetLabelBaseColor();
         this.updateWidgetLabelHoverColor();
         this.slider.updateMessage();
     }
@@ -371,6 +373,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
     }
 
+    public void updateWidgetLabelBaseColor() {
+        if (this.slider instanceof CustomizableWidget w) {
+            w.setLabelBaseColorFancyMenu(this.getLabelBaseColor());
+        }
+    }
+
     public boolean isTransparentBackground() {
         return this.getTemplateProperty(template -> template.transparentBackground, this.transparentBackground);
     }
@@ -429,6 +437,15 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
             return (template.labelHoverColor.get() != null) ? template.labelHoverColor.getDrawable() : null;
         }
         return (this.labelHoverColor.get() != null) ? this.labelHoverColor.getDrawable() : null;
+    }
+
+    @Nullable
+    public DrawableColor getLabelBaseColor() {
+        ButtonElement template = this.getPropertySource();
+        if ((template != null) && template.templateApplyLabel) {
+            return (template.labelBaseColor.get() != null) ? template.labelBaseColor.getDrawable() : null;
+        }
+        return (this.labelBaseColor.get() != null) ? this.labelBaseColor.getDrawable() : null;
     }
 
     protected <T> T getTemplateProperty(@NotNull TemplatePropertyGetter<T> templatePropertyGetter, @Nullable T defaultProperty) {

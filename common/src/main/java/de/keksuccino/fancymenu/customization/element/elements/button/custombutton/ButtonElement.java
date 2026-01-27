@@ -50,6 +50,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public String label;
     @Nullable
     public String hoverLabel;
+    public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
     public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
     public String tooltip;
     public ResourceSupplier<ITexture> backgroundTextureNormal;
@@ -207,6 +208,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTooltip();
         this.updateWidgetLabels();
         this.updateWidgetLabelUnderline();
+        this.updateWidgetLabelBaseColor();
         this.updateWidgetLabelHoverColor();
         this.updateWidgetHoverSound();
         this.updateWidgetUnhoverSound();
@@ -281,6 +283,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public void updateWidgetLabelHoverColor() {
         if (this.getWidget() instanceof CustomizableWidget w) {
             w.setLabelHoverColorFancyMenu(this.getLabelHoverColor());
+        }
+    }
+
+    public void updateWidgetLabelBaseColor() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            w.setLabelBaseColorFancyMenu(this.getLabelBaseColor());
         }
     }
 
@@ -442,6 +450,18 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             return (template.labelHoverColor.get() != null) ? template.labelHoverColor.getDrawable() : null;
         }
         return (this.labelHoverColor.get() != null) ? this.labelHoverColor.getDrawable() : null;
+    }
+
+    @Nullable
+    public DrawableColor getLabelBaseColor() {
+        if (this.isTemplate) {
+            return (this.labelBaseColor.get() != null) ? this.labelBaseColor.getDrawable() : null;
+        }
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) {
+            return (template.labelBaseColor.get() != null) ? template.labelBaseColor.getDrawable() : null;
+        }
+        return (this.labelBaseColor.get() != null) ? this.labelBaseColor.getDrawable() : null;
     }
 
     @NotNull

@@ -23,7 +23,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
@@ -62,13 +61,22 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
     @Override
     protected void init() {
 
+        boolean blur = UIBase.shouldBlur();
+
+        this.actionsListScrollArea.setSetupForBlurInterface(blur);
+        this.descriptionScrollArea.setSetupForBlurInterface(blur);
+
+        if (this.searchBar != null) {
+            this.removeWidget(this.searchBar);
+        }
+
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
         this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
         this.searchBar.setHintFancyMenu(consumes -> Component.translatable("fancymenu.actions.build_action.screen.search_action"));
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateActionsList());
         this.addRenderableWidget(this.searchBar);
-        UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar, blur);
         this.setupInitialFocusWidget(this, this.searchBar);
 
         // Set positions for scroll areas
@@ -96,14 +104,14 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
             this.onNextStep();
         }).setLabelSupplier(consumes -> this.needsValueFirst() ? Component.translatable("fancymenu.ui.generic.next_step") : Component.translatable("fancymenu.common_components.done"));
         this.addRenderableWidget(doneOrNextButton);
-        UIBase.applyDefaultWidgetSkinTo(doneOrNextButton);
+        UIBase.applyDefaultWidgetSkinTo(doneOrNextButton, blur);
 
         ExtendedButton cancelButton = new ExtendedButton(cancelButtonX, cancelButtonY, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.callback.accept(null);
             this.closeWindow();
         });
         this.addRenderableWidget(cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(cancelButton, blur);
 
         this.updateActionsList();
         this.setDescription(this.instance.action);
@@ -156,13 +164,15 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
     @Override
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
+        int textColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.build_screen.available_actions"), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.build_screen.available_actions"), 20, 50, textColor, false);
 
         Component descLabel = Component.translatable("fancymenu.actions.screens.build_screen.action_description");
         int descLabelWidth = this.font.width(descLabel);
-        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, textColor, false);
 
         this.performInitialWidgetFocusActionInRender();
 
@@ -202,7 +212,10 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
-            e.setTextBaseColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
+            int labelColor = UIBase.shouldBlur()
+                    ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                    : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+            e.setTextBaseColor(labelColor);
             this.descriptionScrollArea.addEntry(e);
         });
     }
@@ -276,7 +289,10 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
 
         @NotNull
         private static Component buildLabel(@NotNull Action action) {
-            MutableComponent c = action.getDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
+            int labelColor = UIBase.shouldBlur()
+                    ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                    : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+            MutableComponent c = action.getDisplayName().copy().setStyle(Style.EMPTY.withColor(labelColor));
             if (action.isDeprecated()) {
                 c = c.withStyle(Style.EMPTY.withStrikethrough(true));
                 c = c.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
