@@ -365,10 +365,16 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     protected void updateCursor() {
-        if ((this.hoveredResizeEdge == ResizingEdge.TOP) || (this.hoveredResizeEdge == ResizingEdge.BOTTOM)) {
-            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_VERTICAL);
-        } else if ((this.hoveredResizeEdge == ResizingEdge.LEFT) || (this.hoveredResizeEdge == ResizingEdge.RIGHT)) {
-            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_HORIZONTAL);
+        if (this.hoveredResizeEdge == null) {
+            return;
+        }
+        switch (this.hoveredResizeEdge) {
+            case TOP, BOTTOM -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_VERTICAL);
+            case LEFT, RIGHT -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_HORIZONTAL);
+            case TOP_LEFT, BOTTOM_RIGHT -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_NWSE);
+            case TOP_RIGHT, BOTTOM_LEFT -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_NESW);
+            default -> {
+            }
         }
     }
 
@@ -382,16 +388,32 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         if (this.isTitleBarButtonHovered()) return null;
         float hoverAreaThickness = 10.0f;
         float halfHoverAreaThickness = hoverAreaThickness / 2f;
-        if (this.isComponentAreaHovered(this.getTranslatedX() - halfHoverAreaThickness, this.getTranslatedY(), hoverAreaThickness, this.getHeight(), false)) {
+        boolean left = this.isComponentAreaHovered(this.getTranslatedX() - halfHoverAreaThickness, this.getTranslatedY(), hoverAreaThickness, this.getHeight(), false);
+        boolean right = this.isComponentAreaHovered(this.getTranslatedX() + this.getWidth() - halfHoverAreaThickness, this.getTranslatedY(), hoverAreaThickness, this.getHeight(), false);
+        boolean top = this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY() - halfHoverAreaThickness, this.getWidth(), hoverAreaThickness, false);
+        boolean bottom = this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY() + this.getHeight() - halfHoverAreaThickness, this.getWidth(), hoverAreaThickness, false);
+        if (left && top) {
+            return ResizingEdge.TOP_LEFT;
+        }
+        if (right && top) {
+            return ResizingEdge.TOP_RIGHT;
+        }
+        if (left && bottom) {
+            return ResizingEdge.BOTTOM_LEFT;
+        }
+        if (right && bottom) {
+            return ResizingEdge.BOTTOM_RIGHT;
+        }
+        if (left) {
             return ResizingEdge.LEFT;
         }
-        if (this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY() - halfHoverAreaThickness, this.getWidth(), hoverAreaThickness, false)) {
+        if (top) {
             return ResizingEdge.TOP;
         }
-        if (this.isComponentAreaHovered(this.getTranslatedX() + this.getWidth() - halfHoverAreaThickness, this.getTranslatedY(), hoverAreaThickness, this.getHeight(), false)) {
+        if (right) {
             return ResizingEdge.RIGHT;
         }
-        if (this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY() + this.getHeight() - halfHoverAreaThickness, this.getWidth(), hoverAreaThickness, false)) {
+        if (bottom) {
             return ResizingEdge.BOTTOM;
         }
         return null;
@@ -616,18 +638,25 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     protected void handleResize(float dragOffsetX, float dragOffsetY) {
-        if ((this.activeResizeEdge == ResizingEdge.LEFT) || (this.activeResizeEdge == ResizingEdge.RIGHT)) {
-            float i = (this.activeResizeEdge == ResizingEdge.LEFT) ? (this.leftMouseDownInnerWidth - dragOffsetX) : (this.leftMouseDownInnerWidth + dragOffsetX);
+        if (this.activeResizeEdge == null) {
+            return;
+        }
+        if (this.activeResizeEdge.hasLeftEdge() || this.activeResizeEdge.hasRightEdge()) {
+            float i = this.activeResizeEdge.hasLeftEdge() ? (this.leftMouseDownInnerWidth - dragOffsetX) : (this.leftMouseDownInnerWidth + dragOffsetX);
             if (i >= (this.getCombinedTitleBarButtonWidth() + 10)) {
                 this.bodyWidth = i;
-                this.unscaledWidgetOffsetX = this.leftMouseDownWidgetOffsetX + ((this.activeResizeEdge == ResizingEdge.LEFT) ? dragOffsetX : 0);
+                if (this.activeResizeEdge.hasLeftEdge()) {
+                    this.unscaledWidgetOffsetX = this.leftMouseDownWidgetOffsetX + dragOffsetX;
+                }
             }
         }
-        if ((this.activeResizeEdge == ResizingEdge.TOP) || (this.activeResizeEdge == ResizingEdge.BOTTOM)) {
-            float i = (this.activeResizeEdge == ResizingEdge.TOP) ? (this.leftMouseDownInnerHeight - dragOffsetY) : (this.leftMouseDownInnerHeight + dragOffsetY);
+        if (this.activeResizeEdge.hasTopEdge() || this.activeResizeEdge.hasBottomEdge()) {
+            float i = this.activeResizeEdge.hasTopEdge() ? (this.leftMouseDownInnerHeight - dragOffsetY) : (this.leftMouseDownInnerHeight + dragOffsetY);
             if (i >= (this.getTitleBarHeight() + 10)) {
                 this.bodyHeight = i;
-                this.unscaledWidgetOffsetY = this.leftMouseDownWidgetOffsetY + ((this.activeResizeEdge == ResizingEdge.TOP) ? dragOffsetY : 0);
+                if (this.activeResizeEdge.hasTopEdge()) {
+                    this.unscaledWidgetOffsetY = this.leftMouseDownWidgetOffsetY + dragOffsetY;
+                }
             }
         }
     }
@@ -789,10 +818,42 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     public enum ResizingEdge {
-        LEFT,
-        RIGHT,
-        TOP,
-        BOTTOM
+        LEFT(true, false, false, false),
+        RIGHT(false, true, false, false),
+        TOP(false, false, true, false),
+        BOTTOM(false, false, false, true),
+        TOP_LEFT(true, false, true, false),
+        TOP_RIGHT(false, true, true, false),
+        BOTTOM_LEFT(true, false, false, true),
+        BOTTOM_RIGHT(false, true, false, true);
+
+        private final boolean leftEdge;
+        private final boolean rightEdge;
+        private final boolean topEdge;
+        private final boolean bottomEdge;
+
+        ResizingEdge(boolean leftEdge, boolean rightEdge, boolean topEdge, boolean bottomEdge) {
+            this.leftEdge = leftEdge;
+            this.rightEdge = rightEdge;
+            this.topEdge = topEdge;
+            this.bottomEdge = bottomEdge;
+        }
+
+        public boolean hasLeftEdge() {
+            return this.leftEdge;
+        }
+
+        public boolean hasRightEdge() {
+            return this.rightEdge;
+        }
+
+        public boolean hasTopEdge() {
+            return this.topEdge;
+        }
+
+        public boolean hasBottomEdge() {
+            return this.bottomEdge;
+        }
     }
 
 }

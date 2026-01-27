@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.PressState;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIconTexture;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -675,6 +676,10 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         protected abstract void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
+        public @NotNull MenuBar getParent() {
+            return parent;
+        }
+
         protected int getWidth() {
             return 20;
         }
@@ -760,6 +765,8 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         protected MenuBarEntrySupplier<ITexture> iconTextureSupplier;
         @Nullable
         protected Supplier<DrawableColor> iconTextureColor = () -> UIBase.getUITheme().ui_icon_texture_color;
+        @Nullable
+        protected ConsumingSupplier<ClickableMenuBarEntry, Integer> iconPaddingSupplier;
         @NotNull
         protected ClickAction clickAction;
         protected Font font = Minecraft.getInstance().font;
@@ -787,12 +794,52 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             Component label = this.getLabel();
             ITexture iconTexture = this.getIconTexture();
             if (iconTexture != null) {
-                int[] size = iconTexture.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getWidth(), HEIGHT);
+                int padding = 0;
+                if (this.iconPaddingSupplier != null) {
+                    Integer suppliedPadding = this.iconPaddingSupplier.get(this);
+                    if (suppliedPadding != null) {
+                        padding = Math.max(0, suppliedPadding);
+                    }
+                }
+                int entryWidth = this.getWidth();
+                int entryHeight = HEIGHT;
+                int availableWidth = Math.max(1, entryWidth - (padding * 2));
+                int availableHeight = Math.max(1, entryHeight - (padding * 2));
+                int drawWidth;
+                int drawHeight;
+                int textureWidth;
+                int textureHeight;
+                int drawX = this.x;
+                int drawY = this.y;
+                int baseWidth = iconTexture.getWidth();
+                int baseHeight = iconTexture.getHeight();
+                boolean hasBaseSize = baseWidth > 0 && baseHeight > 0;
+                if (hasBaseSize) {
+                    float scale = Math.min(availableWidth / (float) baseWidth, availableHeight / (float) baseHeight);
+                    if (iconTexture instanceof MaterialIconTexture) {
+                        scale = Math.min(1.0F, scale);
+                    }
+                    if (!Float.isFinite(scale) || scale <= 0.0F) {
+                        scale = 1.0F;
+                    }
+                    drawWidth = Math.max(1, Math.round(baseWidth * scale));
+                    drawHeight = Math.max(1, Math.round(baseHeight * scale));
+                    textureWidth = baseWidth;
+                    textureHeight = baseHeight;
+                } else {
+                    int[] size = iconTexture.getAspectRatio().getAspectRatioSizeByMaximumSize(availableWidth, availableHeight);
+                    drawWidth = size[0];
+                    drawHeight = size[1];
+                    textureWidth = size[0];
+                    textureHeight = size[1];
+                }
+                drawX = this.x + ((entryWidth - drawWidth) / 2);
+                drawY = this.y + ((entryHeight - drawHeight) / 2);
                 UIBase.resetShaderColor(graphics);
                 DrawableColor iconColor = (this.iconTextureColor != null) ? this.iconTextureColor.get() : null;
                 if (iconColor != null) UIBase.setShaderColor(graphics, iconColor);
                 ResourceLocation loc = (iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION;
-                graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+                graphics.blit(loc, drawX, drawY, 0.0F, 0.0F, drawWidth, drawHeight, textureWidth, textureHeight);
             } else {
                 UIBase.renderText(graphics, label, this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + ((float)HEIGHT / 2) - (UIBase.getUITextHeightNormal() / 2), this.getLabelColor());
             }
@@ -885,6 +932,11 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         public ClickableMenuBarEntry setIconTexture(@Nullable ITexture iconTexture) {
             this.iconTextureSupplier = (iconTexture != null) ? ((bar, entry) -> iconTexture) : null;
+            return this;
+        }
+
+        public ClickableMenuBarEntry setIconPaddingSupplier(@Nullable ConsumingSupplier<ClickableMenuBarEntry, Integer> iconPaddingSupplier) {
+            this.iconPaddingSupplier = iconPaddingSupplier;
             return this;
         }
 

@@ -1679,12 +1679,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         @Nullable
         protected IconRenderData resolveIconData() {
             if (this.materialIcon != null) {
-                ResourceLocation location = this.materialIcon.getTextureLocation(UIBase.getUIMaterialIconSize());
+                ResourceLocation location = this.materialIcon.getTextureLocation(UIBase.getUIMaterialIconTextureSizeNormal());
                 if (location == null) {
                     return null;
                 }
-                int width = this.materialIcon.getWidth(UIBase.getUIMaterialIconSize());
-                int height = this.materialIcon.getHeight(UIBase.getUIMaterialIconSize());
+                int width = this.materialIcon.getWidth(UIBase.getUIMaterialIconTextureSizeNormal());
+                int height = this.materialIcon.getHeight(UIBase.getUIMaterialIconTextureSizeNormal());
                 if (width <= 0 || height <= 0) {
                     return null;
                 }
@@ -1779,7 +1779,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Nullable
         protected IconRenderData resolveTooltipIconData() {
-            int iconSize = UIBase.getUIMaterialIconSize();
+            int iconSize = UIBase.getUIMaterialIconTextureSizeNormal();
             ResourceLocation location = CONTEXT_MENU_TOOLTIP_ICON.getTextureLocation(iconSize);
             if (location == null) {
                 return null;
@@ -1812,7 +1812,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 return this.icon;
             }
             if (this.materialIcon != null) {
-                return this.materialIcon.getTextureLocation(UIBase.getUIMaterialIconSize());
+                return this.materialIcon.getTextureLocation(UIBase.getUIMaterialIconTextureSizeNormal());
             }
             return null;
         }
@@ -2039,7 +2039,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Nullable
         protected IconRenderData resolveSubMenuArrowIconData() {
-            int iconSize = UIBase.getUIMaterialIconSize();
+            int iconSize = UIBase.getUIMaterialIconTextureSizeNormal();
             ResourceLocation location = SUB_CONTEXT_MENU_ARROW_ICON.getTextureLocation(iconSize);
             if (location == null) {
                 return null;

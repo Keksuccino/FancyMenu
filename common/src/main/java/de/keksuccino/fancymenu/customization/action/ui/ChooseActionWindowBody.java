@@ -58,6 +58,19 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
 
     }
 
+    public static @NotNull PiPWindow openInWindow(@NotNull ChooseActionWindowBody screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(false)
+                .setForceFocus(false)
+                .setBlockMinecraftScreenInputs(false)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
     @Override
     protected void init() {
 

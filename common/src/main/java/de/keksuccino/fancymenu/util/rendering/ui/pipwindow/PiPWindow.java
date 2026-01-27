@@ -578,7 +578,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (icon == null) {
             return null;
         }
-        int size = UIBase.getUIMaterialIconSize();
+        int size = UIBase.getUIMaterialIconTextureSizeNormal();
         ResourceLocation location = icon.getTextureLocation(size);
         if (location == null) {
             return null;
@@ -602,7 +602,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (icon == null) {
             return null;
         }
-        return icon.getTextureLocation(UIBase.getUIMaterialIconSize());
+        return icon.getTextureLocation(UIBase.getUIMaterialIconTextureSizeNormal());
     }
 
     private void drawScaledString(@NotNull GuiGraphics graphics, @NotNull Font font, @NotNull FormattedCharSequence text, int x, int y, int color, float scale) {

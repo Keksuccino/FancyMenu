@@ -665,7 +665,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         if (icon == null) {
             return null;
         }
-        int size = UIBase.getUIMaterialIconSize();
+        int size = UIBase.getUIMaterialIconTextureSizeNormal();
         ResourceLocation location = icon.getTextureLocation(size);
         if (location == null) {
             return null;

@@ -27,8 +27,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-    //TODO Adden, dass man LayerLayoutEditorWidget an corners resizen kann
-
     //TODO Scroll bar grabber wird in LayerLayoutEditorWidget nicht richtig angezeigt (+ grabber runden, wenn gefixt)
 
     //TODO Alle custom value edit screens von actions zu PiPs mit blur/transparency konvertieren

@@ -33,6 +33,7 @@ import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIconTexture;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -79,7 +80,7 @@ public class CustomizationOverlayUI {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ResourceSupplier<ITexture> FM_LOGO_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/fancymenu_logo.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
-    private static final ResourceSupplier<ITexture> LEAVE_SCREEN_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/exit.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
+    private static final MaterialIconTexture LEAVE_SCREEN_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE, UIBase::getUIMaterialIconTextureSizeBig, () -> MenuBar.HEIGHT - 8);
 
     private static CustomizationOverlayMenuBar grandfatheredMenuBar = null;
 
@@ -517,7 +518,8 @@ public class CustomizationOverlayUI {
         //LEAVE CURRENT SCREEN BUTTON
         menuBar.addClickableEntry(MenuBar.Side.RIGHT, "leave_current_screen", Component.empty(), (bar, entry) -> {
             Minecraft.getInstance().setScreen(null);
-        }).setIconTextureSupplier((bar, entry) -> LEAVE_SCREEN_TEXTURE_SUPPLIER.get())
+        }).setIconTexture(LEAVE_SCREEN_ICON_TEXTURE)
+                .setIconTextureColor(() -> UIBase.getUITheme().error_text_color)
                 .setTooltipSupplier(consumes -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.leave_current_menu.desc")));
 
         return menuBar;

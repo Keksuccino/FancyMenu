@@ -23,6 +23,7 @@ import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIconTexture;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -33,7 +34,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
-import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -43,7 +43,6 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -53,7 +52,7 @@ import java.util.function.Consumer;
 
 public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
-    private static final PngTexture CLOSE_EDITOR_TEXTURE = PngTexture.location(ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/menubar/icons/close.png"));
+    private static final MaterialIconTexture CLOSE_EDITOR_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE, UIBase::getUIMaterialIconTextureSizeBig, () -> MenuBar.HEIGHT - 8);
 
     @Nullable
     private MenuBar grandfatheredMenuBar = null;
@@ -385,8 +384,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.closeEditor();
                         }
                     });
-                }).setIconTexture(CLOSE_EDITOR_TEXTURE)
-                .setIconTextureColor(() -> UIBase.getUITheme().layout_editor_close_icon_color);
+                }).setIconTexture(CLOSE_EDITOR_ICON_TEXTURE)
+                .setIconTextureColor(() -> UIBase.getUITheme().error_text_color);
 
         menuBar.addClickableEntry(MenuBar.Side.RIGHT, "unsaved_indicator", Component.empty(), (bar, entry) -> {
                 }).setLabelSupplier((bar, entry) ->

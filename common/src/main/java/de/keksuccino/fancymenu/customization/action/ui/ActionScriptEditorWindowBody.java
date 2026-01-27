@@ -752,8 +752,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.finalizeActionAddition(call, resolvedReference);
             }
         });
-        Pair<ChooseActionWindowBody, PiPWindow> dialog = Dialogs.openGeneric(screen, screen.getTitle(), null, ChooseActionWindowBody.PIP_WINDOW_WIDTH, ChooseActionWindowBody.PIP_WINDOW_HEIGHT);
-        this.setupChildWindow(this.getWindow(), dialog.getSecond());
+        PiPWindow dialog = ChooseActionWindowBody.openInWindow(screen, this.getWindow());
+        this.setupChildWindow(this.getWindow(), dialog);
     }
 
     protected void onAddAction(@NotNull Action action, @Nullable ExecutableEntry selectionReference) {
