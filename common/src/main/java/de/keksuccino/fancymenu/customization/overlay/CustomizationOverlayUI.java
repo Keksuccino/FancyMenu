@@ -1045,7 +1045,14 @@ public class CustomizationOverlayUI {
         if ((preSelectedUiScale != 1F) && (preSelectedUiScale != 1.5F) && (preSelectedUiScale != 2F) && (preSelectedUiScale != 2.5F) && (preSelectedUiScale != 3F) && (preSelectedUiScale != 3.5F) && (preSelectedUiScale != 4F)) {
             preSelectedUiScale = 4F;
         }
-        userInterfaceMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.ui_scale", ListUtils.of("1","1.5","2","2.5","3","3.5","4"), "" + preSelectedUiScale)
+        String preSelectedUIScaleString = "4";
+        if (preSelectedUiScale == 1F) preSelectedUIScaleString = "1";
+        if (preSelectedUiScale == 1.5F) preSelectedUIScaleString = "1.5";
+        if (preSelectedUiScale == 2F) preSelectedUIScaleString = "2";
+        if (preSelectedUiScale == 2.5F) preSelectedUIScaleString = "2.5";
+        if (preSelectedUiScale == 3F) preSelectedUIScaleString = "3";
+        if (preSelectedUiScale == 3.5F) preSelectedUIScaleString = "3.5";
+        userInterfaceMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.ui_scale", ListUtils.of("1","1.5","2","2.5","3","3.5","4"), preSelectedUIScaleString)
                 .addCycleListener(scaleString -> {
                     if (!MathUtils.isFloat(scaleString)) {
                         scaleString = "4";
