@@ -218,7 +218,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
                 : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
         float labelHeight = UIBase.getUITextHeightNormal();
         int scrollAreaTop = 50 + 15;
-        float requirementsLabelY = scrollAreaTop - labelHeight - 3.0F;
+        float requirementsLabelY = scrollAreaTop - labelHeight - 10.0F;
         UIBase.renderText(graphics, I18n.get("fancymenu.requirements.screens.build_group_screen.group_requirements"), 20, requirementsLabelY, textColor);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
@@ -260,7 +260,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
 
         String idLabel = I18n.get("fancymenu.requirements.screens.build_group_screen.group_identifier");
         float idLabelWidth = UIBase.getUITextWidth(idLabel);
-        float idLabelY = this.groupIdentifierTextField.getY() - labelHeight - 3.0F;
+        float idLabelY = this.groupIdentifierTextField.getY() - labelHeight - 10.0F;
         UIBase.renderText(graphics, idLabel, this.width - 20 - idLabelWidth, idLabelY, textColor);
 
     }
@@ -293,7 +293,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
-                .setForceFocus(true)
+                .setBlockMinecraftScreenInputs(false)
                 .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
                 .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
         PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);

@@ -158,8 +158,7 @@ public class IsGameModeRequirement extends Requirement {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            super.render(graphics, mouseX, mouseY, partial);
+        public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.suggestions.render(graphics, mouseX, mouseY);
         }
 

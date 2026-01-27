@@ -8,12 +8,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFor
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -168,20 +167,11 @@ public abstract class Requirement {
         return window::close;
     }
 
-    public static abstract class RequirementValueEditScreen extends StringBuilderScreen {
+    public static abstract class RequirementValueEditScreen extends PiPCellStringBuilderWindowBody {
 
         protected RequirementValueEditScreen(@NotNull Component title, @NotNull Consumer<String> callback) {
             super(title, callback);
         }
-
-        @Override
-        protected void renderTitle(@NotNull GuiGraphics graphics) {
-            if (PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
-                return;
-            }
-            super.renderTitle(graphics);
-        }
-
     }
 
     /**
