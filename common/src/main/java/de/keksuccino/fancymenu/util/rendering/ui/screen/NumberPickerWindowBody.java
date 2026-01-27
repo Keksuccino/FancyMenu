@@ -119,6 +119,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         this.input = this.addRenderableWidget(new ExtendedEditBox(Minecraft.getInstance().font, inputX, inputY, inputWidth, inputHeight, Component.empty()));
         this.input.setMaxLength(10000);
         this.input.setCharacterFilter(this.inputFilter);
+        this.input.setNavigatable(false);
         UIBase.applyDefaultWidgetSkinTo(this.input, UIBase.shouldBlur());
 
         if (this.inputMode != InputMode.FREE_INPUT) {
@@ -131,6 +132,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         this.slider = new RangeSlider(inputX, sliderY, inputWidth, sliderHeight, Component.empty(), 0.0D, 1.0D, 0.5D);
         UIBase.applyDefaultWidgetSkinTo(this.slider, UIBase.shouldBlur());
         this.slider.setIsActiveSupplier(sliderRef -> this.inputMode != InputMode.FREE_INPUT);
+        this.slider.setNavigatable(false);
 
         if (this.inputMode == InputMode.CYCLE_INPUT && this.cycleValues != null && !this.cycleValues.isEmpty()) {
             this.currentValue = resolveCyclePreset(this.currentValue, this.cycleValues);
@@ -173,12 +175,14 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
             this.closeWindow();
         }));
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
+        this.cancelButton.setNavigatable(false);
 
         this.doneButton = this.addRenderableWidget(new ExtendedButton((this.width / 2) + 5, buttonY, 100, buttonHeight, Component.translatable("fancymenu.common_components.done"), button -> {
             this.onDone.accept(this.currentValue);
             this.closeWindow();
         }));
         UIBase.applyDefaultWidgetSkinTo(this.doneButton, UIBase.shouldBlur());
+        this.doneButton.setNavigatable(false);
 
         this.updatingFromSlider = true;
         updateInputField(this.currentValue);
@@ -198,8 +202,13 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if ((keyCode == InputConstants.KEY_ENTER) && this.inputMode == InputMode.FREE_INPUT && (this.input != null) && this.input.isFocused()) {
+        if (keyCode == InputConstants.KEY_ENTER) {
             this.onDone.accept(this.currentValue);
+            this.closeWindow();
+            return true;
+        }
+        if (keyCode == InputConstants.KEY_ESCAPE) {
+            this.onCancel.accept(this.presetValue);
             this.closeWindow();
             return true;
         }

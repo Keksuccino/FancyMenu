@@ -1089,10 +1089,21 @@ public class Property<T> {
         p.deserializationCodec = Boolean::valueOf;
         p.contextMenuEntrySupplier = (property, builder, menu) -> {
             ContextMenu subMenu = new ContextMenu();
+            Object manualToggleSentinel = new Object();
             ContextMenu.StackApplier stackApplier = (stackEntry, value) -> {
                 BooleanProperty resolved = (BooleanProperty) builder.self().getProperty(key);
                 if (resolved == null) return;
-                if (value instanceof String stringValue) {
+                if (value == manualToggleSentinel) {
+                    String manualValue = resolved.getRawInputOrFormattedValue();
+                    if (manualValue == null) {
+                        Boolean fallback = resolved.get();
+                        if (fallback == null) {
+                            fallback = property.getDefault();
+                        }
+                        manualValue = String.valueOf(fallback != null && fallback);
+                    }
+                    resolved.setManualInput(manualValue);
+                } else if (value instanceof String stringValue) {
                     resolved.setManualInput(stringValue);
                 } else if (value instanceof Boolean boolValue) {
                     resolved.set(boolValue);
@@ -1141,6 +1152,10 @@ public class Property<T> {
                     .setIcon(MaterialIcons.TEXT_FIELDS);
 
             ContextMenu.SubMenuContextMenuEntry entry = new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.empty(), subMenu) {
+                private static final int MODE_DISABLED = 0;
+                private static final int MODE_ENABLED = 1;
+                private static final int MODE_MANUAL = 2;
+
                 private boolean isManualMode() {
                     BooleanProperty resolved = (BooleanProperty) builder.self().getProperty(key);
                     return (resolved != null) && resolved.hasManualInput();
@@ -1173,12 +1188,43 @@ public class Property<T> {
                         if (FancyMenu.getOptions().playUiClickSounds.getValue() && this.enableClickSound) {
                             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                         }
-                        ContextMenuBuilder.StackValue<Boolean> currentValue = builder.resolveStackValue(this);
-                        if (!currentValue.isEmpty()) {
+                        ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(this, consumes -> consumes.getProperty(key) != null);
+                        if (stack.isEmpty()) {
+                            return true;
+                        }
+                        boolean anyManual = false;
+                        boolean allManual = true;
+                        for (PropertyHolder holder : stack.getObjects()) {
+                            BooleanProperty resolved = (BooleanProperty) holder.getProperty(key);
+                            if ((resolved != null) && resolved.hasManualInput()) {
+                                anyManual = true;
+                            } else {
+                                allManual = false;
+                            }
+                        }
+                        int currentMode;
+                        if (anyManual && allManual) {
+                            currentMode = MODE_MANUAL;
+                        } else if (anyManual) {
+                            currentMode = MODE_DISABLED;
+                        } else {
+                            ContextMenuBuilder.StackValue<Boolean> currentValue = builder.resolveStackValue(this);
+                            if (currentValue.isEmpty()) {
+                                return true;
+                            }
                             boolean baseValue = currentValue.hasCommonValue() ? currentValue.getValue() : false;
-                            boolean nextValue = !baseValue;
-                            builder.saveSnapshot();
-                            builder.applyStackAppliers(this, nextValue);
+                            currentMode = baseValue ? MODE_ENABLED : MODE_DISABLED;
+                        }
+                        int nextMode = switch (currentMode) {
+                            case MODE_DISABLED -> MODE_ENABLED;
+                            case MODE_ENABLED -> MODE_MANUAL;
+                            default -> MODE_DISABLED;
+                        };
+                        builder.saveSnapshot();
+                        if (nextMode == MODE_MANUAL) {
+                            builder.applyStackAppliers(this, manualToggleSentinel);
+                        } else {
+                            builder.applyStackAppliers(this, nextMode == MODE_ENABLED);
                         }
                         return true;
                     }

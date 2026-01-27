@@ -15,27 +15,23 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
 
 public class ImageElement extends AbstractElement {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public final Property<ResourceSupplier<ITexture>> textureSupplier = putProperty(Property.resourceSupplierProperty(ITexture.class, "source", null, "fancymenu.elements.image.set_source", true, true, true, null));
-    public final Property<Boolean> repeat = putProperty(Property.booleanProperty("repeat_texture", false, "fancymenu.elements.image.repeat"));
-    public final Property<Boolean> nineSlice = putProperty(Property.booleanProperty("nine_slice_texture", false, "fancymenu.elements.image.nine_slice"));
+    public final Property.BooleanProperty repeat = putProperty(Property.booleanProperty("repeat_texture", false, "fancymenu.elements.image.repeat"));
+    public final Property.BooleanProperty nineSlice = putProperty(Property.booleanProperty("nine_slice_texture", false, "fancymenu.elements.image.nine_slice"));
     public final Property.IntegerProperty nineSliceBorderX = putProperty(Property.integerProperty("nine_slice_texture_border_x", 5, "fancymenu.elements.image.nine_slice.border_x", Property.NumericInputBehavior.<Integer>builder().rangeInput(1, 100).build()));
     public final Property.IntegerProperty nineSliceBorderY = putProperty(Property.integerProperty("nine_slice_texture_border_y", 5, "fancymenu.elements.image.nine_slice.border_y", Property.NumericInputBehavior.<Integer>builder().rangeInput(1, 100).build()));
-    public final Property<Boolean> restartAnimatedOnMenuLoad = putProperty(Property.booleanProperty("restart_animated_on_menu_load", false, "fancymenu.elements.image.restart_animated_on_menu_load"));
+    public final Property.BooleanProperty restartAnimatedOnMenuLoad = putProperty(Property.booleanProperty("restart_animated_on_menu_load", false, "fancymenu.elements.image.restart_animated_on_menu_load"));
     public final Property.ColorProperty imageTint = putProperty(Property.hexColorProperty("image_tint", "#FFFFFF", true, "fancymenu.elements.image.tint"));
-    public final Property.FloatProperty roundingRadiusTopLeft = putProperty(Property.floatProperty("rounding_radius_top_left", 0, "fancymenu.elements.image.rounding_radius.top_left", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 2000.0F).build()));
-    public final Property.FloatProperty roundingRadiusTopRight = putProperty(Property.floatProperty("rounding_radius_top_right", 0, "fancymenu.elements.image.rounding_radius.top_right", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 2000.0F).build()));
-    public final Property.FloatProperty roundingRadiusBottomRight = putProperty(Property.floatProperty("rounding_radius_bottom_right", 0, "fancymenu.elements.image.rounding_radius.bottom_right", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 2000.0F).build()));
-    public final Property.FloatProperty roundingRadiusBottomLeft = putProperty(Property.floatProperty("rounding_radius_bottom_left", 0, "fancymenu.elements.image.rounding_radius.bottom_left", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 2000.0F).build()));
+    public final Property.FloatProperty roundingRadiusTopLeft = putProperty(Property.floatProperty("rounding_radius_top_left", 0, "fancymenu.elements.image.rounding_radius.top_left", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 100.0F).build()));
+    public final Property.FloatProperty roundingRadiusTopRight = putProperty(Property.floatProperty("rounding_radius_top_right", 0, "fancymenu.elements.image.rounding_radius.top_right", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 100.0F).build()));
+    public final Property.FloatProperty roundingRadiusBottomRight = putProperty(Property.floatProperty("rounding_radius_bottom_right", 0, "fancymenu.elements.image.rounding_radius.bottom_right", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 100.0F).build()));
+    public final Property.FloatProperty roundingRadiusBottomLeft = putProperty(Property.floatProperty("rounding_radius_bottom_left", 0, "fancymenu.elements.image.rounding_radius.bottom_left", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 100.0F).build()));
 
     @Nullable
     protected DrawableColor currentImageTint;
@@ -55,7 +51,7 @@ public class ImageElement extends AbstractElement {
         super.onOpenScreen();
 
         // Restart animated textures on menu load if enabled
-        if (this.restartAnimatedOnMenuLoad.tryGetNonNull()) {
+        if (this.restartAnimatedOnMenuLoad.getBoolean()) {
             ResourceSupplier<ITexture> supplier = this.textureSupplier.get();
             if (supplier != null) {
                 ITexture texture = supplier.get();
@@ -97,11 +93,11 @@ public class ImageElement extends AbstractElement {
             if ((t != null) && t.isReady()) {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
-                    if (this.repeat.tryGetNonNull()) {
+                    if (this.repeat.getBoolean()) {
                         this.currentImageTint.setAsShaderColor(graphics, this.opacity);
                         RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
                         this.currentImageTint.resetShaderColor(graphics);
-                    } else if (this.nineSlice.tryGetNonNull()) {
+                    } else if (this.nineSlice.getBoolean()) {
                         this.currentImageTint.setAsShaderColor(graphics, this.opacity);
                         int borderX = this.nineSliceBorderX.getInteger();
                         int borderY = this.nineSliceBorderY.getInteger();
