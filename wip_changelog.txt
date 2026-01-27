@@ -84,6 +84,7 @@
 - You can now set buttons and sliders to have transparent backgrounds (without the need to set transparent textures)
 - You can now set buttons and sliders to underline their label on hover (without setting a "hover label")
 - You can now set a label hover color for buttons and sliders to change the label's color when button/slider is hovered (without setting a "hover label")
+- You can now set a label base color for buttons and sliders to change the label's default (white) color (without setting a custom label text)
 - The file browser screens (choose/save file) got a little glow-up
   - They have a new set of icons and show different icons for audio, video, image and text files now
   - There is a Search bar now to search for files
