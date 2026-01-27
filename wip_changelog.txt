@@ -16,6 +16,7 @@
   - There are actions to start and stop schedulers by its ID
   - There is a requirement that checks if a scheduler is running by its ID
   - To access listeners, click on "menu bar -> Customization -> Manage Schedulers" while not in the layout editor
+  - Schedulers can be seen as the "better" Ticker elements (I don't see why you should continue using tickers tbh, because schedulers are more powerful and easier to organize)
 - Added a new type of fullscreen customization: Decoration Overlays
   - These overlays have pre-defined overlay types, similar to menu background types and they can be toggled on/off for each overlay type
   - Decoration overlays can be accessed via right-clicking the layout editor background -> Decoration Overlays
