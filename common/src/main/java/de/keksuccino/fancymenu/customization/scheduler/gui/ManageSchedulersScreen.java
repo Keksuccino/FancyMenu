@@ -24,6 +24,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -47,7 +48,7 @@ import java.util.function.Consumer;
 public class ManageSchedulersScreen extends PiPCellWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
-    public static final int PIP_WINDOW_HEIGHT = 420;
+    public static final int PIP_WINDOW_HEIGHT = 476;
 
     @NotNull
     protected final Consumer<Boolean> callback;
@@ -57,6 +58,9 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
     protected final List<SchedulerInstance> tempInstances = new ArrayList<>();
     @Nullable
     protected SchedulerInstance selectedInstance;
+    @Nullable
+    protected String cachedStatusIdentifier;
+    protected boolean cachedStatusRunning = false;
 
     public ManageSchedulersScreen(@NotNull Consumer<Boolean> callback) {
         super(Component.translatable("fancymenu.schedulers.manage"));
@@ -139,6 +143,32 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
             this.onEditActionsOfSelected();
         }).setIsActiveSupplier(consumes -> this.selectedInstance != null);
 
+        this.addRightSideButton(20, Component.empty(), button -> {
+            SchedulerInstance selected = this.selectedInstance;
+            if (selected != null) {
+                if (SchedulerHandler.isRunning(selected.getIdentifier())) {
+                    SchedulerHandler.stopScheduler(selected.getIdentifier());
+                } else {
+                    SchedulerHandler.startScheduler(selected.getIdentifier());
+                }
+                this.updateDescriptionArea();
+            }
+        }).setIsActiveSupplier(consumes -> this.selectedInstance != null)
+                .setLabelSupplier(consumes -> {
+                    SchedulerInstance selected = this.selectedInstance;
+                    if (selected != null && SchedulerHandler.isRunning(selected.getIdentifier())) {
+                        return Component.translatable("fancymenu.schedulers.manage.stop_now");
+                    }
+                    return Component.translatable("fancymenu.schedulers.manage.start_now");
+                })
+                .setUITooltipSupplier(consumes -> {
+                    SchedulerInstance selected = this.selectedInstance;
+                    if (selected != null && SchedulerHandler.isRunning(selected.getIdentifier())) {
+                        return UITooltip.of(Component.translatable("fancymenu.schedulers.manage.stop_now.desc"));
+                    }
+                    return UITooltip.of(Component.translatable("fancymenu.schedulers.manage.start_now.desc"));
+                });
+
         this.addRightSideButton(20, Component.translatable("fancymenu.schedulers.manage.settings"), button -> {
             SchedulerInstance selected = this.selectedInstance;
             if (selected != null) {
@@ -217,11 +247,19 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
         Component startOnLaunchValue = Component.translatable(this.selectedInstance.isStartOnLaunch()
                 ? "fancymenu.general.cycle.enabled_disabled.enabled"
                 : "fancymenu.general.cycle.enabled_disabled.disabled");
+        boolean isRunning = SchedulerHandler.isRunning(this.selectedInstance.getIdentifier());
+        Component statusValue = Component.translatable(isRunning
+                ? "fancymenu.schedulers.manage.description.status.running"
+                : "fancymenu.schedulers.manage.description.status.not_running")
+                .withStyle(Style.EMPTY.withColor(isRunning
+                        ? UIBase.getUITheme().success_text_color.getColorInt()
+                        : UIBase.getUITheme().error_text_color.getColorInt()));
 
         newDesc.add(Component.translatable("fancymenu.schedulers.manage.description.start_delay", Component.literal(this.selectedInstance.getStartDelayMs() + " ms")));
         newDesc.add(Component.translatable("fancymenu.schedulers.manage.description.tick_delay", tickDelayValue));
         newDesc.add(Component.translatable("fancymenu.schedulers.manage.description.ticks_to_run", ticksToRunValue));
         newDesc.add(Component.translatable("fancymenu.schedulers.manage.description.start_on_launch", startOnLaunchValue));
+        newDesc.add(Component.translatable("fancymenu.schedulers.manage.description.status", statusValue));
 
         newDesc.add(Component.empty());
         newDesc.add(Component.empty());
@@ -244,6 +282,17 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
     @Override
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.updateSelectedInstance();
+        SchedulerInstance selected = this.selectedInstance;
+        if (selected == null) {
+            this.cachedStatusIdentifier = null;
+            return;
+        }
+        boolean running = SchedulerHandler.isRunning(selected.getIdentifier());
+        if (!selected.getIdentifier().equals(this.cachedStatusIdentifier) || (running != this.cachedStatusRunning)) {
+            this.cachedStatusIdentifier = selected.getIdentifier();
+            this.cachedStatusRunning = running;
+            this.updateDescriptionArea();
+        }
     }
 
     @Override

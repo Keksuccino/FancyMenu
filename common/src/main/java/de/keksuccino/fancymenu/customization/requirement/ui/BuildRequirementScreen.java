@@ -417,7 +417,9 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
-                .setForceFocus(true)
+                .setAlwaysOnTop(false)
+                .setForceFocus(false)
+                .setBlockMinecraftScreenInputs(false)
                 .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
                 .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
         PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);

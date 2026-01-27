@@ -119,6 +119,9 @@ public class SchedulerHandler {
 
     public static void startScheduler(@NotNull String identifier) {
         assertInitialized();
+        if (isRunning(identifier)) {
+            return;
+        }
         SchedulerInstance instance = INSTANCES.get(identifier);
         if (instance == null) {
             LOGGER.warn("[FANCYMENU] Tried to start scheduler but no scheduler with identifier '{}' was found.", identifier);
@@ -146,6 +149,11 @@ public class SchedulerHandler {
         synchronized (LOCK) {
             stopSchedulerInternal(identifier);
         }
+    }
+
+    public static boolean isRunning(@NotNull String identifier) {
+        SchedulerRunState state = RUNNING.get(identifier);
+        return (state != null) && state.active.get();
     }
 
     private static void stopSchedulerInternal(@NotNull String identifier) {

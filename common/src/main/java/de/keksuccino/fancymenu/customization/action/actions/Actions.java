@@ -76,6 +76,7 @@ public class Actions {
     public static final DisplayInChatClientSideAction DISPLAY_IN_CHAT_CLIENT_SIDE = new DisplayInChatClientSideAction();
     public static final ShowToastAction SHOW_TOAST = new ShowToastAction();
     public static final StartSchedulerAction START_SCHEDULER = new StartSchedulerAction();
+    public static final StopSchedulerAction STOP_SCHEDULER = new StopSchedulerAction();
     public static final DeleteFileAction DELETE_FILE = new DeleteFileAction();
     public static final MoveFileAction MOVE_FILE = new MoveFileAction();
     public static final OpenFileFolderAction OPEN_FILE_FOLDER = new OpenFileFolderAction();
@@ -134,6 +135,7 @@ public class Actions {
         ActionRegistry.register(DISPLAY_IN_CHAT_CLIENT_SIDE);
         ActionRegistry.register(SHOW_TOAST);
         ActionRegistry.register(START_SCHEDULER);
+        ActionRegistry.register(STOP_SCHEDULER);
         ActionRegistry.register(DELETE_FILE);
         ActionRegistry.register(MOVE_FILE);
         ActionRegistry.register(OPEN_FILE_FOLDER);

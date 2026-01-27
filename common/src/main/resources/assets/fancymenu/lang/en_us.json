@@ -2691,5 +2691,18 @@
   "fancymenu.schedulers.settings.invalid_number": "Invalid number value!",
   "fancymenu.actions.start_scheduler": "Start Scheduler",
   "fancymenu.actions.start_scheduler.desc": "Starts a scheduler by its unique identifier.",
-  "fancymenu.actions.start_scheduler.value": "Scheduler Identifier"
+  "fancymenu.actions.start_scheduler.value": "Scheduler Identifier",
+  "fancymenu.actions.stop_scheduler": "Stop Scheduler",
+  "fancymenu.actions.stop_scheduler.desc": "Stops a scheduler by its unique identifier.",
+  "fancymenu.actions.stop_scheduler.value": "Scheduler Identifier",
+  "fancymenu.schedulers.manage.start_now": "Start Now",
+  "fancymenu.schedulers.manage.stop_now": "Stop Now",
+  "fancymenu.schedulers.manage.start_now.desc": "Start the selected scheduler immediately.\nSchedulers cannot be started again until they finish.",
+  "fancymenu.schedulers.manage.stop_now.desc": "Stop the selected scheduler immediately.\nSchedulers cannot be started again until they finish.",
+  "fancymenu.schedulers.manage.description.status": "Status: %s",
+  "fancymenu.schedulers.manage.description.status.running": "Running",
+  "fancymenu.schedulers.manage.description.status.not_running": "Not Running",
+  "fancymenu.requirements.is_scheduler_running": "Scheduler Is Running",
+  "fancymenu.requirements.is_scheduler_running.desc": "Checks whether a scheduler with the given identifier is currently running.",
+  "fancymenu.requirements.is_scheduler_running.value.desc": "Scheduler Identifier"
 }

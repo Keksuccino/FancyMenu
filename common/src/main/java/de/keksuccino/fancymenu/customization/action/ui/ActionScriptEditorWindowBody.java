@@ -3150,16 +3150,19 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.displayNameComponent = i.action.getDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.updateValueComponent();
             } else if (this.executable instanceof IfExecutableBlock b) {
-                String requirements = "";
+                MutableComponent requirements = Component.empty();
+                boolean isRequirementsEmpty = true;
                 for (RequirementGroup g : b.condition.getGroups()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += g.identifier;
+                    if (!isRequirementsEmpty) requirements.append(Component.literal(", "));
+                    requirements.append(Component.literal(g.identifier));
+                    isRequirementsEmpty = false;
                 }
                 for (RequirementInstance i : b.condition.getInstances()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += i.requirement.getDisplayName();
+                    if (!isRequirementsEmpty) requirements.append(Component.literal(", "));
+                    requirements.append(i.requirement.getDisplayName());
+                    isRequirementsEmpty = false;
                 }
-                MutableComponent display = Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
+                MutableComponent display = Component.translatable("fancymenu.actions.blocks.if", requirements).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
                 }
