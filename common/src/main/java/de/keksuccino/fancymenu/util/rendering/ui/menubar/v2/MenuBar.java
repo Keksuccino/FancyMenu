@@ -62,7 +62,8 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     public MenuBar() {
         this.collapseOrExpandEntry = this.addClickableEntry(Side.RIGHT, "collapse_or_expand", Component.empty(), (bar, entry) -> {
             this.setExpanded(!this.expanded);
-        }).setIconTextureSupplier((bar, entry) -> this.collapseExpandTextureSupplier.get());
+        }).setIconTextureSupplier((bar, entry) -> this.collapseExpandTextureSupplier.get())
+                .setBaseWidth(8);
         this.addSpacerEntry(Side.RIGHT, "spacer_after_collapse_or_expand_entry").setWidth(10);
     }
 
@@ -652,6 +653,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         protected int x;
         protected int y;
         protected int height;
+        protected int baseWidth = 2;
         protected boolean hovered = false;
         protected MenuBarEntryBooleanSupplier activeSupplier;
         protected MenuBarEntryBooleanSupplier visibleSupplier;
@@ -681,7 +683,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         protected int getWidth() {
-            return 20;
+            return Math.max(1, this.baseWidth);
         }
 
         public boolean isHovered() {
@@ -718,6 +720,11 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         public MenuBarEntry setTooltipSupplier(@Nullable ConsumingSupplier<MenuBarEntry, UITooltip> tooltipSupplier) {
             this.tooltipSupplier = tooltipSupplier;
+            return this;
+        }
+
+        public MenuBarEntry setBaseWidth(int baseWidth) {
+            this.baseWidth = Math.max(1, baseWidth);
             return this;
         }
 
@@ -839,7 +846,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 DrawableColor iconColor = (this.iconTextureColor != null) ? this.iconTextureColor.get() : null;
                 if (iconColor != null) UIBase.setShaderColor(graphics, iconColor);
                 ResourceLocation loc = (iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION;
-                graphics.blit(loc, drawX, drawY, 0.0F, 0.0F, drawWidth, drawHeight, textureWidth, textureHeight);
+                graphics.blit(loc, drawX, drawY, drawWidth, drawHeight, 0.0F, 0.0F, textureWidth, textureHeight, textureWidth, textureHeight);
             } else {
                 UIBase.renderText(graphics, label, this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + ((float) PIXEL_SIZE / 2) - (UIBase.getUITextHeightNormal() / 2), this.getLabelColor());
             }
@@ -858,9 +865,10 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             Component label = this.getLabel();
             ITexture iconTexture = this.getIconTexture();
             if (iconTexture != null) {
-                return PIXEL_SIZE;
+                return Math.max(1, this.baseWidth);
             }
-            return (int) (UIBase.getUITextWidthNormal(label) + (ENTRY_LABEL_SPACE_LEFT_RIGHT * 2));
+            int labelWidth = (int) (UIBase.getUITextWidthNormal(label) + (ENTRY_LABEL_SPACE_LEFT_RIGHT * 2));
+            return Math.max(Math.max(1, this.baseWidth), labelWidth);
         }
 
         @Override
@@ -881,6 +889,11 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         @Override
         public ClickableMenuBarEntry setVisibleSupplier(MenuBarEntryBooleanSupplier visibleSupplier) {
             return (ClickableMenuBarEntry) super.setVisibleSupplier(visibleSupplier);
+        }
+
+        @Override
+        public ClickableMenuBarEntry setBaseWidth(int baseWidth) {
+            return (ClickableMenuBarEntry) super.setBaseWidth(baseWidth);
         }
 
         public ClickableMenuBarEntry setIconTextureColor(@Nullable Supplier<DrawableColor> iconTextureColor) {
@@ -1057,6 +1070,11 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         @Override
         public ContextMenuBarEntry setVisibleSupplier(MenuBarEntryBooleanSupplier visibleSupplier) {
             return (ContextMenuBarEntry) super.setVisibleSupplier(visibleSupplier);
+        }
+
+        @Override
+        public ContextMenuBarEntry setBaseWidth(int baseWidth) {
+            return (ContextMenuBarEntry) super.setBaseWidth(baseWidth);
         }
 
         @Override

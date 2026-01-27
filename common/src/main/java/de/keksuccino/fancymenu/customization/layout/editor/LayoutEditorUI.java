@@ -52,7 +52,7 @@ import java.util.function.Consumer;
 
 public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
-    private static final MaterialIconTexture CLOSE_EDITOR_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE, UIBase::getUIMaterialIconTextureSizeNormal);
+    private static final MaterialIconTexture CLOSE_EDITOR_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE, UIBase::getUIMaterialIconTextureSizeBig);
 
     @Nullable
     private MenuBar grandfatheredMenuBar = null;
@@ -385,7 +385,9 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         }
                     });
                 }).setIconTexture(CLOSE_EDITOR_ICON_TEXTURE)
-                .setIconTextureColor(() -> UIBase.getUITheme().error_text_color);
+                .setIconTextureColor(() -> UIBase.getUITheme().error_text_color)
+                .setIconPaddingSupplier(consumes -> 7)
+                .setBaseWidth(MenuBar.PIXEL_SIZE);
 
         menuBar.addClickableEntry(MenuBar.Side.RIGHT, "unsaved_indicator", Component.empty(), (bar, entry) -> {
                 }).setLabelSupplier((bar, entry) ->

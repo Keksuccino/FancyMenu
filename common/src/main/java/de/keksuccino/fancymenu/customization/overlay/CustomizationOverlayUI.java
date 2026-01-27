@@ -80,7 +80,7 @@ public class CustomizationOverlayUI {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ResourceSupplier<ITexture> FM_LOGO_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/fancymenu_logo.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
-    private static final MaterialIconTexture LEAVE_SCREEN_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE, UIBase::getUIMaterialIconTextureSizeNormal);
+    private static final MaterialIconTexture LEAVE_SCREEN_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE, UIBase::getUIMaterialIconTextureSizeBig);
 
     private static CustomizationOverlayMenuBar grandfatheredMenuBar = null;
 
@@ -520,6 +520,8 @@ public class CustomizationOverlayUI {
             Minecraft.getInstance().setScreen(null);
         }).setIconTexture(LEAVE_SCREEN_ICON_TEXTURE)
                 .setIconTextureColor(() -> UIBase.getUITheme().error_text_color)
+                .setBaseWidth(MenuBar.PIXEL_SIZE)
+                .setIconPaddingSupplier(consumes -> 7)
                 .setTooltipSupplier(consumes -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.leave_current_menu.desc")));
 
         return menuBar;
@@ -987,7 +989,10 @@ public class CustomizationOverlayUI {
     }
 
     public static MenuBar.ClickableMenuBarEntry buildFMIconTabAndAddTo(MenuBar menuBar) {
-        return menuBar.addClickableEntry(MenuBar.Side.LEFT, "fancymenu_icon", Component.empty(), (bar, entry) -> {}).setIconTextureSupplier((bar, entry) -> FM_LOGO_TEXTURE_SUPPLIER.get()).setActive(false);
+        return menuBar.addClickableEntry(MenuBar.Side.LEFT, "fancymenu_icon", Component.empty(), (bar, entry) -> {})
+                .setIconTextureSupplier((bar, entry) -> FM_LOGO_TEXTURE_SUPPLIER.get())
+                .setBaseWidth(MenuBar.PIXEL_SIZE)
+                .setActive(false);
     }
 
     public static ContextMenu buildHelpTabAndAddTo(MenuBar menuBar) {
