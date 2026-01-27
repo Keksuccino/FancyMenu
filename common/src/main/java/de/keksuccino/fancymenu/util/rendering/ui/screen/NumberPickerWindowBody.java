@@ -21,6 +21,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
 
     public static final int PIP_WINDOW_WIDTH = 360;
     public static final int PIP_WINDOW_HEIGHT = 210;
+    private static final long PREVIEW_UPDATE_THROTTLE_MS = 33;
 
     public enum InputMode {
         FREE_INPUT,
@@ -73,6 +74,9 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     private ExtendedButton cancelButton;
     private boolean updatingFromSlider = false;
     private boolean updatingFromInput = false;
+    private long lastPreviewUpdateTime = 0L;
+    @Nullable
+    private String lastPreviewValueSignature = null;
 
     public NumberPickerWindowBody(@NotNull InputMode inputMode, @Nullable N minValue, @Nullable N maxValue, @Nullable List<N> cycleValues, @NotNull N presetValue, @NotNull CharacterFilter inputFilter, @NotNull ValueAdapter<N> adapter, @NotNull Consumer<N> onValueUpdate, @NotNull Consumer<N> onDone, @NotNull Consumer<N> onCancel) {
         super(Component.empty());
@@ -165,7 +169,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
             N resolved = resolveValueFromSlider(((RangeSlider)sliderRef).getRangeValue());
             this.currentValue = resolved;
             updateInputField(resolved);
-            this.onValueUpdate.accept(resolved);
+            this.applyPreviewUpdate(resolved);
             this.updatingFromSlider = false;
         });
         this.addRenderableWidget(this.slider);
@@ -223,7 +227,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         this.currentValue = parsed;
         this.updatingFromInput = true;
         updateSliderFromValue(parsed);
-        this.onValueUpdate.accept(parsed);
+        this.applyPreviewUpdate(parsed);
         this.updatingFromInput = false;
     }
 
@@ -240,6 +244,20 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
             return;
         }
         this.slider.setRangeValue(this.adapter.toSliderValue(value));
+    }
+
+    private void applyPreviewUpdate(@NotNull N value) {
+        String signature = this.adapter.formatValue(value);
+        if (signature.equals(this.lastPreviewValueSignature)) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if ((now - this.lastPreviewUpdateTime) < PREVIEW_UPDATE_THROTTLE_MS) {
+            return;
+        }
+        this.lastPreviewUpdateTime = now;
+        this.lastPreviewValueSignature = signature;
+        this.onValueUpdate.accept(value);
     }
 
     @NotNull
