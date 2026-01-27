@@ -2682,7 +2682,7 @@
   "fancymenu.schedulers.settings.start_delay": "Start Delay (ms)",
   "fancymenu.schedulers.settings.start_delay.desc": "Delay before the first tick runs in milliseconds.",
   "fancymenu.schedulers.settings.tick_delay": "Tick Delay (ms)",
-  "fancymenu.schedulers.settings.tick_delay.desc": "Delay between ticks in milliseconds.\nUse 0 to tick every game tick.",
+  "fancymenu.schedulers.settings.tick_delay.desc": "Delay between ticks in milliseconds.\nUse 0 to tick every 50ms (~20x per second).\nIf the client lags, multiple ticks can queue for the same client tick.",
   "fancymenu.schedulers.settings.ticks_to_run": "Ticks to Run",
   "fancymenu.schedulers.settings.ticks_to_run.desc": "How many ticks the scheduler should run.\nUse 0 for permanent.",
   "fancymenu.schedulers.settings.start_on_launch": "Start on Launch: %s",

@@ -194,6 +194,9 @@ public class SchedulerHandler {
         }
         MainThreadTaskExecutor.executeInMainThread(() -> {
             try {
+                if (!state.active.get()) {
+                    return;
+                }
                 state.instance.getActionScript().execute();
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Error while trying to execute action script of scheduler '{}'", identifier, ex);
