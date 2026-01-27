@@ -318,30 +318,44 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         this.cancelButton = this.addRightSideButton(20, Component.translatable("fancymenu.common_components.cancel"), button -> {
             this.onCancel();
-        });
+        }).setIsActiveSupplier(consumes -> this.allowCancel())
+                .setVisibilitySupplier(consumes -> this.showCancel());
 
         this.doneButton = this.addRightSideButton(20, Component.translatable("fancymenu.common_components.done"), button -> {
             if (this.allowDone()) this.onDone();
         }).setIsActiveSupplier(consumes -> this.allowDone());
 
+        AbstractWidget topRightSideWidget = this.layoutRightSideWidgets(true);
+
+        this.autoScaleScreen(topRightSideWidget);
+
+    }
+
+    @Nullable
+    private AbstractWidget layoutRightSideWidgets(boolean addRenderables) {
         int widgetWidth = this.getRightSideWidgetWidth();
         int widgetX = this.width - 20 - widgetWidth;
         int widgetY = this.height - 20;
         AbstractWidget topRightSideWidget = null;
         for (AbstractWidget w : Lists.reverse(this.rightSideWidgets)) {
             if (!(w instanceof RightSideSpacer)) {
-                UIBase.applyDefaultWidgetSkinTo(w);
+                if (addRenderables) {
+                    UIBase.applyDefaultWidgetSkinTo(w);
+                    this.addRenderableWidget(w);
+                }
                 w.setX(widgetX);
-                w.setY(widgetY - w.getHeight());
                 w.setWidth(widgetWidth);
-                this.addRenderableWidget(w);
+            }
+            if (!w.visible) {
+                continue;
+            }
+            if (!(w instanceof RightSideSpacer)) {
+                w.setY(widgetY - w.getHeight());
                 topRightSideWidget = w;
             }
             widgetY -= w.getHeight() + this.getRightSideDefaultSpaceBetweenWidgets();
         }
-
-        this.autoScaleScreen(topRightSideWidget);
-
+        return topRightSideWidget;
     }
 
     protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
@@ -381,6 +395,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateSelectedCell();
+        this.layoutRightSideWidgets(false);
 
         this.renderCellScreenBackground(graphics, mouseX, mouseY, partial);
 
@@ -434,6 +449,14 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     }
 
     public boolean allowEnterForDone() {
+        return true;
+    }
+
+    public boolean showCancel() {
+        return true;
+    }
+
+    public boolean allowCancel() {
         return true;
     }
 

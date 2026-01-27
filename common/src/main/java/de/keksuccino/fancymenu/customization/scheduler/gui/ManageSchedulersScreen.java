@@ -52,8 +52,6 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
 
     @NotNull
     protected final Consumer<Boolean> callback;
-    protected boolean resultHandled = false;
-    protected boolean skipCloseWarning = false;
     @NotNull
     protected final List<SchedulerInstance> tempInstances = new ArrayList<>();
     @Nullable
@@ -125,6 +123,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
                 if (updatedScript != null) {
                     newInstance.setActionScript(updatedScript);
                     this.tempInstances.add(newInstance);
+                    this.applyChangesNow();
                     this.rebuild();
                 }
             });
@@ -178,6 +177,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
                 }
                 ManageSchedulerSettingsScreen settingsScreen = new ManageSchedulerSettingsScreen(selected, identifier -> isIdentifierAvailable(selected, identifier), call -> {
                     if (call) {
+                        this.applyChangesNow();
                         this.rebuild();
                         this.updateDescriptionArea();
                     }
@@ -196,6 +196,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.schedulers.manage.delete_warning"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         this.tempInstances.remove(sel);
+                        this.applyChangesNow();
                         this.selectedInstance = null;
                         this.rebuild();
                     }
@@ -211,6 +212,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
             ActionScriptEditorWindowBody actionsScreen = new ActionScriptEditorWindowBody(cached.getActionScript(), updatedScript -> {
                 if (updatedScript != null) {
                     cached.setActionScript(updatedScript);
+                    this.applyChangesNow();
                 }
             });
             PiPWindow parentWindow = this.getWindow();
@@ -324,23 +326,6 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
 
     @Override
     public void setWindow(@Nullable PiPWindow window) {
-        if (window != null) {
-            window.setCloseWindowCheck((window1, decision) -> {
-                if (this.skipCloseWarning) {
-                    this.skipCloseWarning = false;
-                    decision.supply(true);
-                    return;
-                }
-                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.schedulers.manage.cancel_warning"), MessageDialogStyle.WARNING, decision::supply);
-            });
-            window.addCloseCallback(() -> {
-                if (this.resultHandled) {
-                    return;
-                }
-                this.resultHandled = true;
-                this.callback.accept(false);
-            });
-        }
         super.setWindow(window);
     }
 
@@ -351,25 +336,22 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
 
     @Override
     protected void onDone() {
-        if (!this.validateInstances()) {
-            return;
-        }
-        SchedulerHandler.applyChanges(this.tempInstances);
-        this.closeWithResult(true);
+        this.closeWindow();
     }
 
     @Override
     public void onWindowClosedExternally() {
+        this.callback.accept(true);
     }
 
-    protected void closeWithResult(boolean accepted) {
-        if (this.resultHandled) {
-            return;
-        }
-        this.resultHandled = true;
-        this.skipCloseWarning = accepted;
-        this.callback.accept(accepted);
-        this.closeWindow();
+    @Override
+    public boolean showCancel() {
+        return false;
+    }
+
+    @Override
+    public boolean allowCancel() {
+        return false;
     }
 
     public static @NotNull PiPWindow openInWindow(@NotNull ManageSchedulersScreen screen, @Nullable PiPWindow parentWindow) {
@@ -432,6 +414,12 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
             }
         }
         return true;
+    }
+
+    protected void applyChangesNow() {
+        if (this.validateInstances()) {
+            SchedulerHandler.applyChanges(this.tempInstances);
+        }
     }
 
     @NotNull
@@ -744,6 +732,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
                     if (!oldIdentifier.equals(newIdentifier)) {
                         SchedulerHandler.stopScheduler(oldIdentifier);
                         this.instance.setIdentifier(newIdentifier);
+                        ManageSchedulersScreen.this.applyChangesNow();
                     }
                 } else if (!newIdentifier.equals(oldIdentifier)) {
                     if (!SchedulerHandler.isIdentifierValid(newIdentifier) || newIdentifier.isBlank()) {

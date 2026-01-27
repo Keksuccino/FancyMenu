@@ -58,6 +58,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected DrawableColor borderColorInactive;
     @Nullable
     protected ConsumingSupplier<ExtendedButton, Boolean> activeSupplier;
+    protected ConsumingSupplier<ExtendedButton, Boolean> visibilitySupplier;
     protected boolean focusable = true;
     protected boolean navigatable = true;
     protected boolean roundedColorBackground = false;
@@ -87,6 +88,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.updateIsActive();
+        this.updateVisibility();
         this.updateLabel();
         UITooltip tooltip = this.getUITooltip();
         if ((tooltip != null) && this.isHovered() && this.visible) {
@@ -217,6 +219,13 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         if (this.activeSupplier != null) {
             Boolean b = this.activeSupplier.get(this);
             if (b != null) this.active = b;
+        }
+    }
+
+    protected void updateVisibility() {
+        if (this.visibilitySupplier != null) {
+            Boolean b = this.visibilitySupplier.get(this);
+            if (b != null) this.visible = b;
         }
     }
 
@@ -366,6 +375,16 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @Nullable
     public ConsumingSupplier<ExtendedButton, Boolean> getIsActiveSupplier() {
         return this.activeSupplier;
+    }
+
+    public ExtendedButton setVisibilitySupplier(@Nullable ConsumingSupplier<ExtendedButton, Boolean> visibilitySupplier) {
+        this.visibilitySupplier = visibilitySupplier;
+        return this;
+    }
+
+    @Nullable
+    public ConsumingSupplier<ExtendedButton, Boolean> getVisibilitySupplier() {
+        return this.visibilitySupplier;
     }
 
     @Nullable
