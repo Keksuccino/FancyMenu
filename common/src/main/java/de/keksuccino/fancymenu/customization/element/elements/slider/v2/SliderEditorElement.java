@@ -175,6 +175,9 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
         this.element.labelBaseColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.PALETTE);
 
+        this.element.labelScale.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.FORMAT_SIZE);
+
         this.rightClickMenu.addSeparatorEntry("separator_after_set_label").setStackable(true);
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "hover_sound",

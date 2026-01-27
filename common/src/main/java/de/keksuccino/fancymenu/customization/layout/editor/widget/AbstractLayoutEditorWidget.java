@@ -514,7 +514,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     protected float getMinTranslatedY() {
-        return MenuBar.HEIGHT + this.getScreenEdgeBorderThickness();
+        return MenuBar.PIXEL_SIZE + this.getScreenEdgeBorderThickness();
     }
 
     protected float getMaxTranslatedY() {

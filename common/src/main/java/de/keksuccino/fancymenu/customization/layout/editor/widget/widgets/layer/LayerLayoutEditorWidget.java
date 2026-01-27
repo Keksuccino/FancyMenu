@@ -46,14 +46,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final MaterialIcon TITLE_BAR_HIDE_ICON = MaterialIcons.CLOSE;
     private static final MaterialIcon TITLE_BAR_EXPAND_ICON = MaterialIcons.EXPAND_MORE;
     private static final MaterialIcon TITLE_BAR_COLLAPSE_ICON = MaterialIcons.EXPAND_LESS;
-    private static final MaterialIcon MOVE_UP_ICON = MaterialIcons.ARROW_UPWARD;
-    private static final MaterialIcon MOVE_DOWN_ICON = MaterialIcons.ARROW_DOWNWARD;
     private static final MaterialIcon EYE_ICON = MaterialIcons.VISIBILITY;
     private static final MaterialIcon MOVE_TO_TOP_ICON = MaterialIcons.VERTICAL_ALIGN_TOP;
     private static final MaterialIcon MOVE_BEHIND_ICON = MaterialIcons.VERTICAL_ALIGN_BOTTOM;
-    private static final float LAYER_MOVE_ICON_PADDING = 2.0f;
     private static final float LAYER_EYE_ICON_PADDING = 4.0f;
-    private static final float LAYER_EYE_ICON_SHIFT_LEFT = 5.0f;
+    private static final float LAYER_ICON_TEXT_GAP = 4.0f;
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
 
@@ -809,8 +806,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         protected AbstractEditorElement element;
         protected LayerLayoutEditorWidget layerWidget;
-        protected boolean moveUpButtonHovered = false;
-        protected boolean moveDownButtonHovered = false;
         protected boolean eyeButtonHovered = false;
         protected Font font = Minecraft.getInstance().font;
         protected ExtendedEditBox editLayerNameBox;
@@ -850,8 +845,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-            this.moveUpButtonHovered = this.isMoveUpButtonMouseOver(mouseX, mouseY);
-            this.moveDownButtonHovered = this.isMoveDownButtonMouseOver(mouseX, mouseY);
             this.eyeButtonHovered = this.isEyeButtonMouseOver(mouseX, mouseY);
             this.layerNameHovered = this.isLayerNameMouseOver(mouseX, mouseY);
 
@@ -862,18 +855,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 graphics.flush();
             }
 
-            float moveIconSize = getIconSize(this.getButtonWidth(), this.getButtonHeight(), LAYER_MOVE_ICON_PADDING);
-            float moveIconX = this.x + (this.getButtonWidth() - moveIconSize) * 0.5f;
-            float moveUpIconY = this.y + (this.getButtonHeight() - moveIconSize) * 0.5f;
-            float moveUpAlpha = this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f;
-            this.layerWidget.renderMaterialIcon(graphics, MOVE_UP_ICON, moveIconX, moveUpIconY, moveIconSize, moveIconSize, moveUpAlpha);
-
-            float moveDownIconY = this.y + this.getButtonHeight() + (this.getButtonHeight() - moveIconSize) * 0.5f;
-            float moveDownAlpha = this.layerWidget.editor.canMoveLayerDown(this.element) ? 1.0f : 0.3f;
-            this.layerWidget.renderMaterialIcon(graphics, MOVE_DOWN_ICON, moveIconX, moveDownIconY, moveIconSize, moveIconSize, moveDownAlpha);
-
             float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
-            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f - LAYER_EYE_ICON_SHIFT_LEFT;
+            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
             float eyeIconY = this.getEyeButtonY() + (this.getEyeButtonHeight() - eyeIconSize) * 0.5f;
             float eyeAlpha = !this.element.element.layerHiddenInEditor ? 1.0f : 0.3f;
             this.layerWidget.renderMaterialIcon(graphics, EYE_ICON, eyeIconX, eyeIconY, eyeIconSize, eyeIconSize, eyeAlpha);
@@ -922,8 +905,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         public float getLayerNameX() {
             float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
-            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f - LAYER_EYE_ICON_SHIFT_LEFT;
-            return eyeIconX + eyeIconSize + this.getArrowEyeGap();
+            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
+            return eyeIconX + eyeIconSize + LAYER_ICON_TEXT_GAP;
         }
 
         public float getLayerNameY() {
@@ -934,32 +917,12 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return (this.getX() + this.getWidth() - 3f) - this.getLayerNameX();
         }
 
-        public boolean isMoveUpButtonHovered() {
-            return this.moveUpButtonHovered;
-        }
-
-        public boolean isMoveDownButtonHovered() {
-            return this.moveDownButtonHovered;
-        }
-
         public boolean isEyeButtonHovered() {
             return this.eyeButtonHovered;
         }
 
         public boolean isLayerNameHovered() {
             return this.layerNameHovered;
-        }
-
-        public boolean isMoveUpButtonMouseOver(double mouseX, double mouseY) {
-            if (this.parent.isMouseInteractingWithGrabbers()) return false;
-            if (!this.parent.isInnerAreaHovered()) return false;
-            return isXYInArea(mouseX, mouseY, this.x, this.y, this.getButtonWidth(), this.getButtonHeight());
-        }
-
-        public boolean isMoveDownButtonMouseOver(double mouseX, double mouseY) {
-            if (this.parent.isMouseInteractingWithGrabbers()) return false;
-            if (!this.parent.isInnerAreaHovered()) return false;
-            return isXYInArea(mouseX, mouseY, this.x, this.y + this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
         }
 
         public boolean isEyeButtonMouseOver(double mouseX, double mouseY) {
@@ -979,38 +942,25 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getEyeButtonHeight() {
-            return 26f;
+            return 28f;
         }
 
         public float getEyeButtonX() {
-            return this.x + this.getButtonWidth();
+            return this.x;
         }
 
         public float getEyeButtonY() {
-            return this.y + 1;
-        }
-
-        public float getButtonHeight() {
-            return 14f;
+            return this.y;
         }
 
         public float getButtonWidth() {
             return 30f;
         }
 
-        private float getArrowEyeGap() {
-            float moveIconSize = getIconSize(this.getButtonWidth(), this.getButtonHeight(), LAYER_MOVE_ICON_PADDING);
-            float moveIconX = this.x + (this.getButtonWidth() - moveIconSize) * 0.5f;
-            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
-            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f - LAYER_EYE_ICON_SHIFT_LEFT;
-            float gap = eyeIconX - (moveIconX + moveIconSize);
-            return Math.max(1.0f, gap);
-        }
-
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if (button == 0) {
-                if (this.isMouseOver(mouseX, mouseY) && !this.moveUpButtonHovered && !this.moveDownButtonHovered && !this.eyeButtonHovered) {
+                if (this.isMouseOver(mouseX, mouseY) && !this.eyeButtonHovered) {
                     // Store initial position for drag threshold checking
                     this.dragStartX = mouseX;
                     this.dragStartY = mouseY;
@@ -1065,27 +1015,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             if (button == 0) {
-                if (this.isMoveUpButtonHovered()) {
-                    if (this.layerWidget.editor.canMoveLayerUp(this.element)) {
-                        if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                        this.layerWidget.editor.history.saveSnapshot();
-                        if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
-                        this.element.setSelected(true);
-                        this.layerWidget.editor.moveLayerUp(this.element);
-                        this.layerWidget.getAllWidgetsExceptThis().forEach(widget -> widget.editorElementOrderChanged(this.element, true));
-                        MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                    }
-                } else if (this.isMoveDownButtonHovered()) {
-                    if (this.layerWidget.editor.canMoveLayerDown(this.element)) {
-                        if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                        this.layerWidget.editor.history.saveSnapshot();
-                        if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
-                        this.element.setSelected(true);
-                        this.layerWidget.editor.moveLayerDown(this.element);
-                        this.layerWidget.getAllWidgetsExceptThis().forEach(widget -> widget.editorElementOrderChanged(this.element, false));
-                        MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                    }
-                } else if (this.isEyeButtonHovered()) {
+                if (this.isEyeButtonHovered()) {
                     if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                     this.layerWidget.editor.history.saveSnapshot();
                     if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
@@ -1158,7 +1088,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float vanillaIconY = this.y + (this.getButtonHeight() - vanillaIconSize) * 0.5f;
             this.layerWidget.renderMaterialIcon(graphics, icon, vanillaIconX, vanillaIconY, vanillaIconSize, vanillaIconSize, 1.0f);
 
-            UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f)));
+            UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), (int)(vanillaIconX + vanillaIconSize + LAYER_ICON_TEXT_GAP), (int)(this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f)));
 
         }
 

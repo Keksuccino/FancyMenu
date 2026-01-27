@@ -176,7 +176,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     protected void renderAreas(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         MenuBar menuBar = this.editor.getCurrentMenuBar();
-        int menuBarHeight = ((menuBar != null) ? (int)((float)MenuBar.HEIGHT * MenuBar.getRenderScale()) : 0);
+        int menuBarHeight = ((menuBar != null) ? (int)((float)MenuBar.PIXEL_SIZE * MenuBar.getRenderScale()) : 0);
         if ((menuBar != null) && !menuBar.isExpanded()) menuBarHeight = 0;
 
         this.topLeftArea.x = -1;

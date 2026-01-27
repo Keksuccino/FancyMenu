@@ -2653,5 +2653,6 @@
   "fancymenu.elements.buttons.textures.transparent_background": "Transparent Background: %s",
   "fancymenu.elements.widgets.label.underline_on_hover": "Underline Label On Hover: %s",
   "fancymenu.elements.widgets.label.hover_color": "Label Hover Color",
-  "fancymenu.elements.widgets.label.base_color": "Label Base Color"
+  "fancymenu.elements.widgets.label.base_color": "Label Base Color",
+  "fancymenu.elements.widgets.label.scale": "Label Scale"
 }

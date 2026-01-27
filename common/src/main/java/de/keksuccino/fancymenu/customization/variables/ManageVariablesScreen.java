@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
@@ -173,7 +172,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
                 ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
                 : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
         int searchBarTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
-        float labelY = searchBarTop - UIBase.getUITextHeightNormal() - 3.0F;
+        float labelY = searchBarTop - UIBase.getUITextHeightNormal() - 10.0F;
         UIBase.renderText(graphics, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, labelY, textColor);
 
     }

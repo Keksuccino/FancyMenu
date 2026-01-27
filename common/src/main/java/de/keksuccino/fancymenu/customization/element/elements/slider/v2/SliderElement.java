@@ -50,6 +50,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public String label;
     public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
     public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
+    public final Property.StringProperty labelScale = putProperty(Property.stringProperty("label_scale", "1.0", false, true, "fancymenu.elements.widgets.label.scale"));
     public String tooltip;
     public ResourceSupplier<ITexture> handleTextureNormal;
     public ResourceSupplier<ITexture> handleTextureHover;
@@ -196,6 +197,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetLabelUnderline();
         this.updateWidgetLabelBaseColor();
         this.updateWidgetLabelHoverColor();
+        this.updateWidgetLabelScale();
         this.slider.updateMessage();
     }
 
@@ -379,6 +381,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
     }
 
+    public void updateWidgetLabelScale() {
+        if (this.slider instanceof CustomizableWidget w) {
+            w.setLabelScaleFancyMenu(this.getLabelScale());
+        }
+    }
+
     public boolean isTransparentBackground() {
         return this.getTemplateProperty(template -> template.transparentBackground, this.transparentBackground);
     }
@@ -446,6 +454,15 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
             return (template.labelBaseColor.get() != null) ? template.labelBaseColor.getDrawable() : null;
         }
         return (this.labelBaseColor.get() != null) ? this.labelBaseColor.getDrawable() : null;
+    }
+
+    @Nullable
+    public String getLabelScale() {
+        ButtonElement template = this.getPropertySource();
+        if ((template != null) && template.templateApplyLabel) {
+            return template.labelScale.getString();
+        }
+        return this.labelScale.getString();
     }
 
     protected <T> T getTemplateProperty(@NotNull TemplatePropertyGetter<T> templatePropertyGetter, @Nullable T defaultProperty) {

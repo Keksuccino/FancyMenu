@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementCon
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
@@ -1692,6 +1693,156 @@ public class Property<T> {
 
         @Nullable
         public String getString() {
+            var s = this.get();
+            if (s == null) return null;
+            String parsed = PlaceholderParser.replacePlaceholders(s);
+            if (!Objects.equals(parsed, this.lastParsed)) {
+                this.lastParsed = parsed;
+            }
+            return parsed;
+        }
+
+    }
+
+    /**
+     * {@link Property} optimized for {@link Integer}s, but with {@code Placeholder} support, so internally it is a {@code Property<String>}.
+     */
+    public static class IntegerProperty extends Property<String> {
+
+        @Nullable
+        private String lastParsed = null;
+
+        protected IntegerProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        protected IntegerProperty(@NotNull String key, @Nullable String defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        public int getInteger() {
+            String s = this.getAsString();
+            if (s == null) s = this.getDefault();
+            if (s == null) s = "1";
+            if (MathUtils.isInteger(s)) return Integer.parseInt(s);
+            return 1;
+        }
+
+        @Nullable
+        public String getAsString() {
+            var s = this.get();
+            if (s == null) return null;
+            String parsed = PlaceholderParser.replacePlaceholders(s);
+            if (!Objects.equals(parsed, this.lastParsed)) {
+                this.lastParsed = parsed;
+            }
+            return parsed;
+        }
+
+    }
+
+    /**
+     * {@link Property} optimized for {@link Float}s, but with {@code Placeholder} support, so internally it is a {@code Property<String>}.
+     */
+    public static class FloatProperty extends Property<String> {
+
+        @Nullable
+        private String lastParsed = null;
+
+        protected FloatProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        protected FloatProperty(@NotNull String key, @Nullable String defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        public float getFloat() {
+            String s = this.getAsString();
+            if (s == null) s = this.getDefault();
+            if (s == null) s = "1.0";
+            if (MathUtils.isFloat(s)) return Float.parseFloat(s);
+            return 1.0F;
+        }
+
+        @Nullable
+        public String getAsString() {
+            var s = this.get();
+            if (s == null) return null;
+            String parsed = PlaceholderParser.replacePlaceholders(s);
+            if (!Objects.equals(parsed, this.lastParsed)) {
+                this.lastParsed = parsed;
+            }
+            return parsed;
+        }
+
+    }
+
+    /**
+     * {@link Property} optimized for {@link Double}s, but with {@code Placeholder} support, so internally it is a {@code Property<String>}.
+     */
+    public static class DoubleProperty extends Property<String> {
+
+        @Nullable
+        private String lastParsed = null;
+
+        protected DoubleProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        protected DoubleProperty(@NotNull String key, @Nullable String defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        public double getDouble() {
+            String s = this.getAsString();
+            if (s == null) s = this.getDefault();
+            if (s == null) s = "1.0";
+            if (MathUtils.isDouble(s)) return Double.parseDouble(s);
+            return 1.0D;
+        }
+
+        @Nullable
+        public String getAsString() {
+            var s = this.get();
+            if (s == null) return null;
+            String parsed = PlaceholderParser.replacePlaceholders(s);
+            if (!Objects.equals(parsed, this.lastParsed)) {
+                this.lastParsed = parsed;
+            }
+            return parsed;
+        }
+
+    }
+
+    /**
+     * {@link Property} optimized for {@link Boolean}s, but with {@code Placeholder} support, so internally it is a {@code Property<String>}.
+     */
+    public static class BooleanProperty extends Property<String> {
+
+        @Nullable
+        private String lastParsed = null;
+
+        protected BooleanProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        protected BooleanProperty(@NotNull String key, @Nullable String defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+            super(key, defaultValue, contextMenuEntryLocalizationKeyBase);
+        }
+
+        public boolean getBoolean() {
+            String s = this.getAsString();
+            if (s == null) s = this.getDefault();
+            if (s == null) s = "false";
+            try {
+                return Boolean.parseBoolean(s);
+            } catch (Exception ignored) {}
+            return false;
+        }
+
+        @Nullable
+        public String getAsString() {
             var s = this.get();
             if (s == null) return null;
             String parsed = PlaceholderParser.replacePlaceholders(s);

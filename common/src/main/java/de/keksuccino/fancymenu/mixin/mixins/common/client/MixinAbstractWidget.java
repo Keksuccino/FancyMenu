@@ -10,6 +10,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtend
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
+import net.minecraft.Util;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
@@ -18,6 +20,7 @@ import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -63,6 +66,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private DrawableColor labelHoverColorFancyMenu;
 	@Unique @Nullable
 	private DrawableColor labelBaseColorFancyMenu;
+	@Unique @Nullable
+	private String labelScaleFancyMenu;
 	@Unique @Nullable
 	private RenderableResource customBackgroundNormalFancyMenu;
 	@Unique @Nullable
@@ -206,6 +211,48 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			}
 		}
 		info.setReturnValue(result);
+	}
+
+	@Inject(method = "renderScrollingString(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;II)V", at = @At("HEAD"), cancellable = true)
+	private void before_renderScrollingString_FancyMenu(GuiGraphics graphics, Font font, int width, int color, CallbackInfo info) {
+		float scale = this.resolveLabelScaleFancyMenu();
+		if (scale == 1.0F) return;
+		if (scale == 0.0F) {
+			info.cancel();
+			return;
+		}
+		AbstractWidget w = this.getWidgetFancyMenu();
+		Component text = w.getMessage();
+		int xMin = w.getX() + width;
+		int xMax = w.getX() + w.getWidth() - width;
+		int yMin = w.getY();
+		int yMax = w.getY() + w.getHeight();
+		float invScale = 1.0F / scale;
+		float scaledMinX = xMin * invScale;
+		float scaledMaxX = xMax * invScale;
+		float scaledMinY = yMin * invScale;
+		float scaledMaxY = yMax * invScale;
+		int textWidth = font.width(text);
+		float textPosY = (scaledMinY + scaledMaxY - font.lineHeight) / 2F + 1F;
+		float maxTextWidth = scaledMaxX - scaledMinX;
+
+		graphics.pose().pushPose();
+		graphics.pose().scale(scale, scale, 1.0F);
+		if (textWidth > maxTextWidth) {
+			float diffTextWidth = textWidth - maxTextWidth;
+			double scrollTime = (double) Util.getMillis() / 1000.0D;
+			double scrollDuration = Math.max(diffTextWidth * 0.5D, 3.0D);
+			double scrollAlpha = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / scrollDuration)) / 2.0D + 0.5D;
+			double textOffset = Mth.lerp(scrollAlpha, 0.0D, diffTextWidth);
+			graphics.enableScissor(xMin, yMin, xMax, yMax);
+			graphics.drawString(font, text, (int)(scaledMinX - (float)textOffset), (int)textPosY, color);
+			graphics.disableScissor();
+		} else {
+			float textPosX = ((scaledMinX + scaledMaxX) / 2F) - (textWidth / 2F);
+			graphics.drawString(font, text, (int)textPosX, (int)textPosY, color);
+		}
+		graphics.pose().popPose();
+		info.cancel();
 	}
 
 	@Inject(method = "isMouseOver", at = @At("HEAD"), cancellable = true)
@@ -415,6 +462,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setUnderlineLabelOnHoverFancyMenu(false);
 		this.setLabelHoverColorFancyMenu(null);
 		this.setLabelBaseColorFancyMenu(null);
+		this.setLabelScaleFancyMenu(null);
 		this.setCustomWidthFancyMenu(null);
 		this.setCustomHeightFancyMenu(null);
 		this.setCustomXFancyMenu(null);
@@ -508,6 +556,18 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public @Nullable DrawableColor getLabelBaseColorFancyMenu() {
 		return this.labelBaseColorFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setLabelScaleFancyMenu(@Nullable String scale) {
+		this.labelScaleFancyMenu = scale;
+	}
+
+	@Unique
+	@Override
+	public @Nullable String getLabelScaleFancyMenu() {
+		return this.labelScaleFancyMenu;
 	}
 
 	@Unique

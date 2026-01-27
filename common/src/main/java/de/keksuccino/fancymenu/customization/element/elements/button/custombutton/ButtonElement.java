@@ -52,6 +52,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public String hoverLabel;
     public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
     public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
+    public final Property.StringProperty labelScale = putProperty(Property.stringProperty("label_scale", "1.0", false, true, "fancymenu.elements.widgets.label.scale"));
     public String tooltip;
     public ResourceSupplier<ITexture> backgroundTextureNormal;
     public ResourceSupplier<ITexture> backgroundTextureHover;
@@ -210,6 +211,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetLabelUnderline();
         this.updateWidgetLabelBaseColor();
         this.updateWidgetLabelHoverColor();
+        this.updateWidgetLabelScale();
         this.updateWidgetHoverSound();
         this.updateWidgetUnhoverSound();
         this.updateWidgetClickSound();
@@ -289,6 +291,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public void updateWidgetLabelBaseColor() {
         if (this.getWidget() instanceof CustomizableWidget w) {
             w.setLabelBaseColorFancyMenu(this.getLabelBaseColor());
+        }
+    }
+
+    public void updateWidgetLabelScale() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            w.setLabelScaleFancyMenu(this.getLabelScale());
         }
     }
 
@@ -462,6 +470,16 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             return (template.labelBaseColor.get() != null) ? template.labelBaseColor.getDrawable() : null;
         }
         return (this.labelBaseColor.get() != null) ? this.labelBaseColor.getDrawable() : null;
+    }
+
+    @Nullable
+    public String getLabelScale() {
+        if (this.isTemplate) return this.labelScale.getString();
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) {
+            return template.labelScale.getString();
+        }
+        return this.labelScale.getString();
     }
 
     @NotNull

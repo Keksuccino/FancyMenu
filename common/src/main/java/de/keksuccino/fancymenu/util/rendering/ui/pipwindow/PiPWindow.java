@@ -1125,7 +1125,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private int getMenuBarHeight() {
-        return (int) ((float) MenuBar.HEIGHT * MenuBar.getRenderScale());
+        return (int) ((float) MenuBar.PIXEL_SIZE * MenuBar.getRenderScale());
     }
 
     /**

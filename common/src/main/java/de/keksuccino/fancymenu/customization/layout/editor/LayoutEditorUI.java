@@ -52,7 +52,7 @@ import java.util.function.Consumer;
 
 public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
-    private static final MaterialIconTexture CLOSE_EDITOR_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE, UIBase::getUIMaterialIconTextureSizeBig, () -> MenuBar.HEIGHT - 8);
+    private static final MaterialIconTexture CLOSE_EDITOR_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE, UIBase::getUIMaterialIconTextureSizeNormal);
 
     @Nullable
     private MenuBar grandfatheredMenuBar = null;
@@ -119,7 +119,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 .setIcon(MaterialIcons.SETTINGS)
                 .setHoverAction((menu, entry, isPost) -> {
                     if (!isPost) {
-                        int menuBarHeight = (int)((float)MenuBar.HEIGHT * MenuBar.getRenderScale());
+                        int menuBarHeight = (int)((float)MenuBar.PIXEL_SIZE * MenuBar.getRenderScale());
                         editor.rightClickMenuOpenPosX = 20;
                         editor.rightClickMenuOpenPosY = menuBarHeight + 20;
                     }
