@@ -2721,5 +2721,7 @@
   "fancymenu.listeners.on_element_spawned.desc": "This listener triggers when an element instance is spawned via the 'Spawn Element Instance' action.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$element_type §r= The spawned element type identifier\n- §z$$element_identifier §r= The spawned element's identifier\n- §z$$target_screen §r= The target screen identifier",
   "fancymenu.context_menu.entries.number.input_via_number_picker": "Set Via Number Picker",
   "fancymenu.context_menu.entries.number.input_as_string": "Set As Plain Text",
-  "fancymenu.general.cycle.enabled_disabled.manual": "Manual"
+  "fancymenu.general.cycle.enabled_disabled.manual": "Manual",
+  "fancymenu.editor.widgets.layers.group.default_name": "Group",
+  "fancymenu.editor.widgets.layers.group.delete.confirm": "Delete this group? Layers inside will remain."
 }

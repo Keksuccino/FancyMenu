@@ -66,8 +66,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private DrawableColor labelHoverColorFancyMenu;
 	@Unique @Nullable
 	private DrawableColor labelBaseColorFancyMenu;
-	@Unique @Nullable
-	private String labelScaleFancyMenu;
+	@Unique
+	private float labelScaleFancyMenu = 1.0F;
 	@Unique @Nullable
 	private RenderableResource customBackgroundNormalFancyMenu;
 	@Unique @Nullable
@@ -462,7 +462,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setUnderlineLabelOnHoverFancyMenu(false);
 		this.setLabelHoverColorFancyMenu(null);
 		this.setLabelBaseColorFancyMenu(null);
-		this.setLabelScaleFancyMenu(null);
+		this.setLabelScaleFancyMenu(1.0F);
 		this.setCustomWidthFancyMenu(null);
 		this.setCustomHeightFancyMenu(null);
 		this.setCustomXFancyMenu(null);
@@ -560,13 +560,13 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 	@Unique
 	@Override
-	public void setLabelScaleFancyMenu(@Nullable String scale) {
+	public void setLabelScaleFancyMenu(float scale) {
 		this.labelScaleFancyMenu = scale;
 	}
 
 	@Unique
 	@Override
-	public @Nullable String getLabelScaleFancyMenu() {
+	public float getLabelScaleFancyMenu() {
 		return this.labelScaleFancyMenu;
 	}
 

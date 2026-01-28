@@ -164,22 +164,12 @@ public interface CustomizableWidget {
     @Nullable
     DrawableColor getLabelBaseColorFancyMenu();
 
-    void setLabelScaleFancyMenu(@Nullable String scale);
+    void setLabelScaleFancyMenu(float scale);
 
-    @Nullable
-    String getLabelScaleFancyMenu();
+    float getLabelScaleFancyMenu();
 
     default float resolveLabelScaleFancyMenu() {
-        String scale = this.getLabelScaleFancyMenu();
-        if (scale == null) return 1.0F;
-        try {
-            float parsed = Float.parseFloat(scale.trim());
-            if (Float.isFinite(parsed)) {
-                return parsed;
-            }
-        } catch (NumberFormatException ignored) {
-        }
-        return 1.0F;
+        return this.getLabelScaleFancyMenu();
     }
 
     void setUnderlineLabelOnHoverFancyMenu(boolean underline);

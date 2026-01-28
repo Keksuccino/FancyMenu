@@ -559,6 +559,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			}
 		}
 
+		this.sanitizeLayerGroups();
+
 	}
 
 	protected void serializeElementInstancesToLayoutInstance() {
@@ -566,6 +568,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.layout.serializedElements.clear();
 		this.layout.serializedVanillaButtonElements.clear();
 		this.layout.serializedDeepElements.clear();
+		this.updateLayerGroupElementOrder();
 
 		//Serialize normal elements
 		for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
@@ -659,6 +662,95 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		return null;
 	}
 
+	@Nullable
+	public Layout.LayerGroup getLayerGroupForElement(@NotNull AbstractEditorElement<?, ?> element) {
+		return this.getLayerGroupForInstanceIdentifier(element.element.getInstanceIdentifier());
+	}
+
+	@Nullable
+	public Layout.LayerGroup getLayerGroupForInstanceIdentifier(@NotNull String instanceIdentifier) {
+		for (Layout.LayerGroup group : this.layout.layerGroups) {
+			if (group.elementInstanceIdentifiers.contains(instanceIdentifier)) {
+				return group;
+			}
+		}
+		return null;
+	}
+
+	@NotNull
+	public List<AbstractEditorElement<?, ?>> getElementsInGroup(@NotNull Layout.LayerGroup group) {
+		List<AbstractEditorElement<?, ?>> elements = new ArrayList<>();
+		for (AbstractEditorElement<?, ?> element : this.normalEditorElements) {
+			if (group.elementInstanceIdentifiers.contains(element.element.getInstanceIdentifier())) {
+				elements.add(element);
+			}
+		}
+		return elements;
+	}
+
+	public void removeElementsFromLayerGroups(@NotNull Collection<String> elementIds) {
+		for (Layout.LayerGroup group : this.layout.layerGroups) {
+			group.elementInstanceIdentifiers.removeIf(elementIds::contains);
+		}
+	}
+
+	public void addElementsToLayerGroup(@NotNull Collection<String> elementIds, @NotNull Layout.LayerGroup group) {
+		this.removeElementsFromLayerGroups(elementIds);
+		for (String id : elementIds) {
+			if (!group.elementInstanceIdentifiers.contains(id)) {
+				group.elementInstanceIdentifiers.add(id);
+			}
+		}
+	}
+
+	public void sanitizeLayerGroups() {
+		Set<String> validIds = new HashSet<>();
+		for (AbstractEditorElement<?, ?> element : this.normalEditorElements) {
+			validIds.add(element.element.getInstanceIdentifier());
+		}
+		Set<String> seen = new HashSet<>();
+		for (Layout.LayerGroup group : this.layout.layerGroups) {
+			List<String> cleaned = new ArrayList<>();
+			for (String id : group.elementInstanceIdentifiers) {
+				if (validIds.contains(id) && seen.add(id)) {
+					cleaned.add(id);
+				}
+			}
+			group.elementInstanceIdentifiers = cleaned;
+		}
+		this.updateLayerGroupElementOrder();
+	}
+
+	public void updateLayerGroupElementOrder() {
+		Map<String, Integer> indexMap = new HashMap<>();
+		for (int i = 0; i < this.normalEditorElements.size(); i++) {
+			indexMap.put(this.normalEditorElements.get(i).element.getInstanceIdentifier(), i);
+		}
+		List<Layout.LayerGroup> withElements = new ArrayList<>();
+		List<Layout.LayerGroup> empty = new ArrayList<>();
+		Map<Layout.LayerGroup, Integer> groupIndex = new HashMap<>();
+		for (Layout.LayerGroup group : this.layout.layerGroups) {
+			group.elementInstanceIdentifiers.sort(Comparator.comparingInt(id -> indexMap.getOrDefault(id, Integer.MAX_VALUE)));
+			int minIndex = Integer.MAX_VALUE;
+			for (String id : group.elementInstanceIdentifiers) {
+				Integer idx = indexMap.get(id);
+				if (idx != null) {
+					minIndex = Math.min(minIndex, idx);
+				}
+			}
+			if (minIndex == Integer.MAX_VALUE) {
+				empty.add(group);
+			} else {
+				withElements.add(group);
+				groupIndex.put(group, minIndex);
+			}
+		}
+		withElements.sort(Comparator.comparingInt(groupIndex::get));
+		this.layout.layerGroups.clear();
+		this.layout.layerGroups.addAll(withElements);
+		this.layout.layerGroups.addAll(empty);
+	}
+
 	public void selectAllElements() {
 		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			if (e.element.layerHiddenInEditor) continue;
@@ -676,8 +768,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public boolean deleteElement(@NotNull AbstractEditorElement<?, ?> element) {
 		if (element.settings.isDestroyable()) {
 			if (!element.settings.shouldHideInsteadOfDestroy()) {
+				this.removeElementsFromLayerGroups(List.of(element.element.getInstanceIdentifier()));
 				this.normalEditorElements.remove(element);
 				this.vanillaWidgetEditorElements.remove(element);
+				this.updateLayerGroupElementOrder();
 				for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 					w.editorElementRemovedOrHidden(element);
 				}
@@ -707,12 +801,24 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	public boolean canMoveLayerUp(AbstractEditorElement<?, ?> element) {
+		Layout.LayerGroup group = this.getLayerGroupForElement(element);
+		if (group != null) {
+			List<AbstractEditorElement<?, ?>> groupElements = this.getElementsInGroup(group);
+			int groupIndex = groupElements.indexOf(element);
+			return groupIndex != -1 && groupIndex < groupElements.size() - 1;
+		}
 		int index = this.normalEditorElements.indexOf(element);
 		if (index == -1) return false;
 		return index < this.normalEditorElements.size()-1;
 	}
 
 	public boolean canMoveLayerDown(AbstractEditorElement<?, ?> element) {
+		Layout.LayerGroup group = this.getLayerGroupForElement(element);
+		if (group != null) {
+			List<AbstractEditorElement<?, ?>> groupElements = this.getElementsInGroup(group);
+			int groupIndex = groupElements.indexOf(element);
+			return groupIndex > 0;
+		}
 		int index = this.normalEditorElements.indexOf(element);
 		return index > 0;
 	}
@@ -724,7 +830,33 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public AbstractEditorElement<?, ?> moveLayerUp(@NotNull AbstractEditorElement<?, ?> element) {
 		AbstractEditorElement<?, ?> movedAbove = null;
 		try {
-			if (this.normalEditorElements.contains(element)) {
+			Layout.LayerGroup group = this.getLayerGroupForElement(element);
+			if (group != null) {
+				List<AbstractEditorElement<?, ?>> groupElements = this.getElementsInGroup(group);
+				int groupIndex = groupElements.indexOf(element);
+				if (groupIndex >= 0 && groupIndex < groupElements.size() - 1) {
+					AbstractEditorElement<?, ?> above = groupElements.get(groupIndex + 1);
+					int targetIndex = this.normalEditorElements.indexOf(above) + 1;
+					List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>(this.normalEditorElements);
+					int sourceIndex = newNormalEditorElements.indexOf(element);
+					if (sourceIndex != -1) {
+						newNormalEditorElements.remove(element);
+						int adjustedTargetIndex = targetIndex;
+						if (sourceIndex < targetIndex) {
+							adjustedTargetIndex--;
+						}
+						if (adjustedTargetIndex < 0) {
+							adjustedTargetIndex = 0;
+						}
+						if (adjustedTargetIndex > newNormalEditorElements.size()) {
+							adjustedTargetIndex = newNormalEditorElements.size();
+						}
+						newNormalEditorElements.add(adjustedTargetIndex, element);
+						this.normalEditorElements = newNormalEditorElements;
+					}
+					movedAbove = above;
+				}
+			} else if (this.normalEditorElements.contains(element)) {
 				List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>();
 				int index = this.normalEditorElements.indexOf(element);
 				int i = 0;
@@ -740,8 +872,15 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						i++;
 					}
 					this.normalEditorElements = newNormalEditorElements;
+					if (movedAbove != null) {
+						Layout.LayerGroup targetGroup = this.getLayerGroupForElement(movedAbove);
+						if (targetGroup != null) {
+							this.addElementsToLayerGroup(List.of(element.element.getInstanceIdentifier()), targetGroup);
+						}
+					}
 				}
 			}
+			this.updateLayerGroupElementOrder();
 		} catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to move element one layer up in the editor!", ex);
 		}
@@ -755,7 +894,33 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public AbstractEditorElement<?, ?> moveLayerDown(AbstractEditorElement<?, ?> element) {
 		AbstractEditorElement<?, ?> movedBehind = null;
 		try {
-			if (this.normalEditorElements.contains(element)) {
+			Layout.LayerGroup group = this.getLayerGroupForElement(element);
+			if (group != null) {
+				List<AbstractEditorElement<?, ?>> groupElements = this.getElementsInGroup(group);
+				int groupIndex = groupElements.indexOf(element);
+				if (groupIndex > 0) {
+					AbstractEditorElement<?, ?> below = groupElements.get(groupIndex - 1);
+					int targetIndex = this.normalEditorElements.indexOf(below);
+					List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>(this.normalEditorElements);
+					int sourceIndex = newNormalEditorElements.indexOf(element);
+					if (sourceIndex != -1) {
+						newNormalEditorElements.remove(element);
+						int adjustedTargetIndex = targetIndex;
+						if (sourceIndex < targetIndex) {
+							adjustedTargetIndex--;
+						}
+						if (adjustedTargetIndex < 0) {
+							adjustedTargetIndex = 0;
+						}
+						if (adjustedTargetIndex > newNormalEditorElements.size()) {
+							adjustedTargetIndex = newNormalEditorElements.size();
+						}
+						newNormalEditorElements.add(adjustedTargetIndex, element);
+						this.normalEditorElements = newNormalEditorElements;
+					}
+					movedBehind = below;
+				}
+			} else if (this.normalEditorElements.contains(element)) {
 				List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>();
 				int index = this.normalEditorElements.indexOf(element);
 				int i = 0;
@@ -771,8 +936,15 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						i++;
 					}
 					this.normalEditorElements = newNormalEditorElements;
+					if (movedBehind != null) {
+						Layout.LayerGroup targetGroup = this.getLayerGroupForElement(movedBehind);
+						if (targetGroup != null) {
+							this.addElementsToLayerGroup(List.of(element.element.getInstanceIdentifier()), targetGroup);
+						}
+					}
 				}
 			}
+			this.updateLayerGroupElementOrder();
 		} catch (Exception ex) {
 			LOGGER.error("[FANCYMENU] Failed to move element one layer down in the editor!", ex);
 		}
@@ -819,6 +991,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 				// Update the elements list
 				this.normalEditorElements = newNormalEditorElements;
+				this.updateLayerGroupElementOrder();
 
 				// Notify widgets about the change
 				boolean movedUp = sourceIndex > targetIndex;

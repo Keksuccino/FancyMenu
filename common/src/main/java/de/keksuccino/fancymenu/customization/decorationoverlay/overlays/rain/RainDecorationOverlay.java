@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.rain;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.RainOverlay;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
@@ -18,9 +17,9 @@ import java.util.Objects;
 
 public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorationOverlay> {
 
-    public final Property.StringProperty rainIntensity = putProperty(Property.stringProperty("rain_intensity", "1.0", false, true, "fancymenu.decoration_overlays.rain.intensity"));
-    public final Property.StringProperty rainScale = putProperty(Property.stringProperty("rain_scale", "1.0", false, true, "fancymenu.decoration_overlays.rain.scale"));
-    public final Property.StringProperty rainThunderBrightness = putProperty(Property.stringProperty("rain_thunder_brightness", "1.0", false, true, "fancymenu.decoration_overlays.rain.thunder_brightness"));
+    public final Property.FloatProperty rainIntensity = putProperty(Property.floatProperty("rain_intensity", 1.0F, "fancymenu.decoration_overlays.rain.intensity"));
+    public final Property.FloatProperty rainScale = putProperty(Property.floatProperty("rain_scale", 1.0F, "fancymenu.decoration_overlays.rain.scale"));
+    public final Property.FloatProperty rainThunderBrightness = putProperty(Property.floatProperty("rain_thunder_brightness", 1.0F, "fancymenu.decoration_overlays.rain.thunder_brightness"));
     public final Property<Boolean> rainPuddles = putProperty(Property.booleanProperty("rain_puddles", true, "fancymenu.decoration_overlays.rain.puddles"));
     public final Property<Boolean> rainDrips = putProperty(Property.booleanProperty("rain_drips", true, "fancymenu.decoration_overlays.rain.drips"));
     public final Property<Boolean> rainThunder = putProperty(Property.booleanProperty("rain_thunder", false, "fancymenu.decoration_overlays.rain.thunder"));
@@ -28,9 +27,6 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
 
     protected final RainOverlay overlay = new RainOverlay(0, 0);
     protected String lastRainColorString = null;
-    protected String lastRainIntensityString = null;
-    protected String lastRainScaleString = null;
-    protected String lastRainThunderBrightnessString = null;
 
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
@@ -81,44 +77,11 @@ public class RainDecorationOverlay extends AbstractDecorationOverlay<RainDecorat
         }
 
         // Update rain intensity
-        String intensityString = this.rainIntensity.getString();
-        if (intensityString == null) intensityString = "1.0";
-        if (!Objects.equals(intensityString, this.lastRainIntensityString)) {
-            this.lastRainIntensityString = intensityString;
-            float lastRainIntensity;
-            if (MathUtils.isFloat(intensityString)) {
-                lastRainIntensity = Float.parseFloat(intensityString);
-            } else {
-                lastRainIntensity = 1.0f;
-            }
-            this.overlay.setIntensity(lastRainIntensity);
-        }
+        this.overlay.setIntensity(this.rainIntensity.getFloat());
 
-        String scaleString = this.rainScale.getString();
-        if (scaleString == null) scaleString = "1.0";
-        if (!Objects.equals(scaleString, this.lastRainScaleString)) {
-            this.lastRainScaleString = scaleString;
-            float scaleValue;
-            if (MathUtils.isFloat(scaleString)) {
-                scaleValue = Float.parseFloat(scaleString);
-            } else {
-                scaleValue = 1.0F;
-            }
-            this.overlay.setScale(scaleValue);
-        }
+        this.overlay.setScale(this.rainScale.getFloat());
 
-        String thunderBrightnessString = this.rainThunderBrightness.getString();
-        if (thunderBrightnessString == null) thunderBrightnessString = "1.0";
-        if (!Objects.equals(thunderBrightnessString, this.lastRainThunderBrightnessString)) {
-            this.lastRainThunderBrightnessString = thunderBrightnessString;
-            float lastThunderBrightness;
-            if (MathUtils.isFloat(thunderBrightnessString)) {
-                lastThunderBrightness = Float.parseFloat(thunderBrightnessString);
-            } else {
-                lastThunderBrightness = 1.0F;
-            }
-            this.overlay.setThunderBrightness(lastThunderBrightness);
-        }
+        this.overlay.setThunderBrightness(this.rainThunderBrightness.getFloat());
 
         this.overlay.setWidth(getScreenWidth());
         this.overlay.setHeight(getScreenHeight());

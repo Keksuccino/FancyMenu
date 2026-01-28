@@ -50,7 +50,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public String label;
     public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
     public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
-    public final Property.StringProperty labelScale = putProperty(Property.stringProperty("label_scale", "1.0", false, true, "fancymenu.elements.widgets.label.scale"));
+    public final Property.FloatProperty labelScale = putProperty(Property.floatProperty("label_scale", 1.0F, "fancymenu.elements.widgets.label.scale"));
     public String tooltip;
     public ResourceSupplier<ITexture> handleTextureNormal;
     public ResourceSupplier<ITexture> handleTextureHover;
@@ -456,13 +456,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         return (this.labelBaseColor.get() != null) ? this.labelBaseColor.getDrawable() : null;
     }
 
-    @Nullable
-    public String getLabelScale() {
+    public float getLabelScale() {
         ButtonElement template = this.getPropertySource();
         if ((template != null) && template.templateApplyLabel) {
-            return template.labelScale.getString();
+            return template.labelScale.getFloat();
         }
-        return this.labelScale.getString();
+        return this.labelScale.getFloat();
     }
 
     protected <T> T getTemplateProperty(@NotNull TemplatePropertyGetter<T> templatePropertyGetter, @Nullable T defaultProperty) {

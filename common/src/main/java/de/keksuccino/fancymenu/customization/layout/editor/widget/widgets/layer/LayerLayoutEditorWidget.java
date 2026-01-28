@@ -7,11 +7,14 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidgetBuilder;
+import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
@@ -39,18 +42,26 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     // Added fields for drag and drop functionality
     protected ScrollAreaEntry draggedEntry = null;
-    private int dragTargetIndex = -1;
+    private int dragTargetUiIndex = -1;
+    private float dragTargetIndicatorY = Float.NaN;
+    @Nullable
+    private Layout.LayerGroup dragTargetGroup = null;
     private boolean isDragging = false;
     private static final int DROP_INDICATOR_THICKNESS = 3;
     private static final int TITLE_BAR_ICON_BASE_SIZE = 8;
     private static final MaterialIcon TITLE_BAR_HIDE_ICON = MaterialIcons.CLOSE;
     private static final MaterialIcon TITLE_BAR_EXPAND_ICON = MaterialIcons.EXPAND_MORE;
     private static final MaterialIcon TITLE_BAR_COLLAPSE_ICON = MaterialIcons.EXPAND_LESS;
+    private static final MaterialIcon GROUP_ADD_ICON = MaterialIcons.ADD;
+    private static final MaterialIcon GROUP_DELETE_ICON = MaterialIcons.CLOSE;
     private static final MaterialIcon EYE_ICON = MaterialIcons.VISIBILITY;
     private static final MaterialIcon MOVE_TO_TOP_ICON = MaterialIcons.VERTICAL_ALIGN_TOP;
     private static final MaterialIcon MOVE_BEHIND_ICON = MaterialIcons.VERTICAL_ALIGN_BOTTOM;
     private static final float LAYER_EYE_ICON_PADDING = 4.0f;
     private static final float LAYER_ICON_TEXT_GAP = 4.0f;
+    private static final float GROUP_INDENT = 12.0f;
+    private static final float GROUP_NAME_LEFT_PADDING = 6.0f;
+    private static final float GROUP_DELETE_BUTTON_WIDTH = 24.0f;
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
 
@@ -100,6 +111,12 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.addTitleBarButton(new MaterialTitleBarButton(this, button -> this.isExpanded() ? TITLE_BAR_COLLAPSE_ICON : TITLE_BAR_EXPAND_ICON, button -> {
             this.setExpanded(!this.isExpanded());
         }));
+
+        this.addTitleBarButton(new MaterialTitleBarButton(this, button -> GROUP_ADD_ICON, button -> {
+            this.editor.history.saveSnapshot();
+            this.editor.layout.layerGroups.add(new Layout.LayerGroup());
+            MainThreadTaskExecutor.executeInMainThread(() -> this.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        }));
     }
 
     @Override
@@ -113,6 +130,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof LayerElementEntry l) {
                 this.children.remove(l.editLayerNameBox);
+            } else if (e instanceof LayerGroupEntry g) {
+                this.children.remove(g.editGroupNameBox);
             }
         }
         this.scrollArea.clearEntries();
@@ -120,11 +139,28 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.scrollArea.addEntry(new VanillaLayerElementEntry(this.scrollArea, this));
             this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
         }
+        Set<Layout.LayerGroup> handledGroups = new HashSet<>();
         for (AbstractEditorElement e : Lists.reverse(new ArrayList<>(this.editor.normalEditorElements))) {
-            LayerElementEntry layer = new LayerElementEntry(this.scrollArea, this, e);
+            Layout.LayerGroup group = this.editor.getLayerGroupForElement(e);
+            if ((group != null) && !handledGroups.contains(group)) {
+                LayerGroupEntry groupEntry = new LayerGroupEntry(this.scrollArea, this, group);
+                this.children.add(groupEntry.editGroupNameBox);
+                this.scrollArea.addEntry(groupEntry);
+                this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
+                handledGroups.add(group);
+            }
+            LayerElementEntry layer = new LayerElementEntry(this.scrollArea, this, e, group);
             this.children.add(layer.editLayerNameBox);
             this.scrollArea.addEntry(layer);
             this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
+        }
+        for (Layout.LayerGroup group : this.editor.layout.layerGroups) {
+            if (!handledGroups.contains(group)) {
+                LayerGroupEntry groupEntry = new LayerGroupEntry(this.scrollArea, this, group);
+                this.children.add(groupEntry.editGroupNameBox);
+                this.scrollArea.addEntry(groupEntry);
+                this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
+            }
         }
         if (!this.editor.layout.renderElementsBehindVanilla) {
             this.scrollArea.addEntry(new VanillaLayerElementEntry(this.scrollArea, this));
@@ -134,7 +170,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         // Reset drag state when list is updated
         this.draggedEntry = null;
-        this.dragTargetIndex = -1;
+        this.dragTargetUiIndex = -1;
+        this.dragTargetIndicatorY = Float.NaN;
+        this.dragTargetGroup = null;
         this.isDragging = false;
     }
 
@@ -152,31 +190,12 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.scrollArea.render(graphics, mouseX, mouseY, partial);
 
         // Render the drop indicator if currently dragging
-        if (isDragging && dragTargetIndex >= 0 && dragTargetIndex <= this.scrollArea.getEntries().size()) {
-            float indicatorY;
-
-            // This is the key change - make the indicator position clearer
-            if (dragTargetIndex == this.scrollArea.getEntries().size()) {
-                // If dropping at the end of the list, show indicator below the last entry
-                if (!this.scrollArea.getEntries().isEmpty()) {
-                    ScrollAreaEntry lastEntry = this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1);
-                    indicatorY = lastEntry.getY() + lastEntry.getHeight();
-                } else {
-                    indicatorY = this.scrollArea.getInnerY();
-                }
-            } else {
-                // This is important: We always draw the indicator at the TOP of the target entry
-                // This ensures the visual position matches where the item will be placed
-                ScrollAreaEntry targetEntry = this.scrollArea.getEntries().get(dragTargetIndex);
-                indicatorY = targetEntry.getY();
-            }
-
-            // Draw thicker drop indicator line
+        if (isDragging && Float.isFinite(dragTargetIndicatorY)) {
+            float indicatorY = dragTargetIndicatorY;
             UIBase.fillF(graphics, this.scrollArea.getInnerX(), indicatorY - DROP_INDICATOR_THICKNESS / 2f,
                     this.scrollArea.getInnerX() + this.scrollArea.getInnerWidth(),
                     indicatorY + DROP_INDICATOR_THICKNESS / 2f,
                     UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_border_color.getColorInt() : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt());
-
         }
 
     }
@@ -217,6 +236,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 if (!l.isLayerNameHovered()) {
                     l.stopEditingLayerName();
                 }
+            } else if (e instanceof LayerGroupEntry g) {
+                if (!g.isGroupNameHovered()) {
+                    g.stopEditingGroupName();
+                }
             }
         }
     }
@@ -225,7 +248,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     protected boolean mouseReleasedBody(double mouseX, double mouseY, int button) {
 
         // Handle drop operation when mouse button is released
-        if (button == 0 && isDragging && draggedEntry instanceof LayerElementEntry && dragTargetIndex >= 0) {
+        if (button == 0 && isDragging && dragTargetUiIndex >= 0) {
             finishDragOperation();
         }
 
@@ -236,11 +259,15 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         // Reset drag state
         isDragging = false;
         draggedEntry = null;
-        dragTargetIndex = -1;
+        dragTargetUiIndex = -1;
+        dragTargetIndicatorY = Float.NaN;
+        dragTargetGroup = null;
 
         for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof LayerElementEntry l) {
                 if (l.layerMouseReleased(mouseX, mouseY, button)) return true;
+            } else if (e instanceof LayerGroupEntry g) {
+                if (g.groupMouseReleased(mouseX, mouseY, button)) return true;
             }
         }
 
@@ -264,6 +291,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof LayerElementEntry l) {
                 if (l.layerMouseDragged(mouseX, mouseY, button, d1, d2)) return true;
+            } else if (e instanceof LayerGroupEntry g) {
+                if (g.groupMouseDragged(mouseX, mouseY, button, d1, d2)) return true;
             }
         }
 
@@ -277,355 +306,303 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private void updateDragTarget(double mouseX, double mouseY) {
         if (!isDragging || draggedEntry == null) return;
 
-        // Get the index of the entry being dragged
-        int draggedIndex = this.scrollArea.getEntries().indexOf(draggedEntry);
-        if (draggedIndex < 0) return;
+        List<AbstractEditorElement<?, ?>> movingElements = this.getMovingElementsForDrag();
+        List<LayerElementEntry> dragEntries = this.getLayerEntriesInUiOrderExcluding(movingElements);
+        this.dragTargetUiIndex = -1;
+        this.dragTargetIndicatorY = Float.NaN;
+        this.dragTargetGroup = null;
 
-        // Check if mouse is completely outside the scroll area's top boundary
-        boolean isAboveWidget = mouseY < this.scrollArea.getInnerY();
-        boolean isBelowWidget = mouseY > this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight();
-
-        // Handle case when mouse is dragged above the widget
-        if (isAboveWidget) {
-            if (this.editor.layout.renderElementsBehindVanilla &&
-                    !this.scrollArea.getEntries().isEmpty() &&
-                    this.scrollArea.getEntries().get(0) instanceof VanillaLayerElementEntry) {
-                // When dragging above with Vanilla at top, position below Vanilla entry
-                dragTargetIndex = 2; // After Vanilla (0) and separator (1)
-            } else {
-                // Otherwise position at the top of the list
-                dragTargetIndex = 0;
+        if (!(draggedEntry instanceof LayerGroupEntry)) {
+            LayerGroupEntry hoveredGroup = this.getHoveredGroupEntry(mouseX, mouseY);
+            if (hoveredGroup != null) {
+                this.dragTargetGroup = hoveredGroup.group;
+                this.dragTargetUiIndex = this.getGroupInsertionIndex(hoveredGroup.group, dragEntries);
+                this.dragTargetIndicatorY = this.getIndicatorYForUiIndex(dragEntries, this.dragTargetUiIndex);
+                return;
             }
+        }
+
+        if (dragEntries.isEmpty()) {
+            this.dragTargetUiIndex = 0;
+            this.dragTargetIndicatorY = this.scrollArea.getInnerY();
             return;
         }
 
-        // Handle case when mouse is dragged below the widget
-        if (isBelowWidget) {
-            if (!this.editor.layout.renderElementsBehindVanilla) {
-                // Find Vanilla entry when it's at the bottom
-                int vanillaIndex = -1;
-                for (int i = 0; i < this.scrollArea.getEntries().size(); i++) {
-                    if (this.scrollArea.getEntries().get(i) instanceof VanillaLayerElementEntry) {
-                        vanillaIndex = i;
-                        break;
-                    }
-                }
-
-                if (vanillaIndex >= 0) {
-                    // When dragging below with Vanilla at bottom, position above Vanilla
-                    dragTargetIndex = vanillaIndex;
-                    return;
-                }
-            }
-
-            // Otherwise position at the bottom of the list
-            dragTargetIndex = this.scrollArea.getEntries().size();
-            return;
-        }
-
-        // Find exactly which entry the mouse is directly over
-        int mouseOverIndex = -1;
-        for (int i = 0; i < this.scrollArea.getEntries().size(); i++) {
-            ScrollAreaEntry entry = this.scrollArea.getEntries().get(i);
-
-            if (entry.isMouseOver(mouseX, mouseY)) {
-                mouseOverIndex = i;
-                break;
-            }
-        }
-
-        // Special handling for when mouse is over the Vanilla entry at the TOP
-        if (this.editor.layout.renderElementsBehindVanilla &&
-                mouseOverIndex == 0 &&
-                this.scrollArea.getEntries().get(0) instanceof VanillaLayerElementEntry) {
-
-            // Get the Vanilla entry
-            VanillaLayerElementEntry vanillaEntry = (VanillaLayerElementEntry)this.scrollArea.getEntries().get(0);
-            float entryMidpoint = vanillaEntry.getY() + vanillaEntry.getHeight() / 2f;
-
+        LayerElementEntry hoveredLayer = this.getHoveredLayerEntry(mouseX, mouseY);
+        if ((hoveredLayer != null) && dragEntries.contains(hoveredLayer)) {
+            float entryMidpoint = hoveredLayer.getY() + hoveredLayer.getHeight() / 2f;
+            int uiIndex = dragEntries.indexOf(hoveredLayer);
             if (mouseY < entryMidpoint) {
-                // Mouse is in top half of Vanilla entry - position at top
-                dragTargetIndex = 0;
+                this.dragTargetUiIndex = uiIndex;
+                this.dragTargetIndicatorY = hoveredLayer.getY();
             } else {
-                // Mouse is in bottom half of Vanilla entry - position right below it
-                // Index 2 skips Vanilla entry (0) and its separator (1)
-                dragTargetIndex = 2;
+                this.dragTargetUiIndex = uiIndex + 1;
+                this.dragTargetIndicatorY = hoveredLayer.getY() + hoveredLayer.getHeight();
+            }
+            if (!(draggedEntry instanceof LayerGroupEntry)) {
+                this.dragTargetGroup = hoveredLayer.group;
             }
             return;
         }
 
-        // Special handling for when mouse is over the Vanilla entry at the BOTTOM
-        if (!this.editor.layout.renderElementsBehindVanilla &&
-                mouseOverIndex >= 0 &&
-                this.scrollArea.getEntries().get(mouseOverIndex) instanceof VanillaLayerElementEntry) {
-
-            // Always place above Vanilla when it's at the bottom
-            dragTargetIndex = mouseOverIndex;
-            return;
-        }
-
-        // Special case: mouse is above all entries but still inside the widget
-        if (mouseOverIndex == -1 && !this.scrollArea.getEntries().isEmpty() &&
-                mouseY < this.scrollArea.getEntries().get(0).getY() &&
-                mouseY >= this.scrollArea.getInnerY()) {
-
-            // Add special handling when Vanilla is at the top
-            if (this.editor.layout.renderElementsBehindVanilla &&
-                    this.scrollArea.getEntries().get(0) instanceof VanillaLayerElementEntry) {
-                // When dropping above Vanilla entry at top, position right below Vanilla and its separator
-                dragTargetIndex = 2;
-            } else {
-                dragTargetIndex = 0;
-            }
-            return;
-        }
-
-        // Special case: mouse is below all entries but still inside the widget
-        if (mouseOverIndex == -1 && !this.scrollArea.getEntries().isEmpty() &&
-                mouseY > this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1).getY() +
-                        this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1).getHeight() &&
-                mouseY <= this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight()) {
-
-            // Add special handling when Vanilla is at the bottom
-            if (!this.editor.layout.renderElementsBehindVanilla) {
-                // Find the Vanilla entry index
-                int vanillaIndex = -1;
-                for (int i = 0; i < this.scrollArea.getEntries().size(); i++) {
-                    if (this.scrollArea.getEntries().get(i) instanceof VanillaLayerElementEntry) {
-                        vanillaIndex = i;
-                        break;
-                    }
-                }
-
-                if (vanillaIndex >= 0) {
-                    // When dropping below Vanilla entry at bottom, position right above Vanilla
-                    dragTargetIndex = vanillaIndex;
-                    return;
-                }
-            }
-
-            dragTargetIndex = this.scrollArea.getEntries().size();
-            return;
-        }
-
-        // Don't continue the logic here to avoid out-of-bounds errors
-        if (mouseOverIndex == -1) {
-            return;
-        }
-
-        // If we're over a separator, adjust to the nearest actual layer
-        if (mouseOverIndex % 2 == 1) { // Separator entries have odd indices
-            // Determine whether to go up or down based on mouse position
-            ScrollAreaEntry separator = this.scrollArea.getEntries().get(mouseOverIndex);
-            float separatorMidpoint = separator.getY() + separator.getHeight() / 2f;
-
-            if (mouseY < separatorMidpoint) {
-                mouseOverIndex = Math.max(0, mouseOverIndex - 1);
-            } else {
-                mouseOverIndex = Math.min(this.scrollArea.getEntries().size() - 1, mouseOverIndex + 1);
-            }
-        }
-
-        // If we're over the entry being dragged, don't change anything
-        if (mouseOverIndex == draggedIndex) {
-            return;
-        }
-
-        // Now determine where to place the indicator based on mouse position
-        ScrollAreaEntry targetEntry = this.scrollArea.getEntries().get(mouseOverIndex);
-        float entryMidpoint = targetEntry.getY() + targetEntry.getHeight() / 2f;
-
-        if (mouseY < entryMidpoint) {
-            // If in top half, place before this entry
-            dragTargetIndex = mouseOverIndex;
+        if (mouseY < this.scrollArea.getInnerY()) {
+            this.dragTargetUiIndex = 0;
+            this.dragTargetIndicatorY = dragEntries.get(0).getY();
+        } else if (mouseY > this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight()) {
+            LayerElementEntry lastEntry = dragEntries.get(dragEntries.size() - 1);
+            this.dragTargetUiIndex = dragEntries.size();
+            this.dragTargetIndicatorY = lastEntry.getY() + lastEntry.getHeight();
         } else {
-            // If in bottom half, place after this entry
-            dragTargetIndex = mouseOverIndex + 1;
-        }
-
-        // Special handling: don't allow placing below Vanilla when it's at the bottom
-        if (!this.editor.layout.renderElementsBehindVanilla) {
-            int vanillaIndex = -1;
-            for (int i = 0; i < this.scrollArea.getEntries().size(); i++) {
-                if (this.scrollArea.getEntries().get(i) instanceof VanillaLayerElementEntry) {
-                    vanillaIndex = i;
+            for (int i = 0; i < dragEntries.size(); i++) {
+                LayerElementEntry entry = dragEntries.get(i);
+                float entryMidpoint = entry.getY() + entry.getHeight() / 2f;
+                if (mouseY < entryMidpoint) {
+                    this.dragTargetUiIndex = i;
+                    this.dragTargetIndicatorY = entry.getY();
                     break;
                 }
             }
-
-            if (vanillaIndex >= 0 && dragTargetIndex > vanillaIndex) {
-                dragTargetIndex = vanillaIndex;
+            if (this.dragTargetUiIndex == -1) {
+                LayerElementEntry lastEntry = dragEntries.get(dragEntries.size() - 1);
+                this.dragTargetUiIndex = dragEntries.size();
+                this.dragTargetIndicatorY = lastEntry.getY() + lastEntry.getHeight();
             }
         }
 
-        // Ensure we don't place the indicator exactly at the dragged entry's position
-        if (dragTargetIndex == draggedIndex) {
-            if (mouseY > this.scrollArea.getEntries().get(draggedIndex).getY() +
-                    this.scrollArea.getEntries().get(draggedIndex).getHeight() / 2f) {
-                dragTargetIndex = draggedIndex + 1;
-            } else {
-                dragTargetIndex = Math.max(0, draggedIndex - 1);
+        if (!(draggedEntry instanceof LayerGroupEntry)) {
+            this.dragTargetGroup = this.resolveDragTargetGroup(mouseX, mouseY, this.dragTargetIndicatorY);
+        }
+    }
+
+    @NotNull
+    private List<LayerElementEntry> getLayerEntriesInUiOrder() {
+        List<LayerElementEntry> entries = new ArrayList<>();
+        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+            if (entry instanceof LayerElementEntry layerEntry) {
+                entries.add(layerEntry);
             }
-        } else if (dragTargetIndex == draggedIndex + 1) {
-            if (draggedIndex < this.scrollArea.getEntries().size() - 1) {
-                ScrollAreaEntry nextEntry = this.scrollArea.getEntries().get(draggedIndex + 1);
-                if (mouseY < nextEntry.getY() + nextEntry.getHeight() / 2f) {
-                    // No change needed
-                } else {
-                    dragTargetIndex = draggedIndex + 2;
+        }
+        return entries;
+    }
+
+    @NotNull
+    private List<LayerElementEntry> getLayerEntriesInUiOrderExcluding(@NotNull Collection<AbstractEditorElement<?, ?>> excluded) {
+        if (excluded.isEmpty()) {
+            return this.getLayerEntriesInUiOrder();
+        }
+        List<LayerElementEntry> entries = new ArrayList<>();
+        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+            if (entry instanceof LayerElementEntry layerEntry) {
+                if (!excluded.contains(layerEntry.element)) {
+                    entries.add(layerEntry);
                 }
             }
         }
+        return entries;
+    }
+
+    @Nullable
+    private LayerGroupEntry getHoveredGroupEntry(double mouseX, double mouseY) {
+        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+            if (entry instanceof LayerGroupEntry groupEntry) {
+                if (groupEntry.isMouseOver(mouseX, mouseY)) {
+                    return groupEntry;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private LayerElementEntry getHoveredLayerEntry(double mouseX, double mouseY) {
+        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+            if (entry instanceof LayerElementEntry layerEntry) {
+                if (layerEntry.isMouseOver(mouseX, mouseY)) {
+                    return layerEntry;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private LayerGroupEntry getGroupEntry(@NotNull Layout.LayerGroup group) {
+        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+            if (entry instanceof LayerGroupEntry groupEntry) {
+                if (groupEntry.group == group) {
+                    return groupEntry;
+                }
+            }
+        }
+        return null;
+    }
+
+    private int getGroupInsertionIndex(@NotNull Layout.LayerGroup group, @NotNull List<LayerElementEntry> entries) {
+        int lastIndex = -1;
+        for (int i = 0; i < entries.size(); i++) {
+            if (entries.get(i).group == group) {
+                lastIndex = i;
+            }
+        }
+        if (lastIndex >= 0) {
+            return lastIndex + 1;
+        }
+        LayerGroupEntry groupEntry = this.getGroupEntry(group);
+        if (groupEntry != null) {
+            float groupY = groupEntry.getY();
+            for (int i = 0; i < entries.size(); i++) {
+                if (entries.get(i).getY() > groupY) {
+                    return i;
+                }
+            }
+        }
+        return entries.size();
+    }
+
+    private float getIndicatorYForUiIndex(@NotNull List<LayerElementEntry> entries, int uiIndex) {
+        if (entries.isEmpty()) {
+            return this.scrollArea.getInnerY();
+        }
+        if (uiIndex <= 0) {
+            return entries.get(0).getY();
+        }
+        if (uiIndex >= entries.size()) {
+            LayerElementEntry lastEntry = entries.get(entries.size() - 1);
+            return lastEntry.getY() + lastEntry.getHeight();
+        }
+        return entries.get(uiIndex).getY();
+    }
+
+    @Nullable
+    private Layout.LayerGroup resolveDragTargetGroup(double mouseX, double mouseY, float indicatorY) {
+        LayerGroupEntry hoveredGroup = this.getHoveredGroupEntry(mouseX, mouseY);
+        if (hoveredGroup != null) {
+            return hoveredGroup.group;
+        }
+        LayerElementEntry hoveredLayer = this.getHoveredLayerEntry(mouseX, mouseY);
+        if (hoveredLayer != null) {
+            return hoveredLayer.group;
+        }
+        List<LayerElementEntry> entries = this.getLayerEntriesInUiOrder();
+        if (entries.isEmpty() || !Float.isFinite(indicatorY)) {
+            return null;
+        }
+        int uiIndex = 0;
+        for (; uiIndex < entries.size(); uiIndex++) {
+            if (indicatorY <= entries.get(uiIndex).getY()) {
+                break;
+            }
+        }
+        Layout.LayerGroup before = (uiIndex > 0) ? entries.get(uiIndex - 1).group : null;
+        Layout.LayerGroup after = (uiIndex < entries.size()) ? entries.get(uiIndex).group : null;
+        if ((before != null) && (before == after)) {
+            return before;
+        }
+        return null;
+    }
+
+    @NotNull
+    private List<AbstractEditorElement<?, ?>> getMovingElementsForDrag() {
+        List<AbstractEditorElement<?, ?>> movingElements = new ArrayList<>();
+        if (this.draggedEntry instanceof LayerGroupEntry groupEntry) {
+            movingElements.addAll(this.editor.getElementsInGroup(groupEntry.group));
+            return movingElements;
+        }
+        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+            if (entry instanceof LayerElementEntry layerElement) {
+                if (layerElement.element.isSelected()) {
+                    movingElements.add(layerElement.element);
+                }
+            }
+        }
+        if (movingElements.isEmpty() && this.draggedEntry instanceof LayerElementEntry layerEntry) {
+            movingElements.add(layerEntry.element);
+        }
+        return movingElements;
     }
 
     /**
-     * Converts a UI list index to an actual element index in the editor
-     * @param uiIndex The index in the UI list
-     * @param forDropIndicator True if this conversion is for a drop indicator position
-     * @return The corresponding index in the editor's element list
-     */
-    private int getElementIndexFromUIIndex(int uiIndex, boolean forDropIndicator) {
-        int elementCount = this.editor.normalEditorElements.size();
-        if (elementCount == 0) return -1;
-
-        // Handle special cases
-        if (uiIndex < 0) return -1;
-        if (uiIndex > this.scrollArea.getEntries().size()) {
-            return 0; // Drop at bottom = index 0 in elements list
-        }
-
-        // Handle vanilla entry special cases
-        if (this.editor.layout.renderElementsBehindVanilla) { // Vanilla entry at TOP of scroll area
-            if (uiIndex <= 1) {
-                // If dropping at or above vanilla entry
-                return elementCount - 1;
-            }
-
-            // Adjust for vanilla entry and separator
-            int entryIndex = (uiIndex - 2) / 2;
-
-            // Convert to element index (accounting for reverse order)
-            int elementIndex = elementCount - 1 - entryIndex;
-
-            // The drop indicator needs to be adjusted differently
-            if (forDropIndicator && uiIndex % 2 == 0) {
-                // If indicator is at TOP of an entry, element should go ABOVE it (one index higher)
-                return elementIndex + 1;
-            }
-
-            return elementIndex;
-        } else { // Vanilla entry at BOTTOM of scroll area
-            // Regular case without vanilla at top
-            int entryIndex = uiIndex / 2;
-
-            // Convert to element index (accounting for reverse order)
-            int elementIndex = elementCount - 1 - entryIndex;
-
-            // Adjust for drop indicator
-            if (forDropIndicator && uiIndex % 2 == 0) {
-                // If indicator is at TOP of an entry, element should go ABOVE it (one index higher)
-                return elementIndex + 1;
-            }
-
-            return elementIndex;
-        }
-    }
-
-    /**
-     * Completes the drag operation by moving the element to the new position
-     */
-    /**
-     * Completes the drag operation by moving all selected elements to the new position
+     * Completes the drag operation by moving the dragged elements to the new position.
      */
     private void finishDragOperation() {
 
-        // Early exits
-        if (!(draggedEntry instanceof LayerElementEntry layerEntry)) return;
+        if (this.dragTargetUiIndex < 0 || this.draggedEntry == null) {
+            return;
+        }
 
-        // Get all selected layer entries
-        List<LayerElementEntry> selectedEntries = new ArrayList<>();
-        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
-            if (entry instanceof LayerElementEntry layerElement &&
-                    layerElement.element.isSelected()) {
-                selectedEntries.add(layerElement);
+        List<AbstractEditorElement<?, ?>> movingElements = this.getMovingElementsForDrag();
+        if (movingElements.isEmpty()) {
+            return;
+        }
+
+        Map<AbstractEditorElement<?, ?>, Integer> oldIndices = new HashMap<>();
+        for (int i = 0; i < this.editor.normalEditorElements.size(); i++) {
+            oldIndices.put(this.editor.normalEditorElements.get(i), i);
+        }
+
+        movingElements.sort(Comparator.comparingInt(element -> oldIndices.getOrDefault(element, -1)));
+
+        List<AbstractEditorElement<?, ?>> remaining = new ArrayList<>(this.editor.normalEditorElements);
+        remaining.removeAll(movingElements);
+
+        int remainingCount = remaining.size();
+        int targetUiIndex = Math.min(Math.max(this.dragTargetUiIndex, 0), remainingCount);
+        int targetIndex = remainingCount - targetUiIndex;
+        targetIndex = Math.min(Math.max(targetIndex, 0), remainingCount);
+
+        List<AbstractEditorElement<?, ?>> reordered = new ArrayList<>(remaining);
+        reordered.addAll(targetIndex, movingElements);
+        boolean groupChangeRequired = false;
+        if (!(this.draggedEntry instanceof LayerGroupEntry)) {
+            if (this.dragTargetGroup != null) {
+                for (AbstractEditorElement<?, ?> element : movingElements) {
+                    Layout.LayerGroup currentGroup = this.editor.getLayerGroupForElement(element);
+                    if (currentGroup != this.dragTargetGroup) {
+                        groupChangeRequired = true;
+                        break;
+                    }
+                }
+            } else {
+                for (AbstractEditorElement<?, ?> element : movingElements) {
+                    if (this.editor.getLayerGroupForElement(element) != null) {
+                        groupChangeRequired = true;
+                        break;
+                    }
+                }
             }
         }
-
-        // If no entries are selected (shouldn't happen), just move the dragged one
-        if (selectedEntries.isEmpty()) {
-            selectedEntries.add(layerEntry);
-        }
-
-        // Get the current index of the dragged entry in UI
-        int currentDraggedIndex = this.scrollArea.getEntries().indexOf(draggedEntry);
-        if (currentDraggedIndex < 0) {
+        if (reordered.equals(this.editor.normalEditorElements) && !groupChangeRequired) {
             return;
         }
 
-        // Skip if no change
-        if (dragTargetIndex == currentDraggedIndex) {
-            return;
-        }
-
-        // Sort selected entries by their current position to maintain relative order
-        selectedEntries.sort(Comparator.comparingInt(entry ->
-                this.scrollArea.getEntries().indexOf(entry)));
-
-        // Get source element indices for all selected entries
-        List<Integer> sourceElementIndices = new ArrayList<>();
-        for (LayerElementEntry entry : selectedEntries) {
-            int entryIndex = this.scrollArea.getEntries().indexOf(entry);
-            int elementIndex = getElementIndexFromUIIndex(entryIndex, false);
-            sourceElementIndices.add(elementIndex);
-        }
-
-        // Determine target position for the first element
-        boolean isIndicatorAtTop = (dragTargetIndex < this.scrollArea.getEntries().size() &&
-                dragTargetIndex % 2 == 0);
-        int targetElementIndex = getElementIndexFromUIIndex(dragTargetIndex, true);
-
-        // Ensure valid indices
-        if (sourceElementIndices.isEmpty() ||
-                targetElementIndex < 0 ||
-                targetElementIndex > this.editor.normalEditorElements.size()) {
-            return;
-        }
-
-        // Save history before modifying layout
         this.editor.history.saveSnapshot();
 
-        // Current positions may change as we move elements, so we need to process from bottom to top
-        // when moving downward, and from top to bottom when moving upward
-        boolean movingDown = targetElementIndex < Collections.min(sourceElementIndices);
+        this.editor.normalEditorElements = reordered;
 
-        if (!movingDown) {
-            // When moving down, process elements from bottom to top
-            Collections.reverse(selectedEntries);
-            Collections.reverse(sourceElementIndices);
-        }
-
-        // Move each selected element
-        for (int i = 0; i < selectedEntries.size(); i++) {
-            LayerElementEntry entry = selectedEntries.get(i);
-            int sourceIndex = sourceElementIndices.get(i);
-
-            // Each element's target position adjusts based on where we've already moved elements
-            int adjustedTargetIndex = targetElementIndex;
-
-            // When moving up, each subsequent element goes right after the previous one
-            if (movingDown && i > 0) {
-                adjustedTargetIndex = targetElementIndex + i;
+        if (!(this.draggedEntry instanceof LayerGroupEntry)) {
+            List<String> movingIds = new ArrayList<>();
+            for (AbstractEditorElement<?, ?> element : movingElements) {
+                movingIds.add(element.element.getInstanceIdentifier());
             }
-
-            AbstractEditorElement elementToMove = entry.element;
-            this.editor.moveLayerToPosition(elementToMove, adjustedTargetIndex);
+            if (this.dragTargetGroup != null) {
+                this.editor.addElementsToLayerGroup(movingIds, this.dragTargetGroup);
+            } else {
+                this.editor.removeElementsFromLayerGroups(movingIds);
+            }
         }
 
-        // Refresh the UI
-        MainThreadTaskExecutor.executeInMainThread(() -> {
-            this.updateList(true);
-        }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        this.editor.updateLayerGroupElementOrder();
 
+        for (AbstractEditorElement<?, ?> element : movingElements) {
+            Integer oldIndex = oldIndices.get(element);
+            Integer newIndex = this.editor.normalEditorElements.indexOf(element);
+            if ((oldIndex != null) && (newIndex != null)) {
+                boolean movedUp = newIndex > oldIndex;
+                this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(element, movedUp));
+            }
+        }
+
+        MainThreadTaskExecutor.executeInMainThread(() -> this.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
     }
 
     @Override
@@ -807,6 +784,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         protected AbstractEditorElement element;
         protected LayerLayoutEditorWidget layerWidget;
+        @Nullable
+        protected Layout.LayerGroup group;
         protected boolean eyeButtonHovered = false;
         protected Font font = Minecraft.getInstance().font;
         protected ExtendedEditBox editLayerNameBox;
@@ -818,10 +797,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         protected double dragStartY;
         private static final int DRAG_THRESHOLD = 3; // Minimum pixels to move before initiating drag
 
-        public LayerElementEntry(ScrollArea parent, LayerLayoutEditorWidget layerWidget, @NotNull AbstractEditorElement element) {
+        public LayerElementEntry(ScrollArea parent, LayerLayoutEditorWidget layerWidget, @NotNull AbstractEditorElement element, @Nullable Layout.LayerGroup group) {
             super(parent, 50, 28);
             this.element = element;
             this.layerWidget = layerWidget;
+            this.group = group;
             this.playClickSound = false;
             this.selectable = false;
             this.selectOnClick = false;
@@ -946,8 +926,12 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return 28f;
         }
 
+        public float getIndentOffset() {
+            return (this.group != null) ? GROUP_INDENT : 0.0f;
+        }
+
         public float getEyeButtonX() {
-            return this.x;
+            return this.x + this.getIndentOffset();
         }
 
         public float getEyeButtonY() {
@@ -991,8 +975,13 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
                         // Important: Set initial target index to the same as the dragged entry
                         // This ensures no jump at the start
-                        int currentIndex = this.parent.getEntries().indexOf(this);
-                        this.layerWidget.dragTargetIndex = currentIndex;
+                        List<LayerElementEntry> entries = this.layerWidget.getLayerEntriesInUiOrder();
+                        int currentIndex = entries.indexOf(this);
+                        if (currentIndex < 0) {
+                            currentIndex = 0;
+                        }
+                        this.layerWidget.dragTargetUiIndex = currentIndex;
+                        this.layerWidget.dragTargetIndicatorY = this.getY();
 
                         return true;
                     }
@@ -1055,6 +1044,220 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
                 this.element.setSelected(true);
                 MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.editor.openElementContextMenuAtMouseIfPossible(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            }
+        }
+
+    }
+
+    private class LayerGroupEntry extends ScrollAreaEntry {
+
+        protected final Layout.LayerGroup group;
+        protected final LayerLayoutEditorWidget layerWidget;
+        protected Font font = Minecraft.getInstance().font;
+        protected ExtendedEditBox editGroupNameBox;
+        protected boolean displayEditGroupNameBox = false;
+        protected boolean groupNameHovered = false;
+        protected boolean deleteButtonHovered = false;
+        protected long lastLeftClick = -1L;
+        protected boolean dragStarted = false;
+        protected double dragStartX;
+        protected double dragStartY;
+        private static final int DRAG_THRESHOLD = 3;
+
+        public LayerGroupEntry(ScrollArea parent, LayerLayoutEditorWidget layerWidget, @NotNull Layout.LayerGroup group) {
+            super(parent, 50, 28);
+            this.group = group;
+            this.layerWidget = layerWidget;
+            this.playClickSound = false;
+            this.selectable = false;
+            this.selectOnClick = false;
+            this.editGroupNameBox = new ExtendedEditBox(this.font, 0, 0, 0, 0, Component.empty()) {
+                @Override
+                public boolean keyPressed(int keycode, int scancode, int modifiers) {
+                    if (this.isVisible() && LayerGroupEntry.this.displayEditGroupNameBox) {
+                        if (keycode == InputConstants.KEY_ENTER) {
+                            LayerGroupEntry.this.stopEditingGroupName();
+                            return true;
+                        }
+                    }
+                    return super.keyPressed(keycode, scancode, modifiers);
+                }
+            };
+            this.editGroupNameBox.setVisible(false);
+            this.editGroupNameBox.setMaxLength(10000);
+            this.backgroundColorNormal = null;
+            this.backgroundColorHover = null;
+        }
+
+        @Override
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            this.groupNameHovered = this.isGroupNameMouseOver(mouseX, mouseY);
+            this.deleteButtonHovered = this.isDeleteButtonMouseOver(mouseX, mouseY);
+
+            if (this.isMouseOver(mouseX, mouseY)) {
+                UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
+            }
+
+            float deleteIconSize = getIconSize(this.getDeleteButtonWidth(), this.getDeleteButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float deleteIconX = this.getDeleteButtonX() + (this.getDeleteButtonWidth() - deleteIconSize) * 0.5f;
+            float deleteIconY = this.getDeleteButtonY() + (this.getDeleteButtonHeight() - deleteIconSize) * 0.5f;
+            float deleteAlpha = this.deleteButtonHovered ? 1.0f : 0.7f;
+            this.layerWidget.renderMaterialIcon(graphics, GROUP_DELETE_ICON, deleteIconX, deleteIconY, deleteIconSize, deleteIconSize, deleteAlpha);
+
+            if (!this.displayEditGroupNameBox) {
+                UIBase.renderText(graphics, Component.literal(this.getGroupName()), (int)this.getGroupNameX(), (int)this.getGroupNameY());
+            } else {
+                UIBase.applyDefaultWidgetSkinTo(this.editGroupNameBox);
+                this.editGroupNameBox.setX((int)this.getGroupNameX());
+                this.editGroupNameBox.setY((int)this.getGroupNameY() - 1);
+                this.editGroupNameBox.setWidth((int)Math.min(this.getMaxGroupNameWidth(), UIBase.getUITextWidth(this.editGroupNameBox.getValue() + 13)));
+                if (this.editGroupNameBox.getWidth() < this.getMaxGroupNameWidth()) {
+                    this.editGroupNameBox.setDisplayPosition(0);
+                }
+                ((IMixinAbstractWidget)this.editGroupNameBox).setHeightFancyMenu((int)(UIBase.getUITextHeightNormal() + 2));
+                this.editGroupNameBox.render(graphics, mouseX, mouseY, partial);
+            }
+        }
+
+        public boolean isGroupNameHovered() {
+            return this.groupNameHovered;
+        }
+
+        public boolean isGroupNameMouseOver(double mouseX, double mouseY) {
+            if (this.parent.isMouseInteractingWithGrabbers()) return false;
+            if (!this.parent.isInnerAreaHovered()) return false;
+            return UIBase.isXYInArea(mouseX, mouseY, this.getGroupNameX(), this.getGroupNameY(), this.getMaxGroupNameWidth(), UIBase.getUITextHeightNormal());
+        }
+
+        public boolean isDeleteButtonMouseOver(double mouseX, double mouseY) {
+            if (this.parent.isMouseInteractingWithGrabbers()) return false;
+            if (!this.parent.isInnerAreaHovered()) return false;
+            return UIBase.isXYInArea(mouseX, mouseY, this.getDeleteButtonX(), this.getDeleteButtonY(), this.getDeleteButtonWidth(), this.getDeleteButtonHeight());
+        }
+
+        public float getGroupNameX() {
+            return this.x + GROUP_NAME_LEFT_PADDING;
+        }
+
+        public float getGroupNameY() {
+            return this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f);
+        }
+
+        public float getMaxGroupNameWidth() {
+            return (this.getX() + this.getWidth() - 3f) - this.getGroupNameX() - this.getDeleteButtonWidth();
+        }
+
+        public float getDeleteButtonWidth() {
+            return GROUP_DELETE_BUTTON_WIDTH;
+        }
+
+        public float getDeleteButtonHeight() {
+            return this.getHeight();
+        }
+
+        public float getDeleteButtonX() {
+            return this.x + this.getWidth() - this.getDeleteButtonWidth();
+        }
+
+        public float getDeleteButtonY() {
+            return this.y;
+        }
+
+        public String getGroupName() {
+            if (this.group.name != null && !this.group.name.replace(" ", "").isEmpty()) {
+                return this.group.name;
+            }
+            return Component.translatable("fancymenu.editor.widgets.layers.group.default_name").getString();
+        }
+
+        protected void startEditingGroupName() {
+            this.editGroupNameBox.setVisible(true);
+            this.editGroupNameBox.setFocused(true);
+            this.editGroupNameBox.setValue(this.getGroupName());
+            this.editGroupNameBox.moveCursorToEnd(false);
+            this.displayEditGroupNameBox = true;
+        }
+
+        protected void stopEditingGroupName() {
+            if (this.displayEditGroupNameBox) {
+                String newName = this.editGroupNameBox.getValue();
+                if (newName != null) {
+                    newName = newName.trim();
+                }
+                if ((newName == null) || newName.isEmpty()) {
+                    this.group.name = null;
+                } else {
+                    String defaultName = Component.translatable("fancymenu.editor.widgets.layers.group.default_name").getString();
+                    if (newName.equals(defaultName)) {
+                        this.group.name = null;
+                    } else {
+                        this.group.name = newName;
+                    }
+                }
+            }
+            this.editGroupNameBox.setFocused(false);
+            this.editGroupNameBox.setVisible(false);
+            this.displayEditGroupNameBox = false;
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (button == 0) {
+                if (this.isMouseOver(mouseX, mouseY) && !this.deleteButtonHovered) {
+                    this.dragStartX = mouseX;
+                    this.dragStartY = mouseY;
+                    this.dragStarted = true;
+                    return true;
+                }
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+        public boolean groupMouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+            if (button == 0 && this.dragStarted) {
+                double deltaX = mouseX - this.dragStartX;
+                double deltaY = mouseY - this.dragStartY;
+                double distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                if (distance > DRAG_THRESHOLD && !this.layerWidget.isDragging) {
+                    this.layerWidget.draggedEntry = this;
+                    this.layerWidget.isDragging = true;
+                    this.layerWidget.dragTargetUiIndex = 0;
+                    this.layerWidget.dragTargetIndicatorY = this.getY();
+                    return true;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public boolean groupMouseReleased(double mouseX, double mouseY, int button) {
+            if (button == 0) {
+                if (this.dragStarted && !this.layerWidget.isDragging) {
+                    this.onClick(this, mouseX, mouseY, button);
+                }
+                this.dragStarted = false;
+            }
+            return false;
+        }
+
+        @Override
+        public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
+            if (button == 0) {
+                if (this.deleteButtonHovered) {
+                    Dialogs.openMessageWithCallback(Component.translatable("fancymenu.editor.widgets.layers.group.delete.confirm"), MessageDialogStyle.WARNING, call -> {
+                        if (call) {
+                            this.layerWidget.editor.history.saveSnapshot();
+                            this.layerWidget.editor.layout.layerGroups.remove(this.group);
+                            MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                        }
+                    });
+                } else if (this.isGroupNameHovered()) {
+                    long now = System.currentTimeMillis();
+                    if ((this.lastLeftClick + 400) > now) {
+                        this.startEditingGroupName();
+                    }
+                    this.lastLeftClick = now;
+                }
             }
         }
 

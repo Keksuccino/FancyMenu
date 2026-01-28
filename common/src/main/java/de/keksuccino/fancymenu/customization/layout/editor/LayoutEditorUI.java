@@ -479,19 +479,18 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     .setIcon(MaterialIcons.BLOCK);
 
             universalLayoutMenu.addClickableEntry("remove_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), (menu1, entry) -> {
-                this.openContextMenuScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuBlacklist, s1 -> {
+                StringListChooserScreen chooserScreen = new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuBlacklist, s1 -> {
                     if (s1 != null) {
-                        this.openContextMenuScreen(editor);
                         Dialogs.openMessageWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm"), MessageDialogStyle.WARNING, call2 -> {
                             if (call2) {
                                 editor.history.saveSnapshot();
                                 editor.layout.universalLayoutMenuBlacklist.remove(s1);
                             }
                         });
-                    } else {
-                        this.openContextMenuScreen(editor);
                     }
-                }));
+                });
+                StringListChooserScreen.openInWindow(chooserScreen);
+                menu1.closeMenuChain();
             }).setIcon(MaterialIcons.REMOVE);
 
             universalLayoutMenu.addClickableEntry("clear_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), (menu1, entry) -> {
@@ -523,19 +522,18 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     .setIcon(MaterialIcons.CHECK_CIRCLE);
 
             universalLayoutMenu.addClickableEntry("remove_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), (menu1, entry) -> {
-                this.openContextMenuScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuWhitelist, s1 -> {
+                StringListChooserScreen chooserScreen = new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuWhitelist, s1 -> {
                     if (s1 != null) {
-                        this.openContextMenuScreen(editor);
                         Dialogs.openMessageWithCallback(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm"), MessageDialogStyle.WARNING, call2 -> {
                             if (call2) {
                                 editor.history.saveSnapshot();
                                 editor.layout.universalLayoutMenuWhitelist.remove(s1);
                             }
                         });
-                    } else {
-                        this.openContextMenuScreen(editor);
                     }
-                }));
+                });
+                StringListChooserScreen.openInWindow(chooserScreen);
+                menu1.closeMenuChain();
             }).setIcon(MaterialIcons.REMOVE);
 
             universalLayoutMenu.addClickableEntry("clear_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), (menu1, entry) -> {

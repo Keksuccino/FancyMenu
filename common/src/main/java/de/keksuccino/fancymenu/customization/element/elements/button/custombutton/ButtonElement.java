@@ -52,7 +52,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public String hoverLabel;
     public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
     public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
-    public final Property.StringProperty labelScale = putProperty(Property.stringProperty("label_scale", "1.0", false, true, "fancymenu.elements.widgets.label.scale"));
+    public final Property.FloatProperty labelScale = putProperty(Property.floatProperty("label_scale", 1.0F, "fancymenu.elements.widgets.label.scale"));
     public String tooltip;
     public ResourceSupplier<ITexture> backgroundTextureNormal;
     public ResourceSupplier<ITexture> backgroundTextureHover;
@@ -472,14 +472,13 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         return (this.labelBaseColor.get() != null) ? this.labelBaseColor.getDrawable() : null;
     }
 
-    @Nullable
-    public String getLabelScale() {
-        if (this.isTemplate) return this.labelScale.getString();
+    public float getLabelScale() {
+        if (this.isTemplate) return this.labelScale.getFloat();
         ButtonElement template = getTopActiveTemplateElement(this.isSlider());
         if ((template != null) && template.templateApplyLabel) {
-            return template.labelScale.getString();
+            return template.labelScale.getFloat();
         }
-        return this.labelScale.getString();
+        return this.labelScale.getFloat();
     }
 
     @NotNull

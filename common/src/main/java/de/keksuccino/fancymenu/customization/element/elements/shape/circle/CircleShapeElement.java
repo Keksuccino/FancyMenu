@@ -6,19 +6,17 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.SmoothCircleRenderer;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class CircleShapeElement extends AbstractElement {
 
     public final Property.ColorProperty color = putProperty(Property.hexColorProperty("color", "#FFFFFF", true, "fancymenu.elements.shape.color"));
     public final Property<Boolean> blurEnabled = putProperty(Property.booleanProperty("blur_enabled", false, "fancymenu.elements.shape.blur"));
-    public final Property.StringProperty blurRadius = putProperty(Property.stringProperty("blur_radius", "3", false, true, "fancymenu.elements.shape.blur.radius"));
-    public final Property.StringProperty roundness = putProperty(Property.stringProperty("roundness", "2", false, true, "fancymenu.elements.shape.circle.roundness"));
+    public final Property.FloatProperty blurRadius = putProperty(Property.floatProperty("blur_radius", 3.0F, "fancymenu.elements.shape.blur.radius"));
+    public final Property.FloatProperty roundness = putProperty(Property.floatProperty("roundness", 2.0F, "fancymenu.elements.shape.circle.roundness"));
 
     public CircleShapeElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -30,8 +28,8 @@ public class CircleShapeElement extends AbstractElement {
 
         if (!this.shouldRender()) return;
 
-        float resolvedBlurRadius = resolveFloat(this.blurRadius.getString(), 3.0F);
-        float resolvedRoundness = Math.max(0.1F, resolveFloat(this.roundness.getString(), 2.0F));
+        float resolvedBlurRadius = Math.max(0.0F, this.blurRadius.getFloat());
+        float resolvedRoundness = Math.max(0.1F, this.roundness.getFloat());
 
         DrawableColor colorResolved = this.color.getDrawable();
 
@@ -69,16 +67,6 @@ public class CircleShapeElement extends AbstractElement {
 
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-    }
-
-    private static float resolveFloat(@Nullable String value, float fallback) {
-        if (value == null) return fallback;
-        String cleaned = value.replace(" ", "");
-        if (MathUtils.isFloat(cleaned)) {
-            float parsed = Float.parseFloat(cleaned);
-            return Math.max(0.0F, parsed);
-        }
-        return fallback;
     }
 
 }

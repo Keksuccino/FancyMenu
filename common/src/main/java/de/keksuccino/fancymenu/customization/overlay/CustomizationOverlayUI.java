@@ -355,7 +355,7 @@ public class CustomizationOverlayUI {
                     if (!(current instanceof CustomGuiBaseScreen)) {
                         Dialogs.openMessageWithCallback(Component.translatable("fancymenu.custom_guis.override.confirm"), MessageDialogStyle.WARNING, override -> {
                             if (override) {
-                                Minecraft.getInstance().setScreen(new StringListChooserScreen(Component.translatable("fancymenu.custom_guis.override.choose_custom"), CustomGuiHandler.getGuiIdentifiers(), s -> {
+                                StringListChooserScreen chooserScreen = new StringListChooserScreen(Component.translatable("fancymenu.custom_guis.override.choose_custom"), CustomGuiHandler.getGuiIdentifiers(), s -> {
                                     CustomGuiBaseScreen customInstance = null;
                                     if (s != null) {
                                         CustomGuiHandler.overrideScreenWithCustomGui(current.getClass().getName(), s);
@@ -363,7 +363,9 @@ public class CustomizationOverlayUI {
                                         customInstance = CustomGuiHandler.constructInstance(s, null, current);
                                     }
                                     Minecraft.getInstance().setScreen((customInstance != null) ? customInstance : current);
-                                }));
+                                });
+                                StringListChooserScreen.openInWindow(chooserScreen);
+                                menu.closeMenuChain();
                             }
                         }).setDelay(2000);
                     }
@@ -380,8 +382,9 @@ public class CustomizationOverlayUI {
                 .setIcon(MaterialIcons.LINK);
 
         customGuiMenu.addClickableEntry("manage_overridden_screens", Component.translatable("fancymenu.custom_guis.manage_overridden"), (menu, entry) -> {
-            Screen s = Minecraft.getInstance().screen;
-            Minecraft.getInstance().setScreen(new ManageOverriddenGuisScreen(() -> Minecraft.getInstance().setScreen(s)));
+            ManageOverriddenGuisScreen manageOverriddenGuisScreen = new ManageOverriddenGuisScreen(() -> {});
+            ManageOverriddenGuisScreen.openInWindow(manageOverriddenGuisScreen);
+            menu.closeMenuChain();
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.custom_guis.manage_overridden.desc")))
                 .setIcon(MaterialIcons.SCREEN_SHARE);
 

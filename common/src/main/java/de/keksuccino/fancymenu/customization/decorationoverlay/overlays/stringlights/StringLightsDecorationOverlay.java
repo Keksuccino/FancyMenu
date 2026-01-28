@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.stringl
 
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.overlay.StringLightsOverlay;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
@@ -18,9 +17,9 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
 
     private static final String DEFAULT_COLOR_HEX = "#FFD27A";
 
-    public final Property.StringProperty stringLightsScale = putProperty(Property.stringProperty("string_lights_scale", "1.0", false, true, "fancymenu.decoration_overlays.string_lights.scale"));
-    public final Property.StringProperty stringLightsWindStrength = putProperty(Property.stringProperty("string_lights_wind_strength", "1.0", false, true, "fancymenu.decoration_overlays.string_lights.wind_strength"));
-    public final Property.StringProperty stringLightsFlickerSpeed = putProperty(Property.stringProperty("string_lights_flicker_speed", "1.0", false, true, "fancymenu.decoration_overlays.string_lights.flicker_speed"));
+    public final Property.FloatProperty stringLightsScale = putProperty(Property.floatProperty("string_lights_scale", 1.0F, "fancymenu.decoration_overlays.string_lights.scale"));
+    public final Property.FloatProperty stringLightsWindStrength = putProperty(Property.floatProperty("string_lights_wind_strength", 1.0F, "fancymenu.decoration_overlays.string_lights.wind_strength"));
+    public final Property.FloatProperty stringLightsFlickerSpeed = putProperty(Property.floatProperty("string_lights_flicker_speed", 1.0F, "fancymenu.decoration_overlays.string_lights.flicker_speed"));
     public final Property<Boolean> stringLightsLeftCenterToTopCenter = putProperty(Property.booleanProperty("string_lights_left_center_to_top_center", true, "fancymenu.decoration_overlays.string_lights.string.show"));
     public final Property<Boolean> stringLightsRightCenterToTopCenter = putProperty(Property.booleanProperty("string_lights_right_center_to_top_center", true, "fancymenu.decoration_overlays.string_lights.string.show"));
     public final Property<Boolean> stringLightsBottomLeftToTopCenter = putProperty(Property.booleanProperty("string_lights_bottom_left_to_top_center", false, "fancymenu.decoration_overlays.string_lights.string.show"));
@@ -48,9 +47,6 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
 
     protected final StringLightsOverlay overlay = new StringLightsOverlay(0, 0);
     protected final EnumMap<StringLightsOverlay.StringLightsPosition, String> lastPositionColorStrings = new EnumMap<>(StringLightsOverlay.StringLightsPosition.class);
-    protected String lastScaleString = null;
-    protected String lastWindStrengthString = null;
-    protected String lastFlickerSpeedString = null;
 
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
@@ -168,44 +164,9 @@ public class StringLightsDecorationOverlay extends AbstractDecorationOverlay<Str
         updatePositionColor(StringLightsOverlay.StringLightsPosition.LOOSE_LEFT_TOP, this.stringLightsLooseLeftTopColorHex);
         updatePositionColor(StringLightsOverlay.StringLightsPosition.LOOSE_RIGHT_TOP, this.stringLightsLooseRightTopColorHex);
 
-        String scaleString = this.stringLightsScale.getString();
-        if (scaleString == null) scaleString = "1.0";
-        if (!Objects.equals(scaleString, this.lastScaleString)) {
-            this.lastScaleString = scaleString;
-            float scaleValue;
-            if (MathUtils.isFloat(scaleString)) {
-                scaleValue = Float.parseFloat(scaleString);
-            } else {
-                scaleValue = 1.0F;
-            }
-            this.overlay.setScale(scaleValue);
-        }
-
-        String windStrengthString = this.stringLightsWindStrength.getString();
-        if (windStrengthString == null) windStrengthString = "1.0";
-        if (!Objects.equals(windStrengthString, this.lastWindStrengthString)) {
-            this.lastWindStrengthString = windStrengthString;
-            float windValue;
-            if (MathUtils.isFloat(windStrengthString)) {
-                windValue = Float.parseFloat(windStrengthString);
-            } else {
-                windValue = 1.0F;
-            }
-            this.overlay.setWindStrength(windValue);
-        }
-
-        String flickerSpeedString = this.stringLightsFlickerSpeed.getString();
-        if (flickerSpeedString == null) flickerSpeedString = "1.0";
-        if (!Objects.equals(flickerSpeedString, this.lastFlickerSpeedString)) {
-            this.lastFlickerSpeedString = flickerSpeedString;
-            float speedValue;
-            if (MathUtils.isFloat(flickerSpeedString)) {
-                speedValue = Float.parseFloat(flickerSpeedString);
-            } else {
-                speedValue = 1.0F;
-            }
-            this.overlay.setFlickerSpeed(speedValue);
-        }
+        this.overlay.setScale(this.stringLightsScale.getFloat());
+        this.overlay.setWindStrength(this.stringLightsWindStrength.getFloat());
+        this.overlay.setFlickerSpeed(this.stringLightsFlickerSpeed.getFloat());
 
         this.overlay.setPositionEnabled(StringLightsOverlay.StringLightsPosition.LEFT_CENTER_TO_TOP_CENTER, this.stringLightsLeftCenterToTopCenter.tryGetNonNullElse(true));
         this.overlay.setPositionEnabled(StringLightsOverlay.StringLightsPosition.RIGHT_CENTER_TO_TOP_CENTER, this.stringLightsRightCenterToTopCenter.tryGetNonNullElse(true));

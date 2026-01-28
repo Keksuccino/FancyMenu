@@ -26,8 +26,8 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
         String parallaxIntensityY = serializedBackground.getValue("parallax_intensity_y");
         if ((parallaxIntensityX == null) || (parallaxIntensityY == null)) {
             String legacyParallaxIntensity = Objects.requireNonNullElse(serializedBackground.getValue("parallax_intensity"), "0.02");
-            deserializeTo.parallaxIntensityXString.set(legacyParallaxIntensity);
-            deserializeTo.parallaxIntensityYString.set(legacyParallaxIntensity);
+            deserializeTo.parallaxIntensityXString.setManualInput(legacyParallaxIntensity);
+            deserializeTo.parallaxIntensityYString.setManualInput(legacyParallaxIntensity);
         }
 
     }

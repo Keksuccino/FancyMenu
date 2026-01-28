@@ -73,6 +73,7 @@ public class Layout extends LayoutBase {
     public List<SerializedElement> serializedElements = new ArrayList<>();
     public List<SerializedElement> serializedVanillaButtonElements = new ArrayList<>();
     public List<SerializedElement> serializedDeepElements = new ArrayList<>();
+    public List<LayerGroup> layerGroups = new ArrayList<>();
     @Legacy("Remove this in the future.")
     public boolean legacyLayout = false;
 
@@ -220,6 +221,28 @@ public class Layout extends LayoutBase {
 
         this.layoutWideRequirementContainer.serializeToExistingPropertyContainer(meta);
 
+        for (LayerGroup group : this.layerGroups) {
+            if (group == null) {
+                continue;
+            }
+            PropertyContainer groupContainer = new PropertyContainer("layer_group");
+            if (group.name != null) {
+                groupContainer.putProperty("group_name", group.name);
+            }
+            if (!group.elementInstanceIdentifiers.isEmpty()) {
+                StringBuilder ids = new StringBuilder();
+                for (String id : group.elementInstanceIdentifiers) {
+                    if (id != null && !id.isEmpty()) {
+                        ids.append(id).append(";");
+                    }
+                }
+                if (ids.length() > 0) {
+                    groupContainer.putProperty("element_ids", ids.toString());
+                }
+            }
+            set.putContainer(groupContainer);
+        }
+
         this.serializedElements.forEach(set::putContainer);
         if (!this.isUniversalLayout()) {
             this.serializedVanillaButtonElements.forEach(set::putContainer);
@@ -311,6 +334,23 @@ public class Layout extends LayoutBase {
                     }
                 }
 
+            }
+
+            for (PropertyContainer sec : serialized.getContainersOfType("layer_group")) {
+                LayerGroup group = new LayerGroup();
+                group.name = sec.getValue("group_name");
+                String rawIds = sec.getValue("element_ids");
+                if (rawIds == null) {
+                    rawIds = sec.getValue("elements");
+                }
+                if (rawIds != null) {
+                    for (String id : rawIds.split(";")) {
+                        if (!id.isEmpty()) {
+                            group.elementInstanceIdentifiers.add(id);
+                        }
+                    }
+                }
+                layout.layerGroups.add(group);
             }
 
             // Convert old deep elements to their new widget versions
@@ -986,6 +1026,15 @@ public class Layout extends LayoutBase {
 
         public List<AbstractElement> foregroundElements = new ArrayList<>();
         public List<AbstractElement> backgroundElements = new ArrayList<>();
+
+    }
+
+    public static class LayerGroup {
+
+        @Nullable
+        public String name = null;
+        @NotNull
+        public List<String> elementInstanceIdentifiers = new ArrayList<>();
 
     }
 

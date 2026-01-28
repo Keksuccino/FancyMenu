@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -27,15 +26,13 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
     public final Property<Boolean> repeat = putProperty(Property.booleanProperty("repeat_texture", false, "fancymenu.backgrounds.image.configure.repeat"));
     public final Property<Boolean> parallaxEnabled = putProperty(Property.booleanProperty("parallax", false, "fancymenu.backgrounds.image.configure.parallax"));
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    public final Property.StringProperty parallaxIntensityXString = putProperty(Property.stringProperty("parallax_intensity_x", "0.02", false, true, "fancymenu.backgrounds.image.configure.parallax_intensity_x"));
+    public final Property.FloatProperty parallaxIntensityXString = putProperty(Property.floatProperty("parallax_intensity_x", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_x"));
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    public final Property.StringProperty parallaxIntensityYString = putProperty(Property.stringProperty("parallax_intensity_y", "0.02", false, true, "fancymenu.backgrounds.image.configure.parallax_intensity_y"));
+    public final Property.FloatProperty parallaxIntensityYString = putProperty(Property.floatProperty("parallax_intensity_y", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_y"));
     /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
     public final Property<Boolean> invertParallax = putProperty(Property.booleanProperty("invert_parallax", false, "fancymenu.backgrounds.image.configure.invert_parallax"));
     public final Property<Boolean> restartAnimatedOnMenuLoad = putProperty(Property.booleanProperty("restart_animated_on_menu_load", false, "fancymenu.backgrounds.image.restart_animated_on_menu_load"));
 
-    protected float currentParallaxIntensityX = -10000.0F;
-    protected float currentParallaxIntensityY = -10000.0F;
     protected double slidePos = 0.0D;
     protected boolean slideMoveBack = false;
     protected boolean slideStop = false;
@@ -116,8 +113,8 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.currentParallaxIntensityX = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.02F, this.parallaxIntensityXString.getString());
-        this.currentParallaxIntensityY = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.02F, this.parallaxIntensityYString.getString());
+        float parallaxIntensityX = this.parallaxIntensityXString.getFloat();
+        float parallaxIntensityY = this.parallaxIntensityYString.getFloat();
 
         RenderSystem.enableBlend();
 
@@ -144,15 +141,15 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
         }
 
         if (resourceLocation != null) {
-            float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY);
+            float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY, parallaxIntensityX, parallaxIntensityY);
             if (this.repeat.tryGetNonNull()) {
-                renderRepeatBackground(graphics, resourceLocation, tex, parallaxOffset);
+                renderRepeatBackground(graphics, resourceLocation, tex, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             } else if (this.slideLeftRight.tryGetNonNull() && !this.parallaxEnabled.tryGetNonNull()) {
-                renderSlideBackground(graphics, ratio, resourceLocation, parallaxOffset);
+                renderSlideBackground(graphics, ratio, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             } else if (this.keepBackgroundAspectRatio) {
-                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset);
+                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             } else {
-                renderFullScreen(graphics, resourceLocation, parallaxOffset);
+                renderFullScreen(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             }
         }
 
@@ -160,7 +157,7 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
 
     }
 
-    protected float[] calculateParallaxOffset(int mouseX, int mouseY) {
+    protected float[] calculateParallaxOffset(int mouseX, int mouseY, float parallaxIntensityX, float parallaxIntensityY) {
         if (!this.parallaxEnabled.tryGetNonNull()) {
             return new float[]{0, 0};
         }
@@ -173,21 +170,21 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
         float directionMultiplier = this.invertParallax.tryGetNonNull() ? 1.0f : -1.0f;
 
         // Calculate offset based on screen dimensions and center-adjusted mouse position
-        float xOffset = directionMultiplier * this.currentParallaxIntensityX * mouseXPercent * getScreenWidth() * 0.5f;
-        float yOffset = directionMultiplier * this.currentParallaxIntensityY * mouseYPercent * getScreenHeight() * 0.5f;
+        float xOffset = directionMultiplier * parallaxIntensityX * mouseXPercent * getScreenWidth() * 0.5f;
+        float yOffset = directionMultiplier * parallaxIntensityY * mouseYPercent * getScreenHeight() * 0.5f;
 
         return new float[]{xOffset, yOffset};
 
     }
 
-    protected void renderRepeatBackground(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, ITexture tex, float[] parallaxOffset) {
+    protected void renderRepeatBackground(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, ITexture tex, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
 
         graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
 
         if (this.parallaxEnabled.tryGetNonNull()) {
             // Create expanded area for parallax movement
-            int expandedWidth = (int)(getScreenWidth() * (1.0F + this.currentParallaxIntensityX));
-            int expandedHeight = (int)(getScreenHeight() * (1.0F + this.currentParallaxIntensityY));
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensityX));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensityY));
 
             // Center the expanded area and apply parallax offset
             int baseX = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
@@ -202,15 +199,15 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
 
     }
 
-    protected void renderSlideBackground(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+    protected void renderSlideBackground(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
         int w = ratio.getAspectRatioWidth(getScreenHeight());
         handleSlideAnimation(w);
         graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
         if (w <= getScreenWidth()) {
             if (this.keepBackgroundAspectRatio) {
-                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset);
+                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             } else {
-                renderFullScreen(graphics, resourceLocation, parallaxOffset);
+                renderFullScreen(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             }
         } else {
             float finalX = (float)this.slidePos;
@@ -219,11 +216,11 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
         RenderingUtils.resetShaderColor(graphics);
     }
 
-    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
         // Calculate base size with reduced parallax expansion
         boolean parallax = this.parallaxEnabled.tryGetNonNull();
-        float parallaxScaleX = parallax ? (1.0F + this.currentParallaxIntensityX) : 1.0F;
-        float parallaxScaleY = parallax ? (1.0F + this.currentParallaxIntensityY) : 1.0F;
+        float parallaxScaleX = parallax ? (1.0F + parallaxIntensityX) : 1.0F;
+        float parallaxScaleY = parallax ? (1.0F + parallaxIntensityY) : 1.0F;
         int[] baseSize = ratio.getAspectRatioSizeByMinimumSize(
                 (int)(getScreenWidth() * parallaxScaleX),
                 (int)(getScreenHeight() * parallaxScaleY)
@@ -240,12 +237,12 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
         RenderingUtils.resetShaderColor(graphics);
     }
 
-    protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+    protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
         graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
         if (this.parallaxEnabled.tryGetNonNull()) {
             // Reduce the expansion amount for parallax
-            int expandedWidth = (int)(getScreenWidth() * (1.0F + this.currentParallaxIntensityX));
-            int expandedHeight = (int)(getScreenHeight() * (1.0F + this.currentParallaxIntensityY));
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensityX));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensityY));
 
             // Center the expanded area and apply parallax offset
             int x = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];

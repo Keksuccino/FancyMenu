@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideo
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
@@ -59,9 +58,9 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
     public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_mcef.sound_channel"));
     public final Property<Boolean> parallaxEnabled = putProperty(Property.booleanProperty("parallax", false, "fancymenu.backgrounds.image.configure.parallax"));
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    public final Property.StringProperty parallaxIntensityXString = putProperty(Property.stringProperty("parallax_intensity_x", "0.02", false, true, "fancymenu.backgrounds.image.configure.parallax_intensity_x"));
+    public final Property.FloatProperty parallaxIntensityXString = putProperty(Property.floatProperty("parallax_intensity_x", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_x"));
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    public final Property.StringProperty parallaxIntensityYString = putProperty(Property.stringProperty("parallax_intensity_y", "0.02", false, true, "fancymenu.backgrounds.image.configure.parallax_intensity_y"));
+    public final Property.FloatProperty parallaxIntensityYString = putProperty(Property.floatProperty("parallax_intensity_y", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_y"));
     /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
     public final Property<Boolean> invertParallax = putProperty(Property.booleanProperty("invert_parallax", false, "fancymenu.backgrounds.image.configure.invert_parallax"));
 
@@ -81,8 +80,6 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
     protected Boolean lastPausedState = null;
     protected volatile long lastRenderTickTime = -1L;
     protected boolean pausedBySystem = false;
-    protected float lastParallaxIntensityX = -10000.0F;
-    protected float lastParallaxIntensityY = -10000.0F;
     protected final AtomicReference<Float> cachedDuration = new AtomicReference<>(0F);
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
     // The field is currently unused, but the scheduler is used, so don't delete this
@@ -153,8 +150,8 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.lastParallaxIntensityX = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.02F, this.parallaxIntensityXString.getString());
-        this.lastParallaxIntensityY = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.02F, this.parallaxIntensityYString.getString());
+        float parallaxIntensityX = this.parallaxIntensityXString.getFloat();
+        float parallaxIntensityY = this.parallaxIntensityYString.getFloat();
 
         if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
             graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), MISSING_MCEF_COLOR.getColorInt());
@@ -166,7 +163,7 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
 
         RenderSystem.enableBlend();
 
-        float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY);
+        float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY, parallaxIntensityX, parallaxIntensityY);
         int x = 0;
         int y = 0;
         int w = getScreenWidth();
@@ -174,8 +171,8 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
 
         if (this.parallaxEnabled.tryGetNonNull()) {
             // Reduce the expansion amount for parallax
-            w = (int)(getScreenWidth() * (1.0F + lastParallaxIntensityX));
-            h = (int)(getScreenHeight() * (1.0F + lastParallaxIntensityY));
+            w = (int)(getScreenWidth() * (1.0F + parallaxIntensityX));
+            h = (int)(getScreenHeight() * (1.0F + parallaxIntensityY));
             // Center the expanded area and apply parallax offset
             x = -((w - getScreenWidth()) / 2) + (int)parallaxOffset[0];
             y = -((h - getScreenHeight()) / 2) + (int)parallaxOffset[1];
@@ -275,7 +272,7 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
 
     }
 
-    protected float[] calculateParallaxOffset(int mouseX, int mouseY) {
+    protected float[] calculateParallaxOffset(int mouseX, int mouseY, float parallaxIntensityX, float parallaxIntensityY) {
 
         if (!this.parallaxEnabled.tryGetNonNull()) {
             return new float[]{0, 0};
@@ -289,8 +286,8 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         float directionMultiplier = this.invertParallax.tryGetNonNull() ? 1.0f : -1.0f;
 
         // Calculate offset based on screen dimensions and center-adjusted mouse position
-        float xOffset = directionMultiplier * lastParallaxIntensityX * mouseXPercent * getScreenWidth() * 0.5f;
-        float yOffset = directionMultiplier * lastParallaxIntensityY * mouseYPercent * getScreenHeight() * 0.5f;
+        float xOffset = directionMultiplier * parallaxIntensityX * mouseXPercent * getScreenWidth() * 0.5f;
+        float yOffset = directionMultiplier * parallaxIntensityY * mouseYPercent * getScreenHeight() * 0.5f;
 
         return new float[]{xOffset, yOffset};
 
