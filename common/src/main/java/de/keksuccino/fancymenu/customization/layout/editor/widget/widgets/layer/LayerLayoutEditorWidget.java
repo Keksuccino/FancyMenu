@@ -54,14 +54,17 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final MaterialIcon TITLE_BAR_COLLAPSE_ICON = MaterialIcons.EXPAND_LESS;
     private static final MaterialIcon GROUP_ADD_ICON = MaterialIcons.ADD;
     private static final MaterialIcon GROUP_DELETE_ICON = MaterialIcons.CLOSE;
+    private static final MaterialIcon GROUP_EXPAND_ICON = MaterialIcons.EXPAND_MORE;
+    private static final MaterialIcon GROUP_COLLAPSE_ICON = MaterialIcons.EXPAND_LESS;
     private static final MaterialIcon EYE_ICON = MaterialIcons.VISIBILITY;
     private static final MaterialIcon MOVE_TO_TOP_ICON = MaterialIcons.VERTICAL_ALIGN_TOP;
     private static final MaterialIcon MOVE_BEHIND_ICON = MaterialIcons.VERTICAL_ALIGN_BOTTOM;
     private static final float LAYER_EYE_ICON_PADDING = 4.0f;
     private static final float LAYER_ICON_TEXT_GAP = 4.0f;
     private static final float GROUP_INDENT = 12.0f;
-    private static final float GROUP_NAME_LEFT_PADDING = 6.0f;
+    private static final float GROUP_NAME_LEFT_PADDING = 0.0f;
     private static final float GROUP_DELETE_BUTTON_WIDTH = 24.0f;
+    private static final float GROUP_COLLAPSE_BUTTON_WIDTH = 24.0f;
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
 
@@ -148,6 +151,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 this.scrollArea.addEntry(groupEntry);
                 this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
                 handledGroups.add(group);
+            }
+            if (group != null && group.collapsed) {
+                continue;
             }
             LayerElementEntry layer = new LayerElementEntry(this.scrollArea, this, e, group);
             this.children.add(layer.editLayerNameBox);
@@ -1057,6 +1063,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         protected ExtendedEditBox editGroupNameBox;
         protected boolean displayEditGroupNameBox = false;
         protected boolean groupNameHovered = false;
+        protected boolean eyeButtonHovered = false;
+        protected boolean collapseButtonHovered = false;
         protected boolean deleteButtonHovered = false;
         protected long lastLeftClick = -1L;
         protected boolean dragStarted = false;
@@ -1092,11 +1100,27 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.groupNameHovered = this.isGroupNameMouseOver(mouseX, mouseY);
+            this.eyeButtonHovered = this.isEyeButtonMouseOver(mouseX, mouseY);
+            this.collapseButtonHovered = this.isCollapseButtonMouseOver(mouseX, mouseY);
             this.deleteButtonHovered = this.isDeleteButtonMouseOver(mouseX, mouseY);
 
-            if (this.isMouseOver(mouseX, mouseY)) {
+            if (this.isGroupFullySelected()) {
+                UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
+            } else if (this.isMouseOver(mouseX, mouseY)) {
                 UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
             }
+
+            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
+            float eyeIconY = this.getEyeButtonY() + (this.getEyeButtonHeight() - eyeIconSize) * 0.5f;
+            float eyeAlpha = this.isGroupHidden() ? 0.3f : 1.0f;
+            this.layerWidget.renderMaterialIcon(graphics, EYE_ICON, eyeIconX, eyeIconY, eyeIconSize, eyeIconSize, eyeAlpha);
+
+            float collapseIconSize = getIconSize(this.getCollapseButtonWidth(), this.getCollapseButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float collapseIconX = this.getCollapseButtonX() + (this.getCollapseButtonWidth() - collapseIconSize) * 0.5f;
+            float collapseIconY = this.getCollapseButtonY() + (this.getCollapseButtonHeight() - collapseIconSize) * 0.5f;
+            float collapseAlpha = this.collapseButtonHovered ? 1.0f : 0.7f;
+            this.layerWidget.renderMaterialIcon(graphics, this.group.collapsed ? GROUP_EXPAND_ICON : GROUP_COLLAPSE_ICON, collapseIconX, collapseIconY, collapseIconSize, collapseIconSize, collapseAlpha);
 
             float deleteIconSize = getIconSize(this.getDeleteButtonWidth(), this.getDeleteButtonHeight(), LAYER_EYE_ICON_PADDING);
             float deleteIconX = this.getDeleteButtonX() + (this.getDeleteButtonWidth() - deleteIconSize) * 0.5f;
@@ -1123,10 +1147,30 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return this.groupNameHovered;
         }
 
+        public boolean isEyeButtonHovered() {
+            return this.eyeButtonHovered;
+        }
+
+        public boolean isCollapseButtonHovered() {
+            return this.collapseButtonHovered;
+        }
+
         public boolean isGroupNameMouseOver(double mouseX, double mouseY) {
             if (this.parent.isMouseInteractingWithGrabbers()) return false;
             if (!this.parent.isInnerAreaHovered()) return false;
             return UIBase.isXYInArea(mouseX, mouseY, this.getGroupNameX(), this.getGroupNameY(), this.getMaxGroupNameWidth(), UIBase.getUITextHeightNormal());
+        }
+
+        public boolean isEyeButtonMouseOver(double mouseX, double mouseY) {
+            if (this.parent.isMouseInteractingWithGrabbers()) return false;
+            if (!this.parent.isInnerAreaHovered()) return false;
+            return UIBase.isXYInArea(mouseX, mouseY, this.getEyeButtonX(), this.getEyeButtonY(), this.getEyeButtonWidth(), this.getEyeButtonHeight());
+        }
+
+        public boolean isCollapseButtonMouseOver(double mouseX, double mouseY) {
+            if (this.parent.isMouseInteractingWithGrabbers()) return false;
+            if (!this.parent.isInnerAreaHovered()) return false;
+            return UIBase.isXYInArea(mouseX, mouseY, this.getCollapseButtonX(), this.getCollapseButtonY(), this.getCollapseButtonWidth(), this.getCollapseButtonHeight());
         }
 
         public boolean isDeleteButtonMouseOver(double mouseX, double mouseY) {
@@ -1136,7 +1180,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getGroupNameX() {
-            return this.x + GROUP_NAME_LEFT_PADDING;
+            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
+            return eyeIconX + eyeIconSize + LAYER_ICON_TEXT_GAP;
         }
 
         public float getGroupNameY() {
@@ -1144,7 +1190,39 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getMaxGroupNameWidth() {
-            return (this.getX() + this.getWidth() - 3f) - this.getGroupNameX() - this.getDeleteButtonWidth();
+            return (this.getX() + this.getWidth() - 3f) - this.getGroupNameX() - (this.getDeleteButtonWidth() + this.getCollapseButtonWidth());
+        }
+
+        public float getEyeButtonWidth() {
+            return 30f;
+        }
+
+        public float getEyeButtonHeight() {
+            return 28f;
+        }
+
+        public float getEyeButtonX() {
+            return this.x + GROUP_NAME_LEFT_PADDING;
+        }
+
+        public float getEyeButtonY() {
+            return this.y;
+        }
+
+        public float getCollapseButtonWidth() {
+            return GROUP_COLLAPSE_BUTTON_WIDTH;
+        }
+
+        public float getCollapseButtonHeight() {
+            return this.getHeight();
+        }
+
+        public float getCollapseButtonX() {
+            return this.getDeleteButtonX() - this.getCollapseButtonWidth();
+        }
+
+        public float getCollapseButtonY() {
+            return this.y;
         }
 
         public float getDeleteButtonWidth() {
@@ -1168,6 +1246,32 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 return this.group.name;
             }
             return Component.translatable("fancymenu.editor.widgets.layers.group.default_name").getString();
+        }
+
+        protected boolean isGroupHidden() {
+            List<AbstractEditorElement<?, ?>> elements = this.layerWidget.editor.getElementsInGroup(this.group);
+            if (elements.isEmpty()) {
+                return false;
+            }
+            for (AbstractEditorElement<?, ?> element : elements) {
+                if (!element.element.layerHiddenInEditor) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        protected boolean isGroupFullySelected() {
+            List<AbstractEditorElement<?, ?>> elements = this.layerWidget.editor.getElementsInGroup(this.group);
+            if (elements.isEmpty()) {
+                return false;
+            }
+            for (AbstractEditorElement<?, ?> element : elements) {
+                if (!element.isSelected()) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         protected void startEditingGroupName() {
@@ -1203,7 +1307,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if (button == 0) {
-                if (this.isMouseOver(mouseX, mouseY) && !this.deleteButtonHovered) {
+                if (this.isMouseOver(mouseX, mouseY) && !this.deleteButtonHovered && !this.collapseButtonHovered && !this.eyeButtonHovered) {
                     this.dragStartX = mouseX;
                     this.dragStartY = mouseY;
                     this.dragStarted = true;
@@ -1243,7 +1347,28 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             if (button == 0) {
-                if (this.deleteButtonHovered) {
+                if (this.eyeButtonHovered) {
+                    List<AbstractEditorElement<?, ?>> elements = this.layerWidget.editor.getElementsInGroup(this.group);
+                    if (!elements.isEmpty()) {
+                        if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                        this.layerWidget.editor.history.saveSnapshot();
+                        boolean hideElements = false;
+                        for (AbstractEditorElement<?, ?> element : elements) {
+                            if (!element.element.layerHiddenInEditor) {
+                                hideElements = true;
+                                break;
+                            }
+                        }
+                        for (AbstractEditorElement<?, ?> element : elements) {
+                            element.element.layerHiddenInEditor = hideElements;
+                        }
+                    }
+                } else if (this.collapseButtonHovered) {
+                    if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    this.layerWidget.editor.history.saveSnapshot();
+                    this.group.collapsed = !this.group.collapsed;
+                    MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                } else if (this.deleteButtonHovered) {
                     Dialogs.openMessageWithCallback(Component.translatable("fancymenu.editor.widgets.layers.group.delete.confirm"), MessageDialogStyle.WARNING, call -> {
                         if (call) {
                             this.layerWidget.editor.history.saveSnapshot();
@@ -1251,7 +1376,27 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                             MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                         }
                     });
-                } else if (this.isGroupNameHovered()) {
+                } else {
+                    List<AbstractEditorElement<?, ?>> elements = this.layerWidget.editor.getElementsInGroup(this.group);
+                    if (!elements.isEmpty()) {
+                        if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                        boolean ctrlDown = Screen.hasControlDown();
+                        boolean allSelected = this.isGroupFullySelected();
+                        if (!ctrlDown) {
+                            this.layerWidget.editor.deselectAllElements();
+                        } else if (allSelected) {
+                            for (AbstractEditorElement<?, ?> element : elements) {
+                                element.setSelected(false);
+                            }
+                            return;
+                        }
+                        for (AbstractEditorElement<?, ?> element : elements) {
+                            element.setSelected(true);
+                        }
+                    }
+                    if (!this.isGroupNameHovered()) {
+                        return;
+                    }
                     long now = System.currentTimeMillis();
                     if ((this.lastLeftClick + 400) > now) {
                         this.startEditingGroupName();

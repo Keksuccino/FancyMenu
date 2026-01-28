@@ -229,6 +229,9 @@ public class Layout extends LayoutBase {
             if (group.name != null) {
                 groupContainer.putProperty("group_name", group.name);
             }
+            if (group.collapsed) {
+                groupContainer.putProperty("collapsed", "true");
+            }
             if (!group.elementInstanceIdentifiers.isEmpty()) {
                 StringBuilder ids = new StringBuilder();
                 for (String id : group.elementInstanceIdentifiers) {
@@ -339,6 +342,7 @@ public class Layout extends LayoutBase {
             for (PropertyContainer sec : serialized.getContainersOfType("layer_group")) {
                 LayerGroup group = new LayerGroup();
                 group.name = sec.getValue("group_name");
+                group.collapsed = SerializationHelper.INSTANCE.deserializeBoolean(group.collapsed, sec.getValue("collapsed"));
                 String rawIds = sec.getValue("element_ids");
                 if (rawIds == null) {
                     rawIds = sec.getValue("elements");
@@ -1035,6 +1039,7 @@ public class Layout extends LayoutBase {
         public String name = null;
         @NotNull
         public List<String> elementInstanceIdentifiers = new ArrayList<>();
+        public boolean collapsed = false;
 
     }
 
