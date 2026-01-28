@@ -5,7 +5,8 @@ import org.jetbrains.annotations.NotNull;
 public final class IconAnimations {
 
     public static final IconAnimation SHORT_WIGGLE_LEFT_RIGHT = createBounceWiggle(400.0F, -1.6F, 1.4F, 1.0F);
-    public static final IconAnimation SHORT_SPIN_UP = createSpinUpRotation(900.0F, 720.0F, 0.25F, 0.32F);
+    public static final IconAnimation SHORT_SPIN_UP = createSpinUpRotation(500.0F, 720.0F, 0.25F, 0.32F);
+    public static final IconAnimation SHORT_SPIN_UP_SUBTLE = createSpinUpRotation(350.0F, 360.0F, 0.25F, 0.32F);
 
     private IconAnimations() {
     }

@@ -3,7 +3,9 @@ package de.keksuccino.fancymenu.customization.customgui;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,7 +16,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class BuildCustomGuiScreen extends CellScreen {
+public class BuildCustomGuiScreen extends PiPCellWindowBody {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     @NotNull
     protected CustomGui gui;
@@ -95,7 +100,7 @@ public class BuildCustomGuiScreen extends CellScreen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.guiTemp.identifier.isEmpty()) {
             this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.invalid").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())));
@@ -107,14 +112,12 @@ public class BuildCustomGuiScreen extends CellScreen {
             this.settingsFeedbackCell.setText(Component.empty());
             this.allSettingsValid = true;
         }
-
-        super.render(graphics, mouseX, mouseY, partial);
-
     }
 
     @Override
     protected void onCancel() {
         this.callback.accept(null);
+        this.closeWindow();
     }
 
     @Override
@@ -131,7 +134,30 @@ public class BuildCustomGuiScreen extends CellScreen {
                 this.gui.popupModeBackgroundOverlay = this.guiTemp.popupModeBackgroundOverlay;
             }
             this.callback.accept(this.gui);
+            this.closeWindow();
         }
+    }
+
+    @Override
+    public void onWindowClosedExternally() {
+        this.callback.accept(null);
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull BuildCustomGuiScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(false)
+                .setForceFocus(false)
+                .setBlockMinecraftScreenInputs(false)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull BuildCustomGuiScreen screen) {
+        return openInWindow(screen, null);
     }
 
 }

@@ -10,7 +10,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayout
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
@@ -180,35 +179,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         }
 
-        this.renderScrollBarGrabberFallback(graphics);
-    }
-
-    private void renderScrollBarGrabberFallback(@NotNull GuiGraphics graphics) {
-        if (!this.scrollArea.isVerticalScrollBarVisible()) {
-            return;
-        }
-
-        if (!this.scrollArea.verticalScrollBar.isRoundedGrabberEnabled()) {
-            return;
-        }
-
-        DrawableColor grabberColor = (this.scrollArea.verticalScrollBar.isGrabberHovered() || this.scrollArea.verticalScrollBar.isGrabberGrabbed())
-                ? (this.scrollArea.verticalScrollBar.hoverBarColor != null ? this.scrollArea.verticalScrollBar.hoverBarColor.get() : null)
-                : (this.scrollArea.verticalScrollBar.idleBarColor != null ? this.scrollArea.verticalScrollBar.idleBarColor.get() : null);
-        if (grabberColor == null) {
-            return;
-        }
-
-        float inset = this.scrollArea.verticalScrollBar.getGrabberEdgeInset();
-        float effectiveStartX = this.scrollArea.verticalScrollBar.scrollAreaStartX + inset;
-        float effectiveStartY = this.scrollArea.verticalScrollBar.scrollAreaStartY + inset;
-        float effectiveEndX = Math.max(effectiveStartX, this.scrollArea.verticalScrollBar.scrollAreaEndX - inset);
-        float effectiveEndY = Math.max(effectiveStartY, this.scrollArea.verticalScrollBar.scrollAreaEndY - inset);
-        float usableAreaHeight = Math.max(0.0F, effectiveEndY - effectiveStartY - this.scrollArea.verticalScrollBar.grabberHeight);
-        float grabberX = effectiveEndX - this.scrollArea.verticalScrollBar.grabberWidth;
-        float grabberY = effectiveStartY + (usableAreaHeight * this.scrollArea.verticalScrollBar.getScroll());
-
-        UIBase.fillF(graphics, grabberX, grabberY, grabberX + this.scrollArea.verticalScrollBar.grabberWidth, grabberY + this.scrollArea.verticalScrollBar.grabberHeight, grabberColor.getColorInt());
     }
 
     @Override

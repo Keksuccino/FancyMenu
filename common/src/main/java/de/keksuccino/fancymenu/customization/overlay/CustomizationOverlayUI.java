@@ -343,7 +343,9 @@ public class CustomizationOverlayUI {
                 .setIcon(MaterialIcons.WIDGETS);
 
         customGuiMenu.addClickableEntry("manage_custom_guis", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.manage"), (menu, entry) -> {
-            Minecraft.getInstance().setScreen(new ManageCustomGuisScreen(() -> Minecraft.getInstance().setScreen(null)));
+            ManageCustomGuisScreen manageCustomGuisScreen = new ManageCustomGuisScreen(() -> {});
+            ManageCustomGuisScreen.openInWindow(manageCustomGuisScreen);
+            menu.closeMenuChain();
         }).setIcon(MaterialIcons.EDIT);
 
         customGuiMenu.addSeparatorEntry("separator_after_manage_custom_guis");

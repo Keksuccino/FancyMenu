@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
@@ -1701,6 +1702,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+            this.blitScaledIcon(graphics, iconData, areaX, areaY, areaWidth, areaHeight, 0.0F);
+        }
+
+        protected void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight, float rotationDegrees) {
             if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
                 return;
             }
@@ -1715,6 +1720,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             graphics.pose().pushPose();
             graphics.pose().translate(drawX, drawY, 0.0F);
             graphics.pose().scale(scale, scale, 1.0F);
+            if (rotationDegrees != 0.0F) {
+                graphics.pose().translate(iconData.width * 0.5F, iconData.height * 0.5F, 0.0F);
+                graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotationDegrees));
+                graphics.pose().translate(-iconData.width * 0.5F, -iconData.height * 0.5F, 0.0F);
+            }
             graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
             graphics.pose().popPose();
         }
@@ -1727,13 +1737,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected void setHovered(boolean hovered) {
             boolean wasHovered = this.hovered;
             super.setHovered(hovered);
-            if (!wasHovered && hovered && FancyMenu.getOptions().enableUiAnimations.getValue()) {
+            if (!wasHovered && hovered && this.isActive() && FancyMenu.getOptions().enableUiAnimations.getValue()) {
                 this.iconWiggleAnimation.start();
             }
         }
 
         protected float getIconWiggleOffsetX() {
             if (!FancyMenu.getOptions().enableUiAnimations.getValue()) {
+                this.iconWiggleAnimation.reset();
+                return 0.0F;
+            }
+            if (!this.isActive()) {
                 this.iconWiggleAnimation.reset();
                 return 0.0F;
             }
@@ -2031,6 +2045,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected long parentMenuHoverStartTime = -1;
         protected long entryHoverStartTime = -1;
         protected long entryNotHoveredStartTime = -1;
+        @NotNull
+        protected IconAnimation.Instance subMenuArrowSpin = IconAnimations.SHORT_SPIN_UP_SUBTLE.createInstance();
 
         public SubMenuContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ContextMenu subContextMenu) {
             super(identifier, parent, label, ((menu, entry) -> {}));
@@ -2055,9 +2071,21 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
             IconRenderData iconData = this.resolveSubMenuArrowIconData();
             if (iconData != null) {
-                this.blitScaledIcon(graphics, iconData, (int) (this.x + this.width - 20), (int) (this.y + 5), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+                this.blitScaledIcon(graphics, iconData, (int) (this.x + this.width - 20), (int) (this.y + 5), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, this.getSubMenuArrowRotation());
             }
             RenderingUtils.resetShaderColor(graphics);
+        }
+
+        protected float getSubMenuArrowRotation() {
+            if (!FancyMenu.getOptions().enableUiAnimations.getValue()) {
+                this.subMenuArrowSpin.reset();
+                return 0.0F;
+            }
+            if (!this.isActive()) {
+                this.subMenuArrowSpin.reset();
+                return 0.0F;
+            }
+            return this.subMenuArrowSpin.getRotationDegrees();
         }
 
         @Nullable
@@ -2144,6 +2172,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
          * @param entryPath The {@link SubMenuContextMenuEntry} path of menus to open.
          */
         public void openSubMenu(@NotNull List<String> entryPath) {
+            if (this.isActive() && !this.subContextMenu.isOpen()) {
+                this.subMenuArrowSpin.start();
+            }
             this.subContextMenu.openMenuAt(0, 0, entryPath);
         }
 
@@ -2151,6 +2182,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
          * Opens the {@link ContextMenu} of this {@link SubMenuContextMenuEntry}.
          */
         public void openSubMenu() {
+            if (this.isActive() && !this.subContextMenu.isOpen()) {
+                this.subMenuArrowSpin.start();
+            }
             this.subContextMenu.openMenuAt(0, 0);
         }
 

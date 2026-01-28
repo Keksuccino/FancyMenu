@@ -1,18 +1,23 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
-public class ManageCustomGuisScreen extends CellScreen {
+public class ManageCustomGuisScreen extends PiPCellWindowBody {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     protected Runnable onCloseRunnable;
     protected List<CustomGui> guis = new ArrayList<>();
@@ -51,11 +56,13 @@ public class ManageCustomGuisScreen extends CellScreen {
     protected void initRightSideWidgets() {
 
         this.addRightSideButton(20, Component.translatable("fancymenu.custom_guis.manage.add"), var1 -> {
-            Screen s = Minecraft.getInstance().screen;
-            Minecraft.getInstance().setScreen(new BuildCustomGuiScreen(null, customGui -> {
-                if (customGui != null) this.guis.add(customGui);
-                Minecraft.getInstance().setScreen(s);
-            }));
+            BuildCustomGuiScreen screen = new BuildCustomGuiScreen(null, customGui -> {
+                if (customGui != null) {
+                    this.guis.add(customGui);
+                    this.rebuild();
+                }
+            });
+            this.openChildWindow(parentWindow -> BuildCustomGuiScreen.openInWindow(screen, parentWindow));
         });
 
         this.addRightSideDefaultSpacer();
@@ -73,12 +80,14 @@ public class ManageCustomGuisScreen extends CellScreen {
         }).setIsActiveSupplier(consumes -> this.selected != null);
 
         this.addRightSideButton(20, Component.translatable("fancymenu.custom_guis.manage.edit"), var1 -> {
-            Screen s = Minecraft.getInstance().screen;
             CustomGui selected = this.selected;
             if (selected != null) {
-                Minecraft.getInstance().setScreen(new BuildCustomGuiScreen(selected, customGui -> {
-                    Minecraft.getInstance().setScreen(s);
-                }));
+                BuildCustomGuiScreen screen = new BuildCustomGuiScreen(selected, customGui -> {
+                    if (customGui != null) {
+                        this.rebuild();
+                    }
+                });
+                this.openChildWindow(parentWindow -> BuildCustomGuiScreen.openInWindow(screen, parentWindow));
             }
         }).setIsActiveSupplier(consumes -> this.selected != null);
 
@@ -86,7 +95,11 @@ public class ManageCustomGuisScreen extends CellScreen {
             CustomGui selected = this.selected;
             if (selected != null) {
                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.custom_guis.manage.remove.confirm"), MessageDialogStyle.WARNING, remove -> {
-                    if (remove) this.guis.remove(selected);
+                    if (remove) {
+                        this.guis.remove(selected);
+                        this.selected = null;
+                        this.rebuild();
+                    }
                 });
             }
         }).setIsActiveSupplier(consumes -> this.selected != null);
@@ -94,14 +107,14 @@ public class ManageCustomGuisScreen extends CellScreen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.selected = this.getSelectedGui();
-        super.render(graphics, mouseX, mouseY, partial);
     }
 
     @Override
     protected void onCancel() {
         this.onCloseRunnable.run();
+        this.closeWindow();
     }
 
     @Override
@@ -111,6 +124,12 @@ public class ManageCustomGuisScreen extends CellScreen {
             if (!g.identifier.replace(" ", "").isEmpty()) CustomGuiHandler.CUSTOM_GUI_SCREENS.put(g.identifier, g);
         }
         CustomGuiHandler.saveChanges();
+        this.onCloseRunnable.run();
+        this.closeWindow();
+    }
+
+    @Override
+    public void onWindowClosedExternally() {
         this.onCloseRunnable.run();
     }
 
@@ -132,6 +151,34 @@ public class ManageCustomGuisScreen extends CellScreen {
             this.gui = gui;
         }
 
+    }
+
+    private void openChildWindow(@NotNull Function<PiPWindow, PiPWindow> opener) {
+        PiPWindow parentWindow = this.getWindow();
+        PiPWindow childWindow = opener.apply(parentWindow);
+        if (parentWindow == null || childWindow == null) {
+            return;
+        }
+        childWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+        parentWindow.setVisible(false);
+        childWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageCustomGuisScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(false)
+                .setForceFocus(false)
+                .setBlockMinecraftScreenInputs(false)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageCustomGuisScreen screen) {
+        return openInWindow(screen, null);
     }
 
 }
