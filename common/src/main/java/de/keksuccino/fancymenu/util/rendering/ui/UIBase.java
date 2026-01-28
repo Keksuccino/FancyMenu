@@ -359,6 +359,7 @@ public class UIBase extends RenderingUtils {
             slider.setSliderBorderColorNormal(UIBase.getUITheme().ui_blur_interface_widget_border_color);
             slider.setSliderHandleColorNormal(UIBase.getUITheme().ui_blur_interface_widget_background_color_normal_type_2);
             slider.setSliderHandleColorHover(UIBase.getUITheme().ui_blur_interface_widget_background_color_hover_type_1);
+            slider.setSliderHandleColorInactive(UIBase.getUITheme().ui_blur_interface_widget_background_color_normal_type_2);
             slider.setLabelColorNormal(UIBase.getUITheme().ui_blur_interface_widget_label_color_normal);
             slider.setLabelColorInactive(UIBase.getUITheme().ui_blur_interface_widget_label_color_inactive);
         } else {
@@ -366,6 +367,7 @@ public class UIBase extends RenderingUtils {
             slider.setSliderBorderColorNormal(UIBase.getUITheme().ui_interface_widget_border_color);
             slider.setSliderHandleColorNormal(UIBase.getUITheme().ui_interface_widget_background_color_normal_type_2);
             slider.setSliderHandleColorHover(UIBase.getUITheme().ui_interface_widget_background_color_hover_type_1);
+            slider.setSliderHandleColorInactive(UIBase.getUITheme().ui_interface_widget_background_color_normal_type_2);
             slider.setLabelColorNormal(UIBase.getUITheme().ui_interface_widget_label_color_normal);
             slider.setLabelColorInactive(UIBase.getUITheme().ui_interface_widget_label_color_inactive);
         }

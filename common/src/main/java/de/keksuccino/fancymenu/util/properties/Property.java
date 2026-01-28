@@ -48,6 +48,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -496,6 +497,35 @@ public class Property<T> {
                     })
                     .setIcon(MaterialIcons.UNDO);
 
+            subMenu.addSeparatorEntry("separator_before_current_value_display")
+                    .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1);
+            subMenu.addClickableEntry("current_value_display", Component.empty(), (contextMenu, entry) -> {})
+                    .setLabelSupplier((contextMenu, entry) -> {
+                        List<? extends PropertyHolder> selectedObjects = builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects();
+                        if (selectedObjects.size() == 1) {
+                            Component valueComponent;
+                            IntegerProperty resolved = (IntegerProperty) selectedObjects.get(0).getProperty(key);
+                            String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
+                            if (val == null) {
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                            } else {
+                                if (Minecraft.getInstance().font.width(val) > 150) {
+                                    val = new StringBuilder(val).reverse().toString();
+                                    val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+                                    val = new StringBuilder(val).reverse().toString();
+                                    val = ".." + val;
+                                }
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+                            }
+                            return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+                        }
+                        return Component.empty();
+                    })
+                    .setClickSoundEnabled(false)
+                    .setChangeBackgroundColorOnHover(false)
+                    .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
+                    .setIcon(MaterialIcons.INFO);
+
             return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
                     .setIcon(MaterialIcons.NUMBERS)
                     .setStackable(true);
@@ -669,6 +699,35 @@ public class Property<T> {
                         if (resolved != null) resolved.set(property.getDefault());
                     })
                     .setIcon(MaterialIcons.UNDO);
+
+            subMenu.addSeparatorEntry("separator_before_current_value_display")
+                    .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1);
+            subMenu.addClickableEntry("current_value_display", Component.empty(), (contextMenu, entry) -> {})
+                    .setLabelSupplier((contextMenu, entry) -> {
+                        List<? extends PropertyHolder> selectedObjects = builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects();
+                        if (selectedObjects.size() == 1) {
+                            Component valueComponent;
+                            DoubleProperty resolved = (DoubleProperty) selectedObjects.get(0).getProperty(key);
+                            String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
+                            if (val == null) {
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                            } else {
+                                if (Minecraft.getInstance().font.width(val) > 150) {
+                                    val = new StringBuilder(val).reverse().toString();
+                                    val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+                                    val = new StringBuilder(val).reverse().toString();
+                                    val = ".." + val;
+                                }
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+                            }
+                            return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+                        }
+                        return Component.empty();
+                    })
+                    .setClickSoundEnabled(false)
+                    .setChangeBackgroundColorOnHover(false)
+                    .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
+                    .setIcon(MaterialIcons.INFO);
 
             return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
                     .setIcon(MaterialIcons.FUNCTIONS)
@@ -844,6 +903,35 @@ public class Property<T> {
                     })
                     .setIcon(MaterialIcons.UNDO);
 
+            subMenu.addSeparatorEntry("separator_before_current_value_display")
+                    .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1);
+            subMenu.addClickableEntry("current_value_display", Component.empty(), (contextMenu, entry) -> {})
+                    .setLabelSupplier((contextMenu, entry) -> {
+                        List<? extends PropertyHolder> selectedObjects = builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects();
+                        if (selectedObjects.size() == 1) {
+                            Component valueComponent;
+                            LongProperty resolved = (LongProperty) selectedObjects.get(0).getProperty(key);
+                            String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
+                            if (val == null) {
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                            } else {
+                                if (Minecraft.getInstance().font.width(val) > 150) {
+                                    val = new StringBuilder(val).reverse().toString();
+                                    val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+                                    val = new StringBuilder(val).reverse().toString();
+                                    val = ".." + val;
+                                }
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+                            }
+                            return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+                        }
+                        return Component.empty();
+                    })
+                    .setClickSoundEnabled(false)
+                    .setChangeBackgroundColorOnHover(false)
+                    .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
+                    .setIcon(MaterialIcons.INFO);
+
             return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
                     .setIcon(MaterialIcons.NUMBERS)
                     .setStackable(true);
@@ -1017,6 +1105,35 @@ public class Property<T> {
                         if (resolved != null) resolved.set(property.getDefault());
                     })
                     .setIcon(MaterialIcons.UNDO);
+
+            subMenu.addSeparatorEntry("separator_before_current_value_display")
+                    .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1);
+            subMenu.addClickableEntry("current_value_display", Component.empty(), (contextMenu, entry) -> {})
+                    .setLabelSupplier((contextMenu, entry) -> {
+                        List<? extends PropertyHolder> selectedObjects = builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects();
+                        if (selectedObjects.size() == 1) {
+                            Component valueComponent;
+                            FloatProperty resolved = (FloatProperty) selectedObjects.get(0).getProperty(key);
+                            String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
+                            if (val == null) {
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                            } else {
+                                if (Minecraft.getInstance().font.width(val) > 150) {
+                                    val = new StringBuilder(val).reverse().toString();
+                                    val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+                                    val = new StringBuilder(val).reverse().toString();
+                                    val = ".." + val;
+                                }
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+                            }
+                            return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+                        }
+                        return Component.empty();
+                    })
+                    .setClickSoundEnabled(false)
+                    .setChangeBackgroundColorOnHover(false)
+                    .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
+                    .setIcon(MaterialIcons.INFO);
 
             return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
                     .setIcon(MaterialIcons.FUNCTIONS)
@@ -1528,58 +1645,6 @@ public class Property<T> {
         p.contextMenuEntrySupplier = (property, builder, menu) -> {
             ContextMenu subMenu = new ContextMenu();
 
-            if (placeholders) {
-
-                subMenu.addClickableEntry("input_as_string", Component.translatable("fancymenu.context_menu.entries.color.input_as_string"),
-                                (contextMenu, entry) -> {
-                                    ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(entry, consumes -> consumes.getProperty(key) != null);
-                                    if (!stack.isPrimary() || stack.isEmpty()) {
-                                        return;
-                                    }
-                                    List<? extends PropertyHolder> selectedObjects = stack.getObjects();
-                                    String defaultText = null;
-                                    List<String> targetValuesOfSelected = new ArrayList<>();
-                                    for (PropertyHolder holder : selectedObjects) {
-                                        ColorProperty resolved = (ColorProperty) holder.getProperty(key);
-                                        String value = (resolved != null) ? resolved.get() : property.getDefault();
-                                        targetValuesOfSelected.add(value);
-                                    }
-                                    if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
-                                        ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
-                                        defaultText = (resolved != null) ? resolved.get() : property.getDefault();
-                                    }
-                                    TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null, call -> {
-                                        if (call != null) {
-                                            builder.saveSnapshot();
-                                            builder.applyStackAppliers(entry, call);
-                                        }
-                                    });
-                                    s.setText(defaultText);
-                                    s.setMultilineMode(false);
-                                    s.setPlaceholdersAllowed(true);
-                                    contextMenu.closeMenuChain();
-                                    Dialogs.openGeneric(s, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null,
-                                            TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
-                                            .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
-                                })
-                        .setStackable(true)
-                        .setStackApplier((stackEntry, value) -> {
-                            String call = null;
-                            if (value instanceof String stringValue) {
-                                call = stringValue;
-                            } else if (value instanceof DrawableColor drawableValue) {
-                                call = drawableValue.getHex();
-                            }
-                            if (call == null) {
-                                return;
-                            }
-                            ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
-                            if (resolved != null) resolved.set(call);
-                        })
-                        .setIcon(MaterialIcons.TEXT_FIELDS);
-
-            }
-
             subMenu.addClickableEntry("input_via_color_picker", Component.translatable("fancymenu.context_menu.entries.color.input_via_color_picker"),
                             (contextMenu, entry) -> {
                                 ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(entry, consumes -> consumes.getProperty(key) != null);
@@ -1649,6 +1714,58 @@ public class Property<T> {
                         if (resolved != null) resolved.set(call);
                     })
                     .setIcon(MaterialIcons.DROPPER_EYE);
+
+            if (placeholders) {
+
+                subMenu.addClickableEntry("input_as_string", Component.translatable("fancymenu.context_menu.entries.color.input_as_string"),
+                                (contextMenu, entry) -> {
+                                    ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(entry, consumes -> consumes.getProperty(key) != null);
+                                    if (!stack.isPrimary() || stack.isEmpty()) {
+                                        return;
+                                    }
+                                    List<? extends PropertyHolder> selectedObjects = stack.getObjects();
+                                    String defaultText = null;
+                                    List<String> targetValuesOfSelected = new ArrayList<>();
+                                    for (PropertyHolder holder : selectedObjects) {
+                                        ColorProperty resolved = (ColorProperty) holder.getProperty(key);
+                                        String value = (resolved != null) ? resolved.get() : property.getDefault();
+                                        targetValuesOfSelected.add(value);
+                                    }
+                                    if (!stack.isStacked() || ListUtils.allInListEqual(targetValuesOfSelected)) {
+                                        ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
+                                        defaultText = (resolved != null) ? resolved.get() : property.getDefault();
+                                    }
+                                    TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null, call -> {
+                                        if (call != null) {
+                                            builder.saveSnapshot();
+                                            builder.applyStackAppliers(entry, call);
+                                        }
+                                    });
+                                    s.setText(defaultText);
+                                    s.setMultilineMode(false);
+                                    s.setPlaceholdersAllowed(true);
+                                    contextMenu.closeMenuChain();
+                                    Dialogs.openGeneric(s, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), null,
+                                            TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                                            .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
+                                })
+                        .setStackable(true)
+                        .setStackApplier((stackEntry, value) -> {
+                            String call = null;
+                            if (value instanceof String stringValue) {
+                                call = stringValue;
+                            } else if (value instanceof DrawableColor drawableValue) {
+                                call = drawableValue.getHex();
+                            }
+                            if (call == null) {
+                                return;
+                            }
+                            ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
+                            if (resolved != null) resolved.set(call);
+                        })
+                        .setIcon(MaterialIcons.TEXT_FIELDS);
+
+            }
 
             subMenu.addSeparatorEntry("separator_before_reset");
 
@@ -2063,6 +2180,18 @@ public class Property<T> {
     }
 
     /**
+     * Resets the current value to the default value.
+     * <p>
+     * This uses {@link #set(Object)} so any configured set-processor is applied.
+     * </p>
+     *
+     * @return this property for chaining
+     */
+    public Property<T> resetToDefault() {
+        return this.set(this.defaultValue);
+    }
+
+    /**
      * Returns the current value (after {@link #getValueGetProcessor() get-processing}, if configured).
      * This may return {@code null}.
      */
@@ -2326,6 +2455,83 @@ public class Property<T> {
     }
 
     /**
+     * Creates a new property instance that copies configuration and values from this instance.
+     * <p>
+     * The clone preserves default/current values, codecs, processors, validators, menu suppliers,
+     * and disabled state. Manual input (if any) is preserved for {@link ManualInputProperty}
+     * subclasses. Value listeners are copied by reference and are not re-fired during cloning.
+     * </p>
+     * <p>
+     * This is a shallow copy: mutable value objects are shared between the original and the clone
+     * unless they are immutable by nature or copied elsewhere.
+     * </p>
+     *
+     * @return a cloned property instance
+     */
+    @Override
+    public Property<T> clone() {
+        Property<T> cloned = this.createCloneInstance();
+        cloned.defaultValue = this.defaultValue;
+        cloned.currentValue = this.currentValue;
+        cloned.deserializationCodec = this.deserializationCodec;
+        cloned.serializationCodec = this.serializationCodec;
+        cloned.contextMenuEntrySupplier = this.contextMenuEntrySupplier;
+        cloned.contextMenuEntryLocalizationKeyBase = this.contextMenuEntryLocalizationKeyBase;
+        cloned.userInputTextValidator = this.userInputTextValidator;
+        cloned.valueSetProcessor = this.valueSetProcessor;
+        cloned.valueGetProcessor = this.valueGetProcessor;
+        cloned.disabled = this.disabled;
+        cloned.valueSetListeners.addAll(this.valueSetListeners);
+        if ((cloned instanceof ManualInputProperty<?> clonedManual) && (this instanceof ManualInputProperty<?> sourceManual)) {
+            clonedManual.manualInput = sourceManual.manualInput;
+        }
+        return cloned;
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    private Property<T> createCloneInstance() {
+        Class<?> clazz = this.getClass();
+        try {
+            Constructor<?> ctor = findCloneConstructor(clazz, 4);
+            if (ctor != null) {
+                ctor.setAccessible(true);
+                return (Property<T>) ctor.newInstance(this.key, this.defaultValue, this.currentValue, this.contextMenuEntryLocalizationKeyBase);
+            }
+            ctor = findCloneConstructor(clazz, 3);
+            if (ctor != null) {
+                ctor.setAccessible(true);
+                Property<T> instance = (Property<T>) ctor.newInstance(this.key, this.defaultValue, this.contextMenuEntryLocalizationKeyBase);
+                instance.currentValue = this.currentValue;
+                return instance;
+            }
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to clone property: " + this.getKey(), ex);
+        }
+        return new Property<>(this.key, this.defaultValue, this.currentValue, this.contextMenuEntryLocalizationKeyBase);
+    }
+
+    @Nullable
+    private static Constructor<?> findCloneConstructor(@NotNull Class<?> clazz, int paramCount) {
+        for (Constructor<?> ctor : clazz.getDeclaredConstructors()) {
+            if (ctor.getParameterCount() != paramCount) {
+                continue;
+            }
+            Class<?>[] params = ctor.getParameterTypes();
+            if (paramCount == 4) {
+                if (params[0] == String.class && params[3] == String.class) {
+                    return ctor;
+                }
+            } else if (paramCount == 3) {
+                if (params[0] == String.class && params[2] == String.class) {
+                    return ctor;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Returns the translation key base used for context menu entry labels.
      */
     public @NotNull String getContextMenuEntryLocalizationKeyBase() {
@@ -2517,28 +2723,95 @@ public class Property<T> {
 
     }
 
-    protected abstract static class ManualInputProperty<T> extends Property<T> {
+    /**
+     * A {@link Property} variant that can either hold a typed value or a raw "manual input" string.
+     * <p>
+     * When {@link #manualInput} is set, the property attempts to resolve placeholders and parse the
+     * string into {@code T}. If parsing succeeds, the manual value overrides the typed value for
+     * getters. If parsing fails, the typed value is used as a fallback, but the raw input is still
+     * preserved for editing and serialization.
+     * </p>
+     * <p>
+     * For copying values between properties (including whether the value was typed or manual),
+     * use {@link #createValueSnapshot()}, {@link #applyValueSnapshot(ManualInputSnapshot)}, or
+     * {@link #copyValueTo(ManualInputProperty)}.
+     * </p>
+     *
+     * @param <T> the typed value stored by the property
+     */
+    public abstract static class ManualInputProperty<T> extends Property<T> {
 
         @Nullable
         protected String manualInput = null;
 
+        /**
+         * Immutable snapshot of a manual-input property. This preserves the raw manual input string
+         * (if any) and the typed current value exactly as stored.
+         * <p>
+         * The snapshot does not resolve placeholders or validate input. It is intended for copying
+         * or restoring state without changing how the user entered the value.
+         * </p>
+         *
+         * @param manualInput raw manual input string or {@code null}
+         * @param currentValue typed current value or {@code null}
+         * @param <T> the typed value stored by the property
+         */
+        public record ManualInputSnapshot<T>(@Nullable String manualInput, @Nullable T currentValue) {
+        }
+
+        /**
+         * Creates a manual-input property with an explicit default and current value.
+         *
+         * @param key the unique key used for lookup and serialization
+         * @param defaultValue the value used when no current value is present
+         * @param currentValue the initial current value
+         * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+         */
         protected ManualInputProperty(@NotNull String key, @Nullable T defaultValue, @Nullable T currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
             super(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         }
 
+        /**
+         * Creates a manual-input property with an explicit default value and no current value.
+         *
+         * @param key the unique key used for lookup and serialization
+         * @param defaultValue the value used when no current value is present
+         * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+         */
         protected ManualInputProperty(@NotNull String key, @Nullable T defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
             super(key, defaultValue, contextMenuEntryLocalizationKeyBase);
         }
 
+        /**
+         * Returns the raw manual input string as entered by the user.
+         * <p>
+         * This value is not placeholder-resolved and not validated. It can be {@code null} when the
+         * property is using its typed value instead.
+         * </p>
+         */
         @Nullable
         public String getManualInput() {
             return this.manualInput;
         }
 
+        /**
+         * Returns whether a non-empty manual input string is set.
+         */
         public boolean hasManualInput() {
             return (this.manualInput != null) && !this.manualInput.isEmpty();
         }
 
+        /**
+         * Sets the raw manual input string.
+         * <p>
+         * An empty or {@code null} string clears manual input. The typed value is not modified, but
+         * manual input takes precedence for getters once set. Listeners are notified with the
+         * resolved old/new values.
+         * </p>
+         *
+         * @param manualInput raw manual input string, or {@code null} to clear
+         * @return this property for chaining
+         */
         @NotNull
         public ManualInputProperty<T> setManualInput(@Nullable String manualInput) {
             T oldValue = this.get();
@@ -2552,11 +2825,77 @@ public class Property<T> {
             return this;
         }
 
+        /**
+         * Clears the manual input string.
+         *
+         * @return this property for chaining
+         */
         @NotNull
         public ManualInputProperty<T> clearManualInput() {
             return this.setManualInput(null);
         }
 
+        /**
+         * Creates an immutable snapshot of the raw manual input and current value.
+         * <p>
+         * This is the simplest way to copy a value to another manual-input property while
+         * preserving whether the user entered a raw string or a typed value.
+         * </p>
+         *
+         * @return snapshot containing the raw manual input and typed current value
+         */
+        @NotNull
+        public ManualInputSnapshot<T> createValueSnapshot() {
+            return new ManualInputSnapshot<>(this.manualInput, this.currentValue);
+        }
+
+        /**
+         * Applies a snapshot created by {@link #createValueSnapshot()}.
+         * <p>
+         * This restores the raw manual input and typed current value exactly as stored. It does not
+         * validate input or run set-processors, but it does notify value listeners.
+         * </p>
+         *
+         * @param snapshot snapshot to apply
+         */
+        public void applyValueSnapshot(@NotNull ManualInputSnapshot<T> snapshot) {
+            this.restoreSnapshot(snapshot.manualInput(), snapshot.currentValue());
+        }
+
+        /**
+         * Copies the raw manual input and current value from this property to another.
+         * <p>
+         * Equivalent to {@code target.applyValueSnapshot(createValueSnapshot())}.
+         * </p>
+         *
+         * @param target property to copy into
+         */
+        public void copyValueTo(@NotNull ManualInputProperty<T> target) {
+            target.restoreSnapshot(this.manualInput, this.currentValue);
+        }
+
+        /**
+         * Copies the raw manual input and current value from another property into this one.
+         * <p>
+         * Equivalent to {@code applyValueSnapshot(source.createValueSnapshot())}.
+         * </p>
+         *
+         * @param source property to copy from
+         */
+        public void copyValueFrom(@NotNull ManualInputProperty<T> source) {
+            this.restoreSnapshot(source.manualInput, source.currentValue);
+        }
+
+        /**
+         * Restores a raw manual input string and typed current value without validation.
+         * <p>
+         * This bypasses set-processors, making it suitable for undo/redo or snapshot restoration.
+         * Listeners are still notified with the resolved old/new values.
+         * </p>
+         *
+         * @param manualInput raw manual input string (nullable)
+         * @param currentValue typed current value (nullable)
+         */
         protected void restoreSnapshot(@Nullable String manualInput, @Nullable T currentValue) {
             T oldValue = this.get();
             if ((manualInput == null) || manualInput.isEmpty()) {
@@ -2569,6 +2908,13 @@ public class Property<T> {
             this.valueSetListeners.forEach(listener -> listener.onSet(oldValue, newValue));
         }
 
+        /**
+         * Returns the raw manual input if present, otherwise returns the typed value formatted
+         * as a string (using {@link #formatValue}).
+         * <p>
+         * This method does not resolve placeholders in manual input.
+         * </p>
+         */
         @Nullable
         public String getRawInputOrFormattedValue() {
             if (this.manualInput != null) {
@@ -2579,6 +2925,14 @@ public class Property<T> {
             return (value != null) ? this.formatValue(value) : null;
         }
 
+        /**
+         * Returns the value as a string suitable for display.
+         * <p>
+         * If manual input is present, placeholders are resolved and the raw input is returned.
+         * Otherwise the typed current value (or default if missing) is formatted via
+         * {@link #formatValue}.
+         * </p>
+         */
         @Nullable
         public String getAsString() {
             if (this.manualInput != null) {
@@ -2589,6 +2943,13 @@ public class Property<T> {
             return (value != null) ? this.formatValue(value) : null;
         }
 
+        /**
+         * Resolves the manual input into a typed value.
+         * <p>
+         * Placeholders are resolved before parsing. Returns {@code null} if no manual input is set
+         * or if parsing fails.
+         * </p>
+         */
         @Nullable
         protected T resolveManualValue() {
             if (this.manualInput == null) return null;
@@ -2596,19 +2957,53 @@ public class Property<T> {
             return this.parseInput(parsed);
         }
 
+        /**
+         * Parses a placeholder-resolved manual input string into {@code T}.
+         * <p>
+         * Return {@code null} to indicate invalid input.
+         * </p>
+         *
+         * @param input placeholder-resolved input string
+         * @return parsed value, or {@code null} if invalid
+         */
         @Nullable
         protected abstract T parseInput(@NotNull String input);
 
+        /**
+         * Returns whether a serialized string should be treated as a typed value.
+         * <p>
+         * When this returns {@code false}, the serialized string is interpreted as manual input.
+         * </p>
+         */
         protected abstract boolean isSerializedValueValid(@NotNull String value);
 
+        /**
+         * Parses a serialized string into a typed value.
+         * <p>
+         * Only called when {@link #isSerializedValueValid(String)} returned {@code true}.
+         * </p>
+         *
+         * @param value serialized value
+         * @return parsed typed value, or {@code null}
+         */
         @Nullable
         protected abstract T parseSerializedValue(@NotNull String value);
 
+        /**
+         * Formats a typed value as a string for display or editing.
+         * <p>
+         * Subclasses can override to customize formatting.
+         * </p>
+         */
         @NotNull
         protected String formatValue(@NotNull T value) {
             return value.toString();
         }
 
+        /**
+         * Returns the resolved manual input value if present and valid; otherwise returns the
+         * typed current value (after get-processing). May return {@code null}.
+         */
         @Override
         public @Nullable T get() {
             T manual = this.resolveManualValue();
@@ -2616,6 +3011,11 @@ public class Property<T> {
             return super.get();
         }
 
+        /**
+         * Returns a non-null value, preferring resolved manual input over the typed value/default.
+         *
+         * @return resolved manual input, current value, or default value
+         */
         @Override
         public T tryGetNonNull() {
             T manual = this.resolveManualValue();
@@ -2623,6 +3023,12 @@ public class Property<T> {
             return super.tryGetNonNull();
         }
 
+        /**
+         * Returns a non-null value, preferring resolved manual input, then current/default, and
+         * finally {@code elseValue}.
+         *
+         * @param elseValue fallback value if current and default are {@code null}
+         */
         @Override
         public T tryGetNonNullElse(@NotNull T elseValue) {
             T manual = this.resolveManualValue();
@@ -2630,18 +3036,45 @@ public class Property<T> {
             return super.tryGetNonNullElse(elseValue);
         }
 
+        /**
+         * Returns {@code false} when manual input is present; otherwise uses the typed value check.
+         */
         @Override
         public boolean isDefault() {
             if (this.manualInput != null) return false;
             return super.isDefault();
         }
 
+        /**
+         * Resets the current value to the default and clears manual input.
+         *
+         * @return this property for chaining
+         */
+        @Override
+        public Property<T> resetToDefault() {
+            return this.set(this.defaultValue);
+        }
+
+        /**
+         * Sets the typed current value and clears manual input.
+         * <p>
+         * Use {@link #setManualInput(String)} if you want to keep a raw string instead.
+         * </p>
+         */
         @Override
         public Property<T> set(@Nullable T value) {
             this.manualInput = null;
             return super.set(value);
         }
 
+        /**
+         * Deserializes the property from storage.
+         * <p>
+         * If the serialized string is valid for the typed value, it is parsed and stored as the
+         * typed current value. Otherwise the string is stored as manual input and the typed value is
+         * reset to the default.
+         * </p>
+         */
         @Override
         public Property<T> deserialize(@NotNull PropertyContainer properties) {
             try {
@@ -2664,6 +3097,13 @@ public class Property<T> {
             return this;
         }
 
+        /**
+         * Serializes the property to storage.
+         * <p>
+         * Manual input is written as-is. If no manual input is present, the typed current value is
+         * serialized using {@link #serializationCodec}.
+         * </p>
+         */
         @Override
         public Property<T> serialize(@NotNull PropertyContainer properties) {
             if (this.serializationCodec == null) {

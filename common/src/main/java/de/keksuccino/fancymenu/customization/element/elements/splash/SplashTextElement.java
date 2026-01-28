@@ -164,7 +164,7 @@ public class SplashTextElement extends AbstractElement {
 
     }
 
-    protected SplashTextElementBuilder getBuilder() {
+    public SplashTextElementBuilder getBuilder() {
         return (SplashTextElementBuilder) this.builder;
     }
 

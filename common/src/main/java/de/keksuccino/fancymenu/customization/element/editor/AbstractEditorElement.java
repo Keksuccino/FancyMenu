@@ -189,7 +189,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         this.topLeftDisplay.addLine("anchor_point", () -> Component.translatable("fancymenu.element.border_display.anchor_point", this.element.anchorPoint.getDisplayName()));
         this.topLeftDisplay.addLine("pos_x", () -> Component.translatable("fancymenu.element.border_display.pos_x", "" + this.getX()));
         this.topLeftDisplay.addLine("width", () -> Component.translatable("fancymenu.element.border_display.width", "" + this.getWidth()));
-        if (this.element.builder.isDeprecated()) {
+        if (this.element.getBuilder().isDeprecated()) {
             this.topLeftDisplay.addLine("deprecated_warning_line0", Component::empty);
             this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Component.translatable("fancymenu.elements.deprecated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
             this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Component.translatable("fancymenu.elements.deprecated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
@@ -333,88 +333,53 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
         }
 
-        if (this.settings.isAdvancedPositioningSupported()) {
+        ContextMenu advancedPositioningMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("advanced_positioning", Component.translatable("fancymenu.elements.features.advanced_positioning"), advancedPositioningMenu)
+                .addIsVisibleSupplier((menu, entry) -> this.settings.isAdvancedPositioningSupported())
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.features.advanced_positioning.desc")))
+                .setStackable(true)
+                .setIcon(MaterialIcons.MOVE);
 
-            ContextMenu advancedPositioningMenu = new ContextMenu();
-            this.rightClickMenu.addSubMenuEntry("advanced_positioning", Component.translatable("fancymenu.elements.features.advanced_positioning"), advancedPositioningMenu)
-                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.features.advanced_positioning.desc")))
-                    .setStackable(true)
-                    .setIcon(MaterialIcons.MOVE);
+        this.element.advancedX.buildContextMenuEntryAndAddTo(advancedPositioningMenu, this)
+                .addIsVisibleSupplier((menu, entry) -> this.settings.isAdvancedPositioningSupported())
+                .setStackable(true)
+                .setIcon(MaterialIcons.MOVE);
 
-            this.addGenericStringInputContextMenuEntryTo(advancedPositioningMenu, "advanced_positioning_x",
-                            element -> element.settings.isAdvancedPositioningSupported(),
-                            consumes -> consumes.element.advancedX,
-                            (element, input) -> element.element.advancedX = input,
-                            null, false, true, Component.translatable("fancymenu.elements.features.advanced_positioning.posx"),
-                            true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                    .setStackable(true)
-                    .setIcon(MaterialIcons.MOVE);
+        this.element.advancedY.buildContextMenuEntryAndAddTo(advancedPositioningMenu, this)
+                .addIsVisibleSupplier((menu, entry) -> this.settings.isAdvancedPositioningSupported())
+                .setStackable(true)
+                .setIcon(MaterialIcons.MOVE);
 
-            this.addGenericStringInputContextMenuEntryTo(advancedPositioningMenu, "advanced_positioning_y",
-                            element -> element.settings.isAdvancedPositioningSupported(),
-                            consumes -> consumes.element.advancedY,
-                            (element, input) -> element.element.advancedY = input,
-                            null, false, true, Component.translatable("fancymenu.elements.features.advanced_positioning.posy"),
-                            true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                    .setStackable(true)
-                    .setIcon(MaterialIcons.MOVE);
+        ContextMenu advancedSizingMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("advanced_sizing", Component.translatable("fancymenu.elements.features.advanced_sizing"), advancedSizingMenu)
+                .addIsVisibleSupplier((menu, entry) -> this.settings.isAdvancedSizingSupported())
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.features.advanced_sizing.desc")))
+                .setStackable(true)
+                .setIcon(MaterialIcons.STRAIGHTEN);
 
-        }
+        this.element.advancedWidth.buildContextMenuEntryAndAddTo(advancedSizingMenu, this)
+                .addIsVisibleSupplier((menu, entry) -> this.settings.isAdvancedSizingSupported())
+                .setStackable(true)
+                .setIcon(MaterialIcons.STRAIGHTEN);
 
-        if (this.settings.isAdvancedSizingSupported()) {
-
-            ContextMenu advancedSizingMenu = new ContextMenu();
-            this.rightClickMenu.addSubMenuEntry("advanced_sizing", Component.translatable("fancymenu.elements.features.advanced_sizing"), advancedSizingMenu)
-                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.features.advanced_sizing.desc")))
-                    .setStackable(true)
-                    .setIcon(MaterialIcons.STRAIGHTEN);
-
-            this.addGenericStringInputContextMenuEntryTo(advancedSizingMenu, "advanced_sizing_width",
-                            element -> element.settings.isAdvancedSizingSupported(),
-                            consumes -> consumes.element.advancedWidth,
-                            (element, input) -> {
-                                element.element.advancedWidth = input;
-                                element.element.baseWidth = 50;
-                            }, null, false, true, Component.translatable("fancymenu.elements.features.advanced_sizing.width"),
-                            true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                    .setStackable(true)
-                    .setIcon(MaterialIcons.STRAIGHTEN);
-
-            this.addGenericStringInputContextMenuEntryTo(advancedSizingMenu, "advanced_sizing_height",
-                            element -> element.settings.isAdvancedSizingSupported(),
-                            consumes -> consumes.element.advancedHeight, (element, input) -> {
-                                element.element.advancedHeight = input;
-                                element.element.baseHeight = 50;
-                            }, null, false, true, Component.translatable("fancymenu.elements.features.advanced_sizing.height"),
-                            true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                    .setStackable(true)
-                    .setIcon(MaterialIcons.STRAIGHTEN);
-
-        }
+        this.element.advancedHeight.buildContextMenuEntryAndAddTo(advancedSizingMenu, this)
+                .addIsVisibleSupplier((menu, entry) -> this.settings.isAdvancedSizingSupported())
+                .setStackable(true)
+                .setIcon(MaterialIcons.STRAIGHTEN);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_advanced_sizing_positioning").setStackable(true);
 
-        if (this.settings.isStretchable()) {
+        this.element.stretchX.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .addIsVisibleSupplier((menu, entry) -> this.settings.isStretchable())
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> this.element.advancedWidth.getInteger() == Integer.MIN_VALUE)
+                .setIcon(MaterialIcons.SWAP_HORIZ);
 
-            this.addToggleContextMenuEntryTo(this.rightClickMenu, "stretch_x",
-                            this.selfClass(),
-                            consumes -> consumes.element.stretchX,
-                            (element1, aBoolean) -> element1.element.stretchX = aBoolean,
-                            "fancymenu.elements.stretch.x")
-                    .setStackable(true)
-                    .addIsActiveSupplier((menu, entry) -> element.advancedWidth == null)
-                    .setIcon(MaterialIcons.SWAP_HORIZ);
-
-            this.addToggleContextMenuEntryTo(this.rightClickMenu, "stretch_y",
-                            this.selfClass(),
-                            consumes -> consumes.element.stretchY,
-                            (element1, aBoolean) -> element1.element.stretchY = aBoolean,
-                            "fancymenu.elements.stretch.y")
-                    .setStackable(true)
-                    .addIsActiveSupplier((menu, entry) -> element.advancedHeight == null)
-                    .setIcon(MaterialIcons.SWAP_VERT);
-
-        }
+        this.element.stretchY.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .addIsVisibleSupplier((menu, entry) -> this.settings.isStretchable())
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> this.element.advancedHeight.getInteger() == Integer.MIN_VALUE)
+                .setIcon(MaterialIcons.SWAP_VERT);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_stretch_xy").setStackable(true);
 
@@ -890,16 +855,16 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     }
 
     protected void tick() {
-        if ((this.element.advancedWidth != null) || (this.element.advancedHeight != null) && !this.topLeftDisplay.hasLine("advanced_sizing_enabled")) {
+        if (!this.element.advancedWidth.isDefault() || !this.element.advancedHeight.isDefault() && !this.topLeftDisplay.hasLine("advanced_sizing_enabled")) {
             this.topLeftDisplay.addLine("advanced_sizing_enabled", () -> Component.translatable("fancymenu.elements.advanced_sizing.enabled_notification"));
         }
-        if ((this.element.advancedWidth == null) && (this.element.advancedHeight == null) && this.topLeftDisplay.hasLine("advanced_sizing_enabled")) {
+        if (this.element.advancedWidth.isDefault() && this.element.advancedHeight.isDefault() && this.topLeftDisplay.hasLine("advanced_sizing_enabled")) {
             this.topLeftDisplay.removeLine("advanced_sizing_enabled");
         }
-        if ((this.element.advancedX != null) || (this.element.advancedY != null) && !this.topLeftDisplay.hasLine("advanced_positioning_enabled")) {
+        if (!this.element.advancedX.isDefault() || !this.element.advancedY.isDefault() && !this.topLeftDisplay.hasLine("advanced_positioning_enabled")) {
             this.topLeftDisplay.addLine("advanced_positioning_enabled", () -> Component.translatable("fancymenu.elements.advanced_positioning.enabled_notification"));
         }
-        if ((this.element.advancedX == null) && (this.element.advancedY == null) && this.topLeftDisplay.hasLine("advanced_positioning_enabled")) {
+        if (this.element.advancedX.isDefault() && this.element.advancedY.isDefault() && this.topLeftDisplay.hasLine("advanced_positioning_enabled")) {
             this.topLeftDisplay.removeLine("advanced_positioning_enabled");
         }
         // Handle rotation display
@@ -940,7 +905,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     }
 
     protected void renderDeprecatedIndicator(GuiGraphics graphics) {
-        if (this.element.builder.isDeprecated()) {
+        if (this.element.getBuilder().isDeprecated()) {
             RenderSystem.enableBlend();
             AspectRatio ratio = new AspectRatio(32, 32);
             int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth() / 3, this.getHeight() / 3);
@@ -1843,12 +1808,12 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 return false;
             }
             if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
-                if ((this.type == ResizeGrabberType.TOP) && (AbstractEditorElement.this.element.advancedY != null)) return false;
-                return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableY() && (AbstractEditorElement.this.element.advancedHeight == null);
+                if ((this.type == ResizeGrabberType.TOP) && !AbstractEditorElement.this.element.advancedY.isDefault()) return false;
+                return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableY() && AbstractEditorElement.this.element.advancedHeight.isDefault();
             }
             if ((this.type == ResizeGrabberType.LEFT) || (this.type == ResizeGrabberType.RIGHT)) {
-                if ((this.type == ResizeGrabberType.LEFT) && (AbstractEditorElement.this.element.advancedX != null)) return false;
-                return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableX() && (AbstractEditorElement.this.element.advancedWidth == null);
+                if ((this.type == ResizeGrabberType.LEFT) && !AbstractEditorElement.this.element.advancedX.isDefault()) return false;
+                return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableX() && AbstractEditorElement.this.element.advancedWidth.isDefault();
             }
             return false;
         }

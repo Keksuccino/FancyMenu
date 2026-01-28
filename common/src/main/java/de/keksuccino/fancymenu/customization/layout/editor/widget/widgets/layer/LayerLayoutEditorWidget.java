@@ -936,7 +936,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @SuppressWarnings("all")
         public String getLayerName() {
             if (this.element.element.customElementLayerName != null) return this.element.element.customElementLayerName;
-            return this.element.element.builder.getDisplayName(this.element.element).getString();
+            return this.element.element.getBuilder().getDisplayName(this.element.element).getString();
         }
 
         public float getLayerNameX() {

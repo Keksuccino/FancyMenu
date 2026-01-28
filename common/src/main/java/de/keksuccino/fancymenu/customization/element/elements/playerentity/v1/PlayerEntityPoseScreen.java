@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
@@ -273,16 +274,16 @@ public class PlayerEntityPoseScreen extends CellScreen {
         String cachedRightLegZRot = this.element.rightLegZRot;
         String cachedScale = this.element.scale;
         ElementAnchorPoint cachedOrientation = this.element.anchorPoint;
-        String cachedAdvancedX = this.element.advancedX;
-        String cachedAdvancedY = this.element.advancedY;
+        var cachedAdvancedX = this.element.advancedX.clone();
+        var cachedAdvancedY = this.element.advancedY.clone();
         int cachedPosOffsetX = this.element.posOffsetX;
         int cachedPosOffsetY = this.element.posOffsetY;
 
         this.applyPose();
         this.element.scale = "" + ENTITY_SCALE;
         this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-        this.element.advancedX = null;
-        this.element.advancedY = null;
+        this.element.advancedX.resetToDefault();
+        this.element.advancedY.resetToDefault();
         this.element.posOffsetX = posX;
         this.element.posOffsetY = posY;
 
@@ -307,8 +308,8 @@ public class PlayerEntityPoseScreen extends CellScreen {
         this.element.rightLegZRot = cachedRightLegZRot;
         this.element.scale = cachedScale;
         this.element.anchorPoint = cachedOrientation;
-        this.element.advancedX = cachedAdvancedX;
-        this.element.advancedY = cachedAdvancedY;
+        this.element.advancedX.copyValueFrom((Property.ManualInputProperty<Integer>) cachedAdvancedX);
+        this.element.advancedY.copyValueFrom((Property.ManualInputProperty<Integer>) cachedAdvancedY);
         this.element.posOffsetX = cachedPosOffsetX;
         this.element.posOffsetY = cachedPosOffsetY;
 

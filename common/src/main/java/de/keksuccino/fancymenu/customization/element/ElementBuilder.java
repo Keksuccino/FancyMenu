@@ -171,49 +171,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.anchorPointElementIdentifier = anchorElement;
             }
 
-            String w = serialized.getValue("width");
-            if (w != null) {
-                if (w.equals("%guiwidth%")) {
-                    element.stretchX = true;
-                } else {
-                    if (MathUtils.isInteger(w)) {
-                        element.baseWidth = Integer.parseInt(w);
-                    }
-                    if (element.baseWidth < 0) {
-                        element.baseWidth = 0;
-                    }
-                }
-            }
-
-            String h = serialized.getValue("height");
-            if (h != null) {
-                if (h.equals("%guiheight%")) {
-                    element.stretchY = true;
-                } else {
-                    if (MathUtils.isInteger(h)) {
-                        element.baseHeight = Integer.parseInt(h);
-                    }
-                    if (element.baseHeight < 0) {
-                        element.baseHeight = 0;
-                    }
-                }
-            }
-
-            String stretchXString = serialized.getValue("stretch_x");
-            if ((stretchXString != null) && stretchXString.equals("true")) {
-                element.stretchX = true;
-            }
-
-            String stretchYString = serialized.getValue("stretch_y");
-            if ((stretchYString != null) && stretchYString.equals("true")) {
-                element.stretchY = true;
-            }
-
-            element.advancedWidth = serialized.getValue("advanced_width");
-            element.advancedHeight = serialized.getValue("advanced_height");
-            element.advancedX = serialized.getValue("advanced_posx");
-            element.advancedY = serialized.getValue("advanced_posy");
-
             String stayOnScreen = serialized.getValue("stay_on_screen");
             //Setting this to false if null should set it to false for all legacy elements, so old layouts don't break
             if ((stayOnScreen == null) || stayOnScreen.equals("false")) {
@@ -276,6 +233,36 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             element.getPropertyMap().forEach((s, property) -> property.deserialize(serialized));
 
+            // Legacy support
+            String w = serialized.getValue("width");
+            if (w != null) {
+                if (w.equals("%guiwidth%")) {
+                    element.stretchX.set(true);
+                } else {
+                    if (MathUtils.isInteger(w)) {
+                        element.baseWidth = Integer.parseInt(w);
+                    }
+                    if (element.baseWidth < 0) {
+                        element.baseWidth = 0;
+                    }
+                }
+            }
+
+            // Legacy support
+            String h = serialized.getValue("height");
+            if (h != null) {
+                if (h.equals("%guiheight%")) {
+                    element.stretchY.set(true);
+                } else {
+                    if (MathUtils.isInteger(h)) {
+                        element.baseHeight = Integer.parseInt(h);
+                    }
+                    if (element.baseHeight < 0) {
+                        element.baseHeight = 0;
+                    }
+                }
+            }
+
             element.afterConstruction();
 
             return element;
@@ -332,18 +319,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 sec.putProperty("anchor_point_element", element.anchorPointElementIdentifier);
             }
 
-            if (element.advancedX != null) {
-                sec.putProperty("advanced_posx", element.advancedX);
-            }
-            if (element.advancedY != null) {
-                sec.putProperty("advanced_posy", element.advancedY);
-            }
-            if (element.advancedWidth != null) {
-                sec.putProperty("advanced_width", element.advancedWidth);
-            }
-            if (element.advancedHeight != null) {
-                sec.putProperty("advanced_height", element.advancedHeight);
-            }
             if (element.appearanceDelay == null) {
                 element.appearanceDelay = AbstractElement.AppearanceDelay.NO_DELAY;
             }
@@ -351,8 +326,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("y", "" + element.posOffsetY);
             sec.putProperty("width", "" + element.baseWidth);
             sec.putProperty("height", "" + element.baseHeight);
-            sec.putProperty("stretch_x", "" + element.stretchX);
-            sec.putProperty("stretch_y", "" + element.stretchY);
 
             sec.putProperty("stay_on_screen", "" + element.stayOnScreen);
 

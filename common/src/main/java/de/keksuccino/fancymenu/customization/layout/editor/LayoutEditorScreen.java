@@ -544,7 +544,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		//Wrap normal elements
 		for (AbstractElement e : ListUtils.mergeLists(normalElements.backgroundElements, normalElements.foregroundElements)) {
-			AbstractEditorElement<?, ?> editorElement = e.builder.wrapIntoEditorElementInternal(e, this);
+			AbstractEditorElement<?, ?> editorElement = e.getBuilder().wrapIntoEditorElementInternal(e, this);
 			if (editorElement != null) {
 				this.normalEditorElements.add(editorElement);
 			}
@@ -569,7 +569,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		//Serialize normal elements
 		for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
-			SerializedElement serialized = e.element.builder.serializeElementInternal(e.element);
+			SerializedElement serialized = e.element.getBuilder().serializeElementInternal(e.element);
 			if (serialized != null) {
 				this.layout.serializedElements.add(serialized);
 			}
@@ -841,10 +841,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			for (AbstractEditorElement<?, ?> e : elements) {
 				if (e.element.layerHiddenInEditor) continue;
 				if (e.settings.isCopyable()) {
-					SerializedElement serialized = e.element.builder.serializeElementInternal(e.element);
+					SerializedElement serialized = e.element.getBuilder().serializeElementInternal(e.element);
 					if (serialized != null) {
 						serialized.putProperty("instance_identifier", ScreenCustomization.generateUniqueIdentifier());
-						COPIED_ELEMENTS_CLIPBOARD.put(serialized, e.element.builder);
+						COPIED_ELEMENTS_CLIPBOARD.put(serialized, e.element.getBuilder());
 					}
 				}
 			}

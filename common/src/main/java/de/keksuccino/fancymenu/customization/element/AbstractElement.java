@@ -54,31 +54,16 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public static final int STAY_ON_SCREEN_EDGE_ZONE_SIZE = 2;
 
     private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
+	protected final ElementBuilder<?,?> builder;
+    private String instanceIdentifier;
 
-	public final ElementBuilder<?,?> builder;
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
-	protected String anchorPointElementIdentifier = null;
-	protected AbstractElement cachedElementAnchorPointParent = null;
-	/** Not the same as {@link AbstractElement#getAbsoluteX()}! This is the X-offset from the origin of its anchor! **/
+    /** X-offset from the element's origin/anchor **/
 	public int posOffsetX = 0;
-	/** Not the same as {@link AbstractElement#getAbsoluteY()}! This is the Y-offset from the origin of its anchor! **/
+    /** Y-offset from the element's origin/anchor **/
 	public int posOffsetY = 0;
 	public int baseWidth = 0;
 	public int baseHeight = 0;
-	public String advancedX;
-	public Integer cachedAdvancedX;
-	public long lastAdvancedXParse = -1;
-	public String advancedY;
-	public Integer cachedAdvancedY;
-	public long lastAdvancedYParse = -1;
-	public String advancedWidth;
-	public Integer cachedAdvancedWidth;
-	public long lastAdvancedWidthParse = -1;
-	public String advancedHeight;
-	public Integer cachedAdvancedHeight;
-	public long lastAdvancedHeightParse = -1;
-	public boolean stretchX = false;
-	public boolean stretchY = false;
 	public boolean stayOnScreen = true;
 	public volatile boolean visible = true;
 	public volatile AppearanceDelay appearanceDelay = AppearanceDelay.NO_DELAY;
@@ -121,83 +106,67 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean stickyAnchor = false;
 	public int animatedOffsetX = 0;
 	public int animatedOffsetY = 0;
-	/**
-	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
-	 * Elements that do not support scaling via {@link PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
-	 * This value is -1F by default and is not always set to an actual scale, so check this before using it!
-	 **/
-	public float customGuiScale = -1F;
 	public RequirementContainer requirementContainer = new RequirementContainer();
 	@Nullable
 	public String customElementLayerName = null;
-	/**
-	 * Controls whether the element should enable parallax movement in response to mouse position.
-	 * When true, the element will move slightly opposite to mouse movement (or with it if invertParallax is true)
-	 * to create a depth effect.
-	 */
 	public boolean enableParallax = false;
-	/**
-	 * Controls the direction of parallax movement.
-	 * When false (default), elements move opposite to mouse movement.
-	 * When true, elements move with mouse movement.
-	 */
 	public boolean invertParallax = false;
-	/**
-	 * Controls the horizontal intensity of the parallax effect.
-	 * Range is 0.0 to 1.0 where:
-	 * - 0.0 means no movement
-	 * - 1.0 means maximum movement
-	 * Default is 0.5 for medium intensity.
-	 */
 	@NotNull
 	public String parallaxIntensityXString = "0.5";
-	/**
-	 * Controls the vertical intensity of the parallax effect.
-	 * Range is 0.0 to 1.0 where:
-	 * - 0.0 means no movement
-	 * - 1.0 means maximum movement
-	 * Default is 0.5 for medium intensity.
-	 */
 	@NotNull
 	public String parallaxIntensityYString = "0.5";
-	public float lastParallaxIntensityX = -10000.0F;
-	public float lastParallaxIntensityY = -10000.0F;
 	public boolean loadOncePerSession = false;
 	public boolean layerHiddenInEditor = false;
-	private String instanceIdentifier;
-	@Nullable
-	protected Layout parentLayout;
-	@Nullable
-	protected RuntimePropertyContainer cachedMemory;
-	protected int cachedMouseX = 0;
-	protected int cachedMouseY = 0;
 	/** The rotation angle in degrees. 0 = no rotation, positive values rotate clockwise */
 	public float rotationDegrees = 0.0F;
 	public boolean advancedRotationMode = false;
 	@Nullable
 	public String advancedRotationDegrees;
-	/** Whether this element type supports rotation. Can be overridden in subclasses. */
-	protected boolean supportsRotation = true;
-	protected String lastAdvancedRotationDegrees;
-	
-	/** The vertical tilt angle in degrees. Positive values tilt top away from viewer */
+	/** The vertical tilt angle in degrees. */
 	public float verticalTiltDegrees = 0.0F;
-	/** The horizontal tilt angle in degrees. Positive values tilt right side away from viewer */
+	/** The horizontal tilt angle in degrees. */
 	public float horizontalTiltDegrees = 0.0F;
-	/** Whether this element type supports tilting. Can be overridden in subclasses. */
-	protected boolean supportsTilting = true;
 	public boolean advancedVerticalTiltMode = false;
 	@Nullable
 	public String advancedVerticalTiltDegrees;
-	protected String lastAdvancedVerticalTiltDegrees;
 	public boolean advancedHorizontalTiltMode = false;
 	@Nullable
 	public String advancedHorizontalTiltDegrees;
+
+    /**
+     * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
+     * Elements that do not support scaling via {@link PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
+     * This value is -1F by default and is not always set to an actual scale, so check this before using it!
+     **/
+    public float customGuiScale = -1F;
+
+    protected String anchorPointElementIdentifier = null;
+    protected AbstractElement cachedElementAnchorPointParent = null;
+    @Nullable
+    protected Layout parentLayout;
+    @Nullable
+    protected RuntimePropertyContainer cachedMemory;
+    protected int cachedMouseX = 0;
+    protected int cachedMouseY = 0;
+    protected String lastAdvancedRotationDegrees;
+    protected String lastAdvancedVerticalTiltDegrees;
 	protected String lastAdvancedHorizontalTiltDegrees;
-	protected boolean allowDepthTestManipulation = false;
+    protected float lastParallaxIntensityX = -10000.0F;
+    protected float lastParallaxIntensityY = -10000.0F;
+    protected boolean allowDepthTestManipulation = false;
+    /** Whether this element type supports rotation. Can be overridden in subclasses. */
+    protected boolean supportsRotation = true;
+    /** Whether this element type supports tilting. Can be overridden in subclasses. */
+    protected boolean supportsTilting = true;
 
     public final Property<Boolean> shouldBeAffectedByDecorationOverlays = putProperty(Property.booleanProperty("should_be_affected_by_decoration_overlays", false, "fancymenu.elements.abstract.should_be_affected_by_decoration_overlays"));
     public final Property.ColorProperty inEditorColor = putProperty(Property.hexColorProperty("in_editor_color", DrawableColor.of(Color.ORANGE).getHex(), false, "fancymenu.elements.in_editor_color"));
+    public final Property.IntegerProperty advancedX = putProperty(Property.integerProperty("advanced_posx", Integer.MIN_VALUE, "fancymenu.elements.features.advanced_positioning.posx", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
+    public final Property.IntegerProperty advancedY = putProperty(Property.integerProperty("advanced_posy", Integer.MIN_VALUE, "fancymenu.elements.features.advanced_positioning.posy", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
+    public final Property.IntegerProperty advancedWidth = putProperty(Property.integerProperty("advanced_width", Integer.MIN_VALUE, "fancymenu.elements.features.advanced_sizing.width", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
+    public final Property.IntegerProperty advancedHeight = putProperty(Property.integerProperty("advanced_height", Integer.MIN_VALUE, "fancymenu.elements.features.advanced_sizing.height", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
+    public final Property.BooleanProperty stretchX = putProperty(Property.booleanProperty("stretch_x", false, "fancymenu.elements.stretch.x"));
+    public final Property.BooleanProperty stretchY = putProperty(Property.booleanProperty("stretch_y", false, "fancymenu.elements.stretch.y"));
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -277,8 +246,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.cachedMouseX = mouseX;
 		this.cachedMouseY = mouseY;
 
-		this.lastParallaxIntensityX = SerializationHelper.INSTANCE.INSTANCE.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityXString));
-		this.lastParallaxIntensityY = SerializationHelper.INSTANCE.INSTANCE.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityYString));
+		this.lastParallaxIntensityX = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityXString));
+		this.lastParallaxIntensityY = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityYString));
 
 		this.tickBaseOpacity();
 
@@ -645,7 +614,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.instanceIdentifier = Objects.requireNonNull(id);
 	}
 
-	public float getRotationDegrees() {
+    public ElementBuilder<?, ?> getBuilder() {
+        return builder;
+    }
+
+    public float getRotationDegrees() {
 		if (!this.supportsRotation()) return 0;
 		if (this.advancedRotationMode) {
 			if (this.advancedRotationDegrees == null) return 0;
@@ -707,23 +680,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * Returns the actual/final X position the element will have when it gets rendered.
 	 */
 	public int getAbsoluteX() {
+
 		int x = 0;
 		if (this.anchorPoint != null) {
 			x = this.anchorPoint.getElementPositionX(this);
 		}
 
-		if (this.advancedX != null) {
-			long now = System.currentTimeMillis();
-			if (((this.lastAdvancedXParse + 30) > now) && (this.cachedAdvancedX != null)) {
-				x = this.cachedAdvancedX;
-			} else {
-				String s = PlaceholderParser.replacePlaceholders(this.advancedX).replace(" ", "");
-				if (MathUtils.isDouble(s)) {
-					x = (int) Double.parseDouble(s);
-					this.cachedAdvancedX = x;
-					this.lastAdvancedXParse = now;
-				}
-			}
+		if (!this.advancedX.isDefault()) {
+			x = this.advancedX.getInteger();
 		}
 
 		x += this.animatedOffsetX;
@@ -741,8 +705,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			x += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
 		}
 
-		if (this.stretchX) {
-			x = 0;
+		if (this.stretchX.getBoolean()) {
+            x = 0;
 		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
 			if (x < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				x = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
@@ -751,30 +715,23 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 				x = getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth();
 			}
 		}
+
 		return x;
+
 	}
 
 	/**
 	 * Returns the actual/final Y position the element will have when it gets rendered.
 	 */
 	public int getAbsoluteY() {
+
 		int y = 0;
 		if (this.anchorPoint != null) {
 			y = this.anchorPoint.getElementPositionY(this);
 		}
 
-		if (this.advancedY != null) {
-			long now = System.currentTimeMillis();
-			if (((this.lastAdvancedYParse + 30) > now) && (this.cachedAdvancedY != null)) {
-				y = this.cachedAdvancedY;
-			} else {
-				String s = PlaceholderParser.replacePlaceholders(this.advancedY).replace(" ", "");
-				if (MathUtils.isDouble(s)) {
-					y = (int) Double.parseDouble(s);
-					this.cachedAdvancedY = y;
-					this.lastAdvancedYParse = now;
-				}
-			}
+		if (!this.advancedY.isDefault()) {
+			y = this.advancedY.getInteger();
 		}
 
 		y += this.animatedOffsetY;
@@ -792,7 +749,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			y += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
 		}
 
-		if (this.stretchY) {
+		if (this.stretchY.getBoolean()) {
 			y = 0;
 		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
 			if (y < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
@@ -802,28 +759,19 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 				y = getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight();
 			}
 		}
+
 		return y;
+
 	}
 
 	/**
 	 * Returns the actual/final width the element will have when it gets rendered.
 	 */
 	public int getAbsoluteWidth() {
-		if (this.advancedWidth != null) {
-			long now = System.currentTimeMillis();
-			//Cache advancedWidth for 30ms to save performance (thanks to danorris for the idea!)
-			if (((this.lastAdvancedWidthParse + 30) > now) && (this.cachedAdvancedWidth != null)) {
-				return this.cachedAdvancedWidth;
-			} else {
-				String s = PlaceholderParser.replacePlaceholders(this.advancedWidth).replace(" ", "");
-				if (MathUtils.isDouble(s)) {
-					this.cachedAdvancedWidth = (int) Double.parseDouble(s);
-					this.lastAdvancedWidthParse = now;
-					return this.cachedAdvancedWidth;
-				}
-			}
+		if (!this.advancedWidth.isDefault()) {
+			return this.advancedWidth.getInteger();
 		}
-		if (this.stretchX) {
+		if (this.stretchX.getBoolean()) {
 			return getScreenWidth();
 		}
 		this.updateAutoSizing(false);
@@ -837,21 +785,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * Returns the actual/final height the element will have when it gets rendered.
 	 */
 	public int getAbsoluteHeight() {
-		if (this.advancedHeight != null) {
-			long now = System.currentTimeMillis();
-			//Cache advancedHeight for 30ms to save performance (thanks to danorris for the idea!)
-			if (((this.lastAdvancedHeightParse + 30) > now) && (this.cachedAdvancedHeight != null)) {
-				return this.cachedAdvancedHeight;
-			} else {
-				String s = PlaceholderParser.replacePlaceholders(this.advancedHeight).replace(" ", "");
-				if (MathUtils.isDouble(s)) {
-					this.cachedAdvancedHeight = (int) Double.parseDouble(s);
-					this.lastAdvancedHeightParse = now;
-					return this.cachedAdvancedHeight;
-				}
-			}
+		if (!this.advancedHeight.isDefault()) {
+			return this.advancedHeight.getInteger();
 		}
-		if (this.stretchY) {
+		if (this.stretchY.getBoolean()) {
 			return getScreenHeight();
 		}
 		this.updateAutoSizing(false);

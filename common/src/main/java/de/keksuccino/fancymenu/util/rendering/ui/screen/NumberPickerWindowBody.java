@@ -3,7 +3,10 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -11,6 +14,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -22,6 +27,8 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     public static final int PIP_WINDOW_WIDTH = 360;
     public static final int PIP_WINDOW_HEIGHT = 210;
     private static final long PREVIEW_UPDATE_THROTTLE_MS = 33;
+    private static final long ARROW_REPEAT_DELAY_MS = 300L;
+    private static final long ARROW_REPEAT_INTERVAL_MS = 50L;
 
     public enum InputMode {
         FREE_INPUT,
@@ -72,11 +79,20 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     private RangeSlider slider;
     private ExtendedButton doneButton;
     private ExtendedButton cancelButton;
+    @Nullable
+    private ArrowButton arrowUpButton;
+    @Nullable
+    private ArrowButton arrowDownButton;
     private boolean updatingFromSlider = false;
     private boolean updatingFromInput = false;
     private long lastPreviewUpdateTime = 0L;
     @Nullable
     private String lastPreviewValueSignature = null;
+    private int holdDirection = 0;
+    private boolean holdFromKeyboard = false;
+    private boolean holdMouseDown = false;
+    private long holdStartTime = 0L;
+    private long holdLastRepeatTime = 0L;
 
     public NumberPickerWindowBody(@NotNull InputMode inputMode, @Nullable N minValue, @Nullable N maxValue, @Nullable List<N> cycleValues, @NotNull N presetValue, @NotNull CharacterFilter inputFilter, @NotNull ValueAdapter<N> adapter, @NotNull Consumer<N> onValueUpdate, @NotNull Consumer<N> onDone, @NotNull Consumer<N> onCancel) {
         super(Component.empty());
@@ -110,13 +126,19 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         int buttonHeight = 20;
         int gapInputSlider = 8;
         int gapSliderButtons = 18;
+        int arrowButtonGap = 4;
+        int arrowButtonSize = inputHeight;
 
         int contentHeight = inputHeight + gapInputSlider + sliderHeight + gapSliderButtons + buttonHeight;
         int startY = Math.max(16, (this.height - contentHeight) / 2);
 
-        int inputWidth = Math.max(160, this.width - 80);
-        int inputX = (this.width - inputWidth) / 2;
+        int inputWidth = Math.max(160, this.width - 80 - (arrowButtonSize * 2) - (arrowButtonGap * 2));
+        int inputGroupWidth = inputWidth + (arrowButtonSize * 2) + (arrowButtonGap * 2);
+        int inputGroupX = (this.width - inputGroupWidth) / 2;
+        int arrowUpX = inputGroupX;
+        int inputX = inputGroupX + arrowButtonSize + arrowButtonGap;
         int inputY = startY;
+        int arrowDownX = inputX + inputWidth + arrowButtonGap;
         int sliderY = inputY + inputHeight + gapInputSlider;
         int buttonY = sliderY + sliderHeight + gapSliderButtons;
 
@@ -132,6 +154,9 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
             this.input.setResponder(this::onInputChanged);
             this.setupInitialFocusWidget(this, this.input);
         }
+
+        this.arrowUpButton = new ArrowButton(arrowUpX, inputY, arrowButtonSize, inputHeight, MaterialIcons.KEYBOARD_ARROW_UP, 1);
+        this.arrowDownButton = new ArrowButton(arrowDownX, inputY, arrowButtonSize, inputHeight, MaterialIcons.KEYBOARD_ARROW_DOWN, -1);
 
         this.slider = new RangeSlider(inputX, sliderY, inputWidth, sliderHeight, Component.empty(), 0.0D, 1.0D, 0.5D);
         UIBase.applyDefaultWidgetSkinTo(this.slider, UIBase.shouldBlur());
@@ -205,6 +230,23 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     }
 
     @Override
+    public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        boolean active = this.isInputActive();
+        if (this.arrowUpButton != null) {
+            this.arrowUpButton.render(graphics, mouseX, mouseY, partial, active);
+        }
+        if (this.arrowDownButton != null) {
+            this.arrowDownButton.render(graphics, mouseX, mouseY, partial, active);
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        this.tickArrowHold();
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == InputConstants.KEY_ENTER) {
             this.onDone.accept(this.currentValue);
@@ -216,7 +258,44 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
             this.closeWindow();
             return true;
         }
+        if ((keyCode == InputConstants.KEY_UP) || (keyCode == InputConstants.KEY_DOWN)) {
+            if (this.isInputFocused()) {
+                this.startArrowHold(keyCode == InputConstants.KEY_UP ? 1 : -1, true);
+            }
+            return true;
+        }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if ((keyCode == InputConstants.KEY_UP) || (keyCode == InputConstants.KEY_DOWN)) {
+            this.stopArrowHoldFromKeyboard();
+            return true;
+        }
+        return super.keyReleased(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        boolean active = this.isInputActive();
+        if ((button == 0) && active) {
+            if ((this.arrowUpButton != null) && this.arrowUpButton.mouseClicked(mouseX, mouseY, button, true)) {
+                return true;
+            }
+            if ((this.arrowDownButton != null) && this.arrowDownButton.mouseClicked(mouseX, mouseY, button, true)) {
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            this.stopArrowHoldFromMouse();
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     private void onInputChanged(@NotNull String text) {
@@ -260,6 +339,107 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         this.onValueUpdate.accept(value);
     }
 
+    private boolean isInputActive() {
+        return (this.input != null) && this.input.active;
+    }
+
+    private boolean isInputFocused() {
+        return (this.input != null) && this.input.isFocused();
+    }
+
+    private void startArrowHold(int direction, boolean fromKeyboard) {
+        if (direction == 0) return;
+        if (!this.isInputActive()) return;
+        if (fromKeyboard && !this.isInputFocused()) return;
+        if ((this.holdDirection == direction) && (this.holdFromKeyboard == fromKeyboard)) return;
+        this.holdDirection = direction;
+        this.holdFromKeyboard = fromKeyboard;
+        this.holdMouseDown = !fromKeyboard;
+        long now = System.currentTimeMillis();
+        this.holdStartTime = now;
+        this.holdLastRepeatTime = now;
+        this.adjustValueByStep(direction);
+    }
+
+    private void stopArrowHoldFromMouse() {
+        if (!this.holdFromKeyboard) {
+            this.clearArrowHold();
+        }
+        this.holdMouseDown = false;
+    }
+
+    private void stopArrowHoldFromKeyboard() {
+        if (this.holdFromKeyboard) {
+            this.clearArrowHold();
+        }
+    }
+
+    private void clearArrowHold() {
+        this.holdDirection = 0;
+        this.holdFromKeyboard = false;
+        this.holdMouseDown = false;
+        this.holdStartTime = 0L;
+        this.holdLastRepeatTime = 0L;
+    }
+
+    private void tickArrowHold() {
+        if (this.holdDirection == 0) return;
+        if (!this.isInputActive()) {
+            this.clearArrowHold();
+            return;
+        }
+        if (this.holdFromKeyboard) {
+            if (!this.isInputFocused()) {
+                this.clearArrowHold();
+                return;
+            }
+            int keyCode = this.holdDirection > 0 ? InputConstants.KEY_UP : InputConstants.KEY_DOWN;
+            if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), keyCode)) {
+                this.clearArrowHold();
+                return;
+            }
+        } else if (!this.holdMouseDown) {
+            this.clearArrowHold();
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if ((now - this.holdStartTime) < ARROW_REPEAT_DELAY_MS) {
+            return;
+        }
+        if ((now - this.holdLastRepeatTime) >= ARROW_REPEAT_INTERVAL_MS) {
+            this.adjustValueByStep(this.holdDirection);
+            this.holdLastRepeatTime = now;
+        }
+    }
+
+    private void adjustValueByStep(int direction) {
+        if (direction == 0) return;
+        N next = resolveValueAfterStep(direction);
+        if (next == null) return;
+        this.currentValue = next;
+        this.updatingFromSlider = true;
+        updateInputField(next);
+        updateSliderFromValue(next);
+        this.applyPreviewUpdate(next);
+        this.updatingFromSlider = false;
+    }
+
+    @NotNull
+    private N resolveValueAfterStep(int direction) {
+        if (this.inputMode == InputMode.CYCLE_INPUT && this.cycleValues != null && !this.cycleValues.isEmpty()) {
+            int index = resolveCycleIndex(this.currentValue, this.cycleValues);
+            int nextIndex = Mth.clamp(index + direction, 0, this.cycleValues.size() - 1);
+            return this.cycleValues.get(nextIndex);
+        }
+        double value = this.currentValue.doubleValue() + direction;
+        if (this.inputMode == InputMode.RANGE_INPUT && (this.minValue != null) && (this.maxValue != null)) {
+            double min = Math.min(this.minValue.doubleValue(), this.maxValue.doubleValue());
+            double max = Math.max(this.minValue.doubleValue(), this.maxValue.doubleValue());
+            value = Mth.clamp(value, min, max);
+        }
+        return this.adapter.fromSliderValue(value);
+    }
+
     @NotNull
     private N resolveValueFromSlider(double sliderValue) {
         if (this.inputMode == InputMode.CYCLE_INPUT && this.cycleValues != null && !this.cycleValues.isEmpty()) {
@@ -290,6 +470,67 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         if (index < 0) index = 0;
         if (index >= size) index = size - 1;
         return index;
+    }
+
+    private final class ArrowButton extends UIBase {
+
+        private final MaterialIcon icon;
+        private final int direction;
+        private int x;
+        private int y;
+        private int width;
+        private int height;
+        private boolean hovered = false;
+
+        private ArrowButton(int x, int y, int width, int height, @NotNull MaterialIcon icon, int direction) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            this.icon = icon;
+            this.direction = direction;
+        }
+
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean active) {
+            if (!active) {
+                this.hovered = false;
+                return;
+            }
+            this.hovered = UIBase.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.height);
+            RenderSystem.enableBlend();
+            UIBase.resetShaderColor(graphics);
+            DrawableColor iconColor = UIBase.getUITheme().ui_icon_texture_color;
+            if (iconColor != null) {
+                UIBase.setShaderColor(graphics, iconColor);
+            }
+            int textureSize = UIBase.getUIMaterialIconTextureSizeNormal();
+            ResourceLocation location = this.icon.getTextureLocation(textureSize);
+            if (location != null) {
+                int iconWidth = Math.max(1, this.icon.getWidth(textureSize));
+                int iconHeight = Math.max(1, this.icon.getHeight(textureSize));
+                float maxScale = Math.min((this.width - 2) / (float) iconWidth, (this.height - 2) / (float) iconHeight);
+                if (!Float.isFinite(maxScale) || maxScale <= 0.0F) {
+                    maxScale = 1.0F;
+                }
+                float baseScale = Math.min(1.0F, maxScale);
+                float scale = baseScale * (this.hovered ? 1.15F : 1.0F);
+                if (scale > maxScale) scale = maxScale;
+                int drawWidth = Math.max(1, Math.round(iconWidth * scale));
+                int drawHeight = Math.max(1, Math.round(iconHeight * scale));
+                int drawX = this.x + ((this.width - drawWidth) / 2);
+                int drawY = this.y + ((this.height - drawHeight) / 2);
+                graphics.blit(location, drawX, drawY, drawWidth, drawHeight, 0.0F, 0.0F, iconWidth, iconHeight, iconWidth, iconHeight);
+            }
+            UIBase.resetShaderColor(graphics);
+        }
+
+        public boolean mouseClicked(double mouseX, double mouseY, int button, boolean active) {
+            if (!active || (button != 0)) return false;
+            if (!UIBase.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.height)) return false;
+            NumberPickerWindowBody.this.startArrowHold(this.direction, false);
+            return true;
+        }
+
     }
 
 }

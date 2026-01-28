@@ -37,23 +37,23 @@ public interface ElementStacker<E extends AbstractElement> {
         if ((e.baseHeight != 0) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
             stack.baseHeight = e.baseHeight;
         }
-        if ((e.advancedX != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
-            stack.advancedX = e.advancedX;
+        if (!e.advancedX.isDefault() && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
+            stack.advancedX.copyValueFrom(e.advancedX);
         }
-        if ((e.advancedY != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
-            stack.advancedY = e.advancedY;
+        if (!e.advancedY.isDefault() && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
+            stack.advancedY.copyValueFrom(e.advancedY);
         }
-        if ((e.advancedWidth != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
-            stack.advancedWidth = e.advancedWidth;
+        if (!e.advancedWidth.isDefault() && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
+            stack.advancedWidth.copyValueFrom(e.advancedWidth);
         }
-        if ((e.advancedHeight != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
-            stack.advancedHeight = e.advancedHeight;
+        if (!e.advancedHeight.isDefault() && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
+            stack.advancedHeight.copyValueFrom(e.advancedHeight);
         }
-        if (e.stretchX) {
-            stack.stretchX = true;
+        if (!e.stretchX.isDefault()) {
+            stack.stretchX.copyValueFrom(e.stretchX);
         }
-        if (e.stretchY) {
-            stack.stretchY = true;
+        if (!e.stretchY.isDefault()) {
+            stack.stretchY.copyValueFrom(e.stretchY);
         }
         if (e.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY) {
             stack.appearanceDelay = e.appearanceDelay;

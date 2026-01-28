@@ -857,8 +857,8 @@ public class Layout extends LayoutBase {
                 if (action.equalsIgnoreCase("resizebutton")) {
                     element.baseWidth = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 5, sec.getValue("width"));
                     element.baseHeight = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 5, sec.getValue("height"));
-                    element.advancedWidth = sec.getValue("advanced_width");
-                    element.advancedHeight = sec.getValue("advanced_height");
+                    element.advancedWidth.setManualInput(sec.getValue("advanced_width"));
+                    element.advancedHeight.setManualInput(sec.getValue("advanced_height"));
                     addElement = true;
                 }
 

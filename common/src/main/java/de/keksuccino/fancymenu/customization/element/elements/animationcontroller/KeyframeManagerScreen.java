@@ -151,7 +151,7 @@ public class KeyframeManagerScreen extends Screen {
         timelineDuration += TIMELINE_PADDING_DURATION;
 
         // Create dummy element for preview
-        this.previewElement = new PreviewElement(controller.builder);
+        this.previewElement = new PreviewElement(controller.getBuilder());
         this.previewElement.baseWidth = 50;
         this.previewElement.baseHeight = 50;
         this.previewElement.posOffsetX = 0;
