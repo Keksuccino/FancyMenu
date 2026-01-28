@@ -2723,5 +2723,15 @@
   "fancymenu.context_menu.entries.number.input_as_string": "Set As Plain Text",
   "fancymenu.general.cycle.enabled_disabled.manual": "Manual",
   "fancymenu.editor.widgets.layers.group.default_name": "Group",
-  "fancymenu.editor.widgets.layers.group.delete.confirm": "Delete this group? Layers inside will remain."
+  "fancymenu.editor.widgets.layers.group.delete.confirm": "Delete this group? Layers inside will remain.",
+  "fancymenu.editor.widgets.layers.context.add_group": "Add Group",
+  "fancymenu.editor.widgets.layers.context.rename_layer": "Rename Layer",
+  "fancymenu.editor.widgets.layers.context.rename_group": "Rename Group",
+  "fancymenu.editor.widgets.layers.context.hide_layer": "Hide Layer",
+  "fancymenu.editor.widgets.layers.context.show_layer": "Show Layer",
+  "fancymenu.editor.widgets.layers.context.hide_group": "Hide Group",
+  "fancymenu.editor.widgets.layers.context.show_group": "Show Group",
+  "fancymenu.editor.widgets.layers.context.collapse_group": "Collapse Group",
+  "fancymenu.editor.widgets.layers.context.expand_group": "Expand Group",
+  "fancymenu.editor.widgets.layers.context.delete_group": "Delete Group"
 }

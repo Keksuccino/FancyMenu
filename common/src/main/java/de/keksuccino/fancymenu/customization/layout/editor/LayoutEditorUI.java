@@ -385,7 +385,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         }
                     });
                 }).setIconTexture(CLOSE_EDITOR_ICON_TEXTURE)
-                .setIconTextureColor(() -> UIBase.getUITheme().error_text_color)
+                .setIconTextureColor(() -> UIBase.getUITheme().menu_bar_close_icon_color)
                 .setIconPaddingSupplier(consumes -> 7)
                 .setBaseWidth(MenuBar.PIXEL_SIZE);
 

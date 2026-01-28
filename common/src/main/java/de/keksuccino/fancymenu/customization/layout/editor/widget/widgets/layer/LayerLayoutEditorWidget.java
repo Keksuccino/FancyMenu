@@ -13,12 +13,15 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
@@ -52,8 +55,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final MaterialIcon TITLE_BAR_HIDE_ICON = MaterialIcons.CLOSE;
     private static final MaterialIcon TITLE_BAR_EXPAND_ICON = MaterialIcons.EXPAND_MORE;
     private static final MaterialIcon TITLE_BAR_COLLAPSE_ICON = MaterialIcons.EXPAND_LESS;
-    private static final MaterialIcon GROUP_ADD_ICON = MaterialIcons.ADD;
-    private static final MaterialIcon GROUP_DELETE_ICON = MaterialIcons.CLOSE;
     private static final MaterialIcon GROUP_EXPAND_ICON = MaterialIcons.EXPAND_MORE;
     private static final MaterialIcon GROUP_COLLAPSE_ICON = MaterialIcons.EXPAND_LESS;
     private static final MaterialIcon EYE_ICON = MaterialIcons.VISIBILITY;
@@ -63,7 +64,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final float LAYER_ICON_TEXT_GAP = 4.0f;
     private static final float GROUP_INDENT = 12.0f;
     private static final float GROUP_NAME_LEFT_PADDING = 0.0f;
-    private static final float GROUP_DELETE_BUTTON_WIDTH = 24.0f;
     private static final float GROUP_COLLAPSE_BUTTON_WIDTH = 24.0f;
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
@@ -113,12 +113,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         this.addTitleBarButton(new MaterialTitleBarButton(this, button -> this.isExpanded() ? TITLE_BAR_COLLAPSE_ICON : TITLE_BAR_EXPAND_ICON, button -> {
             this.setExpanded(!this.isExpanded());
-        }));
-
-        this.addTitleBarButton(new MaterialTitleBarButton(this, button -> GROUP_ADD_ICON, button -> {
-            this.editor.history.saveSnapshot();
-            this.editor.layout.layerGroups.add(new Layout.LayerGroup());
-            MainThreadTaskExecutor.executeInMainThread(() -> this.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }));
     }
 
@@ -229,6 +223,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             if (this.scrollArea.horizontalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
             for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
                 if (entry.mouseClicked(mouseX, mouseY, button)) return true;
+            }
+            if (button == 1 && this.scrollArea.isMouseOverInnerArea(mouseX, mouseY)) {
+                this.openContextMenuForBackground();
+                return true;
             }
         }
 
@@ -713,6 +711,305 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
     }
 
+    private void openContextMenuForBackground() {
+        this.openLayerContextMenu(null, null);
+    }
+
+    private void openContextMenuForLayer(@NotNull LayerElementEntry entry) {
+        this.openLayerContextMenu(entry, null);
+    }
+
+    private void openContextMenuForGroup(@NotNull LayerGroupEntry entry) {
+        this.openLayerContextMenu(null, entry);
+    }
+
+    private void openLayerContextMenu(@Nullable LayerElementEntry layerEntry, @Nullable LayerGroupEntry groupEntry) {
+        ContextMenu menu = new ContextMenu();
+
+        this.addAddGroupEntry(menu);
+
+        if (layerEntry != null) {
+            AbstractEditorElement<?, ?> element = layerEntry.element;
+            menu.addSeparatorEntry("separator_layer");
+            this.addToggleLayerVisibilityEntry(menu, element);
+            this.addRenameLayerEntry(menu, layerEntry);
+            this.addMoveLayerEntries(menu, element);
+        } else if (groupEntry != null) {
+            menu.addSeparatorEntry("separator_group");
+            this.addToggleGroupVisibilityEntry(menu, groupEntry.group);
+            this.addToggleGroupCollapseEntry(menu, groupEntry.group);
+            this.addRenameGroupEntry(menu, groupEntry);
+            this.addMoveGroupEntries(menu, groupEntry.group);
+            this.addDeleteGroupEntry(menu, groupEntry.group);
+        }
+
+        ContextMenuHandler.INSTANCE.setAndOpenAtMouse(menu);
+    }
+
+    private void addAddGroupEntry(@NotNull ContextMenu menu) {
+        menu.addClickableEntry("add_group", Component.translatable("fancymenu.editor.widgets.layers.context.add_group"), (menu1, entry) -> {
+            this.editor.history.saveSnapshot();
+            this.editor.layout.layerGroups.add(new Layout.LayerGroup());
+            menu1.closeMenuChain();
+            MainThreadTaskExecutor.executeInMainThread(() -> this.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        }).setIcon(MaterialIcons.ADD);
+    }
+
+    private void addToggleLayerVisibilityEntry(@NotNull ContextMenu menu, @NotNull AbstractEditorElement<?, ?> element) {
+        boolean hidden = element.element.layerHiddenInEditor;
+        Component label = Component.translatable(hidden
+                ? "fancymenu.editor.widgets.layers.context.show_layer"
+                : "fancymenu.editor.widgets.layers.context.hide_layer");
+        menu.addClickableEntry("toggle_layer_visibility", label, (menu1, entry) -> {
+            this.editor.history.saveSnapshot();
+            element.element.layerHiddenInEditor = !element.element.layerHiddenInEditor;
+            menu1.closeMenu();
+        }).setIcon(EYE_ICON);
+    }
+
+    private void addToggleGroupVisibilityEntry(@NotNull ContextMenu menu, @NotNull Layout.LayerGroup group) {
+        boolean hidden = this.isGroupHidden(group);
+        Component label = Component.translatable(hidden
+                ? "fancymenu.editor.widgets.layers.context.show_group"
+                : "fancymenu.editor.widgets.layers.context.hide_group");
+        menu.addClickableEntry("toggle_group_visibility", label, (menu1, entry) -> {
+            this.editor.history.saveSnapshot();
+            this.toggleGroupVisibility(group);
+            menu1.closeMenu();
+        }).setIcon(EYE_ICON);
+    }
+
+    private void addToggleGroupCollapseEntry(@NotNull ContextMenu menu, @NotNull Layout.LayerGroup group) {
+        Component label = Component.translatable(group.collapsed
+                ? "fancymenu.editor.widgets.layers.context.expand_group"
+                : "fancymenu.editor.widgets.layers.context.collapse_group");
+        menu.addClickableEntry("toggle_group_collapse", label, (menu1, entry) -> {
+            this.editor.history.saveSnapshot();
+            group.collapsed = !group.collapsed;
+            menu1.closeMenu();
+            MainThreadTaskExecutor.executeInMainThread(() -> this.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        }).setIcon(group.collapsed ? GROUP_EXPAND_ICON : GROUP_COLLAPSE_ICON);
+    }
+
+    private void addRenameLayerEntry(@NotNull ContextMenu menu, @NotNull LayerElementEntry entry) {
+        menu.addClickableEntry("rename_layer", Component.translatable("fancymenu.editor.widgets.layers.context.rename_layer"), (menu1, menuEntry) -> {
+            TextInputWindowBody inputScreen = new TextInputWindowBody(null, value -> this.applyLayerName(entry.element, value));
+            Dialogs.openGeneric(inputScreen,
+                    Component.translatable("fancymenu.editor.widgets.layers.context.rename_layer"),
+                    null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                    .getSecond().setIcon(MaterialIcons.DRIVE_FILE_RENAME_OUTLINE);
+            inputScreen.setText(entry.getLayerName());
+            menu1.closeMenuChain();
+        }).setIcon(MaterialIcons.DRIVE_FILE_RENAME_OUTLINE);
+    }
+
+    private void addRenameGroupEntry(@NotNull ContextMenu menu, @NotNull LayerGroupEntry entry) {
+        menu.addClickableEntry("rename_group", Component.translatable("fancymenu.editor.widgets.layers.context.rename_group"), (menu1, menuEntry) -> {
+            TextInputWindowBody inputScreen = new TextInputWindowBody(null, value -> this.applyGroupName(entry.group, value));
+            Dialogs.openGeneric(inputScreen,
+                    Component.translatable("fancymenu.editor.widgets.layers.context.rename_group"),
+                    null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                    .getSecond().setIcon(MaterialIcons.DRIVE_FILE_RENAME_OUTLINE);
+            inputScreen.setText(entry.getGroupName());
+            menu1.closeMenuChain();
+        }).setIcon(MaterialIcons.DRIVE_FILE_RENAME_OUTLINE);
+    }
+
+    private void addMoveLayerEntries(@NotNull ContextMenu menu, @NotNull AbstractEditorElement<?, ?> element) {
+        menu.addSeparatorEntry("separator_layer_move");
+        menu.addClickableEntry("move_layer_up", Component.translatable("fancymenu.editor.object.moveup"), (menu1, entry) -> {
+            this.editor.moveLayerUp(element);
+            this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(element, true));
+            menu1.closeMenu();
+        }).addIsActiveSupplier((menu1, entry) -> this.editor.canMoveLayerUp(element))
+                .setIcon(MaterialIcons.ARROW_UPWARD);
+        menu.addClickableEntry("move_layer_down", Component.translatable("fancymenu.editor.object.movedown"), (menu1, entry) -> {
+            this.editor.moveLayerDown(element);
+            this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(element, false));
+            menu1.closeMenu();
+        }).addIsActiveSupplier((menu1, entry) -> this.editor.canMoveLayerDown(element))
+                .setIcon(MaterialIcons.ARROW_DOWNWARD);
+    }
+
+    private void addMoveGroupEntries(@NotNull ContextMenu menu, @NotNull Layout.LayerGroup group) {
+        menu.addSeparatorEntry("separator_group_move");
+        menu.addClickableEntry("move_group_up", Component.translatable("fancymenu.editor.object.moveup"), (menu1, entry) -> {
+            if (this.moveLayerGroup(group, true)) {
+                menu1.closeMenu();
+            }
+        }).addIsActiveSupplier((menu1, entry) -> this.canMoveLayerGroup(group, true))
+                .setIcon(MaterialIcons.ARROW_UPWARD);
+        menu.addClickableEntry("move_group_down", Component.translatable("fancymenu.editor.object.movedown"), (menu1, entry) -> {
+            if (this.moveLayerGroup(group, false)) {
+                menu1.closeMenu();
+            }
+        }).addIsActiveSupplier((menu1, entry) -> this.canMoveLayerGroup(group, false))
+                .setIcon(MaterialIcons.ARROW_DOWNWARD);
+    }
+
+    private void addDeleteGroupEntry(@NotNull ContextMenu menu, @NotNull Layout.LayerGroup group) {
+        menu.addSeparatorEntry("separator_group_delete");
+        menu.addClickableEntry("delete_group", Component.translatable("fancymenu.editor.widgets.layers.context.delete_group"), (menu1, entry) -> {
+            menu1.closeMenuChain();
+            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.editor.widgets.layers.group.delete.confirm"), MessageDialogStyle.WARNING, call -> {
+                if (call) {
+                    this.editor.history.saveSnapshot();
+                    this.editor.layout.layerGroups.remove(group);
+                    MainThreadTaskExecutor.executeInMainThread(() -> this.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                }
+            });
+        }).setIcon(MaterialIcons.DELETE);
+    }
+
+    private void applyLayerName(@NotNull AbstractEditorElement<?, ?> element, @Nullable String value) {
+        String oldLayerName = (element.element.customElementLayerName != null)
+                ? element.element.customElementLayerName
+                : element.element.getBuilder().getDisplayName(element.element).getString();
+        element.element.customElementLayerName = value;
+        if (Objects.equals(oldLayerName, element.element.customElementLayerName)) {
+            element.element.customElementLayerName = null;
+        }
+        if ((element.element.customElementLayerName != null) && element.element.customElementLayerName.replace(" ", "").isEmpty()) {
+            element.element.customElementLayerName = null;
+        }
+    }
+
+    private void applyGroupName(@NotNull Layout.LayerGroup group, @Nullable String value) {
+        if (value != null) {
+            value = value.trim();
+        }
+        if ((value == null) || value.isEmpty()) {
+            group.name = null;
+        } else {
+            String defaultName = Component.translatable("fancymenu.editor.widgets.layers.group.default_name").getString();
+            if (value.equals(defaultName)) {
+                group.name = null;
+            } else {
+                group.name = value;
+            }
+        }
+    }
+
+    private void toggleGroupVisibility(@NotNull Layout.LayerGroup group) {
+        List<AbstractEditorElement<?, ?>> elements = this.editor.getElementsInGroup(group);
+        if (elements.isEmpty()) {
+            return;
+        }
+        boolean hideElements = false;
+        for (AbstractEditorElement<?, ?> element : elements) {
+            if (!element.element.layerHiddenInEditor) {
+                hideElements = true;
+                break;
+            }
+        }
+        for (AbstractEditorElement<?, ?> element : elements) {
+            element.element.layerHiddenInEditor = hideElements;
+        }
+    }
+
+    private boolean isGroupHidden(@NotNull Layout.LayerGroup group) {
+        List<AbstractEditorElement<?, ?>> elements = this.editor.getElementsInGroup(group);
+        if (elements.isEmpty()) {
+            return false;
+        }
+        for (AbstractEditorElement<?, ?> element : elements) {
+            if (!element.element.layerHiddenInEditor) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean canMoveLayerGroup(@NotNull Layout.LayerGroup group, boolean moveUp) {
+        List<AbstractEditorElement<?, ?>> groupElements = this.editor.getElementsInGroup(group);
+        if (groupElements.isEmpty()) {
+            return false;
+        }
+        Set<AbstractEditorElement<?, ?>> groupSet = new HashSet<>(groupElements);
+        int minIndex = Integer.MAX_VALUE;
+        int maxIndex = Integer.MIN_VALUE;
+        for (AbstractEditorElement<?, ?> element : groupElements) {
+            int idx = this.editor.normalEditorElements.indexOf(element);
+            if (idx >= 0) {
+                minIndex = Math.min(minIndex, idx);
+                maxIndex = Math.max(maxIndex, idx);
+            }
+        }
+        if (moveUp) {
+            for (int i = maxIndex + 1; i < this.editor.normalEditorElements.size(); i++) {
+                if (!groupSet.contains(this.editor.normalEditorElements.get(i))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        for (int i = minIndex - 1; i >= 0; i--) {
+            if (!groupSet.contains(this.editor.normalEditorElements.get(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean moveLayerGroup(@NotNull Layout.LayerGroup group, boolean moveUp) {
+        List<AbstractEditorElement<?, ?>> groupElements = this.editor.getElementsInGroup(group);
+        if (groupElements.isEmpty()) {
+            return false;
+        }
+        Set<AbstractEditorElement<?, ?>> groupSet = new HashSet<>(groupElements);
+        int minIndex = Integer.MAX_VALUE;
+        int maxIndex = Integer.MIN_VALUE;
+        for (AbstractEditorElement<?, ?> element : groupElements) {
+            int idx = this.editor.normalEditorElements.indexOf(element);
+            if (idx >= 0) {
+                minIndex = Math.min(minIndex, idx);
+                maxIndex = Math.max(maxIndex, idx);
+            }
+        }
+        AbstractEditorElement<?, ?> anchor = null;
+        if (moveUp) {
+            for (int i = maxIndex + 1; i < this.editor.normalEditorElements.size(); i++) {
+                AbstractEditorElement<?, ?> candidate = this.editor.normalEditorElements.get(i);
+                if (!groupSet.contains(candidate)) {
+                    anchor = candidate;
+                    break;
+                }
+            }
+        } else {
+            for (int i = minIndex - 1; i >= 0; i--) {
+                AbstractEditorElement<?, ?> candidate = this.editor.normalEditorElements.get(i);
+                if (!groupSet.contains(candidate)) {
+                    anchor = candidate;
+                    break;
+                }
+            }
+        }
+        if (anchor == null) {
+            return false;
+        }
+        List<AbstractEditorElement<?, ?>> remaining = new ArrayList<>(this.editor.normalEditorElements);
+        remaining.removeIf(groupSet::contains);
+        int anchorIndex = remaining.indexOf(anchor);
+        if (anchorIndex < 0) {
+            return false;
+        }
+        int insertIndex = moveUp ? anchorIndex + 1 : anchorIndex;
+        if (insertIndex < 0) {
+            insertIndex = 0;
+        }
+        if (insertIndex > remaining.size()) {
+            insertIndex = remaining.size();
+        }
+        remaining.addAll(insertIndex, groupElements);
+        this.editor.normalEditorElements = remaining;
+        this.editor.updateLayerGroupElementOrder();
+        for (AbstractEditorElement<?, ?> element : groupElements) {
+            this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(element, moveUp));
+        }
+        MainThreadTaskExecutor.executeInMainThread(() -> this.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        return true;
+    }
+
     private class MaterialTitleBarButton extends TitleBarButton {
 
         @NotNull
@@ -1049,7 +1346,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             if (button == 1) {
                 if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
                 this.element.setSelected(true);
-                MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.editor.openElementContextMenuAtMouseIfPossible(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                this.layerWidget.openContextMenuForLayer(this);
             }
         }
 
@@ -1065,7 +1362,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         protected boolean groupNameHovered = false;
         protected boolean eyeButtonHovered = false;
         protected boolean collapseButtonHovered = false;
-        protected boolean deleteButtonHovered = false;
         protected long lastLeftClick = -1L;
         protected boolean dragStarted = false;
         protected double dragStartX;
@@ -1102,7 +1398,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.groupNameHovered = this.isGroupNameMouseOver(mouseX, mouseY);
             this.eyeButtonHovered = this.isEyeButtonMouseOver(mouseX, mouseY);
             this.collapseButtonHovered = this.isCollapseButtonMouseOver(mouseX, mouseY);
-            this.deleteButtonHovered = this.isDeleteButtonMouseOver(mouseX, mouseY);
 
             if (this.isGroupFullySelected()) {
                 UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
@@ -1121,12 +1416,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float collapseIconY = this.getCollapseButtonY() + (this.getCollapseButtonHeight() - collapseIconSize) * 0.5f;
             float collapseAlpha = this.collapseButtonHovered ? 1.0f : 0.7f;
             this.layerWidget.renderMaterialIcon(graphics, this.group.collapsed ? GROUP_EXPAND_ICON : GROUP_COLLAPSE_ICON, collapseIconX, collapseIconY, collapseIconSize, collapseIconSize, collapseAlpha);
-
-            float deleteIconSize = getIconSize(this.getDeleteButtonWidth(), this.getDeleteButtonHeight(), LAYER_EYE_ICON_PADDING);
-            float deleteIconX = this.getDeleteButtonX() + (this.getDeleteButtonWidth() - deleteIconSize) * 0.5f;
-            float deleteIconY = this.getDeleteButtonY() + (this.getDeleteButtonHeight() - deleteIconSize) * 0.5f;
-            float deleteAlpha = this.deleteButtonHovered ? 1.0f : 0.7f;
-            this.layerWidget.renderMaterialIcon(graphics, GROUP_DELETE_ICON, deleteIconX, deleteIconY, deleteIconSize, deleteIconSize, deleteAlpha);
 
             if (!this.displayEditGroupNameBox) {
                 UIBase.renderText(graphics, Component.literal(this.getGroupName()), (int)this.getGroupNameX(), (int)this.getGroupNameY());
@@ -1173,12 +1462,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return UIBase.isXYInArea(mouseX, mouseY, this.getCollapseButtonX(), this.getCollapseButtonY(), this.getCollapseButtonWidth(), this.getCollapseButtonHeight());
         }
 
-        public boolean isDeleteButtonMouseOver(double mouseX, double mouseY) {
-            if (this.parent.isMouseInteractingWithGrabbers()) return false;
-            if (!this.parent.isInnerAreaHovered()) return false;
-            return UIBase.isXYInArea(mouseX, mouseY, this.getDeleteButtonX(), this.getDeleteButtonY(), this.getDeleteButtonWidth(), this.getDeleteButtonHeight());
-        }
-
         public float getGroupNameX() {
             float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
             float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
@@ -1190,7 +1473,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getMaxGroupNameWidth() {
-            return (this.getX() + this.getWidth() - 3f) - this.getGroupNameX() - (this.getDeleteButtonWidth() + this.getCollapseButtonWidth());
+            return (this.getX() + this.getWidth() - 3f) - this.getGroupNameX() - this.getCollapseButtonWidth();
         }
 
         public float getEyeButtonWidth() {
@@ -1218,26 +1501,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getCollapseButtonX() {
-            return this.getDeleteButtonX() - this.getCollapseButtonWidth();
+            return this.x + this.getWidth() - this.getCollapseButtonWidth();
         }
 
         public float getCollapseButtonY() {
-            return this.y;
-        }
-
-        public float getDeleteButtonWidth() {
-            return GROUP_DELETE_BUTTON_WIDTH;
-        }
-
-        public float getDeleteButtonHeight() {
-            return this.getHeight();
-        }
-
-        public float getDeleteButtonX() {
-            return this.x + this.getWidth() - this.getDeleteButtonWidth();
-        }
-
-        public float getDeleteButtonY() {
             return this.y;
         }
 
@@ -1307,7 +1574,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if (button == 0) {
-                if (this.isMouseOver(mouseX, mouseY) && !this.deleteButtonHovered && !this.collapseButtonHovered && !this.eyeButtonHovered) {
+                if (this.isMouseOver(mouseX, mouseY) && !this.collapseButtonHovered && !this.eyeButtonHovered) {
                     this.dragStartX = mouseX;
                     this.dragStartY = mouseY;
                     this.dragStarted = true;
@@ -1346,6 +1613,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
+            if (button == 1) {
+                this.layerWidget.openContextMenuForGroup(this);
+                return;
+            }
             if (button == 0) {
                 if (this.eyeButtonHovered) {
                     List<AbstractEditorElement<?, ?>> elements = this.layerWidget.editor.getElementsInGroup(this.group);
@@ -1368,14 +1639,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                     this.layerWidget.editor.history.saveSnapshot();
                     this.group.collapsed = !this.group.collapsed;
                     MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                } else if (this.deleteButtonHovered) {
-                    Dialogs.openMessageWithCallback(Component.translatable("fancymenu.editor.widgets.layers.group.delete.confirm"), MessageDialogStyle.WARNING, call -> {
-                        if (call) {
-                            this.layerWidget.editor.history.saveSnapshot();
-                            this.layerWidget.editor.layout.layerGroups.remove(this.group);
-                            MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                        }
-                    });
                 } else {
                     List<AbstractEditorElement<?, ?>> elements = this.layerWidget.editor.getElementsInGroup(this.group);
                     if (!elements.isEmpty()) {

@@ -28,7 +28,10 @@ import org.jetbrains.annotations.NotNull;
 public class FancyMenu {
 
 
-    //TODO NumberPicker laggt, wenn 4 auf einmal offen in ImageElement (rounding radius values)
+    //TODO Layer Groups:
+    // - Scroll korrigieren, wenn group collapse/expand
+
+    //TODO MenuBar entry background in NON-BLUR light mode theme fixen !!!!
 
 
 

@@ -534,7 +534,7 @@ public class CustomizationOverlayUI {
         menuBar.addClickableEntry(MenuBar.Side.RIGHT, "leave_current_screen", Component.empty(), (bar, entry) -> {
             Minecraft.getInstance().setScreen(null);
         }).setIconTexture(LEAVE_SCREEN_ICON_TEXTURE)
-                .setIconTextureColor(() -> UIBase.getUITheme().error_text_color)
+                .setIconTextureColor(() -> UIBase.getUITheme().menu_bar_close_icon_color)
                 .setBaseWidth(MenuBar.PIXEL_SIZE)
                 .setIconPaddingSupplier(consumes -> 7)
                 .setTooltipSupplier(consumes -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.leave_current_menu.desc")));
