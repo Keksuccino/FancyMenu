@@ -38,6 +38,7 @@ public class UIBase extends RenderingUtils {
     private static final int MATERIAL_ICON_SIZE_NORMAL = 100;
     private static final int MATERIAL_ICON_SIZE_LARGE = 200;
     private static final int MATERIAL_ICON_SIZE_CORRECTION_FOR_BIG_ICONS = 100;
+    private static final int MATERIAL_ICON_SIZE_CORRECTION_FOR_MEDIUM_ICONS = 50;
 
     public static int getUIMaterialIconTextureSizeNormal() {
         if (getUIScale() < 2) return MATERIAL_ICON_SIZE_SMALL;
@@ -47,6 +48,10 @@ public class UIBase extends RenderingUtils {
 
     public static int getUIMaterialIconTextureSizeBig() {
         return getUIMaterialIconTextureSizeNormal() + MATERIAL_ICON_SIZE_CORRECTION_FOR_BIG_ICONS;
+    }
+
+    public static int getUIMaterialIconTextureSizeMedium() {
+        return getUIMaterialIconTextureSizeNormal() + MATERIAL_ICON_SIZE_CORRECTION_FOR_MEDIUM_ICONS;
     }
 
     @NotNull

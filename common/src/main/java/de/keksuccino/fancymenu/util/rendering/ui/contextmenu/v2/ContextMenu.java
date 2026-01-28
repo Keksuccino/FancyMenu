@@ -6,6 +6,8 @@ import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
+import de.keksuccino.fancymenu.util.rendering.IconAnimation;
+import de.keksuccino.fancymenu.util.rendering.IconAnimations;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
@@ -1632,6 +1634,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected boolean tooltipActive = false;
         protected long tooltipIconHoverStart = -1;
         protected boolean enableClickSound = true;
+        @NotNull
+        protected IconAnimation.Instance iconWiggleAnimation = IconAnimations.SHORT_WIGGLE_LEFT_RIGHT.createInstance();
 
         public ClickableContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ClickAction clickAction) {
             super(identifier, parent);
@@ -1668,7 +1672,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             if (iconData == null) {
                 return;
             }
-            float areaX = this.x + ICON_PADDING_LEFT;
+            float areaX = this.x + ICON_PADDING_LEFT + this.getIconWiggleOffsetX();
             float areaY = this.y + (this.getHeight() / 2.0F) - (ICON_WIDTH_HEIGHT / 2.0F);
             RenderSystem.enableBlend();
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
@@ -1717,6 +1721,23 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected boolean hasIconAssigned() {
             return this.icon != null || this.materialIcon != null;
+        }
+
+        @Override
+        protected void setHovered(boolean hovered) {
+            boolean wasHovered = this.hovered;
+            super.setHovered(hovered);
+            if (!wasHovered && hovered && FancyMenu.getOptions().enableUiAnimations.getValue()) {
+                this.iconWiggleAnimation.start();
+            }
+        }
+
+        protected float getIconWiggleOffsetX() {
+            if (!FancyMenu.getOptions().enableUiAnimations.getValue()) {
+                this.iconWiggleAnimation.reset();
+                return 0.0F;
+            }
+            return this.iconWiggleAnimation.getOffsetX();
         }
 
         protected void renderTooltipIconAndRegisterTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -1891,6 +1912,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
             copy.materialIcon = this.materialIcon;
+            copy.iconWiggleAnimation = this.iconWiggleAnimation.getAnimation().createInstance();
             copy.stackApplier = this.stackApplier;
             copy.stackValueSupplier = this.stackValueSupplier;
             copy.stackGroupKey = this.stackGroupKey;
@@ -1991,6 +2013,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
             copy.materialIcon = this.materialIcon;
+            copy.iconWiggleAnimation = this.iconWiggleAnimation.getAnimation().createInstance();
             copy.stackApplier = this.stackApplier;
             copy.stackValueSupplier = this.stackValueSupplier;
             copy.stackGroupKey = this.stackGroupKey;
@@ -2163,6 +2186,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.labelSupplier = this.labelSupplier;
             copy.icon = this.icon;
             copy.materialIcon = this.materialIcon;
+            copy.iconWiggleAnimation = this.iconWiggleAnimation.getAnimation().createInstance();
             copy.stackApplier = this.stackApplier;
             copy.stackValueSupplier = this.stackValueSupplier;
             copy.stackGroupKey = this.stackGroupKey;

@@ -140,53 +140,47 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     @Override
-    protected void renderBody(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial) {
+    protected void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.scrollArea.setX(this.getRealBodyX());
-        this.scrollArea.setY(this.getRealBodyY());
+        this.scrollArea.setX(0);
+        this.scrollArea.setY(0);
         this.scrollArea.setWidth(this.getBodyWidth());
         this.scrollArea.setHeight(this.getBodyHeight());
         this.scrollArea.horizontalScrollBar.active = false;
         this.scrollArea.makeEntriesWidthOfArea = true;
         this.scrollArea.makeAllEntriesWidthOfWidestEntry = false;
 
-        this.renderBodyWithScissor(graphics, () -> {
-            graphics.pose().pushPose();
+        this.scrollArea.render(graphics, mouseX, mouseY, partial);
 
-            this.scrollArea.render(graphics, (int) mouseX, (int) mouseY, partial);
+        // Render the drop indicator if currently dragging
+        if (isDragging && dragTargetIndex >= 0 && dragTargetIndex <= this.scrollArea.getEntries().size()) {
+            float indicatorY;
 
-            // Render the drop indicator if currently dragging
-            if (isDragging && dragTargetIndex >= 0 && dragTargetIndex <= this.scrollArea.getEntries().size()) {
-                float indicatorY;
-
-                // This is the key change - make the indicator position clearer
-                if (dragTargetIndex == this.scrollArea.getEntries().size()) {
-                    // If dropping at the end of the list, show indicator below the last entry
-                    if (!this.scrollArea.getEntries().isEmpty()) {
-                        ScrollAreaEntry lastEntry = this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1);
-                        indicatorY = lastEntry.getY() + lastEntry.getHeight();
-                    } else {
-                        indicatorY = this.scrollArea.getInnerY();
-                    }
+            // This is the key change - make the indicator position clearer
+            if (dragTargetIndex == this.scrollArea.getEntries().size()) {
+                // If dropping at the end of the list, show indicator below the last entry
+                if (!this.scrollArea.getEntries().isEmpty()) {
+                    ScrollAreaEntry lastEntry = this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1);
+                    indicatorY = lastEntry.getY() + lastEntry.getHeight();
                 } else {
-                    // This is important: We always draw the indicator at the TOP of the target entry
-                    // This ensures the visual position matches where the item will be placed
-                    ScrollAreaEntry targetEntry = this.scrollArea.getEntries().get(dragTargetIndex);
-                    indicatorY = targetEntry.getY();
+                    indicatorY = this.scrollArea.getInnerY();
                 }
-
-                // Draw thicker drop indicator line
-                fillF(graphics, this.scrollArea.getInnerX(), indicatorY - DROP_INDICATOR_THICKNESS / 2f,
-                        this.scrollArea.getInnerX() + this.scrollArea.getInnerWidth(),
-                        indicatorY + DROP_INDICATOR_THICKNESS / 2f,
-                        UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_border_color.getColorInt() : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt());
-
+            } else {
+                // This is important: We always draw the indicator at the TOP of the target entry
+                // This ensures the visual position matches where the item will be placed
+                ScrollAreaEntry targetEntry = this.scrollArea.getEntries().get(dragTargetIndex);
+                indicatorY = targetEntry.getY();
             }
 
-            this.renderScrollBarGrabberFallback(graphics);
+            // Draw thicker drop indicator line
+            UIBase.fillF(graphics, this.scrollArea.getInnerX(), indicatorY - DROP_INDICATOR_THICKNESS / 2f,
+                    this.scrollArea.getInnerX() + this.scrollArea.getInnerWidth(),
+                    indicatorY + DROP_INDICATOR_THICKNESS / 2f,
+                    UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_border_color.getColorInt() : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt());
 
-            graphics.pose().popPose();
-        });
+        }
+
+        this.renderScrollBarGrabberFallback(graphics);
     }
 
     private void renderScrollBarGrabberFallback(@NotNull GuiGraphics graphics) {
@@ -214,18 +208,40 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         float grabberX = effectiveEndX - this.scrollArea.verticalScrollBar.grabberWidth;
         float grabberY = effectiveStartY + (usableAreaHeight * this.scrollArea.verticalScrollBar.getScroll());
 
-        fillF(graphics, grabberX, grabberY, grabberX + this.scrollArea.verticalScrollBar.grabberWidth, grabberY + this.scrollArea.verticalScrollBar.grabberHeight, grabberColor.getColorInt());
+        UIBase.fillF(graphics, grabberX, grabberY, grabberX + this.scrollArea.verticalScrollBar.grabberWidth, grabberY + this.scrollArea.verticalScrollBar.grabberHeight, grabberColor.getColorInt());
     }
 
     @Override
-    protected @Nullable ResizingEdge updateHoveredResizingEdge() {
+    protected @Nullable ResizingEdge updateHoveredResizingEdge(double localMouseX, double localMouseY) {
         if (this.scrollArea.isMouseInteractingWithGrabbers()) return null;
-        return super.updateHoveredResizingEdge();
+        return super.updateHoveredResizingEdge(localMouseX, localMouseY);
     }
 
     @Override
-    protected boolean mouseClickedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!this.isVisible()) {
+            return false;
+        }
+        this.stopEditingLayerNames();
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
 
+    @Override
+    protected boolean mouseClickedBody(double mouseX, double mouseY, int button) {
+        if (super.mouseClickedBody(mouseX, mouseY, button)) return true;
+        if (this.isExpanded()) {
+            if (this.scrollArea.verticalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+            if (this.scrollArea.horizontalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+            for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+                if (entry.mouseClicked(mouseX, mouseY, button)) return true;
+            }
+        }
+
+        return true;
+
+    }
+
+    private void stopEditingLayerNames() {
         for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof LayerElementEntry l) {
                 if (!l.isLayerNameHovered()) {
@@ -233,25 +249,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 }
             }
         }
-
-        if (this.isVisible()) {
-            if (super.mouseClickedComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, button)) return true;
-            if (this.isExpanded()) {
-                //Override original mouseClicked of ScrollArea, to use a combination of real and translated mouse coordinates
-                if (this.scrollArea.verticalScrollBar.mouseClicked(translatedMouseX, translatedMouseY, button)) return true;
-                if (this.scrollArea.horizontalScrollBar.mouseClicked(translatedMouseX, translatedMouseY, button)) return true;
-                for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
-                    if (entry.mouseClicked(realMouseX, realMouseY, button)) return true;
-                }
-            }
-        }
-
-        return this.isVisible() && this.isMouseOver();
-
     }
 
     @Override
-    protected boolean mouseReleasedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
+    protected boolean mouseReleasedBody(double mouseX, double mouseY, int button) {
 
         // Handle drop operation when mouse button is released
         if (button == 0 && isDragging && draggedEntry instanceof LayerElementEntry && dragTargetIndex >= 0) {
@@ -259,8 +260,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         // Always inform scroll bars about mouse release so they can reset their grabber state
-        this.scrollArea.verticalScrollBar.mouseReleased(translatedMouseX, translatedMouseY, button);
-        this.scrollArea.horizontalScrollBar.mouseReleased(translatedMouseX, translatedMouseY, button);
+        this.scrollArea.verticalScrollBar.mouseReleased(mouseX, mouseY, button);
+        this.scrollArea.horizontalScrollBar.mouseReleased(mouseX, mouseY, button);
 
         // Reset drag state
         isDragging = false;
@@ -269,41 +270,41 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof LayerElementEntry l) {
-                if (l.layerMouseReleased(realMouseX, realMouseY, button)) return true;
+                if (l.layerMouseReleased(mouseX, mouseY, button)) return true;
             }
         }
 
-        return super.mouseReleasedComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, button);
+        return super.mouseReleasedBody(mouseX, mouseY, button);
 
     }
 
     @Override
-    protected boolean mouseDraggedComponent(double translatedMouseX, double translatedMouseY, int button, double d1, double d2) {
+    protected boolean mouseDraggedBody(double mouseX, double mouseY, int button, double d1, double d2) {
 
         // Give scroll bars a chance to handle dragging their grabbers
-        if (this.scrollArea.verticalScrollBar.mouseDragged(translatedMouseX, translatedMouseY, button, d1, d2) ||
-                this.scrollArea.horizontalScrollBar.mouseDragged(translatedMouseX, translatedMouseY, button, d1, d2)) {
+        if (this.scrollArea.verticalScrollBar.mouseDragged(mouseX, mouseY, button, d1, d2) ||
+                this.scrollArea.horizontalScrollBar.mouseDragged(mouseX, mouseY, button, d1, d2)) {
             return true;
         }
 
         if (isDragging && button == 0) {
-            updateDragTarget(translatedMouseX, translatedMouseY, this.getRealMouseX(), this.getRealMouseY());
+            updateDragTarget(mouseX, mouseY);
         }
 
         for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof LayerElementEntry l) {
-                if (l.layerMouseDragged(translatedMouseX, translatedMouseY, button, d1, d2)) return true;
+                if (l.layerMouseDragged(mouseX, mouseY, button, d1, d2)) return true;
             }
         }
 
-        return super.mouseDraggedComponent(translatedMouseX, translatedMouseY, button, d1, d2);
+        return super.mouseDraggedBody(mouseX, mouseY, button, d1, d2);
 
     }
 
     /**
      * Updates the drag target index based on current mouse position
      */
-    private void updateDragTarget(double translatedMouseX, double translatedMouseY, double realMouseX, double realMouseY) {
+    private void updateDragTarget(double mouseX, double mouseY) {
         if (!isDragging || draggedEntry == null) return;
 
         // Get the index of the entry being dragged
@@ -311,8 +312,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         if (draggedIndex < 0) return;
 
         // Check if mouse is completely outside the scroll area's top boundary
-        boolean isAboveWidget = translatedMouseY < this.scrollArea.getInnerY();
-        boolean isBelowWidget = translatedMouseY > this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight();
+        boolean isAboveWidget = mouseY < this.scrollArea.getInnerY();
+        boolean isBelowWidget = mouseY > this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight();
 
         // Handle case when mouse is dragged above the widget
         if (isAboveWidget) {
@@ -357,7 +358,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         for (int i = 0; i < this.scrollArea.getEntries().size(); i++) {
             ScrollAreaEntry entry = this.scrollArea.getEntries().get(i);
 
-            if (entry.isMouseOver(realMouseX, realMouseY)) {
+            if (entry.isMouseOver(mouseX, mouseY)) {
                 mouseOverIndex = i;
                 break;
             }
@@ -372,7 +373,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             VanillaLayerElementEntry vanillaEntry = (VanillaLayerElementEntry)this.scrollArea.getEntries().get(0);
             float entryMidpoint = vanillaEntry.getY() + vanillaEntry.getHeight() / 2f;
 
-            if (translatedMouseY < entryMidpoint) {
+            if (mouseY < entryMidpoint) {
                 // Mouse is in top half of Vanilla entry - position at top
                 dragTargetIndex = 0;
             } else {
@@ -395,8 +396,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         // Special case: mouse is above all entries but still inside the widget
         if (mouseOverIndex == -1 && !this.scrollArea.getEntries().isEmpty() &&
-                translatedMouseY < this.scrollArea.getEntries().get(0).getY() &&
-                translatedMouseY >= this.scrollArea.getInnerY()) {
+                mouseY < this.scrollArea.getEntries().get(0).getY() &&
+                mouseY >= this.scrollArea.getInnerY()) {
 
             // Add special handling when Vanilla is at the top
             if (this.editor.layout.renderElementsBehindVanilla &&
@@ -411,9 +412,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         // Special case: mouse is below all entries but still inside the widget
         if (mouseOverIndex == -1 && !this.scrollArea.getEntries().isEmpty() &&
-                translatedMouseY > this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1).getY() +
+                mouseY > this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1).getY() +
                         this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1).getHeight() &&
-                translatedMouseY <= this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight()) {
+                mouseY <= this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight()) {
 
             // Add special handling when Vanilla is at the bottom
             if (!this.editor.layout.renderElementsBehindVanilla) {
@@ -448,7 +449,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             ScrollAreaEntry separator = this.scrollArea.getEntries().get(mouseOverIndex);
             float separatorMidpoint = separator.getY() + separator.getHeight() / 2f;
 
-            if (translatedMouseY < separatorMidpoint) {
+            if (mouseY < separatorMidpoint) {
                 mouseOverIndex = Math.max(0, mouseOverIndex - 1);
             } else {
                 mouseOverIndex = Math.min(this.scrollArea.getEntries().size() - 1, mouseOverIndex + 1);
@@ -464,7 +465,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         ScrollAreaEntry targetEntry = this.scrollArea.getEntries().get(mouseOverIndex);
         float entryMidpoint = targetEntry.getY() + targetEntry.getHeight() / 2f;
 
-        if (translatedMouseY < entryMidpoint) {
+        if (mouseY < entryMidpoint) {
             // If in top half, place before this entry
             dragTargetIndex = mouseOverIndex;
         } else {
@@ -489,7 +490,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         // Ensure we don't place the indicator exactly at the dragged entry's position
         if (dragTargetIndex == draggedIndex) {
-            if (translatedMouseY > this.scrollArea.getEntries().get(draggedIndex).getY() +
+            if (mouseY > this.scrollArea.getEntries().get(draggedIndex).getY() +
                     this.scrollArea.getEntries().get(draggedIndex).getHeight() / 2f) {
                 dragTargetIndex = draggedIndex + 1;
             } else {
@@ -498,7 +499,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         } else if (dragTargetIndex == draggedIndex + 1) {
             if (draggedIndex < this.scrollArea.getEntries().size() - 1) {
                 ScrollAreaEntry nextEntry = this.scrollArea.getEntries().get(draggedIndex + 1);
-                if (translatedMouseY < nextEntry.getY() + nextEntry.getHeight() / 2f) {
+                if (mouseY < nextEntry.getY() + nextEntry.getHeight() / 2f) {
                     // No change needed
                 } else {
                     dragTargetIndex = draggedIndex + 2;
@@ -658,13 +659,13 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     @Override
-    protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDeltaX, double scrollDeltaY) {
-        if (super.mouseScrolledComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, scrollDeltaX, scrollDeltaY)) return true;
+    protected boolean mouseScrolledBody(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        if (super.mouseScrolledBody(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) return true;
 
         // Handle scroll wheel manually to support the widget's translated coordinate system
         if (scrollDeltaY != 0.0D && this.scrollArea.isVerticalScrollBarVisible() && this.scrollArea.verticalScrollBar.isScrollWheelAllowed()) {
-            boolean hoveringContent = this.scrollArea.isMouseOverInnerArea(realMouseX, realMouseY);
-            boolean hoveringBar = this.scrollArea.verticalScrollBar.isMouseInsideScrollArea(realMouseX, realMouseY, true);
+            boolean hoveringContent = this.scrollArea.isMouseOverInnerArea(mouseX, mouseY);
+            boolean hoveringBar = this.scrollArea.verticalScrollBar.isMouseInsideScrollArea(mouseX, mouseY, true);
             if (hoveringContent || hoveringBar) {
                 float scrollOffset = 0.1F * this.scrollArea.verticalScrollBar.getWheelScrollSpeed();
                 if (scrollDeltaY > 0.0D) {
@@ -675,7 +676,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             }
         }
 
-        return this.scrollArea.mouseScrolled(realMouseX, realMouseY, scrollDeltaX, scrollDeltaY);
+        return this.scrollArea.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
     }
 
     @Override
@@ -739,7 +740,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         RenderSystem.defaultBlendFunc();
         UIBase.getUITheme().setUITextureShaderColor(graphics, alpha);
         blitScaledIcon(graphics, iconData, x, y, width, height);
-        resetShaderColor(graphics);
+        UIBase.resetShaderColor(graphics);
     }
 
     private static float getIconSize(float areaWidth, float areaHeight, float padding) {
@@ -770,8 +771,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, float partial) {
-            this.hovered = this.isMouseOver();
+        public void render(@NotNull GuiGraphics graphics, float partial, double localMouseX, double localMouseY) {
+            this.hovered = this.isMouseOver(localMouseX, localMouseY);
 
             this.renderHoverBackground(graphics, partial);
 
@@ -783,9 +784,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             if (iconData == null) {
                 return;
             }
-            float scale = this.parent.getFixedComponentScale();
-            float iconPadding = Math.max(0.0F, 4.0F * scale);
-            float maxIconSize = Math.max(1.0F, TITLE_BAR_ICON_BASE_SIZE * scale);
+            float iconPadding = Math.max(0.0F, 4.0F);
+            float maxIconSize = Math.max(1.0F, TITLE_BAR_ICON_BASE_SIZE);
             float iconSize = Math.max(1.0F, Math.min(this.width - iconPadding, maxIconSize));
             iconSize = Math.min(iconSize, Math.min(this.width, this.parent.getTitleBarHeight()));
             float iconX = this.x + (this.width - iconSize) * 0.5F;
@@ -794,15 +794,15 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             RenderSystem.defaultBlendFunc();
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
             blitScaledIcon(graphics, iconData, iconX, iconY, iconSize, iconSize);
-            resetShaderColor(graphics);
+            UIBase.resetShaderColor(graphics);
         }
 
         @Override
         protected void renderHoverBackground(GuiGraphics graphics, float partial) {
-            if (!this.isMouseOver()) {
+            if (!this.isHovered()) {
                 return;
             }
-            resetShaderColor(graphics);
+            UIBase.resetShaderColor(graphics);
             float radius = UIBase.getInterfaceCornerRoundingRadius();
             float topLeft = 0.0F;
             float topRight = 0.0F;
@@ -816,25 +816,20 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                     bottomRight = radius;
                 }
             }
-            float renderScale = this.parent.getFixedComponentScale();
-            float smoothX = (this.parent.getTranslatedX() + this.x) * renderScale;
-            float smoothY = (this.parent.getTranslatedY() + this.y) * renderScale;
-            float smoothWidth = this.width * renderScale;
-            float smoothHeight = this.parent.getTitleBarHeight() * renderScale;
-            SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
                     graphics,
-                    smoothX,
-                    smoothY,
-                    smoothWidth,
-                    smoothHeight,
-                    topLeft * renderScale,
-                    topRight * renderScale,
-                    bottomRight * renderScale,
-                    bottomLeft * renderScale,
+                    this.x,
+                    this.y,
+                    this.width,
+                    this.parent.getTitleBarHeight(),
+                    topLeft,
+                    topRight,
+                    bottomRight,
+                    bottomLeft,
                     getElementHoverColor().getColorInt(),
                     partial
             );
-            resetShaderColor(graphics);
+            UIBase.resetShaderColor(graphics);
         }
     }
 
@@ -887,7 +882,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             RenderSystem.enableBlend();
 
             if (this.element.isSelected() || this.element.isMultiSelected()) {
-                fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
+                UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
                 graphics.flush();
             }
 
@@ -964,13 +959,13 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public boolean isEyeButtonMouseOver(double mouseX, double mouseY) {
             if (this.parent.isMouseInteractingWithGrabbers()) return false;
             if (!this.parent.isInnerAreaHovered()) return false;
-            return isXYInArea(mouseX, mouseY, this.getEyeButtonX(), this.getEyeButtonY(), this.getEyeButtonWidth(), this.getEyeButtonHeight());
+            return UIBase.isXYInArea(mouseX, mouseY, this.getEyeButtonX(), this.getEyeButtonY(), this.getEyeButtonWidth(), this.getEyeButtonHeight());
         }
 
         public boolean isLayerNameMouseOver(double mouseX, double mouseY) {
             if (this.parent.isMouseInteractingWithGrabbers()) return false;
             if (!this.parent.isInnerAreaHovered()) return false;
-            return isXYInArea(mouseX, mouseY, this.getLayerNameX(), this.getLayerNameY(), this.getMaxLayerNameWidth(), UIBase.getUITextHeightNormal());
+            return UIBase.isXYInArea(mouseX, mouseY, this.getLayerNameX(), this.getLayerNameY(), this.getMaxLayerNameWidth(), UIBase.getUITextHeightNormal());
         }
 
         public float getEyeButtonWidth() {
@@ -1135,7 +1130,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public boolean isMoveTopBottomButtonHovered(double mouseX, double mouseY) {
             if (this.parent.isMouseInteractingWithGrabbers()) return false;
             if (!this.parent.isInnerAreaHovered()) return false;
-            return isXYInArea(mouseX, mouseY, this.x, this.y, this.getButtonWidth(), this.getButtonHeight());
+            return UIBase.isXYInArea(mouseX, mouseY, this.x, this.y, this.getButtonWidth(), this.getButtonHeight());
         }
 
         public float getButtonHeight() {
@@ -1174,7 +1169,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             RenderSystem.enableBlend();
-            fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getBorderColor().getColorInt());
+            UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getBorderColor().getColorInt());
         }
 
         @Override

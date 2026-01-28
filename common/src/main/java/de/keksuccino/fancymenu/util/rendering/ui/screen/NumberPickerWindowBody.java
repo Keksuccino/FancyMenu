@@ -503,7 +503,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
             if (iconColor != null) {
                 UIBase.setShaderColor(graphics, iconColor);
             }
-            int textureSize = UIBase.getUIMaterialIconTextureSizeNormal();
+            int textureSize = UIBase.getUIMaterialIconTextureSizeMedium();
             ResourceLocation location = this.icon.getTextureLocation(textureSize);
             if (location != null) {
                 int iconWidth = Math.max(1, this.icon.getWidth(textureSize));
@@ -518,7 +518,8 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
                 int drawWidth = Math.max(1, Math.round(iconWidth * scale));
                 int drawHeight = Math.max(1, Math.round(iconHeight * scale));
                 int drawX = this.x + ((this.width - drawWidth) / 2);
-                int drawY = this.y + ((this.height - drawHeight) / 2);
+                int hoverOffset = this.hovered ? (this.direction > 0 ? -1 : 1) : 0;
+                int drawY = this.y + ((this.height - drawHeight) / 2) + hoverOffset;
                 graphics.blit(location, drawX, drawY, drawWidth, drawHeight, 0.0F, 0.0F, iconWidth, iconHeight, iconWidth, iconHeight);
             }
             UIBase.resetShaderColor(graphics);
