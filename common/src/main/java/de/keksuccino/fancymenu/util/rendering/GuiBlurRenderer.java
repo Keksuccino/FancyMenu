@@ -268,7 +268,11 @@ public final class GuiBlurRenderer {
         // Run the post chain with blending off; otherwise each full-screen pass would multiply existing alpha,
         // darkening any translucent GUI content every time a blur area is drawn.
         RenderSystem.disableBlend();
+
+        float margin = blurRadius * 4.0F;
+        graphics.enableScissor((int) (area.x - margin), (int) (area.y - margin), (int) (area.x + area.width + margin), (int) (area.y + area.height + margin));
         postChain.process(partial);
+
         RenderTarget finalTarget = getFinalTarget(postChain);
         minecraft.getMainRenderTarget().bindWrite(false);
         RenderSystem.enableBlend();
@@ -279,6 +283,7 @@ public final class GuiBlurRenderer {
             finalTarget.blitToScreen(minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight(), false);
         }
         RenderingUtils.resetShaderColor(graphics);
+        graphics.disableScissor();
     }
 
     private static PostChain getOrCreatePostChain(Minecraft minecraft) {
