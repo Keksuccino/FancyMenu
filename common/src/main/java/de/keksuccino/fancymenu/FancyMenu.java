@@ -28,8 +28,9 @@ import org.jetbrains.annotations.NotNull;
 public class FancyMenu {
 
 
-    //TODO Layer Groups:
-    // - Scroll korrigieren, wenn group collapse/expand
+    //TODO Layer Widget: Scroll korrigieren, wenn group collapse/expand
+
+    //TODO Layer WIdget: Bei Group the right-side icons tauschen (auge ganz außen und collapse innen)
 
     //TODO MenuBar entry background in NON-BLUR light mode theme fixen !!!!
 
