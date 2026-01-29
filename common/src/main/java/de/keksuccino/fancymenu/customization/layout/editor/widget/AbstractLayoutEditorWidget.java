@@ -235,8 +235,10 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
         graphics.pose().pushPose();
         graphics.pose().translate(this.getRealBodyX(), this.getRealBodyY(), 0.0F);
         try {
+            LayoutEditorWidgetRenderContext.beginBodyRender(scissorX, scissorY, renderScale);
             this.renderBody(graphics, (int)Math.floor(bodyMouseX), (int)Math.floor(bodyMouseY), partial);
         } finally {
+            LayoutEditorWidgetRenderContext.endBodyRender();
             graphics.pose().popPose();
             graphics.disableScissor();
         }

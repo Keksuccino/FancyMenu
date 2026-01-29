@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRenderContext;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -37,12 +38,33 @@ public class MixinGuiGraphics {
 
     @ModifyArgs(method = "enableScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/navigation/ScreenRectangle;<init>(IIII)V"))
     private void modify_enableScissor_FancyMenu(Args args) {
-        if (!PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
+        boolean pipActive = PiPWindowHandler.INSTANCE.isScreenRenderActive();
+        boolean widgetActive = LayoutEditorWidgetRenderContext.isBodyRenderActive();
+        if (!pipActive && !widgetActive) {
             return;
         }
-        int offsetX = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetX();
-        int offsetY = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetY();
-        double scale = PiPWindowHandler.INSTANCE.getActiveScreenRenderScaleFactor();
+        double scale = 1.0;
+        double offsetX = 0.0;
+        double offsetY = 0.0;
+        if (pipActive) {
+            scale = PiPWindowHandler.INSTANCE.getActiveScreenRenderScaleFactor();
+            offsetX = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetX();
+            offsetY = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetY();
+        }
+        if (widgetActive) {
+            double widgetScale = LayoutEditorWidgetRenderContext.getActiveBodyRenderScaleFactor();
+            double widgetOffsetX = LayoutEditorWidgetRenderContext.getActiveBodyRenderOffsetX();
+            double widgetOffsetY = LayoutEditorWidgetRenderContext.getActiveBodyRenderOffsetY();
+            if (pipActive) {
+                offsetX = offsetX + (widgetOffsetX * scale);
+                offsetY = offsetY + (widgetOffsetY * scale);
+                scale = scale * widgetScale;
+            } else {
+                offsetX = widgetOffsetX;
+                offsetY = widgetOffsetY;
+                scale = widgetScale;
+            }
+        }
         int minX = (int) Math.floor(((int) args.get(0)) * scale + offsetX);
         int minY = (int) Math.floor(((int) args.get(1)) * scale + offsetY);
         int width = (int) Math.ceil(((int) args.get(2)) * scale);
@@ -55,12 +77,33 @@ public class MixinGuiGraphics {
 
     @ModifyArgs(method = "containsPointInScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics$ScissorStack;containsPoint(II)Z"))
     private void modify_containsPointInScissor_FancyMenu(Args args) {
-        if (!PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
+        boolean pipActive = PiPWindowHandler.INSTANCE.isScreenRenderActive();
+        boolean widgetActive = LayoutEditorWidgetRenderContext.isBodyRenderActive();
+        if (!pipActive && !widgetActive) {
             return;
         }
-        int offsetX = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetX();
-        int offsetY = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetY();
-        double scale = PiPWindowHandler.INSTANCE.getActiveScreenRenderScaleFactor();
+        double scale = 1.0;
+        double offsetX = 0.0;
+        double offsetY = 0.0;
+        if (pipActive) {
+            scale = PiPWindowHandler.INSTANCE.getActiveScreenRenderScaleFactor();
+            offsetX = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetX();
+            offsetY = PiPWindowHandler.INSTANCE.getActiveScreenRenderOffsetY();
+        }
+        if (widgetActive) {
+            double widgetScale = LayoutEditorWidgetRenderContext.getActiveBodyRenderScaleFactor();
+            double widgetOffsetX = LayoutEditorWidgetRenderContext.getActiveBodyRenderOffsetX();
+            double widgetOffsetY = LayoutEditorWidgetRenderContext.getActiveBodyRenderOffsetY();
+            if (pipActive) {
+                offsetX = offsetX + (widgetOffsetX * scale);
+                offsetY = offsetY + (widgetOffsetY * scale);
+                scale = scale * widgetScale;
+            } else {
+                offsetX = widgetOffsetX;
+                offsetY = widgetOffsetY;
+                scale = widgetScale;
+            }
+        }
         args.set(0, (int) Math.round(((int) args.get(0)) * scale + offsetX));
         args.set(1, (int) Math.round(((int) args.get(1)) * scale + offsetY));
     }

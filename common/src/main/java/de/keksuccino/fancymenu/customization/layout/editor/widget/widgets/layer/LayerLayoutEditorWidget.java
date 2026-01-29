@@ -1110,9 +1110,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float labelX = this.getLayerNameX();
             float labelY = this.getLayerNameY();
             float labelWidth = this.getMaxLayerNameWidth();
-            float labelHeight = UIBase.getUITextHeightNormal();
+            float labelHeight = this.getHeight();
             if (labelWidth > 0.0f) {
-                graphics.enableScissor((int) labelX, (int) labelY, (int) (labelX + labelWidth), (int) (labelY + labelHeight));
+                graphics.enableScissor((int) labelX, (int) this.getY(), (int) (labelX + labelWidth), (int) (this.getY() + labelHeight));
                 UIBase.renderText(graphics, Component.literal(this.getLayerName()), (int) labelX, (int) labelY);
                 graphics.disableScissor();
             }
@@ -1343,9 +1343,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float labelX = this.getGroupNameX();
             float labelY = this.getGroupNameY();
             float labelWidth = this.getMaxGroupNameWidth();
-            float labelHeight = UIBase.getUITextHeightNormal();
+            float labelHeight = this.getHeight();
             if (labelWidth > 0.0f) {
-                graphics.enableScissor((int) labelX, (int) labelY, (int) (labelX + labelWidth), (int) (labelY + labelHeight));
+                graphics.enableScissor((int) labelX, (int) this.getY(), (int) (labelX + labelWidth), (int) (this.getY() + labelHeight));
                 UIBase.renderText(graphics, Component.literal(this.getGroupName()), (int) labelX, (int) labelY);
                 graphics.disableScissor();
             }
