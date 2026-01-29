@@ -908,7 +908,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 }
                 return UIBase.getUITheme().ui_interface_widget_background_color_hover_type_1.getColorInt();
             }
-            return UIBase.getUITheme().ui_interface_widget_background_color_normal_type_1.getColorIntWithAlpha(UIBase.shouldBlur() ? 0.0F : 1.0F);
+            return DrawableColor.BLACK.getColorIntWithAlpha(0.0F); // always fully transparent
         }
 
         @NotNull
@@ -1187,19 +1187,12 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
     public static class SeparatorMenuBarEntry extends MenuBarEntry {
 
-        @NotNull
-        protected Supplier<DrawableColor> color = () -> UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_border_color : UIBase.getUITheme().ui_interface_widget_border_color;
-
         public SeparatorMenuBarEntry(@NotNull String identifier, @NotNull MenuBar parent) {
             super(identifier, parent);
         }
 
         @Override
         protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderSystem.enableBlend();
-            UIBase.resetShaderColor(graphics);
-            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + PIXEL_SIZE, this.getColor().getColorInt());
-            UIBase.resetShaderColor(graphics);
         }
 
         @Override
@@ -1227,16 +1220,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             return (SeparatorMenuBarEntry) super.setVisibleSupplier(visibleSupplier);
         }
 
-        @NotNull
-        public DrawableColor getColor() {
-            return this.color.get();
-        }
-
-        public SeparatorMenuBarEntry setColor(@NotNull Supplier<DrawableColor> color) {
-            this.color = color;
-            return this;
-        }
-
     }
 
     public enum Side {
@@ -1254,6 +1237,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             this.entry = entry;
             this.entryPath = entryPath;
         }
+
     }
 
 }
