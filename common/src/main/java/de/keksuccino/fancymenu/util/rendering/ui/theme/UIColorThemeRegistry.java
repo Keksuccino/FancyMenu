@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.theme;
 
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.UIColorThemeChangedEvent;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIThemes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +32,7 @@ public class UIColorThemeRegistry {
         if (activeTheme != null) {
             return activeTheme;
         }
-        return UIColorThemes.DARK;
+        return UIThemes.DARK;
     }
 
     public static void setActiveTheme(@NotNull String identifier) {
@@ -40,7 +40,7 @@ public class UIColorThemeRegistry {
         if (activeTheme == null) {
             LOGGER.error("[FANCYMENU] Unable to switch theme! Theme not found: " + identifier);
             LOGGER.error("[FANCYMENU] Falling back to DARK theme!");
-            activeTheme = UIColorThemes.DARK;
+            activeTheme = UIThemes.DARK;
         }
         EventHandler.INSTANCE.postEvent(new UIColorThemeChangedEvent(getActiveTheme()));
     }

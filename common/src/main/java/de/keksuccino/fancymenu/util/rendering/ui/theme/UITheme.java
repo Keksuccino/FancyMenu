@@ -15,6 +15,7 @@ public class UITheme {
     //----------------------------
 
     public boolean allow_blur = false;
+    public boolean allow_animations = true;
     public float interface_corner_rounding_radius = 6.0f;
     public float widget_corner_rounding_radius = 6.0f; // old was 4.0f
 

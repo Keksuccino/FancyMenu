@@ -43,7 +43,7 @@ import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIThemes;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
@@ -293,7 +293,7 @@ public class ScreenCustomization {
 	public static void reloadFancyMenu() {
 		FancyMenu.reloadOptions();
 		ResourceHandlers.reloadAll();
-		UIColorThemes.reloadThemes();
+		UIThemes.reloadThemes();
 		LayoutHandler.reloadLayouts();
 		AnimationControllerHandler.stopAllAnimations();
 		AnimationControllerHandler.clearMemory();

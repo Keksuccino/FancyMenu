@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFontManager;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIThemes;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioEngineReloadHandler;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
@@ -32,6 +32,12 @@ public class FancyMenu {
     // - Scroll korrigieren, wenn group collapse/expand
 
     //TODO MenuBar entry background in NON-BLUR light mode theme fixen !!!!
+
+    //TODO Choose Listener Type Screen -> Alles mit SmoothFont rendern
+
+    //TODO Choose Panorama Screen -> Alles mit SmoothFont rendern
+
+    //TODO Choose Slideshow Screen -> Alles mit SmoothFont rendern
 
 
 
@@ -92,7 +98,7 @@ public class FancyMenu {
 
 		LOGGER.info("[FANCYMENU] Starting late client initialization phase..");
 
-		UIColorThemes.registerAll();
+		UIThemes.registerAll();
 
 		WindowHandler.updateCustomWindowIcon();
 

@@ -91,7 +91,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
 
-        boolean animationsEnabled = FancyMenu.getOptions().enableUiAnimations.getValue() && this.openAnimationEnabled;
+        boolean animationsEnabled = UIBase.shouldPlayAnimations() && this.openAnimationEnabled;
         boolean openingAnimation = animationsEnabled && this.isTopLevelOpenAnimationRunning();
         float uiScale = UIBase.calculateFixedScale(this.getScale());
         float animationScale = animationsEnabled ? this.getOpenAnimationScale(partial) : 1.0F;
@@ -650,7 +650,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     private boolean isTopLevelOpenAnimationRunning() {
-        if (!FancyMenu.getOptions().enableUiAnimations.getValue() || !this.openAnimationEnabled) return false;
+        if (!UIBase.shouldPlayAnimations() || !this.openAnimationEnabled) return false;
         if (this.isSubMenu() || !this.openAnimationActive) return false;
         float elapsedMs = (float) (net.minecraft.Util.getMillis() - this.openAnimationStartMs);
         if (elapsedMs >= OPEN_ANIMATION_GROW_TIME_MS) {
@@ -661,7 +661,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     private float getOpenAnimationScale(float partial) {
-        if (!FancyMenu.getOptions().enableUiAnimations.getValue() || !this.openAnimationEnabled) return 1.0F;
+        if (!UIBase.shouldPlayAnimations() || !this.openAnimationEnabled) return 1.0F;
         if (this.isSubMenu() || !this.isOpen()) return 1.0F;
         if (!this.isTopLevelOpenAnimationRunning()) return 1.0F;
 
@@ -930,7 +930,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.rawX = x;
         this.rawY = y;
         this.open = true;
-        if (!this.isSubMenu() && FancyMenu.getOptions().enableUiAnimations.getValue() && this.openAnimationEnabled) {
+        if (!this.isSubMenu() && UIBase.shouldPlayAnimations() && this.openAnimationEnabled) {
             this.openAnimationStartMs = net.minecraft.Util.getMillis();
             this.openAnimationActive = true;
         } else {
@@ -1015,7 +1015,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public boolean isUserNavigatingInMenu() {
-        if (FancyMenu.getOptions().enableUiAnimations.getValue() && this.openAnimationEnabled && this.isTopLevelOpenAnimationRunning()) {
+        if (UIBase.shouldPlayAnimations() && this.openAnimationEnabled && this.isTopLevelOpenAnimationRunning()) {
             return true;
         }
         // If the menu is scrollable and the mouse is over it, consider it as navigating
@@ -1737,13 +1737,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected void setHovered(boolean hovered) {
             boolean wasHovered = this.hovered;
             super.setHovered(hovered);
-            if (!wasHovered && hovered && this.isActive() && FancyMenu.getOptions().enableUiAnimations.getValue()) {
+            if (!wasHovered && hovered && this.isActive() && UIBase.shouldPlayAnimations()) {
                 this.iconWiggleAnimation.start();
             }
         }
 
         protected float getIconWiggleOffsetX() {
-            if (!FancyMenu.getOptions().enableUiAnimations.getValue()) {
+            if (!UIBase.shouldPlayAnimations()) {
                 this.iconWiggleAnimation.reset();
                 return 0.0F;
             }
@@ -2077,7 +2077,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected float getSubMenuArrowRotation() {
-            if (!FancyMenu.getOptions().enableUiAnimations.getValue()) {
+            if (!UIBase.shouldPlayAnimations()) {
                 this.subMenuArrowSpin.reset();
                 return 0.0F;
             }

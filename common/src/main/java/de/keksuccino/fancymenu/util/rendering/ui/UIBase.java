@@ -40,6 +40,11 @@ public class UIBase extends RenderingUtils {
     private static final int MATERIAL_ICON_SIZE_CORRECTION_FOR_BIG_ICONS = 100;
     private static final int MATERIAL_ICON_SIZE_CORRECTION_FOR_MEDIUM_ICONS = 50;
 
+    public static boolean shouldPlayAnimations() {
+        if (!getUITheme().allow_animations) return false;
+        return FancyMenu.getOptions().enableUiAnimations.getValue();
+    }
+
     public static int getUIMaterialIconTextureSizeNormal() {
         if (getUIScale() < 2) return MATERIAL_ICON_SIZE_SMALL;
         if (getUIScale() < 3) return MATERIAL_ICON_SIZE_NORMAL;

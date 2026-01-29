@@ -2733,5 +2733,11 @@
   "fancymenu.editor.widgets.layers.context.show_group": "Show Group",
   "fancymenu.editor.widgets.layers.context.collapse_group": "Collapse Group",
   "fancymenu.editor.widgets.layers.context.expand_group": "Expand Group",
-  "fancymenu.editor.widgets.layers.context.delete_group": "Delete Group"
+  "fancymenu.editor.widgets.layers.context.delete_group": "Delete Group",
+  "fancymenu.ui.themes.cherry_blossom": "Cherry Blossom",
+  "fancymenu.ui.themes.spooky_season": "Spooky Season",
+  "fancymenu.ui.themes.dark_high_contrast": "Dark High Contrast",
+  "fancymenu.ui.themes.light_high_contrast": "Light High Contrast",
+  "fancymenu.ui.themes.pumpkin_soup": "Pumpkin Soup",
+  "fancymenu.ui.themes.cozy_campfire": "Cozy Campfire"
 }
