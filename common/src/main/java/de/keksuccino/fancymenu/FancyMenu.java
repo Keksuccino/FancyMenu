@@ -32,7 +32,7 @@ public class FancyMenu {
 
     //TODO Layer WIdget: Bei Group the right-side icons tauschen (auge ganz außen und collapse innen)
 
-    //TODO MenuBar entry background in NON-BLUR light mode theme fixen !!!!
+    //TODO Layout menu in Layout Editor reworken, so wie Layout menu in CustomizationOverlay (dann Manage Layouts Screen löschen, da unused)
 
     //TODO Choose Listener Type Screen -> Alles mit SmoothFont rendern
 
