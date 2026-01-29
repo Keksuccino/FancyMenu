@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -39,6 +40,7 @@ public class CustomizationOverlay {
 	}
 
 	public static void refreshMenuBar() {
+        ContextMenuHandler.INSTANCE.removeCurrent();
 		overlayMenuBar = CustomizationOverlayUI.buildMenuBar((overlayMenuBar == null) || overlayMenuBar.isExpanded());
         ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.CUSTOMIZATION_MENU_BAR, overlayMenuBar);
         ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(ScreenOverlays.CUSTOMIZATION_MENU_BAR, screen -> {

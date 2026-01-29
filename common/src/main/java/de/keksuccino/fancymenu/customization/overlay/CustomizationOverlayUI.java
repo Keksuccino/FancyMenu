@@ -1013,8 +1013,20 @@ public class CustomizationOverlayUI {
                 })).setClickSoundEnabled(false)
                 .setIcon(MaterialIcons.VOLUME_UP);
 
-        userInterfaceMenu.addValueCycleEntry("ui_animations", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_animations", FancyMenu.getOptions().enableUiAnimations.getValue())
+        boolean allowUiAnimations = UIBase.getUITheme().allow_animations;
+        LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> uiAnimationsCycle = CommonCycles.cycleEnabledDisabled(
+                "fancymenu.overlay.menu_bar.user_interface.ui_animations",
+                allowUiAnimations && FancyMenu.getOptions().enableUiAnimations.getValue()
+        );
+        userInterfaceMenu.addValueCycleEntry("ui_animations", uiAnimationsCycle
                         .addCycleListener(cycle -> FancyMenu.getOptions().enableUiAnimations.setValue(cycle.getAsBoolean())))
+                .addIsActiveSupplier((menu, entry) -> UIBase.getUITheme().allow_animations)
+                .setTickAction((menu, entry, isPost) -> {
+                    boolean allowed = UIBase.getUITheme().allow_animations;
+                    uiAnimationsCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.getByBoolean(
+                            allowed && FancyMenu.getOptions().enableUiAnimations.getValue()
+                    ), false);
+                })
                 .setIcon(MaterialIcons.ANIMATION);
 
         userInterfaceMenu.addValueCycleEntry("use_minecraft_font", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.use_minecraft_font", FancyMenu.getOptions().useMinecraftFont.getValue())
@@ -1024,8 +1036,20 @@ public class CustomizationOverlayUI {
 
         userInterfaceMenu.addSeparatorEntry("separator_before_blur_settings");
 
-        userInterfaceMenu.addValueCycleEntry("ui_blur", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_blur", FancyMenu.getOptions().enableUiBlur.getValue())
+        boolean allowUiBlur = UIBase.getUITheme().allow_blur;
+        LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> uiBlurCycle = CommonCycles.cycleEnabledDisabled(
+                "fancymenu.overlay.menu_bar.user_interface.ui_blur",
+                allowUiBlur && FancyMenu.getOptions().enableUiBlur.getValue()
+        );
+        userInterfaceMenu.addValueCycleEntry("ui_blur", uiBlurCycle
                         .addCycleListener(cycle -> FancyMenu.getOptions().enableUiBlur.setValue(cycle.getAsBoolean())))
+                .addIsActiveSupplier((menu, entry) -> UIBase.getUITheme().allow_blur)
+                .setTickAction((menu, entry, isPost) -> {
+                    boolean allowed = UIBase.getUITheme().allow_blur;
+                    uiBlurCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.getByBoolean(
+                            allowed && FancyMenu.getOptions().enableUiBlur.getValue()
+                    ), false);
+                })
                 .setIcon(MaterialIcons.BLUR_ON);
 
         ContextMenu.ClickableContextMenuEntry<?> blurIntensityEntry = ContextMenuUtils.addRangeSliderInputContextMenuEntryTo(

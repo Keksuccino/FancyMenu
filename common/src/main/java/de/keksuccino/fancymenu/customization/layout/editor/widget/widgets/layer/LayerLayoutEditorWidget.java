@@ -8,9 +8,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidgetBuilder;
 import de.keksuccino.fancymenu.customization.layout.Layout;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
-import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -22,7 +20,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -57,14 +54,18 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final MaterialIcon TITLE_BAR_COLLAPSE_ICON = MaterialIcons.EXPAND_LESS;
     private static final MaterialIcon GROUP_EXPAND_ICON = MaterialIcons.EXPAND_MORE;
     private static final MaterialIcon GROUP_COLLAPSE_ICON = MaterialIcons.EXPAND_LESS;
+    private static final MaterialIcon LAYER_ICON = MaterialIcons.LAYERS;
+    private static final MaterialIcon GROUP_ICON = MaterialIcons.FOLDER;
     private static final MaterialIcon EYE_ICON = MaterialIcons.VISIBILITY;
     private static final MaterialIcon MOVE_TO_TOP_ICON = MaterialIcons.VERTICAL_ALIGN_TOP;
     private static final MaterialIcon MOVE_BEHIND_ICON = MaterialIcons.VERTICAL_ALIGN_BOTTOM;
     private static final float LAYER_EYE_ICON_PADDING = 4.0f;
+    private static final float LAYER_ENTRY_ICON_PADDING = 6.0f;
     private static final float LAYER_ICON_TEXT_GAP = 4.0f;
     private static final float GROUP_INDENT = 12.0f;
     private static final float GROUP_NAME_LEFT_PADDING = 0.0f;
     private static final float GROUP_COLLAPSE_BUTTON_WIDTH = 24.0f;
+    private static final float GROUP_EYE_BUTTON_WIDTH = 30.0f;
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
 
@@ -124,13 +125,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     public void updateList(boolean keepScroll) {
         float scroll = this.scrollArea.verticalScrollBar.getScroll();
-        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
-            if (e instanceof LayerElementEntry l) {
-                this.children.remove(l.editLayerNameBox);
-            } else if (e instanceof LayerGroupEntry g) {
-                this.children.remove(g.editGroupNameBox);
-            }
-        }
         this.scrollArea.clearEntries();
         if (this.editor.layout.renderElementsBehindVanilla) {
             this.scrollArea.addEntry(new VanillaLayerElementEntry(this.scrollArea, this));
@@ -141,7 +135,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             Layout.LayerGroup group = this.editor.getLayerGroupForElement(e);
             if ((group != null) && !handledGroups.contains(group)) {
                 LayerGroupEntry groupEntry = new LayerGroupEntry(this.scrollArea, this, group);
-                this.children.add(groupEntry.editGroupNameBox);
                 this.scrollArea.addEntry(groupEntry);
                 this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
                 handledGroups.add(group);
@@ -150,14 +143,12 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 continue;
             }
             LayerElementEntry layer = new LayerElementEntry(this.scrollArea, this, e, group);
-            this.children.add(layer.editLayerNameBox);
             this.scrollArea.addEntry(layer);
             this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
         }
         for (Layout.LayerGroup group : this.editor.layout.layerGroups) {
             if (!handledGroups.contains(group)) {
                 LayerGroupEntry groupEntry = new LayerGroupEntry(this.scrollArea, this, group);
-                this.children.add(groupEntry.editGroupNameBox);
                 this.scrollArea.addEntry(groupEntry);
                 this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
             }
@@ -211,7 +202,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         if (!this.isVisible()) {
             return false;
         }
-        this.stopEditingLayerNames();
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
@@ -232,20 +222,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         return true;
 
-    }
-
-    private void stopEditingLayerNames() {
-        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
-            if (e instanceof LayerElementEntry l) {
-                if (!l.isLayerNameHovered()) {
-                    l.stopEditingLayerName();
-                }
-            } else if (e instanceof LayerGroupEntry g) {
-                if (!g.isGroupNameHovered()) {
-                    g.stopEditingGroupName();
-                }
-            }
-        }
     }
 
     @Override
@@ -1091,10 +1067,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         protected Layout.LayerGroup group;
         protected boolean eyeButtonHovered = false;
         protected Font font = Minecraft.getInstance().font;
-        protected ExtendedEditBox editLayerNameBox;
-        protected boolean displayEditLayerNameBox = false;
-        protected boolean layerNameHovered = false;
-        protected long lastLeftClick = -1L;
         protected boolean dragStarted = false; // Flag to track if drag has been initiated
         protected double dragStartX;
         protected double dragStartY;
@@ -1108,20 +1080,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.playClickSound = false;
             this.selectable = false;
             this.selectOnClick = false;
-            this.editLayerNameBox = new ExtendedEditBox(this.font, 0, 0, 0, 0, Component.empty()) {
-                @Override
-                public boolean keyPressed(int keycode, int scancode, int modifiers) {
-                    if (this.isVisible() && LayerElementEntry.this.displayEditLayerNameBox) {
-                        if (keycode == InputConstants.KEY_ENTER) {
-                            LayerElementEntry.this.stopEditingLayerName();
-                            return true;
-                        }
-                    }
-                    return super.keyPressed(keycode, scancode, modifiers);
-                }
-            };
-            this.editLayerNameBox.setVisible(false);
-            this.editLayerNameBox.setMaxLength(10000);
             this.backgroundColorNormal = null;
             this.backgroundColorHover = null;
         }
@@ -1130,7 +1088,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             this.eyeButtonHovered = this.isEyeButtonMouseOver(mouseX, mouseY);
-            this.layerNameHovered = this.isLayerNameMouseOver(mouseX, mouseY);
 
             RenderSystem.enableBlend();
 
@@ -1139,46 +1096,27 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 graphics.flush();
             }
 
-            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float layerIconSize = getIconSize(this.getLayerIconWidth(), this.getLayerIconHeight(), LAYER_ENTRY_ICON_PADDING);
+            float layerIconX = this.getLayerIconX() + (this.getLayerIconWidth() - layerIconSize) * 0.5f;
+            float layerIconY = this.getLayerIconY() + (this.getLayerIconHeight() - layerIconSize) * 0.5f;
+            this.layerWidget.renderMaterialIcon(graphics, LAYER_ICON, layerIconX, layerIconY, layerIconSize, layerIconSize, 1.0f);
+
+            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_ENTRY_ICON_PADDING);
             float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
             float eyeIconY = this.getEyeButtonY() + (this.getEyeButtonHeight() - eyeIconSize) * 0.5f;
             float eyeAlpha = !this.element.element.layerHiddenInEditor ? 1.0f : 0.3f;
             this.layerWidget.renderMaterialIcon(graphics, EYE_ICON, eyeIconX, eyeIconY, eyeIconSize, eyeIconSize, eyeAlpha);
 
-            if (!this.displayEditLayerNameBox) {
-                UIBase.renderText(graphics, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
-            } else {
-                UIBase.applyDefaultWidgetSkinTo(this.editLayerNameBox);
-                this.editLayerNameBox.setX((int)this.getLayerNameX());
-                this.editLayerNameBox.setY((int)this.getLayerNameY() - 1);
-                this.editLayerNameBox.setWidth((int) Math.min(this.getMaxLayerNameWidth(), UIBase.getUITextWidth(this.editLayerNameBox.getValue() + 13)));
-                if (this.editLayerNameBox.getWidth() < this.getMaxLayerNameWidth()) {
-                    this.editLayerNameBox.setDisplayPosition(0);
-                }
-                ((IMixinAbstractWidget)this.editLayerNameBox).setHeightFancyMenu((int)(UIBase.getUITextHeightNormal() + 2));
-                this.editLayerNameBox.render(graphics, mouseX, mouseY, partial);
+            float labelX = this.getLayerNameX();
+            float labelY = this.getLayerNameY();
+            float labelWidth = this.getMaxLayerNameWidth();
+            float labelHeight = UIBase.getUITextHeightNormal();
+            if (labelWidth > 0.0f) {
+                graphics.enableScissor((int) labelX, (int) labelY, (int) (labelX + labelWidth), (int) (labelY + labelHeight));
+                UIBase.renderText(graphics, Component.literal(this.getLayerName()), (int) labelX, (int) labelY);
+                graphics.disableScissor();
             }
 
-        }
-
-        protected void startEditingLayerName() {
-            this.editLayerNameBox.setVisible(true);
-            this.editLayerNameBox.setFocused(true);
-            this.editLayerNameBox.setValue(this.getLayerName());
-            this.editLayerNameBox.moveCursorToEnd(false);
-            this.displayEditLayerNameBox = true;
-        }
-
-        protected void stopEditingLayerName() {
-            if (this.displayEditLayerNameBox) {
-                String oldLayerName = this.getLayerName();
-                this.element.element.customElementLayerName = this.editLayerNameBox.getValue();
-                if (Objects.equals(oldLayerName, this.element.element.customElementLayerName)) this.element.element.customElementLayerName = null;
-                if ((this.element.element.customElementLayerName != null) && this.element.element.customElementLayerName.replace(" ", "").isEmpty()) this.element.element.customElementLayerName = null;
-            }
-            this.editLayerNameBox.setFocused(false);
-            this.editLayerNameBox.setVisible(false);
-            this.displayEditLayerNameBox = false;
         }
 
         @SuppressWarnings("all")
@@ -1188,9 +1126,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getLayerNameX() {
-            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
-            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
-            return eyeIconX + eyeIconSize + LAYER_ICON_TEXT_GAP;
+            float iconSize = getIconSize(this.getLayerIconWidth(), this.getLayerIconHeight(), LAYER_ENTRY_ICON_PADDING);
+            float iconX = this.getLayerIconX() + (this.getLayerIconWidth() - iconSize) * 0.5f;
+            return iconX + iconSize + LAYER_ICON_TEXT_GAP;
         }
 
         public float getLayerNameY() {
@@ -1198,15 +1136,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getMaxLayerNameWidth() {
-            return (this.getX() + this.getWidth() - 3f) - this.getLayerNameX();
+            return (this.getX() + this.getWidth() - 3f) - this.getLayerNameX() - this.getEyeButtonWidth();
         }
 
         public boolean isEyeButtonHovered() {
             return this.eyeButtonHovered;
-        }
-
-        public boolean isLayerNameHovered() {
-            return this.layerNameHovered;
         }
 
         public boolean isEyeButtonMouseOver(double mouseX, double mouseY) {
@@ -1215,10 +1149,24 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return UIBase.isXYInArea(mouseX, mouseY, this.getEyeButtonX(), this.getEyeButtonY(), this.getEyeButtonWidth(), this.getEyeButtonHeight());
         }
 
-        public boolean isLayerNameMouseOver(double mouseX, double mouseY) {
-            if (this.parent.isMouseInteractingWithGrabbers()) return false;
-            if (!this.parent.isInnerAreaHovered()) return false;
-            return UIBase.isXYInArea(mouseX, mouseY, this.getLayerNameX(), this.getLayerNameY(), this.getMaxLayerNameWidth(), UIBase.getUITextHeightNormal());
+        public float getLayerIconWidth() {
+            return 30f;
+        }
+
+        public float getLayerIconHeight() {
+            return 28f;
+        }
+
+        public float getIndentOffset() {
+            return (this.group != null) ? GROUP_INDENT : 0.0f;
+        }
+
+        public float getLayerIconX() {
+            return this.x + this.getIndentOffset();
+        }
+
+        public float getLayerIconY() {
+            return this.y;
         }
 
         public float getEyeButtonWidth() {
@@ -1229,12 +1177,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return 28f;
         }
 
-        public float getIndentOffset() {
-            return (this.group != null) ? GROUP_INDENT : 0.0f;
-        }
-
         public float getEyeButtonX() {
-            return this.x + this.getIndentOffset();
+            return this.x + this.getWidth() - this.getEyeButtonWidth();
         }
 
         public float getEyeButtonY() {
@@ -1334,13 +1278,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                         this.element.setSelected(true);
                     }
 
-                    if (this.isLayerNameHovered()) {
-                        long now = System.currentTimeMillis();
-                        if ((this.lastLeftClick + 400) > now) {
-                            this.startEditingLayerName();
-                        }
-                        this.lastLeftClick = now;
-                    }
                 }
             }
             if (button == 1) {
@@ -1357,12 +1294,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         protected final Layout.LayerGroup group;
         protected final LayerLayoutEditorWidget layerWidget;
         protected Font font = Minecraft.getInstance().font;
-        protected ExtendedEditBox editGroupNameBox;
-        protected boolean displayEditGroupNameBox = false;
-        protected boolean groupNameHovered = false;
         protected boolean eyeButtonHovered = false;
         protected boolean collapseButtonHovered = false;
-        protected long lastLeftClick = -1L;
         protected boolean dragStarted = false;
         protected double dragStartX;
         protected double dragStartY;
@@ -1375,27 +1308,12 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.playClickSound = false;
             this.selectable = false;
             this.selectOnClick = false;
-            this.editGroupNameBox = new ExtendedEditBox(this.font, 0, 0, 0, 0, Component.empty()) {
-                @Override
-                public boolean keyPressed(int keycode, int scancode, int modifiers) {
-                    if (this.isVisible() && LayerGroupEntry.this.displayEditGroupNameBox) {
-                        if (keycode == InputConstants.KEY_ENTER) {
-                            LayerGroupEntry.this.stopEditingGroupName();
-                            return true;
-                        }
-                    }
-                    return super.keyPressed(keycode, scancode, modifiers);
-                }
-            };
-            this.editGroupNameBox.setVisible(false);
-            this.editGroupNameBox.setMaxLength(10000);
             this.backgroundColorNormal = null;
             this.backgroundColorHover = null;
         }
 
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            this.groupNameHovered = this.isGroupNameMouseOver(mouseX, mouseY);
             this.eyeButtonHovered = this.isEyeButtonMouseOver(mouseX, mouseY);
             this.collapseButtonHovered = this.isCollapseButtonMouseOver(mouseX, mouseY);
 
@@ -1405,35 +1323,32 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
             }
 
-            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float groupIconSize = getIconSize(this.getGroupIconWidth(), this.getGroupIconHeight(), LAYER_ENTRY_ICON_PADDING);
+            float groupIconX = this.getGroupIconX() + (this.getGroupIconWidth() - groupIconSize) * 0.5f;
+            float groupIconY = this.getGroupIconY() + (this.getGroupIconHeight() - groupIconSize) * 0.5f;
+            this.layerWidget.renderMaterialIcon(graphics, GROUP_ICON, groupIconX, groupIconY, groupIconSize, groupIconSize, 1.0f);
+
+            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_ENTRY_ICON_PADDING);
             float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
             float eyeIconY = this.getEyeButtonY() + (this.getEyeButtonHeight() - eyeIconSize) * 0.5f;
             float eyeAlpha = this.isGroupHidden() ? 0.3f : 1.0f;
             this.layerWidget.renderMaterialIcon(graphics, EYE_ICON, eyeIconX, eyeIconY, eyeIconSize, eyeIconSize, eyeAlpha);
 
-            float collapseIconSize = getIconSize(this.getCollapseButtonWidth(), this.getCollapseButtonHeight(), LAYER_EYE_ICON_PADDING);
+            float collapseIconSize = getIconSize(this.getCollapseButtonWidth(), this.getCollapseButtonHeight(), LAYER_ENTRY_ICON_PADDING);
             float collapseIconX = this.getCollapseButtonX() + (this.getCollapseButtonWidth() - collapseIconSize) * 0.5f;
             float collapseIconY = this.getCollapseButtonY() + (this.getCollapseButtonHeight() - collapseIconSize) * 0.5f;
             float collapseAlpha = this.collapseButtonHovered ? 1.0f : 0.7f;
             this.layerWidget.renderMaterialIcon(graphics, this.group.collapsed ? GROUP_EXPAND_ICON : GROUP_COLLAPSE_ICON, collapseIconX, collapseIconY, collapseIconSize, collapseIconSize, collapseAlpha);
 
-            if (!this.displayEditGroupNameBox) {
-                UIBase.renderText(graphics, Component.literal(this.getGroupName()), (int)this.getGroupNameX(), (int)this.getGroupNameY());
-            } else {
-                UIBase.applyDefaultWidgetSkinTo(this.editGroupNameBox);
-                this.editGroupNameBox.setX((int)this.getGroupNameX());
-                this.editGroupNameBox.setY((int)this.getGroupNameY() - 1);
-                this.editGroupNameBox.setWidth((int)Math.min(this.getMaxGroupNameWidth(), UIBase.getUITextWidth(this.editGroupNameBox.getValue() + 13)));
-                if (this.editGroupNameBox.getWidth() < this.getMaxGroupNameWidth()) {
-                    this.editGroupNameBox.setDisplayPosition(0);
-                }
-                ((IMixinAbstractWidget)this.editGroupNameBox).setHeightFancyMenu((int)(UIBase.getUITextHeightNormal() + 2));
-                this.editGroupNameBox.render(graphics, mouseX, mouseY, partial);
+            float labelX = this.getGroupNameX();
+            float labelY = this.getGroupNameY();
+            float labelWidth = this.getMaxGroupNameWidth();
+            float labelHeight = UIBase.getUITextHeightNormal();
+            if (labelWidth > 0.0f) {
+                graphics.enableScissor((int) labelX, (int) labelY, (int) (labelX + labelWidth), (int) (labelY + labelHeight));
+                UIBase.renderText(graphics, Component.literal(this.getGroupName()), (int) labelX, (int) labelY);
+                graphics.disableScissor();
             }
-        }
-
-        public boolean isGroupNameHovered() {
-            return this.groupNameHovered;
         }
 
         public boolean isEyeButtonHovered() {
@@ -1442,12 +1357,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         public boolean isCollapseButtonHovered() {
             return this.collapseButtonHovered;
-        }
-
-        public boolean isGroupNameMouseOver(double mouseX, double mouseY) {
-            if (this.parent.isMouseInteractingWithGrabbers()) return false;
-            if (!this.parent.isInnerAreaHovered()) return false;
-            return UIBase.isXYInArea(mouseX, mouseY, this.getGroupNameX(), this.getGroupNameY(), this.getMaxGroupNameWidth(), UIBase.getUITextHeightNormal());
         }
 
         public boolean isEyeButtonMouseOver(double mouseX, double mouseY) {
@@ -1463,9 +1372,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getGroupNameX() {
-            float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_EYE_ICON_PADDING);
-            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
-            return eyeIconX + eyeIconSize + LAYER_ICON_TEXT_GAP;
+            float iconSize = getIconSize(this.getGroupIconWidth(), this.getGroupIconHeight(), LAYER_ENTRY_ICON_PADDING);
+            float iconX = this.getGroupIconX() + (this.getGroupIconWidth() - iconSize) * 0.5f;
+            return iconX + iconSize + LAYER_ICON_TEXT_GAP;
         }
 
         public float getGroupNameY() {
@@ -1473,19 +1382,35 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getMaxGroupNameWidth() {
-            return (this.getX() + this.getWidth() - 3f) - this.getGroupNameX() - this.getCollapseButtonWidth();
+            return (this.getX() + this.getWidth() - 3f) - this.getGroupNameX() - this.getCollapseButtonWidth() - this.getEyeButtonWidth();
         }
 
-        public float getEyeButtonWidth() {
+        public float getGroupIconWidth() {
             return 30f;
         }
 
-        public float getEyeButtonHeight() {
+        public float getGroupIconHeight() {
             return 28f;
         }
 
-        public float getEyeButtonX() {
+        public float getGroupIconX() {
             return this.x + GROUP_NAME_LEFT_PADDING;
+        }
+
+        public float getGroupIconY() {
+            return this.y;
+        }
+
+        public float getEyeButtonWidth() {
+            return GROUP_EYE_BUTTON_WIDTH;
+        }
+
+        public float getEyeButtonHeight() {
+            return this.getHeight();
+        }
+
+        public float getEyeButtonX() {
+            return this.x + this.getWidth() - this.getCollapseButtonWidth() - this.getEyeButtonWidth();
         }
 
         public float getEyeButtonY() {
@@ -1539,36 +1464,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 }
             }
             return true;
-        }
-
-        protected void startEditingGroupName() {
-            this.editGroupNameBox.setVisible(true);
-            this.editGroupNameBox.setFocused(true);
-            this.editGroupNameBox.setValue(this.getGroupName());
-            this.editGroupNameBox.moveCursorToEnd(false);
-            this.displayEditGroupNameBox = true;
-        }
-
-        protected void stopEditingGroupName() {
-            if (this.displayEditGroupNameBox) {
-                String newName = this.editGroupNameBox.getValue();
-                if (newName != null) {
-                    newName = newName.trim();
-                }
-                if ((newName == null) || newName.isEmpty()) {
-                    this.group.name = null;
-                } else {
-                    String defaultName = Component.translatable("fancymenu.editor.widgets.layers.group.default_name").getString();
-                    if (newName.equals(defaultName)) {
-                        this.group.name = null;
-                    } else {
-                        this.group.name = newName;
-                    }
-                }
-            }
-            this.editGroupNameBox.setFocused(false);
-            this.editGroupNameBox.setVisible(false);
-            this.displayEditGroupNameBox = false;
         }
 
         @Override
@@ -1657,14 +1552,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                             element.setSelected(true);
                         }
                     }
-                    if (!this.isGroupNameHovered()) {
-                        return;
-                    }
-                    long now = System.currentTimeMillis();
-                    if ((this.lastLeftClick + 400) > now) {
-                        this.startEditingGroupName();
-                    }
-                    this.lastLeftClick = now;
                 }
             }
         }
