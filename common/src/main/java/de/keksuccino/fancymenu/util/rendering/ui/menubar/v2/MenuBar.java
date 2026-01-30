@@ -50,8 +50,8 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     protected final List<MenuBarEntry> rightEntries = new ArrayList<>();
     protected final List<MenuBarClickListener> clickListeners = new ArrayList<>();
     protected final List<PendingContextMenuOpen> pendingContextMenuOpens = new ArrayList<>();
-    protected static final MaterialIconTexture COLLAPSE_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.UNFOLD_LESS_DOUBLE, UIBase::getUIMaterialIconTextureSizeMedium);
-    protected static final MaterialIconTexture EXPAND_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.UNFOLD_MORE_DOUBLE, UIBase::getUIMaterialIconTextureSizeMedium);
+    protected static final MaterialIconTexture COLLAPSE_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.UNFOLD_LESS_DOUBLE, MaterialIconTexture::getDefaultTextureSize);
+    protected static final MaterialIconTexture EXPAND_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.UNFOLD_MORE_DOUBLE, MaterialIconTexture::getDefaultTextureSize);
     protected boolean hovered = false;
     protected boolean expanded = true;
     protected boolean layoutReady = false;
@@ -805,10 +805,20 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 int drawY = this.y;
                 int baseWidth = iconTexture.getWidth();
                 int baseHeight = iconTexture.getHeight();
+                boolean isMaterialIcon = iconTexture instanceof MaterialIconTexture;
+                ResourceLocation materialIconLocation = null;
+                if (isMaterialIcon) {
+                    MaterialIconTexture materialIconTexture = (MaterialIconTexture) iconTexture;
+                    float renderWidth = availableWidth;
+                    float renderHeight = availableHeight;
+                    baseWidth = materialIconTexture.getWidthForUI(renderWidth, renderHeight);
+                    baseHeight = materialIconTexture.getHeightForUI(renderWidth, renderHeight);
+                    materialIconLocation = materialIconTexture.getResourceLocationForUI(renderWidth, renderHeight);
+                }
                 boolean hasBaseSize = baseWidth > 0 && baseHeight > 0;
                 if (hasBaseSize) {
                     float scale = Math.min(availableWidth / (float) baseWidth, availableHeight / (float) baseHeight);
-                    if (iconTexture instanceof MaterialIconTexture) {
+                    if (isMaterialIcon) {
                         scale = Math.min(1.0F, scale);
                     }
                     if (!Float.isFinite(scale) || scale <= 0.0F) {
@@ -830,7 +840,15 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 UIBase.resetShaderColor(graphics);
                 DrawableColor iconColor = (this.iconTextureColor != null) ? this.iconTextureColor.get() : null;
                 if (iconColor != null) UIBase.setShaderColor(graphics, iconColor);
-                ResourceLocation loc = (iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION;
+                ResourceLocation loc = materialIconLocation;
+                if (loc == null) {
+                    if (isMaterialIcon) {
+                        loc = ITexture.MISSING_TEXTURE_LOCATION;
+                    } else {
+                        ResourceLocation fallback = iconTexture.getResourceLocation();
+                        loc = (fallback != null) ? fallback : ITexture.MISSING_TEXTURE_LOCATION;
+                    }
+                }
                 graphics.blit(loc, drawX, drawY, drawWidth, drawHeight, 0.0F, 0.0F, textureWidth, textureHeight, textureWidth, textureHeight);
             } else {
                 UIBase.renderText(graphics, label, this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + ((float) PIXEL_SIZE / 2) - (UIBase.getUITextHeightNormal() / 2), this.getLabelColor());

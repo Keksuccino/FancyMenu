@@ -503,8 +503,10 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
             if (iconColor != null) {
                 UIBase.setShaderColor(graphics, iconColor);
             }
-            int textureSize = UIBase.getUIMaterialIconTextureSizeMedium();
-            ResourceLocation location = this.icon.getTextureLocation(textureSize);
+            float baseRenderSize = Math.max(1.0F, Math.min(this.width - 2.0F, this.height - 2.0F));
+            float renderSize = baseRenderSize * (this.hovered ? 1.15F : 1.0F);
+            int textureSize = this.icon.getTextureSizeForUI(renderSize, renderSize);
+            ResourceLocation location = this.icon.getTextureLocationForUI(renderSize, renderSize);
             if (location != null) {
                 int iconWidth = Math.max(1, this.icon.getWidth(textureSize));
                 int iconHeight = Math.max(1, this.icon.getHeight(textureSize));

@@ -622,15 +622,17 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     @Nullable
-    private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon) {
+    private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon, float renderWidth, float renderHeight) {
         if (icon == null) {
             return null;
         }
-        int size = UIBase.getUIMaterialIconTextureSizeNormal();
-        ResourceLocation location = icon.getTextureLocation(size);
+        float safeRenderWidth = Math.max(1.0F, renderWidth);
+        float safeRenderHeight = Math.max(1.0F, renderHeight);
+        ResourceLocation location = icon.getTextureLocationForUI(safeRenderWidth, safeRenderHeight);
         if (location == null) {
             return null;
         }
+        int size = icon.getTextureSizeForUI(safeRenderWidth, safeRenderHeight);
         int width = icon.getWidth(size);
         int height = icon.getHeight(size);
         if (width <= 0 || height <= 0) {
@@ -659,7 +661,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     private void renderMaterialIcon(@NotNull GuiGraphics graphics, @NotNull MaterialIcon icon, float x, float y, float width, float height, float alpha) {
-        IconRenderData iconData = resolveMaterialIconData(icon);
+        IconRenderData iconData = resolveMaterialIconData(icon, width, height);
         if (iconData == null) {
             return;
         }
@@ -1006,14 +1008,14 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             if (icon == null) {
                 return;
             }
-            IconRenderData iconData = resolveMaterialIconData(icon);
-            if (iconData == null) {
-                return;
-            }
             float iconPadding = Math.max(0.0F, 4.0F);
             float maxIconSize = Math.max(1.0F, TITLE_BAR_ICON_BASE_SIZE);
             float iconSize = Math.max(1.0F, Math.min(this.width - iconPadding, maxIconSize));
             iconSize = Math.min(iconSize, Math.min(this.width, this.parent.getTitleBarHeight()));
+            IconRenderData iconData = resolveMaterialIconData(icon, iconSize, iconSize);
+            if (iconData == null) {
+                return;
+            }
             float iconX = this.x + (this.width - iconSize) * 0.5F;
             float iconY = this.y + (this.parent.getTitleBarHeight() - iconSize) * 0.5F;
             RenderSystem.enableBlend();

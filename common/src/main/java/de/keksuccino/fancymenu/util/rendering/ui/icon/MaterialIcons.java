@@ -38,9 +38,9 @@ public final class MaterialIcons {
     public static final float BASE_SIZE = 20.0F;
     public static final int DEFAULT_PIXEL_SIZE = Math.round(BASE_SIZE);
 
-    private static final float SDF_RANGE = 4.0F;
-    private static final int BLUR_THREE_QUARTERS_THRESHOLD = 30;
-    private static final int BLUR_FULL_THRESHOLD = 40;
+    private static final float SDF_RANGE = 3.0F;
+    private static final int BLUR_THREE_QUARTERS_THRESHOLD = 36;
+    private static final int BLUR_FULL_THRESHOLD = 48;
     private static final List<MaterialIcon> ALL_ICONS = new ArrayList<>(4200);
     private static final List<MaterialIcon> ALL_ICONS_VIEW = Collections.unmodifiableList(ALL_ICONS);
     private static final Map<String, MaterialIcon> ICONS_BY_NAME = new HashMap<>();
@@ -3972,6 +3972,7 @@ public final class MaterialIcons {
             dynamicTexture = new DynamicTexture(nativeImage);
             ResourceLocation location = Minecraft.getInstance().getTextureManager().register(buildTextureKey(icon.getName(), sizePx), dynamicTexture);
             icon.assign(cache, location, width, height);
+            applyMaterialIconFilter(location);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to create material icon texture: {} @{}px", icon.getName(), sizePx, ex);
             icon.markFailed(cache);
@@ -3986,6 +3987,20 @@ public final class MaterialIcons {
                 } catch (Exception ignored) {
                 }
             }
+        }
+    }
+
+    private static void applyMaterialIconFilter(@Nonnull ResourceLocation location) {
+        Runnable action = () -> {
+            try {
+                Minecraft.getInstance().getTextureManager().getTexture(location).setFilter(true, false);
+            } catch (Exception ignored) {
+            }
+        };
+        if (RenderSystem.isOnRenderThreadOrInit()) {
+            action.run();
+        } else {
+            RenderSystem.recordRenderCall(action::run);
         }
     }
 

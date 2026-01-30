@@ -11,6 +11,8 @@ import java.util.function.IntSupplier;
 
 public final class MaterialIconTexture implements ITexture {
 
+    public static final int DEFAULT_TEXTURE_SIZE = 96;
+
     @Nonnull
     private final MaterialIcon icon;
     @Nonnull
@@ -22,8 +24,36 @@ public final class MaterialIconTexture implements ITexture {
         this.textureSizeSupplier = Objects.requireNonNull(textureSizeSupplier, "textureSizeSupplier");
     }
 
+    public static int getDefaultTextureSize() {
+        return DEFAULT_TEXTURE_SIZE;
+    }
+
+    @Nonnull
+    public MaterialIcon getIcon() {
+        return this.icon;
+    }
+
     private int getTextureSizePx() {
         return Math.max(1, this.textureSizeSupplier.getAsInt());
+    }
+
+    public int getTextureSizeForUI(float renderWidth, float renderHeight) {
+        return this.icon.getTextureSizeForUI(renderWidth, renderHeight);
+    }
+
+    public int getWidthForUI(float renderWidth, float renderHeight) {
+        int size = getTextureSizeForUI(renderWidth, renderHeight);
+        return this.icon.getWidth(size);
+    }
+
+    public int getHeightForUI(float renderWidth, float renderHeight) {
+        int size = getTextureSizeForUI(renderWidth, renderHeight);
+        return this.icon.getHeight(size);
+    }
+
+    @Nullable
+    public ResourceLocation getResourceLocationForUI(float renderWidth, float renderHeight) {
+        return this.icon.getTextureLocationForUI(renderWidth, renderHeight);
     }
 
     @Override

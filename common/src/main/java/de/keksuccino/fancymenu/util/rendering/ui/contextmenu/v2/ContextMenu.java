@@ -1684,12 +1684,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         @Nullable
         protected IconRenderData resolveIconData() {
             if (this.materialIcon != null) {
-                ResourceLocation location = this.materialIcon.getTextureLocation(UIBase.getUIMaterialIconTextureSizeNormal());
+                float renderSize = ICON_WIDTH_HEIGHT;
+                ResourceLocation location = this.materialIcon.getTextureLocationForUI(renderSize, renderSize);
                 if (location == null) {
                     return null;
                 }
-                int width = this.materialIcon.getWidth(UIBase.getUIMaterialIconTextureSizeNormal());
-                int height = this.materialIcon.getHeight(UIBase.getUIMaterialIconTextureSizeNormal());
+                int iconSize = this.materialIcon.getTextureSizeForUI(renderSize, renderSize);
+                int width = this.materialIcon.getWidth(iconSize);
+                int height = this.materialIcon.getHeight(iconSize);
                 if (width <= 0 || height <= 0) {
                     return null;
                 }
@@ -1814,11 +1816,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Nullable
         protected IconRenderData resolveTooltipIconData() {
-            int iconSize = UIBase.getUIMaterialIconTextureSizeNormal();
-            ResourceLocation location = CONTEXT_MENU_TOOLTIP_ICON.getTextureLocation(iconSize);
+            float renderSize = ICON_WIDTH_HEIGHT;
+            ResourceLocation location = CONTEXT_MENU_TOOLTIP_ICON.getTextureLocationForUI(renderSize, renderSize);
             if (location == null) {
                 return null;
             }
+            int iconSize = CONTEXT_MENU_TOOLTIP_ICON.getTextureSizeForUI(renderSize, renderSize);
             int width = CONTEXT_MENU_TOOLTIP_ICON.getWidth(iconSize);
             int height = CONTEXT_MENU_TOOLTIP_ICON.getHeight(iconSize);
             if (width <= 0 || height <= 0) {
@@ -1847,7 +1850,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 return this.icon;
             }
             if (this.materialIcon != null) {
-                return this.materialIcon.getTextureLocation(UIBase.getUIMaterialIconTextureSizeNormal());
+                float renderSize = ICON_WIDTH_HEIGHT;
+                return this.materialIcon.getTextureLocationForUI(renderSize, renderSize);
             }
             return null;
         }
@@ -2090,11 +2094,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Nullable
         protected IconRenderData resolveSubMenuArrowIconData() {
-            int iconSize = UIBase.getUIMaterialIconTextureSizeNormal();
-            ResourceLocation location = SUB_CONTEXT_MENU_ARROW_ICON.getTextureLocation(iconSize);
+            float renderSize = ICON_WIDTH_HEIGHT;
+            ResourceLocation location = SUB_CONTEXT_MENU_ARROW_ICON.getTextureLocationForUI(renderSize, renderSize);
             if (location == null) {
                 return null;
             }
+            int iconSize = SUB_CONTEXT_MENU_ARROW_ICON.getTextureSizeForUI(renderSize, renderSize);
             int width = SUB_CONTEXT_MENU_ARROW_ICON.getWidth(iconSize);
             int height = SUB_CONTEXT_MENU_ARROW_ICON.getHeight(iconSize);
             if (width <= 0 || height <= 0) {
