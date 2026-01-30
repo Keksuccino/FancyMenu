@@ -27,21 +27,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-
-    //TODO Layer Widget: Scroll korrigieren, wenn group collapse/expand
-
-    //TODO Layer WIdget: Bei Group the right-side icons tauschen (auge ganz außen und collapse innen)
-
-    //TODO Layout menu in Layout Editor reworken, so wie Layout menu in CustomizationOverlay (dann Manage Layouts Screen löschen, da unused)
-
-    //TODO Choose Listener Type Screen -> Alles mit SmoothFont rendern
-
-    //TODO Choose Panorama Screen -> Alles mit SmoothFont rendern
-
-    //TODO Choose Slideshow Screen -> Alles mit SmoothFont rendern
-
-
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final String VERSION = "3.9.0";

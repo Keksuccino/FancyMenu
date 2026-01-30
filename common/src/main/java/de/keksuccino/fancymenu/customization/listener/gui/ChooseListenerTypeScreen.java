@@ -141,15 +141,30 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         RenderSystem.enableBlend();
         
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, this.getGenericTextColor(), false);
+        UIBase.renderText(graphics, titleComp, 20, 20, this.getGenericTextColor());
         
-        graphics.drawString(this.font, Component.translatable("fancymenu.listeners.choose_type.available"), 
-                20, 50, this.getGenericTextColor(), false);
+        float labelTextHeight = UIBase.getUITextHeightNormal();
+        int listenersAreaTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
+        float listenersLabelY = listenersAreaTop - labelTextHeight - UIBase.getAreaLabelVerticalPadding();
+        UIBase.renderText(
+                graphics,
+                Component.translatable("fancymenu.listeners.choose_type.available"),
+                20,
+                listenersLabelY,
+                this.getGenericTextColor()
+        );
         
         Component descLabel = Component.translatable("fancymenu.listeners.choose_type.description");
-        int descLabelWidth = this.font.width(descLabel);
-        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, 
-                this.getGenericTextColor(), false);
+        float descLabelWidth = UIBase.getUITextWidthNormal(descLabel);
+        float descAreaTop = (this.descriptionScrollArea != null) ? this.descriptionScrollArea.getYWithBorder() : (50 + 15);
+        float descLabelY = descAreaTop - labelTextHeight - UIBase.getAreaLabelVerticalPadding();
+        UIBase.renderText(
+                graphics,
+                descLabel,
+                this.width - 20 - descLabelWidth,
+                descLabelY,
+                this.getGenericTextColor()
+        );
 
         this.performInitialWidgetFocusActionInRender();
     }

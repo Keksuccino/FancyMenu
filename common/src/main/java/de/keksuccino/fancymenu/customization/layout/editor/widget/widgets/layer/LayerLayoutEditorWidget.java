@@ -597,6 +597,41 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
     }
 
+    private void fillClippedToRoundedBottomSmooth(@NotNull GuiGraphics graphics, float x, float y, float width, float height, int color) {
+        if (width <= 0.0F || height <= 0.0F) {
+            return;
+        }
+        float innerX = this.scrollArea.getInnerX();
+        float innerY = this.scrollArea.getInnerY();
+        float innerWidth = this.scrollArea.getInnerWidth();
+        float innerHeight = this.scrollArea.getInnerHeight();
+        float left = Math.max(x, innerX);
+        float right = Math.min(x + width, innerX + innerWidth);
+        if (right <= left) {
+            return;
+        }
+        float top = y;
+        float bottom = y + height;
+        if (!this.scrollArea.isRoundedStyle()) {
+            UIBase.fillF(graphics, left, top, right, bottom, color);
+            return;
+        }
+        float radius = this.resolveScrollAreaBottomRadius();
+        if (radius <= 0.0F) {
+            UIBase.fillF(graphics, left, top, right, bottom, color);
+            return;
+        }
+        float areaBottom = innerY + innerHeight;
+        float roundingStart = areaBottom - radius;
+        if (bottom <= roundingStart) {
+            UIBase.fillF(graphics, left, top, right, bottom, color);
+            return;
+        }
+        graphics.enableScissor((int) Math.floor(left), (int) Math.floor(top), (int) Math.ceil(right), (int) Math.ceil(bottom));
+        SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, innerX, innerY, innerWidth, innerHeight, radius, color, 1.0F);
+        graphics.disableScissor();
+    }
+
     /**
      * Completes the drag operation by moving the dragged elements to the new position.
      */
@@ -1190,7 +1225,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             RenderSystem.enableBlend();
 
             if (this.element.isSelected() || this.element.isMultiSelected()) {
-                this.layerWidget.fillClippedToRoundedBottom(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
+                this.layerWidget.fillClippedToRoundedBottomSmooth(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
                 graphics.flush();
             }
 
@@ -1416,9 +1451,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.collapseButtonHovered = this.isCollapseButtonMouseOver(mouseX, mouseY);
 
             if (this.isGroupFullySelected()) {
-                this.layerWidget.fillClippedToRoundedBottom(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
+                this.layerWidget.fillClippedToRoundedBottomSmooth(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
             } else if (this.isMouseOver(mouseX, mouseY)) {
-                this.layerWidget.fillClippedToRoundedBottom(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
+                this.layerWidget.fillClippedToRoundedBottomSmooth(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
             }
 
             float groupIconSize = getIconSize(this.getGroupIconWidth(), this.getGroupIconHeight(), LAYER_ENTRY_ICON_PADDING);

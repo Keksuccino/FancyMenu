@@ -92,22 +92,29 @@ public class ChoosePanoramaScreen extends PiPWindowBody {
 
         RenderSystem.enableBlend();
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.panorama.choose.available_panoramas"), 20, 50, getGenericTextColor(), false);
+        float listAreaX = 20.0F;
+        float listLabelY = 50.0F;
+        float labelHeight = UIBase.getUITextHeightNormal();
+        float labelPadding = UIBase.getAreaLabelVerticalPadding();
+        float listAreaY = listLabelY + labelHeight + labelPadding;
+        UIBase.renderText(graphics, Component.translatable("fancymenu.panorama.choose.available_panoramas"), listAreaX, listLabelY, getGenericTextColor());
 
         this.panoramaListScrollArea.setWidth(((float) this.width / 2) - 40, true);
         this.panoramaListScrollArea.setHeight(this.height - 85, true);
-        this.panoramaListScrollArea.setX(20, true);
-        this.panoramaListScrollArea.setY(50 + 15, true);
+        this.panoramaListScrollArea.setX(listAreaX, true);
+        this.panoramaListScrollArea.setY(listAreaY, true);
 
         if (this.selectedPanorama != null) {
             Component previewLabel = Component.translatable("fancymenu.panorama.choose.preview");
-            int previewLabelWidth = this.font.width(previewLabel);
-            graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, getGenericTextColor(), false);
+            float previewLabelWidth = UIBase.getUITextWidthNormal(previewLabel);
+            float previewLabelX = this.width - 20 - previewLabelWidth;
+            float previewLabelY = listAreaY - labelHeight - labelPadding;
+            UIBase.renderText(graphics, previewLabel, previewLabelX, previewLabelY, getGenericTextColor());
 
             int previewW = (this.width / 2) - 40;
             int previewH = this.height / 2;
             int previewX = this.width - 20 - previewW;
-            int previewY = 50 + 15;
+            int previewY = (int) listAreaY;
             graphics.fill(previewX, previewY, previewX + previewW, previewY + previewH, getAreaBackgroundColor());
             this.selectedPanorama.renderInArea(graphics, previewX, previewY, previewW, previewH, partial);
             UIBase.renderBorder(graphics, previewX, previewY, previewX + previewW, previewY + previewH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);

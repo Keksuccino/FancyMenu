@@ -93,17 +93,24 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
 
         RenderSystem.enableBlend();
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), 20, 50, getGenericTextColor(), false);
+        float listAreaX = 20.0F;
+        float listLabelY = 50.0F;
+        float labelHeight = UIBase.getUITextHeightNormal();
+        float labelPadding = UIBase.getAreaLabelVerticalPadding();
+        float listAreaY = listLabelY + labelHeight + labelPadding;
+        UIBase.renderText(graphics, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), listAreaX, listLabelY, getGenericTextColor());
 
         this.slideshowListScrollArea.setWidth(((float) this.width / 2) - 40, true);
         this.slideshowListScrollArea.setHeight(this.height - 85, true);
-        this.slideshowListScrollArea.setX(20, true);
-        this.slideshowListScrollArea.setY(50 + 15, true);
+        this.slideshowListScrollArea.setX(listAreaX, true);
+        this.slideshowListScrollArea.setY(listAreaY, true);
 
         if (this.selectedSlideshow != null) {
             Component previewLabel = Component.translatable("fancymenu.slideshow.choose.preview");
-            int previewLabelWidth = this.font.width(previewLabel);
-            graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, getGenericTextColor(), false);
+            float previewLabelWidth = UIBase.getUITextWidthNormal(previewLabel);
+            float previewLabelX = this.width - 20 - previewLabelWidth;
+            float previewLabelY = listAreaY - labelHeight - labelPadding;
+            UIBase.renderText(graphics, previewLabel, previewLabelX, previewLabelY, getGenericTextColor());
 
             int slideW = (this.width / 2) - 40;
             int slideH = this.height / 2;
@@ -112,7 +119,7 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
             slideW = size[0];
             slideH = size[1];
             int slideX = this.width - 20 - slideW;
-            int slideY = 50 + 15;
+            int slideY = (int) listAreaY;
             graphics.fill(slideX, slideY, slideX + slideW, slideY + slideH, getAreaBackgroundColor());
             this.selectedSlideshow.x = slideX;
             this.selectedSlideshow.y = slideY;
