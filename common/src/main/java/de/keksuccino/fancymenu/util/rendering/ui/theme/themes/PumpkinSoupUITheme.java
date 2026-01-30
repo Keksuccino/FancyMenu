@@ -13,6 +13,7 @@ public class PumpkinSoupUITheme extends UITheme {
 
         allow_blur = true;
 
+        ui_blur_icon_button_hover_color = DrawableColor.of(new Color(60, 45, 36, 13));
         ui_blur_icon_texture_color = DrawableColor.of(new Color(60, 45, 36));
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(250, 244, 236, 185));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(210, 192, 175, 160));
@@ -39,6 +40,7 @@ public class PumpkinSoupUITheme extends UITheme {
         ui_blur_interface_generic_text_color = DrawableColor.of(new Color(60, 45, 36));
         ui_blur_tooltip_background_tint = DrawableColor.of(new Color(255, 249, 242, 220));
 
+        ui_icon_button_hover_color = DrawableColor.of(new Color(60, 45, 36, 13));
         ui_icon_texture_color = DrawableColor.of(new Color(60, 45, 36));
         ui_overlay_background_color = DrawableColor.of(new Color(245, 238, 229));
         ui_overlay_border_color = DrawableColor.of(new Color(208, 190, 174));

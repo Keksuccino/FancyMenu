@@ -432,6 +432,15 @@ public class UIBase extends RenderingUtils {
         SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, x, y, width, height, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius, color, 1.0F);
     }
 
+    public static void renderIconButtonHoverBackground(@NotNull GuiGraphics graphics, float x, float y, float width, float height) {
+        if (width <= 0.0F || height <= 0.0F) return;
+        float radius = getWidgetCornerRoundingRadius();
+        int color = UIBlur.shouldBlur()
+                ? getUITheme().ui_blur_icon_button_hover_color.getColorInt()
+                : getUITheme().ui_icon_button_hover_color.getColorInt();
+        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, x, y, width, height, radius, radius, radius, radius, color, 1.0F);
+    }
+
     public static void renderRoundedBorder(@NotNull GuiGraphics graphics, float xMin, float yMin, float xMax, float yMax, float borderThickness, float innerTopLeftRadius, float innerTopRightRadius, float innerBottomRightRadius, float innerBottomLeftRadius, int borderColor) {
         float width = xMax - xMin;
         float height = yMax - yMin;

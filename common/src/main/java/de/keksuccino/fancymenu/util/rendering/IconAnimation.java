@@ -69,6 +69,9 @@ public final class IconAnimation {
         @NotNull
         private final IconAnimation animation;
         private long startMs = -1L;
+        private boolean looping = false;
+        private float loopDelayMs = 0.0F;
+        private int loopCount = 0;
 
         private Instance(@NotNull IconAnimation animation) {
             this.animation = animation;
@@ -87,7 +90,15 @@ public final class IconAnimation {
                 return false;
             }
             float elapsedMs = (float) (Util.getMillis() - this.startMs);
-            if (elapsedMs >= this.animation.durationMs) {
+            if (!this.looping) {
+                if (elapsedMs >= this.animation.durationMs) {
+                    this.startMs = -1L;
+                    return false;
+                }
+                return true;
+            }
+            float lastPlayEnd = getLastPlayEndMs();
+            if (lastPlayEnd > 0.0F && elapsedMs >= lastPlayEnd) {
                 this.startMs = -1L;
                 return false;
             }
@@ -100,11 +111,27 @@ public final class IconAnimation {
                 return Offset.ZERO;
             }
             float elapsedMs = (float) (Util.getMillis() - this.startMs);
-            Offset offset = this.animation.getOffset(elapsedMs);
-            if (elapsedMs >= this.animation.durationMs) {
-                this.startMs = -1L;
+            if (!this.looping) {
+                Offset offset = this.animation.getOffset(elapsedMs);
+                if (elapsedMs >= this.animation.durationMs) {
+                    this.startMs = -1L;
+                }
+                return offset;
             }
-            return offset;
+            float lastPlayEnd = getLastPlayEndMs();
+            if (lastPlayEnd > 0.0F && elapsedMs >= lastPlayEnd) {
+                this.startMs = -1L;
+                return Offset.ZERO;
+            }
+            float cycleDuration = this.animation.durationMs + this.loopDelayMs;
+            if (cycleDuration <= 0.0F) {
+                return Offset.ZERO;
+            }
+            float timeInCycle = elapsedMs % cycleDuration;
+            if (timeInCycle >= this.animation.durationMs) {
+                return Offset.ZERO;
+            }
+            return this.animation.getOffset(timeInCycle);
         }
 
         public float getOffsetX() {
@@ -128,8 +155,34 @@ public final class IconAnimation {
         }
 
         @NotNull
+        public Instance setLooping(boolean looping) {
+            this.looping = looping;
+            return this;
+        }
+
+        @NotNull
+        public Instance setLoopDelayMs(float loopDelayMs) {
+            this.loopDelayMs = Math.max(0.0F, loopDelayMs);
+            return this;
+        }
+
+        @NotNull
+        public Instance setLoopCount(int loopCount) {
+            this.loopCount = loopCount;
+            return this;
+        }
+
+        @NotNull
         public IconAnimation getAnimation() {
             return this.animation;
+        }
+
+        private float getLastPlayEndMs() {
+            if (this.loopCount <= 0) {
+                return -1.0F;
+            }
+            float cycleDuration = this.animation.durationMs + this.loopDelayMs;
+            return ((this.loopCount - 1) * cycleDuration) + this.animation.durationMs;
         }
     }
 

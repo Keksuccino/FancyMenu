@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -25,7 +26,8 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
-    private static final int LIST_ENTRY_VERTICAL_PADDING = 1;
+    private static final int LIST_ENTRY_TOP_DOWN_BORDER = 1;
+    private static final int LIST_ENTRY_OUTER_PADDING = 3;
     private static final int LIST_TOP_SPACER_HEIGHT = 5;
 
     protected Consumer<String> callback;
@@ -161,7 +163,10 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
         this.slideshowListScrollArea.clearEntries();
         CellScreen.SpacerScrollAreaEntry spacer = new CellScreen.SpacerScrollAreaEntry(this.slideshowListScrollArea, LIST_TOP_SPACER_HEIGHT);
         spacer.setSelectable(false);
-        spacer.setClickable(false);
+        spacer.selectOnClick = false;
+        spacer.setPlayClickSound(false);
+        spacer.setBackgroundColorNormal(() -> DrawableColor.FULLY_TRANSPARENT);
+        spacer.setBackgroundColorHover(() -> DrawableColor.FULLY_TRANSPARENT);
         this.slideshowListScrollArea.addEntry(spacer);
         boolean addedAny = false;
         for (String s : SlideshowHandler.getSlideshowNames()) {
@@ -221,7 +226,9 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
     }
 
     private int getListEntryHeight() {
-        return (int)(UIBase.getUITextHeightNormal() + (LIST_ENTRY_VERTICAL_PADDING * 2));
+        return (int)(UIBase.getUITextHeightNormal()
+                + (LIST_ENTRY_TOP_DOWN_BORDER * 2)
+                + (LIST_ENTRY_OUTER_PADDING * 2));
     }
 
     public static @NotNull PiPWindow openInWindow(@NotNull ChooseSlideshowScreen screen, @Nullable PiPWindow parentWindow) {

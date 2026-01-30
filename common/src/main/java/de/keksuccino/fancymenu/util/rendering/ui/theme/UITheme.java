@@ -19,6 +19,7 @@ public class UITheme {
     public float interface_corner_rounding_radius = 6.0f;
     public float widget_corner_rounding_radius = 6.0f; // old was 4.0f
 
+    public DrawableColor ui_blur_icon_button_hover_color = DrawableColor.of(new Color(255, 255, 255, 13));
     public DrawableColor ui_blur_icon_texture_color = DrawableColor.of(new Color(255, 255, 255));
     public DrawableColor ui_blur_overlay_background_tint = DrawableColor.of(new Color(38, 38, 38, 174));
     public DrawableColor ui_blur_overlay_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
@@ -45,6 +46,7 @@ public class UITheme {
     public DrawableColor ui_blur_interface_generic_text_color = DrawableColor.of(new Color(255, 255, 255));
     public DrawableColor ui_blur_tooltip_background_tint = DrawableColor.of(new Color(19, 19, 19, 169));
 
+    public DrawableColor ui_icon_button_hover_color = DrawableColor.of(new Color(255, 255, 255, 13));
     public DrawableColor ui_icon_texture_color = DrawableColor.of(new Color(255, 255, 255));
     public DrawableColor ui_overlay_background_color = DrawableColor.of(new Color(40, 40, 40));
     public DrawableColor ui_overlay_border_color = DrawableColor.of(new Color(62, 64, 66));

@@ -13,6 +13,7 @@ public class CozyCampfireUITheme extends UITheme {
 
         allow_blur = true;
 
+        ui_blur_icon_button_hover_color = DrawableColor.of(new Color(242, 229, 208, 13));
         ui_blur_icon_texture_color = DrawableColor.of(new Color(242, 229, 208));
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(24, 19, 16, 185));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(92, 78, 66, 160));
@@ -39,6 +40,7 @@ public class CozyCampfireUITheme extends UITheme {
         ui_blur_interface_generic_text_color = DrawableColor.of(new Color(242, 229, 208));
         ui_blur_tooltip_background_tint = DrawableColor.of(new Color(28, 22, 16, 220));
 
+        ui_icon_button_hover_color = DrawableColor.of(new Color(242, 229, 208, 13));
         ui_icon_texture_color = DrawableColor.of(new Color(242, 229, 208));
         ui_overlay_background_color = DrawableColor.of(new Color(26, 20, 16));
         ui_overlay_border_color = DrawableColor.of(new Color(86, 74, 64));

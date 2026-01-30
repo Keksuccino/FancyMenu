@@ -13,6 +13,7 @@ public class SpookySeasonUITheme extends UITheme {
 
         allow_blur = true;
 
+        ui_blur_icon_button_hover_color = DrawableColor.of(new Color(242, 231, 217, 13));
         ui_blur_icon_texture_color = DrawableColor.of(new Color(242, 231, 217));
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(16, 13, 20, 185));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(78, 70, 86, 160));
@@ -39,6 +40,7 @@ public class SpookySeasonUITheme extends UITheme {
         ui_blur_interface_generic_text_color = DrawableColor.of(new Color(242, 231, 217));
         ui_blur_tooltip_background_tint = DrawableColor.of(new Color(20, 16, 25, 220));
 
+        ui_icon_button_hover_color = DrawableColor.of(new Color(242, 231, 217, 13));
         ui_icon_texture_color = DrawableColor.of(new Color(242, 231, 217));
         ui_overlay_background_color = DrawableColor.of(new Color(23, 19, 28));
         ui_overlay_border_color = DrawableColor.of(new Color(72, 65, 82));

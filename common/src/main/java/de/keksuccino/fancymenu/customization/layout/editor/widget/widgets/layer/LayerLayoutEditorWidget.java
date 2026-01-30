@@ -1224,7 +1224,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
             RenderSystem.enableBlend();
 
-            if (this.element.isSelected() || this.element.isMultiSelected()) {
+            if (this.element.isSelected() || this.element.isMultiSelected() || this.isHovered()) {
                 this.layerWidget.fillClippedToRoundedBottomSmooth(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
                 graphics.flush();
             }

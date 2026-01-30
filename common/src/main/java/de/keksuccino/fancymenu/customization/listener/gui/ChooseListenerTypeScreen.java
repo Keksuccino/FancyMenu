@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.listener.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
@@ -29,7 +30,8 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
-    private static final int LIST_ENTRY_VERTICAL_PADDING = 1;
+    private static final int LIST_ENTRY_TOP_DOWN_BORDER = 1;
+    private static final int LIST_ENTRY_OUTER_PADDING = 3;
     private static final int LIST_TOP_SPACER_HEIGHT = 5;
 
     @NotNull
@@ -180,7 +182,10 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         this.listenersScrollArea.clearEntries();
         CellScreen.SpacerScrollAreaEntry spacer = new CellScreen.SpacerScrollAreaEntry(this.listenersScrollArea, LIST_TOP_SPACER_HEIGHT);
         spacer.setSelectable(false);
-        spacer.setClickable(false);
+        spacer.selectOnClick = false;
+        spacer.setPlayClickSound(false);
+        spacer.setBackgroundColorNormal(() -> DrawableColor.FULLY_TRANSPARENT);
+        spacer.setBackgroundColorHover(() -> DrawableColor.FULLY_TRANSPARENT);
         this.listenersScrollArea.addEntry(spacer);
         
         for (AbstractListener listener : ListenerRegistry.getListeners()) {
@@ -308,7 +313,9 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
     }
 
     private int getListEntryHeight() {
-        return (int)(UIBase.getUITextHeightNormal() + (LIST_ENTRY_VERTICAL_PADDING * 2));
+        return (int)(UIBase.getUITextHeightNormal()
+                + (LIST_ENTRY_TOP_DOWN_BORDER * 2)
+                + (LIST_ENTRY_OUTER_PADDING * 2));
     }
 
     public static @NotNull PiPWindow openInWindow(@NotNull ChooseListenerTypeScreen screen, @Nullable PiPWindow parentWindow) {

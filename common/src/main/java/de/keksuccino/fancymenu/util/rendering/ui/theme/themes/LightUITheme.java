@@ -13,6 +13,7 @@ public class LightUITheme extends UITheme {
 
         allow_blur = true;
 
+        ui_blur_icon_button_hover_color = DrawableColor.of(new Color(44, 49, 58, 13));
         ui_blur_icon_texture_color = DrawableColor.of(new Color(44, 49, 58));
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(248, 250, 253, 180));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(206, 212, 221, 150));
@@ -39,6 +40,7 @@ public class LightUITheme extends UITheme {
         ui_blur_interface_generic_text_color = DrawableColor.of(new Color(44, 49, 58));
         ui_blur_tooltip_background_tint = DrawableColor.of(new Color(255, 255, 255, 220));
 
+        ui_icon_button_hover_color = DrawableColor.of(new Color(54, 60, 69, 13));
         ui_icon_texture_color = DrawableColor.of(new Color(54, 60, 69));
         ui_overlay_background_color = DrawableColor.of(new Color(242, 244, 247));
         ui_overlay_border_color = DrawableColor.of(new Color(210, 216, 224));
@@ -141,4 +143,3 @@ public class LightUITheme extends UITheme {
     }
 
 }
-

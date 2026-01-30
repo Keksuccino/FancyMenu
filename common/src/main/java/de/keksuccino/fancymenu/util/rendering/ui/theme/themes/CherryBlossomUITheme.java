@@ -13,6 +13,7 @@ public class CherryBlossomUITheme extends UITheme {
 
         allow_blur = true;
 
+        ui_blur_icon_button_hover_color = DrawableColor.of(new Color(57, 50, 61, 13));
         ui_blur_icon_texture_color = DrawableColor.of(new Color(57, 50, 61));
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(250, 244, 248, 185));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(221, 207, 218, 160));
@@ -39,6 +40,7 @@ public class CherryBlossomUITheme extends UITheme {
         ui_blur_interface_generic_text_color = DrawableColor.of(new Color(57, 50, 61));
         ui_blur_tooltip_background_tint = DrawableColor.of(new Color(255, 250, 253, 220));
 
+        ui_icon_button_hover_color = DrawableColor.of(new Color(62, 55, 67, 13));
         ui_icon_texture_color = DrawableColor.of(new Color(62, 55, 67));
         ui_overlay_background_color = DrawableColor.of(new Color(245, 239, 243));
         ui_overlay_border_color = DrawableColor.of(new Color(217, 205, 215));

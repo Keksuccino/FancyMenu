@@ -16,6 +16,7 @@ public class DarkHighContrastUITheme extends UITheme {
         interface_corner_rounding_radius = 0.0f;
         widget_corner_rounding_radius = 0.0f;
 
+        ui_blur_icon_button_hover_color = DrawableColor.of(new Color(255, 255, 255, 13));
         ui_blur_icon_texture_color = DrawableColor.of(new Color(255, 255, 255));
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(0, 0, 0, 220));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(255, 255, 255, 220));
@@ -42,6 +43,7 @@ public class DarkHighContrastUITheme extends UITheme {
         ui_blur_interface_generic_text_color = DrawableColor.of(new Color(255, 255, 255));
         ui_blur_tooltip_background_tint = DrawableColor.of(new Color(0, 0, 0, 230));
 
+        ui_icon_button_hover_color = DrawableColor.of(new Color(255, 255, 255, 13));
         ui_icon_texture_color = DrawableColor.of(new Color(255, 255, 255));
         ui_overlay_background_color = DrawableColor.of(new Color(0, 0, 0));
         ui_overlay_border_color = DrawableColor.of(new Color(255, 255, 255));
