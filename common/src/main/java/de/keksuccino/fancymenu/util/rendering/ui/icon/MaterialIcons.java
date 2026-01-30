@@ -38,9 +38,8 @@ public final class MaterialIcons {
     public static final float BASE_SIZE = 20.0F;
     public static final int DEFAULT_PIXEL_SIZE = Math.round(BASE_SIZE);
 
-    private static final float SDF_RANGE = 3.0F;
-    private static final int BLUR_THREE_QUARTERS_THRESHOLD = 36;
-    private static final int BLUR_FULL_THRESHOLD = 48;
+    private static final float SDF_RANGE_MIN = 2.0F;
+    private static final float SDF_RANGE_MAX = 4.0F;
     private static final List<MaterialIcon> ALL_ICONS = new ArrayList<>(4200);
     private static final List<MaterialIcon> ALL_ICONS_VIEW = Collections.unmodifiableList(ALL_ICONS);
     private static final Map<String, MaterialIcon> ICONS_BY_NAME = new HashMap<>();
@@ -3956,15 +3955,19 @@ public final class MaterialIcons {
         }
 
         float sdfRange = resolveSdfRange(sizePx);
-        int padding = 0;
-        int width = (int)Math.ceil(bounds.getWidth());
-        int height = (int)Math.ceil(bounds.getHeight());
+        int padding = resolveBlurPadding(sdfRange);
+        double minX = Math.floor(bounds.getX()) - padding;
+        double minY = Math.floor(bounds.getY()) - padding;
+        double maxX = Math.ceil(bounds.getMaxX()) + padding;
+        double maxY = Math.ceil(bounds.getMaxY()) + padding;
+        int width = (int)Math.ceil(maxX - minX);
+        int height = (int)Math.ceil(maxY - minY);
         if (width <= 0 || height <= 0) {
             icon.markFailed(cache);
             return;
         }
 
-        BufferedImage image = renderGlyph(glyphVector, bounds, width, height, padding, sdfRange);
+        BufferedImage image = renderGlyph(glyphVector, minX, minY, width, height, sdfRange);
         NativeImage nativeImage = null;
         DynamicTexture dynamicTexture = null;
         try {
@@ -4074,16 +4077,31 @@ public final class MaterialIcons {
 
     private static float resolveSdfRange(int sizePx) {
         int normalizedSize = normalizeSize(sizePx);
-        if (normalizedSize >= BLUR_FULL_THRESHOLD) {
-            return SDF_RANGE;
+        if (normalizedSize <= 32) {
+            return SDF_RANGE_MAX;
         }
-        if (normalizedSize >= BLUR_THREE_QUARTERS_THRESHOLD) {
-            return SDF_RANGE * 0.75F;
+        if (normalizedSize <= 48) {
+            return 3.5F;
         }
-        return SDF_RANGE * 0.5F;
+        if (normalizedSize <= 64) {
+            return 3.0F;
+        }
+        if (normalizedSize <= 96) {
+            return 2.6F;
+        }
+        if (normalizedSize <= 128) {
+            return 2.3F;
+        }
+        return SDF_RANGE_MIN;
     }
 
-    private static BufferedImage renderGlyph(@Nonnull GlyphVector glyphVector, @Nonnull Rectangle2D bounds, int width, int height, int padding, float sdfRange) {
+    private static int resolveBlurPadding(float sdfRange) {
+        float sigma = sdfRange / 4.0F;
+        int radius = (int) Math.ceil(sigma * 3.0F);
+        return Math.max(1, Math.min(6, radius + 1));
+    }
+
+    private static BufferedImage renderGlyph(@Nonnull GlyphVector glyphVector, double minX, double minY, int width, int height, float sdfRange) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
         graphics.setComposite(AlphaComposite.Clear);
@@ -4099,7 +4117,7 @@ public final class MaterialIcons {
         graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         graphics.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
 
-        graphics.translate(padding - bounds.getX(), padding - bounds.getY());
+        graphics.translate(-minX, -minY);
         graphics.drawGlyphVector(glyphVector, 0, 0);
         graphics.dispose();
 
