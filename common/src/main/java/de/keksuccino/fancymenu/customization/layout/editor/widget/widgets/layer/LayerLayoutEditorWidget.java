@@ -515,6 +515,88 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         return movingElements;
     }
 
+    private float resolveScrollAreaBottomRadius() {
+        float radius = UIBase.getInterfaceCornerRoundingRadius();
+        if (radius <= 0.0F) {
+            return 0.0F;
+        }
+        float innerWidth = this.scrollArea.getInnerWidth();
+        float innerHeight = this.scrollArea.getInnerHeight();
+        float maxRadius = Math.min(innerWidth, innerHeight) * 0.5F;
+        if (maxRadius <= 0.0F) {
+            return 0.0F;
+        }
+        return Math.min(radius, maxRadius);
+    }
+
+    private float getBottomCornerInset(float y, float areaBottom, float radius) {
+        float roundingStart = areaBottom - radius;
+        if (y <= roundingStart) {
+            return 0.0F;
+        }
+        float dy = y - roundingStart;
+        if (dy >= radius) {
+            return radius;
+        }
+        float inside = (radius * radius) - (dy * dy);
+        if (inside <= 0.0F) {
+            return radius;
+        }
+        return radius - (float) Math.sqrt(inside);
+    }
+
+    private void fillClippedToRoundedBottom(@NotNull GuiGraphics graphics, float x, float y, float width, float height, int color) {
+        if (width <= 0.0F || height <= 0.0F) {
+            return;
+        }
+        float innerX = this.scrollArea.getInnerX();
+        float innerY = this.scrollArea.getInnerY();
+        float innerWidth = this.scrollArea.getInnerWidth();
+        float innerHeight = this.scrollArea.getInnerHeight();
+        float left = Math.max(x, innerX);
+        float right = Math.min(x + width, innerX + innerWidth);
+        if (right <= left) {
+            return;
+        }
+        if (!this.scrollArea.isRoundedStyle()) {
+            UIBase.fillF(graphics, left, y, right, y + height, color);
+            return;
+        }
+        float radius = this.resolveScrollAreaBottomRadius();
+        if (radius <= 0.0F) {
+            UIBase.fillF(graphics, left, y, right, y + height, color);
+            return;
+        }
+        float areaBottom = innerY + innerHeight;
+        float roundingStart = areaBottom - radius;
+        float fullTop = y;
+        float fullBottom = Math.min(y + height, roundingStart);
+        if (fullBottom > fullTop) {
+            UIBase.fillF(graphics, left, fullTop, right, fullBottom, color);
+        }
+        float roundedTop = Math.max(y, roundingStart);
+        float roundedBottom = y + height;
+        if (roundedBottom <= roundedTop) {
+            return;
+        }
+        int yStart = (int) Math.floor(roundedTop);
+        int yEnd = (int) Math.ceil(roundedBottom);
+        for (int yi = yStart; yi < yEnd; yi++) {
+            float lineTop = Math.max(roundedTop, yi);
+            float lineBottom = Math.min(roundedBottom, yi + 1.0F);
+            if (lineBottom <= lineTop) {
+                continue;
+            }
+            float lineCenter = (lineTop + lineBottom) * 0.5F;
+            float inset = this.getBottomCornerInset(lineCenter, areaBottom, radius);
+            float lineLeft = left + inset;
+            float lineRight = right - inset;
+            if (lineRight > lineLeft) {
+                UIBase.fillF(graphics, lineLeft, lineTop, lineRight, lineBottom, color);
+            }
+        }
+    }
+
     /**
      * Completes the drag operation by moving the dragged elements to the new position.
      */
@@ -1108,7 +1190,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             RenderSystem.enableBlend();
 
             if (this.element.isSelected() || this.element.isMultiSelected()) {
-                UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
+                this.layerWidget.fillClippedToRoundedBottom(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
                 graphics.flush();
             }
 
@@ -1334,9 +1416,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.collapseButtonHovered = this.isCollapseButtonMouseOver(mouseX, mouseY);
 
             if (this.isGroupFullySelected()) {
-                UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
+                this.layerWidget.fillClippedToRoundedBottom(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
             } else if (this.isMouseOver(mouseX, mouseY)) {
-                UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getElementHoverColor().getColorInt());
+                this.layerWidget.fillClippedToRoundedBottom(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
             }
 
             float groupIconSize = getIconSize(this.getGroupIconWidth(), this.getGroupIconHeight(), LAYER_ENTRY_ICON_PADDING);
@@ -1653,7 +1735,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             RenderSystem.enableBlend();
-            UIBase.fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), getBorderColor().getColorInt());
+            LayerLayoutEditorWidget.this.fillClippedToRoundedBottom(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getBorderColor().getColorInt());
         }
 
         @Override

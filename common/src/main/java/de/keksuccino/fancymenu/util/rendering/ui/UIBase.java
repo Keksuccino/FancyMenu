@@ -34,29 +34,55 @@ public class UIBase extends RenderingUtils {
     public static final int HORIZONTAL_SCROLL_BAR_WIDTH = 40;
     public static final int HORIZONTAL_SCROLL_BAR_HEIGHT = 5;
 
-    private static final int MATERIAL_ICON_SIZE_SMALL = 50;
-    private static final int MATERIAL_ICON_SIZE_NORMAL = 100;
-    private static final int MATERIAL_ICON_SIZE_LARGE = 200;
-    private static final int MATERIAL_ICON_SIZE_CORRECTION_FOR_BIG_ICONS = 100;
-    private static final int MATERIAL_ICON_SIZE_CORRECTION_FOR_MEDIUM_ICONS = 50;
-
-    public static boolean shouldPlayAnimations() {
-        if (!getUITheme().allow_animations) return false;
-        return FancyMenu.getOptions().enableUiAnimations.getValue();
+    /**
+     * Retrieves the currently active UI color theme for FancyMenu.
+     *
+     * @return active {@link UITheme}
+     */
+    @NotNull
+    public static UITheme getUITheme() {
+        return UIColorThemeRegistry.getActiveTheme();
     }
 
-    public static int getUIMaterialIconTextureSizeNormal() {
-        if (getUIScale() < 2) return MATERIAL_ICON_SIZE_SMALL;
-        if (getUIScale() < 3) return MATERIAL_ICON_SIZE_NORMAL;
-        return MATERIAL_ICON_SIZE_LARGE;
+    /**
+     * Returns the logical UI scale used for FancyMenu's UI elements, after applying
+     * automatic adjustments (4K auto scale and Unicode font enforcement).
+     */
+    public static float getUIScale() {
+        float uiScale = FancyMenu.getOptions().uiScale.getValue();
+        //Handle "Auto" scale (set scale to 2 if window bigger than 3000x1700 to show 1080p and 2K screens on scale 1 and 4K on scale 2)
+        if (uiScale == 4F) {
+            uiScale = 1.5F;
+            if ((Minecraft.getInstance().getWindow().getWidth() > 3000) || (Minecraft.getInstance().getWindow().getHeight() > 1700)) {
+                uiScale = 2F;
+            }
+        }
+        //Force a scale of 2 or bigger if Unicode font is enabled
+        if (shouldUseMinecraftFontForUIRendering() && Minecraft.getInstance().isEnforceUnicode() && (uiScale < 2F)) {
+            uiScale = 2F;
+        }
+        return uiScale;
     }
 
-    public static int getUIMaterialIconTextureSizeBig() {
-        return getUIMaterialIconTextureSizeNormal() + MATERIAL_ICON_SIZE_CORRECTION_FOR_BIG_ICONS;
+    /**
+     * Returns the current FancyMenu UI scale corrected for the game's GUI scale,
+     * ready to be used directly for rendering in window pixel space.
+     */
+    public static float getFixedUIScale() {
+        return calculateFixedScale(getUIScale());
     }
 
-    public static int getUIMaterialIconTextureSizeMedium() {
-        return getUIMaterialIconTextureSizeNormal() + MATERIAL_ICON_SIZE_CORRECTION_FOR_MEDIUM_ICONS;
+    /**
+     * Converts a logical FancyMenu UI scale to a render-ready scale by compensating
+     * for the current Minecraft GUI scale.
+     *
+     * @param fixedScale logical FancyMenu UI scale (typically from user options)
+     * @return render-scale multiplier that aligns with window pixels
+     */
+    public static float calculateFixedScale(float fixedScale) {
+        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        if (guiScale == 0.0D) return fixedScale; // fallback to avoid divide-by-zero
+        return fixedScale / (float) guiScale;
     }
 
     @NotNull
@@ -201,134 +227,35 @@ public class UIBase extends RenderingUtils {
         return width;
     }
 
-    /**
-     * Line-wraps UI components at the given width using the normal UI font size.
-     */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull List<C> lines, float maxWidth) {
-        return lineWrapUIComponentsNormal(lines, maxWidth, true);
+    public static float getWidgetCornerRoundingRadius() {
+        return getUITheme().widget_corner_rounding_radius;
     }
 
     /**
-     * Line-wraps UI components at the given width using the normal UI font size.
+     * Default corner radius for UI interfaces.
      */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
-        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
+    public static float getInterfaceCornerRoundingRadius() {
+        return getUITheme().interface_corner_rounding_radius;
     }
 
     /**
-     * Line-wraps a UI component at the given width using the normal UI font size.
+     * Blur strength applied to supported UI surfaces.
      */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull C lines, float maxWidth) {
-        return lineWrapUIComponentsNormal(lines, maxWidth, true);
+    public static float getBlurRadius() {
+        return 4.0F;
     }
 
     /**
-     * Line-wraps a UI component at the given width using the normal UI font size.
+     * Whether UI blur is currently enabled in FancyMenu options.
      */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull C lines, float maxWidth, boolean forUIScale) {
-        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
+    public static boolean shouldBlur() {
+        if (!getUITheme().allow_blur) return false;
+        return FancyMenu.getOptions().enableUiBlur.getValue();
     }
 
-    /**
-     * Line-wraps UI components at the given width using the small UI font size.
-     */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull List<C> lines, float maxWidth) {
-        return lineWrapUIComponentsSmall(lines, maxWidth, true);
-    }
-
-    /**
-     * Line-wraps UI components at the given width using the small UI font size.
-     */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
-        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
-    }
-
-    /**
-     * Line-wraps a UI component at the given width using the small UI font size.
-     */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull C lines, float maxWidth) {
-        return lineWrapUIComponentsSmall(lines, maxWidth, true);
-    }
-
-    /**
-     * Line-wraps a UI component at the given width using the small UI font size.
-     */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull C lines, float maxWidth, boolean forUIScale) {
-        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
-    }
-
-    /**
-     * Line-wraps UI components at the given width using the large UI font size.
-     */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull List<C> lines, float maxWidth) {
-        return lineWrapUIComponentsLarge(lines, maxWidth, true);
-    }
-
-    /**
-     * Line-wraps UI components at the given width using the large UI font size.
-     */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
-        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
-    }
-
-    /**
-     * Line-wraps a UI component at the given width using the large UI font size.
-     */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull C lines, float maxWidth) {
-        return lineWrapUIComponentsLarge(lines, maxWidth, true);
-    }
-
-    /**
-     * Line-wraps a UI component at the given width using the large UI font size.
-     */
-    @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull C lines, float maxWidth, boolean forUIScale) {
-        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
-    }
-
-    /**
-     * Retrieves the currently active UI color theme for FancyMenu.
-     *
-     * @return active {@link UITheme}
-     */
-    @NotNull
-    public static UITheme getUITheme() {
-        return UIColorThemeRegistry.getActiveTheme();
+    public static boolean shouldPlayAnimations() {
+        if (!getUITheme().allow_animations) return false;
+        return FancyMenu.getOptions().enableUiAnimations.getValue();
     }
 
     /**
@@ -452,73 +379,6 @@ public class UIBase extends RenderingUtils {
         button.setLabelRenderedWithUiBase(true);
         button.setRoundedColorBackgroundEnabled(true);
         return button;
-    }
-
-    /**
-     * Returns the logical UI scale used for FancyMenu's UI elements, after applying
-     * automatic adjustments (4K auto scale and Unicode font enforcement).
-     */
-    public static float getUIScale() {
-        float uiScale = FancyMenu.getOptions().uiScale.getValue();
-        //Handle "Auto" scale (set scale to 2 if window bigger than 3000x1700 to show 1080p and 2K screens on scale 1 and 4K on scale 2)
-        if (uiScale == 4F) {
-            uiScale = 1.5F;
-            if ((Minecraft.getInstance().getWindow().getWidth() > 3000) || (Minecraft.getInstance().getWindow().getHeight() > 1700)) {
-                uiScale = 2F;
-            }
-        }
-        //Force a scale of 2 or bigger if Unicode font is enabled
-        if (shouldUseMinecraftFontForUIRendering() && Minecraft.getInstance().isEnforceUnicode() && (uiScale < 2F)) {
-            uiScale = 2F;
-        }
-        return uiScale;
-    }
-
-    /**
-     * Returns the current FancyMenu UI scale corrected for the game's GUI scale,
-     * ready to be used directly for rendering in window pixel space.
-     */
-    public static float getFixedUIScale() {
-        return calculateFixedScale(getUIScale());
-    }
-
-    /**
-     * Converts a logical FancyMenu UI scale to a render-ready scale by compensating
-     * for the current Minecraft GUI scale.
-     *
-     * @param fixedScale logical FancyMenu UI scale (typically from user options)
-     * @return render-scale multiplier that aligns with window pixels
-     */
-    public static float calculateFixedScale(float fixedScale) {
-        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
-        if (guiScale == 0.0D) return fixedScale; // fallback to avoid divide-by-zero
-        return fixedScale / (float) guiScale;
-    }
-
-    public static float getWidgetCornerRoundingRadius() {
-        return getUITheme().widget_corner_rounding_radius;
-    }
-
-    /**
-     * Default corner radius for UI interfaces.
-     */
-    public static float getInterfaceCornerRoundingRadius() {
-        return getUITheme().interface_corner_rounding_radius;
-    }
-
-    /**
-     * Blur strength applied to supported UI surfaces.
-     */
-    public static float getBlurRadius() {
-        return 4.0F;
-    }
-
-    /**
-     * Whether UI blur is currently enabled in FancyMenu options.
-     */
-    public static boolean shouldBlur() {
-        if (!getUITheme().allow_blur) return false;
-        return FancyMenu.getOptions().enableUiBlur.getValue();
     }
 
     /**
@@ -653,6 +513,126 @@ public class UIBase extends RenderingUtils {
         TextDimensions dimensions = SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, false);
         SmoothTextRenderer.resetOverriddenRenderScale();
         return dimensions;
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the normal UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull List<C> lines, float maxWidth) {
+        return lineWrapUIComponentsNormal(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the normal UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
+        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the normal UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull C lines, float maxWidth) {
+        return lineWrapUIComponentsNormal(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the normal UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull C lines, float maxWidth, boolean forUIScale) {
+        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the small UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull List<C> lines, float maxWidth) {
+        return lineWrapUIComponentsSmall(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the small UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
+        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the small UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull C lines, float maxWidth) {
+        return lineWrapUIComponentsSmall(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the small UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull C lines, float maxWidth, boolean forUIScale) {
+        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the large UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull List<C> lines, float maxWidth) {
+        return lineWrapUIComponentsLarge(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps UI components at the given width using the large UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
+        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the large UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull C lines, float maxWidth) {
+        return lineWrapUIComponentsLarge(lines, maxWidth, true);
+    }
+
+    /**
+     * Line-wraps a UI component at the given width using the large UI font size.
+     */
+    @NotNull
+    public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull C lines, float maxWidth, boolean forUIScale) {
+        if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
+        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
+        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
+        SmoothTextRenderer.resetOverriddenRenderScale();
+        return wrappedLines;
     }
 
     public static float getAreaLabelVerticalPadding() {

@@ -261,8 +261,9 @@ public final class GuiBlurRenderer {
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
-        RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
-        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, rotation, tint);
+        RenderRotationUtil.Rotation2D maskRotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
+        RenderRotationUtil.Rotation2D scissorRotation = RenderRotationUtil.getCurrentAdditionalRenderRotation2D();
+        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
 
         graphics.flush();
         // Run the post chain with blending off; otherwise each full-screen pass would multiply existing alpha,
@@ -270,7 +271,8 @@ public final class GuiBlurRenderer {
         RenderSystem.disableBlend();
 
         float margin = blurRadius * 4.0F;
-        graphics.enableScissor((int) (area.x - margin), (int) (area.y - margin), (int) (area.x + area.width + margin), (int) (area.y + area.height + margin));
+        ScissorBounds scissor = resolveScissorBounds(area, margin, scissorRotation);
+        graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
         postChain.process(partial);
 
         RenderTarget finalTarget = getFinalTarget(postChain);
@@ -400,6 +402,90 @@ public final class GuiBlurRenderer {
             return 2.0F;
         }
         return Math.max(0.1F, roundness);
+    }
+
+    private static ScissorBounds resolveScissorBounds(BlurArea area, float margin, RenderRotationUtil.Rotation2D rotation) {
+        float baseMinX = area.x - margin;
+        float baseMinY = area.y - margin;
+        float baseMaxX = area.x + area.width + margin;
+        float baseMaxY = area.y + area.height + margin;
+
+        if (rotation == null || isRotationIdentity(rotation)) {
+            return new ScissorBounds(baseMinX, baseMinY, baseMaxX, baseMaxY);
+        }
+
+        float m00 = rotation.m00();
+        float m01 = rotation.m01();
+        float m10 = rotation.m10();
+        float m11 = rotation.m11();
+        if (!isFinite(m00) || !isFinite(m01) || !isFinite(m10) || !isFinite(m11)) {
+            return new ScissorBounds(baseMinX, baseMinY, baseMaxX, baseMaxY);
+        }
+
+        float halfWidth = area.width * 0.5F;
+        float halfHeight = area.height * 0.5F;
+        float boundHalfWidth = Math.abs(m00) * halfWidth + Math.abs(m01) * halfHeight;
+        float boundHalfHeight = Math.abs(m10) * halfWidth + Math.abs(m11) * halfHeight;
+        if (!Float.isFinite(boundHalfWidth) || !Float.isFinite(boundHalfHeight)) {
+            return new ScissorBounds(baseMinX, baseMinY, baseMaxX, baseMaxY);
+        }
+
+        float centerX = area.x + halfWidth;
+        float centerY = area.y + halfHeight;
+
+        float rotatedMinX = centerX - boundHalfWidth - margin;
+        float rotatedMaxX = centerX + boundHalfWidth + margin;
+        float rotatedMinY = centerY - boundHalfHeight - margin;
+        float rotatedMaxY = centerY + boundHalfHeight + margin;
+
+        return new ScissorBounds(
+                Math.min(baseMinX, rotatedMinX),
+                Math.min(baseMinY, rotatedMinY),
+                Math.max(baseMaxX, rotatedMaxX),
+                Math.max(baseMaxY, rotatedMaxY)
+        );
+    }
+
+    private static boolean isRotationIdentity(RenderRotationUtil.Rotation2D rotation) {
+        return nearlyEqual(rotation.m00(), 1.0F)
+                && nearlyEqual(rotation.m11(), 1.0F)
+                && nearlyEqual(rotation.m01(), 0.0F)
+                && nearlyEqual(rotation.m10(), 0.0F);
+    }
+
+    private static boolean nearlyEqual(float a, float b) {
+        return Math.abs(a - b) <= 1.0E-4F;
+    }
+
+    private static boolean isFinite(float value) {
+        return Float.isFinite(value);
+    }
+
+    private record ScissorBounds(float minX, float minY, float maxX, float maxY) {
+
+        private int minXInt() {
+            return floorToInt(minX);
+        }
+
+        private int minYInt() {
+            return floorToInt(minY);
+        }
+
+        private int maxXInt() {
+            return ceilToInt(maxX);
+        }
+
+        private int maxYInt() {
+            return ceilToInt(maxY);
+        }
+
+        private static int floorToInt(float value) {
+            return (int) Math.floor(value);
+        }
+
+        private static int ceilToInt(float value) {
+            return (int) Math.ceil(value);
+        }
     }
 
 }
