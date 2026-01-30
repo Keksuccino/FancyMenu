@@ -9,6 +9,8 @@ import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayout
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidgetBuilder;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.rendering.IconAnimation;
+import de.keksuccino.fancymenu.util.rendering.IconAnimations;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -66,6 +68,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final float GROUP_NAME_LEFT_PADDING = 0.0f;
     private static final float GROUP_COLLAPSE_BUTTON_WIDTH = 24.0f;
     private static final float GROUP_EYE_BUTTON_WIDTH = 30.0f;
+    private static final float ICON_BUTTON_HOVER_PADDING = 2.0f;
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
 
@@ -773,6 +776,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     private static void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+        blitScaledIcon(graphics, iconData, areaX, areaY, areaWidth, areaHeight, 0.0F);
+    }
+
+    private static void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight, float rotationDegrees) {
         if (areaWidth <= 0.0F || areaHeight <= 0.0F || iconData.width <= 0 || iconData.height <= 0) {
             return;
         }
@@ -787,11 +794,20 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         graphics.pose().pushPose();
         graphics.pose().translate(drawX, drawY, 0.0F);
         graphics.pose().scale(scale, scale, 1.0F);
+        if (rotationDegrees != 0.0F) {
+            graphics.pose().translate(iconData.width * 0.5F, iconData.height * 0.5F, 0.0F);
+            graphics.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(rotationDegrees));
+            graphics.pose().translate(-iconData.width * 0.5F, -iconData.height * 0.5F, 0.0F);
+        }
         graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
         graphics.pose().popPose();
     }
 
     private void renderMaterialIcon(@NotNull GuiGraphics graphics, @NotNull MaterialIcon icon, float x, float y, float width, float height, float alpha) {
+        this.renderMaterialIcon(graphics, icon, x, y, width, height, alpha, 0.0F);
+    }
+
+    private void renderMaterialIcon(@NotNull GuiGraphics graphics, @NotNull MaterialIcon icon, float x, float y, float width, float height, float alpha, float rotationDegrees) {
         IconRenderData iconData = resolveMaterialIconData(icon, width, height);
         if (iconData == null) {
             return;
@@ -799,8 +815,35 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         UIBase.getUITheme().setUITextureShaderColor(graphics, alpha);
-        blitScaledIcon(graphics, iconData, x, y, width, height);
+        blitScaledIcon(graphics, iconData, x, y, width, height, rotationDegrees);
         UIBase.resetShaderColor(graphics);
+    }
+
+    private static void updateIconHoverAnimation(@NotNull IconAnimation.Instance animation, boolean hovered, boolean wasHovered) {
+        if (!UIBase.shouldPlayAnimations()) {
+            animation.reset();
+            return;
+        }
+        if (hovered) {
+            if (!wasHovered) {
+                animation.start();
+            }
+        } else {
+            animation.reset();
+        }
+    }
+
+    private static void renderIconButtonHover(@NotNull GuiGraphics graphics, float x, float y, float width, float height) {
+        float padding = ICON_BUTTON_HOVER_PADDING;
+        UIBase.renderIconButtonHoverBackground(graphics, x + padding, y + padding, width - (padding * 2.0F), height - (padding * 2.0F));
+    }
+
+    @NotNull
+    private static IconAnimation.Offset getIconHoverOffset(@NotNull IconAnimation.Instance animation) {
+        if (!UIBase.shouldPlayAnimations()) {
+            return IconAnimation.Offset.ZERO;
+        }
+        return animation.getOffset();
     }
 
     private static float getIconSize(float areaWidth, float areaHeight, float padding) {
@@ -1199,6 +1242,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Nullable
         protected Layout.LayerGroup group;
         protected boolean eyeButtonHovered = false;
+        protected IconAnimation.Instance eyeHoverAnimation = IconAnimations.SHORT_DIAGONAL_BOUNCE.createInstance();
         protected Font font = Minecraft.getInstance().font;
         protected boolean dragStarted = false; // Flag to track if drag has been initiated
         protected double dragStartX;
@@ -1220,7 +1264,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+            boolean wasEyeButtonHovered = this.eyeButtonHovered;
             this.eyeButtonHovered = this.isEyeButtonMouseOver(mouseX, mouseY);
+            updateIconHoverAnimation(this.eyeHoverAnimation, this.eyeButtonHovered, wasEyeButtonHovered);
 
             RenderSystem.enableBlend();
 
@@ -1229,16 +1275,21 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 graphics.flush();
             }
 
+            if (this.eyeButtonHovered) {
+                renderIconButtonHover(graphics, this.getEyeButtonX(), this.getEyeButtonY(), this.getEyeButtonWidth(), this.getEyeButtonHeight());
+            }
+
             float layerIconSize = getIconSize(this.getLayerIconWidth(), this.getLayerIconHeight(), LAYER_ENTRY_ICON_PADDING);
             float layerIconX = this.getLayerIconX() + (this.getLayerIconWidth() - layerIconSize) * 0.5f;
             float layerIconY = this.getLayerIconY() + (this.getLayerIconHeight() - layerIconSize) * 0.5f;
             this.layerWidget.renderMaterialIcon(graphics, LAYER_ICON, layerIconX, layerIconY, layerIconSize, layerIconSize, 1.0f);
 
             float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_ENTRY_ICON_PADDING);
-            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
-            float eyeIconY = this.getEyeButtonY() + (this.getEyeButtonHeight() - eyeIconSize) * 0.5f;
+            IconAnimation.Offset eyeOffset = getIconHoverOffset(this.eyeHoverAnimation);
+            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f + eyeOffset.x();
+            float eyeIconY = this.getEyeButtonY() + (this.getEyeButtonHeight() - eyeIconSize) * 0.5f + eyeOffset.y();
             float eyeAlpha = !this.element.element.layerHiddenInEditor ? 1.0f : 0.3f;
-            this.layerWidget.renderMaterialIcon(graphics, EYE_ICON, eyeIconX, eyeIconY, eyeIconSize, eyeIconSize, eyeAlpha);
+            this.layerWidget.renderMaterialIcon(graphics, EYE_ICON, eyeIconX, eyeIconY, eyeIconSize, eyeIconSize, eyeAlpha, eyeOffset.rotationDegrees());
 
             float labelX = this.getLayerNameX();
             float labelY = this.getLayerNameY();
@@ -1429,6 +1480,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         protected Font font = Minecraft.getInstance().font;
         protected boolean eyeButtonHovered = false;
         protected boolean collapseButtonHovered = false;
+        protected IconAnimation.Instance eyeHoverAnimation = IconAnimations.SHORT_DIAGONAL_BOUNCE.createInstance();
+        protected IconAnimation.Instance collapseHoverAnimation = IconAnimations.SHORT_DIAGONAL_BOUNCE.createInstance();
         protected boolean dragStarted = false;
         protected double dragStartX;
         protected double dragStartY;
@@ -1447,13 +1500,24 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            boolean wasEyeButtonHovered = this.eyeButtonHovered;
+            boolean wasCollapseButtonHovered = this.collapseButtonHovered;
             this.eyeButtonHovered = this.isEyeButtonMouseOver(mouseX, mouseY);
             this.collapseButtonHovered = this.isCollapseButtonMouseOver(mouseX, mouseY);
+            updateIconHoverAnimation(this.eyeHoverAnimation, this.eyeButtonHovered, wasEyeButtonHovered);
+            updateIconHoverAnimation(this.collapseHoverAnimation, this.collapseButtonHovered, wasCollapseButtonHovered);
 
             if (this.isGroupFullySelected()) {
                 this.layerWidget.fillClippedToRoundedBottomSmooth(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
             } else if (this.isMouseOver(mouseX, mouseY)) {
                 this.layerWidget.fillClippedToRoundedBottomSmooth(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
+            }
+
+            if (this.eyeButtonHovered) {
+                renderIconButtonHover(graphics, this.getEyeButtonX(), this.getEyeButtonY(), this.getEyeButtonWidth(), this.getEyeButtonHeight());
+            }
+            if (this.collapseButtonHovered) {
+                renderIconButtonHover(graphics, this.getCollapseButtonX(), this.getCollapseButtonY(), this.getCollapseButtonWidth(), this.getCollapseButtonHeight());
             }
 
             float groupIconSize = getIconSize(this.getGroupIconWidth(), this.getGroupIconHeight(), LAYER_ENTRY_ICON_PADDING);
@@ -1462,16 +1526,17 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.layerWidget.renderMaterialIcon(graphics, GROUP_ICON, groupIconX, groupIconY, groupIconSize, groupIconSize, 1.0f);
 
             float eyeIconSize = getIconSize(this.getEyeButtonWidth(), this.getEyeButtonHeight(), LAYER_ENTRY_ICON_PADDING);
-            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f;
-            float eyeIconY = this.getEyeButtonY() + (this.getEyeButtonHeight() - eyeIconSize) * 0.5f;
+            IconAnimation.Offset eyeOffset = getIconHoverOffset(this.eyeHoverAnimation);
+            float eyeIconX = this.getEyeButtonX() + (this.getEyeButtonWidth() - eyeIconSize) * 0.5f + eyeOffset.x();
+            float eyeIconY = this.getEyeButtonY() + (this.getEyeButtonHeight() - eyeIconSize) * 0.5f + eyeOffset.y();
             float eyeAlpha = this.isGroupHidden() ? 0.3f : 1.0f;
-            this.layerWidget.renderMaterialIcon(graphics, EYE_ICON, eyeIconX, eyeIconY, eyeIconSize, eyeIconSize, eyeAlpha);
+            this.layerWidget.renderMaterialIcon(graphics, EYE_ICON, eyeIconX, eyeIconY, eyeIconSize, eyeIconSize, eyeAlpha, eyeOffset.rotationDegrees());
 
             float collapseIconSize = getIconSize(this.getCollapseButtonWidth(), this.getCollapseButtonHeight(), LAYER_ENTRY_ICON_PADDING);
-            float collapseIconX = this.getCollapseButtonX() + (this.getCollapseButtonWidth() - collapseIconSize) * 0.5f;
-            float collapseIconY = this.getCollapseButtonY() + (this.getCollapseButtonHeight() - collapseIconSize) * 0.5f;
-            float collapseAlpha = this.collapseButtonHovered ? 1.0f : 0.7f;
-            this.layerWidget.renderMaterialIcon(graphics, this.group.collapsed ? GROUP_EXPAND_ICON : GROUP_COLLAPSE_ICON, collapseIconX, collapseIconY, collapseIconSize, collapseIconSize, collapseAlpha);
+            IconAnimation.Offset collapseOffset = getIconHoverOffset(this.collapseHoverAnimation);
+            float collapseIconX = this.getCollapseButtonX() + (this.getCollapseButtonWidth() - collapseIconSize) * 0.5f + collapseOffset.x();
+            float collapseIconY = this.getCollapseButtonY() + (this.getCollapseButtonHeight() - collapseIconSize) * 0.5f + collapseOffset.y();
+            this.layerWidget.renderMaterialIcon(graphics, this.group.collapsed ? GROUP_EXPAND_ICON : GROUP_COLLAPSE_ICON, collapseIconX, collapseIconY, collapseIconSize, collapseIconSize, 1.0f, collapseOffset.rotationDegrees());
 
             float labelX = this.getGroupNameX();
             float labelY = this.getGroupNameY();
@@ -1695,6 +1760,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         protected LayerLayoutEditorWidget layerWidget;
         protected boolean moveTopBottomButtonHovered = false;
+        protected IconAnimation.Instance moveTopBottomHoverAnimation = IconAnimations.SHORT_DIAGONAL_BOUNCE.createInstance();
         protected Font font = Minecraft.getInstance().font;
 
         public VanillaLayerElementEntry(ScrollArea parent, LayerLayoutEditorWidget layerWidget) {
@@ -1710,17 +1776,25 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+            boolean wasMoveTopBottomButtonHovered = this.moveTopBottomButtonHovered;
             this.moveTopBottomButtonHovered = this.isMoveTopBottomButtonHovered(mouseX, mouseY);
+            updateIconHoverAnimation(this.moveTopBottomHoverAnimation, this.moveTopBottomButtonHovered, wasMoveTopBottomButtonHovered);
 
             RenderSystem.enableBlend();
 
             MaterialIcon icon = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_ICON : MOVE_TO_TOP_ICON;
             float vanillaIconSize = getIconSize(this.getButtonWidth(), this.getButtonHeight(), LAYER_EYE_ICON_PADDING);
-            float vanillaIconX = this.x + (this.getButtonWidth() - vanillaIconSize) * 0.5f;
-            float vanillaIconY = this.y + (this.getButtonHeight() - vanillaIconSize) * 0.5f;
-            this.layerWidget.renderMaterialIcon(graphics, icon, vanillaIconX, vanillaIconY, vanillaIconSize, vanillaIconSize, 1.0f);
+            if (this.moveTopBottomButtonHovered) {
+                renderIconButtonHover(graphics, this.x, this.y, this.getButtonWidth(), this.getButtonHeight());
+            }
+            float vanillaIconBaseX = this.x + (this.getButtonWidth() - vanillaIconSize) * 0.5f;
+            float vanillaIconBaseY = this.y + (this.getButtonHeight() - vanillaIconSize) * 0.5f;
+            IconAnimation.Offset vanillaOffset = getIconHoverOffset(this.moveTopBottomHoverAnimation);
+            float vanillaIconX = vanillaIconBaseX + vanillaOffset.x();
+            float vanillaIconY = vanillaIconBaseY + vanillaOffset.y();
+            this.layerWidget.renderMaterialIcon(graphics, icon, vanillaIconX, vanillaIconY, vanillaIconSize, vanillaIconSize, 1.0f, vanillaOffset.rotationDegrees());
 
-            UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), (int)(vanillaIconX + vanillaIconSize + LAYER_ICON_TEXT_GAP), (int)(this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f)));
+            UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), (int)(vanillaIconBaseX + vanillaIconSize + LAYER_ICON_TEXT_GAP), (int)(this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f)));
 
         }
 

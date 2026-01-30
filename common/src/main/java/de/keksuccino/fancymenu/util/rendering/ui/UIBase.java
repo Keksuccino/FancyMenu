@@ -435,7 +435,7 @@ public class UIBase extends RenderingUtils {
     public static void renderIconButtonHoverBackground(@NotNull GuiGraphics graphics, float x, float y, float width, float height) {
         if (width <= 0.0F || height <= 0.0F) return;
         float radius = getWidgetCornerRoundingRadius();
-        int color = UIBlur.shouldBlur()
+        int color = shouldBlur()
                 ? getUITheme().ui_blur_icon_button_hover_color.getColorInt()
                 : getUITheme().ui_icon_button_hover_color.getColorInt();
         SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, x, y, width, height, radius, radius, radius, radius, color, 1.0F);
