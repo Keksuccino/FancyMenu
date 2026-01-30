@@ -11,13 +11,12 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
@@ -26,6 +25,8 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
+    private static final int LIST_ENTRY_VERTICAL_PADDING = 1;
+    private static final int LIST_TOP_SPACER_HEIGHT = 5;
 
     protected Consumer<String> callback;
     protected String selectedSlideshowName = null;
@@ -158,14 +159,23 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
 
     protected void updateSlideshowScrollAreaContent() {
         this.slideshowListScrollArea.clearEntries();
+        CellScreen.SpacerScrollAreaEntry spacer = new CellScreen.SpacerScrollAreaEntry(this.slideshowListScrollArea, LIST_TOP_SPACER_HEIGHT);
+        spacer.setSelectable(false);
+        spacer.setClickable(false);
+        this.slideshowListScrollArea.addEntry(spacer);
+        boolean addedAny = false;
         for (String s : SlideshowHandler.getSlideshowNames()) {
             SlideshowScrollEntry e = new SlideshowScrollEntry(this.slideshowListScrollArea, s, getLabelTextColor(), (entry) -> {
                 this.setSelectedSlideshow((SlideshowScrollEntry)entry);
             });
+            e.setHeight(this.getListEntryHeight());
             this.slideshowListScrollArea.addEntry(e);
+            addedAny = true;
         }
-        if (this.slideshowListScrollArea.getEntries().isEmpty()) {
-            this.slideshowListScrollArea.addEntry(new TextScrollAreaEntry(this.slideshowListScrollArea, Component.translatable("fancymenu.slideshow.choose.no_slideshows"), (entry) -> {}));
+        if (!addedAny) {
+            TextScrollAreaEntry emptyEntry = new TextScrollAreaEntry(this.slideshowListScrollArea, Component.translatable("fancymenu.slideshow.choose.no_slideshows"), (entry) -> {});
+            emptyEntry.setHeight(this.getListEntryHeight());
+            this.slideshowListScrollArea.addEntry(emptyEntry);
         }
         float totalWidth = this.slideshowListScrollArea.getTotalEntryWidth();
         for (ScrollAreaEntry e : this.slideshowListScrollArea.getEntries()) {
@@ -210,6 +220,10 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
                 : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();
     }
 
+    private int getListEntryHeight() {
+        return (int)(UIBase.getUITextHeightNormal() + (LIST_ENTRY_VERTICAL_PADDING * 2));
+    }
+
     public static @NotNull PiPWindow openInWindow(@NotNull ChooseSlideshowScreen screen, @Nullable PiPWindow parentWindow) {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
@@ -227,12 +241,13 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
         return openInWindow(screen, null);
     }
 
-    public static class SlideshowScrollEntry extends TextListScrollAreaEntry {
+    public static class SlideshowScrollEntry extends TextScrollAreaEntry {
 
         public String slideshow;
 
-        public SlideshowScrollEntry(ScrollArea parent, @NotNull String slideshow, int labelColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(labelColor)), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
+        public SlideshowScrollEntry(ScrollArea parent, @NotNull String slideshow, int labelColor, @NotNull Consumer<TextScrollAreaEntry> onClick) {
+            super(parent, Component.literal(slideshow), onClick);
+            this.setTextBaseColor(labelColor);
             this.slideshow = slideshow;
         }
 

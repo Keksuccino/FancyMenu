@@ -80,29 +80,57 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
             fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.height, color);
             return;
         }
-        float areaY = this.parent.getInnerY() + 2;
-        float areaBottom = this.parent.getInnerY() + this.parent.getInnerHeight() - 2;
-        float entryY = this.y;
-        float entryHeight = this.height;
-        float visibleTop = Math.max(entryY, areaY);
-        float visibleBottom = Math.min(entryY + entryHeight, areaBottom);
-        float visibleHeight = visibleBottom - visibleTop;
-        if (visibleHeight <= 0) {
+        float areaX = this.parent.getInnerX();
+        float areaY = this.parent.getInnerY();
+        float areaWidth = this.parent.getInnerWidth();
+        float areaHeight = this.parent.getInnerHeight();
+        if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
             return;
         }
-        boolean roundTop = entryY <= areaY + 5;
-        boolean roundBottom = (entryY + entryHeight) >= areaBottom - 5;
-        if (roundTop || roundBottom) {
-            float radius = UIBase.getInterfaceCornerRoundingRadius();
-            if (roundTop && roundBottom) {
-                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, this.x, visibleTop, this.width, visibleHeight, radius, radius, radius, radius, color, partial);
-            } else if (roundTop) {
-                SmoothRectangleRenderer.renderSmoothRectRoundTopCornersScaled(graphics, this.x, visibleTop, this.width, visibleHeight, radius, color, partial);
-            } else {
-                SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, this.x, visibleTop, this.width, visibleHeight, radius, color, partial);
-            }
-        } else {
+        float entryTop = this.y;
+        float entryBottom = this.y + this.height;
+        float visibleTop = Math.max(entryTop, areaY);
+        float visibleBottom = Math.min(entryBottom, areaY + areaHeight);
+        float visibleHeight = visibleBottom - visibleTop;
+        if (visibleHeight <= 0.0F) {
+            return;
+        }
+        float radius = UIBase.getInterfaceCornerRoundingRadius();
+        float maxRadius = Math.min(areaWidth, areaHeight) * 0.5F;
+        if (maxRadius <= 0.0F) {
+            return;
+        }
+        radius = Math.min(radius, maxRadius);
+        if (radius <= 0.0F) {
             fillF(graphics, this.x, visibleTop, this.x + this.width, visibleTop + visibleHeight, color);
+            return;
+        }
+        float topRoundedLimit = areaY + radius;
+        float bottomRoundedLimit = areaY + areaHeight - radius;
+        boolean needsRounded = visibleTop < topRoundedLimit || visibleBottom > bottomRoundedLimit;
+        float left = Math.max(this.x, areaX);
+        float right = Math.min(this.x + this.width, areaX + areaWidth);
+        if (right <= left) {
+            return;
+        }
+        if (needsRounded) {
+            float scissorPadding = this.parent.isScissorEnabled() ? 2.0F : 0.0F;
+            float scissorX = areaX + scissorPadding;
+            float scissorY = areaY + scissorPadding;
+            float scissorWidth = areaWidth - (scissorPadding * 2.0F);
+            float scissorHeight = areaHeight - (scissorPadding * 2.0F);
+            float scissorLeft = Math.max(left, scissorX);
+            float scissorRight = Math.min(right, scissorX + scissorWidth);
+            float scissorTop = Math.max(visibleTop, scissorY);
+            float scissorBottom = Math.min(visibleBottom, scissorY + scissorHeight);
+            if (scissorRight <= scissorLeft || scissorBottom <= scissorTop) {
+                return;
+            }
+            graphics.enableScissor((int) Math.floor(scissorLeft), (int) Math.floor(scissorTop), (int) Math.ceil(scissorRight), (int) Math.ceil(scissorBottom));
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, areaX, areaY, areaWidth, areaHeight, radius, radius, radius, radius, color, partial);
+            graphics.disableScissor();
+        } else {
+            fillF(graphics, left, visibleTop, right, visibleTop + visibleHeight, color);
         }
     }
 

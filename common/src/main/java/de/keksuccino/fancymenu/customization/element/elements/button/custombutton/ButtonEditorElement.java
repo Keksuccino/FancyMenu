@@ -96,6 +96,9 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                 .setStackable(true)
                 .setIcon(MaterialIcons.FORMAT_UNDERLINED);
 
+        this.element.labelShadow.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.SHADOW);
+
         this.element.labelHoverColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.PALETTE);
 

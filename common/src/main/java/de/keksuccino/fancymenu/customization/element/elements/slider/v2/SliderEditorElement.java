@@ -169,6 +169,9 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                 .setStackable(true)
                 .setIcon(MaterialIcons.FORMAT_UNDERLINED);
 
+        this.element.labelShadow.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.SHADOW);
+
         this.element.labelHoverColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.PALETTE);
 

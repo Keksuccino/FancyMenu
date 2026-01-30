@@ -51,6 +51,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
     public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
     public final Property.FloatProperty labelScale = putProperty(Property.floatProperty("label_scale", 1.0F, "fancymenu.elements.widgets.label.scale"));
+    public final Property.BooleanProperty labelShadow = putProperty(Property.booleanProperty("label_shadow", true, "fancymenu.elements.widgets.label.shadow"));
     public String tooltip;
     public ResourceSupplier<ITexture> handleTextureNormal;
     public ResourceSupplier<ITexture> handleTextureHover;
@@ -195,6 +196,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTooltip();
         this.updateWidgetTexture();
         this.updateWidgetLabelUnderline();
+        this.updateWidgetLabelShadow();
         this.updateWidgetLabelBaseColor();
         this.updateWidgetLabelHoverColor();
         this.updateWidgetLabelScale();
@@ -370,6 +372,15 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
     }
 
+    public void updateWidgetLabelShadow() {
+        if (this.slider instanceof CustomizableWidget w) {
+            w.setLabelShadowFancyMenu(this.isLabelShadowEnabled());
+        }
+        if (this.slider != null) {
+            this.slider.setLabelShadow(this.isLabelShadowEnabled());
+        }
+    }
+
     public void updateWidgetLabelHoverColor() {
         if (this.slider instanceof CustomizableWidget w) {
             w.setLabelHoverColorFancyMenu(this.getLabelHoverColor());
@@ -443,6 +454,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         ButtonElement template = this.getPropertySource();
         if ((template != null) && template.templateApplyLabel) return template.underlineLabelOnHover;
         return this.underlineLabelOnHover;
+    }
+
+    public boolean isLabelShadowEnabled() {
+        ButtonElement template = this.getPropertySource();
+        if ((template != null) && template.templateApplyLabel) return template.labelShadow.getBoolean();
+        return this.labelShadow.getBoolean();
     }
 
     @Nullable

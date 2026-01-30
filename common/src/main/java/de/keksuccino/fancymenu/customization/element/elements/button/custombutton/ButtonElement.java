@@ -16,6 +16,8 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -53,6 +55,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
     public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
     public final Property.FloatProperty labelScale = putProperty(Property.floatProperty("label_scale", 1.0F, "fancymenu.elements.widgets.label.scale"));
+    public final Property.BooleanProperty labelShadow = putProperty(Property.booleanProperty("label_shadow", true, "fancymenu.elements.widgets.label.shadow"));
     public String tooltip;
     public ResourceSupplier<ITexture> backgroundTextureNormal;
     public ResourceSupplier<ITexture> backgroundTextureHover;
@@ -209,6 +212,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTooltip();
         this.updateWidgetLabels();
         this.updateWidgetLabelUnderline();
+        this.updateWidgetLabelShadow();
         this.updateWidgetLabelBaseColor();
         this.updateWidgetLabelHoverColor();
         this.updateWidgetLabelScale();
@@ -286,6 +290,21 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public void updateWidgetLabelUnderline() {
         if (this.getWidget() instanceof CustomizableWidget w) {
             w.setUnderlineLabelOnHoverFancyMenu(this.isUnderlineLabelOnHover());
+        }
+    }
+
+    public void updateWidgetLabelShadow() {
+        AbstractWidget widget = this.getWidget();
+        if (widget == null) return;
+        boolean shadow = this.isLabelShadowEnabled();
+        if (widget instanceof ExtendedButton b) {
+            b.setLabelShadowEnabled(shadow);
+        }
+        if (widget instanceof AbstractExtendedSlider s) {
+            s.setLabelShadow(shadow);
+        }
+        if (widget instanceof CustomizableWidget w) {
+            w.setLabelShadowFancyMenu(shadow);
         }
     }
 
@@ -453,6 +472,13 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         ButtonElement template = getTopActiveTemplateElement(this.isSlider());
         if ((template != null) && template.templateApplyLabel) return template.underlineLabelOnHover;
         return this.underlineLabelOnHover;
+    }
+
+    public boolean isLabelShadowEnabled() {
+        if (this.isTemplate) return this.labelShadow.getBoolean();
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) return template.labelShadow.getBoolean();
+        return this.labelShadow.getBoolean();
     }
 
     @Nullable

@@ -176,6 +176,10 @@ public interface CustomizableWidget {
 
     boolean isUnderlineLabelOnHoverFancyMenu();
 
+    void setLabelShadowFancyMenu(boolean shadow);
+
+    boolean isLabelShadowFancyMenu();
+
     void setCustomClickSoundFancyMenu(@Nullable IAudio sound);
 
     @Nullable

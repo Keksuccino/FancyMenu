@@ -10,13 +10,12 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
@@ -25,6 +24,8 @@ public class ChoosePanoramaScreen extends PiPWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
+    private static final int LIST_ENTRY_VERTICAL_PADDING = 1;
+    private static final int LIST_TOP_SPACER_HEIGHT = 5;
 
     protected Consumer<String> callback;
     protected String selectedPanoramaName = null;
@@ -144,14 +145,23 @@ public class ChoosePanoramaScreen extends PiPWindowBody {
 
     protected void updatePanoramaScrollAreaContent() {
         this.panoramaListScrollArea.clearEntries();
+        CellScreen.SpacerScrollAreaEntry spacer = new CellScreen.SpacerScrollAreaEntry(this.panoramaListScrollArea, LIST_TOP_SPACER_HEIGHT);
+        spacer.setSelectable(false);
+        spacer.setClickable(false);
+        this.panoramaListScrollArea.addEntry(spacer);
+        boolean addedAny = false;
         for (String s : PanoramaHandler.getPanoramaNames()) {
             PanoramaScrollEntry e = new PanoramaScrollEntry(this.panoramaListScrollArea, s, getLabelTextColor(), (entry) -> {
                 this.setSelectedPanorama((PanoramaScrollEntry)entry);
             });
+            e.setHeight(this.getListEntryHeight());
             this.panoramaListScrollArea.addEntry(e);
+            addedAny = true;
         }
-        if (this.panoramaListScrollArea.getEntries().isEmpty()) {
-            this.panoramaListScrollArea.addEntry(new TextScrollAreaEntry(this.panoramaListScrollArea, Component.translatable("fancymenu.panorama.choose.no_panoramas"), (entry) -> {}));
+        if (!addedAny) {
+            TextScrollAreaEntry emptyEntry = new TextScrollAreaEntry(this.panoramaListScrollArea, Component.translatable("fancymenu.panorama.choose.no_panoramas"), (entry) -> {});
+            emptyEntry.setHeight(this.getListEntryHeight());
+            this.panoramaListScrollArea.addEntry(emptyEntry);
         }
         float totalWidth = this.panoramaListScrollArea.getTotalEntryWidth();
         for (ScrollAreaEntry e : this.panoramaListScrollArea.getEntries()) {
@@ -196,6 +206,10 @@ public class ChoosePanoramaScreen extends PiPWindowBody {
                 : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();
     }
 
+    private int getListEntryHeight() {
+        return (int)(UIBase.getUITextHeightNormal() + (LIST_ENTRY_VERTICAL_PADDING * 2));
+    }
+
     public static @NotNull PiPWindow openInWindow(@NotNull ChoosePanoramaScreen screen, @Nullable PiPWindow parentWindow) {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
@@ -213,12 +227,13 @@ public class ChoosePanoramaScreen extends PiPWindowBody {
         return openInWindow(screen, null);
     }
 
-    public static class PanoramaScrollEntry extends TextListScrollAreaEntry {
+    public static class PanoramaScrollEntry extends TextScrollAreaEntry {
 
         public String panorama;
 
-        public PanoramaScrollEntry(ScrollArea parent, @NotNull String panorama, int labelColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(panorama).setStyle(Style.EMPTY.withColor(labelColor)), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
+        public PanoramaScrollEntry(ScrollArea parent, @NotNull String panorama, int labelColor, @NotNull Consumer<TextScrollAreaEntry> onClick) {
+            super(parent, Component.literal(panorama), onClick);
+            this.setTextBaseColor(labelColor);
             this.panorama = panorama;
         }
 

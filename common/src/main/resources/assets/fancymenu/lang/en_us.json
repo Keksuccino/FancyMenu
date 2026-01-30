@@ -2739,5 +2739,6 @@
   "fancymenu.ui.themes.dark_high_contrast": "Dark High Contrast",
   "fancymenu.ui.themes.light_high_contrast": "Light High Contrast",
   "fancymenu.ui.themes.pumpkin_soup": "Pumpkin Soup",
-  "fancymenu.ui.themes.cozy_campfire": "Cozy Campfire"
+  "fancymenu.ui.themes.cozy_campfire": "Cozy Campfire",
+  "fancymenu.elements.widgets.label.shadow": "Label Shadow: %s"
 }

@@ -70,6 +70,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private DrawableColor labelBaseColorFancyMenu;
 	@Unique
 	private float labelScaleFancyMenu = 1.0F;
+	@Unique
+	private boolean labelShadowFancyMenu = true;
 	@Unique @Nullable
 	private RenderableResource customBackgroundNormalFancyMenu;
 	@Unique @Nullable
@@ -239,7 +241,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Inject(method = "renderScrollingString(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;II)V", at = @At("HEAD"), cancellable = true)
 	private void before_renderScrollingString_FancyMenu(GuiGraphics graphics, Font font, int width, int color, CallbackInfo info) {
 		float scale = this.resolveLabelScaleFancyMenu();
-		if (scale == 1.0F) return;
+		boolean labelShadow = this.labelShadowFancyMenu;
+		if (scale == 1.0F && labelShadow) return;
 		if (scale == 0.0F) {
 			info.cancel();
 			return;
@@ -250,6 +253,26 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		int xMax = w.getX() + w.getWidth() - width;
 		int yMin = w.getY();
 		int yMax = w.getY() + w.getHeight();
+		if (scale == 1.0F) {
+			int textWidth = font.width(text);
+			int textPosY = (yMin + yMax - 9) / 2 + 1;
+			int maxTextWidth = xMax - xMin;
+			if (textWidth > maxTextWidth) {
+				int diffTextWidth = textWidth - maxTextWidth;
+				double scrollTime = (double) Util.getMillis() / 1000.0D;
+				double scrollDuration = Math.max((double) diffTextWidth * 0.5D, 3.0D);
+				double scrollAlpha = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / scrollDuration)) / 2.0D + 0.5D;
+				double textOffset = Mth.lerp(scrollAlpha, 0.0D, (double) diffTextWidth);
+				graphics.enableScissor(xMin, yMin, xMax, yMax);
+				graphics.drawString(font, text, xMin - (int) textOffset, textPosY, color, labelShadow);
+				graphics.disableScissor();
+			} else {
+				int textPosX = Mth.clamp((xMin + xMax) / 2, xMin + textWidth / 2, xMax - textWidth / 2);
+				graphics.drawString(font, text, textPosX - (textWidth / 2), textPosY, color, labelShadow);
+			}
+			info.cancel();
+			return;
+		}
 		float invScale = 1.0F / scale;
 		float scaledMinX = xMin * invScale;
 		float scaledMaxX = xMax * invScale;
@@ -268,11 +291,11 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			double scrollAlpha = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / scrollDuration)) / 2.0D + 0.5D;
 			double textOffset = Mth.lerp(scrollAlpha, 0.0D, diffTextWidth);
 			graphics.enableScissor(xMin, yMin, xMax, yMax);
-			graphics.drawString(font, text, (int)(scaledMinX - (float)textOffset), (int)textPosY, color);
+			graphics.drawString(font, text, (int)(scaledMinX - (float)textOffset), (int)textPosY, color, labelShadow);
 			graphics.disableScissor();
 		} else {
 			float textPosX = ((scaledMinX + scaledMaxX) / 2F) - (textWidth / 2F);
-			graphics.drawString(font, text, (int)textPosX, (int)textPosY, color);
+			graphics.drawString(font, text, (int)textPosX, (int)textPosY, color, labelShadow);
 		}
 		graphics.pose().popPose();
 		info.cancel();
@@ -533,6 +556,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setCustomLabelFancyMenu(null);
 		this.setHoverLabelFancyMenu(null);
 		this.setUnderlineLabelOnHoverFancyMenu(false);
+		this.setLabelShadowFancyMenu(true);
 		this.setLabelHoverColorFancyMenu(null);
 		this.setLabelBaseColorFancyMenu(null);
 		this.setLabelScaleFancyMenu(1.0F);
@@ -606,6 +630,18 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public boolean isUnderlineLabelOnHoverFancyMenu() {
 		return this.underlineLabelOnHoverFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setLabelShadowFancyMenu(boolean shadow) {
+		this.labelShadowFancyMenu = shadow;
+	}
+
+	@Unique
+	@Override
+	public boolean isLabelShadowFancyMenu() {
+		return this.labelShadowFancyMenu;
 	}
 
 	@Unique

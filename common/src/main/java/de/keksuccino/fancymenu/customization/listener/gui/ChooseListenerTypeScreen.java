@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.listener.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
@@ -12,7 +11,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -31,6 +29,8 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
+    private static final int LIST_ENTRY_VERTICAL_PADDING = 1;
+    private static final int LIST_TOP_SPACER_HEIGHT = 5;
 
     @NotNull
     protected final Consumer<AbstractListener> callback;
@@ -178,14 +178,17 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         if (searchValue.isBlank()) searchValue = null;
         
         this.listenersScrollArea.clearEntries();
+        CellScreen.SpacerScrollAreaEntry spacer = new CellScreen.SpacerScrollAreaEntry(this.listenersScrollArea, LIST_TOP_SPACER_HEIGHT);
+        spacer.setSelectable(false);
+        spacer.setClickable(false);
+        this.listenersScrollArea.addEntry(spacer);
         
         for (AbstractListener listener : ListenerRegistry.getListeners()) {
             if (!this.listenerFitsSearchValue(listener, searchValue)) continue;
             
             ListenerScrollEntry entry = new ListenerScrollEntry(
                     this.listenersScrollArea,
-                    ((MutableComponent)listener.getDisplayName()).withColor(this.getLabelTextColor()),
-                    UIBase.getUITheme().bullet_list_dot_color_1,
+                    listener.getDisplayName().copy(),
                     e -> {
                         this.selectedListener = listener;
                         this.setDescription(listener);
@@ -193,6 +196,7 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
             );
             entry.listener = listener;
             entry.setTextBaseColor(this.getLabelTextColor());
+            entry.setHeight(this.getListEntryHeight());
             entry.setDoubleClickAction(() -> {
                 if (this.selectedListener == listener) {
                     this.closeWithResult(this.selectedListener);
@@ -301,6 +305,10 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         return UIBase.shouldBlur()
                 ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
                 : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+    }
+
+    private int getListEntryHeight() {
+        return (int)(UIBase.getUITextHeightNormal() + (LIST_ENTRY_VERTICAL_PADDING * 2));
     }
 
     public static @NotNull PiPWindow openInWindow(@NotNull ChooseListenerTypeScreen screen, @Nullable PiPWindow parentWindow) {
@@ -423,7 +431,7 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
 
     }
 
-    public class ListenerScrollEntry extends TextListScrollAreaEntry {
+    public class ListenerScrollEntry extends TextScrollAreaEntry {
         
         @Nullable
         public AbstractListener listener;
@@ -432,8 +440,8 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         @Nullable
         protected Runnable doubleClickAction;
         
-        public ListenerScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull DrawableColor listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, text, listDotColor, onClick);
+        public ListenerScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull Consumer<TextScrollAreaEntry> onClick) {
+            super(parent, text, onClick);
         }
         
         public void setDoubleClickAction(@Nullable Runnable action) {
