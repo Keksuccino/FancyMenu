@@ -184,7 +184,7 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
 
         //Separator between title bar and body (match PiPWindow logic)
         float titleBarHeight = this.getTitleBarHeight();
-        if (titleBarHeight > 0.0F) {
+        if (this.isExpanded() && titleBarHeight > 0.0F) {
             double renderScale = getRenderScaleSafe();
             float divider = (float) Math.max(1.0F, renderScale);
             float dividerHeight = divider / (float) renderScale;

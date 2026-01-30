@@ -4083,16 +4083,16 @@ public final class MaterialIcons {
     private static float resolveSdfRange(int sizePx) {
         int normalizedSize = normalizeSize(sizePx);
         if (normalizedSize <= 24) {
-            return 3.2F;
-        }
-        if (normalizedSize <= 32) {
             return 3.0F;
         }
-        if (normalizedSize <= 48) {
+        if (normalizedSize <= 32) {
             return 2.8F;
         }
+        if (normalizedSize <= 48) {
+            return 2.7F;
+        }
         if (normalizedSize <= 64) {
-            return 2.6F;
+            return 2.5F;
         }
         if (normalizedSize <= 96) {
             return 2.4F;

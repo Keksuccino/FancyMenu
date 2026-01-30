@@ -84,6 +84,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         menuBar.addContextMenuEntry("layout_tab", Component.translatable("fancymenu.editor.layout"), layoutMenu);
 
         layoutMenu.addClickableEntry("new_layout", Component.translatable("fancymenu.editor.layout.new"), (menu, entry) -> {
+            menu.closeMenuChain();
             displayUnsavedWarning(call -> {
                 if (call) {
                     editor.saveWidgetSettings();
@@ -129,6 +130,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         layoutMenu.addSeparatorEntry("separator_after_layout_settings");
 
         layoutMenu.addClickableEntry("close_editor", Component.translatable("fancymenu.editor.close"), (menu, entry) -> {
+            menu.closeMenuChain();
             displayUnsavedWarning(call -> {
                 if (call) {
                     editor.closeEditor();
@@ -989,6 +991,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 .setIcon(MaterialIcons.TOGGLE_ON);
 
         menu.addClickableEntry("edit_layout", Component.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
+            menu1.closeMenuChain();
             displayUnsavedWarning(call -> {
                 if (call) {
                     editor.saveWidgetSettings();
