@@ -4106,7 +4106,7 @@ public final class MaterialIcons {
     private static int resolveBlurPadding(float sdfRange) {
         float sigma = sdfRange / 4.0F;
         int radius = (int) Math.ceil(sigma * 3.0F);
-        return Math.max(1, Math.min(6, radius + 1));
+        return Math.max(1, Math.min(6, radius));
     }
 
     private static BufferedImage renderGlyph(@Nonnull GlyphVector glyphVector, double minX, double minY, int width, int height, float sdfRange) {
