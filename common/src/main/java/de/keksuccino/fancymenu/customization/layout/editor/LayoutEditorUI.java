@@ -11,7 +11,6 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
@@ -97,7 +96,9 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             });
         }).setIcon(MaterialIcons.ADD);
 
-        layoutMenu.addSubMenuEntry("open_layout", Component.translatable("fancymenu.editor.layout.open"), buildOpenLayoutContextMenu())
+        String layoutMenuIdentifier = editor.layout.isUniversalLayout() ? null : editor.layout.screenIdentifier;
+        ContextMenu openLayoutMenu = CustomizationOverlayUI.buildLayoutMenu(editor.layoutTargetScreen, layoutMenuIdentifier, false, this::buildManageLayoutSubMenu);
+        layoutMenu.addSubMenuEntry("open_layout", Component.translatable("fancymenu.editor.layout.open"), openLayoutMenu)
                 .setIcon(MaterialIcons.FOLDER_OPEN);
 
         layoutMenu.addSeparatorEntry("separator_after_open_layout");
@@ -971,109 +972,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             }
 
         };
-
-    }
-
-    public ContextMenu buildOpenLayoutContextMenu() {
-
-        ContextMenu menu = new ContextMenu();
-
-        if (editor.layout.isUniversalLayout()) {
-
-            List<Layout> allLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true);
-            int allLayoutsCount = allLayouts.size();
-            int i = 0;
-            for (Layout l : LayoutHandler.sortLayoutListByLastEdited(allLayouts, true, 8)) {
-                if (l.getLayoutName().equals(editor.layout.getLayoutName())) continue; //Don't show the current layout in the list
-                menu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(l))
-                        .setLabelSupplier((menu1, entry) -> {
-                            Style style = l.getStatus().getValueComponentStyle();
-                            MutableComponent c = Component.literal(l.getLayoutName());
-                            c.append(Component.literal(" (").setStyle(style));
-                            c.append(l.getStatus().getValueComponent());
-                            c.append(Component.literal(")").setStyle(style));
-                            return c;
-                        })
-                        .setIcon(MaterialIcons.VIEW_QUILT);
-                i++;
-            }
-            if (allLayoutsCount > 8) {
-                String moreLayoutCount = "" + (allLayoutsCount-8);
-                menu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu1, entry) -> {
-                    displayUnsavedWarning(call -> {
-						if (call) {
-							editor.saveWidgetSettings();
-							editor.layout.decorationOverlays.forEach(pair -> pair.getSecond().onCloseScreen(null, null));
-							this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
-								this.openContextMenuScreen(editor);
-							}));
-						}
-                    });
-                }).setIcon(MaterialIcons.MORE_HORIZ);
-            }
-
-            menu.addSeparatorEntry("separator_after_recent_layouts");
-
-            menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu1, entry) -> {
-                displayUnsavedWarning(call -> {
-                    if (call) {
-                        editor.saveWidgetSettings();
-                        this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
-                            this.openContextMenuScreen(editor);
-                        }));
-                    }
-                });
-            }).setIcon(MaterialIcons.VIEW_LIST);
-
-        } else if (editor.layout.screenIdentifier != null) {
-
-            List<Layout> allLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false);
-            int allLayoutsCount = allLayouts.size();
-            int i = 0;
-            for (Layout l : LayoutHandler.sortLayoutListByLastEdited(allLayouts, true, 8)) {
-                if (l.getLayoutName().equals(editor.layout.getLayoutName())) continue; //Don't show the current layout in the list
-                menu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(l))
-                        .setLabelSupplier((menu1, entry) -> {
-                            Style style = l.getStatus().getValueComponentStyle();
-                            MutableComponent c = Component.literal(l.getLayoutName());
-                            c.append(Component.literal(" (").setStyle(style));
-                            c.append(l.getStatus().getValueComponent());
-                            c.append(Component.literal(")").setStyle(style));
-                            return c;
-                        })
-                        .setIcon(MaterialIcons.VIEW_QUILT);
-                i++;
-            }
-            if (allLayoutsCount > 8) {
-                String moreLayoutCount = "" + (allLayoutsCount-8);
-                menu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu1, entry) -> {
-                    displayUnsavedWarning(call -> {
-                        if (call) {
-                            editor.saveWidgetSettings();
-                            this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
-                                this.openContextMenuScreen(editor);
-                            }));
-                        }
-                    });
-                }).setIcon(MaterialIcons.MORE_HORIZ);
-            }
-
-            menu.addSeparatorEntry("separator_after_recent_layouts");
-
-            menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu1, entry) -> {
-                displayUnsavedWarning(call -> {
-                    if (call) {
-                        editor.saveWidgetSettings();
-                        this.openContextMenuScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
-                            this.openContextMenuScreen(editor);
-                        }));
-                    }
-                });
-            }).setIcon(MaterialIcons.VIEW_LIST);
-
-        }
-
-        return menu;
 
     }
 

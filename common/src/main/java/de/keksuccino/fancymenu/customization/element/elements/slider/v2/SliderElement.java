@@ -198,6 +198,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetLabelBaseColor();
         this.updateWidgetLabelHoverColor();
         this.updateWidgetLabelScale();
+        this.updateWidgetHitboxRotation();
         this.slider.updateMessage();
     }
 
@@ -384,6 +385,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public void updateWidgetLabelScale() {
         if (this.slider instanceof CustomizableWidget w) {
             w.setLabelScaleFancyMenu(this.getLabelScale());
+        }
+    }
+
+    public void updateWidgetHitboxRotation() {
+        if (this.slider instanceof CustomizableWidget w) {
+            w.setHitboxRotationFancyMenu(this.getRotationDegrees(), this.getVerticalTiltDegrees(), this.getHorizontalTiltDegrees());
         }
     }
 

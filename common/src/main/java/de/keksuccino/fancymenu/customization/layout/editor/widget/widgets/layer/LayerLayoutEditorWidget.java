@@ -94,6 +94,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         this.scrollArea.backgroundColor = () -> null;
         this.scrollArea.borderColor = () -> null;
+        this.scrollArea.setBorderThickness(0.0F);
         this.scrollArea.setScissorEnabled(false);
         this.scrollArea.setRenderOnlyEntriesInArea(true);
         this.scrollArea.setSetupForBlurInterface(true);
@@ -1425,7 +1426,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getEyeButtonX() {
-            return this.x + this.getWidth() - this.getCollapseButtonWidth() - this.getEyeButtonWidth();
+            return this.x + this.getWidth() - this.getEyeButtonWidth();
         }
 
         public float getEyeButtonY() {
@@ -1441,7 +1442,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getCollapseButtonX() {
-            return this.x + this.getWidth() - this.getCollapseButtonWidth();
+            return this.x + this.getWidth() - this.getEyeButtonWidth() - this.getCollapseButtonWidth();
         }
 
         public float getCollapseButtonY() {

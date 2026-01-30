@@ -164,9 +164,9 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
 
     protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
         float x = this.getRealBodyX();
-        float y = this.getRealBodyY();
+        float y = this.getBorderThickness() + this.getTitleBarHeight();
         float width = this.getBodyWidth();
-        float height = this.getBodyHeight();
+        float height = this.getBodyHeight() + this.getBorderThickness();
         if (width <= 0 || height <= 0) {
             return;
         }
@@ -182,14 +182,18 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
 
         this.renderTitleBar(graphics, localMouseX, localMouseY, partial);
 
-        //Separator between title bar and body
-        if (this.isExpanded()) {
+        //Separator between title bar and body (match PiPWindow logic)
+        float titleBarHeight = this.getTitleBarHeight();
+        if (titleBarHeight > 0.0F) {
+            double renderScale = getRenderScaleSafe();
+            float divider = (float) Math.max(1.0F, renderScale);
+            float dividerHeight = divider / (float) renderScale;
             UIBase.resetShaderColor(graphics);
-            float separatorXMin = this.getBorderThickness();
-            float separatorYMin = this.getBorderThickness() + this.getTitleBarHeight();
-            float separatorXMax = separatorXMin + this.getBodyWidth();
-            float separatorYMax = separatorYMin + this.getBorderThickness();
-            UIBase.fillF(graphics, separatorXMin, separatorYMin, separatorXMax, separatorYMax, this.getBorderColor().getColorInt());
+            float titleBarX = this.getBorderThickness();
+            float titleBarY = this.getBorderThickness();
+            float titleBarRight = titleBarX + this.getBodyWidth();
+            float bottom = titleBarY + titleBarHeight;
+            RenderingUtils.fillF(graphics, titleBarX, bottom - dividerHeight, titleBarRight, bottom, this.getBorderColor().getColorInt());
         }
 
         //Widget border
@@ -335,8 +339,8 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
 
     @NotNull
     protected DrawableColor getBorderColor() {
-        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_overlay_border_color;
-        return UIBase.getUITheme().ui_interface_widget_border_color;
+        if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_border_color;
+        return UIBase.getUITheme().ui_interface_border_color;
     }
 
     @NotNull

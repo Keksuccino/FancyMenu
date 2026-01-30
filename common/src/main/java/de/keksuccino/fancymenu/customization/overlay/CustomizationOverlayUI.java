@@ -74,6 +74,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class CustomizationOverlayUI {
 
@@ -172,76 +173,9 @@ public class CustomizationOverlayUI {
 
         customizationMenu.addSeparatorEntry("separator_after_override_current");
 
-        ContextMenu layoutMenu = new ContextMenu();
+        ContextMenu layoutMenu = buildLayoutMenu(screen, identifier, true, layout -> buildManageLayoutSubMenu(layout, List.of("layouts"), screen));
         customizationMenu.addSubMenuEntry("layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout"), layoutMenu)
                 .setIcon(MaterialIcons.GALLERY_THUMBNAIL);
-
-        ContextMenu layoutNewMenu = new ContextMenu();
-        layoutMenu.addSubMenuEntry("new_layout", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new"), layoutNewMenu)
-                .setIcon(MaterialIcons.ADD);
-
-        layoutNewMenu.addClickableEntry("new_layout_for_current", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new.current"), (menu, entry) -> {
-                    if (screen != null) {
-                        LayoutHandler.openLayoutEditor(new Layout(screen), screen);
-                    }
-                }).addIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(screen))
-                .setTooltipSupplier((menu, entry) -> {
-                    if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) {
-                        return UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new.current.disabled.tooltip"));
-                    }
-                    return null;
-                })
-                .setIcon(MaterialIcons.ADD);
-
-        layoutNewMenu.addClickableEntry("new_universal_layout", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new.universal"), (menu, entry) -> {
-            LayoutHandler.openLayoutEditor(new Layout(), null);
-        }).setIcon(MaterialIcons.ADD);
-
-        layoutMenu.addSeparatorEntry("separator_after_new_layouts");
-
-        if (identifier != null) {
-            int layoutIndex = 0;
-            List<Layout> normalLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false);
-            LayoutHandler.sortLayoutListByLastEdited(normalLayouts, true);
-            for (Layout layout : normalLayouts) {
-                layoutMenu.addSubMenuEntry("layout_normal_" + layoutIndex, Component.empty(), buildManageLayoutSubMenu(layout, List.of("layouts")))
-                        .setLabelSupplier((menu, entry) -> {
-                            Style style = layout.getStatus().getValueComponentStyle();
-                            MutableComponent c = Component.literal(layout.getLayoutName());
-                            c.append(Component.literal(" "));
-                            MutableComponent normalSuffix = Component.translatable("fancymenu.ui.customization_overlay.layouts.normal_suffix").setStyle(Style.EMPTY.withBold(true));
-                            c.append(normalSuffix);
-                            c.append(Component.literal(" (").setStyle(style));
-                            c.append(layout.getStatus().getValueComponent());
-                            c.append(Component.literal(")").setStyle(style));
-                            return c;
-                        })
-                        .setIcon(MaterialIcons.GALLERY_THUMBNAIL);
-                layoutIndex++;
-            }
-        }
-
-        layoutMenu.addSeparatorEntry("separator_after_normal_layouts");
-
-        int layoutIndex = 0;
-        List<Layout> universalLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true);
-        LayoutHandler.sortLayoutListByLastEdited(universalLayouts, true);
-        for (Layout layout : universalLayouts) {
-            layoutMenu.addSubMenuEntry("layout_universal_" + layoutIndex, Component.empty(), buildManageLayoutSubMenu(layout, List.of("layouts")))
-                    .setLabelSupplier((menu, entry) -> {
-                        Style style = layout.getStatus().getValueComponentStyle();
-                        MutableComponent c = Component.literal(layout.getLayoutName());
-                        c.append(Component.literal(" "));
-                        MutableComponent universalSuffix = Component.translatable("fancymenu.ui.customization_overlay.layouts.universal_suffix").setStyle(Style.EMPTY.withBold(true));
-                        c.append(universalSuffix);
-                        c.append(Component.literal(" (").setStyle(style));
-                        c.append(layout.getStatus().getValueComponent());
-                        c.append(Component.literal(")").setStyle(style));
-                        return c;
-                    })
-                    .setIcon(MaterialIcons.GALLERY_THUMBNAIL);
-            layoutIndex++;
-        }
 
         customizationMenu.addSeparatorEntry("separator_after_layout_menu");
 
@@ -460,6 +394,91 @@ public class CustomizationOverlayUI {
 
         return menuBar;
 
+    }
+
+    @NotNull
+    public static ContextMenu buildLayoutMenu(@Nullable Screen layoutTargetScreen, @Nullable String screenIdentifier, boolean includeNewEntry, @NotNull Function<Layout, ContextMenu> manageLayoutSubMenuBuilder) {
+
+        ContextMenu layoutMenu = new ContextMenu();
+
+        if (includeNewEntry) {
+            ContextMenu layoutNewMenu = new ContextMenu();
+            layoutMenu.addSubMenuEntry("new_layout", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new"), layoutNewMenu)
+                    .setIcon(MaterialIcons.ADD);
+
+            layoutNewMenu.addClickableEntry("new_layout_for_current", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new.current"), (menu, entry) -> {
+                        if (layoutTargetScreen != null) {
+                            LayoutHandler.openLayoutEditor(new Layout(layoutTargetScreen), layoutTargetScreen);
+                        }
+                    }).addIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(layoutTargetScreen))
+                    .setTooltipSupplier((menu, entry) -> {
+                        if (!ScreenCustomization.isCustomizationEnabledForScreen(layoutTargetScreen)) {
+                            return UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new.current.disabled.tooltip"));
+                        }
+                        return null;
+                    })
+                    .setIcon(MaterialIcons.ADD);
+
+            layoutNewMenu.addClickableEntry("new_universal_layout", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new.universal"), (menu, entry) -> {
+                LayoutHandler.openLayoutEditor(new Layout(), null);
+            }).setIcon(MaterialIcons.ADD);
+
+            layoutMenu.addSeparatorEntry("separator_after_new_layouts");
+        }
+
+        if (screenIdentifier != null) {
+            int layoutIndex = 0;
+            List<Layout> normalLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(screenIdentifier, false);
+            LayoutHandler.sortLayoutListByLastEdited(normalLayouts, true);
+            for (Layout layout : normalLayouts) {
+                layoutMenu.addSubMenuEntry("layout_normal_" + layoutIndex, Component.empty(), manageLayoutSubMenuBuilder.apply(layout))
+                        .setLabelSupplier((menu, entry) -> {
+                            Style style = layout.getStatus().getValueComponentStyle();
+                            MutableComponent c = Component.literal(layout.getLayoutName());
+                            c.append(Component.literal(" "));
+                            MutableComponent normalSuffix = Component.translatable("fancymenu.ui.customization_overlay.layouts.normal_suffix").setStyle(Style.EMPTY.withBold(true));
+                            c.append(normalSuffix);
+                            c.append(Component.literal(" (").setStyle(style));
+                            c.append(layout.getStatus().getValueComponent());
+                            c.append(Component.literal(")").setStyle(style));
+                            return c;
+                        })
+                        .setIcon(MaterialIcons.GALLERY_THUMBNAIL);
+                layoutIndex++;
+            }
+        }
+
+        layoutMenu.addSeparatorEntry("separator_after_normal_layouts");
+
+        int layoutIndex = 0;
+        List<Layout> universalLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true);
+        LayoutHandler.sortLayoutListByLastEdited(universalLayouts, true);
+        for (Layout layout : universalLayouts) {
+            layoutMenu.addSubMenuEntry("layout_universal_" + layoutIndex, Component.empty(), manageLayoutSubMenuBuilder.apply(layout))
+                    .setLabelSupplier((menu, entry) -> {
+                        Style style = layout.getStatus().getValueComponentStyle();
+                        MutableComponent c = Component.literal(layout.getLayoutName());
+                        c.append(Component.literal(" "));
+                        MutableComponent universalSuffix = Component.translatable("fancymenu.ui.customization_overlay.layouts.universal_suffix").setStyle(Style.EMPTY.withBold(true));
+                        c.append(universalSuffix);
+                        c.append(Component.literal(" (").setStyle(style));
+                        c.append(layout.getStatus().getValueComponent());
+                        c.append(Component.literal(")").setStyle(style));
+                        return c;
+                    })
+                    .setIcon(MaterialIcons.GALLERY_THUMBNAIL);
+            layoutIndex++;
+        }
+
+        return layoutMenu;
+
+    }
+
+    @NotNull
+    public static ContextMenu buildLayoutMenu(boolean includeNewEntry) {
+        Screen screen = Minecraft.getInstance().screen;
+        String identifier = (screen != null) ? ScreenIdentifierHandler.getIdentifierOfScreen(screen) : null;
+        return buildLayoutMenu(screen, identifier, includeNewEntry, layout -> buildManageLayoutSubMenu(layout, List.of("layouts"), screen));
     }
 
     public static ContextMenu buildSettingsMenu(@NotNull ResourceSupplier<ITexture> emptyImageSupplier) {
@@ -1104,14 +1123,12 @@ public class CustomizationOverlayUI {
     }
 
     @NotNull
-    protected static ContextMenu buildManageLayoutSubMenu(Layout layout, @NotNull List<String> entryPath) {
+    protected static ContextMenu buildManageLayoutSubMenu(Layout layout, @Nullable List<String> entryPath, @Nullable Screen layoutTargetScreen) {
 
         // layouts -> manage_layouts -> manage_layouts_for_current
         // layouts -> manage_layouts -> layout_manage_universal
 
         ContextMenu menu = new ContextMenu();
-        Screen screen = Minecraft.getInstance().screen;
-
         menu.addClickableEntry("toggle_layout_status", Component.empty(), (menu1, entry) -> {
             MainThreadTaskExecutor.executeInMainThread(() -> {
                 grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
@@ -1122,7 +1139,7 @@ public class CustomizationOverlayUI {
 
         menu.addClickableEntry("edit_layout", Component.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
             menu1.closeMenu();
-            MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : screen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : layoutTargetScreen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }).setIcon(MaterialIcons.EDIT);
 
         menu.addClickableEntry("delete_layout", Component.translatable("fancymenu.layout.manage.delete"), (menu1, entry) -> {
@@ -1131,7 +1148,9 @@ public class CustomizationOverlayUI {
                 if (call) {
                     layout.delete(false);
                 }
-                forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
+                if ((entryPath != null) && !entryPath.isEmpty()) {
+                    forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
+                }
             });
         }).setIcon(MaterialIcons.DELETE);
 

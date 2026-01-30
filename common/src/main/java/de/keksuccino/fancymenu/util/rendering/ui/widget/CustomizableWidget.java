@@ -262,6 +262,14 @@ public interface CustomizableWidget {
 
     void setCustomYFancyMenu(@Nullable Integer y);
 
+    void setHitboxRotationFancyMenu(float rotationDegrees, float verticalTiltDegrees, float horizontalTiltDegrees);
+
+    float getHitboxRotationDegreesFancyMenu();
+
+    float getHitboxVerticalTiltDegreesFancyMenu();
+
+    float getHitboxHorizontalTiltDegreesFancyMenu();
+
     enum CustomBackgroundResetBehavior {
         RESET_NEVER,
         RESET_ON_HOVER,

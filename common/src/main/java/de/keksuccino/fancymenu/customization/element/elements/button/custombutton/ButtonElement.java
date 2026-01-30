@@ -218,6 +218,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTexture();
         this.updateWidgetSize();
         this.updateWidgetPosition();
+        this.updateWidgetHitboxRotation();
         this.updateWidgetNavigatable();
     }
 
@@ -247,6 +248,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (this.getWidget() == null) return;
         this.getWidget().setX(this.getAbsoluteX());
         this.getWidget().setY(this.getAbsoluteY());
+    }
+
+    public void updateWidgetHitboxRotation() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            w.setHitboxRotationFancyMenu(this.getRotationDegrees(), this.getVerticalTiltDegrees(), this.getHorizontalTiltDegrees());
+        }
     }
 
     public void updateWidgetSize() {
