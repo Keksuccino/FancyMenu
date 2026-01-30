@@ -31,6 +31,8 @@ public class FancyMenu {
 
     //TODO FIXEN: Text element rendert keinen Text mehr..???
 
+    //TODO "Tipps" system adden, dass immer kleine Toast-like Tipps in der rechten ecke einblendet
+
 
 
 	private static final Logger LOGGER = LogManager.getLogger();
