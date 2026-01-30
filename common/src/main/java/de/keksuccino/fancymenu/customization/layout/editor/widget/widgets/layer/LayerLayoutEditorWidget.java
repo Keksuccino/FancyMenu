@@ -124,7 +124,13 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     public void updateList(boolean keepScroll) {
-        float scroll = this.scrollArea.verticalScrollBar.getScroll();
+        float scrollOffsetY = 0.0F;
+        if (keepScroll) {
+            float totalScrollHeight = this.scrollArea.getTotalScrollHeight();
+            if (totalScrollHeight > 0.0F) {
+                scrollOffsetY = totalScrollHeight * this.scrollArea.verticalScrollBar.getScroll();
+            }
+        }
         this.scrollArea.clearEntries();
         if (this.editor.layout.renderElementsBehindVanilla) {
             this.scrollArea.addEntry(new VanillaLayerElementEntry(this.scrollArea, this));
@@ -157,7 +163,14 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.scrollArea.addEntry(new VanillaLayerElementEntry(this.scrollArea, this));
             this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
         }
-        if (keepScroll) this.scrollArea.verticalScrollBar.setScroll(scroll);
+        if (keepScroll) {
+            float totalScrollHeight = this.scrollArea.getTotalScrollHeight();
+            if (totalScrollHeight > 0.0F) {
+                this.scrollArea.verticalScrollBar.setScroll(scrollOffsetY / totalScrollHeight);
+            } else {
+                this.scrollArea.verticalScrollBar.setScroll(0.0F);
+            }
+        }
 
         // Reset drag state when list is updated
         this.draggedEntry = null;

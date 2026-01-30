@@ -16,6 +16,8 @@ public final class MaterialIcon {
     private static final float BASELINE_QUALITY_SCALE = 2.0F;
     private static final float GLYPH_COVERAGE_COMPENSATION = 1.2F;
     private static final int DEFAULT_FALLBACK_TEXTURE_SIZE = 96;
+    private static final float MAX_MINIFICATION_RATIO_DEFAULT = 2.75F;
+    private static final float MAX_MINIFICATION_RATIO_HIGH_SCALE = 2.4F;
 
     private final String name;
     private final int codepoint;
@@ -87,6 +89,11 @@ public final class MaterialIcon {
         float desiredSize = renderPixelSize * oversample * GLYPH_COVERAGE_COMPENSATION;
 
         float targetSize = Math.max(minTextureSize, desiredSize);
+        float maxMinification = resolveMaxMinificationRatio(uiScale);
+        float maxAllowedSize = renderPixelSize * maxMinification;
+        if (Float.isFinite(maxAllowedSize) && maxAllowedSize > 0.0F) {
+            targetSize = Math.min(targetSize, maxAllowedSize);
+        }
         int resolvedSize = quantizeTextureSize(targetSize);
         return MaterialIcons.normalizeSize(resolvedSize);
     }
@@ -141,6 +148,13 @@ public final class MaterialIcon {
             return 1.75F;
         }
         return BASELINE_QUALITY_SCALE;
+    }
+
+    private static float resolveMaxMinificationRatio(float uiScale) {
+        if (uiScale >= 3.0F) {
+            return MAX_MINIFICATION_RATIO_HIGH_SCALE;
+        }
+        return MAX_MINIFICATION_RATIO_DEFAULT;
     }
 
     private static int quantizeTextureSize(float desiredSize) {
