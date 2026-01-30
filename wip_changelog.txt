@@ -124,6 +124,7 @@
 - The "Rectangle Shape" element now has support for rounding the shape corners (#1484)
 - The "Rectangle Shape" element now has support for enabling blurring, so the shape can be used as a blur background for menu areas, etc. (#1484)
 - You can now set an "Unhover Sound" for buttons, sliders and checkboxes, similar to the hover sound, but for unhover (duh) (#1415)
+- Rotated buttons and sliders now adjust their "hitbox" to the rotation, so even when rotated you can click/hover the actual visible body instead of the original/not-rotated body
 - The "Input Field" element now has support for setting hover, unhover and click sounds
 - Most of FancyMenu's simple text inputs (input fields) now allow for selecting text by holding down the mouse and moving over the text
 - The text editor got some QoL additions
