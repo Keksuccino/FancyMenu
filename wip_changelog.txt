@@ -91,11 +91,13 @@
 - Added "Comment" object to the action script system that lets you add comments to your scripts for easier organization and logic explaination (#1465)
 - Ported "Is Player Using Item" requirement from Spiffy (#1401)
 - Ported "Is Player In Structure" requirement from Spiffy (#1402)
-- You can now set buttons and sliders to have transparent backgrounds (without the need to set transparent textures)
-- You can now set buttons and sliders to underline their label on hover (without setting a "hover label")
-- You can now set a label hover color for buttons and sliders to change the label's color when button/slider is hovered (without setting a "hover label")
-- You can now set a label base color for buttons and sliders to change the label's default (white) color (without setting a custom label text)
-- You can now set the text scale at which button and slider labels should show
+- "Button" and "Slider" elements got some new features:
+  - They can have transparent backgrounds now (without the need to set transparent textures)
+  - Labels can now show underlined on hover (without setting a "hover label" text)
+  - You can now set a hover color for the label to change its color when button/slider is hovered (without setting a "hover label" text)
+  - You can now set a base color for the label to change its default (white) color (without setting a custom label text)
+  - There's support for setting the label text scale now
+  - Both elements now let you toggle on/off the text shadow of labels
 - The file browser screens (choose/save file) got a little glow-up
   - They have a new set of icons and show different icons for audio, video, image and text files now
   - There is a Search bar now to search for files
