@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.icon;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.client.Minecraft;
@@ -3996,7 +3997,11 @@ public final class MaterialIcons {
     private static void applyMaterialIconFilter(@Nonnull ResourceLocation location) {
         Runnable action = () -> {
             try {
-                Minecraft.getInstance().getTextureManager().getTexture(location).setFilter(true, false);
+                var texture = Minecraft.getInstance().getTextureManager().getTexture(location);
+                texture.setFilter(true, false);
+                texture.bind();
+                GlStateManager._texParameter(3553, 10242, 33071);
+                GlStateManager._texParameter(3553, 10243, 33071);
             } catch (Exception ignored) {
             }
         };

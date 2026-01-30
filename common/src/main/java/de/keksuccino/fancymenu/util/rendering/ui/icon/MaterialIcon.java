@@ -81,7 +81,8 @@ public final class MaterialIcon {
 
         float densityBucket = resolveDensityBucket(uiScale);
         float renderPixelSize = maxRenderSize * uiScale;
-        float minTextureSize = BASELINE_ICON_DP * densityBucket * BASELINE_QUALITY_SCALE;
+        float qualityScale = resolveQualityScale(renderPixelSize);
+        float minTextureSize = BASELINE_ICON_DP * densityBucket * qualityScale;
         float oversample = resolveOversampleFactor(renderPixelSize);
         float desiredSize = renderPixelSize * oversample * GLYPH_COVERAGE_COMPENSATION;
 
@@ -124,6 +125,22 @@ public final class MaterialIcon {
             return 1.12F;
         }
         return 1.08F;
+    }
+
+    private static float resolveQualityScale(float renderPixelSize) {
+        if (renderPixelSize <= 18.0F) {
+            return 1.0F;
+        }
+        if (renderPixelSize <= 24.0F) {
+            return 1.2F;
+        }
+        if (renderPixelSize <= 32.0F) {
+            return 1.5F;
+        }
+        if (renderPixelSize <= 48.0F) {
+            return 1.75F;
+        }
+        return BASELINE_QUALITY_SCALE;
     }
 
     private static int quantizeTextureSize(float desiredSize) {
