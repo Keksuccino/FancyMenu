@@ -4,7 +4,10 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
@@ -16,6 +19,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayout
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
@@ -45,6 +49,7 @@ import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -795,12 +800,17 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         addTo.addSubMenuEntry("menu_backgrounds", Component.translatable("fancymenu.backgrounds.general.backgrounds"), backgroundsMenu)
                 .setIcon(MaterialIcons.WALLPAPER);
         // The backgrounds list always holds exactly one instance of each background type
-        editor.layout.menuBackgrounds.forEach(background -> {
+        List<MenuBackground<?>> sortedBackgrounds = new ArrayList<>(editor.layout.menuBackgrounds);
+        sortedBackgrounds.sort(Comparator
+                .comparing(background -> background.builder.getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(background -> background.builder.getDisplayName().getString())
+                .thenComparing(background -> background.builder.getIdentifier()));
+        for (MenuBackground<?> background : sortedBackgrounds) {
             var entry = backgroundsMenu.addSubMenuEntry("menu_background_" + background.builder.getIdentifier(), background.builder.getDisplayName(), background._initConfigMenu(editor));
             entry.setIcon(MaterialIcons.WALLPAPER);
             var desc = background.builder.getDescription();
             if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> UITooltip.of(desc));
-        });
+        }
 
         backgroundsMenu.addSeparatorEntry("separator_after_background_types");
 
@@ -829,12 +839,17 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         ContextMenu menu = new ContextMenu();
 
         // Normal layouts always have one instance of each overlay type, so doing this is fine
-        editor.layout.decorationOverlays.forEach(pair -> {
+        List<Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>>> sortedOverlays = new ArrayList<>(editor.layout.decorationOverlays);
+        sortedOverlays.sort(Comparator
+                .comparing(pair -> pair.getFirst().getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(pair -> pair.getFirst().getDisplayName().getString())
+                .thenComparing(pair -> pair.getFirst().getIdentifier()));
+        for (Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>> pair : sortedOverlays) {
             var entry = menu.addSubMenuEntry("overlay_" + pair.getFirst().getIdentifier(), pair.getFirst().getDisplayName(), pair.getSecond()._initConfigMenu(editor));
             entry.setIcon(MaterialIcons.AUTO_AWESOME);
             var desc = pair.getFirst().getDescription();
             if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> UITooltip.of(desc));
-        });
+        }
 
         return menu;
 
@@ -902,37 +917,46 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
         ContextMenu menu = new ContextMenu();
 
-        int i = 0;
-        for (ElementBuilder<?,?> builder : ElementRegistry.getBuilders()) {
+        List<ElementBuilder<?, ?>> builders = new ArrayList<>();
+        for (ElementBuilder<?, ?> builder : ElementRegistry.getBuilders()) {
             if ((LayoutEditorScreen.getCurrentInstance() != null) && !builder.shouldShowUpInEditorElementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             if (!builder.isDeprecated()) {
-                ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("element_" + i, builder.getDisplayName(null), (menu1, entry1) -> {
-                    AbstractEditorElement<?,?> editorElement = builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), editor);
-                    if (editorElement != null) {
-                        editorElement.element.afterConstruction();
-                        editor.history.saveSnapshot();
-                        editor.normalEditorElements.add(editorElement);
-                        if ((editor.rightClickMenuOpenPosX != -1000) && (editor.rightClickMenuOpenPosY != -1000)) {
-                            //Add new element at right-click menu coordinates
-                            editorElement.setAnchorPoint(editorElement.element.anchorPoint, editor.rightClickMenuOpenPosX, editor.rightClickMenuOpenPosY, true);
-                            editor.deselectAllElements();
-                            editorElement.setSelected(true);
-                            editor.rightClickMenuOpenPosX = -1000;
-                            editor.rightClickMenuOpenPosY = -1000;
-                        }
-                        for (AbstractLayoutEditorWidget w : editor.layoutEditorWidgets) {
-                            w.editorElementAdded(editorElement);
-                        }
-                        menu.closeMenu();
-                    }
-                });
-                Component[] desc = builder.getDescription(null);
-                if ((desc != null) && (desc.length > 0)) {
-                    entry.setTooltipSupplier((menu1, entry1) -> UITooltip.of(desc));
-                }
-                entry.setIcon(MaterialIcons.WIDGETS);
-                i++;
+                builders.add(builder);
             }
+        }
+        builders.sort(Comparator
+                .comparing((ElementBuilder<?, ?> builder) -> builder.getDisplayName(null).getString(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(builder -> builder.getDisplayName(null).getString())
+                .thenComparing(ElementBuilder::getIdentifier));
+
+        int i = 0;
+        for (ElementBuilder<?,?> builder : builders) {
+            ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("element_" + i, builder.getDisplayName(null), (menu1, entry1) -> {
+                AbstractEditorElement<?,?> editorElement = builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), editor);
+                if (editorElement != null) {
+                    editorElement.element.afterConstruction();
+                    editor.history.saveSnapshot();
+                    editor.normalEditorElements.add(editorElement);
+                    if ((editor.rightClickMenuOpenPosX != -1000) && (editor.rightClickMenuOpenPosY != -1000)) {
+                        //Add new element at right-click menu coordinates
+                        editorElement.setAnchorPoint(editorElement.element.anchorPoint, editor.rightClickMenuOpenPosX, editor.rightClickMenuOpenPosY, true);
+                        editor.deselectAllElements();
+                        editorElement.setSelected(true);
+                        editor.rightClickMenuOpenPosX = -1000;
+                        editor.rightClickMenuOpenPosY = -1000;
+                    }
+                    for (AbstractLayoutEditorWidget w : editor.layoutEditorWidgets) {
+                        w.editorElementAdded(editorElement);
+                    }
+                    menu.closeMenu();
+                }
+            });
+            Component[] desc = builder.getDescription(null);
+            if ((desc != null) && (desc.length > 0)) {
+                entry.setTooltipSupplier((menu1, entry1) -> UITooltip.of(desc));
+            }
+            entry.setIcon(MaterialIcons.WIDGETS);
+            i++;
         }
 
         return menu;

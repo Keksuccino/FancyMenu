@@ -45,6 +45,8 @@ public class CreditsScreen extends Screen {
         } else {
             this.markdownRenderer.rebuild((float)(centerX - (scrollWidth / 2)), this.headerHeight, scrollWidth, scrollHeight);
         }
+        // Allow markdown to render once to measure its size before entry culling.
+        this.markdownRenderer.getScrollArea().setRenderOnlyEntriesInArea(false);
         this.markdownRenderer.getMarkdownRenderer().setHeadlineLineColor(UIBase.getUITheme().ui_interface_background_color);
         this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUITheme().ui_interface_generic_text_color);
         this.markdownRenderer.getMarkdownRenderer().setTextShadow(false);

@@ -417,6 +417,11 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
         return this.scissorEnabled;
     }
 
+    /**
+     * Controls whether entries are culled based on their current size and the visible area.
+     * Disabling this can help when entries determine their size during render (e.g., markdown)
+     * so they still get a chance to measure themselves, at the cost of extra rendering work.
+     */
     public ScrollArea setRenderOnlyEntriesInArea(boolean renderOnlyEntriesInArea) {
         this.renderOnlyEntriesInArea = renderOnlyEntriesInArea;
         return this;

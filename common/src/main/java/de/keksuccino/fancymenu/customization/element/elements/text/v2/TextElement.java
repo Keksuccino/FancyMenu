@@ -99,13 +99,15 @@ public class TextElement extends AbstractElement {
         this.scrollArea.borderColor = () -> DrawableColor.of(0,0,0,0);
 
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
+        // Ensure markdown can render once to measure its size before culling kicks in.
+        this.scrollArea.setRenderOnlyEntriesInArea(false);
 
         //Don't render markdown lines outside visible area (for performance reasons)
         this.markdownRenderer.addLineRenderValidator(line -> {
-            if ((line.parent.getY() + line.offsetY + line.getLineHeight()) < this.getAbsoluteY()) {
+            if ((line.parent.getY() + line.offsetY + line.getLineHeight()) < this.scrollArea.getInnerY()) {
                 return false;
             }
-            if ((line.parent.getY() + line.offsetY) > (this.getAbsoluteY() + this.getAbsoluteHeight())) {
+            if ((line.parent.getY() + line.offsetY) > (this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight())) {
                 return false;
             }
             return true;

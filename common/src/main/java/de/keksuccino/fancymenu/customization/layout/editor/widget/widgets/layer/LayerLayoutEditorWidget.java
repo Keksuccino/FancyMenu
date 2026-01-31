@@ -62,6 +62,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final MaterialIcon MOVE_BEHIND_ICON = MaterialIcons.VERTICAL_ALIGN_BOTTOM;
     private static final float LAYER_ENTRY_ICON_PADDING = 6.0f;
     private static final float LAYER_ICON_TEXT_GAP = 4.0f;
+    private static final float RIGHT_SIDE_BUTTON_OFFSET = 5.0f;
     private static final float GROUP_INDENT = 12.0f;
     private static final float GROUP_NAME_LEFT_PADDING = 0.0f;
     private static final float GROUP_COLLAPSE_BUTTON_WIDTH = 24.0f;
@@ -1289,7 +1290,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getMaxLayerNameWidth() {
-            return this.eyeButton.getX() - this.getLayerNameX() - 3f;
+            float rightEdge = this.x + this.getWidth() - RIGHT_SIDE_BUTTON_OFFSET;
+            float eyeWidth = this.eyeButton.getWidth();
+            return rightEdge - eyeWidth - this.getLayerNameX() - 3f;
         }
 
         public boolean isEyeButtonMouseOver(double mouseX, double mouseY) {
@@ -1306,7 +1309,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float eyeAlpha = !this.element.element.layerHiddenInEditor ? 1.0f : 0.3f;
             float eyeWidth = this.eyeButton.getWidth();
             float eyeHeight = this.eyeButton.getHeight();
-            this.eyeButton.setX(this.x + this.getWidth() - eyeWidth)
+            this.eyeButton.setX(this.x + this.getWidth() - eyeWidth - RIGHT_SIDE_BUTTON_OFFSET)
                     .setY(this.y)
                     .setWidth(eyeWidth)
                     .setHeight(eyeHeight)
@@ -1533,7 +1536,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float eyeAlpha = this.isGroupHidden() ? 0.3f : 1.0f;
             float eyeWidth = this.eyeButton.getWidth();
             float eyeHeight = this.eyeButton.getHeight();
-            this.eyeButton.setX(this.x + this.getWidth() - eyeWidth)
+            this.eyeButton.setX(this.x + this.getWidth() - eyeWidth - RIGHT_SIDE_BUTTON_OFFSET)
                     .setY(this.y)
                     .setWidth(eyeWidth)
                     .setHeight(eyeHeight)
@@ -1545,7 +1548,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float eyeWidth = this.eyeButton.getWidth();
             float collapseWidth = this.collapseButton.getWidth();
             float collapseHeight = this.collapseButton.getHeight();
-            this.collapseButton.setX(this.x + this.getWidth() - eyeWidth - collapseWidth)
+            this.collapseButton.setX(this.x + this.getWidth() - eyeWidth - collapseWidth - RIGHT_SIDE_BUTTON_OFFSET)
                     .setY(this.y)
                     .setWidth(collapseWidth)
                     .setHeight(collapseHeight)
@@ -1564,7 +1567,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getMaxGroupNameWidth() {
-            return this.collapseButton.getX() - this.getGroupNameX() - 3f;
+            float rightEdge = this.x + this.getWidth() - RIGHT_SIDE_BUTTON_OFFSET;
+            float eyeWidth = this.eyeButton.getWidth();
+            float collapseWidth = this.collapseButton.getWidth();
+            return rightEdge - eyeWidth - collapseWidth - this.getGroupNameX() - 3f;
         }
 
         public float getGroupIconWidth() {
@@ -1734,7 +1740,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float iconBaseY = this.y + (this.getHeight() - iconSize) * 0.5f;
             this.layerWidget.renderMaterialIcon(graphics, VANILLA_ICON, iconBaseX, iconBaseY, iconSize, iconSize, 1.0f);
             float labelX = iconBaseX + iconSize + LAYER_ICON_TEXT_GAP;
-            float labelWidth = this.moveTopBottomButton.getX() - labelX - 3f;
+            float rightEdge = this.x + this.getWidth() - RIGHT_SIDE_BUTTON_OFFSET;
+            float labelWidth = rightEdge - this.moveTopBottomButton.getWidth() - labelX - 3f;
             float labelY = this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f);
             if (labelWidth > 0.0f) {
                 graphics.enableScissor((int) labelX, (int) this.getY(), (int) (labelX + labelWidth), (int) (this.getY() + this.getHeight()));
@@ -1758,7 +1765,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             MaterialIcon icon = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_ICON : MOVE_TO_TOP_ICON;
             float buttonWidth = this.moveTopBottomButton.getWidth();
             float buttonHeight = this.moveTopBottomButton.getHeight();
-            this.moveTopBottomButton.setX(this.x + this.getWidth() - buttonWidth)
+            this.moveTopBottomButton.setX(this.x + this.getWidth() - buttonWidth - RIGHT_SIDE_BUTTON_OFFSET)
                     .setY(this.y)
                     .setWidth(buttonWidth)
                     .setHeight(buttonHeight)
