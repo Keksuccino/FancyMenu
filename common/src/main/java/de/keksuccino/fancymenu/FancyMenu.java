@@ -27,14 +27,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-
-
-    //TODO FIXEN: Text element rendert keinen Text mehr..???
-
-    //TODO "Tipps" system adden, dass immer kleine Toast-like Tipps in der rechten ecke einblendet
-
-
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final String VERSION = "3.9.0";
