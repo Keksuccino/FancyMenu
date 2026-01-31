@@ -102,7 +102,7 @@ public class MarkdownTextLine implements Renderable {
         }
         if (last != null) {
             if (last.text.endsWith(" ")) {
-                f -= (this.parent.font.width(" ") * last.getScale());
+                f -= (this.parent.getUnscaledTextWidth(" ") * last.getScale());
             }
         }
         if (f < 0) {

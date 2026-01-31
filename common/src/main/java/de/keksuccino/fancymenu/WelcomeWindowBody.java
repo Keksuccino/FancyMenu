@@ -59,6 +59,9 @@ public class WelcomeWindowBody extends PiPWindowBody {
         }
         this.markdownRenderer.getMarkdownRenderer().setText("^^^\n\n\n" + I18n.get("fancymenu.welcome.screen.text") + "\n^^^");
         this.markdownRenderer.getMarkdownRenderer().setAutoLineBreakingEnabled(true);
+        this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUITheme().ui_interface_generic_text_color);
+        this.markdownRenderer.getMarkdownRenderer().setTextShadow(false);
+        this.markdownRenderer.getMarkdownRenderer().setUIFontRenderingEnabled(true);
         this.addRenderableWidget(this.markdownRenderer);
 
         ExtendedButton btn = this.addRenderableWidget(new ExtendedButton(centerX - 100, this.height - (FOOTER_HEIGHT / 2) - 10, 200, 20, Component.translatable("fancymenu.welcome.screen.open_docs"), button -> {
@@ -81,7 +84,7 @@ public class WelcomeWindowBody extends PiPWindowBody {
         // Render headline
         float headlineW = UIBase.getUITextWidthNormal(HEADLINE, true);
         float headlineH = UIBase.getUITextHeightNormal(true);
-        UIBase.renderText(graphics, HEADLINE, (this.width / 2F) - (headlineW / 2F), (HEADER_HEIGHT / 2F) - (headlineH / 2F), -1, UIBase.getUITextSizeNormal(), true);
+        UIBase.renderText(graphics, HEADLINE, (this.width / 2F) - (headlineW / 2F), (HEADER_HEIGHT / 2F) - (headlineH / 2F), UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), UIBase.getUITextSizeNormal(), false);
 
     }
 

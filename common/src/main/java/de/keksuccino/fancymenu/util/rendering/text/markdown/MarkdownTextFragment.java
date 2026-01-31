@@ -62,7 +62,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public MarkdownTextFragment(@NotNull MarkdownRenderer parent, @NotNull String text) {
         this.parent = parent;
         this.text = text;
-        this.unscaledTextHeight = this.parent.font.lineHeight;
+        this.unscaledTextHeight = this.parent.getUnscaledTextHeight();
     }
 
     @Override
@@ -100,7 +100,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             RenderSystem.enableBlend();
             graphics.pose().pushPose();
             graphics.pose().scale(this.getScale(), this.getScale(), this.getScale());
-            graphics.drawString(this.parent.font, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
+            this.parent.renderText(graphics, this.buildRenderComponent(false), this.getTextRenderX(), this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
             graphics.pose().popPose();
             RenderingUtils.resetShaderColor(graphics);
 
@@ -208,7 +208,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                             // Render the code block background
                             float endX = fragment.x + fragment.getRenderWidth() + 1;
                             if (fragment.text.endsWith(" ")) {
-                                endX -= (this.parent.font.width(" ") * fragment.getScale());
+                                endX -= (this.parent.getUnscaledTextWidth(" ") * fragment.getScale());
                             }
                             renderCodeBlockBackground(graphics, codeBlockStartX, fragment.y - 2, endX, 
                                 fragment.y + fragment.getTextRenderHeight(), 
@@ -297,7 +297,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             if (this.codeBlockContext.singleLine) {
                 float xEnd = end.x + end.getRenderWidth();
                 if (end.text.endsWith(" ")) {
-                    xEnd -= (this.parent.font.width(" ") * this.getScale());
+                    xEnd -= (this.parent.getUnscaledTextWidth(" ") * this.getScale());
                 }
                 renderCodeBlockBackground(graphics, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else {
@@ -351,7 +351,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             final float bulletX = this.x - (5 * scale) + (this.parent.bulletListIndent * (this.bulletListLevel) * scale);
 
             // Vertical centering using text baseline
-            final float textBaselineY = this.getTextY() + (Minecraft.getInstance().font.lineHeight * scale * 0.5f) - (bulletSize * 0.5f);
+            final float textBaselineY = this.getTextY() + (this.parent.getUnscaledTextHeight() * scale * 0.5f) - (bulletSize * 0.5f);
 
             RenderingUtils.fillF(graphics, bulletX, textBaselineY, bulletX + bulletSize, textBaselineY + bulletSize,
                     this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity)
@@ -448,7 +448,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     protected void updateWidth() {
-        this.unscaledTextWidth = this.parent.font.width(this.buildRenderComponent(true));
+        this.unscaledTextWidth = this.parent.getUnscaledTextWidth(this.buildRenderComponent(true));
     }
 
     public float getTextRenderX() {

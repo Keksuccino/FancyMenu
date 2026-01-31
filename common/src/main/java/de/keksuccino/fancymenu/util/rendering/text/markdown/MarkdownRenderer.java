@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -12,6 +13,8 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FastColor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,6 +84,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean autoLineBreaks = true;
     protected boolean removeHtmlBreaks = true;
     protected boolean textShadow = true;
+    protected boolean uiFontRenderingEnabled = false;
     protected float textOpacity = 1.0F;
     protected float lineSpacing = 2;
     protected float border = 2;
@@ -603,6 +607,16 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this;
     }
 
+    public boolean isUIFontRenderingEnabled() {
+        return this.uiFontRenderingEnabled;
+    }
+
+    public MarkdownRenderer setUIFontRenderingEnabled(boolean enabled) {
+        this.uiFontRenderingEnabled = enabled;
+        this.refreshRenderer();
+        return this;
+    }
+
     public float getLineSpacing() {
         return this.lineSpacing;
     }
@@ -707,6 +721,47 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     public MarkdownRenderer setTableMargin(float tableMargin) {
         this.tableMargin = tableMargin;
         return this;
+    }
+
+    protected float getUnscaledTextWidth(@NotNull Component text) {
+        if (this.uiFontRenderingEnabled) {
+            return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal(), true);
+        }
+        return this.font.width(text);
+    }
+
+    protected float getUnscaledTextWidth(@NotNull String text) {
+        if (this.uiFontRenderingEnabled) {
+            return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal(), true);
+        }
+        return this.font.width(text);
+    }
+
+    protected float getUnscaledTextHeight() {
+        if (this.uiFontRenderingEnabled) {
+            return UIBase.getUITextHeight(UIBase.getUITextSizeNormal(), true);
+        }
+        return this.font.lineHeight;
+    }
+
+    protected void renderText(@NotNull GuiGraphics graphics, @NotNull Component text, float x, float y, int color, boolean shadow) {
+        if (this.uiFontRenderingEnabled) {
+            float textSize = UIBase.getUITextSizeNormal();
+            if (shadow) {
+                UIBase.renderText(graphics, text, x + 1.0f, y + 1.0f, darkenColor(color), textSize, true);
+            }
+            UIBase.renderText(graphics, text, x, y, color, textSize, true);
+            return;
+        }
+        graphics.drawString(this.font, text, (int)x, (int)y, color, shadow);
+    }
+
+    protected int darkenColor(int color) {
+        int alpha = FastColor.ARGB32.alpha(color);
+        int red = (int)(FastColor.ARGB32.red(color) * 0.25F);
+        int green = (int)(FastColor.ARGB32.green(color) * 0.25F);
+        int blue = (int)(FastColor.ARGB32.blue(color) * 0.25F);
+        return FastColor.ARGB32.color(alpha, red, green, blue);
     }
 
     public void resetHovered() {
