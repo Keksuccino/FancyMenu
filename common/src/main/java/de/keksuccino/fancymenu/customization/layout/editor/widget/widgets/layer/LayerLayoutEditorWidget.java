@@ -1233,7 +1233,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 }
                 this.element.setSelected(true);
                 this.element.element.layerHiddenInEditor = !this.element.element.layerHiddenInEditor;
-            });
+            }).setHoverBackgroundPadding(2.0f);
             this.playClickSound = false;
             this.selectable = false;
             this.selectOnClick = false;
@@ -1467,7 +1467,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 for (AbstractEditorElement<?, ?> element : elements) {
                     element.element.layerHiddenInEditor = hideElements;
                 }
-            });
+            }).setHoverBackgroundPadding(2.0f);
             this.collapseButton = new UIIconButton(0.0F, 0.0F, GROUP_COLLAPSE_BUTTON_WIDTH, this.getHeight(), GROUP_COLLAPSE_ICON, button -> {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
@@ -1475,7 +1475,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 this.layerWidget.editor.history.saveSnapshot();
                 this.group.collapsed = !this.group.collapsed;
                 MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-            });
+            }).setHoverBackgroundPadding(2.0f);
             this.playClickSound = false;
             this.selectable = false;
             this.selectOnClick = false;
@@ -1712,7 +1712,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 this.layerWidget.editor.layout.renderElementsBehindVanilla = !this.layerWidget.editor.layout.renderElementsBehindVanilla;
                 this.layerWidget.editor.deselectAllElements();
                 MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-            });
+            }).setHoverBackgroundPadding(2.0f);
             this.playClickSound = false;
             this.selectable = false;
             this.selectOnClick = false;

@@ -3,18 +3,16 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.UIIconButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -80,9 +78,9 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     private ExtendedButton doneButton;
     private ExtendedButton cancelButton;
     @Nullable
-    private ArrowButton arrowUpButton;
+    private UIIconButton arrowUpButton;
     @Nullable
-    private ArrowButton arrowDownButton;
+    private UIIconButton arrowDownButton;
     private boolean updatingFromSlider = false;
     private boolean updatingFromInput = false;
     private long lastPreviewUpdateTime = 0L;
@@ -127,17 +125,19 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         int gapInputSlider = 8;
         int gapSliderButtons = 18;
         int arrowButtonGap = 4;
-        int arrowButtonSize = inputHeight;
+        int arrowButtonWidth = 24;
+        int arrowButtonHeight = 28;
 
         int contentHeight = inputHeight + gapInputSlider + sliderHeight + gapSliderButtons + buttonHeight;
         int startY = Math.max(16, (this.height - contentHeight) / 2);
 
-        int inputWidth = Math.max(160, this.width - 80 - (arrowButtonSize * 2) - (arrowButtonGap * 2));
-        int inputGroupWidth = inputWidth + (arrowButtonSize * 2) + (arrowButtonGap * 2);
+        int inputWidth = Math.max(160, this.width - 80 - (arrowButtonWidth * 2) - (arrowButtonGap * 2));
+        int inputGroupWidth = inputWidth + (arrowButtonWidth * 2) + (arrowButtonGap * 2);
         int inputGroupX = (this.width - inputGroupWidth) / 2;
         int arrowUpX = inputGroupX;
-        int inputX = inputGroupX + arrowButtonSize + arrowButtonGap;
+        int inputX = inputGroupX + arrowButtonWidth + arrowButtonGap;
         int inputY = startY;
+        int arrowButtonY = inputY + ((inputHeight - arrowButtonHeight) / 2);
         int arrowDownX = inputX + inputWidth + arrowButtonGap;
         int sliderY = inputY + inputHeight + gapInputSlider;
         int buttonY = sliderY + sliderHeight + gapSliderButtons;
@@ -155,8 +155,8 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
             this.setupInitialFocusWidget(this, this.input);
         }
 
-        this.arrowUpButton = new ArrowButton(arrowUpX, inputY, arrowButtonSize, inputHeight, MaterialIcons.KEYBOARD_ARROW_UP, 1);
-        this.arrowDownButton = new ArrowButton(arrowDownX, inputY, arrowButtonSize, inputHeight, MaterialIcons.KEYBOARD_ARROW_DOWN, -1);
+        this.arrowUpButton = new UIIconButton(arrowUpX, arrowButtonY, arrowButtonWidth, arrowButtonHeight, MaterialIcons.EXPAND_LESS, button -> this.startArrowHold(1, false));
+        this.arrowDownButton = new UIIconButton(arrowDownX, arrowButtonY, arrowButtonWidth, arrowButtonHeight, MaterialIcons.EXPAND_MORE, button -> this.startArrowHold(-1, false));
 
         this.slider = new RangeSlider(inputX, sliderY, inputWidth, sliderHeight, Component.empty(), 0.0D, 1.0D, 0.5D);
         UIBase.applyDefaultWidgetSkinTo(this.slider, UIBase.shouldBlur());
@@ -232,11 +232,11 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     @Override
     public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         boolean active = this.isInputActive();
-        if (this.arrowUpButton != null) {
-            this.arrowUpButton.render(graphics, mouseX, mouseY, partial, active);
+        if (this.arrowUpButton != null && active) {
+            this.arrowUpButton.render(graphics, mouseX, mouseY, partial);
         }
-        if (this.arrowDownButton != null) {
-            this.arrowDownButton.render(graphics, mouseX, mouseY, partial, active);
+        if (this.arrowDownButton != null && active) {
+            this.arrowDownButton.render(graphics, mouseX, mouseY, partial);
         }
     }
 
@@ -280,10 +280,10 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean active = this.isInputActive();
         if ((button == 0) && active) {
-            if ((this.arrowUpButton != null) && this.arrowUpButton.mouseClicked(mouseX, mouseY, button, true)) {
+            if ((this.arrowUpButton != null) && this.arrowUpButton.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
-            if ((this.arrowDownButton != null) && this.arrowDownButton.mouseClicked(mouseX, mouseY, button, true)) {
+            if ((this.arrowDownButton != null) && this.arrowDownButton.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
         }
@@ -470,70 +470,6 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         if (index < 0) index = 0;
         if (index >= size) index = size - 1;
         return index;
-    }
-
-    private final class ArrowButton extends UIBase {
-
-        private final MaterialIcon icon;
-        private final int direction;
-        private int x;
-        private int y;
-        private int width;
-        private int height;
-        private boolean hovered = false;
-
-        private ArrowButton(int x, int y, int width, int height, @NotNull MaterialIcon icon, int direction) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.icon = icon;
-            this.direction = direction;
-        }
-
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean active) {
-            if (!active) {
-                this.hovered = false;
-                return;
-            }
-            this.hovered = UIBase.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.height);
-            RenderSystem.enableBlend();
-            UIBase.resetShaderColor(graphics);
-            DrawableColor iconColor = UIBase.getUITheme().ui_icon_texture_color;
-            if (iconColor != null) {
-                UIBase.setShaderColor(graphics, iconColor);
-            }
-            float baseRenderSize = Math.max(1.0F, Math.min(this.width - 2.0F, this.height - 2.0F));
-            float renderSize = baseRenderSize * (this.hovered ? 1.15F : 1.0F);
-            int textureSize = this.icon.getTextureSizeForUI(renderSize, renderSize);
-            ResourceLocation location = this.icon.getTextureLocationForUI(renderSize, renderSize);
-            if (location != null) {
-                int iconWidth = Math.max(1, this.icon.getWidth(textureSize));
-                int iconHeight = Math.max(1, this.icon.getHeight(textureSize));
-                float maxScale = Math.min((this.width - 2) / (float) iconWidth, (this.height - 2) / (float) iconHeight);
-                if (!Float.isFinite(maxScale) || maxScale <= 0.0F) {
-                    maxScale = 1.0F;
-                }
-                float baseScale = Math.min(1.0F, maxScale);
-                float scale = baseScale * (this.hovered ? 1.15F : 1.0F);
-                if (scale > maxScale) scale = maxScale;
-                int drawWidth = Math.max(1, Math.round(iconWidth * scale));
-                int drawHeight = Math.max(1, Math.round(iconHeight * scale));
-                int drawX = this.x + ((this.width - drawWidth) / 2);
-                int hoverOffset = this.hovered ? (this.direction > 0 ? -1 : 1) : 0;
-                int drawY = this.y + ((this.height - drawHeight) / 2) + hoverOffset;
-                graphics.blit(location, drawX, drawY, drawWidth, drawHeight, 0.0F, 0.0F, iconWidth, iconHeight, iconWidth, iconHeight);
-            }
-            UIBase.resetShaderColor(graphics);
-        }
-
-        public boolean mouseClicked(double mouseX, double mouseY, int button, boolean active) {
-            if (!active || (button != 0)) return false;
-            if (!UIBase.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.height)) return false;
-            NumberPickerWindowBody.this.startArrowHold(this.direction, false);
-            return true;
-        }
-
     }
 
 }

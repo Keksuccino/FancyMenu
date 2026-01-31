@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 public class UIIconButton implements Renderable, GuiEventListener, NarratableEntry {
 
     private static final float DEFAULT_ICON_PADDING = 6.0F;
-    private static final float DEFAULT_HOVER_BACKGROUND_PADDING = 2.0F;
+    private static final float DEFAULT_HOVER_BACKGROUND_PADDING = 0.0F;
 
     private float x;
     private float y;
