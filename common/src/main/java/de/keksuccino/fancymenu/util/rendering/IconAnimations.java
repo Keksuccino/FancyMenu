@@ -8,7 +8,7 @@ public final class IconAnimations {
     public static final IconAnimation SHORT_SPIN_UP = createSpinUpRotation(500.0F, 720.0F, 0.25F, 0.32F);
     public static final IconAnimation SHORT_SPIN_UP_SUBTLE = createSpinUpRotation(350.0F, 360.0F, 0.25F, 0.32F);
     public static final IconAnimation SHORT_PENDULUM_SWAY = createPendulumSway(380.0F, 1.1F, 0.3F, 0.12F);
-    public static final IconAnimation SHORT_DIAGONAL_BOUNCE = createDiagonalBounce(400.0F, 0.95F, 0.6F, 0.12F, 2.5F);
+    public static final IconAnimation SHORT_DIAGONAL_BOUNCE = createDiagonalBounce(400.0F, 0.25F, 0.6F, 0.12F, 2.5F);
 
     private IconAnimations() {
     }
