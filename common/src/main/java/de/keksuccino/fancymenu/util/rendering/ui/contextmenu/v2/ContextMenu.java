@@ -1301,7 +1301,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (!this.isOpen()) return false;
         ContextMenu root = this.getRootMenu();
         root.clearCachedSearchMenuIfClosed();
-        ContextMenu hoverMenu = root.getMenuUnderCursor(root.renderMouseX, root.renderMouseY);
+        int mouseX = MouseInput.getMouseX();
+        int mouseY = MouseInput.getMouseY();
+        ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);
         ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
         if (targetMenu.isCtrlF(keyCode)) {
             if (hoverMenu != null) {
@@ -1333,7 +1335,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (!this.isOpen()) return false;
         ContextMenu root = this.getRootMenu();
         root.clearCachedSearchMenuIfClosed();
-        ContextMenu hoverMenu = root.getMenuUnderCursor(root.renderMouseX, root.renderMouseY);
+        int mouseX = MouseInput.getMouseX();
+        int mouseY = MouseInput.getMouseY();
+        ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);
         ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
         if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
             if (hoverMenu != null) {
@@ -1352,7 +1356,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (!this.isOpen()) return false;
         ContextMenu root = this.getRootMenu();
         root.clearCachedSearchMenuIfClosed();
-        ContextMenu hoverMenu = root.getMenuUnderCursor(root.renderMouseX, root.renderMouseY);
+        int mouseX = MouseInput.getMouseX();
+        int mouseY = MouseInput.getMouseY();
+        ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);
         ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
         if (!targetMenu.searchEntry.isVisible() && !Character.isISOControl(codePoint)) {
             if (hoverMenu != null) {
