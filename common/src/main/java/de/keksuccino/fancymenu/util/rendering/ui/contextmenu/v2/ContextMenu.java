@@ -2810,6 +2810,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         @Override
         public boolean charTyped(char codePoint, int modifiers) {
             if (!this.isVisible()) return false;
+            if (this.parent.needsScrolling) {
+                this.parent.scrollPosition = 0.0F;
+            }
             return this.searchBox.charTyped(codePoint, modifiers);
         }
 
