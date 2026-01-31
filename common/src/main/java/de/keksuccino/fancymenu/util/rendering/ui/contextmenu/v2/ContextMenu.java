@@ -90,6 +90,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private boolean searchEntryRequested = false;
     private boolean searchEntryVisibleLast = false;
     private boolean alwaysShowSearchBar = false;
+    private ContextMenu cachedSearchMenu = null;
 
     public ContextMenu() {
         this.searchEntry = new SearchContextMenuEntry(SEARCH_ENTRY_IDENTIFIER, this);
@@ -134,6 +135,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         for (ContextMenuEntry<?> e : this.entries) {
             if (e instanceof ClickableContextMenuEntry<?> c) {
                 if (c.hasIconAssigned()) {
+                    addIconSpace = true;
+                    break;
+                }
+            }
+            if (e instanceof SearchContextMenuEntry s) {
+                if (s.hasIconAssigned() && s.isVisible()) {
                     addIconSpace = true;
                     break;
                 }
@@ -1038,6 +1045,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.open = false;
         this.openAnimationActive = false;
         this.resetSearchState();
+        ContextMenu root = this.getRootMenu();
+        if (root.cachedSearchMenu == this) {
+            root.cachedSearchMenu = null;
+        }
         return this;
     }
 
@@ -1303,16 +1314,30 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!this.isOpen()) return false;
-        ContextMenu hoverMenu = this.getMenuUnderCursor(this.renderMouseX, this.renderMouseY);
-        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : this;
+        ContextMenu root = this.getRootMenu();
+        root.clearCachedSearchMenuIfClosed();
+        ContextMenu hoverMenu = root.getMenuUnderCursor(root.renderMouseX, root.renderMouseY);
+        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
         if (targetMenu.isCtrlF(keyCode)) {
-            targetMenu.showSearchEntry(true);
+            if (hoverMenu != null) {
+                root.cachedSearchMenu = hoverMenu;
+            }
+            if (targetMenu.isAlwaysShowSearchBar()) {
+                targetMenu.showSearchEntry(true);
+            } else if (targetMenu.isSearchEntryVisible()) {
+                targetMenu.hideSearchEntry();
+            } else {
+                targetMenu.showSearchEntry(true);
+            }
             return true;
         }
         if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.keyPressed(keyCode, scanCode, modifiers)) {
+            if (hoverMenu != null) {
+                root.cachedSearchMenu = hoverMenu;
+            }
             return true;
         }
-        if (targetMenu != this && this.searchEntry.isVisible() && this.searchEntry.keyPressed(keyCode, scanCode, modifiers)) {
+        if (targetMenu != root && root.searchEntry.isVisible() && root.searchEntry.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
         return GuiEventListener.super.keyPressed(keyCode, scanCode, modifiers);
@@ -1321,12 +1346,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         if (!this.isOpen()) return false;
-        ContextMenu hoverMenu = this.getMenuUnderCursor(this.renderMouseX, this.renderMouseY);
-        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : this;
+        ContextMenu root = this.getRootMenu();
+        root.clearCachedSearchMenuIfClosed();
+        ContextMenu hoverMenu = root.getMenuUnderCursor(root.renderMouseX, root.renderMouseY);
+        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
         if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
+            if (hoverMenu != null) {
+                root.cachedSearchMenu = hoverMenu;
+            }
             return true;
         }
-        if (targetMenu != this && this.searchEntry.isVisible() && this.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
+        if (targetMenu != root && root.searchEntry.isVisible() && root.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
             return true;
         }
         return GuiEventListener.super.keyReleased(keyCode, scanCode, modifiers);
@@ -1335,12 +1365,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
         if (!this.isOpen()) return false;
-        ContextMenu hoverMenu = this.getMenuUnderCursor(this.renderMouseX, this.renderMouseY);
-        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : this;
+        ContextMenu root = this.getRootMenu();
+        root.clearCachedSearchMenuIfClosed();
+        ContextMenu hoverMenu = root.getMenuUnderCursor(root.renderMouseX, root.renderMouseY);
+        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
         if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.charTyped(codePoint, modifiers)) {
+            if (hoverMenu != null) {
+                root.cachedSearchMenu = hoverMenu;
+            }
             return true;
         }
-        if (targetMenu != this && this.searchEntry.isVisible() && this.searchEntry.charTyped(codePoint, modifiers)) {
+        if (targetMenu != root && root.searchEntry.isVisible() && root.searchEntry.charTyped(codePoint, modifiers)) {
             return true;
         }
         return GuiEventListener.super.charTyped(codePoint, modifiers);
@@ -1401,6 +1436,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.updateSearchVisibilityState(focus);
     }
 
+    protected void hideSearchEntry() {
+        this.searchEntryRequested = false;
+        this.updateSearchVisibilityState(false);
+    }
+
     protected void resetSearchState() {
         this.searchEntryRequested = false;
         this.searchEntry.resetSearchValue();
@@ -1446,6 +1486,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return keyCode == InputConstants.KEY_F && Screen.hasControlDown();
     }
 
+    protected void clearCachedSearchMenuIfClosed() {
+        if (this.cachedSearchMenu != null && !this.cachedSearchMenu.isOpen()) {
+            this.cachedSearchMenu = null;
+        }
+    }
+
     @Nullable
     protected ContextMenu getMenuUnderCursor(int mouseX, int mouseY) {
         if (!this.isOpen()) return null;
@@ -1459,6 +1505,15 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             }
         }
         return hovered;
+    }
+
+    @NotNull
+    protected ContextMenu getRootMenu() {
+        ContextMenu current = this;
+        while (current.parentEntry != null) {
+            current = current.parentEntry.parent;
+        }
+        return current;
     }
 
     protected boolean isProtectedEntryIdentifier(@NotNull String identifier) {
@@ -2633,6 +2688,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         private static final int FIELD_HORIZONTAL_PADDING = 10;
         private static final int MIN_FIELD_WIDTH = 40;
         private static final int MIN_FIELD_HEIGHT = 12;
+        @Nullable
+        private MaterialIcon icon = MaterialIcons.SEARCH;
         private final ExtendedEditBox searchBox;
         private boolean lastBlurState = UIBase.shouldBlur();
 
@@ -2642,7 +2699,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             this.searchBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 0, 0, Component.empty());
             this.searchBox.setHintFancyMenu(consumes -> Component.translatable("fancymenu.ui.generic.search"));
             this.searchBox.setResponder(value -> parent.closeSubMenus());
-            UIBase.applyDefaultWidgetSkinTo(this.searchBox, this.lastBlurState);
+            this.applyDefaultSkin();
             this.setChangeBackgroundColorOnHover(false);
         }
 
@@ -2650,6 +2707,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.applySkinIfNeeded();
             this.updateSearchBoxBounds();
+            this.renderIcon(graphics);
             this.searchBox.render(graphics, mouseX, mouseY, partial);
         }
 
@@ -2674,6 +2732,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.stackApplier = this.stackApplier;
             copy.stackValueSupplier = this.stackValueSupplier;
             copy.stackGroupKey = this.stackGroupKey;
+            copy.icon = this.icon;
             copy.searchBox.setValue(this.searchBox.getValue());
             return copy;
         }
@@ -2742,6 +2801,15 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return this.searchBox.getValue();
         }
 
+        public boolean hasIconAssigned() {
+            return this.icon != null;
+        }
+
+        public SearchContextMenuEntry setIcon(@Nullable MaterialIcon icon) {
+            this.icon = icon;
+            return this;
+        }
+
         private void updateSearchBoxBounds() {
             int paddingLeft = FIELD_HORIZONTAL_PADDING + (this.addSpaceForIcon ? ClickableContextMenuEntry.ICON_LABEL_SPACING : 0);
             int paddingRight = FIELD_HORIZONTAL_PADDING;
@@ -2755,12 +2823,70 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             this.searchBox.setHeight(height);
         }
 
+        private void renderIcon(@NotNull GuiGraphics graphics) {
+            IconRenderData iconData = this.resolveIconData();
+            if (iconData == null) {
+                return;
+            }
+            float areaX = this.x + ClickableContextMenuEntry.ICON_PADDING_LEFT;
+            float areaY = this.y + (this.getHeight() / 2.0F) - (ClickableContextMenuEntry.ICON_WIDTH_HEIGHT / 2.0F);
+            RenderSystem.enableBlend();
+            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+            this.blitScaledIcon(graphics, iconData, areaX, areaY, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT);
+            RenderingUtils.resetShaderColor(graphics);
+        }
+
+        @Nullable
+        private IconRenderData resolveIconData() {
+            if (this.icon == null) {
+                return null;
+            }
+            float renderSize = ClickableContextMenuEntry.ICON_WIDTH_HEIGHT;
+            ResourceLocation location = this.icon.getTextureLocationForUI(renderSize, renderSize);
+            if (location == null) {
+                return null;
+            }
+            int iconSize = this.icon.getTextureSizeForUI(renderSize, renderSize);
+            int width = this.icon.getWidth(iconSize);
+            int height = this.icon.getHeight(iconSize);
+            if (width <= 0 || height <= 0) {
+                return null;
+            }
+            return new IconRenderData(location, width, height);
+        }
+
+        private void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+            if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
+                return;
+            }
+            float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
+            if (!Float.isFinite(scale) || scale <= 0.0F) {
+                return;
+            }
+            float scaledWidth = iconData.width * scale;
+            float scaledHeight = iconData.height * scale;
+            float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
+            float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
+            graphics.pose().pushPose();
+            graphics.pose().translate(drawX, drawY, 0.0F);
+            graphics.pose().scale(scale, scale, 1.0F);
+            graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+            graphics.pose().popPose();
+        }
+
         private void applySkinIfNeeded() {
             boolean blur = UIBase.shouldBlur();
             if (blur != this.lastBlurState) {
                 this.lastBlurState = blur;
-                UIBase.applyDefaultWidgetSkinTo(this.searchBox, blur);
+                this.applyDefaultSkin();
             }
+        }
+
+        private void applyDefaultSkin() {
+            UIBase.applyDefaultWidgetSkinTo(this.searchBox, this.lastBlurState);
+            this.searchBox.setBackgroundColor(DrawableColor.FULLY_TRANSPARENT);
+            this.searchBox.setBorderNormalColor(DrawableColor.FULLY_TRANSPARENT);
+            this.searchBox.setBorderFocusedColor(DrawableColor.FULLY_TRANSPARENT);
         }
 
     }
