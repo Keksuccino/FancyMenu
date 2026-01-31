@@ -99,6 +99,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private double forcedFancyMenuUiScale = 1.0;
     private boolean alwaysOnTop = false;
     private boolean forceFocusEnabled = false;
+    private boolean titleBarIconTintEnabled = true;
 
     private boolean maximized = false;
     private int restoreX;
@@ -345,10 +346,22 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             boolean renderedIcon = false;
             IconRenderData materialIconData = resolveMaterialIconData(this.materialIcon, iconSize, iconSize);
             if (materialIconData != null) {
+                if (this.titleBarIconTintEnabled) {
+                    theme.setUITextureShaderColor(graphics, 1.0F);
+                }
                 blitScaledIcon(graphics, materialIconData, iconX, iconY, iconSize, iconSize);
+                if (this.titleBarIconTintEnabled) {
+                    RenderingUtils.resetShaderColor(graphics);
+                }
                 renderedIcon = true;
             } else if (this.icon != null) {
+                if (this.titleBarIconTintEnabled) {
+                    theme.setUITextureShaderColor(graphics, 1.0F);
+                }
                 RenderingUtils.blitF(graphics, this.icon, iconX, iconY, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize);
+                if (this.titleBarIconTintEnabled) {
+                    RenderingUtils.resetShaderColor(graphics);
+                }
                 renderedIcon = true;
             }
             if (renderedIcon) {
@@ -878,6 +891,15 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
         this.forceFocusEnabled = forceFocusEnabled;
         PiPWindowHandler.INSTANCE.refreshWindowOrder(this);
+        return this;
+    }
+
+    public boolean isTitleBarIconTintEnabled() {
+        return this.titleBarIconTintEnabled;
+    }
+
+    public PiPWindow setTitleBarIconTintEnabled(boolean titleBarIconTintEnabled) {
+        this.titleBarIconTintEnabled = titleBarIconTintEnabled;
         return this;
     }
 

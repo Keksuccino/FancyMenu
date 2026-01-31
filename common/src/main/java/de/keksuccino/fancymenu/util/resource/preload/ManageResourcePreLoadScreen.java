@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
@@ -13,6 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -26,6 +28,7 @@ public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
+    private static final int LIST_ENTRY_TOP_DOWN_BORDER = 1;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -41,7 +44,7 @@ public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
     @Override
     protected void initCells() {
 
-        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+        this.addSpacerCell(5).setIgnoreSearch();
 
         for (ResourceSource source : ResourcePreLoader.getRegisteredResourceSources(this.cachedSerialized)) {
 
@@ -54,13 +57,13 @@ public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
                 sourceString = ResourceSourceType.getWithoutSourcePrefix(source.getSerializationSource());
             }
 
-            this.addLabelCell(Component.literal(sourceString).setStyle(Style.EMPTY.withColor(this.getLabelColor())))
+            this.addCell(new ResourceSourceCell(Component.literal(sourceString).setStyle(Style.EMPTY.withColor(this.getLabelColor()))))
                     .putMemoryValue("source", source.getSerializationSource())
                     .setSelectable(true);
 
         }
 
-        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+        this.addSpacerCell(5).setIgnoreSearch();
 
     }
 
@@ -150,6 +153,35 @@ public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
         return UIBase.shouldBlur()
                 ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
                 : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+    }
+
+    protected class ResourceSourceCell extends LabelCell {
+
+        private static final int TOP_DOWN_CELL_BORDER = LIST_ENTRY_TOP_DOWN_BORDER;
+
+        public ResourceSourceCell(@NotNull Component label) {
+            super(label);
+        }
+
+        @Override
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            RenderingUtils.resetShaderColor(graphics);
+            UIBase.renderText(graphics, this.text, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER);
+            RenderingUtils.resetShaderColor(graphics);
+        }
+
+        @Override
+        protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
+            this.setWidth((int)UIBase.getUITextWidthNormal(this.text));
+            this.setHeight((int)(UIBase.getUITextHeightNormal() + (TOP_DOWN_CELL_BORDER * 2)));
+        }
+
+        @Override
+        protected void updatePosition(@NotNull CellScrollEntry scrollEntry) {
+            this.setX((int)(scrollEntry.getX() + 5));
+            this.setY((int)scrollEntry.getY());
+        }
+
     }
 
     @Override

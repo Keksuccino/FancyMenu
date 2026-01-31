@@ -651,6 +651,12 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
         }
 
         @Override
+        protected void updatePosition(@NotNull CellScrollEntry scrollEntry) {
+            this.setX((int)(scrollEntry.getX() + 5));
+            this.setY((int)scrollEntry.getY());
+        }
+
+        @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if (button == 0 && this.isHovered() && !this.editMode) {
                 long currentTime = System.currentTimeMillis();

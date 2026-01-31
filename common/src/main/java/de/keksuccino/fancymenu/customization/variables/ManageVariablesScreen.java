@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
@@ -13,10 +14,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -34,6 +35,9 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
+    private static final int LIST_ENTRY_TOP_DOWN_BORDER = 1;
+    private static final int LIST_ENTRY_OUTER_PADDING = 3;
+    private static final int LIST_TOP_SPACER_HEIGHT = 5;
 
     protected Consumer<List<Variable>> callback;
 
@@ -216,6 +220,13 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
         if (searchValue.isBlank()) searchValue = null;
 
         this.variableListScrollArea.clearEntries();
+        CellScreen.SpacerScrollAreaEntry spacer = new CellScreen.SpacerScrollAreaEntry(this.variableListScrollArea, LIST_TOP_SPACER_HEIGHT);
+        spacer.setSelectable(false);
+        spacer.selectOnClick = false;
+        spacer.setPlayClickSound(false);
+        spacer.setBackgroundColorNormal(() -> DrawableColor.FULLY_TRANSPARENT);
+        spacer.setBackgroundColorHover(() -> DrawableColor.FULLY_TRANSPARENT);
+        this.variableListScrollArea.addEntry(spacer);
 
         List<Variable> variables = VariableHandler.getVariables();
         variables.sort(Comparator
@@ -226,10 +237,13 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
             if (!this.variableFitsSearchValue(v, searchValue)) continue;
             VariableScrollEntry e = new VariableScrollEntry(this.variableListScrollArea, v, (entry) -> {
             });
+            e.setHeight(this.getListEntryHeight());
             this.variableListScrollArea.addEntry(e);
         }
-        if (this.variableListScrollArea.getEntries().isEmpty()) {
-            this.variableListScrollArea.addEntry(new TextScrollAreaEntry(this.variableListScrollArea, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())), (entry) -> {}));
+        if (this.variableListScrollArea.getEntries().size() == 1) {
+            TextScrollAreaEntry emptyEntry = new TextScrollAreaEntry(this.variableListScrollArea, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())), (entry) -> {});
+            emptyEntry.setHeight(this.getListEntryHeight());
+            this.variableListScrollArea.addEntry(emptyEntry);
         }
 
     }
@@ -249,12 +263,18 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
         });
     }
 
-    public static class VariableScrollEntry extends TextListScrollAreaEntry {
+    protected int getListEntryHeight() {
+        return (int)(UIBase.getUITextHeightNormal()
+                + (LIST_ENTRY_TOP_DOWN_BORDER * 2)
+                + (LIST_ENTRY_OUTER_PADDING * 2));
+    }
+
+    public static class VariableScrollEntry extends TextScrollAreaEntry {
 
         public Variable variable;
 
-        public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(resolveLabelColor())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
+        public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextScrollAreaEntry> onClick) {
+            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(resolveLabelColor())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))), onClick);
             this.variable = variable;
         }
 

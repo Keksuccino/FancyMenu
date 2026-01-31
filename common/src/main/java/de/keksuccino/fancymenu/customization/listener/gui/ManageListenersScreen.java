@@ -603,6 +603,12 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             }
             this.setHeight((int)(UIBase.getUITextHeightNormal() + (TOP_DOWN_CELL_BORDER * 2)));
         }
+
+        @Override
+        protected void updatePosition(@NotNull CellScrollEntry scrollEntry) {
+            this.setX((int)(scrollEntry.getX() + 5));
+            this.setY((int)scrollEntry.getY());
+        }
         
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {

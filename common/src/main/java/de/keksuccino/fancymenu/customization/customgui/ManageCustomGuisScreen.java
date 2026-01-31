@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
@@ -18,6 +20,7 @@ public class ManageCustomGuisScreen extends PiPCellWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
+    private static final int LIST_ENTRY_TOP_DOWN_BORDER = 1;
 
     protected Runnable onCloseRunnable;
     protected List<CustomGui> guis = new ArrayList<>();
@@ -36,13 +39,13 @@ public class ManageCustomGuisScreen extends PiPCellWindowBody {
     @Override
     protected void initCells() {
 
-        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+        this.addSpacerCell(5).setIgnoreSearch();
 
         for (CustomGui gui : this.guis) {
             this.addCell(new CustomGuiCell(gui)).setSelectable(true);
         }
 
-        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+        this.addSpacerCell(5).setIgnoreSearch();
 
     }
 
@@ -149,6 +152,25 @@ public class ManageCustomGuisScreen extends PiPCellWindowBody {
         public CustomGuiCell(@NotNull CustomGui gui) {
             super(Component.literal(gui.identifier));
             this.gui = gui;
+        }
+
+        @Override
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            RenderingUtils.resetShaderColor(graphics);
+            UIBase.renderText(graphics, this.text, this.getX(), this.getY() + LIST_ENTRY_TOP_DOWN_BORDER);
+            RenderingUtils.resetShaderColor(graphics);
+        }
+
+        @Override
+        protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
+            this.setWidth((int)UIBase.getUITextWidthNormal(this.text));
+            this.setHeight((int)(UIBase.getUITextHeightNormal() + (LIST_ENTRY_TOP_DOWN_BORDER * 2)));
+        }
+
+        @Override
+        protected void updatePosition(@NotNull CellScrollEntry scrollEntry) {
+            this.setX((int)(scrollEntry.getX() + 5));
+            this.setY((int)scrollEntry.getY());
         }
 
     }
