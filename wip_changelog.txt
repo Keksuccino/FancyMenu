@@ -130,6 +130,7 @@
 - Rotated buttons and sliders now adjust their "hitbox" to the rotation, so even when rotated you can click/hover the actual visible body instead of the original/not-rotated body
 - The "Input Field" element now has support for setting hover, unhover and click sounds
 - Most of FancyMenu's simple text inputs (input fields) now allow for selecting text by holding down the mouse and moving over the text
+- The "New Element" menu's entries are now ordered alphabetically
 - The text editor got some QoL additions
   - Duplicate Line: Ctrl + D
   - Move Line Up/Down: Alt + Up/Down
