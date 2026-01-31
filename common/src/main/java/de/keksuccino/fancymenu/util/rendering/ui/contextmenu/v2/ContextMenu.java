@@ -131,21 +131,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_top", this));
 
         //Check if icon space should get added to entries
-        boolean addIconSpace = false;
-        for (ContextMenuEntry<?> e : this.entries) {
-            if (e instanceof ClickableContextMenuEntry<?> c) {
-                if (c.hasIconAssigned()) {
-                    addIconSpace = true;
-                    break;
-                }
-            }
-            if (e instanceof SearchContextMenuEntry s) {
-                if (s.hasIconAssigned() && s.isVisible()) {
-                    addIconSpace = true;
-                    break;
-                }
-            }
-        }
+        boolean addIconSpace = this.shouldAddIconSpaceForEntries();
 
         this.rawWidth = 20;
         this.rawHeight = 0;
@@ -1369,6 +1355,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         root.clearCachedSearchMenuIfClosed();
         ContextMenu hoverMenu = root.getMenuUnderCursor(root.renderMouseX, root.renderMouseY);
         ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
+        if (!targetMenu.searchEntry.isVisible() && !Character.isISOControl(codePoint)) {
+            if (hoverMenu != null) {
+                root.cachedSearchMenu = hoverMenu;
+            }
+            targetMenu.showSearchEntry(true);
+        }
         if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.charTyped(codePoint, modifiers)) {
             if (hoverMenu != null) {
                 root.cachedSearchMenu = hoverMenu;
@@ -1433,6 +1425,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     protected void showSearchEntry(boolean focus) {
         this.searchEntryRequested = true;
         this.scrollPosition = 0.0F;
+        this.searchEntry.prepareForImmediateInput(this.shouldAddIconSpaceForEntries());
         this.updateSearchVisibilityState(focus);
     }
 
@@ -1468,6 +1461,22 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return value.isBlank() ? null : value;
     }
 
+    protected boolean shouldAddIconSpaceForEntries() {
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (e instanceof ClickableContextMenuEntry<?> c) {
+                if (c.hasIconAssigned()) {
+                    return true;
+                }
+            }
+            if (e instanceof SearchContextMenuEntry s) {
+                if (s.hasIconAssigned() && s.isVisible()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     protected boolean matchesSearchFilter(@NotNull ContextMenuEntry<?> entry, @NotNull String searchLower) {
         if ((entry == this.searchEntry) || (entry == this.searchSeparator)) {
             return true;
@@ -1477,7 +1486,27 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
         if (entry instanceof ClickableContextMenuEntry<?> clickable) {
             Component label = clickable.getLabel();
-            return label.getString().toLowerCase(Locale.ROOT).contains(searchLower);
+            String labelLower = label.getString().toLowerCase(Locale.ROOT);
+            if (labelLower.contains(searchLower)) {
+                return true;
+            }
+            String trimmedSearch = searchLower.trim();
+            if (trimmedSearch.isEmpty()) {
+                return true;
+            }
+            String[] parts = trimmedSearch.split("\\s+");
+            if (parts.length <= 1) {
+                return false;
+            }
+            for (String part : parts) {
+                if (part.isEmpty()) {
+                    continue;
+                }
+                if (!labelLower.contains(part)) {
+                    return false;
+                }
+            }
+            return true;
         }
         return false;
     }
@@ -2697,7 +2726,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             super(identifier, parent);
             this.height = 20;
             this.searchBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 0, 0, Component.empty());
-            this.searchBox.setHintFancyMenu(consumes -> Component.translatable("fancymenu.ui.generic.search"));
             this.searchBox.setResponder(value -> parent.closeSubMenus());
             this.applyDefaultSkin();
             this.setChangeBackgroundColorOnHover(false);
@@ -2808,6 +2836,22 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         public SearchContextMenuEntry setIcon(@Nullable MaterialIcon icon) {
             this.icon = icon;
             return this;
+        }
+
+        public void prepareForImmediateInput(boolean addIconSpace) {
+            this.addSpaceForIcon = addIconSpace;
+            if (this.width <= 0.0F) {
+                float fallbackWidth = Math.max(this.parent.getWidth(), this.getMinWidth());
+                if (fallbackWidth <= 0.0F) {
+                    fallbackWidth = this.getMinWidth();
+                }
+                this.width = fallbackWidth;
+            }
+            if (this.height <= 0.0F) {
+                this.height = 20;
+            }
+            this.updateSearchBoxBounds();
+            this.searchBox.setHighlightPos(this.searchBox.getCursorPosition());
         }
 
         private void updateSearchBoxBounds() {
