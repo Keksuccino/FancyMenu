@@ -802,9 +802,9 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         // The backgrounds list always holds exactly one instance of each background type
         List<MenuBackground<?>> sortedBackgrounds = new ArrayList<>(editor.layout.menuBackgrounds);
         sortedBackgrounds.sort(Comparator
-                .comparing(background -> background.builder.getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(background -> background.builder.getDisplayName().getString())
-                .thenComparing(background -> background.builder.getIdentifier()));
+                .comparing((MenuBackground<?> background) -> background.builder.getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing((MenuBackground<?> background) -> background.builder.getDisplayName().getString())
+                .thenComparing((MenuBackground<?> background) -> background.builder.getIdentifier()));
         for (MenuBackground<?> background : sortedBackgrounds) {
             var entry = backgroundsMenu.addSubMenuEntry("menu_background_" + background.builder.getIdentifier(), background.builder.getDisplayName(), background._initConfigMenu(editor));
             entry.setIcon(MaterialIcons.WALLPAPER);
@@ -841,9 +841,9 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         // Normal layouts always have one instance of each overlay type, so doing this is fine
         List<Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>>> sortedOverlays = new ArrayList<>(editor.layout.decorationOverlays);
         sortedOverlays.sort(Comparator
-                .comparing(pair -> pair.getFirst().getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(pair -> pair.getFirst().getDisplayName().getString())
-                .thenComparing(pair -> pair.getFirst().getIdentifier()));
+                .comparing((Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>> pair) -> pair.getFirst().getDisplayName().getString(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing((Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>> pair) -> pair.getFirst().getDisplayName().getString())
+                .thenComparing((Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>> pair) -> pair.getFirst().getIdentifier()));
         for (Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>> pair : sortedOverlays) {
             var entry = menu.addSubMenuEntry("overlay_" + pair.getFirst().getIdentifier(), pair.getFirst().getDisplayName(), pair.getSecond()._initConfigMenu(editor));
             entry.setIcon(MaterialIcons.AUTO_AWESOME);

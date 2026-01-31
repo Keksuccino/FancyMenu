@@ -62,7 +62,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final MaterialIcon MOVE_BEHIND_ICON = MaterialIcons.VERTICAL_ALIGN_BOTTOM;
     private static final float LAYER_ENTRY_ICON_PADDING = 6.0f;
     private static final float LAYER_ICON_TEXT_GAP = 4.0f;
-    private static final float RIGHT_SIDE_BUTTON_OFFSET = 5.0f;
+    private static final float RIGHT_SIDE_BUTTON_OFFSET = 7.0f;
     private static final float GROUP_INDENT = 12.0f;
     private static final float GROUP_NAME_LEFT_PADDING = 0.0f;
     private static final float GROUP_COLLAPSE_BUTTON_WIDTH = 24.0f;
