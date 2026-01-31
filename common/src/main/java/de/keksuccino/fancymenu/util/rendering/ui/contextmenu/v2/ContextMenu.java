@@ -1303,18 +1303,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!this.isOpen()) return false;
-        for (ContextMenuEntry<?> e : this.entries) {
-            if (e instanceof SubMenuContextMenuEntry s && s.subContextMenu.isOpen()) {
-                if (s.subContextMenu.keyPressed(keyCode, scanCode, modifiers)) {
-                    return true;
-                }
-            }
-        }
-        if (this.isCtrlF(keyCode)) {
-            this.showSearchEntry(true);
+        ContextMenu hoverMenu = this.getMenuUnderCursor(this.renderMouseX, this.renderMouseY);
+        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : this;
+        if (targetMenu.isCtrlF(keyCode)) {
+            targetMenu.showSearchEntry(true);
             return true;
         }
-        if (this.searchEntry.isVisible() && this.searchEntry.keyPressed(keyCode, scanCode, modifiers)) {
+        if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        if (targetMenu != this && this.searchEntry.isVisible() && this.searchEntry.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
         return GuiEventListener.super.keyPressed(keyCode, scanCode, modifiers);
@@ -1323,14 +1321,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         if (!this.isOpen()) return false;
-        for (ContextMenuEntry<?> e : this.entries) {
-            if (e instanceof SubMenuContextMenuEntry s && s.subContextMenu.isOpen()) {
-                if (s.subContextMenu.keyReleased(keyCode, scanCode, modifiers)) {
-                    return true;
-                }
-            }
+        ContextMenu hoverMenu = this.getMenuUnderCursor(this.renderMouseX, this.renderMouseY);
+        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : this;
+        if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
+            return true;
         }
-        if (this.searchEntry.isVisible() && this.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
+        if (targetMenu != this && this.searchEntry.isVisible() && this.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
             return true;
         }
         return GuiEventListener.super.keyReleased(keyCode, scanCode, modifiers);
@@ -1339,14 +1335,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
         if (!this.isOpen()) return false;
-        for (ContextMenuEntry<?> e : this.entries) {
-            if (e instanceof SubMenuContextMenuEntry s && s.subContextMenu.isOpen()) {
-                if (s.subContextMenu.charTyped(codePoint, modifiers)) {
-                    return true;
-                }
-            }
+        ContextMenu hoverMenu = this.getMenuUnderCursor(this.renderMouseX, this.renderMouseY);
+        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : this;
+        if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.charTyped(codePoint, modifiers)) {
+            return true;
         }
-        if (this.searchEntry.isVisible() && this.searchEntry.charTyped(codePoint, modifiers)) {
+        if (targetMenu != this && this.searchEntry.isVisible() && this.searchEntry.charTyped(codePoint, modifiers)) {
             return true;
         }
         return GuiEventListener.super.charTyped(codePoint, modifiers);
@@ -1450,6 +1444,21 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     protected boolean isCtrlF(int keyCode) {
         return keyCode == InputConstants.KEY_F && Screen.hasControlDown();
+    }
+
+    @Nullable
+    protected ContextMenu getMenuUnderCursor(int mouseX, int mouseY) {
+        if (!this.isOpen()) return null;
+        ContextMenu hovered = this.isMouseOverMenu(mouseX, mouseY) ? this : null;
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (e instanceof SubMenuContextMenuEntry s && s.subContextMenu.isOpen()) {
+                ContextMenu subHovered = s.subContextMenu.getMenuUnderCursor(mouseX, mouseY);
+                if (subHovered != null) {
+                    hovered = subHovered;
+                }
+            }
+        }
+        return hovered;
     }
 
     protected boolean isProtectedEntryIdentifier(@NotNull String identifier) {
