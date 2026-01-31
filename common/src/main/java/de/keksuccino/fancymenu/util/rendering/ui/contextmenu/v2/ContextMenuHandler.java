@@ -96,6 +96,33 @@ public class ContextMenuHandler extends AbstractContainerEventHandler implements
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        ContextMenu current = this.getCurrent();
+        if (current != null) {
+            return current.keyPressed(keyCode, scanCode, modifiers);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        ContextMenu current = this.getCurrent();
+        if (current != null) {
+            return current.keyReleased(keyCode, scanCode, modifiers);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        ContextMenu current = this.getCurrent();
+        if (current != null) {
+            return current.charTyped(codePoint, modifiers);
+        }
+        return false;
+    }
+
+    @Override
     public Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
         ContextMenu current = this.getCurrent();
         if (current != null && current.isMouseOverMenu(mouseX, mouseY)) {
