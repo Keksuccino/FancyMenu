@@ -68,7 +68,7 @@ public class ContextMenuHandler extends AbstractContainerEventHandler implements
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         ContextMenu current = this.getCurrent();
         if (current != null) {
-            if (!current.isUserNavigatingInMenu()) {
+            if (current.getMenuUnderCursor(mouseX, mouseY) == null) {
                 removeCurrent();
                 return false;
             }

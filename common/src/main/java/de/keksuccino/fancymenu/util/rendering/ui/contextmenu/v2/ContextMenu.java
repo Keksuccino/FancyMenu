@@ -1069,14 +1069,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public boolean isUserNavigatingInMenu() {
+        if (!this.isOpen()) return false;
         if (UIBase.shouldPlayAnimations() && this.openAnimationEnabled && this.isTopLevelOpenAnimationRunning()) {
             return true;
         }
-        // If the menu is scrollable and the mouse is over it, consider it as navigating
-        if (this.needsScrolling && this.isOpen() && this.isMouseOverMenu(this.renderMouseX, this.renderMouseY)) {
-            return true;
-        }
-        return this.isHovered() || this.isUserNavigatingInSubMenu();
+        int mouseX = MouseInput.getMouseX();
+        int mouseY = MouseInput.getMouseY();
+        return this.getMenuUnderCursor(mouseX, mouseY) != null;
     }
 
     public boolean isUserNavigatingInSubMenu() {
