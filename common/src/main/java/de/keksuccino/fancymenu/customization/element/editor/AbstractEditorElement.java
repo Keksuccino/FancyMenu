@@ -115,7 +115,16 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     protected int movingStartPosY = 0;
     protected int resizingStartPosX = 0;
     protected int resizingStartPosY = 0;
-    protected final List<ResizeGrabber> resizeGrabbers = List.of(new ResizeGrabber(ResizeGrabberType.TOP), new ResizeGrabber(ResizeGrabberType.RIGHT), new ResizeGrabber(ResizeGrabberType.BOTTOM), new ResizeGrabber(ResizeGrabberType.LEFT));
+    protected final List<ResizeGrabber> resizeGrabbers = List.of(
+            new ResizeGrabber(ResizeGrabberType.TOP_LEFT),
+            new ResizeGrabber(ResizeGrabberType.TOP),
+            new ResizeGrabber(ResizeGrabberType.TOP_RIGHT),
+            new ResizeGrabber(ResizeGrabberType.RIGHT),
+            new ResizeGrabber(ResizeGrabberType.BOTTOM_RIGHT),
+            new ResizeGrabber(ResizeGrabberType.BOTTOM),
+            new ResizeGrabber(ResizeGrabberType.BOTTOM_LEFT),
+            new ResizeGrabber(ResizeGrabberType.LEFT)
+    );
     protected ResizeGrabber activeResizeGrabber = null;
     protected RotationGrabber rotationGrabber = new RotationGrabber();
     protected boolean rotationGrabberActive = false;
@@ -1459,40 +1468,66 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 int diffX = (int)-(this.resizingStartPosX - mouseX);
                 int diffY = (int)-(this.resizingStartPosY - mouseY);
                 if ((diffX > 0) || (diffY > 0)) this.recentlyResized = true;
-                if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
-                    int newWidth = (this.activeResizeGrabber.type == ResizeGrabberType.LEFT) ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
-                    if (newWidth >= 2) {
-                        this.element.autoSizingWidth = 0;
-                        this.element.autoSizingHeight = 0;
-                        int cachedOldOffsetX = this.element.posOffsetX;
-                        int cachedOldPosX = this.element.getAbsoluteX();
-                        int cachedOldWidth = this.element.getAbsoluteWidth();
-                        this.element.baseWidth = newWidth;
-                        this.element.posOffsetX = this.leftMouseDownBaseX + this.element.anchorPoint.getResizePositionOffsetX(this.element, diffX, this.activeResizeGrabber.type);
-                        if (this.element.stickyAnchor) {
-                            this.element.posOffsetX += this.element.anchorPoint.getStickyResizePositionCorrectionX(this.element, diffX, cachedOldOffsetX, this.element.posOffsetX, cachedOldPosX, this.element.getAbsoluteX(), cachedOldWidth, this.element.getAbsoluteWidth(), this.activeResizeGrabber.type);
-                        }
-                        if (Screen.hasShiftDown()) {
-                            this.element.baseHeight = this.resizeAspectRatio.getAspectRatioHeight(this.element.baseWidth);
-                        }
+
+                ResizeGrabberType resizeType = this.activeResizeGrabber.type;
+                boolean resizeLeft = (resizeType == ResizeGrabberType.LEFT) || (resizeType == ResizeGrabberType.TOP_LEFT) || (resizeType == ResizeGrabberType.BOTTOM_LEFT);
+                boolean resizeRight = (resizeType == ResizeGrabberType.RIGHT) || (resizeType == ResizeGrabberType.TOP_RIGHT) || (resizeType == ResizeGrabberType.BOTTOM_RIGHT);
+                boolean resizeTop = (resizeType == ResizeGrabberType.TOP) || (resizeType == ResizeGrabberType.TOP_LEFT) || (resizeType == ResizeGrabberType.TOP_RIGHT);
+                boolean resizeBottom = (resizeType == ResizeGrabberType.BOTTOM) || (resizeType == ResizeGrabberType.BOTTOM_LEFT) || (resizeType == ResizeGrabberType.BOTTOM_RIGHT);
+                boolean resizeHorizontal = resizeLeft || resizeRight;
+                boolean resizeVertical = resizeTop || resizeBottom;
+                boolean resizeCorner = resizeHorizontal && resizeVertical;
+
+                int newWidth = this.leftMouseDownBaseWidth;
+                int newHeight = this.leftMouseDownBaseHeight;
+
+                if (resizeHorizontal) {
+                    newWidth = resizeLeft ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
+                }
+                if (resizeVertical) {
+                    newHeight = resizeTop ? (this.leftMouseDownBaseHeight - diffY) : (this.leftMouseDownBaseHeight + diffY);
+                }
+
+                if (resizeCorner && Screen.hasShiftDown()) {
+                    if (Math.abs(diffX) >= Math.abs(diffY)) {
+                        newWidth = resizeLeft ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
+                        newHeight = this.resizeAspectRatio.getAspectRatioHeight(newWidth);
+                    } else {
+                        newHeight = resizeTop ? (this.leftMouseDownBaseHeight - diffY) : (this.leftMouseDownBaseHeight + diffY);
+                        newWidth = this.resizeAspectRatio.getAspectRatioWidth(newHeight);
                     }
                 }
-                if ((this.activeResizeGrabber.type == ResizeGrabberType.TOP) || (this.activeResizeGrabber.type == ResizeGrabberType.BOTTOM)) {
-                    int newHeight = (this.activeResizeGrabber.type == ResizeGrabberType.TOP) ? (this.leftMouseDownBaseHeight - diffY) : (this.leftMouseDownBaseHeight + diffY);
-                    if (newHeight >= 2) {
-                        this.element.autoSizingWidth = 0;
-                        this.element.autoSizingHeight = 0;
-                        int cachedOldOffsetY = this.element.posOffsetY;
-                        int cachedOldPosY = this.element.getAbsoluteY();
-                        int cachedOldHeight = this.element.getAbsoluteHeight();
-                        this.element.baseHeight = newHeight;
-                        this.element.posOffsetY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
-                        if (this.element.stickyAnchor) {
-                            this.element.posOffsetY += this.element.anchorPoint.getStickyResizePositionCorrectionY(this.element, diffY, cachedOldOffsetY, this.element.posOffsetY, cachedOldPosY, this.element.getAbsoluteY(), cachedOldHeight, this.element.baseHeight, this.activeResizeGrabber.type);
-                        }
-                        if (Screen.hasShiftDown()) {
-                            this.element.baseWidth = this.resizeAspectRatio.getAspectRatioWidth(this.element.baseHeight);
-                        }
+
+                if (resizeHorizontal && newWidth >= 2 && (!resizeCorner || !Screen.hasShiftDown() || newHeight >= 2)) {
+                    this.element.autoSizingWidth = 0;
+                    this.element.autoSizingHeight = 0;
+                    int cachedOldOffsetX = this.element.posOffsetX;
+                    int cachedOldPosX = this.element.getAbsoluteX();
+                    int cachedOldWidth = this.element.getAbsoluteWidth();
+                    int usedDiffX = resizeLeft ? (this.leftMouseDownBaseWidth - newWidth) : (newWidth - this.leftMouseDownBaseWidth);
+                    this.element.baseWidth = newWidth;
+                    this.element.posOffsetX = this.leftMouseDownBaseX + this.element.anchorPoint.getResizePositionOffsetX(this.element, usedDiffX, resizeType);
+                    if (this.element.stickyAnchor) {
+                        this.element.posOffsetX += this.element.anchorPoint.getStickyResizePositionCorrectionX(this.element, usedDiffX, cachedOldOffsetX, this.element.posOffsetX, cachedOldPosX, this.element.getAbsoluteX(), cachedOldWidth, this.element.getAbsoluteWidth(), resizeType);
+                    }
+                    if (Screen.hasShiftDown() && !resizeCorner) {
+                        this.element.baseHeight = this.resizeAspectRatio.getAspectRatioHeight(this.element.baseWidth);
+                    }
+                }
+                if (resizeVertical && newHeight >= 2 && (!resizeCorner || !Screen.hasShiftDown() || newWidth >= 2)) {
+                    this.element.autoSizingWidth = 0;
+                    this.element.autoSizingHeight = 0;
+                    int cachedOldOffsetY = this.element.posOffsetY;
+                    int cachedOldPosY = this.element.getAbsoluteY();
+                    int cachedOldHeight = this.element.getAbsoluteHeight();
+                    int usedDiffY = resizeTop ? (this.leftMouseDownBaseHeight - newHeight) : (newHeight - this.leftMouseDownBaseHeight);
+                    this.element.baseHeight = newHeight;
+                    this.element.posOffsetY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, usedDiffY, resizeType);
+                    if (this.element.stickyAnchor) {
+                        this.element.posOffsetY += this.element.anchorPoint.getStickyResizePositionCorrectionY(this.element, usedDiffY, cachedOldOffsetY, this.element.posOffsetY, cachedOldPosY, this.element.getAbsoluteY(), cachedOldHeight, this.element.baseHeight, resizeType);
+                    }
+                    if (Screen.hasShiftDown() && !resizeCorner) {
+                        this.element.baseWidth = this.resizeAspectRatio.getAspectRatioWidth(this.element.baseHeight);
                     }
                 }
             }
@@ -1743,9 +1778,13 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     }
 
     public enum ResizeGrabberType {
+        TOP_LEFT,
         TOP,
+        TOP_RIGHT,
         RIGHT,
+        BOTTOM_RIGHT,
         BOTTOM,
+        BOTTOM_LEFT,
         LEFT
     }
 
@@ -1770,33 +1809,37 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
         protected int getX() {
             int x = AbstractEditorElement.this.getX();
-            if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
-                x += (AbstractEditorElement.this.getWidth() / 2) - (this.width / 2);
+            boolean resizeLeft = (this.type == ResizeGrabberType.LEFT) || (this.type == ResizeGrabberType.TOP_LEFT) || (this.type == ResizeGrabberType.BOTTOM_LEFT);
+            boolean resizeRight = (this.type == ResizeGrabberType.RIGHT) || (this.type == ResizeGrabberType.TOP_RIGHT) || (this.type == ResizeGrabberType.BOTTOM_RIGHT);
+            if (resizeLeft) {
+                return x - (this.width / 2);
             }
-            if (this.type == ResizeGrabberType.RIGHT) {
-                x += AbstractEditorElement.this.getWidth() - (this.width / 2);
+            if (resizeRight) {
+                return x + AbstractEditorElement.this.getWidth() - (this.width / 2);
             }
-            if (this.type == ResizeGrabberType.LEFT) {
-                x -= (this.width / 2);
-            }
-            return x;
+            return x + (AbstractEditorElement.this.getWidth() / 2) - (this.width / 2);
         }
 
         protected int getY() {
             int y = AbstractEditorElement.this.getY();
-            if (this.type == ResizeGrabberType.TOP) {
-                y -= (this.height / 2);
+            boolean resizeTop = (this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.TOP_LEFT) || (this.type == ResizeGrabberType.TOP_RIGHT);
+            boolean resizeBottom = (this.type == ResizeGrabberType.BOTTOM) || (this.type == ResizeGrabberType.BOTTOM_LEFT) || (this.type == ResizeGrabberType.BOTTOM_RIGHT);
+            if (resizeTop) {
+                return y - (this.height / 2);
             }
-            if ((this.type == ResizeGrabberType.RIGHT) || (this.type == ResizeGrabberType.LEFT)) {
-                y += (AbstractEditorElement.this.getHeight() / 2) - (this.height / 2);
+            if (resizeBottom) {
+                return y + AbstractEditorElement.this.getHeight() - (this.height / 2);
             }
-            if (this.type == ResizeGrabberType.BOTTOM) {
-                y += AbstractEditorElement.this.getHeight() - (this.height / 2);
-            }
-            return y;
+            return y + (AbstractEditorElement.this.getHeight() / 2) - (this.height / 2);
         }
 
         protected long getCursor() {
+            if ((this.type == ResizeGrabberType.TOP_LEFT) || (this.type == ResizeGrabberType.BOTTOM_RIGHT)) {
+                return CursorHandler.CURSOR_RESIZE_NWSE;
+            }
+            if ((this.type == ResizeGrabberType.TOP_RIGHT) || (this.type == ResizeGrabberType.BOTTOM_LEFT)) {
+                return CursorHandler.CURSOR_RESIZE_NESW;
+            }
             if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
                 return CursorHandler.CURSOR_RESIZE_VERTICAL;
             }
@@ -1807,13 +1850,25 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             if (AbstractEditorElement.this.isMultiSelected()) {
                 return false;
             }
-            if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
-                if ((this.type == ResizeGrabberType.TOP) && !AbstractEditorElement.this.element.advancedY.isDefault()) return false;
-                return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableY() && AbstractEditorElement.this.element.advancedHeight.isDefault();
+            boolean resizeLeft = (this.type == ResizeGrabberType.LEFT) || (this.type == ResizeGrabberType.TOP_LEFT) || (this.type == ResizeGrabberType.BOTTOM_LEFT);
+            boolean resizeRight = (this.type == ResizeGrabberType.RIGHT) || (this.type == ResizeGrabberType.TOP_RIGHT) || (this.type == ResizeGrabberType.BOTTOM_RIGHT);
+            boolean resizeTop = (this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.TOP_LEFT) || (this.type == ResizeGrabberType.TOP_RIGHT);
+            boolean resizeBottom = (this.type == ResizeGrabberType.BOTTOM) || (this.type == ResizeGrabberType.BOTTOM_LEFT) || (this.type == ResizeGrabberType.BOTTOM_RIGHT);
+            boolean resizeHorizontal = resizeLeft || resizeRight;
+            boolean resizeVertical = resizeTop || resizeBottom;
+            boolean resizeCorner = resizeHorizontal && resizeVertical;
+            boolean canResizeX = AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableX() && AbstractEditorElement.this.element.advancedWidth.isDefault();
+            boolean canResizeY = AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableY() && AbstractEditorElement.this.element.advancedHeight.isDefault();
+            if (resizeLeft && !AbstractEditorElement.this.element.advancedX.isDefault()) return false;
+            if (resizeTop && !AbstractEditorElement.this.element.advancedY.isDefault()) return false;
+            if (resizeCorner) {
+                return canResizeX && canResizeY;
             }
-            if ((this.type == ResizeGrabberType.LEFT) || (this.type == ResizeGrabberType.RIGHT)) {
-                if ((this.type == ResizeGrabberType.LEFT) && !AbstractEditorElement.this.element.advancedX.isDefault()) return false;
-                return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableX() && AbstractEditorElement.this.element.advancedWidth.isDefault();
+            if (resizeVertical) {
+                return canResizeY;
+            }
+            if (resizeHorizontal) {
+                return canResizeX;
             }
             return false;
         }

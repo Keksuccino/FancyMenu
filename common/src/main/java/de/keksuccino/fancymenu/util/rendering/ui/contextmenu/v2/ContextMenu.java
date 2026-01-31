@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
@@ -18,6 +19,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -37,6 +39,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @SuppressWarnings("all")
@@ -50,6 +53,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private static final MaterialIcon CONTEXT_MENU_TOOLTIP_ICON = MaterialIcons.INFO;
     private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
     private static final int SCROLL_INDICATOR_HEIGHT = 12; // Space reserved for arrows
+    private static final String SEARCH_ENTRY_IDENTIFIER = "context_menu_search";
+    private static final String SEARCH_SEPARATOR_IDENTIFIER = "context_menu_search_separator";
+    private static final String SEARCH_TOGGLE_IDENTIFIER = "context_menu_search_toggle";
 
     protected final List<ContextMenuEntry<?>> entries = new ArrayList<>();
     protected float scale = UIBase.getUIScale();
@@ -80,6 +86,30 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private boolean openAnimationActive = false;
     protected int renderMouseX = 0;
     protected int renderMouseY = 0;
+    private final SearchContextMenuEntry searchEntry;
+    private final SeparatorContextMenuEntry searchSeparator;
+    private final ClickableContextMenuEntry<?> searchToggleEntry;
+    private boolean searchEntryRequested = false;
+    private boolean searchEntryVisibleLast = false;
+
+    public ContextMenu() {
+        this.searchEntry = new SearchContextMenuEntry(SEARCH_ENTRY_IDENTIFIER, this);
+        this.searchSeparator = new SeparatorContextMenuEntry(SEARCH_SEPARATOR_IDENTIFIER, this);
+        this.entries.add(this.searchEntry);
+        this.entries.add(this.searchSeparator);
+        this.searchEntry.addIsVisibleSupplier((menu, entry) -> this.isSearchEntryVisible());
+        this.searchSeparator.addIsVisibleSupplier((menu, entry) -> this.isSearchEntryVisible());
+        this.searchToggleEntry = ContextMenuUtils.addToggleContextMenuEntryTo(this,
+                SEARCH_TOGGLE_IDENTIFIER,
+                () -> FancyMenu.getOptions().contextMenuAlwaysShowSearchBar.getValue(),
+                value -> {
+                    FancyMenu.getOptions().contextMenuAlwaysShowSearchBar.setValue(value);
+                    this.updateSearchVisibilityState(false);
+                },
+                "fancymenu.context_menu.entries.always_show_search_bar");
+        this.searchToggleEntry.setIcon((MaterialIcon)null);
+        this.searchEntryVisibleLast = this.isSearchEntryVisible();
+    }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -88,6 +118,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.renderMouseY = mouseY;
 
         if (!this.isOpen()) return;
+
+        this.updateSearchVisibilityState(false);
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
 
@@ -121,11 +153,19 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.rawWidth = 20;
         this.rawHeight = 0;
 
+        String searchText = this.getActiveSearchText();
+        String searchLower = (searchText != null) ? searchText.toLowerCase(Locale.ROOT) : null;
+        boolean filterActive = (searchLower != null) && !searchLower.isBlank();
         List<ContextMenuEntry<?>> visibleEntries = new ArrayList<>();
         for (ContextMenuEntry<?> e : this.entries) {
             e.addSpaceForIcon = addIconSpace;
-            if (e.isVisible()) {
+            if (e.isVisible() && (!filterActive || this.matchesSearchFilter(e, searchLower))) {
                 visibleEntries.add(e);
+            }
+        }
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (!visibleEntries.contains(e)) {
+                e.setHovered(false);
             }
         }
 
@@ -134,7 +174,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         while (startIndex <= endIndex && visibleEntries.get(startIndex) instanceof SeparatorContextMenuEntry) {
             startIndex++;
         }
-        while (endIndex >= startIndex && visibleEntries.get(endIndex) instanceof SeparatorContextMenuEntry) {
+        while (endIndex >= startIndex && visibleEntries.get(endIndex) instanceof SeparatorContextMenuEntry && visibleEntries.get(endIndex) != this.searchSeparator) {
             endIndex--;
         }
 
@@ -562,15 +602,31 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     @NotNull
     public <T extends ContextMenuEntry<?>> T addEntryAt(int index, @NotNull T entry) {
+        if ((entry instanceof SearchContextMenuEntry) && (entry != this.searchEntry)) {
+            LOGGER.error("[FANCYMENU] Failed to add ContextMenu search entry! Only one search entry is allowed per menu.");
+            return entry;
+        }
         if (this.hasEntry(entry.identifier)) {
             LOGGER.error("[FANCYMENU] Failed to add ContextMenu entry! Identifier already in use: " + entry.identifier);
         } else {
+            if (!this.isProtectedEntry(entry)) {
+                int minIndex = this.getProtectedEntriesCount();
+                if (index < minIndex) index = minIndex;
+                if ((this.searchToggleEntry != null) && (entry != this.searchToggleEntry) && this.entries.contains(this.searchToggleEntry)) {
+                    int toggleIndex = this.entries.indexOf(this.searchToggleEntry);
+                    if (index > toggleIndex) index = toggleIndex;
+                }
+            }
             this.entries.add(index, entry);
         }
         return entry;
     }
 
     public ContextMenu removeEntry(String identifier) {
+        if (this.isProtectedEntryIdentifier(identifier)) {
+            LOGGER.error("[FANCYMENU] Failed to remove ContextMenu entry! Entry is protected: " + identifier);
+            return this;
+        }
         ContextMenuEntry<?> e = this.getEntry(identifier);
         if (e != null) {
             this.entries.remove(e);
@@ -581,10 +637,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     public ContextMenu clearEntries() {
         this.closeMenu();
-        for (ContextMenuEntry<?> e : this.entries) {
+        List<ContextMenuEntry<?>> entriesToRemove = new ArrayList<>(this.entries);
+        for (ContextMenuEntry<?> e : entriesToRemove) {
+            if (this.isProtectedEntry(e)) continue;
+            this.entries.remove(e);
             e.onRemoved();
         }
-        this.entries.clear();
+        this.resetSearchState();
         return this;
     }
 
@@ -927,6 +986,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     public ContextMenu openMenuAt(float x, float y, @Nullable List<String> entryPath) {
         this.closeSubMenus();
         this.unhoverAllEntries();
+        this.resetSearchState();
         this.rawX = x;
         this.rawY = y;
         this.open = true;
@@ -981,6 +1041,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.unhoverAllEntries();
         this.open = false;
         this.openAnimationActive = false;
+        this.resetSearchState();
         return this;
     }
 
@@ -1064,6 +1125,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float scale = UIBase.calculateFixedScale(this.scale) * this.getOpenAnimationScale(0.0F);
             int scaledMouseX = (int) ((float)mouseX / scale);
             int scaledMouseY = (int) ((float)mouseY / scale);
+            String searchText = this.getActiveSearchText();
+            String searchLower = (searchText != null) ? searchText.toLowerCase(Locale.ROOT) : null;
+            boolean filterActive = (searchLower != null) && !searchLower.isBlank();
 
             // Check if click is on scroll arrow areas first
             if (button == 0 && this.needsScrolling && this.isMouseOverMenu(mouseX, mouseY)) {
@@ -1103,6 +1167,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             // Process entries only if they're visible in the scroll area
             for (ContextMenuEntry<?> entry : this.entries) {
+                if (!entry.isVisible()) continue;
+                if (filterActive && !this.matchesSearchFilter(entry, searchLower)) continue;
                 if (!this.needsScrolling || isEntryVisible(entry)) {
                     entry.mouseClicked(scaledMouseX, scaledMouseY, button);
                 }
@@ -1117,6 +1183,62 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return true;
         }
         return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.isUserNavigatingInMenu()) {
+            float scale = UIBase.calculateFixedScale(this.scale) * this.getOpenAnimationScale(0.0F);
+            int scaledMouseX = (int) ((float)mouseX / scale);
+            int scaledMouseY = (int) ((float)mouseY / scale);
+            String searchText = this.getActiveSearchText();
+            String searchLower = (searchText != null) ? searchText.toLowerCase(Locale.ROOT) : null;
+            boolean filterActive = (searchLower != null) && !searchLower.isBlank();
+
+            for (ContextMenuEntry<?> entry : this.entries) {
+                if (!entry.isVisible()) continue;
+                if (filterActive && !this.matchesSearchFilter(entry, searchLower)) continue;
+                if (!this.needsScrolling || isEntryVisible(entry)) {
+                    entry.mouseReleased(scaledMouseX, scaledMouseY, button);
+                }
+            }
+            for (ContextMenuEntry<?> e : this.entries) {
+                if (e instanceof SubMenuContextMenuEntry s) {
+                    s.subContextMenu.mouseReleased(mouseX, mouseY, button);
+                }
+            }
+            return true;
+        }
+        return GuiEventListener.super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.isUserNavigatingInMenu()) {
+            float scale = UIBase.calculateFixedScale(this.scale) * this.getOpenAnimationScale(0.0F);
+            int scaledMouseX = (int) ((float)mouseX / scale);
+            int scaledMouseY = (int) ((float)mouseY / scale);
+            double scaledDragX = dragX / scale;
+            double scaledDragY = dragY / scale;
+            String searchText = this.getActiveSearchText();
+            String searchLower = (searchText != null) ? searchText.toLowerCase(Locale.ROOT) : null;
+            boolean filterActive = (searchLower != null) && !searchLower.isBlank();
+
+            for (ContextMenuEntry<?> entry : this.entries) {
+                if (!entry.isVisible()) continue;
+                if (filterActive && !this.matchesSearchFilter(entry, searchLower)) continue;
+                if (!this.needsScrolling || isEntryVisible(entry)) {
+                    entry.mouseDragged(scaledMouseX, scaledMouseY, button, scaledDragX, scaledDragY);
+                }
+            }
+            for (ContextMenuEntry<?> e : this.entries) {
+                if (e instanceof SubMenuContextMenuEntry s) {
+                    s.subContextMenu.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+                }
+            }
+            return true;
+        }
+        return GuiEventListener.super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
@@ -1183,6 +1305,58 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!this.isOpen()) return false;
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (e instanceof SubMenuContextMenuEntry s && s.subContextMenu.isOpen()) {
+                if (s.subContextMenu.keyPressed(keyCode, scanCode, modifiers)) {
+                    return true;
+                }
+            }
+        }
+        if (this.isCtrlF(keyCode)) {
+            this.showSearchEntry(true);
+            return true;
+        }
+        if (this.searchEntry.isVisible() && this.searchEntry.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        return GuiEventListener.super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (!this.isOpen()) return false;
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (e instanceof SubMenuContextMenuEntry s && s.subContextMenu.isOpen()) {
+                if (s.subContextMenu.keyReleased(keyCode, scanCode, modifiers)) {
+                    return true;
+                }
+            }
+        }
+        if (this.searchEntry.isVisible() && this.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        return GuiEventListener.super.keyReleased(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (!this.isOpen()) return false;
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (e instanceof SubMenuContextMenuEntry s && s.subContextMenu.isOpen()) {
+                if (s.subContextMenu.charTyped(codePoint, modifiers)) {
+                    return true;
+                }
+            }
+        }
+        if (this.searchEntry.isVisible() && this.searchEntry.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return GuiEventListener.super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
     public @NotNull NarrationPriority narrationPriority() {
         return NarrationPriority.NONE;
     }
@@ -1225,6 +1399,81 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return s.height;
         }
         return 1;
+    }
+
+    protected boolean isSearchEntryVisible() {
+        return FancyMenu.getOptions().contextMenuAlwaysShowSearchBar.getValue() || this.searchEntryRequested;
+    }
+
+    protected void showSearchEntry(boolean focus) {
+        this.searchEntryRequested = true;
+        this.scrollPosition = 0.0F;
+        this.updateSearchVisibilityState(focus);
+    }
+
+    protected void resetSearchState() {
+        this.searchEntryRequested = false;
+        this.searchEntry.resetSearchValue();
+        this.searchEntryVisibleLast = this.isSearchEntryVisible();
+    }
+
+    protected void updateSearchVisibilityState(boolean focusOnShow) {
+        boolean visible = this.isSearchEntryVisible();
+        if (visible != this.searchEntryVisibleLast) {
+            if (!visible) {
+                this.searchEntry.resetSearchValue();
+            } else if (focusOnShow) {
+                this.searchEntry.focusAndSelectAll();
+            }
+        } else if (visible && focusOnShow) {
+            this.searchEntry.focusAndSelectAll();
+        }
+        this.searchEntryVisibleLast = visible;
+    }
+
+    @Nullable
+    protected String getActiveSearchText() {
+        if (!this.isSearchEntryVisible()) return null;
+        String value = this.searchEntry.getSearchValue();
+        return value.isBlank() ? null : value;
+    }
+
+    protected boolean matchesSearchFilter(@NotNull ContextMenuEntry<?> entry, @NotNull String searchLower) {
+        if ((entry == this.searchEntry) || (entry == this.searchSeparator)) {
+            return true;
+        }
+        if (entry instanceof SeparatorContextMenuEntry || entry instanceof SpacerContextMenuEntry) {
+            return true;
+        }
+        if (entry instanceof ClickableContextMenuEntry<?> clickable) {
+            Component label = clickable.getLabel();
+            return label.getString().toLowerCase(Locale.ROOT).contains(searchLower);
+        }
+        return false;
+    }
+
+    protected boolean isCtrlF(int keyCode) {
+        return keyCode == InputConstants.KEY_F && Screen.hasControlDown();
+    }
+
+    protected boolean isProtectedEntryIdentifier(@NotNull String identifier) {
+        return SEARCH_ENTRY_IDENTIFIER.equals(identifier)
+                || SEARCH_SEPARATOR_IDENTIFIER.equals(identifier)
+                || SEARCH_TOGGLE_IDENTIFIER.equals(identifier);
+    }
+
+    protected boolean isProtectedEntry(@NotNull ContextMenuEntry<?> entry) {
+        return entry == this.searchEntry
+                || entry == this.searchSeparator
+                || entry == this.searchToggleEntry
+                || this.isProtectedEntryIdentifier(entry.identifier);
+    }
+
+    protected int getProtectedEntriesCount() {
+        int count = 0;
+        if (this.searchEntry != null) count++;
+        if (this.searchSeparator != null) count++;
+        return count;
     }
 
     /**
@@ -2371,6 +2620,144 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         @Override
         public boolean isFocused() {
             return false;
+        }
+
+    }
+
+    public static class SearchContextMenuEntry extends ContextMenuEntry<SearchContextMenuEntry> {
+
+        private static final int FIELD_VERTICAL_PADDING = 2;
+        private static final int FIELD_HORIZONTAL_PADDING = 10;
+        private static final int MIN_FIELD_WIDTH = 40;
+        private static final int MIN_FIELD_HEIGHT = 12;
+        private final ExtendedEditBox searchBox;
+        private boolean lastBlurState = UIBase.shouldBlur();
+
+        public SearchContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
+            super(identifier, parent);
+            this.height = 20;
+            this.searchBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 0, 0, Component.empty());
+            this.searchBox.setHintFancyMenu(consumes -> Component.translatable("fancymenu.ui.generic.search"));
+            this.searchBox.setResponder(value -> parent.closeSubMenus());
+            UIBase.applyDefaultWidgetSkinTo(this.searchBox, this.lastBlurState);
+            this.setChangeBackgroundColorOnHover(false);
+        }
+
+        @Override
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            this.applySkinIfNeeded();
+            this.updateSearchBoxBounds();
+            this.searchBox.render(graphics, mouseX, mouseY, partial);
+        }
+
+        @Override
+        public float getMinWidth() {
+            Component hint = Component.translatable("fancymenu.ui.generic.search");
+            float width = UIBase.getUITextWidthNormal(hint) + (FIELD_HORIZONTAL_PADDING * 2.0F);
+            if (this.addSpaceForIcon) {
+                width += ClickableContextMenuEntry.ICON_LABEL_SPACING;
+            }
+            return Math.max(width, 120.0F);
+        }
+
+        @Override
+        public SearchContextMenuEntry copy() {
+            SearchContextMenuEntry copy = new SearchContextMenuEntry(this.identifier, this.parent);
+            copy.height = this.height;
+            copy.tickAction = this.tickAction;
+            copy.tooltipSupplier = this.tooltipSupplier;
+            copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
+            copy.visibleStateSuppliers = new ArrayList<>(this.visibleStateSuppliers);
+            copy.stackApplier = this.stackApplier;
+            copy.stackValueSupplier = this.stackValueSupplier;
+            copy.stackGroupKey = this.stackGroupKey;
+            copy.searchBox.setValue(this.searchBox.getValue());
+            return copy;
+        }
+
+        @Override
+        public void setFocused(boolean var1) {
+        }
+
+        @Override
+        public boolean isFocused() {
+            return false;
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (!this.isVisible()) return false;
+            this.updateSearchBoxBounds();
+            return this.searchBox.mouseClicked(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            if (!this.isVisible()) return false;
+            this.updateSearchBoxBounds();
+            return this.searchBox.mouseReleased(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+            if (!this.isVisible()) return false;
+            this.updateSearchBoxBounds();
+            return this.searchBox.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (!this.isVisible()) return false;
+            return this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+        }
+
+        @Override
+        public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+            if (!this.isVisible()) return false;
+            return this.searchBox.keyReleased(keyCode, scanCode, modifiers);
+        }
+
+        @Override
+        public boolean charTyped(char codePoint, int modifiers) {
+            if (!this.isVisible()) return false;
+            return this.searchBox.charTyped(codePoint, modifiers);
+        }
+
+        public void resetSearchValue() {
+            this.searchBox.setValue("");
+            this.searchBox.setFocused(false);
+        }
+
+        public void focusAndSelectAll() {
+            this.searchBox.setFocused(true);
+            this.searchBox.moveCursorToEnd(false);
+            this.searchBox.setHighlightPos(0);
+        }
+
+        @NotNull
+        public String getSearchValue() {
+            return this.searchBox.getValue();
+        }
+
+        private void updateSearchBoxBounds() {
+            int paddingLeft = FIELD_HORIZONTAL_PADDING + (this.addSpaceForIcon ? ClickableContextMenuEntry.ICON_LABEL_SPACING : 0);
+            int paddingRight = FIELD_HORIZONTAL_PADDING;
+            int x = Math.round(this.x + paddingLeft);
+            int y = Math.round(this.y + FIELD_VERTICAL_PADDING);
+            int width = Math.max(MIN_FIELD_WIDTH, Math.round(this.width - paddingLeft - paddingRight));
+            int height = Math.max(MIN_FIELD_HEIGHT, Math.round(this.height - FIELD_VERTICAL_PADDING * 2));
+            this.searchBox.setX(x);
+            this.searchBox.setY(y);
+            this.searchBox.setWidth(width);
+            this.searchBox.setHeight(height);
+        }
+
+        private void applySkinIfNeeded() {
+            boolean blur = UIBase.shouldBlur();
+            if (blur != this.lastBlurState) {
+                this.lastBlurState = blur;
+                UIBase.applyDefaultWidgetSkinTo(this.searchBox, blur);
+            }
         }
 
     }

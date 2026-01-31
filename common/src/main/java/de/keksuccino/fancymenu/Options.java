@@ -62,6 +62,7 @@ public class Options extends AbstractOptions {
     public final Option<Float> uiScale = new Option<>(config, "ui_scale", 4.0F, "ui");
     public final Option<Boolean> playUiClickSounds = new Option<>(config, "play_ui_click_sounds", true, "ui");
     public final Option<Integer> contextMenuHoverOpenSpeed = new Option<>(config, "context_menu_hover_open_speed", 1, "ui");
+    public final Option<Boolean> contextMenuAlwaysShowSearchBar = new Option<>(config, "context_menu_always_show_search_bar", false, "ui");
     public final Option<String> uiTheme = new Option<>(config, "ui_theme", "dark", "ui");
     public final Option<Boolean> enableUiBlur = new Option<>(config, "enable_ui_blur", true, "ui");
     public final Option<Float> uiBlurIntensity = new Option<>(config, "ui_blur_intensity", 3.0F, "ui");
