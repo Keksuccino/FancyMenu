@@ -77,10 +77,6 @@ public class WelcomeWindowBody extends PiPWindowBody {
 
         RenderSystem.enableBlend();
 
-        // Render header and footer separators
-        graphics.fillGradient(0, HEADER_HEIGHT, this.width, HEADER_HEIGHT + 4, -16777216, 0);
-        graphics.fillGradient(0, this.height - FOOTER_HEIGHT - 4, this.width, this.height - FOOTER_HEIGHT, 0, -16777216);
-
         // Render headline
         float headlineW = UIBase.getUITextWidthNormal(HEADLINE, true);
         float headlineH = UIBase.getUITextHeightNormal(true);
