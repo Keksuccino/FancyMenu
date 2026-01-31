@@ -55,7 +55,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private static final int SCROLL_INDICATOR_HEIGHT = 12; // Space reserved for arrows
     private static final String SEARCH_ENTRY_IDENTIFIER = "context_menu_search";
     private static final String SEARCH_SEPARATOR_IDENTIFIER = "context_menu_search_separator";
-    private static final String SEARCH_TOGGLE_IDENTIFIER = "context_menu_search_toggle";
 
     protected final List<ContextMenuEntry<?>> entries = new ArrayList<>();
     protected float scale = UIBase.getUIScale();
@@ -88,9 +87,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     protected int renderMouseY = 0;
     private final SearchContextMenuEntry searchEntry;
     private final SeparatorContextMenuEntry searchSeparator;
-    private final ClickableContextMenuEntry<?> searchToggleEntry;
     private boolean searchEntryRequested = false;
     private boolean searchEntryVisibleLast = false;
+    private boolean alwaysShowSearchBar = false;
 
     public ContextMenu() {
         this.searchEntry = new SearchContextMenuEntry(SEARCH_ENTRY_IDENTIFIER, this);
@@ -99,15 +98,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.entries.add(this.searchSeparator);
         this.searchEntry.addIsVisibleSupplier((menu, entry) -> this.isSearchEntryVisible());
         this.searchSeparator.addIsVisibleSupplier((menu, entry) -> this.isSearchEntryVisible());
-        this.searchToggleEntry = ContextMenuUtils.addToggleContextMenuEntryTo(this,
-                SEARCH_TOGGLE_IDENTIFIER,
-                () -> FancyMenu.getOptions().contextMenuAlwaysShowSearchBar.getValue(),
-                value -> {
-                    FancyMenu.getOptions().contextMenuAlwaysShowSearchBar.setValue(value);
-                    this.updateSearchVisibilityState(false);
-                },
-                "fancymenu.context_menu.entries.always_show_search_bar");
-        this.searchToggleEntry.setIcon((MaterialIcon)null);
         this.searchEntryVisibleLast = this.isSearchEntryVisible();
     }
 
@@ -612,10 +602,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             if (!this.isProtectedEntry(entry)) {
                 int minIndex = this.getProtectedEntriesCount();
                 if (index < minIndex) index = minIndex;
-                if ((this.searchToggleEntry != null) && (entry != this.searchToggleEntry) && this.entries.contains(this.searchToggleEntry)) {
-                    int toggleIndex = this.entries.indexOf(this.searchToggleEntry);
-                    if (index > toggleIndex) index = toggleIndex;
-                }
             }
             this.entries.add(index, entry);
         }
@@ -705,6 +691,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     public ContextMenu setForceUIScale(boolean forceUIScale) {
         this.forceUIScale = forceUIScale;
+        return this;
+    }
+
+    public boolean isAlwaysShowSearchBar() {
+        return this.alwaysShowSearchBar;
+    }
+
+    public ContextMenu setAlwaysShowSearchBar(boolean alwaysShowSearchBar) {
+        this.alwaysShowSearchBar = alwaysShowSearchBar;
+        this.updateSearchVisibilityState(false);
         return this;
     }
 
@@ -1402,7 +1398,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     protected boolean isSearchEntryVisible() {
-        return FancyMenu.getOptions().contextMenuAlwaysShowSearchBar.getValue() || this.searchEntryRequested;
+        return this.alwaysShowSearchBar || this.searchEntryRequested;
     }
 
     protected void showSearchEntry(boolean focus) {
@@ -1458,14 +1454,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     protected boolean isProtectedEntryIdentifier(@NotNull String identifier) {
         return SEARCH_ENTRY_IDENTIFIER.equals(identifier)
-                || SEARCH_SEPARATOR_IDENTIFIER.equals(identifier)
-                || SEARCH_TOGGLE_IDENTIFIER.equals(identifier);
+                || SEARCH_SEPARATOR_IDENTIFIER.equals(identifier);
     }
 
     protected boolean isProtectedEntry(@NotNull ContextMenuEntry<?> entry) {
         return entry == this.searchEntry
                 || entry == this.searchSeparator
-                || entry == this.searchToggleEntry
                 || this.isProtectedEntryIdentifier(entry.identifier);
     }
 
