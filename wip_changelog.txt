@@ -5,6 +5,7 @@
 - Fixed inactive buttons don't show labels in MC 1.21.11 (#1471)
 - Fixed "Panorama" menu background type not rendering in the layout editor in MC 1.21.11
 - Fixed anchoring elements to each other via manual element ID input not working in MC 1.21.11 (#1501)
+- Fixed error related to serializing enchanted items that causes the client to disconnect from servers in MC 1.21.11 (#1499, #1495)
 
 
 %changelog:end%
