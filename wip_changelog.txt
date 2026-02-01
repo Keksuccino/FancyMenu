@@ -1,4 +1,21 @@
 
+## CHANGELOG | FANCYMENU v3.8.4 [ W I P !! Not public yet !! ]
+
+- Fixed background blur not working for some menu background types in MC 1.21.11 (#1500)
+- Fixed inactive buttons don't show labels in MC 1.21.11 (#1471)
+- Fixed "Panorama" menu background type not rendering in the layout editor in MC 1.21.11
+
+
+%changelog:end%
+
+
+
+
+
+
+
+
+
 ## CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
 ### New Features and Improvements
