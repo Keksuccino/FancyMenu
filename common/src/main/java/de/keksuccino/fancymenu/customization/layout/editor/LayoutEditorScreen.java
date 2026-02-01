@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.background.backgrounds.panorama.PanoramaMenuBackground;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
@@ -259,8 +260,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.activeElementContextMenu = null;
 		}
 
-		this.renderBackground(graphics, mouseX, mouseY, partial);
-
 		this.renderElements(graphics, mouseX, mouseY, partial);
 
 		this.renderMouseSelectionRectangle(graphics, mouseX, mouseY);
@@ -331,7 +330,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+		// Avoid a batched solid fill covering the panorama preview in the editor.
+		boolean hasPanoramaBackground = this.layout.menuBackgrounds.stream().anyMatch(background -> background instanceof PanoramaMenuBackground);
+		if (!hasPanoramaBackground) {
+			graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+		}
 
 		this.layout.menuBackgrounds.forEach(menuBackground -> {
 
@@ -344,7 +347,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (!this.layout.menuBackgrounds.isEmpty()) {
 
 			if (this.layout.applyVanillaBackgroundBlur) {
-				Minecraft.getInstance().gameRenderer.processBlurEffect();
+				graphics.nextStratum();
+				graphics.blurBeforeThisStratum();
 			}
 
 			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {

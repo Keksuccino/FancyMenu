@@ -100,7 +100,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
             } else if ("snbt".equalsIgnoreCase(returnType)) {
                 return tag.toString();
             } else if ("json".equalsIgnoreCase(returnType) && tag instanceof CompoundTag) {
-                String json = ComponentParser.toJson(NbtUtils.toPrettyComponent(tag));
+                String json = ComponentParser.toJson(NbtUtils.toPrettyComponent(tag), level.registryAccess());
                 if (json.startsWith("\"") && json.endsWith("\"")) {
                     return json.substring(1, json.length() - 1);
                 }

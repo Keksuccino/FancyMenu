@@ -244,12 +244,19 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				anchorPointMenu.addClickableEntry("anchor_point_element", ElementAnchorPoints.ELEMENT.getDisplayName(),
 								(menu, entry) -> {
 									if (entry.getStackMeta().isFirstInStack()) {
+										List<AbstractEditorElement> selectedElements = new ArrayList<>(this.editor.getSelectedElements());
+										if (!selectedElements.contains(this)) selectedElements.add(this);
 										TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.elements.anchor_points.element.setidentifier"), null, call -> {
 											if (call != null) {
-												AbstractEditorElement editorElement = this.editor.getElementByInstanceIdentifier(call);
+												String trimmedCall = call.trim();
+												if (trimmedCall.isEmpty()) {
+													Minecraft.getInstance().setScreen(this.editor);
+													return;
+												}
+												AbstractEditorElement editorElement = this.editor.getElementByInstanceIdentifier(trimmedCall);
 												if (editorElement != null) {
 													this.editor.history.saveSnapshot();
-													for (AbstractEditorElement e : this.editor.getSelectedElements()) {
+													for (AbstractEditorElement e : selectedElements) {
 														if (e.settings.isAnchorPointChangeable() && e.settings.isElementAnchorPointAllowed()) {
 															e.element.setAnchorPointElementIdentifier(editorElement.element.getInstanceIdentifier());
 															e.element.setElementAnchorPointParent(editorElement.element);

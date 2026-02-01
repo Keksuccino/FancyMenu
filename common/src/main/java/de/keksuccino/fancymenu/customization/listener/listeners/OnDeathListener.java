@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.listener.listeners;
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,6 +40,13 @@ public class OnDeathListener extends AbstractListener {
 
     @Nullable
     private String serializeComponent(@NotNull Component component) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.level != null) {
+            return ComponentParser.toJson(component, minecraft.level.registryAccess());
+        }
+        if (minecraft.player != null && minecraft.player.connection != null) {
+            return ComponentParser.toJson(component, minecraft.player.connection.registryAccess());
+        }
         return ComponentParser.toJson(component);
     }
 

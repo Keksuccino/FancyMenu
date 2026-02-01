@@ -5,6 +5,7 @@
   "client": [
     "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
+    "client.IMixinAbstractWidgetWithInactiveMessage",
     "client.IMixinBossHealthOverlay",
     "client.IMixinButton",
     "client.IMixinClientLanguage",

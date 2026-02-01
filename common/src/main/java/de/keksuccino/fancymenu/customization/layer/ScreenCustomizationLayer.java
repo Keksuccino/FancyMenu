@@ -548,7 +548,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (!this.layoutBase.menuBackgrounds.isEmpty()) {
 
 			if (this.layoutBase.applyVanillaBackgroundBlur) {
-				Minecraft.getInstance().gameRenderer.processBlurEffect();
+				graphics.nextStratum();
+				graphics.blurBeforeThisStratum();
 			}
 
 			if (this.layoutBase.showScreenBackgroundOverlayOnCustomBackground) {

@@ -3,8 +3,10 @@ package de.keksuccino.fancymenu.util.rendering.text;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.mojang.serialization.JsonOps;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.MutableComponent;
@@ -34,7 +36,20 @@ public class ComponentParser {
 
     @NotNull
     public static String toJson(@NotNull Component component) {
-        return ComponentSerialization.CODEC.encodeStart(JsonOps.INSTANCE, component).getOrThrow(JsonParseException::new).toString();
+        return toJson(component, null);
+    }
+
+    @NotNull
+    public static String toJson(@NotNull Component component, @Nullable HolderLookup.Provider registries) {
+        try {
+            if (registries != null) {
+                return de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentSerialization.Serializer.toJson(component, registries);
+            }
+            return ComponentSerialization.CODEC.encodeStart(JsonOps.INSTANCE, component).getOrThrow(JsonParseException::new).toString();
+        } catch (Exception ex) {
+            LOGGER.info("[FANCYMENU] Failed to serialize Component to JSON. Falling back to plain text.", ex);
+            return new JsonPrimitive(component.getString()).toString();
+        }
     }
 
     private static @Nullable MutableComponent deserializeComponentFromJson(@NotNull String json) {

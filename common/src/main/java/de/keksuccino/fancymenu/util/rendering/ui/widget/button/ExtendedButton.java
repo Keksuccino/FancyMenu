@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidgetWithInactiveMessage;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -160,6 +161,10 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         Component c = this.labelSupplier.get(this);
         if (c == null) c = Component.literal("");
         ((IMixinAbstractWidget)this).setMessageFieldFancyMenu(c);
+        Component inactiveLabel = c;
+        Component customLabel = this.getExtendedAsCustomizableWidget().getCustomLabelFancyMenu();
+        if (customLabel != null) inactiveLabel = customLabel;
+        ((IMixinAbstractWidgetWithInactiveMessage)this).setInactiveMessageFancyMenu(inactiveLabel);
     }
 
     protected void updateIsActive() {
@@ -246,12 +251,13 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     public ExtendedButton setLabel(@NotNull Component label) {
         this.labelSupplier = (btn) -> label;
-        ((IMixinAbstractWidget)this).setMessageFieldFancyMenu(label);
+        this.updateLabel();
         return this;
     }
 
     public ExtendedButton setLabel(@NotNull String label) {
         this.labelSupplier = (btn) -> Component.literal(label);
+        this.updateLabel();
         return this;
     }
 

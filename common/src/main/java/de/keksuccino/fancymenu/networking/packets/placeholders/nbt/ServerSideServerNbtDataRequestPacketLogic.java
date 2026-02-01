@@ -159,7 +159,7 @@ public class ServerSideServerNbtDataRequestPacketLogic {
             case "json" -> {
                 if (tag instanceof CompoundTag) {
                     Component component = NbtUtils.toPrettyComponent(tag);
-                    return ComponentParser.toJson(component);
+                    return ComponentParser.toJson(component, context.source().registryAccess());
                 }
                 return tag.toString();
             }
