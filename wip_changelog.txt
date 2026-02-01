@@ -132,7 +132,7 @@
 - Most of FancyMenu's simple text inputs (input fields) now allow for selecting text by holding down the mouse and moving over the text
 - The "New Element" menu's entries are now ordered alphabetically
 - Added support for corner resizing to all elements in the layout editor
-- Context and Dropdown menus in FancyMenu now have a search bar (just start typing while a context/dropdown menu is open and see it start filtering entries)
+- Context and Dropdown menus of FancyMenu now have a search bar (just start typing while a context/dropdown menu is open and see it start filtering entries)
 - The text editor got some QoL additions
   - Duplicate Line: Ctrl + D
   - Move Line Up/Down: Alt + Up/Down
