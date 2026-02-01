@@ -30,7 +30,7 @@ file="META-INF/accesstransformer.cfg"
 modId="konkrete"
 type="required"
 ordering="NONE"
-versionRange="[1.9.4,)"
+versionRange="[1.9.18,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]

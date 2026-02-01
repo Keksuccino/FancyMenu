@@ -24,10 +24,9 @@ dependencies {
     compileOnly "com.github.Keksuccino:japng:0.5.3"
     compileOnly "com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7"
     modCompileOnly "maven.modrinth:melody:1.0.15-1.21.11-fabric"
-    modCompileOnly "maven.modrinth:konkrete:1.9.14-1.21.11-fabric"
+    modCompileOnly "maven.modrinth:konkrete:1.9.18-1.21.11-fabric"
     modCompileOnly "de.keksuccino:mcef-fabric:2.1.7-1.21.10"
     compileOnly "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
-    compileOnly "net.objecthunter:exp4j:0.4.8"
 }
 
 loom {
