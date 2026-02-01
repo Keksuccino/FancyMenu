@@ -7,7 +7,7 @@ CHANGELOG | FANCYMENU v3.8.4
 - Fixed "Panorama" menu background type not rendering in the layout editor in MC 1.21.11
 - Fixed anchoring elements to each other via manual element ID input not working in MC 1.21.11 (#1501)
 - Fixed error related to serializing enchanted items that causes the client to disconnect from servers in MC 1.21.11 (#1499, #1495)
-- Fixed crash when using JsonPath features (#1488)
+- Fixed crash when using JsonPath features in MC 1.21.11 (#1488)
 
 %changelog:end%
 
@@ -3913,6 +3913,7 @@ CHANGELOG | FANCYMNENU v1.5
 - Fixed a bug that prevented customized menu buttons from loading when the previous menu was the language settings menu
 - Fixed a rare bug that could lead to a crash when trying to save or load layouts while having non-layout files saved in the layout directory (.minecraft/config/fancymenu/customization)
 - Fixed a MC 1.12 bug that could lead to non-functional 'openlink' button actions even though the given URL was correct
+
 
 
 
