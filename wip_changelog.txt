@@ -4,6 +4,7 @@
 - Fixed background blur not working for some menu background types in MC 1.21.11 (#1500)
 - Fixed inactive buttons don't show labels in MC 1.21.11 (#1471)
 - Fixed "Panorama" menu background type not rendering in the layout editor in MC 1.21.11
+- Fixed anchoring elements to each other via manual element ID input not working in MC 1.21.11 (#1501)
 
 
 %changelog:end%
