@@ -1,12 +1,13 @@
 
 ## CHANGELOG | FANCYMENU v3.8.4 [ W I P !! Not public yet !! ]
 
+- Minimum required Konkrete version is now v1.9.18
 - Fixed background blur not working for some menu background types in MC 1.21.11 (#1500)
 - Fixed inactive buttons don't show labels in MC 1.21.11 (#1471)
 - Fixed "Panorama" menu background type not rendering in the layout editor in MC 1.21.11
 - Fixed anchoring elements to each other via manual element ID input not working in MC 1.21.11 (#1501)
 - Fixed error related to serializing enchanted items that causes the client to disconnect from servers in MC 1.21.11 (#1499, #1495)
-
+- Fixed crash when using JsonPath features (#1488)
 
 %changelog:end%
 
