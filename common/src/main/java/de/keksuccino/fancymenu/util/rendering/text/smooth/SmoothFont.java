@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -14,15 +15,21 @@ import java.util.Objects;
 
 public final class SmoothFont implements AutoCloseable {
 
-    // Select LODs based on how much the generated atlas would be downscaled on screen.
-    // Keeping the on-screen scale at >= 0.5 avoids excessive minification artifacts.
-    private static final float MIN_SCREEN_SCALE_FOR_LOD = 0.5F;
+    // Mirrored from MaterialIcons sizing heuristics to keep glyph quality consistent.
+    private static final int BASELINE_GLYPH_DP = 24;
+    private static final float BASELINE_QUALITY_SCALE = 2.0F;
+    private static final float GLYPH_COVERAGE_COMPENSATION = 1.2F;
+    private static final int DEFAULT_FALLBACK_PIXEL_SIZE = 96;
+    private static final float MAX_MINIFICATION_RATIO_DEFAULT = 2.75F;
+    private static final float MAX_MINIFICATION_RATIO_HIGH_SCALE = 2.4F;
+    private static final float SDF_RANGE_MIN = 2.0F;
+    private static final float SDF_RANGE_MAX = 4.0F;
+    private static final int SMALL_ATLAS_SIZE = 512;
+    private static final int DEFAULT_ATLAS_SIZE = 1024;
 
     private final String debugName;
     private final float baseSize;
-    private final float sdfRange;
     private final FontRenderContext fontRenderContext;
-    private final float[] lodGenerationSizes;
 
     // Metrics
     private final float ascent;
@@ -46,22 +53,21 @@ public final class SmoothFont implements AutoCloseable {
     private String cachedLanguageCode = "";
     private final int fallbackSourceIndex;
 
-    SmoothFont(@Nonnull String debugName, @Nonnull Font baseFont, float baseSize, float sdfRange) {
-        this(debugName, List.of(baseFont), baseSize, sdfRange, -1.0F, 0.0F, 0.0F, null, null);
+    SmoothFont(@Nonnull String debugName, @Nonnull Font baseFont, float baseSize) {
+        this(debugName, List.of(baseFont), baseSize, -1.0F, 0.0F, 0.0F, null, null);
     }
 
-    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float sdfRange, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
-        this(debugName, baseFonts, baseSize, sdfRange, -1.0F, 0.0F, 0.0F, languageOrders, sourceLabels);
+    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
+        this(debugName, baseFonts, baseSize, -1.0F, 0.0F, 0.0F, languageOrders, sourceLabels);
     }
 
-    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float sdfRange, float lineHeightOverride, float lineHeightOffset, float yOffset, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
+    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float lineHeightOverride, float lineHeightOffset, float yOffset, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
         this.debugName = Objects.requireNonNull(debugName);
         Objects.requireNonNull(baseFonts);
         if (baseFonts.isEmpty()) {
             throw new IllegalArgumentException("SmoothFont requires at least one base font");
         }
         this.baseSize = Math.max(1.0F, baseSize);
-        this.sdfRange = Math.max(1.0F, sdfRange);
         this.fontRenderContext = new FontRenderContext(null, true, true);
 
         // Calculate metrics using the primary font at base size
@@ -82,13 +88,12 @@ public final class SmoothFont implements AutoCloseable {
         this.strikethroughOffset = metrics.getStrikethroughOffset();
         this.strikethroughThickness = metrics.getStrikethroughThickness();
 
-        this.lodGenerationSizes = new float[] {this.baseSize * 2.0F, this.baseSize * 4.0F, this.baseSize * 6.0F, this.baseSize * 8.0F};
         this.sources = new FontSource[baseFonts.size()];
         this.sourceLabels = normalizeLabels(sourceLabels, baseFonts.size());
         for (int i = 0; i < baseFonts.size(); i++) {
             Font font = Objects.requireNonNull(baseFonts.get(i));
             String sourceDebugName = this.debugName + "_f" + i;
-            this.sources[i] = new FontSource(this, font, this.baseSize, sourceDebugName, this.sourceLabels[i], i);
+            this.sources[i] = new FontSource(this, font, sourceDebugName, this.sourceLabels[i], i);
         }
 
         this.defaultOrder = new int[this.sources.length];
@@ -101,38 +106,27 @@ public final class SmoothFont implements AutoCloseable {
     }
 
     /**
-     * Selects the appropriate LOD level based on effective screen size.
+     * Resolves the glyph generation size (in pixels) for a specific render size and scale.
      *
      * @param size logical text size
-     * @param renderScale current render scale (GUI scale * any additional pose scaling)
-     * @return LOD index (1 = Tiny, 2 = Small, 3 = Medium, 4 = Large)
+     * @param renderScale scale the text will be rendered at (GUI scale * additional pose scaling)
+     * @return generation size in pixels
      */
-    public int getLodLevel(float size, float renderScale) {
-        return this._getLodLevel(size, renderScale);
-    }
-
-    private int _getLodLevel(float size, float renderScale) {
-        float renderSize = size * renderScale;
-        // Choose the highest LOD that doesn't downscale too aggressively.
-        for (int index = lodGenerationSizes.length - 1; index >= 0; index--) {
-            float genSize = lodGenerationSizes[index];
-            if (renderSize / genSize >= MIN_SCREEN_SCALE_FOR_LOD) {
-                return index + 1;
-            }
-        }
-        return 1;
+    public int getGenerationSize(float size, float renderScale) {
+        return resolveGenerationSize(size, renderScale);
     }
 
     public float getBaseSize() {
         return baseSize;
     }
 
-    // Calculates the rendering scale factor for a specific LOD level.
-    // This bridges the gap between the requested size and the huge internal texture.
-    float getScaleForLod(int lodIndex, float size) {
-        int resolvedLod = Math.min(Math.max(lodIndex, 1), lodGenerationSizes.length);
-        float genSize = lodGenerationSizes[resolvedLod - 1];
-        return size / genSize;
+    // Calculates the rendering scale factor between the requested size and the generated glyph size.
+    float getScaleForGenerationSize(int generationSize, float size) {
+        int resolvedSize = normalizeSize(generationSize);
+        if (resolvedSize <= 0) {
+            return 0.0F;
+        }
+        return size / (float) resolvedSize;
     }
 
     public float getLineHeight(float size) {
@@ -168,18 +162,178 @@ public final class SmoothFont implements AutoCloseable {
         return yOffset * (size / baseSize);
     }
 
-    SmoothFontGlyph getGlyph(int lodIndex, int codepoint, boolean bold, boolean italic) {
+    private static int resolveGenerationSize(float size, float renderScale) {
+        float logicalSize = size;
+        if (!Float.isFinite(logicalSize) || logicalSize <= 0.0F) {
+            return normalizeSize(DEFAULT_FALLBACK_PIXEL_SIZE);
+        }
+        float scale = renderScale;
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            scale = 1.0F;
+        }
+
+        float renderPixelSize = logicalSize * scale;
+        if (!Float.isFinite(renderPixelSize) || renderPixelSize <= 0.0F) {
+            return normalizeSize(DEFAULT_FALLBACK_PIXEL_SIZE);
+        }
+
+        float densityBucket = resolveDensityBucket(scale);
+        float qualityScale = resolveQualityScale(renderPixelSize);
+        float minTextureSize = BASELINE_GLYPH_DP * densityBucket * qualityScale;
+        float oversample = resolveOversampleFactor(renderPixelSize);
+        float desiredSize = renderPixelSize * oversample * GLYPH_COVERAGE_COMPENSATION;
+
+        float targetSize = Math.max(minTextureSize, desiredSize);
+        float maxMinification = resolveMaxMinificationRatio(scale);
+        float maxAllowedSize = renderPixelSize * maxMinification;
+        if (Float.isFinite(maxAllowedSize) && maxAllowedSize > 0.0F) {
+            targetSize = Math.min(targetSize, maxAllowedSize);
+        }
+        int resolvedSize = quantizeTextureSize(targetSize);
+        return normalizeSize(resolvedSize);
+    }
+
+    private static float resolveDensityBucket(float renderScale) {
+        if (renderScale <= 1.0F) {
+            return 1.0F;
+        }
+        float bucket = (float) Math.ceil(renderScale * 2.0F) / 2.0F;
+        return Math.min(4.0F, Math.max(1.0F, bucket));
+    }
+
+    private static float resolveOversampleFactor(float renderPixelSize) {
+        if (renderPixelSize <= 12.0F) {
+            return 2.2F;
+        }
+        if (renderPixelSize <= 16.0F) {
+            return 2.0F;
+        }
+        if (renderPixelSize <= 20.0F) {
+            return 1.8F;
+        }
+        if (renderPixelSize <= 24.0F) {
+            return 1.65F;
+        }
+        if (renderPixelSize <= 32.0F) {
+            return 1.45F;
+        }
+        if (renderPixelSize <= 48.0F) {
+            return 1.3F;
+        }
+        if (renderPixelSize <= 64.0F) {
+            return 1.2F;
+        }
+        if (renderPixelSize <= 96.0F) {
+            return 1.12F;
+        }
+        return 1.08F;
+    }
+
+    private static float resolveQualityScale(float renderPixelSize) {
+        if (renderPixelSize <= 18.0F) {
+            return 1.0F;
+        }
+        if (renderPixelSize <= 24.0F) {
+            return 1.2F;
+        }
+        if (renderPixelSize <= 32.0F) {
+            return 1.5F;
+        }
+        if (renderPixelSize <= 48.0F) {
+            return 1.75F;
+        }
+        return BASELINE_QUALITY_SCALE;
+    }
+
+    private static float resolveMaxMinificationRatio(float renderScale) {
+        if (renderScale >= 3.0F) {
+            return MAX_MINIFICATION_RATIO_HIGH_SCALE;
+        }
+        return MAX_MINIFICATION_RATIO_DEFAULT;
+    }
+
+    private static int quantizeTextureSize(float desiredSize) {
+        int size = Math.max(1, (int) Math.ceil(desiredSize));
+        int step = resolveQuantizationStep(size);
+        return roundUpToStep(size, step);
+    }
+
+    private static int resolveQuantizationStep(int size) {
+        if (size <= 24) {
+            return 1;
+        }
+        if (size <= 64) {
+            return 2;
+        }
+        if (size <= 160) {
+            return 4;
+        }
+        if (size <= 320) {
+            return 8;
+        }
+        return 16;
+    }
+
+    private static int roundUpToStep(int value, int step) {
+        return ((value + step - 1) / step) * step;
+    }
+
+    private static int normalizeSize(int sizePx) {
+        if (sizePx <= 0) {
+            return DEFAULT_FALLBACK_PIXEL_SIZE;
+        }
+        return sizePx;
+    }
+
+    private static float resolveSdfRange(int sizePx) {
+        int normalizedSize = normalizeSize(sizePx);
+        if (normalizedSize <= 24) {
+            return 3.0F;
+        }
+        if (normalizedSize <= 32) {
+            return 2.8F;
+        }
+        if (normalizedSize <= 48) {
+            return 2.7F;
+        }
+        if (normalizedSize <= 64) {
+            return 2.5F;
+        }
+        if (normalizedSize <= 96) {
+            return 2.4F;
+        }
+        if (normalizedSize <= 128) {
+            return 2.2F;
+        }
+        return SDF_RANGE_MIN;
+    }
+
+    private static int resolveBlurPadding(float sdfRange) {
+        float sigma = sdfRange / 4.0F;
+        int radius = (int) Math.ceil(sigma * 3.0F);
+        int padding = Math.max(1, Math.min(6, radius));
+        if (sdfRange >= 2.8F && padding > 1) {
+            padding -= 1;
+        }
+        return padding;
+    }
+
+    private static int resolveInitialAtlasSize(int generationSize) {
+        int normalizedSize = normalizeSize(generationSize);
+        if (normalizedSize <= 32) {
+            return SMALL_ATLAS_SIZE;
+        }
+        return DEFAULT_ATLAS_SIZE;
+    }
+
+    SmoothFontGlyph getGlyph(int generationSize, int codepoint, boolean bold, boolean italic) {
         int sourceIndex = resolveSourceIndex(codepoint);
-        return sources[sourceIndex].getGlyph(lodIndex, codepoint, bold, italic);
+        return sources[sourceIndex].getGlyph(generationSize, codepoint, bold, italic);
     }
 
     // Internal method to expose Atlas for texture binding
-    SmoothFontAtlas getAtlas(int lodIndex, boolean bold, boolean italic) {
-        return sources[0].getAtlas(lodIndex, bold, italic);
-    }
-
-    float getSdfRange() {
-        return sdfRange;
+    SmoothFontAtlas getAtlas(int generationSize, boolean bold, boolean italic) {
+        return sources[0].getAtlas(generationSize, bold, italic);
     }
 
     FontRenderContext getFontRenderContext() {
@@ -265,88 +419,74 @@ public final class SmoothFont implements AutoCloseable {
     private static class FontSource implements AutoCloseable {
         final SmoothFont parent;
         final Font rawFont;
-        final float baseSize;
         final String debugName;
         final String sourceLabel;
         final int sourceIndex;
-        final LodLevel[] lodLevels;
+        final Int2ObjectOpenHashMap<SizeLevel> sizeLevels;
 
-        FontSource(SmoothFont parent, Font rawFont, float baseSize, String debugName, String sourceLabel, int sourceIndex) {
+        FontSource(SmoothFont parent, Font rawFont, String debugName, String sourceLabel, int sourceIndex) {
             this.parent = parent;
             this.rawFont = rawFont;
-            this.baseSize = baseSize;
             this.debugName = debugName;
             this.sourceLabel = sourceLabel;
             this.sourceIndex = sourceIndex;
-            this.lodLevels = new LodLevel[4];
+            this.sizeLevels = new Int2ObjectOpenHashMap<>();
         }
 
         boolean canDisplay(int codepoint) {
             return rawFont.canDisplay(codepoint);
         }
 
-        SmoothFontGlyph getGlyph(int lodIndex, int codepoint, boolean bold, boolean italic) {
-            return getLodLevel(lodIndex).getAtlas(bold, italic).getGlyph(codepoint);
+        SmoothFontGlyph getGlyph(int generationSize, int codepoint, boolean bold, boolean italic) {
+            return getSizeLevel(generationSize).getAtlas(bold, italic).getGlyph(codepoint);
         }
 
-        SmoothFontAtlas getAtlas(int lodIndex, boolean bold, boolean italic) {
-            return getLodLevel(lodIndex).getAtlas(bold, italic);
+        SmoothFontAtlas getAtlas(int generationSize, boolean bold, boolean italic) {
+            return getSizeLevel(generationSize).getAtlas(bold, italic);
         }
 
         @Override
         public void close() {
-            for (LodLevel lod : lodLevels) {
-                if (lod != null) {
-                    lod.close();
-                }
+            for (SizeLevel level : sizeLevels.values()) {
+                level.close();
             }
+            sizeLevels.clear();
         }
 
-        private LodLevel getLodLevel(int lodIndex) {
-            int resolvedIndex = resolveLodIndex(lodIndex);
-            LodLevel lod = lodLevels[resolvedIndex];
-            if (lod != null) {
-                return lod;
+        private SizeLevel getSizeLevel(int generationSize) {
+            int resolvedSize = normalizeSize(generationSize);
+            SizeLevel level = sizeLevels.get(resolvedSize);
+            if (level != null) {
+                return level;
             }
             synchronized (this) {
-                lod = lodLevels[resolvedIndex];
-                if (lod == null) {
-                    lod = createLodLevel(resolvedIndex);
-                    lodLevels[resolvedIndex] = lod;
+                level = sizeLevels.get(resolvedSize);
+                if (level == null) {
+                    level = createSizeLevel(resolvedSize);
+                    sizeLevels.put(resolvedSize, level);
                 }
-                return lod;
+                return level;
             }
         }
 
-        private int resolveLodIndex(int lodIndex) {
-            int resolved = Math.min(Math.max(lodIndex, 1), lodLevels.length);
-            return resolved - 1;
-        }
-
-        private LodLevel createLodLevel(int lodIndex) {
-            return switch (lodIndex) {
-                // LOD 1: Tiny (2x scale, starts with 512px atlas)
-                case 0 -> new LodLevel(parent, rawFont, baseSize * 2.0F, 512, debugName, "_tiny", "tiny", sourceLabel, sourceIndex);
-                // LOD 2: Small (4x scale, starts with 1024px atlas)
-                case 1 -> new LodLevel(parent, rawFont, baseSize * 4.0F, 1024, debugName, "_small", "small", sourceLabel, sourceIndex);
-                // LOD 3: Medium (6x scale, starts with 1024px atlas)
-                case 2 -> new LodLevel(parent, rawFont, baseSize * 6.0F, 1024, debugName, "_medium", "medium", sourceLabel, sourceIndex);
-                // LOD 4: Large (8x scale, starts with 1024px atlas)
-                case 3 -> new LodLevel(parent, rawFont, baseSize * 8.0F, 1024, debugName, "_large", "large", sourceLabel, sourceIndex);
-                default -> throw new IllegalArgumentException("Invalid LOD index: " + lodIndex);
-            };
+        private SizeLevel createSizeLevel(int generationSize) {
+            float sdfRange = resolveSdfRange(generationSize);
+            int padding = resolveBlurPadding(sdfRange);
+            int initialAtlasSize = resolveInitialAtlasSize(generationSize);
+            String sizeLabel = generationSize + "px";
+            return new SizeLevel(parent, rawFont, generationSize, sdfRange, padding, initialAtlasSize, debugName, sizeLabel, sourceLabel, sourceIndex);
         }
     }
 
-    private static class LodLevel implements AutoCloseable {
-        final float generationSize;
+    private static class SizeLevel implements AutoCloseable {
+        final int generationSize;
         private final SmoothFont parent;
         private final Font rawFont;
-        private final float lodSdfRange;
+        private final float sdfRange;
+        private final int padding;
         private final int initialAtlasSize;
         private final String debugName;
-        private final String suffix;
-        private final String lodLabel;
+        private final String sizeLabel;
         private final String sourceLabel;
         private final int sourceIndex;
         private SmoothFontAtlas plainAtlas;
@@ -354,22 +494,17 @@ public final class SmoothFont implements AutoCloseable {
         private SmoothFontAtlas italicAtlas;
         private SmoothFontAtlas boldItalicAtlas;
 
-        LodLevel(SmoothFont parent, Font rawFont, float genSize, int initialAtlasSize, String debugName, String suffix, String lodLabel, String sourceLabel, int sourceIndex) {
+        SizeLevel(SmoothFont parent, Font rawFont, int genSize, float sdfRange, int padding, int initialAtlasSize, String debugName, String sizeLabel, String sourceLabel, int sourceIndex) {
             this.generationSize = genSize;
             this.parent = parent;
             this.rawFont = rawFont;
             this.initialAtlasSize = Math.max(1, initialAtlasSize);
             this.debugName = debugName;
-            this.suffix = suffix;
-            this.lodLabel = lodLabel;
+            this.sizeLabel = sizeLabel;
             this.sourceLabel = sourceLabel;
             this.sourceIndex = sourceIndex;
-
-            // Scale SDF range based on LOD size, but cap it to avoid over-blurring
-            // on higher LODs (which can cause thin strokes to drop out).
-            float scale = genSize / parent.getBaseSize();
-            float sdfScale = Math.min(scale, 2.0F);
-            this.lodSdfRange = Math.max(1.0F, parent.getSdfRange() * sdfScale);
+            this.sdfRange = Math.max(0.5F, Math.min(SDF_RANGE_MAX, sdfRange));
+            this.padding = Math.max(1, padding);
         }
 
         SmoothFontAtlas getAtlas(boolean bold, boolean italic) {
@@ -418,8 +553,9 @@ public final class SmoothFont implements AutoCloseable {
         }
 
         private SmoothFontAtlas createAtlas(int style, String styleSuffix, String styleLabel) {
-            Font derived = rawFont.deriveFont(style, generationSize);
-            return new SmoothFontAtlas(parent, derived, parent.getFontRenderContext(), lodSdfRange, debugName + suffix + styleSuffix, initialAtlasSize, sourceLabel, sourceIndex, lodLabel, styleLabel);
+            Font derived = rawFont.deriveFont(style, (float) generationSize);
+            String atlasName = debugName + "_" + generationSize + styleSuffix;
+            return new SmoothFontAtlas(parent, derived, parent.getFontRenderContext(), sdfRange, padding, atlasName, initialAtlasSize, sourceLabel, sourceIndex, sizeLabel, styleLabel);
         }
 
         @Override

@@ -145,13 +145,13 @@ public class TextFormattingUtils {
      * Line-wraps components using the SmoothTextRenderer measurement logic.
      */
     @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapComponentsSmooth(@NotNull List<C> lines, @NotNull SmoothFont font, float textSize, float maxWidth) {
+    public static <C extends Component> List<MutableComponent> lineWrapComponentsSmooth(@NotNull List<C> lines, @NotNull SmoothFont font, float textSize, float maxWidth, float renderScale) {
         Objects.requireNonNull(font);
         List<MutableComponent> wrappedLines = new ArrayList<>();
         for (Component line : lines) {
             if (line.getString().isBlank()) line = Component.literal(" ");
             List<StyledCodepoint> codepoints = collectStyledCodepoints(line);
-            wrappedLines.addAll(wrapSmoothCodepoints(codepoints, font, textSize, maxWidth));
+            wrappedLines.addAll(wrapSmoothCodepoints(codepoints, font, textSize, maxWidth, renderScale));
         }
         return wrappedLines;
     }
@@ -160,8 +160,8 @@ public class TextFormattingUtils {
      * Line-wraps components using the SmoothTextRenderer measurement logic.
      */
     @NotNull
-    public static <C extends Component> List<MutableComponent> lineWrapComponentsSmooth(@NotNull C lines, @NotNull SmoothFont font, float textSize, float maxWidth) {
-        return lineWrapComponentsSmooth(List.of(lines), font, textSize, maxWidth);
+    public static <C extends Component> List<MutableComponent> lineWrapComponentsSmooth(@NotNull C lines, @NotNull SmoothFont font, float textSize, float maxWidth, float renderScale) {
+        return lineWrapComponentsSmooth(List.of(lines), font, textSize, maxWidth, renderScale);
     }
 
     @NotNull
@@ -176,7 +176,7 @@ public class TextFormattingUtils {
     }
 
     @NotNull
-    private static List<MutableComponent> wrapSmoothCodepoints(@NotNull List<StyledCodepoint> codepoints, @NotNull SmoothFont font, float textSize, float maxWidth) {
+    private static List<MutableComponent> wrapSmoothCodepoints(@NotNull List<StyledCodepoint> codepoints, @NotNull SmoothFont font, float textSize, float maxWidth, float renderScale) {
         List<MutableComponent> result = new ArrayList<>();
         if (codepoints.isEmpty()) {
             result.add(Component.literal(" "));
@@ -201,7 +201,7 @@ public class TextFormattingUtils {
             }
 
             if (maxWidth > 0.0F && currentLine.size() > 1) {
-                float width = measureSmoothWidth(currentLine, font, textSize);
+                float width = measureSmoothWidth(currentLine, font, textSize, renderScale);
                 if (width > maxWidth) {
                     if (lastBreakIndex >= 0) {
                         int endIndex = trimTrailingWhitespaceIndex(currentLine, lastBreakIndex);
@@ -230,7 +230,7 @@ public class TextFormattingUtils {
         return result;
     }
 
-    private static float measureSmoothWidth(@NotNull List<StyledCodepoint> codepoints, @NotNull SmoothFont font, float textSize) {
+    private static float measureSmoothWidth(@NotNull List<StyledCodepoint> codepoints, @NotNull SmoothFont font, float textSize, float renderScale) {
         if (codepoints.isEmpty()) return 0.0F;
         FormattedCharSequence sequence = sink -> {
             int index = 0;
@@ -241,7 +241,7 @@ public class TextFormattingUtils {
             }
             return true;
         };
-        return SmoothTextRenderer.getTextWidth(font, sequence, textSize);
+        return SmoothTextRenderer.getTextWidth(font, sequence, textSize, renderScale);
     }
 
     private static int trimTrailingWhitespaceIndex(@NotNull List<StyledCodepoint> line, int endIndex) {

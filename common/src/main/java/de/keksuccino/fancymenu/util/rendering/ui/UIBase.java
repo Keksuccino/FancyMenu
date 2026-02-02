@@ -94,6 +94,17 @@ public class UIBase extends RenderingUtils {
         return FancyMenu.getOptions().useMinecraftFont.getValue();
     }
 
+    private static float resolveTextRenderScale(boolean forUIScale) {
+        if (forUIScale) {
+            return UIBase.getUIScale();
+        }
+        float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
+        if (!Float.isFinite(guiScale) || guiScale <= 0.0F) {
+            return 1.0F;
+        }
+        return guiScale;
+    }
+
     public static float getUITextSizeNormal() {
         if (UIBase.getUIScale() <= 1) return SmoothFonts.DEFAULT_TEXT_SIZE + 2; // make text easier to read on small scales
         return SmoothFonts.DEFAULT_TEXT_SIZE;
@@ -113,10 +124,7 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextHeightNormal(boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.lineHeight;
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        float height = getUIFont().getLineHeight(getUITextSizeNormal());
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return height;
+        return getUIFont().getLineHeight(getUITextSizeNormal());
     }
 
     public static float getUITextHeightLarge() {
@@ -125,10 +133,7 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextHeightLarge(boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.lineHeight;
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        float height = getUIFont().getLineHeight(getUITextSizeLarge());
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return height;
+        return getUIFont().getLineHeight(getUITextSizeLarge());
     }
 
     public static float getUITextHeightSmall() {
@@ -137,10 +142,7 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextHeightSmall(boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.lineHeight;
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        float height = getUIFont().getLineHeight(getUITextSizeSmall());
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return height;
+        return getUIFont().getLineHeight(getUITextSizeSmall());
     }
 
     public static float getUITextHeight(float textSize) {
@@ -149,10 +151,7 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextHeight(float textSize, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.lineHeight;
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        float height = getUIFont().getLineHeight(textSize);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return height;
+        return getUIFont().getLineHeight(textSize);
     }
 
     public static float getUITextWidthNormal(@NotNull Component text) {
@@ -161,10 +160,8 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextWidthNormal(@NotNull Component text, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return width;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal(), renderScale);
     }
 
     public static float getUITextWidthLarge(@NotNull Component text) {
@@ -173,10 +170,8 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextWidthLarge(@NotNull Component text, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeLarge());
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return width;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeLarge(), renderScale);
     }
 
     public static float getUITextWidthSmall(@NotNull Component text) {
@@ -185,10 +180,8 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextWidthSmall(@NotNull Component text, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeSmall());
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return width;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeSmall(), renderScale);
     }
 
     public static float getUITextWidth(@NotNull String text) {
@@ -197,10 +190,8 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextWidth(@NotNull String text, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return width;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal(), renderScale);
     }
 
     public static float getUITextWidth(@NotNull Component text, float textSize) {
@@ -209,10 +200,8 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextWidth(@NotNull Component text, float textSize, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return width;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize, renderScale);
     }
 
     public static float getUITextWidth(@NotNull String text, float textSize) {
@@ -221,10 +210,8 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextWidth(@NotNull String text, float textSize, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        float width = SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return width;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize, renderScale);
     }
 
     public static float getWidgetCornerRoundingRadius() {
@@ -513,15 +500,13 @@ public class UIBase extends RenderingUtils {
 
     public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, float textSize, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) {
-            int width = (int)getUITextWidthNormal(text, false); // we use "false" here, to not call the scale override methods twice
+            int width = (int)getUITextWidthNormal(text, false);
             TextDimensions dimensions = new TextDimensions(width, Minecraft.getInstance().font.lineHeight);
             graphics.drawString(Minecraft.getInstance().font, text, (int)x, (int)y, baseColor, false);
             return dimensions;
         }
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        TextDimensions dimensions = SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, false);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return dimensions;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, renderScale, false);
     }
 
     /**
@@ -538,10 +523,8 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth, renderScale);
     }
 
     /**
@@ -558,10 +541,8 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull C lines, float maxWidth, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth, renderScale);
     }
 
     /**
@@ -578,10 +559,8 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth, renderScale);
     }
 
     /**
@@ -598,10 +577,8 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull C lines, float maxWidth, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth, renderScale);
     }
 
     /**
@@ -618,10 +595,8 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull List<C> lines, float maxWidth, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth, renderScale);
     }
 
     /**
@@ -638,10 +613,8 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull C lines, float maxWidth, boolean forUIScale) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        if (forUIScale) SmoothTextRenderer.setOverriddenRenderScale(UIBase.getUIScale());
-        List<MutableComponent> wrappedLines = TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
-        SmoothTextRenderer.resetOverriddenRenderScale();
-        return wrappedLines;
+        float renderScale = resolveTextRenderScale(forUIScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth, renderScale);
     }
 
     public static float getAreaLabelVerticalPadding() {

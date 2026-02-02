@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatterRegistry;
 import net.minecraft.ChatFormatting;
@@ -31,27 +30,14 @@ public final class SmoothTextRenderer {
     private static final MeasureCache<LegacyMeasureKey> LEGACY_MEASURE_CACHE = new MeasureCache<>(MEASURE_CACHE_LIMIT);
     private static final MeasureCache<FormattedMeasureKey> FORMATTED_MEASURE_CACHE = new MeasureCache<>(MEASURE_CACHE_LIMIT);
 
-    private static float overriddenRenderScale = -1F;
-
     private SmoothTextRenderer() {
     }
 
-    public static float getRenderScale() {
-        float overridden = getOverriddenRenderScale();
-        if (overridden != -1F) return overridden;
-        return (float) Minecraft.getInstance().getWindow().getGuiScale();
-    }
-
-    public static float getOverriddenRenderScale() {
-        return overriddenRenderScale;
-    }
-
-    public static void setOverriddenRenderScale(float overriddenRenderScale) {
-        SmoothTextRenderer.overriddenRenderScale = overriddenRenderScale;
-    }
-
-    public static void resetOverriddenRenderScale() {
-        SmoothTextRenderer.overriddenRenderScale = -1F;
+    private static float sanitizeRenderScale(float renderScale) {
+        if (!Float.isFinite(renderScale) || renderScale <= 0.0F) {
+            return 1.0F;
+        }
+        return renderScale;
     }
 
     public static void clearCaches() {
@@ -63,30 +49,31 @@ public final class SmoothTextRenderer {
         return FancyMenu.getOptions().smoothFontMultilineRendering.getValue();
     }
 
-    public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float x, float y, int color, float size, boolean shadow) {
+    public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float x, float y, int color, float size, float renderScale, boolean shadow) {
         if (text.isEmpty() || size <= 0.0F) return EMPTY_DIMENSION;
-        TextDimensions dimension = measureLegacyText(font, text, size);
+        float resolvedScale = sanitizeRenderScale(renderScale);
+        TextDimensions dimension = measureLegacyText(font, text, size, resolvedScale);
 
         if (shadow) {
-            renderTextInternal(graphics, font, text, x + 1.0F, y + 1.0F, darkenColor(color), size);
+            renderTextInternal(graphics, font, text, x + 1.0F, y + 1.0F, darkenColor(color), size, resolvedScale);
         }
-        renderTextInternal(graphics, font, text, x, y, color, size);
+        renderTextInternal(graphics, font, text, x, y, color, size, resolvedScale);
         graphics.flush();
         return dimension;
     }
 
-    public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull Component text, float x, float y, int color, float size, boolean shadow) {
+    public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull Component text, float x, float y, int color, float size, float renderScale, boolean shadow) {
         if (size <= 0.0F) return EMPTY_DIMENSION;
         FormattedCharSequence sequence = text.getVisualOrderText();
         if (sequence == FormattedCharSequence.EMPTY) return EMPTY_DIMENSION;
-        TextDimensions dimensions = renderFormattedText(graphics, font, sequence, x, y, color, size, shadow);
+        TextDimensions dimensions = renderFormattedText(graphics, font, sequence, x, y, color, size, renderScale, shadow);
         graphics.flush();
         return dimensions;
     }
 
-    public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float x, float y, int color, float size, boolean shadow) {
+    public static TextDimensions renderText(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float x, float y, int color, float size, float renderScale, boolean shadow) {
         if (size <= 0.0F) return EMPTY_DIMENSION;
-        TextDimensions dimensions = renderFormattedText(graphics, font, text, x, y, color, size, shadow);
+        TextDimensions dimensions = renderFormattedText(graphics, font, text, x, y, color, size, renderScale, shadow);
         graphics.flush();
         return dimensions;
     }
@@ -94,40 +81,38 @@ public final class SmoothTextRenderer {
     public static TextDimensions renderTextScreenSpace(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull String text, float xPixels, float yPixels, int color, float sizePixels, boolean shadow) {
         float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
         if (guiScale <= 0.0F) return EMPTY_DIMENSION;
-        TextDimensions dimension = renderText(graphics, font, text, xPixels / guiScale, yPixels / guiScale, color, sizePixels / guiScale, shadow);
+        TextDimensions dimension = renderText(graphics, font, text, xPixels / guiScale, yPixels / guiScale, color, sizePixels / guiScale, guiScale, shadow);
         return new TextDimensions(dimension.width() * guiScale, dimension.height() * guiScale);
     }
 
     public static TextDimensions renderTextScreenSpace(@Nonnull GuiGraphics graphics, @Nonnull SmoothFont font, @Nonnull Component text, float xPixels, float yPixels, int color, float sizePixels, boolean shadow) {
         float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
         if (guiScale <= 0.0F) return EMPTY_DIMENSION;
-        TextDimensions dimension = renderText(graphics, font, text, xPixels / guiScale, yPixels / guiScale, color, sizePixels / guiScale, shadow);
+        TextDimensions dimension = renderText(graphics, font, text, xPixels / guiScale, yPixels / guiScale, color, sizePixels / guiScale, guiScale, shadow);
         return new TextDimensions(dimension.width() * guiScale, dimension.height() * guiScale);
     }
 
-    public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull String text, float size) {
+    public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull String text, float size, float renderScale) {
         if (text.isEmpty() || size <= 0.0F) return 0.0F;
 
-        return measureLegacyText(font, text, size).width();
+        return measureLegacyText(font, text, size, sanitizeRenderScale(renderScale)).width();
     }
 
-    public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull Component text, float size) {
+    public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull Component text, float size, float renderScale) {
         if (size <= 0.0F) return 0.0F;
         FormattedCharSequence sequence = text.getVisualOrderText();
         if (sequence == FormattedCharSequence.EMPTY) return 0.0F;
-        return getTextWidth(font, sequence, size);
+        return getTextWidth(font, sequence, size, renderScale);
     }
 
-    public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float size) {
+    public static float getTextWidth(@Nonnull SmoothFont font, @Nonnull FormattedCharSequence text, float size, float renderScale) {
         if (size <= 0.0F) return 0.0F;
-        return measureFormattedText(font, text, size).width();
+        return measureFormattedText(font, text, size, sanitizeRenderScale(renderScale)).width();
     }
 
-    private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size) {
-        // Select the LOD atlas set for this size, accounting for current render scale.
-        float renderScale = getRenderScale();
-        int lod = font.getLodLevel(size, renderScale);
-        float scale = font.getScaleForLod(lod, size);
+    private static void renderTextInternal(GuiGraphics graphics, SmoothFont font, String text, float x, float y, int baseColor, float size, float renderScale) {
+        int generationSize = font.getGenerationSize(size, renderScale);
+        float scale = font.getScaleForGenerationSize(generationSize, size);
         boolean allowMultiline = isMultilineEnabled();
 
         float ascent = font.getAscent(size);
@@ -181,7 +166,7 @@ public final class SmoothTextRenderer {
                 if (style.obfuscated) {
                     codepoint = getObfuscatedCodepoint(codepoint);
                 }
-                SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+                SmoothFontGlyph glyph = font.getGlyph(generationSize, codepoint, style.bold, style.italic);
                 if (glyph.hasTexture()) {
                     SmoothFontAtlas atlas = glyph.atlas();
                     if (consumer == null || currentAtlas != atlas) {
@@ -232,8 +217,8 @@ public final class SmoothTextRenderer {
                 codepoint = getObfuscatedCodepoint(codepoint);
             }
 
-            // Fetch the glyph from the selected LOD.
-            SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+            // Fetch the glyph from the selected generation size.
+            SmoothFontGlyph glyph = font.getGlyph(generationSize, codepoint, style.bold, style.italic);
 
             if (glyph.hasTexture()) {
                 SmoothFontAtlas atlas = glyph.atlas();
@@ -252,69 +237,70 @@ public final class SmoothTextRenderer {
         drawLineIfNeeded(graphics, style.strikethrough, strikeStartX, penX, baseline + font.getStrikethroughOffset(size), strikeColor, strikeThickness);
     }
 
-    private static void renderFormattedTextInternal(GuiGraphics graphics, SmoothFont font, FormattedCharSequence text, float x, float y, int baseColor, float size) {
-        float renderScale = getRenderScale();
-        int lod = font.getLodLevel(size, renderScale);
-        float scale = font.getScaleForLod(lod, size);
+    private static void renderFormattedTextInternal(GuiGraphics graphics, SmoothFont font, FormattedCharSequence text, float x, float y, int baseColor, float size, float renderScale) {
+        float resolvedScale = sanitizeRenderScale(renderScale);
+        int generationSize = font.getGenerationSize(size, resolvedScale);
+        float scale = font.getScaleForGenerationSize(generationSize, size);
         boolean allowMultiline = isMultilineEnabled();
 
         float ascent = font.getAscent(size);
         float yOffset = font.getYOffset(size);
         float lineHeight = font.getLineHeight(size);
 
-        ComponentRenderState state = new ComponentRenderState(graphics, font, baseColor, size, lod, scale, ascent, yOffset, lineHeight, x, y, allowMultiline);
+        ComponentRenderState state = new ComponentRenderState(graphics, font, baseColor, size, generationSize, scale, ascent, yOffset, lineHeight, x, y, allowMultiline);
         text.accept(state);
         state.finish();
 
         RenderingUtils.resetShaderColor(graphics);
     }
 
-    private static TextDimensions renderFormattedText(GuiGraphics graphics, SmoothFont font, FormattedCharSequence text, float x, float y, int color, float size, boolean shadow) {
-        TextDimensions dimension = measureFormattedText(font, text, size);
+    private static TextDimensions renderFormattedText(GuiGraphics graphics, SmoothFont font, FormattedCharSequence text, float x, float y, int color, float size, float renderScale, boolean shadow) {
+        float resolvedScale = sanitizeRenderScale(renderScale);
+        TextDimensions dimension = measureFormattedText(font, text, size, resolvedScale);
         if (dimension.width() <= 0.0F && dimension.height() <= 0.0F) {
             return dimension;
         }
 
         if (shadow) {
-            renderFormattedTextInternal(graphics, font, text, x + 1.0F, y + 1.0F, darkenColor(color), size);
+            renderFormattedTextInternal(graphics, font, text, x + 1.0F, y + 1.0F, darkenColor(color), size, resolvedScale);
         }
-        renderFormattedTextInternal(graphics, font, text, x, y, color, size);
+        renderFormattedTextInternal(graphics, font, text, x, y, color, size, resolvedScale);
 
         return dimension;
     }
 
-    private static TextDimensions measureFormattedText(SmoothFont font, FormattedCharSequence text, float size) {
-        float renderScale = getRenderScale();
+    private static TextDimensions measureFormattedText(SmoothFont font, FormattedCharSequence text, float size, float renderScale) {
+        float resolvedScale = sanitizeRenderScale(renderScale);
         boolean allowMultiline = isMultilineEnabled();
-        FormattedMeasureKey key = new FormattedMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(renderScale), allowMultiline);
+        FormattedMeasureKey key = new FormattedMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(resolvedScale), allowMultiline);
         TextDimensions cached = FORMATTED_MEASURE_CACHE.get(key);
         if (cached != null) {
             return cached;
         }
-        int lod = font.getLodLevel(size, renderScale);
-        float scale = font.getScaleForLod(lod, size);
+        int generationSize = font.getGenerationSize(size, resolvedScale);
+        float scale = font.getScaleForGenerationSize(generationSize, size);
         float lineHeight = font.getLineHeight(size);
-        FormattedMeasureState state = new FormattedMeasureState(font, lod, scale, lineHeight, allowMultiline);
+        FormattedMeasureState state = new FormattedMeasureState(font, generationSize, scale, lineHeight, allowMultiline);
         text.accept(state);
         TextDimensions dimension = state.getDimension();
         FORMATTED_MEASURE_CACHE.put(key, dimension);
         return dimension;
     }
 
-    private static TextDimensions measureLegacyText(SmoothFont font, String text, float size) {
+    private static TextDimensions measureLegacyText(SmoothFont font, String text, float size, float renderScale) {
         if (text.isEmpty() || size <= 0.0F) {
             return EMPTY_DIMENSION;
         }
 
-        float renderScale = getRenderScale();
+        float resolvedScale = sanitizeRenderScale(renderScale);
         boolean allowMultiline = isMultilineEnabled();
-        LegacyMeasureKey key = new LegacyMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(renderScale), allowMultiline);
+        LegacyMeasureKey key = new LegacyMeasureKey(font, text, Float.floatToIntBits(size), Float.floatToIntBits(resolvedScale), allowMultiline);
         TextDimensions cached = LEGACY_MEASURE_CACHE.get(key);
         if (cached != null) {
             return cached;
         }
-        int lod = font.getLodLevel(size, renderScale);
-        float scale = font.getScaleForLod(lod, size);
+        int generationSize = font.getGenerationSize(size, resolvedScale);
+        float scale = font.getScaleForGenerationSize(generationSize, size);
         float lineHeight = font.getLineHeight(size);
 
         float maxWidth = 0.0F;
@@ -334,7 +320,7 @@ public final class SmoothTextRenderer {
                 }
                 int codepoint = ' ';
                 index++;
-                SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+                SmoothFontGlyph glyph = font.getGlyph(generationSize, codepoint, style.bold, style.italic);
                 lineWidth += glyph.advance() * scale;
                 continue;
             }
@@ -348,7 +334,7 @@ public final class SmoothTextRenderer {
             int codepoint = text.codePointAt(index);
             index += Character.charCount(codepoint);
 
-            SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+            SmoothFontGlyph glyph = font.getGlyph(generationSize, codepoint, style.bold, style.italic);
             lineWidth += glyph.advance() * scale;
         }
 
@@ -532,7 +518,7 @@ public final class SmoothTextRenderer {
         private final SmoothFont font;
         private final int baseColor;
         private final float size;
-        private final int lod;
+        private final int generationSize;
         private final float scale;
         private final float ascent;
         private final float yOffset;
@@ -554,12 +540,12 @@ public final class SmoothTextRenderer {
         private VertexConsumer consumer;
         private SmoothFontAtlas currentAtlas;
 
-        private ComponentRenderState(GuiGraphics graphics, SmoothFont font, int baseColor, float size, int lod, float scale, float ascent, float yOffset, float lineHeight, float x, float y, boolean allowMultiline) {
+        private ComponentRenderState(GuiGraphics graphics, SmoothFont font, int baseColor, float size, int generationSize, float scale, float ascent, float yOffset, float lineHeight, float x, float y, boolean allowMultiline) {
             this.graphics = graphics;
             this.font = font;
             this.baseColor = baseColor;
             this.size = size;
-            this.lod = lod;
+            this.generationSize = generationSize;
             this.scale = scale;
             this.ascent = ascent;
             this.yOffset = yOffset;
@@ -595,7 +581,7 @@ public final class SmoothTextRenderer {
             }
 
             int renderCodepoint = style.obfuscated ? getObfuscatedCodepoint(codepoint) : codepoint;
-            SmoothFontGlyph glyph = font.getGlyph(lod, renderCodepoint, style.bold, style.italic);
+            SmoothFontGlyph glyph = font.getGlyph(generationSize, renderCodepoint, style.bold, style.italic);
 
             if (glyph.hasTexture()) {
                 SmoothFontAtlas atlas = glyph.atlas();
@@ -671,7 +657,7 @@ public final class SmoothTextRenderer {
 
     private static final class FormattedMeasureState implements FormattedCharSink {
         private final SmoothFont font;
-        private final int lod;
+        private final int generationSize;
         private final float scale;
         private final float lineHeight;
         private final boolean allowMultiline;
@@ -682,9 +668,9 @@ public final class SmoothTextRenderer {
         private final StyleState style;
         private final StyleState nextStyle;
 
-        private FormattedMeasureState(SmoothFont font, int lod, float scale, float lineHeight, boolean allowMultiline) {
+        private FormattedMeasureState(SmoothFont font, int generationSize, float scale, float lineHeight, boolean allowMultiline) {
             this.font = font;
-            this.lod = lod;
+            this.generationSize = generationSize;
             this.scale = scale;
             this.lineHeight = lineHeight;
             this.allowMultiline = allowMultiline;
@@ -706,7 +692,7 @@ public final class SmoothTextRenderer {
                 }
                 codepoint = ' ';
             }
-            SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+            SmoothFontGlyph glyph = font.getGlyph(generationSize, codepoint, style.bold, style.italic);
             lineWidth += glyph.advance() * scale;
             return true;
         }
@@ -722,7 +708,7 @@ public final class SmoothTextRenderer {
 
     private static final class FormattedWidthState implements FormattedCharSink {
         private final SmoothFont font;
-        private final int lod;
+        private final int generationSize;
         private final float scale;
         private final boolean allowMultiline;
         private float maxWidth;
@@ -731,9 +717,9 @@ public final class SmoothTextRenderer {
         private final StyleState style;
         private final StyleState nextStyle;
 
-        private FormattedWidthState(SmoothFont font, int lod, float scale, boolean allowMultiline) {
+        private FormattedWidthState(SmoothFont font, int generationSize, float scale, boolean allowMultiline) {
             this.font = font;
-            this.lod = lod;
+            this.generationSize = generationSize;
             this.scale = scale;
             this.allowMultiline = allowMultiline;
             this.style = new StyleState(0xFFFFFFFF);
@@ -753,7 +739,7 @@ public final class SmoothTextRenderer {
                 }
                 codepoint = ' ';
             }
-            SmoothFontGlyph glyph = font.getGlyph(lod, codepoint, style.bold, style.italic);
+            SmoothFontGlyph glyph = font.getGlyph(generationSize, codepoint, style.bold, style.italic);
             lineWidth += glyph.advance() * scale;
             return true;
         }

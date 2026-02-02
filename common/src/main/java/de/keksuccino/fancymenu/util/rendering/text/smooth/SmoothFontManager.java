@@ -728,9 +728,7 @@ public final class SmoothFontManager {
         if (fonts.isEmpty()) {
             return null;
         }
-        // Keep the base SDF range small; per-LOD scaling is handled in SmoothFont.
-        float sdfRange = 1.0F;
-        return new SmoothFont(sanitizeKey(key), fonts, baseSize, sdfRange, lineHeightOverride, lineHeightOffset, yOffset, languageOrders, resolvedLabels);
+        return new SmoothFont(sanitizeKey(key), fonts, baseSize, lineHeightOverride, lineHeightOffset, yOffset, languageOrders, resolvedLabels);
     }
 
     private static String sanitizeKey(String key) {
