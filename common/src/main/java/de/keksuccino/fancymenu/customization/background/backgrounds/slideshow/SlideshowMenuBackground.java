@@ -44,9 +44,9 @@ public class SlideshowMenuBackground extends MenuBackground<SlideshowMenuBackgro
         }, (background, name) -> background.slideshowName.set(name), (menu1, entry, switcherValue) -> {
             Component name;
             if (switcherValue.equals("fancymenu.backgrounds.slideshow.name.none")) {
-                name = Component.translatable("fancymenu.backgrounds.slideshow.name.none").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                name = Component.translatable("fancymenu.backgrounds.slideshow.name.none").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
             } else {
-                name = Component.literal(switcherValue).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+                name = Component.literal(switcherValue).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
             }
             return Component.translatable("fancymenu.backgrounds.slideshow.name", name);
         }).setIcon(MaterialIcons.SLIDESHOW);

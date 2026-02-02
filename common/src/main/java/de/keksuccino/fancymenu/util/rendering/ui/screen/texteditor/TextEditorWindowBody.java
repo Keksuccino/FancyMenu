@@ -115,7 +115,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         if (UIBase.shouldBlur()) return UIBase.getUITheme().ui_blur_interface_widget_label_color_normal;
         return UIBase.getUITheme().ui_interface_widget_label_color_normal;
     };
-    protected Supplier<DrawableColor> placeholderEntryBackToCategoriesLabelColor = () -> UIBase.getUITheme().warning_text_color;
+    protected Supplier<DrawableColor> placeholderEntryBackToCategoriesLabelColor = () -> UIBase.getUITheme().warning_color;
     protected int currentLineWidth;
     protected int lastTickFocusedLineIndex = -1;
     protected TextEditorLine startHighlightLine = null;
@@ -421,13 +421,13 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
     protected void renderMultilineNotSupportedNotification(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (!this.multilineMode) {
-            MutableComponent indicator = Component.translatable("fancymenu.editor.text_editor.single_line_warning.indicator").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())).append(Component.literal(" [?]").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
+            MutableComponent indicator = Component.translatable("fancymenu.editor.text_editor.single_line_warning.indicator").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt())).append(Component.literal(" [?]").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().warning_color.getColorInt())));
             int indicatorX = this.getEditorAreaX();
             int indicatorY = this.getEditorAreaY() - this.font.lineHeight - 5;
             int indicatorWidth = this.font.width(indicator);
             graphics.drawString(this.font, indicator, indicatorX, indicatorY, -1, false);
             if (UIBase.isXYInArea(mouseX, mouseY, indicatorX, indicatorY, indicatorWidth, this.font.lineHeight)) {
-                TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.editor.text_editor.single_line_warning").withColor(UIBase.getUITheme().error_text_color.getColorInt())), () -> true);
+                TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.editor.text_editor.single_line_warning").withColor(UIBase.getUITheme().error_color.getColorInt())), () -> true);
             }
         }
     }

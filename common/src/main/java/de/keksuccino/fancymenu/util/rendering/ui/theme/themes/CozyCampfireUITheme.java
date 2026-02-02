@@ -66,9 +66,9 @@ public class CozyCampfireUITheme extends UITheme {
         ui_interface_generic_text_color = DrawableColor.of(new Color(242, 229, 208));
         ui_tooltip_background_color = DrawableColor.of(new Color(28, 22, 16));
 
-        success_text_color = DrawableColor.of(new Color(110, 196, 122));
-        error_text_color = DrawableColor.of(new Color(220, 92, 78));
-        warning_text_color = DrawableColor.of(new Color(232, 142, 64));
+        success_color = DrawableColor.of(new Color(110, 196, 122));
+        error_color = DrawableColor.of(new Color(220, 92, 78));
+        warning_color = DrawableColor.of(new Color(232, 142, 64));
 
         layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(232, 142, 64));
         layout_editor_grid_color_normal = DrawableColor.of(new Color(170, 108, 76, 110));

@@ -69,9 +69,9 @@ public class LightHighContrastUITheme extends UITheme {
         ui_interface_generic_text_color = DrawableColor.of(new Color(0, 0, 0));
         ui_tooltip_background_color = DrawableColor.of(new Color(255, 255, 255));
 
-        success_text_color = DrawableColor.of(new Color(0, 150, 0));
-        error_text_color = DrawableColor.of(new Color(200, 0, 0));
-        warning_text_color = DrawableColor.of(new Color(180, 110, 0));
+        success_color = DrawableColor.of(new Color(0, 150, 0));
+        error_color = DrawableColor.of(new Color(200, 0, 0));
+        warning_color = DrawableColor.of(new Color(180, 110, 0));
 
         layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(0, 120, 255));
         layout_editor_grid_color_normal = DrawableColor.of(new Color(0, 0, 0, 140));

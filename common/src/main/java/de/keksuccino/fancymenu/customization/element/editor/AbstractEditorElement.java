@@ -12,7 +12,6 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementCon
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
-import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -200,9 +199,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         this.topLeftDisplay.addLine("width", () -> Component.translatable("fancymenu.element.border_display.width", "" + this.getWidth()));
         if (this.element.getBuilder().isDeprecated()) {
             this.topLeftDisplay.addLine("deprecated_warning_line0", Component::empty);
-            this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Component.translatable("fancymenu.elements.deprecated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
-            this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Component.translatable("fancymenu.elements.deprecated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
-            this.topLeftDisplay.addLine("deprecated_warning_line3", () -> Component.translatable("fancymenu.elements.deprecated_warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
+            this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Component.translatable("fancymenu.elements.deprecated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())));
+            this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Component.translatable("fancymenu.elements.deprecated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())));
+            this.topLeftDisplay.addLine("deprecated_warning_line3", () -> Component.translatable("fancymenu.elements.deprecated_warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())));
         }
 
         this.bottomRightDisplay.addLine("pos_y", () -> Component.translatable("fancymenu.element.border_display.pos_y", "" + this.getY()));
@@ -922,7 +921,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             int texH = size[1];
             int texX = this.getX() + this.getWidth() - texW;
             int texY = this.getY();
-            UIBase.setShaderColor(graphics, UIBase.getUITheme().warning_text_color);
+            UIBase.setShaderColor(graphics, UIBase.getUITheme().warning_color);
             graphics.blit(DEPRECATED_WARNING_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
             RenderingUtils.resetShaderColor(graphics);
         }

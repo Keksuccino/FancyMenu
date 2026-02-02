@@ -394,7 +394,7 @@ public class SendHttpRequestAction extends Action {
             List<HttpMethod> methods = Arrays.asList(HttpMethod.values());
             LocalizedGenericValueCycle<HttpMethod> methodCycle = LocalizedGenericValueCycle.of("fancymenu.actions.send_http_request.edit.method", methods.toArray(new HttpMethod[0]));
             methodCycle.setCurrentValue(HttpMethod.valueOf(this.config.method));
-            methodCycle.setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+            methodCycle.setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
             this.addCycleButtonCell(methodCycle, true, (value, button) -> this.config.method = value.name());
 
             this.addCellGroupEndSpacerCell();
@@ -461,7 +461,7 @@ public class SendHttpRequestAction extends Action {
             LocalizedGenericValueCycle<AuthType> authCycle = LocalizedGenericValueCycle.of("fancymenu.actions.send_http_request.edit.auth_type", authTypes.toArray(new AuthType[0]));
             // Set a custom value name supplier that returns the localized name
             authCycle.setValueNameSupplier(authType -> Component.translatable(authType.getLocalizationKey()).getString());
-            authCycle.setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+            authCycle.setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
             authCycle.setCurrentValue(this.config.authType);
             
             this.addCycleButtonCell(authCycle, true, (value, button) -> {

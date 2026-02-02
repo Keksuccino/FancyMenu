@@ -254,8 +254,8 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
                 ? "fancymenu.schedulers.manage.description.status.running"
                 : "fancymenu.schedulers.manage.description.status.not_running")
                 .withStyle(Style.EMPTY.withColor(isRunning
-                        ? UIBase.getUITheme().success_text_color.getColorInt()
-                        : UIBase.getUITheme().error_text_color.getColorInt()));
+                        ? UIBase.getUITheme().success_color.getColorInt()
+                        : UIBase.getUITheme().error_color.getColorInt()));
 
         newDesc.add(Component.translatable("fancymenu.schedulers.manage.description.start_delay", Component.literal(this.selectedInstance.getStartDelayMs() + " ms")));
         newDesc.add(Component.translatable("fancymenu.schedulers.manage.description.tick_delay", tickDelayValue));
@@ -467,7 +467,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
         } else if (executable instanceof IfExecutableBlock ifBlock) {
             String requirements = this.buildRequirementsString(ifBlock);
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements))
                             .setStyle(Style.EMPTY.withColor(labelColor))));
 
@@ -484,7 +484,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
         } else if (executable instanceof WhileExecutableBlock whileBlock) {
             String requirements = this.buildRequirementsString(whileBlock);
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements))
                             .setStyle(Style.EMPTY.withColor(labelColor))));
 
@@ -493,7 +493,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
             }
         } else if (executable instanceof DelayExecutableBlock delayBlock) {
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.delay", Component.literal(delayBlock.getDelayMsRaw()))
                             .setStyle(Style.EMPTY.withColor(labelColor))));
 
@@ -502,7 +502,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
             }
         } else if (executable instanceof ExecuteLaterExecutableBlock executeLaterBlock) {
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.execute_later", Component.literal(executeLaterBlock.getDelayMsRaw()))
                             .setStyle(Style.EMPTY.withColor(labelColor))));
 
@@ -511,7 +511,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
             }
         } else if (executable instanceof AbstractExecutableBlock) {
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.literal("[UNKNOWN BLOCK]")
                             .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))));
         }
@@ -528,7 +528,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
         if (block instanceof ElseIfExecutableBlock elseIfBlock) {
             String requirements = this.buildRequirementsString(elseIfBlock);
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements))
                             .setStyle(Style.EMPTY.withColor(labelColor))));
 
@@ -538,7 +538,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
 
         } else if (block instanceof ElseExecutableBlock elseBlock) {
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.else")
                             .setStyle(Style.EMPTY.withColor(labelColor))));
 

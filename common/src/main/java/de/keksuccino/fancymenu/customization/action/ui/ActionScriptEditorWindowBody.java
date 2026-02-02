@@ -536,7 +536,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         if (action.isDeprecated()) {
             label = label.withStyle(Style.EMPTY.withStrikethrough(true));
             label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
-            label = label.append(Component.translatable("fancymenu.actions.deprecated").setStyle(Style.EMPTY.withColor(theme.error_text_color.getColorInt()).withStrikethrough(false)));
+            label = label.append(Component.translatable("fancymenu.actions.deprecated").setStyle(Style.EMPTY.withColor(theme.error_color.getColorInt()).withStrikethrough(false)));
         }
         return label;
     }
@@ -3424,7 +3424,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     UIBase.renderText(graphics, this.valueLabelComponent, valueTextX, valueTextY, -1);
                 }
             } else {
-                UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, theme.warning_text_color.getColor());
+                UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, theme.warning_color.getColor());
                 UIBase.renderText(graphics, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - textOffset), -1);
             }
         }
@@ -3681,7 +3681,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         private MutableComponent createCollapsedSuffixComponent(@NotNull UITheme theme) {
-            return Component.literal(" ").append(Component.translatable("fancymenu.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.warning_text_color.getColorInt())));
+            return Component.literal(" ").append(Component.translatable("fancymenu.actions.blocks.folder.collapsed").setStyle(Style.EMPTY.withColor(theme.warning_color.getColorInt())));
         }
 
         protected void updateValueComponent() {

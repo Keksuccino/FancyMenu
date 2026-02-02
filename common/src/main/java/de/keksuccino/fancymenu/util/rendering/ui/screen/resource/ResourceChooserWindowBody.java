@@ -328,7 +328,7 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
             if (fileTypeDisplayName == null) fileTypeDisplayName = Component.empty();
             typesComponent = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types.toString())).append(Component.literal(")"));
         }
-        this.addLabelCell(typesComponent.setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())));
+        this.addLabelCell(typesComponent.setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())));
 
         this.addCellGroupEndSpacerCell();
 
@@ -366,12 +366,12 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
         //Update Legacy Local Warning Tooltip
         if (this.showWarningLegacyLocal && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
             TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(
-                    Component.translatable("fancymenu.resources.chooser_screen.legacy_local.warning").withColor(UIBase.getUITheme().warning_text_color.getColorInt())), () -> true);
+                    Component.translatable("fancymenu.resources.chooser_screen.legacy_local.warning").withColor(UIBase.getUITheme().warning_color.getColorInt())), () -> true);
         }
         //Update No Extension Warning Tooltip
         if (!this.showWarningLegacyLocal && this.showWarningNoExtension && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
             TooltipHandler.INSTANCE.addRenderTickTooltip(
-                    UITooltip.of(Component.translatable("fancymenu.resources.chooser_screen.no_extension.warning").withColor(UIBase.getUITheme().warning_text_color.getColorInt())), () -> true);
+                    UITooltip.of(Component.translatable("fancymenu.resources.chooser_screen.no_extension.warning").withColor(UIBase.getUITheme().warning_color.getColorInt())), () -> true);
         }
     }
 
@@ -384,7 +384,7 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
                 int x = this.editBox.getX() - w - 2;
                 int y = this.editBox.getY() + 2;
                 this.warningHovered = UIBase.isXYInArea(mouseX, mouseY, x, y, w, h);
-                RenderingUtils.setShaderColor(graphics, UIBase.getUITheme().warning_text_color, 1.0F);
+                RenderingUtils.setShaderColor(graphics, UIBase.getUITheme().warning_color, 1.0F);
                 graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
                 RenderingUtils.resetShaderColor(graphics);
             }

@@ -77,10 +77,10 @@ public class KeyframeManagerScreen extends Screen {
     protected static final long RECORDING_BLINK_INTERVAL = 600; // 600ms blink interval
     protected static final int NOTIFICATION_PADDING = 10;
 
-    protected static final Component KEYFRAME_ADDED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_added").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
-    protected static final Component KEYFRAME_DELETED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_deleted").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
-    protected static final Component PLAYING_STARTED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_started").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
-    protected static final Component PLAYING_STOPPED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_stopped").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+    protected static final Component KEYFRAME_ADDED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_added").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
+    protected static final Component KEYFRAME_DELETED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_deleted").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+    protected static final Component PLAYING_STARTED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_started").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
+    protected static final Component PLAYING_STOPPED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_stopped").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
 
     protected final AnimationControllerElement controller;
     protected final Consumer<AnimationControllerMetadata> resultCallback;
@@ -284,7 +284,7 @@ public class KeyframeManagerScreen extends Screen {
         this.anchorButton = new CycleButton<>(0, 0, buttonBaseWidth + 105, 0,
                 CommonCycles.cycle("fancymenu.elements.animation_controller.keyframe_manager.anchor_point_cycle", anchorPoints, ElementAnchorPoints.TOP_LEFT)
                         .setValueNameSupplier(ElementAnchorPoint::getName)
-                        .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())),
+                        .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())),
                 (value, button) -> this.setAnchorPoint(value));
         this.anchorButton.setIsActiveSupplier(consumes -> ((this.selectedKeyframes.size() == 1) || this.isRecording) && !this.isOffsetMode);
         this.addBottomWidget(2, 0, this.anchorButton);
@@ -705,7 +705,7 @@ public class KeyframeManagerScreen extends Screen {
 
         // Determine current time color
         int currentTimeColor = currentPlayOrRecordPosition > actualEndTime ?
-                UIBase.getUITheme().warning_text_color.getColorInt() :
+                UIBase.getUITheme().warning_color.getColorInt() :
                 UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
 
         MutableComponent currentTimeComp = Component.literal(currentTimeStr).setStyle(Style.EMPTY.withColor(currentTimeColor));
@@ -885,7 +885,7 @@ public class KeyframeManagerScreen extends Screen {
         }
         if (isOverProgressLine((int)mouseX, (int)mouseY) && this.isRecording && !this.isRecordingPaused) {
             this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_drag_progress")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), 6000);
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())), 6000);
             return true;
         }
 
@@ -898,7 +898,7 @@ public class KeyframeManagerScreen extends Screen {
         }
         if (this.isRecording && !this.isRecordingPaused && (clickedIndex >= 0)) {
             this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_edit_keyframe")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), 6000);
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())), 6000);
             return true;
         }
         if (clickedIndex >= 0) {

@@ -133,7 +133,7 @@ public abstract class Action {
         if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
             this.asyncErrorShown = true;
             MainThreadTaskExecutor.executeInMainThread(() -> {
-                Component actionNameFormatted = this.getDisplayName().copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                Component actionNameFormatted = this.getDisplayName().copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_color.getColorInt()));
                 Dialogs.openMessage(Component.translatable("fancymenu.actions.async.cant_run_async", actionNameFormatted), MessageDialogStyle.ERROR);
             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }

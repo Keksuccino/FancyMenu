@@ -208,7 +208,7 @@ public abstract class Requirement {
         if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
             this.asyncErrorShown = true;
             MainThreadTaskExecutor.executeInMainThread(() -> {
-                var requirementNameFormatted = this.getDisplayName().copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                var requirementNameFormatted = this.getDisplayName().copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_color.getColorInt()));
                 Dialogs.openMessage(Component.translatable("fancymenu.requirements.async.cant_run_async", requirementNameFormatted), MessageDialogStyle.ERROR);
             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }

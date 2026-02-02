@@ -507,7 +507,7 @@ public class Property<T> {
                             IntegerProperty resolved = (IntegerProperty) selectedObjects.get(0).getProperty(key);
                             String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
                             if (val == null) {
-                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                             } else {
                                 if (Minecraft.getInstance().font.width(val) > 150) {
                                     val = new StringBuilder(val).reverse().toString();
@@ -515,7 +515,7 @@ public class Property<T> {
                                     val = new StringBuilder(val).reverse().toString();
                                     val = ".." + val;
                                 }
-                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
                             }
                             return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
                         }
@@ -710,7 +710,7 @@ public class Property<T> {
                             DoubleProperty resolved = (DoubleProperty) selectedObjects.get(0).getProperty(key);
                             String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
                             if (val == null) {
-                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                             } else {
                                 if (Minecraft.getInstance().font.width(val) > 150) {
                                     val = new StringBuilder(val).reverse().toString();
@@ -718,7 +718,7 @@ public class Property<T> {
                                     val = new StringBuilder(val).reverse().toString();
                                     val = ".." + val;
                                 }
-                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
                             }
                             return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
                         }
@@ -913,7 +913,7 @@ public class Property<T> {
                             LongProperty resolved = (LongProperty) selectedObjects.get(0).getProperty(key);
                             String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
                             if (val == null) {
-                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                             } else {
                                 if (Minecraft.getInstance().font.width(val) > 150) {
                                     val = new StringBuilder(val).reverse().toString();
@@ -921,7 +921,7 @@ public class Property<T> {
                                     val = new StringBuilder(val).reverse().toString();
                                     val = ".." + val;
                                 }
-                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
                             }
                             return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
                         }
@@ -1116,7 +1116,7 @@ public class Property<T> {
                             FloatProperty resolved = (FloatProperty) selectedObjects.get(0).getProperty(key);
                             String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
                             if (val == null) {
-                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                             } else {
                                 if (Minecraft.getInstance().font.width(val) > 150) {
                                     val = new StringBuilder(val).reverse().toString();
@@ -1124,7 +1124,7 @@ public class Property<T> {
                                     val = new StringBuilder(val).reverse().toString();
                                     val = ".." + val;
                                 }
-                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
                             }
                             return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
                         }
@@ -1353,17 +1353,17 @@ public class Property<T> {
                 BooleanProperty resolved = (BooleanProperty) builder.self().getProperty(key);
                 if ((resolved != null) && resolved.hasManualInput()) {
                     Component manual = Component.translatable("fancymenu.general.cycle.enabled_disabled.manual")
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
                     return Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), manual);
                 }
                 Boolean value = (resolved != null) ? resolved.get() : property.getDefault();
                 if (value != null && value) {
                     Component enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled")
-                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+                            .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
                     return Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), enabled);
                 }
                 Component disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled")
-                        .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                        .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                 return Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), disabled);
             });
             entry.setStackApplier(stackApplier);
@@ -1795,7 +1795,7 @@ public class Property<T> {
                             ColorProperty resolved = (ColorProperty) selectedObjects.get(0).getProperty(key);
                             String val = (resolved != null) ? resolved.get() : property.getDefault();
                             if (val == null) {
-                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                             } else {
                                 if (Minecraft.getInstance().font.width(val) > 150) {
                                     val = new StringBuilder(val).reverse().toString();
@@ -1803,7 +1803,7 @@ public class Property<T> {
                                     val = new StringBuilder(val).reverse().toString();
                                     val = ".." + val;
                                 }
-                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()));
+                                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
                             }
                             return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
                         }

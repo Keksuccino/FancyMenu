@@ -134,11 +134,11 @@ public class IsKeyPressedRequirement extends Requirement {
 
             InputConstants.Key key = getKey(this.keyCode);
 
-            this.selectedKeyLabel = this.addLabelCell(Component.translatable("fancymenu.requirements.is_key_pressed.screen.selected_key", ((MutableComponent)key.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()))));
+            this.selectedKeyLabel = this.addLabelCell(Component.translatable("fancymenu.requirements.is_key_pressed.screen.selected_key", ((MutableComponent)key.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()))));
 
             this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.requirements.is_key_pressed.screen.change_key"), button -> {
                 this.keyInputModeEnabled = true;
-                this.pressNowLabel.setText(Component.translatable("fancymenu.requirements.is_key_pressed.screen.change_key.press_now").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())));
+                this.pressNowLabel.setText(Component.translatable("fancymenu.requirements.is_key_pressed.screen.change_key.press_now").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt())));
                 button.setFocused(false);
             }).setIsActiveSupplier(consumes -> !this.keyInputModeEnabled), true);
 
@@ -155,7 +155,7 @@ public class IsKeyPressedRequirement extends Requirement {
                 this.keyInputModeEnabled = false;
                 this.pressNowLabel.setText(Component.empty());
                 InputConstants.Key key = getKey(this.keyCode);
-                this.selectedKeyLabel.setText(Component.translatable("fancymenu.requirements.is_key_pressed.screen.selected_key", ((MutableComponent)key.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt()))));
+                this.selectedKeyLabel.setText(Component.translatable("fancymenu.requirements.is_key_pressed.screen.selected_key", ((MutableComponent)key.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()))));
                 return true;
             }
             return super.keyPressed(keycode, scancode, modifiers);

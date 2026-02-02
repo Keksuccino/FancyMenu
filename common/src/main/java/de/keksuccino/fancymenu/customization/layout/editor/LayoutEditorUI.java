@@ -399,7 +399,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
         menuBar.addClickableEntry(MenuBar.Side.RIGHT, "unsaved_indicator", Component.empty(), (bar, entry) -> {
                 }).setLabelSupplier((bar, entry) ->
-                        editor.unsavedChanges ? Component.translatable("fancymenu.editor.menu_bar.unsaved_warning").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().warning_text_color.getColorInt())) : Component.empty())
+                        editor.unsavedChanges ? Component.translatable("fancymenu.editor.menu_bar.unsaved_warning").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().warning_color.getColorInt())) : Component.empty())
                 .setActive(false);
 
         return menuBar;
@@ -448,7 +448,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
     private MutableComponent buildEditorWidgetToggleLabel(@NotNull AbstractLayoutEditorWidget widget) {
         boolean visible = widget.isVisible();
-        int color = visible ? UIBase.getUITheme().success_text_color.getColorInt() : UIBase.getUITheme().error_text_color.getColorInt();
+        int color = visible ? UIBase.getUITheme().success_color.getColorInt() : UIBase.getUITheme().error_color.getColorInt();
         String symbol = visible ? "✔" : "✖";
         MutableComponent label = Component.empty();
         label.append(Component.literal(symbol).withStyle(Style.EMPTY.withColor(color)));

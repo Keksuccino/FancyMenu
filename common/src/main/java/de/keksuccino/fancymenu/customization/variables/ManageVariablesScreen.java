@@ -241,7 +241,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
             this.variableListScrollArea.addEntry(e);
         }
         if (this.variableListScrollArea.getEntries().size() == 1) {
-            TextScrollAreaEntry emptyEntry = new TextScrollAreaEntry(this.variableListScrollArea, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())), (entry) -> {});
+            TextScrollAreaEntry emptyEntry = new TextScrollAreaEntry(this.variableListScrollArea, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt())), (entry) -> {});
             emptyEntry.setHeight(this.getListEntryHeight());
             this.variableListScrollArea.addEntry(emptyEntry);
         }
@@ -274,7 +274,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
         public Variable variable;
 
         public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextScrollAreaEntry> onClick) {
-            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(resolveLabelColor())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))), onClick);
+            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(resolveLabelColor())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))), onClick);
             this.variable = variable;
         }
 

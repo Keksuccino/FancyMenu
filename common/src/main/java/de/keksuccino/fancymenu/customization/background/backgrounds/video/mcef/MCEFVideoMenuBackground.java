@@ -127,7 +127,7 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
             }
         }, (menu1, entry, switcherValue) -> {
             Component name = Component.translatable("soundCategory." + switcherValue.getName())
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
             return Component.translatable("fancymenu.elements.video_mcef.sound_channel", name);
         }).setIcon(MaterialIcons.SPEAKER);
 

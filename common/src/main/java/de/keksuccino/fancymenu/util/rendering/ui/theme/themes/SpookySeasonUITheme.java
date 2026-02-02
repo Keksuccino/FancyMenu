@@ -66,9 +66,9 @@ public class SpookySeasonUITheme extends UITheme {
         ui_interface_generic_text_color = DrawableColor.of(new Color(242, 231, 217));
         ui_tooltip_background_color = DrawableColor.of(new Color(24, 19, 29));
 
-        success_text_color = DrawableColor.of(new Color(105, 186, 93));
-        error_text_color = DrawableColor.of(new Color(220, 80, 72));
-        warning_text_color = DrawableColor.of(new Color(232, 142, 56));
+        success_color = DrawableColor.of(new Color(105, 186, 93));
+        error_color = DrawableColor.of(new Color(220, 80, 72));
+        warning_color = DrawableColor.of(new Color(232, 142, 56));
 
         layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(216, 108, 43));
         layout_editor_grid_color_normal = DrawableColor.of(new Color(150, 88, 180, 110));

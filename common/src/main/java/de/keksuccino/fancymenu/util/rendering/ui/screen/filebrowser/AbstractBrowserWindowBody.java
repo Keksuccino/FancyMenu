@@ -1099,7 +1099,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
         protected int getTextColor() {
             if (this.isResourceUnfriendly()) {
-                return UIBase.getUITheme().error_text_color.getColorInt();
+                return UIBase.getUITheme().error_color.getColorInt();
             }
             return UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
         }

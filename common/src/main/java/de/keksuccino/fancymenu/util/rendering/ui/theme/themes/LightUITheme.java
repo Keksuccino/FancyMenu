@@ -66,9 +66,9 @@ public class LightUITheme extends UITheme {
         ui_interface_generic_text_color = DrawableColor.of(new Color(42, 46, 54));
         ui_tooltip_background_color = DrawableColor.of(new Color(245, 247, 251));
 
-        success_text_color = DrawableColor.of(new Color(22, 163, 74));
-        error_text_color = DrawableColor.of(new Color(220, 38, 38));
-        warning_text_color = DrawableColor.of(new Color(217, 119, 6));
+        success_color = DrawableColor.of(new Color(22, 163, 74));
+        error_color = DrawableColor.of(new Color(220, 38, 38));
+        warning_color = DrawableColor.of(new Color(217, 119, 6));
 
         layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(59, 130, 246));
         layout_editor_grid_color_normal = DrawableColor.of(new Color(139, 92, 246, 90));

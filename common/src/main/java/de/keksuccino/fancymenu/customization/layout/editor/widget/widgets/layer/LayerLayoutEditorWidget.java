@@ -1745,7 +1745,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float labelY = this.getY() + (this.getHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f);
             if (labelWidth > 0.0f) {
                 graphics.enableScissor((int) labelX, (int) this.getY(), (int) (labelX + labelWidth), (int) (this.getY() + this.getHeight()));
-                UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())), (int) labelX, (int) labelY);
+                UIBase.renderText(graphics, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())), (int) labelX, (int) labelY);
                 graphics.disableScissor();
             }
 

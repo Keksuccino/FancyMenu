@@ -52,16 +52,16 @@ public class TargetElementManagerScreen extends CellScreen {
         // List current targets
         if (this.targets.isEmpty()) {
             this.addLabelCell(Component.translatable("fancymenu.elements.animation_controller.manage_targets.no_targets")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt())));
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt())));
         } else {
             for (AnimationControllerElement.TargetElement target : this.targets) {
                 AbstractEditorElement<?,?> e = this.parentLayoutEditor.getElementByInstanceIdentifier(target.targetElementId);
                 MutableComponent label = (e != null) ? e.element.getDisplayName().copy() : Component.literal("---");
-                label = label.setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+                label = label.setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
                 label = label.append(Component.literal(" [" + target.targetElementId + "]").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_generic_text_color.getColorInt())));
                 label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_generic_text_color.getColorInt())));
                 label = label.append(Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.label", target.timingOffsetMs)
-                        .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_text_color.getColorInt())));
+                        .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt())));
                 this.addCell(new TargetEntryCell(target, label));
             }
         }

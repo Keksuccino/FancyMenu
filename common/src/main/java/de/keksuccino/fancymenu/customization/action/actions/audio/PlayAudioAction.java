@@ -339,7 +339,7 @@ public class PlayAudioAction extends Action {
             CycleButton<SoundSource> soundChannelButton = new CycleButton<>(0, 0, 20, 20,
                     CommonCycles.cycle("fancymenu.actions.play_audio.edit.sound_channel", Arrays.asList(SoundSource.values()), this.config.getSoundSource())
                             .setValueNameSupplier(soundSource -> Component.translatable("soundCategory." + soundSource.getName()).getString())
-                            .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt())),
+                            .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())),
                     (value, button) -> this.config.setSoundSource(value));
             soundChannelButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.play_audio.edit.sound_channel.desc")));
             this.addWidgetCell(soundChannelButton, true);

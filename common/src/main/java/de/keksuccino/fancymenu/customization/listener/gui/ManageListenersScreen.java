@@ -400,7 +400,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
         } else if (executable instanceof IfExecutableBlock ifBlock) {
             String requirements = this.buildRequirementsString(ifBlock);
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements))
                             .setStyle(Style.EMPTY.withColor(labelColor))));
             
@@ -419,7 +419,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
         } else if (executable instanceof WhileExecutableBlock whileBlock) {
             String requirements = this.buildRequirementsString(whileBlock);
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements))
                             .setStyle(Style.EMPTY.withColor(labelColor))));
             
@@ -429,7 +429,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             }
         } else if (executable instanceof DelayExecutableBlock delayBlock) {
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.delay", Component.literal(delayBlock.getDelayMsRaw()))
                             .setStyle(Style.EMPTY.withColor(labelColor))));
 
@@ -438,7 +438,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             }
         } else if (executable instanceof ExecuteLaterExecutableBlock executeLaterBlock) {
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.execute_later", Component.literal(executeLaterBlock.getDelayMsRaw()))
                             .setStyle(Style.EMPTY.withColor(labelColor))));
 
@@ -448,7 +448,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
         } else if (executable instanceof AbstractExecutableBlock) {
             // For any other abstract executable blocks
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.literal("[UNKNOWN BLOCK]")
                             .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))));
         }
@@ -465,7 +465,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
         if (block instanceof ElseIfExecutableBlock elseIfBlock) {
             String requirements = this.buildRequirementsString(elseIfBlock);
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements))
                             .setStyle(Style.EMPTY.withColor(labelColor))));
             
@@ -476,7 +476,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             
         } else if (block instanceof ElseExecutableBlock elseBlock) {
             lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
                     .append(Component.translatable("fancymenu.actions.blocks.else")
                             .setStyle(Style.EMPTY.withColor(labelColor))));
             

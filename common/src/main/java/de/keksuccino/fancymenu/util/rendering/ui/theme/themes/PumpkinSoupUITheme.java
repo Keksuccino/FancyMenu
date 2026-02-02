@@ -66,9 +66,9 @@ public class PumpkinSoupUITheme extends UITheme {
         ui_interface_generic_text_color = DrawableColor.of(new Color(56, 42, 34));
         ui_tooltip_background_color = DrawableColor.of(new Color(248, 241, 233));
 
-        success_text_color = DrawableColor.of(new Color(32, 153, 106));
-        error_text_color = DrawableColor.of(new Color(218, 78, 58));
-        warning_text_color = DrawableColor.of(new Color(230, 126, 60));
+        success_color = DrawableColor.of(new Color(32, 153, 106));
+        error_color = DrawableColor.of(new Color(218, 78, 58));
+        warning_color = DrawableColor.of(new Color(230, 126, 60));
 
         layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(230, 126, 60));
         layout_editor_grid_color_normal = DrawableColor.of(new Color(219, 140, 88, 100));

@@ -48,7 +48,7 @@ public class AudioEditorElement extends AbstractEditorElement<AudioEditorElement
                         AudioEditorElement.class,
                         consumes -> consumes.element.soundSource,
                         (audioEditorElement, soundSource) -> audioEditorElement.element.setSoundSource(soundSource),
-                        (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.audio.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()))))
+                        (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.audio.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))))
                 .setStackable(false)
                 .setIcon(MaterialIcons.VOLUME_UP);
 

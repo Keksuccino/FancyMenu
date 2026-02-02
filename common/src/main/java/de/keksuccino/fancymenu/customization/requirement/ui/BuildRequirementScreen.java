@@ -328,7 +328,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                 this.setDescription(null);
             });
             backEntry.setSelectable(false);
-            backEntry.setTextBaseColor(UIBase.getUITheme().warning_text_color.getColorInt());
+            backEntry.setTextBaseColor(UIBase.getUITheme().warning_color.getColorInt());
             this.requirementsListScrollArea.addEntry(backEntry);
 
             //Add requirement entries of given category

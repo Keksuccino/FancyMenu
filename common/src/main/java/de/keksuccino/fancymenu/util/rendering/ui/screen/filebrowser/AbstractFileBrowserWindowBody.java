@@ -301,7 +301,7 @@ public abstract class AbstractFileBrowserWindowBody extends AbstractBrowserWindo
                         File fFinal = f2;
                         this.currentDirectoryComponent.append(ComponentWidget.empty(0, 0)
                                 .setTextSupplier(consumes -> {
-                                    if (consumes.isHoveredOrFocused()) return Component.literal(fFinal.getName()).setStyle(Style.EMPTY.withStrikethrough(true).withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                                    if (consumes.isHoveredOrFocused()) return Component.literal(fFinal.getName()).setStyle(Style.EMPTY.withStrikethrough(true).withColor(UIBase.getUITheme().error_color.getColorInt()));
                                     return Component.literal(fFinal.getName());
                                 })
                         );

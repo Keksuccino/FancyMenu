@@ -309,7 +309,7 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
             if (action.isDeprecated()) {
                 c = c.withStyle(Style.EMPTY.withStrikethrough(true));
                 c = c.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
-                c = c.append(Component.translatable("fancymenu.actions.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_text_color.getColorInt()).withStrikethrough(false)));
+                c = c.append(Component.translatable("fancymenu.actions.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()).withStrikethrough(false)));
             }
             return c;
         }

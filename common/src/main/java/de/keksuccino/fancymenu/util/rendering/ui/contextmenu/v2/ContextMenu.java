@@ -48,11 +48,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final MaterialIcon SUB_CONTEXT_MENU_ARROW_ICON = MaterialIcons.CHEVRON_RIGHT;
-    private static final ResourceLocation SCROLL_UP_ARROW = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_up_arrow.png");
-    private static final ResourceLocation SCROLL_DOWN_ARROW = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_down_arrow.png");
+    private static final MaterialIcon SCROLL_UP_ICON = MaterialIcons.ARROW_DROP_UP;
+    private static final MaterialIcon SCROLL_DOWN_ICON = MaterialIcons.ARROW_DROP_DOWN;
     private static final MaterialIcon CONTEXT_MENU_TOOLTIP_ICON = MaterialIcons.INFO;
     private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
     private static final int SCROLL_INDICATOR_HEIGHT = 12; // Space reserved for arrows
+    private static final int SCROLL_INDICATOR_ICON_SIZE = 10;
     private static final String SEARCH_ENTRY_IDENTIFIER = "context_menu_search";
     private static final String SEARCH_SEPARATOR_IDENTIFIER = "context_menu_search_separator";
 
@@ -398,12 +399,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 // Render arrow centered
                 RenderSystem.enableBlend();
                 UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-                graphics.blit(
-                        SCROLL_UP_ARROW,
-                        (int)(scaledX + this.getWidth()/2 - 5),
-                        (int)(scaledY + (SCROLL_INDICATOR_HEIGHT - 10) / 2), // Center vertically
-                        0.0F, 0.0F, 10, 10, 10, 10
-                );
+                IconRenderData iconData = resolveMaterialIconData(SCROLL_UP_ICON, SCROLL_INDICATOR_ICON_SIZE, SCROLL_INDICATOR_ICON_SIZE);
+                if (iconData != null) {
+                    blitScaledIcon(
+                            graphics,
+                            iconData,
+                            scaledX + this.getWidth() / 2.0F - (SCROLL_INDICATOR_ICON_SIZE / 2.0F),
+                            scaledY + (SCROLL_INDICATOR_HEIGHT - SCROLL_INDICATOR_ICON_SIZE) / 2.0F, // Center vertically
+                            SCROLL_INDICATOR_ICON_SIZE,
+                            SCROLL_INDICATOR_ICON_SIZE
+                    );
+                }
                 RenderingUtils.resetShaderColor(graphics);
             }
 
@@ -427,12 +433,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 // Render arrow centered (with fixed position)
                 RenderSystem.enableBlend();
                 UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-                graphics.blit(
-                        SCROLL_DOWN_ARROW,
-                        (int)(scaledX + this.getWidth()/2 - 5),
-                        (int)(scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT + (SCROLL_INDICATOR_HEIGHT - 10) / 2), // Centered in area
-                        0.0F, 0.0F, 10, 10, 10, 10
-                );
+                IconRenderData iconData = resolveMaterialIconData(SCROLL_DOWN_ICON, SCROLL_INDICATOR_ICON_SIZE, SCROLL_INDICATOR_ICON_SIZE);
+                if (iconData != null) {
+                    blitScaledIcon(
+                            graphics,
+                            iconData,
+                            scaledX + this.getWidth() / 2.0F - (SCROLL_INDICATOR_ICON_SIZE / 2.0F),
+                            scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT + (SCROLL_INDICATOR_HEIGHT - SCROLL_INDICATOR_ICON_SIZE) / 2.0F, // Centered in area
+                            SCROLL_INDICATOR_ICON_SIZE,
+                            SCROLL_INDICATOR_ICON_SIZE
+                    );
+                }
                 RenderingUtils.resetShaderColor(graphics);
             }
         }
@@ -2665,6 +2676,43 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             this.width = width;
             this.height = height;
         }
+    }
+
+    @Nullable
+    private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon, float renderWidth, float renderHeight) {
+        if (icon == null) {
+            return null;
+        }
+        ResourceLocation location = icon.getTextureLocationForUI(renderWidth, renderHeight);
+        if (location == null) {
+            return null;
+        }
+        int iconSize = icon.getTextureSizeForUI(renderWidth, renderHeight);
+        int width = icon.getWidth(iconSize);
+        int height = icon.getHeight(iconSize);
+        if (width <= 0 || height <= 0) {
+            return null;
+        }
+        return new IconRenderData(location, width, height);
+    }
+
+    private static void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+        if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
+            return;
+        }
+        float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return;
+        }
+        float scaledWidth = iconData.width * scale;
+        float scaledHeight = iconData.height * scale;
+        float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
+        float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
+        graphics.pose().pushPose();
+        graphics.pose().translate(drawX, drawY, 0.0F);
+        graphics.pose().scale(scale, scale, 1.0F);
+        graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+        graphics.pose().popPose();
     }
 
     public static class ValueCycleContextMenuEntry<V> extends ClickableContextMenuEntry<ValueCycleContextMenuEntry<V>> {

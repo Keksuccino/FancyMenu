@@ -78,7 +78,7 @@ public abstract class Placeholder {
         if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
             this.asyncErrorShown = true;
             MainThreadTaskExecutor.executeInMainThread(() -> {
-                var placeholderName = Component.literal(this.getDisplayName()).withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_text_color.getColorInt()));
+                var placeholderName = Component.literal(this.getDisplayName()).withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_color.getColorInt()));
                 Dialogs.openMessage(Component.translatable("fancymenu.placeholders.async.cant_run_async", placeholderName), MessageDialogStyle.ERROR);
             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }

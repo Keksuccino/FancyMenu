@@ -109,7 +109,7 @@ public class ElementSelectorScreen extends CellScreen {
             this.element = element;
 
             MutableComponent label = element.element.getDisplayName().copy();
-            label = label.setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_text_color.getColorInt()));
+            label = label.setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
             label = label.append(Component.literal(" [" + element.element.getInstanceIdentifier() + "]").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_generic_text_color.getColorInt())));
             this.setText(label);
 

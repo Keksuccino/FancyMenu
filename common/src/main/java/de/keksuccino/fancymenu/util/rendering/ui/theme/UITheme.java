@@ -72,9 +72,10 @@ public class UITheme {
     public DrawableColor ui_interface_generic_text_color = DrawableColor.of(new Color(255, 255, 255));
     public DrawableColor ui_tooltip_background_color = DrawableColor.of(new Color(43, 43, 43));
 
-    public DrawableColor success_text_color = DrawableColor.of(new Color(49, 206, 5));
-    public DrawableColor error_text_color = DrawableColor.of(new Color(237, 69, 69));
-    public DrawableColor warning_text_color = DrawableColor.of(new Color(229, 155, 18));
+    public DrawableColor info_color = DrawableColor.of(new Color(3, 129, 255));
+    public DrawableColor success_color = DrawableColor.of(new Color(49, 206, 5));
+    public DrawableColor error_color = DrawableColor.of(new Color(237, 69, 69));
+    public DrawableColor warning_color = DrawableColor.of(new Color(229, 155, 18));
 
     public DrawableColor layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(3, 148, 252));
     public DrawableColor layout_editor_grid_color_normal = DrawableColor.of(new Color(186, 121, 241, 100));

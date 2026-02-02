@@ -66,9 +66,9 @@ public class CherryBlossomUITheme extends UITheme {
         ui_interface_generic_text_color = DrawableColor.of(new Color(52, 46, 58));
         ui_tooltip_background_color = DrawableColor.of(new Color(247, 240, 245));
 
-        success_text_color = DrawableColor.of(new Color(34, 158, 110));
-        error_text_color = DrawableColor.of(new Color(219, 63, 96));
-        warning_text_color = DrawableColor.of(new Color(224, 123, 52));
+        success_color = DrawableColor.of(new Color(34, 158, 110));
+        error_color = DrawableColor.of(new Color(219, 63, 96));
+        warning_color = DrawableColor.of(new Color(224, 123, 52));
 
         layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(221, 104, 143));
         layout_editor_grid_color_normal = DrawableColor.of(new Color(216, 120, 166, 95));
