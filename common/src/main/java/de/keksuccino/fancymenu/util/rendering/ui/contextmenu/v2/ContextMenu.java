@@ -1158,6 +1158,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 || keyCode == InputConstants.KEY_RIGHT;
     }
 
+    private boolean isTabKey(int keyCode) {
+        return keyCode == InputConstants.KEY_TAB;
+    }
+
     private boolean isEnterKey(int keyCode) {
         return keyCode == InputConstants.KEY_ENTER
                 || keyCode == InputConstants.KEY_NUMPADENTER;
@@ -1168,7 +1172,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     private boolean isNavigationConsumeKey(int keyCode) {
-        return this.isArrowKey(keyCode) || this.isEnterKey(keyCode) || this.isEscapeKey(keyCode);
+        return this.isArrowKey(keyCode) || this.isTabKey(keyCode) || this.isEnterKey(keyCode) || this.isEscapeKey(keyCode);
     }
 
     private void updateArrowNavigationMouseState(int mouseX, int mouseY) {
@@ -1214,8 +1218,15 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     private void onSearchFilterChanged() {
         ContextMenu root = this.getRootMenu();
-        if (!root.arrowNavigationActive || root.arrowNavigationMenu != this || !this.isSearchEntryVisible()) {
+        if (!this.isSearchEntryVisible()) {
             return;
+        }
+        String searchText = this.getActiveSearchText();
+        if (searchText == null || searchText.isBlank()) {
+            return;
+        }
+        if (!root.arrowNavigationActive || root.arrowNavigationMenu != this) {
+            root.activateArrowNavigation(this);
         }
         List<ContextMenuEntry<?>> navigable = this.getNavigableEntries();
         ContextMenuEntry<?> first = navigable.isEmpty() ? null : navigable.get(0);
@@ -1608,6 +1619,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 } else {
                     root.handleArrowHorizontalNavigation(activeMenu, keyCode);
                 }
+                return true;
+            }
+            if (root.isTabKey(keyCode)) {
+                ContextMenu activeMenu = (root.arrowNavigationActive && root.arrowNavigationMenu != null) ? root.arrowNavigationMenu : targetMenu;
+                root.activateArrowNavigation(activeMenu);
+                int direction = Screen.hasShiftDown() ? -1 : 1;
+                root.moveArrowSelection(activeMenu, direction);
                 return true;
             }
         }

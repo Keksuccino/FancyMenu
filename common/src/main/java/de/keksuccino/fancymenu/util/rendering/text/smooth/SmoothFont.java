@@ -315,7 +315,8 @@ public final class SmoothFont implements AutoCloseable {
         if (sdfRange >= 2.8F && padding > 1) {
             padding -= 1;
         }
-        return padding;
+        int reduced = Math.round(padding * 0.2F);
+        return Math.max(0, reduced);
     }
 
     private static int resolveInitialAtlasSize(int generationSize) {

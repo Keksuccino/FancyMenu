@@ -4110,7 +4110,8 @@ public final class MaterialIcons {
         if (sdfRange >= 2.8F && padding > 1) {
             padding -= 1;
         }
-        return padding;
+        int reduced = Math.round(padding * 0.2F);
+        return Math.max(0, reduced);
     }
 
     private static BufferedImage renderGlyph(@Nonnull GlyphVector glyphVector, double minX, double minY, int width, int height, float sdfRange) {
