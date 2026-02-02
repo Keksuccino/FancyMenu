@@ -1212,7 +1212,20 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.arrowNavigationEntry = null;
     }
 
+    private void onSearchFilterChanged() {
+        ContextMenu root = this.getRootMenu();
+        if (!root.arrowNavigationActive || root.arrowNavigationMenu != this || !this.isSearchEntryVisible()) {
+            return;
+        }
+        List<ContextMenuEntry<?>> navigable = this.getNavigableEntries();
+        ContextMenuEntry<?> first = navigable.isEmpty() ? null : navigable.get(0);
+        root.setArrowNavigationSelection(this, first);
+    }
+
     private void activateArrowNavigation(@NotNull ContextMenu menu) {
+        if (!this.arrowNavigationActive) {
+            this.cachedSearchMenu = null;
+        }
         if (this.arrowNavigationMenu != menu) {
             if (this.arrowNavigationMenu != null) {
                 this.arrowNavigationMenu.unhoverAllEntries();
@@ -1370,7 +1383,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         for (ContextMenuEntry<?> entry : this.entries) {
             if (!entry.isVisible()) continue;
             if (filterActive && !this.matchesSearchFilter(entry, searchLower)) continue;
-            if (entry instanceof SeparatorContextMenuEntry || entry instanceof SpacerContextMenuEntry) continue;
+            if (entry instanceof SeparatorContextMenuEntry || entry instanceof SpacerContextMenuEntry || entry instanceof SearchContextMenuEntry) continue;
             navigable.add(entry);
         }
         return navigable;
@@ -1572,6 +1585,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         int mouseY = MouseInput.getMouseY();
         ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);
         ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
+        if (root.arrowNavigationActive && root.arrowNavigationMenu != null) {
+            targetMenu = root.arrowNavigationMenu;
+        }
         if (root.isNavigationConsumeKey(keyCode)) {
             if (root.isEscapeKey(keyCode)) {
                 root.closeMenuChain();
@@ -1595,7 +1611,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             }
         }
         if (targetMenu.isCtrlF(keyCode)) {
-            if (hoverMenu != null) {
+            if (!root.arrowNavigationActive && hoverMenu != null) {
                 root.cachedSearchMenu = hoverMenu;
             }
             if (targetMenu.isAlwaysShowSearchBar()) {
@@ -1608,7 +1624,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return true;
         }
         if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.keyPressed(keyCode, scanCode, modifiers)) {
-            if (hoverMenu != null) {
+            if (!root.arrowNavigationActive && hoverMenu != null) {
                 root.cachedSearchMenu = hoverMenu;
             }
             return true;
@@ -1631,8 +1647,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         int mouseY = MouseInput.getMouseY();
         ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);
         ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
+        if (root.arrowNavigationActive && root.arrowNavigationMenu != null) {
+            targetMenu = root.arrowNavigationMenu;
+        }
         if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
-            if (hoverMenu != null) {
+            if (!root.arrowNavigationActive && hoverMenu != null) {
                 root.cachedSearchMenu = hoverMenu;
             }
             return true;
@@ -1652,14 +1671,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         int mouseY = MouseInput.getMouseY();
         ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);
         ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
+        if (root.arrowNavigationActive && root.arrowNavigationMenu != null) {
+            targetMenu = root.arrowNavigationMenu;
+        }
         if (!targetMenu.searchEntry.isVisible() && !Character.isISOControl(codePoint)) {
-            if (hoverMenu != null) {
+            if (!root.arrowNavigationActive && hoverMenu != null) {
                 root.cachedSearchMenu = hoverMenu;
             }
             targetMenu.showSearchEntry(true);
         }
         if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.charTyped(codePoint, modifiers)) {
-            if (hoverMenu != null) {
+            if (!root.arrowNavigationActive && hoverMenu != null) {
                 root.cachedSearchMenu = hoverMenu;
             }
             return true;
@@ -3023,7 +3045,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             super(identifier, parent);
             this.height = 20;
             this.searchBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 0, 0, Component.empty());
-            this.searchBox.setResponder(value -> parent.closeSubMenus());
+            this.searchBox.setResponder(value -> {
+                parent.closeSubMenus();
+                parent.onSearchFilterChanged();
+            });
             this.applyDefaultSkin();
             this.setChangeBackgroundColorOnHover(false);
         }
