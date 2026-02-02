@@ -27,12 +27,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-
-
-    //TODO Blur background blur radius für popup-mode von CustomGUI auf 7 setzen
-
-
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final String VERSION = "3.9.0";
