@@ -757,6 +757,8 @@ public class CustomizationOverlayUI {
                 .setTooltipSupplier((menu, entry) -> !WindowHandler.allCustomWindowIconsSetAndFound() ? UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.toggle.disabled.tooltip")) : null)
                 .setIcon(MaterialIcons.IMAGE);
 
+        windowIconMenu.addSeparatorEntry("separator_after_toggle");
+
         FileTypeGroup<?> pngFileGroup = FileTypeGroup.of(FileTypes.PNG_IMAGE);
         pngFileGroup.setDisplayName(FileTypeGroups.IMAGE_GROUP_COMPONENT);
 
