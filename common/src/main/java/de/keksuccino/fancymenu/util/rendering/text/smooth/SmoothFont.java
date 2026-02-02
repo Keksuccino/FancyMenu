@@ -308,15 +308,24 @@ public final class SmoothFont implements AutoCloseable {
         return SDF_RANGE_MIN;
     }
 
-    private static int resolveBlurPadding(float sdfRange) {
+    private static int resolveBlurPadding(float sdfRange, int generationSize) {
         float sigma = sdfRange / 4.0F;
         int radius = (int) Math.ceil(sigma * 3.0F);
         int padding = Math.max(1, Math.min(6, radius));
         if (sdfRange >= 2.8F && padding > 1) {
             padding -= 1;
         }
-        int reduced = Math.round(padding * 0.2F);
+        float scale = resolvePaddingScale(generationSize);
+        int reduced = Math.round(padding * scale);
         return Math.max(0, reduced);
+    }
+
+    private static float resolvePaddingScale(int sizePx) {
+        int normalizedSize = normalizeSize(sizePx);
+        if (normalizedSize <= 32) {
+            return 0.2F;
+        }
+        return 0.3F;
     }
 
     private static int resolveInitialAtlasSize(int generationSize) {
@@ -472,7 +481,7 @@ public final class SmoothFont implements AutoCloseable {
 
         private SizeLevel createSizeLevel(int generationSize) {
             float sdfRange = resolveSdfRange(generationSize);
-            int padding = resolveBlurPadding(sdfRange);
+            int padding = resolveBlurPadding(sdfRange, generationSize);
             int initialAtlasSize = resolveInitialAtlasSize(generationSize);
             String sizeLabel = generationSize + "px";
             return new SizeLevel(parent, rawFont, generationSize, sdfRange, padding, initialAtlasSize, debugName, sizeLabel, sourceLabel, sourceIndex);

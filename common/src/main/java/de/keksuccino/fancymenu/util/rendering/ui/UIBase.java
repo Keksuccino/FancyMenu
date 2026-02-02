@@ -106,7 +106,7 @@ public class UIBase extends RenderingUtils {
     }
 
     public static float getUITextSizeNormal() {
-        if (UIBase.getUIScale() <= 1) return SmoothFonts.DEFAULT_TEXT_SIZE + 2; // make text easier to read on small scales
+        if (UIBase.getUIScale() <= 1) return SmoothFonts.DEFAULT_TEXT_SIZE + 1; // make text easier to read on small scales
         return SmoothFonts.DEFAULT_TEXT_SIZE;
     }
 

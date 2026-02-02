@@ -3956,7 +3956,7 @@ public final class MaterialIcons {
         }
 
         float sdfRange = resolveSdfRange(sizePx);
-        int padding = resolveBlurPadding(sdfRange);
+        int padding = resolveBlurPadding(sdfRange, sizePx);
         double minX = Math.floor(bounds.getX()) - padding;
         double minY = Math.floor(bounds.getY()) - padding;
         double maxX = Math.ceil(bounds.getMaxX()) + padding;
@@ -4103,15 +4103,24 @@ public final class MaterialIcons {
         return SDF_RANGE_MIN;
     }
 
-    private static int resolveBlurPadding(float sdfRange) {
+    private static int resolveBlurPadding(float sdfRange, int sizePx) {
         float sigma = sdfRange / 4.0F;
         int radius = (int) Math.ceil(sigma * 3.0F);
         int padding = Math.max(1, Math.min(6, radius));
         if (sdfRange >= 2.8F && padding > 1) {
             padding -= 1;
         }
-        int reduced = Math.round(padding * 0.2F);
+        float scale = resolvePaddingScale(sizePx);
+        int reduced = Math.round(padding * scale);
         return Math.max(0, reduced);
+    }
+
+    private static float resolvePaddingScale(int sizePx) {
+        int normalizedSize = normalizeSize(sizePx);
+        if (normalizedSize <= 32) {
+            return 0.2F;
+        }
+        return 0.3F;
     }
 
     private static BufferedImage renderGlyph(@Nonnull GlyphVector glyphVector, double minX, double minY, int width, int height, float sdfRange) {
