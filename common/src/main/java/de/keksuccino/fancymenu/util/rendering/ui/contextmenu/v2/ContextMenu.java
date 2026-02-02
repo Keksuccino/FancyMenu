@@ -1384,6 +1384,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             if (!entry.isVisible()) continue;
             if (filterActive && !this.matchesSearchFilter(entry, searchLower)) continue;
             if (entry instanceof SeparatorContextMenuEntry || entry instanceof SpacerContextMenuEntry || entry instanceof SearchContextMenuEntry) continue;
+            if (!entry.isActive()) continue;
             navigable.add(entry);
         }
         return navigable;
