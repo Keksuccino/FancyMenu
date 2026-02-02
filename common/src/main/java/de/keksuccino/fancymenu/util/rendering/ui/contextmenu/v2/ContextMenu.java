@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
@@ -91,6 +91,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private boolean searchEntryVisibleLast = false;
     private boolean alwaysShowSearchBar = false;
     private ContextMenu cachedSearchMenu = null;
+    private boolean arrowNavigationActive = false;
+    @Nullable
+    private ContextMenu arrowNavigationMenu = null;
+    @Nullable
+    private ContextMenuEntry<?> arrowNavigationEntry = null;
+    private int arrowNavigationMouseX = Integer.MIN_VALUE;
+    private int arrowNavigationMouseY = Integer.MIN_VALUE;
 
     public ContextMenu() {
         this.searchEntry = new SearchContextMenuEntry(SEARCH_ENTRY_IDENTIFIER, this);
@@ -111,6 +118,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (!this.isOpen()) return;
 
         this.updateSearchVisibilityState(false);
+
+        ContextMenu root = this.getRootMenu();
+        if (root == this) {
+            this.updateArrowNavigationMouseState(mouseX, mouseY);
+            this.clearArrowNavigationIfMenuClosed();
+            this.validateArrowNavigationSelection();
+        }
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
 
@@ -203,6 +217,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         float scaledMouseX = (float) ((float)mouseX / renderScale);
         float scaledMouseY = (float) ((float)mouseY / renderScale);
         boolean navigatingInSub = this.isUserNavigatingInSubMenu();
+        boolean arrowNavigationActive = root.arrowNavigationActive;
+        ContextMenu arrowNavigationMenu = root.arrowNavigationMenu;
+        ContextMenuEntry<?> arrowNavigationEntry = root.arrowNavigationEntry;
         float normalRoundingRadius = UIBase.getInterfaceCornerRoundingRadius();
         float normalCornerTopLeft = this.roundTopLeftCorner ? normalRoundingRadius : 0.0F;
         float normalCornerTopRight = this.roundTopRightCorner ? normalRoundingRadius : 0.0F;
@@ -318,8 +335,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 }
 
                 boolean hover = e.isHovered();
+                boolean shouldHover;
+                if (arrowNavigationActive) {
+                    shouldHover = (arrowNavigationMenu == this) && (arrowNavigationEntry == e);
+                } else {
+                    shouldHover = !navigatingInSub && UIBase.isXYInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight());
+                }
                 // Only set hover if the entry is visible in the scroll area
-                e.setHovered(isVisible && !navigatingInSub && UIBase.isXYInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
+                e.setHovered(isVisible && shouldHover);
 
                 //Run hover action of element if its hover state changed to hovered
                 if (!hover && e.isHovered() && (e.hoverAction != null)) {
@@ -976,6 +999,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.closeSubMenus();
         this.unhoverAllEntries();
         this.resetSearchState();
+        if (!this.isSubMenu()) {
+            this.resetArrowNavigationState();
+        }
         this.rawX = x;
         this.rawY = y;
         this.open = true;
@@ -1032,6 +1058,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.openAnimationActive = false;
         this.resetSearchState();
         ContextMenu root = this.getRootMenu();
+        if (root.arrowNavigationMenu == this || root == this) {
+            root.resetArrowNavigationState();
+        }
         if (root.cachedSearchMenu == this) {
             root.cachedSearchMenu = null;
         }
@@ -1059,6 +1088,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         for (ContextMenuEntry<?> e : this.entries) {
             if (e instanceof SubMenuContextMenuEntry s) {
                 s.subContextMenu.closeMenu();
+            }
+        }
+        return this;
+    }
+
+    protected ContextMenu closeSubMenusExcept(@Nullable SubMenuContextMenuEntry keepOpen) {
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (e instanceof SubMenuContextMenuEntry s) {
+                if (keepOpen == null || s != keepOpen) {
+                    s.subContextMenu.closeMenu();
+                }
             }
         }
         return this;
@@ -1109,6 +1149,231 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         float visibleBottom = scaledY + this.displayHeight - SCROLL_INDICATOR_HEIGHT;
 
         return entryTop < visibleBottom && entryBottom > visibleTop;
+    }
+
+    private boolean isArrowKey(int keyCode) {
+        return keyCode == InputConstants.KEY_UP
+                || keyCode == InputConstants.KEY_DOWN
+                || keyCode == InputConstants.KEY_LEFT
+                || keyCode == InputConstants.KEY_RIGHT;
+    }
+
+    private boolean isEnterKey(int keyCode) {
+        return keyCode == InputConstants.KEY_ENTER
+                || keyCode == InputConstants.KEY_NUMPADENTER;
+    }
+
+    private boolean isEscapeKey(int keyCode) {
+        return keyCode == InputConstants.KEY_ESCAPE;
+    }
+
+    private boolean isNavigationConsumeKey(int keyCode) {
+        return this.isArrowKey(keyCode) || this.isEnterKey(keyCode) || this.isEscapeKey(keyCode);
+    }
+
+    private void updateArrowNavigationMouseState(int mouseX, int mouseY) {
+        if (!this.arrowNavigationActive) {
+            this.arrowNavigationMouseX = mouseX;
+            this.arrowNavigationMouseY = mouseY;
+            return;
+        }
+        if (mouseX != this.arrowNavigationMouseX || mouseY != this.arrowNavigationMouseY) {
+            if (this.getMenuUnderCursor(mouseX, mouseY) != null) {
+                this.resetArrowNavigationState();
+            }
+            this.arrowNavigationMouseX = mouseX;
+            this.arrowNavigationMouseY = mouseY;
+        }
+    }
+
+    private void clearArrowNavigationIfMenuClosed() {
+        if (this.arrowNavigationMenu != null && !this.arrowNavigationMenu.isOpen()) {
+            this.resetArrowNavigationState();
+        }
+    }
+
+    private void validateArrowNavigationSelection() {
+        if (!this.arrowNavigationActive || this.arrowNavigationMenu == null) {
+            return;
+        }
+        List<ContextMenuEntry<?>> navigable = this.arrowNavigationMenu.getNavigableEntries();
+        if (this.arrowNavigationEntry != null && !navigable.contains(this.arrowNavigationEntry)) {
+            this.arrowNavigationMenu.unhoverAllEntries();
+            this.arrowNavigationEntry = null;
+        }
+    }
+
+    private void resetArrowNavigationState() {
+        if (this.arrowNavigationMenu != null) {
+            this.arrowNavigationMenu.unhoverAllEntries();
+        }
+        this.arrowNavigationActive = false;
+        this.arrowNavigationMenu = null;
+        this.arrowNavigationEntry = null;
+    }
+
+    private void activateArrowNavigation(@NotNull ContextMenu menu) {
+        if (this.arrowNavigationMenu != menu) {
+            if (this.arrowNavigationMenu != null) {
+                this.arrowNavigationMenu.unhoverAllEntries();
+            }
+            this.arrowNavigationMenu = menu;
+            this.arrowNavigationEntry = null;
+        }
+        menu.unhoverAllEntries();
+        this.arrowNavigationActive = true;
+        this.arrowNavigationMouseX = MouseInput.getMouseX();
+        this.arrowNavigationMouseY = MouseInput.getMouseY();
+    }
+
+    private void setArrowNavigationSelection(@NotNull ContextMenu menu, @Nullable ContextMenuEntry<?> entry) {
+        if (this.arrowNavigationMenu != menu) {
+            if (this.arrowNavigationMenu != null) {
+                this.arrowNavigationMenu.unhoverAllEntries();
+            }
+            this.arrowNavigationMenu = menu;
+        }
+        if (this.arrowNavigationEntry == entry && this.arrowNavigationMenu == menu) {
+            this.arrowNavigationActive = true;
+            this.arrowNavigationMouseX = MouseInput.getMouseX();
+            this.arrowNavigationMouseY = MouseInput.getMouseY();
+            return;
+        }
+        this.arrowNavigationEntry = entry;
+        this.arrowNavigationActive = true;
+        this.arrowNavigationMouseX = MouseInput.getMouseX();
+        this.arrowNavigationMouseY = MouseInput.getMouseY();
+
+        menu.unhoverAllEntries();
+        if (entry != null) {
+            entry.setHovered(true);
+            if (entry.hoverAction != null) {
+                entry.hoverAction.run(menu, entry, false);
+            }
+            menu.scrollEntryIntoView(entry);
+            if (entry instanceof SubMenuContextMenuEntry sub) {
+                menu.closeSubMenusExcept(sub);
+                if (sub.isActive() && !sub.subContextMenu.isOpen()) {
+                    sub.openSubMenu();
+                }
+            } else {
+                menu.closeSubMenusExcept(null);
+            }
+        }
+    }
+
+    private void moveArrowSelection(@NotNull ContextMenu menu, int direction) {
+        List<ContextMenuEntry<?>> navigable = menu.getNavigableEntries();
+        if (navigable.isEmpty()) {
+            this.setArrowNavigationSelection(menu, null);
+            return;
+        }
+        int index = -1;
+        if (this.arrowNavigationMenu == menu && this.arrowNavigationEntry != null) {
+            index = navigable.indexOf(this.arrowNavigationEntry);
+        }
+        if (index < 0) {
+            index = direction > 0 ? 0 : navigable.size() - 1;
+        } else {
+            int size = navigable.size();
+            int nextIndex = index + direction;
+            if (nextIndex < 0) {
+                nextIndex = size - 1;
+            } else if (nextIndex >= size) {
+                nextIndex = 0;
+            }
+            index = nextIndex;
+        }
+        this.setArrowNavigationSelection(menu, navigable.get(index));
+    }
+
+    private void handleArrowHorizontalNavigation(@NotNull ContextMenu menu, int keyCode) {
+        boolean goLeft = keyCode == InputConstants.KEY_LEFT;
+        boolean goRight = keyCode == InputConstants.KEY_RIGHT;
+
+        if (menu.isSubMenu()) {
+            SubMenuContextMenuEntry parentEntry = menu.getParentEntry();
+            if (parentEntry != null) {
+                boolean opensRight = menu.getPossibleSubMenuOpeningSide() == SubMenuOpeningSide.RIGHT;
+                if ((opensRight && goLeft) || (!opensRight && goRight)) {
+                    menu.closeMenu();
+                    this.setArrowNavigationSelection(parentEntry.parent, parentEntry);
+                    return;
+                }
+            }
+        }
+
+        if (this.arrowNavigationEntry instanceof SubMenuContextMenuEntry sub) {
+            boolean opensRight = sub.subContextMenu.getPossibleSubMenuOpeningSide() == SubMenuOpeningSide.RIGHT;
+            if ((opensRight && goRight) || (!opensRight && goLeft)) {
+                if (sub.isActive()) {
+                    if (!sub.subContextMenu.isOpen()) {
+                        menu.closeSubMenusExcept(sub);
+                        sub.openSubMenu();
+                    }
+                    this.jumpToSubMenu(sub);
+                }
+            }
+        }
+    }
+
+    private void jumpToSubMenu(@NotNull SubMenuContextMenuEntry entry) {
+        ContextMenu subMenu = entry.getSubContextMenu();
+        List<ContextMenuEntry<?>> navigable = subMenu.getNavigableEntries();
+        if (navigable.isEmpty()) {
+            this.setArrowNavigationSelection(subMenu, null);
+            return;
+        }
+        this.setArrowNavigationSelection(subMenu, navigable.get(0));
+    }
+
+    private void performArrowNavigationClick() {
+        if (this.arrowNavigationMenu == null || this.arrowNavigationEntry == null) {
+            return;
+        }
+        ContextMenuEntry<?> entry = this.arrowNavigationEntry;
+        if (!entry.isVisible()) {
+            return;
+        }
+        entry.setHovered(true);
+        entry.mouseClicked(entry.x + 1.0F, entry.y + 1.0F, 0);
+    }
+
+    private void scrollEntryIntoView(@NotNull ContextMenuEntry<?> entry) {
+        if (!this.needsScrolling) {
+            return;
+        }
+        float scale = UIBase.calculateFixedScale(this.getScale());
+        float scaledY = (float)((float)this.getActualY()/scale) + this.getBorderThickness();
+        float visibleTop = scaledY + SCROLL_INDICATOR_HEIGHT;
+        float visibleBottom = scaledY + this.displayHeight - SCROLL_INDICATOR_HEIGHT;
+        float entryTop = entry.y;
+        float entryBottom = entry.y + entry.getHeight();
+        float maxScrollPosition = this.rawHeight - (this.displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
+        if (maxScrollPosition < 0.0F) {
+            maxScrollPosition = 0.0F;
+        }
+
+        if (entryTop < visibleTop) {
+            this.scrollPosition = Math.max(0.0F, this.scrollPosition - (visibleTop - entryTop));
+        } else if (entryBottom > visibleBottom) {
+            this.scrollPosition = Math.min(maxScrollPosition, this.scrollPosition + (entryBottom - visibleBottom));
+        }
+    }
+
+    @NotNull
+    private List<ContextMenuEntry<?>> getNavigableEntries() {
+        String searchText = this.getActiveSearchText();
+        String searchLower = (searchText != null) ? searchText.toLowerCase(Locale.ROOT) : null;
+        boolean filterActive = (searchLower != null) && !searchLower.isBlank();
+        List<ContextMenuEntry<?>> navigable = new ArrayList<>();
+        for (ContextMenuEntry<?> entry : this.entries) {
+            if (!entry.isVisible()) continue;
+            if (filterActive && !this.matchesSearchFilter(entry, searchLower)) continue;
+            if (entry instanceof SeparatorContextMenuEntry || entry instanceof SpacerContextMenuEntry) continue;
+            navigable.add(entry);
+        }
+        return navigable;
     }
 
     @Override
@@ -1301,10 +1566,34 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (!this.isOpen()) return false;
         ContextMenu root = this.getRootMenu();
         root.clearCachedSearchMenuIfClosed();
+        root.clearArrowNavigationIfMenuClosed();
+        root.validateArrowNavigationSelection();
         int mouseX = MouseInput.getMouseX();
         int mouseY = MouseInput.getMouseY();
         ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);
         ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
+        if (root.isNavigationConsumeKey(keyCode)) {
+            if (root.isEscapeKey(keyCode)) {
+                root.closeMenuChain();
+                return true;
+            }
+            if (root.isEnterKey(keyCode)) {
+                root.performArrowNavigationClick();
+                return true;
+            }
+            if (root.isArrowKey(keyCode)) {
+                ContextMenu activeMenu = (root.arrowNavigationActive && root.arrowNavigationMenu != null) ? root.arrowNavigationMenu : targetMenu;
+                root.activateArrowNavigation(activeMenu);
+                if (keyCode == InputConstants.KEY_UP) {
+                    root.moveArrowSelection(activeMenu, -1);
+                } else if (keyCode == InputConstants.KEY_DOWN) {
+                    root.moveArrowSelection(activeMenu, 1);
+                } else {
+                    root.handleArrowHorizontalNavigation(activeMenu, keyCode);
+                }
+                return true;
+            }
+        }
         if (targetMenu.isCtrlF(keyCode)) {
             if (hoverMenu != null) {
                 root.cachedSearchMenu = hoverMenu;
@@ -1335,6 +1624,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (!this.isOpen()) return false;
         ContextMenu root = this.getRootMenu();
         root.clearCachedSearchMenuIfClosed();
+        if (root.isNavigationConsumeKey(keyCode)) {
+            return true;
+        }
         int mouseX = MouseInput.getMouseX();
         int mouseY = MouseInput.getMouseY();
         ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);

@@ -29,8 +29,6 @@ public class FancyMenu {
 
 
 
-    //TODO Unicode-handling in UIBase.getUIScale() entfernen
-
     //TODO Blur background blur radius für popup-mode von CustomGUI auf 7 setzen
 
 

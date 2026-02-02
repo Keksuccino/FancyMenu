@@ -141,13 +141,9 @@ public class CustomGuiBaseScreen extends Screen {
     }
 
     protected void renderGuiBlurBackground(@NotNull GuiGraphics graphics, float partial) {
-        Minecraft minecraft = Minecraft.getInstance();
-        int vanillaRadius = minecraft.options.getMenuBackgroundBlurriness();
-        if (vanillaRadius < 1) {
-            return;
-        }
-        double guiScale = minecraft.getWindow().getGuiScale();
-        float blurRadius = guiScale > 0.0D ? (float) vanillaRadius / (float) guiScale : (float) vanillaRadius;
+        int radius = 7;
+        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        float blurRadius = guiScale > 0.0D ? (float) radius / (float) guiScale : (float) radius;
         GuiBlurRenderer.renderBlurArea(graphics, 0.0F, 0.0F, this.width, this.height, blurRadius, 0.0F, DrawableColor.FULLY_TRANSPARENT, partial);
     }
 
