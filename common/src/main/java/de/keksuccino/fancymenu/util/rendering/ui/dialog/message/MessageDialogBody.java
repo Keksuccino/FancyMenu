@@ -3,9 +3,12 @@ package de.keksuccino.fancymenu.util.rendering.ui.dialog.message;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -87,7 +90,7 @@ public class MessageDialogBody extends PiPWindowBody {
         if (this.style.getIcon() != null) {
             int iconX = PADDING;
             int iconY = contentY + (contentBlockHeight - ICON_SIZE) / 2;
-            renderIcon(graphics, this.style.getIcon(), iconX, iconY);
+            renderIcon(graphics, this.style.getIcon(), iconX, iconY, resolveIconTint());
             textX = iconX + ICON_SIZE + ICON_GAP;
         }
 
@@ -167,8 +170,18 @@ public class MessageDialogBody extends PiPWindowBody {
         }
     }
 
-    private void renderIcon(@NotNull GuiGraphics graphics, @NotNull ResourceLocation icon, int x, int y) {
-        graphics.blit(icon, x, y, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+    private void renderIcon(@NotNull GuiGraphics graphics, @NotNull MaterialIcon icon, int x, int y, @Nullable DrawableColor tint) {
+        IconRenderData data = resolveMaterialIconData(icon, ICON_SIZE, ICON_SIZE);
+        if (data == null) {
+            return;
+        }
+        if (tint != null) {
+            RenderingUtils.setShaderColor(graphics, tint);
+        }
+        blitScaledIcon(graphics, data, x, y, ICON_SIZE, ICON_SIZE);
+        if (tint != null) {
+            RenderingUtils.resetShaderColor(graphics);
+        }
     }
 
     private void rebuildButtons() {
@@ -216,6 +229,16 @@ public class MessageDialogBody extends PiPWindowBody {
         }
     }
 
+    @Nullable
+    private DrawableColor resolveIconTint() {
+        return switch (this.style) {
+            case INFO -> UIBase.getUITheme().info_color;
+            case WARNING -> UIBase.getUITheme().warning_color;
+            case ERROR -> UIBase.getUITheme().error_color;
+            default -> null;
+        };
+    }
+
     private boolean isOkOnlyMode() {
         return this.callback == null || this.forceOkOnly;
     }
@@ -252,6 +275,57 @@ public class MessageDialogBody extends PiPWindowBody {
         int secs = (int)((this.delayEnd - System.currentTimeMillis()) / 1000);
         if (secs < 1) secs = 1;
         return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ui.confirmation_screen.delay.tooltip", "" + secs));
+    }
+
+    @Nullable
+    private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon, float renderWidth, float renderHeight) {
+        if (icon == null) {
+            return null;
+        }
+        float safeRenderWidth = Math.max(1.0F, renderWidth);
+        float safeRenderHeight = Math.max(1.0F, renderHeight);
+        ResourceLocation location = icon.getTextureLocationForUI(safeRenderWidth, safeRenderHeight);
+        if (location == null) {
+            return null;
+        }
+        int size = icon.getTextureSizeForUI(safeRenderWidth, safeRenderHeight);
+        int width = icon.getWidth(size);
+        int height = icon.getHeight(size);
+        if (width <= 0 || height <= 0) {
+            return null;
+        }
+        return new IconRenderData(location, width, height);
+    }
+
+    private static void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+        if (areaWidth <= 0.0F || areaHeight <= 0.0F || iconData.width <= 0 || iconData.height <= 0) {
+            return;
+        }
+        float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return;
+        }
+        float scaledWidth = iconData.width * scale;
+        float scaledHeight = iconData.height * scale;
+        float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
+        float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
+        graphics.pose().pushPose();
+        graphics.pose().translate(drawX, drawY, 0.0F);
+        graphics.pose().scale(scale, scale, 1.0F);
+        graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+        graphics.pose().popPose();
+    }
+
+    private static final class IconRenderData {
+        private final ResourceLocation texture;
+        private final int width;
+        private final int height;
+
+        private IconRenderData(@NotNull ResourceLocation texture, int width, int height) {
+            this.texture = texture;
+            this.width = width;
+            this.height = height;
+        }
     }
 
 }

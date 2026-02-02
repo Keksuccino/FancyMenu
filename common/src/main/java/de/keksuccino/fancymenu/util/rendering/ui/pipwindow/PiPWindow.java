@@ -324,17 +324,19 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         boolean maximizeHovered = this.maximizable && isPointInArea(mouseX, mouseY, maximizeX, buttonY, buttonSlotSize, titleBarHeight);
         boolean closeHovered = this.closable && isPointInArea(mouseX, mouseY, closeX, buttonY, buttonSlotSize, titleBarHeight);
         boolean hasBody = getBodyHeight() > 0;
-        float buttonIconSize = resolveButtonIconSize(buttonSlotSize, titleBarHeight);
+        float buttonSlotSizeUnscaled = resolveUnscaledSize(buttonSlotSize, scale);
+        float buttonIconSizeUnscaled = resolveButtonIconSize(buttonSlotSizeUnscaled, this.titleBarHeight);
+        float buttonIconSize = buttonIconSizeUnscaled * scale;
 
         if (this.maximizable) {
             boolean rightmost = !this.closable;
-            IconRenderData maximizeIcon = resolveButtonIconData(getActiveMaximizeButtonResourceIcon(), getActiveMaximizeButtonMaterialIcon(), buttonIconSize);
-            renderButton(graphics, theme, maximizeX, buttonY, buttonSlotSize, titleBarHeight, maximizeHovered, maximizeIcon, rightmost, hasBody, partial);
+            IconRenderData maximizeIcon = resolveButtonIconData(getActiveMaximizeButtonResourceIcon(), getActiveMaximizeButtonMaterialIcon(), buttonIconSizeUnscaled);
+            renderButton(graphics, theme, maximizeX, buttonY, buttonSlotSize, titleBarHeight, maximizeHovered, maximizeIcon, buttonIconSize, rightmost, hasBody, partial);
         }
 
         if (this.closable) {
-            IconRenderData closeIcon = resolveButtonIconData(this.closeButtonIcon, this.closeButtonMaterialIcon, buttonIconSize);
-            renderButton(graphics, theme, closeX, buttonY, buttonSlotSize, titleBarHeight, closeHovered, closeIcon, true, hasBody, partial);
+            IconRenderData closeIcon = resolveButtonIconData(this.closeButtonIcon, this.closeButtonMaterialIcon, buttonIconSizeUnscaled);
+            renderButton(graphics, theme, closeX, buttonY, buttonSlotSize, titleBarHeight, closeHovered, closeIcon, buttonIconSize, true, hasBody, partial);
         }
 
         float padding = getRenderButtonPadding();
@@ -344,22 +346,20 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             float iconX = titleBarX + padding;
             float iconY = titleBarY + (titleBarHeight - iconSize) * 0.5F;
             boolean renderedIcon = false;
-            IconRenderData materialIconData = resolveMaterialIconData(this.materialIcon, iconSize, iconSize);
-            if (materialIconData != null) {
-                if (this.titleBarIconTintEnabled) {
+            float iconSizeUnscaled = resolveUnscaledSize(iconSize, scale);
+            IconRenderData iconData = resolveMaterialIconData(this.materialIcon, iconSizeUnscaled, iconSizeUnscaled);
+            boolean isMaterialIcon = iconData != null;
+            if (iconData == null && this.icon != null) {
+                iconData = new IconRenderData(this.icon, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
+            }
+            if (iconData != null) {
+                if (isMaterialIcon && this.titleBarIconTintEnabled) {
                     theme.setUITextureShaderColor(graphics, 1.0F);
-                }
-                blitScaledIcon(graphics, materialIconData, iconX, iconY, iconSize, iconSize);
-                if (this.titleBarIconTintEnabled) {
+                } else {
                     RenderingUtils.resetShaderColor(graphics);
                 }
-                renderedIcon = true;
-            } else if (this.icon != null) {
-                if (this.titleBarIconTintEnabled) {
-                    theme.setUITextureShaderColor(graphics, 1.0F);
-                }
-                RenderingUtils.blitF(graphics, this.icon, iconX, iconY, 0.0F, 0.0F, iconSize, iconSize, iconSize, iconSize);
-                if (this.titleBarIconTintEnabled) {
+                blitScaledIcon(graphics, iconData, iconX, iconY, iconSize, iconSize);
+                if (isMaterialIcon && this.titleBarIconTintEnabled) {
                     RenderingUtils.resetShaderColor(graphics);
                 }
                 renderedIcon = true;
@@ -530,7 +530,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
     }
 
-    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UITheme theme, float x, float y, float width, float height, boolean hovered, @NotNull IconRenderData icon, boolean rightmost, boolean hasBody, float partial) {
+    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UITheme theme, float x, float y, float width, float height, boolean hovered, @NotNull IconRenderData icon, float iconSize, boolean rightmost, boolean hasBody, float partial) {
         if (hovered) {
             int color = UIBase.shouldBlur() ? theme.ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : theme.ui_interface_widget_background_color_hover_type_1.getColorInt();
             float radius = getFrameCornerRadius();
@@ -554,13 +554,13 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                 RenderingUtils.fillF(graphics, x, y, x + width, y + height, color);
             }
         }
-        float iconSize = resolveButtonIconSize(width, height);
-        float iconX = x + (width - iconSize) * 0.5F;
-        float iconY = y + (height - iconSize) * 0.5F;
+        float safeIconSize = Math.max(1.0F, Math.min(iconSize, Math.min(width, height)));
+        float iconX = x + (width - safeIconSize) * 0.5F;
+        float iconY = y + (height - safeIconSize) * 0.5F;
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-        blitScaledIcon(graphics, icon, iconX, iconY, iconSize, iconSize);
+        blitScaledIcon(graphics, icon, iconX, iconY, safeIconSize, safeIconSize);
         RenderingUtils.resetShaderColor(graphics);
     }
 
@@ -630,6 +630,13 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         float maxIconSize = Math.max(1.0F, DEFAULT_ICON_TEXTURE_SIZE);
         float iconSize = Math.max(1.0F, Math.min(width - iconPadding, maxIconSize));
         return Math.min(iconSize, Math.min(width, height));
+    }
+
+    private float resolveUnscaledSize(float scaledSize, float scale) {
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return scaledSize;
+        }
+        return scaledSize / scale;
     }
 
     private void drawScaledString(@NotNull GuiGraphics graphics, @NotNull Font font, @NotNull FormattedCharSequence text, int x, int y, int color, float scale) {
