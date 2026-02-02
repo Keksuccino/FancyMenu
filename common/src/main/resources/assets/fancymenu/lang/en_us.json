@@ -2740,5 +2740,20 @@
   "fancymenu.ui.themes.light_high_contrast": "Light High Contrast",
   "fancymenu.ui.themes.pumpkin_soup": "Pumpkin Soup",
   "fancymenu.ui.themes.cozy_campfire": "Cozy Campfire",
-  "fancymenu.elements.widgets.label.shadow": "Label Shadow: %s"
+  "fancymenu.elements.widgets.label.shadow": "Label Shadow: %s",
+  "fancymenu.ui.scales.auto": "Auto",
+  "fancymenu.ui.scales.micro": "Micro (%s)",
+  "fancymenu.ui.scales.extra_small": "Extra Small (%s)",
+  "fancymenu.ui.scales.small": "Small (%s)",
+  "fancymenu.ui.scales.medium": "Medium (%s)",
+  "fancymenu.ui.scales.medium_large": "Medium Large (%s)",
+  "fancymenu.ui.scales.large": "Large (%s)",
+  "fancymenu.ui.scales.extra_large": "Extra Large (%s)",
+  "fancymenu.ui.scales.huge": "Huge (%s)",
+  "fancymenu.ui.scales.gigantic": "Gigantic (%s)",
+  "fancymenu.ui.scales.colossal": "Colossal (%s)",
+  "fancymenu.ui.scales.titanic": "Titanic (%s)",
+  "fancymenu.ui.scales.massive": "Massive (%s)",
+  "fancymenu.ui.scales.immense": "Immense (%s)",
+  "fancymenu.ui.scales.maximum": "Maximum (%s)"
 }

@@ -49,19 +49,7 @@ public class UIBase extends RenderingUtils {
      * automatic adjustments (4K auto scale and Unicode font enforcement).
      */
     public static float getUIScale() {
-        float uiScale = FancyMenu.getOptions().uiScale.getValue();
-        //Handle "Auto" scale (set scale to 2 if window bigger than 3000x1700 to show 1080p and 2K screens on scale 1 and 4K on scale 2)
-        if (uiScale == 4F) {
-            uiScale = 1.5F;
-            if ((Minecraft.getInstance().getWindow().getWidth() > 3000) || (Minecraft.getInstance().getWindow().getHeight() > 1700)) {
-                uiScale = 2F;
-            }
-        }
-        //Force a scale of 2 or bigger if Unicode font is enabled
-        if (shouldUseMinecraftFontForUIRendering() && Minecraft.getInstance().isEnforceUnicode() && (uiScale < 2F)) {
-            uiScale = 2F;
-        }
-        return uiScale;
+        return UIScale.getUIScaleFloat();
     }
 
     /**

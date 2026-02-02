@@ -59,7 +59,7 @@ public class Options extends AbstractOptions {
     public final Option<Boolean> enableElementRotationControls = new Option<>(config, "enable_element_rotation_controls", true, "layout_editor");
     public final Option<Boolean> enableElementTiltingControls = new Option<>(config, "enable_element_tilting_controls", true, "layout_editor");
 
-    public final Option<Float> uiScale = new Option<>(config, "ui_scale", 4.0F, "ui");
+    public final Option<String> uiScale = new Option<>(config, "ui_scale_v2", "auto", "ui");
     public final Option<Boolean> playUiClickSounds = new Option<>(config, "play_ui_click_sounds", true, "ui");
     public final Option<Integer> contextMenuHoverOpenSpeed = new Option<>(config, "context_menu_hover_open_speed", 1, "ui");
     public final Option<String> uiTheme = new Option<>(config, "ui_theme", "dark", "ui");
