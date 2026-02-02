@@ -37,6 +37,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIconTexture;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.UIScale;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
@@ -62,7 +63,6 @@ import de.keksuccino.fancymenu.util.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -999,29 +999,23 @@ public class CustomizationOverlayUI {
         ContextMenu userInterfaceMenu = new ContextMenu();
         menuBar.addContextMenuEntry("user_interface", Component.translatable("fancymenu.overlay.menu_bar.user_interface"), userInterfaceMenu);
 
-        float preSelectedUiScale = FancyMenu.getOptions().uiScale.getValue();
-        if ((preSelectedUiScale != 1F) && (preSelectedUiScale != 1.5F) && (preSelectedUiScale != 2F) && (preSelectedUiScale != 2.5F) && (preSelectedUiScale != 3F) && (preSelectedUiScale != 3.5F) && (preSelectedUiScale != 4F)) {
-            preSelectedUiScale = 4F;
-        }
-        String preSelectedUIScaleString = "4";
-        if (preSelectedUiScale == 1F) preSelectedUIScaleString = "1";
-        if (preSelectedUiScale == 1.5F) preSelectedUIScaleString = "1.5";
-        if (preSelectedUiScale == 2F) preSelectedUIScaleString = "2";
-        if (preSelectedUiScale == 2.5F) preSelectedUIScaleString = "2.5";
-        if (preSelectedUiScale == 3F) preSelectedUIScaleString = "3";
-        if (preSelectedUiScale == 3.5F) preSelectedUIScaleString = "3.5";
-        userInterfaceMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.ui_scale", ListUtils.of("1","1.5","2","2.5","3","3.5","4"), preSelectedUIScaleString)
-                .addCycleListener(scaleString -> {
-                    if (!MathUtils.isFloat(scaleString)) {
-                        scaleString = "4";
-                    }
-                    FancyMenu.getOptions().uiScale.setValue(Float.valueOf(scaleString));
-                    userInterfaceMenu.closeMenu();
-                }).setValueNameSupplier(value -> {
-                    if (value.equals("4")) return I18n.get("fancymenu.overlay.menu_bar.user_interface.ui_scale.auto");
-                    return value;
-                }))
+        ContextMenu uiScaleMenu = new ContextMenu();
+        userInterfaceMenu.addSubMenuEntry("ui_scale", Component.translatable("fancymenu.ui.scale.label"), uiScaleMenu)
                 .setIcon(MaterialIcons.STRAIGHTEN);
+        UIScale initialUiScale = UIScale.getUIScale();
+        for (UIScale scale : UIScale.values()) {
+            uiScaleMenu.addClickableEntry("ui_scale_" + scale.getName(), scale.getDisplayName(), (menu, entry) -> {
+                        FancyMenu.getOptions().uiScale.setValue(scale.getName());
+                        menu.closeMenuChain();
+                    })
+                    .setTickAction((menu, entry, isPost) -> {
+                        UIScale activeScale = UIScale.getUIScale();
+                        if (entry instanceof ContextMenu.ClickableContextMenuEntry<?> clickable) {
+                            clickable.setIcon(activeScale == scale ? MaterialIcons.CHECK_BOX : MaterialIcons.CHECK_BOX_OUTLINE_BLANK);
+                        }
+                    })
+                    .setIcon(initialUiScale == scale ? MaterialIcons.CHECK_BOX : MaterialIcons.CHECK_BOX_OUTLINE_BLANK);
+        }
 
         userInterfaceMenu.addValueCycleEntry("ui_click_sounds", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_click_sounds", FancyMenu.getOptions().playUiClickSounds.getValue())
                 .addCycleListener(cycle -> {

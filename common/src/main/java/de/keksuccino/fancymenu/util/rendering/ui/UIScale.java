@@ -69,15 +69,20 @@ public enum UIScale {
 
     /**
      * Returns the logical UI scale used for FancyMenu's UI elements, after applying
-     * automatic adjustments (4K auto scale and Unicode font enforcement).
+     * automatic adjustments (2K/4K auto-scale and Unicode font enforcement).
      */
     public static float getUIScaleFloat() {
         UIScale scale = getUIScale();
         float uiScale = scale.getScale();
-        //Handle "Auto" scale (set scale to 2 if window bigger than 3000x1700 to show 1080p and 2K screens on scale 1 and 4K on scale 2)
+        //Handle "Auto" scale (use SMALL for 2K-ish windows, MEDIUM for 4K-ish windows)
         if (scale == AUTO) {
             uiScale = EXTRA_SMALL.getScale();
-            if ((Minecraft.getInstance().getWindow().getWidth() > 3000) || (Minecraft.getInstance().getWindow().getHeight() > 1700)) {
+            int windowWidth = Minecraft.getInstance().getWindow().getWidth();
+            int windowHeight = Minecraft.getInstance().getWindow().getHeight();
+            if ((windowWidth >= 2400) || (windowHeight >= 1300)) {
+                uiScale = SMALL.getScale();
+            }
+            if ((windowWidth > 3000) || (windowHeight > 1700)) {
                 uiScale = MEDIUM.getScale();
             }
         }
