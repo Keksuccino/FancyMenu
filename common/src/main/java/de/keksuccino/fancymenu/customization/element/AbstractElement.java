@@ -17,14 +17,12 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -67,14 +65,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean stayOnScreen = true;
 	public volatile boolean visible = true;
 	public volatile AppearanceDelay appearanceDelay = AppearanceDelay.NO_DELAY;
-	public volatile float appearanceDelayInSeconds = 1.0F;
 	public long appearanceDelayEndTime = -1;
 	@NotNull
 	public Fading fadeIn = Fading.NO_FADING;
 	@NotNull
 	public Fading fadeOut = Fading.NO_FADING;
-	public float fadeInSpeed = 1.0F;
-	public float fadeOutSpeed = 1.0F;
 	public boolean shouldDoFadeInIfNeeded = false;
 	public boolean fadeInStarted = false;
 	public boolean fadeInFinished = false;
@@ -84,8 +79,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public long lastFadeInTick = -1;
 	public long lastFadeOutTick = -1;
 	public float opacity = 1.0F;
-	@NotNull
-	public String baseOpacity = "1.0";
 	public float lastBaseOpacity = -1.0F;
 	public long lastBaseOpacityParse = -1L;
 	public float cachedBaseOpacity = 1.0F;
@@ -111,27 +104,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public String customElementLayerName = null;
 	public boolean enableParallax = false;
 	public boolean invertParallax = false;
-	@NotNull
-	public String parallaxIntensityXString = "0.5";
-	@NotNull
-	public String parallaxIntensityYString = "0.5";
 	public boolean loadOncePerSession = false;
 	public boolean layerHiddenInEditor = false;
 	/** The rotation angle in degrees. 0 = no rotation, positive values rotate clockwise */
-	public float rotationDegrees = 0.0F;
 	public boolean advancedRotationMode = false;
-	@Nullable
-	public String advancedRotationDegrees;
 	/** The vertical tilt angle in degrees. */
-	public float verticalTiltDegrees = 0.0F;
 	/** The horizontal tilt angle in degrees. */
-	public float horizontalTiltDegrees = 0.0F;
 	public boolean advancedVerticalTiltMode = false;
-	@Nullable
-	public String advancedVerticalTiltDegrees;
 	public boolean advancedHorizontalTiltMode = false;
-	@Nullable
-	public String advancedHorizontalTiltDegrees;
 
     /**
      * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
@@ -148,9 +128,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
     protected RuntimePropertyContainer cachedMemory;
     protected int cachedMouseX = 0;
     protected int cachedMouseY = 0;
-    protected String lastAdvancedRotationDegrees;
-    protected String lastAdvancedVerticalTiltDegrees;
-	protected String lastAdvancedHorizontalTiltDegrees;
     protected float lastParallaxIntensityX = -10000.0F;
     protected float lastParallaxIntensityY = -10000.0F;
     protected boolean allowDepthTestManipulation = false;
@@ -167,6 +144,18 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
     public final Property.IntegerProperty advancedHeight = putProperty(Property.integerProperty("advanced_height", Integer.MIN_VALUE, "fancymenu.elements.features.advanced_sizing.height", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
     public final Property.BooleanProperty stretchX = putProperty(Property.booleanProperty("stretch_x", false, "fancymenu.elements.stretch.x"));
     public final Property.BooleanProperty stretchY = putProperty(Property.booleanProperty("stretch_y", false, "fancymenu.elements.stretch.y"));
+    public final Property.FloatProperty appearanceDelaySeconds = putProperty(Property.floatProperty("appearance_delay_seconds", 1.0F, "fancymenu.element.general.appearance_delay.seconds"));
+    public final Property.FloatProperty fadeInSpeed = putProperty(Property.floatProperty("fade_in_speed", 1.0F, "fancymenu.element.fading.fade_in.speed"));
+    public final Property.FloatProperty fadeOutSpeed = putProperty(Property.floatProperty("fade_out_speed", 1.0F, "fancymenu.element.fading.fade_out.speed"));
+    public final Property.FloatProperty baseOpacity = putProperty(Property.floatProperty("base_opacity", 1.0F, "fancymenu.element.base_opacity"));
+    public final Property.FloatProperty parallaxIntensityX = putProperty(Property.floatProperty("parallax_intensity_x", 0.5F, "fancymenu.elements.parallax.intensity_x"));
+    public final Property.FloatProperty parallaxIntensityY = putProperty(Property.floatProperty("parallax_intensity_y", 0.5F, "fancymenu.elements.parallax.intensity_y"));
+    public final Property.FloatProperty rotationDegrees = putProperty(Property.floatProperty("rotation_degrees", 0.0F, "fancymenu.element.rotation.degrees"));
+    public final Property.FloatProperty advancedRotationDegrees = putProperty(Property.floatProperty("advanced_rotation_degrees", 0.0F, "fancymenu.element.rotation.degrees"));
+    public final Property.FloatProperty verticalTiltDegrees = putProperty(Property.floatProperty("vertical_tilt_degrees", 0.0F, "fancymenu.element.tilt.vertical.degrees"));
+    public final Property.FloatProperty advancedVerticalTiltDegrees = putProperty(Property.floatProperty("advanced_vertical_tilt_degrees", 0.0F, "fancymenu.element.tilt.vertical.degrees"));
+    public final Property.FloatProperty horizontalTiltDegrees = putProperty(Property.floatProperty("horizontal_tilt_degrees", 0.0F, "fancymenu.element.tilt.horizontal.degrees"));
+    public final Property.FloatProperty advancedHorizontalTiltDegrees = putProperty(Property.floatProperty("advanced_horizontal_tilt_degrees", 0.0F, "fancymenu.element.tilt.horizontal.degrees"));
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -246,8 +235,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.cachedMouseX = mouseX;
 		this.cachedMouseY = mouseY;
 
-		this.lastParallaxIntensityX = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityXString));
-		this.lastParallaxIntensityY = SerializationHelper.INSTANCE.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityYString));
+		this.lastParallaxIntensityX = this.parallaxIntensityX.getFloat();
+		this.lastParallaxIntensityY = this.parallaxIntensityY.getFloat();
 
 		this.tickBaseOpacity();
 
@@ -404,7 +393,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 						float elapsedSeconds = (now - this.lastFadeInTick) / 1000.0F;
 						this.lastFadeInTick = now;
 						// Increase opacity based on elapsed time; 0.4 is the base rate for fadeSpeed = 1.
-						this.opacity += elapsedSeconds * (0.4F * this.fadeInSpeed);
+						float fadeInSpeed = Math.max(0.0F, this.fadeInSpeed.getFloat());
+						this.opacity += elapsedSeconds * (0.4F * fadeInSpeed);
 						this.opacity = Math.max(0.02F, this.opacity);
 						if (this.opacity >= this.lastBaseOpacity) {
 							this.opacity = this.lastBaseOpacity;
@@ -438,7 +428,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 					float elapsedSeconds = (now - this.lastFadeOutTick) / 1000.0F;
 					this.lastFadeOutTick = now;
 					// Decrease opacity based on elapsed time.
-					this.opacity -= elapsedSeconds * (0.4F * this.fadeOutSpeed);
+					float fadeOutSpeed = Math.max(0.0F, this.fadeOutSpeed.getFloat());
+					this.opacity -= elapsedSeconds * (0.4F * fadeOutSpeed);
 					this.opacity = Math.max(0.02F, this.opacity);
 					if (this.opacity <= 0.02F) {
 						this.opacity = 0.02F;
@@ -492,11 +483,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			return;
 		}
 		boolean applied = this.getMemory().putPropertyIfAbsentAndGet("appearance_delay_applied", false);
-		if ((!isResize || !applied) && (this.appearanceDelay != AppearanceDelay.NO_DELAY) && (this.appearanceDelayInSeconds > 0.0F)) {
+		float delaySeconds = Math.max(0.0F, this.appearanceDelaySeconds.getFloat());
+		if ((!isResize || !applied) && (this.appearanceDelay != AppearanceDelay.NO_DELAY) && (delaySeconds > 0.0F)) {
 			if ((this.appearanceDelay == AppearanceDelay.FIRST_TIME) && applied) {
 				this.appearanceDelayEndTime = -1;
 			} else {
-				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)(this.appearanceDelayInSeconds * 1000.0F));
+				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)(delaySeconds * 1000.0F));
 			}
 		} else {
 			this.appearanceDelayEndTime = -1;
@@ -512,16 +504,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		long now = System.currentTimeMillis();
 		if ((this.lastBaseOpacityParse + 30L) > now) return this.cachedBaseOpacity;
 		this.lastBaseOpacityParse = now;
-		String s = PlaceholderParser.replacePlaceholders(this.baseOpacity);
-		if (MathUtils.isFloat(s)) {
-			float f = Float.parseFloat(s);
-			if (f < 0.0F) f = 0.0F;
-			if (f > 1.0F) f = 1.0F;
-			this.cachedBaseOpacity = f;
-			return f;
-		}
-		this.cachedBaseOpacity = 1.0F;
-		return 1.0F;
+		float f = this.baseOpacity.getFloat();
+		if (f < 0.0F) f = 0.0F;
+		if (f > 1.0F) f = 1.0F;
+		this.cachedBaseOpacity = f;
+		return f;
 	}
 
 	/**
@@ -621,59 +608,21 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
     public float getRotationDegrees() {
 		if (!this.supportsRotation()) return 0;
 		if (this.advancedRotationMode) {
-			if (this.advancedRotationDegrees == null) return 0;
-			String degrees = PlaceholderParser.replacePlaceholders(this.advancedRotationDegrees);
-			if (!degrees.equals(this.lastAdvancedRotationDegrees)) {
-				this.lastAdvancedRotationDegrees = degrees;
-				if (MathUtils.isFloat(degrees)) {
-					this.rotationDegrees = Float.parseFloat(degrees);
-				} else {
-					this.rotationDegrees = 0;
-					LOGGER.error("[FANCYMENU] Failed to parse advanced rotation degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
-				}
-			}
+			return this.advancedRotationDegrees.getFloat();
 		}
-		return this.rotationDegrees;
+		return this.rotationDegrees.getFloat();
 	}
 
 	public float getVerticalTiltDegrees() {
 		if (!this.supportsTilting()) return 0;
-		if (this.advancedVerticalTiltMode) {
-			if (this.advancedVerticalTiltDegrees == null) return 0;
-			String degrees = PlaceholderParser.replacePlaceholders(this.advancedVerticalTiltDegrees);
-			if (!degrees.equals(this.lastAdvancedVerticalTiltDegrees)) {
-				this.lastAdvancedVerticalTiltDegrees = degrees;
-				if (MathUtils.isFloat(degrees)) {
-					float value = Float.parseFloat(degrees);
-					// Clamp to -60 to 60 range
-					this.verticalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, value));
-				} else {
-					this.verticalTiltDegrees = 0;
-					LOGGER.error("[FANCYMENU] Failed to parse advanced vertical tilt degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
-				}
-			}
-		}
-		return this.verticalTiltDegrees;
+		float value = this.advancedVerticalTiltMode ? this.advancedVerticalTiltDegrees.getFloat() : this.verticalTiltDegrees.getFloat();
+		return Math.max(-60.0F, Math.min(60.0F, value));
 	}
 
 	public float getHorizontalTiltDegrees() {
 		if (!this.supportsTilting()) return 0;
-		if (this.advancedHorizontalTiltMode) {
-			if (this.advancedHorizontalTiltDegrees == null) return 0;
-			String degrees = PlaceholderParser.replacePlaceholders(this.advancedHorizontalTiltDegrees);
-			if (!degrees.equals(this.lastAdvancedHorizontalTiltDegrees)) {
-				this.lastAdvancedHorizontalTiltDegrees = degrees;
-				if (MathUtils.isFloat(degrees)) {
-					float value = Float.parseFloat(degrees);
-					// Clamp to -60 to 60 range
-					this.horizontalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, value));
-				} else {
-					this.horizontalTiltDegrees = 0;
-					LOGGER.error("[FANCYMENU] Failed to parse advanced horizontal tilt degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
-				}
-			}
-		}
-		return this.horizontalTiltDegrees;
+		float value = this.advancedHorizontalTiltMode ? this.advancedHorizontalTiltDegrees.getFloat() : this.horizontalTiltDegrees.getFloat();
+		return Math.max(-60.0F, Math.min(60.0F, value));
 	}
 
 	/**

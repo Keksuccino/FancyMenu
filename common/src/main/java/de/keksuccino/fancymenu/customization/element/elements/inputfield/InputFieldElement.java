@@ -24,7 +24,8 @@ public class InputFieldElement extends AbstractElement {
 
     public String linkedVariable;
     public InputFieldType type = InputFieldType.TEXT;
-    public int maxTextLength = 10000;
+    public final Property.IntegerProperty maxTextLength = putProperty(Property.integerProperty("max_text_length", 10000, "fancymenu.elements.input_field.editor.set_max_length",
+            Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
     public ExtendedEditBox editBox;
     public String lastValue = "";
     public boolean navigatable = true;
@@ -35,6 +36,7 @@ public class InputFieldElement extends AbstractElement {
     public InputFieldElement(ElementBuilder<InputFieldElement, InputFieldEditorElement> builder) {
         super(builder);
         this.allowDepthTestManipulation = true;
+        this.maxTextLength.addValueSetListener((oldValue, newValue) -> this.updateWidgetMaxLength());
     }
 
     @Override
@@ -62,6 +64,7 @@ public class InputFieldElement extends AbstractElement {
 
             this.updateWidgetBounds();
             this.updateWidgetSounds();
+            this.updateWidgetMaxLength();
 
             this.editBox.render(graphics, mouseX, mouseY, partial);
 
@@ -101,6 +104,12 @@ public class InputFieldElement extends AbstractElement {
         ((IMixinAbstractWidget)this.editBox).setHeightFancyMenu(this.getAbsoluteHeight());
     }
 
+    public void updateWidgetMaxLength() {
+        if (this.editBox == null) return;
+        int maxLength = Math.max(1, this.maxTextLength.getInteger());
+        this.editBox.setMaxLength(maxLength);
+    }
+
     public void updateWidgetSounds() {
         if (this.editBox instanceof CustomizableWidget w) {
             ResourceSupplier<IAudio> hover = this.hoverSound.get();
@@ -115,6 +124,7 @@ public class InputFieldElement extends AbstractElement {
     @Override
     public void afterConstruction() {
         this.updateWidgetBounds();
+        this.updateWidgetMaxLength();
     }
 
     @Override

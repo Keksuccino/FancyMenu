@@ -103,11 +103,6 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
             element.actionExecutor = g;
         }
 
-        String tickDelayMsString = serialized.getValue("tick_delay");
-        if ((tickDelayMsString != null) && MathUtils.isLong(tickDelayMsString)) {
-            element.tickDelayMs = Long.parseLong(tickDelayMsString);
-        }
-
         String isAsyncString = serialized.getValue("is_async");
         if ((isAsyncString != null) && isAsyncString.equalsIgnoreCase("true")) {
             element.isAsync = true;
@@ -129,7 +124,6 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
     protected SerializedElement serializeElement(@NotNull TickerElement element, @NotNull SerializedElement serializeTo) {
 
         serializeTo.putProperty("is_async", "" + element.isAsync);
-        serializeTo.putProperty("tick_delay", "" + element.tickDelayMs);
         serializeTo.putProperty("tick_mode", element.tickMode.name);
 
         serializeTo.putProperty("ticker_element_executable_block_identifier", element.actionExecutor.identifier);

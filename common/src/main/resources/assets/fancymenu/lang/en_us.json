@@ -2769,6 +2769,7 @@
   "fancymenu.global_customizations.slider_handle.nine_slice.border.right": "Slider Handle Nine-Slice Right Border Size [Pixels]",
   "fancymenu.global_customizations.slider_handle.nine_slice.border.bottom": "Slider Handle Nine-Slice Bottom Border Size [Pixels]",
   "fancymenu.global_customizations.slider_handle.nine_slice.border.left": "Slider Handle Nine-Slice Left Border Size [Pixels]",
-  "fancymenu.global_customizations.slider_background.set_texture": "Set Texture"
+  "fancymenu.global_customizations.slider_background.set_texture": "Set Texture",
+  "fancymenu.elements.vanilla_button.automated_clicks": "Automated Clicks"
 
 }

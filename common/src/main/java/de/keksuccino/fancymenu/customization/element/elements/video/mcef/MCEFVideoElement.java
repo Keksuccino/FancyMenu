@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.video.IVideoElement;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
@@ -40,7 +41,8 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     public boolean loop = false;
     public boolean preserveAspectRatio = true;
     /** Value between 0.0 and 1.0 **/
-    public float volume = 1.0F;
+    public final Property.FloatProperty volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_mcef.volume",
+            Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 1.0F).build()));
     @NotNull
     public SoundSource soundSource = SoundSource.MASTER;
 
@@ -129,7 +131,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
             this.updateVolume();
             if ((this.lastCachedActualVolume == -11000F) || (this.cachedActualVolume != this.lastCachedActualVolume)) {
-                this.setVolume(this.volume, true);
+                this.setVolume(this.volume.getFloat(), true);
             }
             this.lastCachedActualVolume = this.cachedActualVolume;
 
@@ -280,9 +282,8 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
      */
     protected void setVolume(float volume, boolean updatePlayer) {
         volume = Math.max(0.0F, Math.min(1.0F, volume));
-        this.volume = volume;
         if ((this.videoPlayer != null)) {
-            float actualVolume = this.volume;
+            float actualVolume = volume;
             float masterVolume = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER);
             float soundSourceVolume = Minecraft.getInstance().options.getSoundSourceVolume(this.soundSource);
             if (this.soundSource != SoundSource.MASTER) {
@@ -298,7 +299,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     }
 
     protected void updateVolume() {
-        this.setVolume(this.volume, false);
+        this.setVolume(this.volume.getFloat(), false);
     }
 
     /**

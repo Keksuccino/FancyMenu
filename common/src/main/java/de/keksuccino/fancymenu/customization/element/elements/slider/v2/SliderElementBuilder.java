@@ -32,8 +32,8 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         element.baseHeight = 20;
         element.label = "New Slider: $$value";
         element.listValues.addAll(List.of("some_value", "another_value", "third_value"));
-        element.minRangeValue = 0.0D;
-        element.maxRangeValue = 20.0D;
+        element.minRangeValue.set(0.0D);
+        element.maxRangeValue.set(20.0D);
         return element;
     }
 
@@ -53,11 +53,6 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         element.preSelectedValue = serialized.getValue("pre_selected_value");
 
         element.label = serialized.getValue("slider_label");
-
-        element.minRangeValue = deserializeNumber(Double.class, element.minRangeValue, serialized.getValue("min_range_value"));
-        element.maxRangeValue = deserializeNumber(Double.class, element.maxRangeValue, serialized.getValue("max_range_value"));
-
-        element.roundingDecimalPlace = deserializeNumber(Integer.class, element.roundingDecimalPlace, serialized.getValue("rounding_decimal_place"));
 
         List<Pair<String, String>> listValueEntries = new ArrayList<>();
         serialized.getProperties().forEach((key, value) -> {
@@ -100,11 +95,7 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         element.restartBackgroundAnimationsOnHover = deserializeBoolean(element.restartBackgroundAnimationsOnHover, serialized.getValue("restart_background_animations"));
 
         element.nineSliceCustomBackground = deserializeBoolean(element.nineSliceCustomBackground, serialized.getValue("nine_slice_custom_background"));
-        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_border_x"));
-        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_border_y"));
         element.nineSliceSliderHandle = deserializeBoolean(element.nineSliceSliderHandle, serialized.getValue("nine_slice_slider_handle"));
-        element.nineSliceSliderHandleBorderX = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderX, serialized.getValue("nine_slice_slider_handle_border_x"));
-        element.nineSliceSliderHandleBorderY = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderY, serialized.getValue("nine_slice_slider_handle_border_y"));
 
         element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
 
@@ -117,9 +108,6 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         }
 
         element.hoverSound = deserializeAudioResourceSupplier(serialized.getValue("hoversound"));
-
-        element.buildSlider();
-        element.prepareExecutableBlock();
 
         return element;
 
@@ -140,11 +128,6 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         serializeTo.putProperty("pre_selected_value", element.preSelectedValue);
 
         serializeTo.putProperty("slider_label", element.label);
-
-        serializeTo.putProperty("min_range_value", "" + element.minRangeValue);
-        serializeTo.putProperty("max_range_value", "" + element.maxRangeValue);
-
-        serializeTo.putProperty("rounding_decimal_place", "" + element.roundingDecimalPlace);
 
         int i = 0;
         for (String s : element.listValues) {
@@ -179,11 +162,7 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         }
 
         serializeTo.putProperty("nine_slice_custom_background", "" + element.nineSliceCustomBackground);
-        serializeTo.putProperty("nine_slice_border_x", "" + element.nineSliceBorderX);
-        serializeTo.putProperty("nine_slice_border_y", "" + element.nineSliceBorderY);
         serializeTo.putProperty("nine_slice_slider_handle", "" + element.nineSliceSliderHandle);
-        serializeTo.putProperty("nine_slice_slider_handle_border_x", "" + element.nineSliceSliderHandleBorderX);
-        serializeTo.putProperty("nine_slice_slider_handle_border_y", "" + element.nineSliceSliderHandleBorderY);
 
         serializeTo.putProperty("navigatable", "" + element.navigatable);
 

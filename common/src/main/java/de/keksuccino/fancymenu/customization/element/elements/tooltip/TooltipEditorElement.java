@@ -126,12 +126,7 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                 .setIcon(MaterialIcons.TEXT_FORMAT);
 
         // Text scale - using Text element localization
-        this.addFloatInputContextMenuEntryTo(markdownMenu, "text_scale",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).markdownRenderer.getTextBaseScale(),
-                (e, scale) -> ((TooltipElement)e.element).markdownRenderer.setTextBaseScale(scale),
-                Component.translatable("fancymenu.elements.text.scale"),
-                true, 1.0F, null, null)
+        this.element.textScale.buildContextMenuEntryAndAddTo(markdownMenu, this)
                 .setIcon(MaterialIcons.FORMAT_SIZE);
 
         // Text color - using Text element localization
@@ -145,21 +140,11 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                 .setIcon(MaterialIcons.PALETTE);
 
         // Text border - using Text element localization
-        this.addIntegerInputContextMenuEntryTo(markdownMenu, "text_border",
-                TooltipEditorElement.class,
-                e -> (int)((TooltipElement)e.element).markdownRenderer.getBorder(),
-                (e, border) -> ((TooltipElement)e.element).markdownRenderer.setBorder(border),
-                Component.translatable("fancymenu.elements.text.text_border"),
-                true, 0, null, null)
+        this.element.textBorder.buildContextMenuEntryAndAddTo(markdownMenu, this)
                 .setIcon(MaterialIcons.BORDER_OUTER);
 
         // Line spacing - using Text element localization
-        this.addIntegerInputContextMenuEntryTo(markdownMenu, "line_spacing",
-                TooltipEditorElement.class,
-                e -> (int)((TooltipElement)e.element).markdownRenderer.getLineSpacing(),
-                (e, spacing) -> ((TooltipElement)e.element).markdownRenderer.setLineSpacing(spacing),
-                Component.translatable("fancymenu.elements.text.line_spacing"),
-                true, 1, null, null)
+        this.element.lineSpacing.buildContextMenuEntryAndAddTo(markdownMenu, this)
                 .setIcon(MaterialIcons.FORMAT_LINE_SPACING);
 
         // Auto line wrapping - using Text element localization
@@ -203,39 +188,19 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                 .setIcon(MaterialIcons.GRID_GUIDES);
 
         // Nine-slice border top
-        this.addIntegerInputContextMenuEntryTo(nineSliceMenu, "nine_slice_border_top",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).nineSliceBorderTop,
-                (e, value) -> ((TooltipElement)e.element).nineSliceBorderTop = value,
-                Component.translatable("fancymenu.elements.tooltip.nine_slice.border.top"),
-                true, 5, null, null)
+        this.element.nineSliceBorderTop.buildContextMenuEntryAndAddTo(nineSliceMenu, this)
                 .setIcon(MaterialIcons.BORDER_TOP);
 
         // Nine-slice border right
-        this.addIntegerInputContextMenuEntryTo(nineSliceMenu, "nine_slice_border_right",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).nineSliceBorderRight,
-                (e, value) -> ((TooltipElement)e.element).nineSliceBorderRight = value,
-                Component.translatable("fancymenu.elements.tooltip.nine_slice.border.right"),
-                true, 5, null, null)
+        this.element.nineSliceBorderRight.buildContextMenuEntryAndAddTo(nineSliceMenu, this)
                 .setIcon(MaterialIcons.BORDER_RIGHT);
 
         // Nine-slice border bottom
-        this.addIntegerInputContextMenuEntryTo(nineSliceMenu, "nine_slice_border_bottom",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).nineSliceBorderBottom,
-                (e, value) -> ((TooltipElement)e.element).nineSliceBorderBottom = value,
-                Component.translatable("fancymenu.elements.tooltip.nine_slice.border.bottom"),
-                true, 5, null, null)
+        this.element.nineSliceBorderBottom.buildContextMenuEntryAndAddTo(nineSliceMenu, this)
                 .setIcon(MaterialIcons.BORDER_BOTTOM);
 
         // Nine-slice border left
-        this.addIntegerInputContextMenuEntryTo(nineSliceMenu, "nine_slice_border_left",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).nineSliceBorderLeft,
-                (e, value) -> ((TooltipElement)e.element).nineSliceBorderLeft = value,
-                Component.translatable("fancymenu.elements.tooltip.nine_slice.border.left"),
-                true, 5, null, null)
+        this.element.nineSliceBorderLeft.buildContextMenuEntryAndAddTo(nineSliceMenu, this)
                 .setIcon(MaterialIcons.BORDER_LEFT);
 
         // Mouse following toggle

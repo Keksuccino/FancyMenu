@@ -50,8 +50,8 @@ public class AnimationControllerHandler {
     private static int resolveTimingOffsetMs(@NotNull AnimationControllerElement controller, @NotNull AnimationControllerElement.TargetElement targetConfig) {
         int timingOffsetMs = targetConfig.timingOffsetMs;
         if (controller.randomTimingOffsetMode) {
-            int min = controller.randomTimingOffsetMinMs;
-            int max = controller.randomTimingOffsetMaxMs;
+            int min = controller.randomTimingOffsetMinMs.getInteger();
+            int max = controller.randomTimingOffsetMaxMs.getInteger();
             if (min > max) {
                 int temp = min;
                 min = max;

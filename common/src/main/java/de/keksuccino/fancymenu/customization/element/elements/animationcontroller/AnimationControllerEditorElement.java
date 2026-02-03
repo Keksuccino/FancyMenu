@@ -2,11 +2,8 @@ package de.keksuccino.fancymenu.customization.element.elements.animationcontroll
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -87,33 +84,12 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                 .setStackable(false)
                 .setIcon(MaterialIcons.SHUFFLE);
 
-        this.rightClickMenu.addClickableEntry("random_timing_offsets_range", Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"),
-                        (menu, entry) -> {
-                            menu.closeMenuChain();
-                            DualTextInputWindowBody s = DualTextInputWindowBody.build(
-                                    Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"),
-                                    Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range.min"),
-                                    Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range.max"),
-                                    CharacterFilter.buildIntegerFilter(),
-                                    callback -> {
-                                        if (callback != null) {
-                                            int min = parseOffsetValue(callback.getFirst(), this.element.randomTimingOffsetMinMs);
-                                            int max = parseOffsetValue(callback.getSecond(), this.element.randomTimingOffsetMaxMs);
-                                            if (min > max) {
-                                                int temp = min;
-                                                min = max;
-                                                max = temp;
-                                            }
-                                            this.editor.history.saveSnapshot();
-                                            this.element.randomTimingOffsetMinMs = min;
-                                            this.element.randomTimingOffsetMaxMs = max;
-                                        }
-                                    });
-                            s.setFirstText("" + this.element.randomTimingOffsetMinMs);
-                            s.setSecondText("" + this.element.randomTimingOffsetMaxMs);
-                            s.setAllowPlaceholders(false);
-                            Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.animation_controller.random_timing_offsets.range"), null, DualTextInputWindowBody.PIP_WINDOW_WIDTH, DualTextInputWindowBody.PIP_WINDOW_HEIGHT);
-                        })
+        this.element.randomTimingOffsetMinMs.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.range.desc")))
+                .setStackable(false)
+                .setIcon(MaterialIcons.TIMER);
+
+        this.element.randomTimingOffsetMaxMs.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.range.desc")))
                 .setStackable(false)
                 .setIcon(MaterialIcons.TIMER);
@@ -138,18 +114,6 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                 .setStackable(false)
                 .setIcon(MaterialIcons.LINK);
 
-    }
-
-    protected int parseOffsetValue(@NotNull String value, int fallback) {
-        String trimmed = value.trim();
-        if (trimmed.isEmpty()) {
-            return fallback;
-        }
-        try {
-            return Integer.parseInt(trimmed);
-        } catch (NumberFormatException ignored) {
-            return fallback;
-        }
     }
 
 }

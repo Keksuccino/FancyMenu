@@ -43,9 +43,9 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public String preSelectedValue;
     @NotNull
     public List<String> listValues = new ArrayList<>();
-    public double minRangeValue = 1;
-    public double maxRangeValue = 10;
-    public int roundingDecimalPlace = 2;
+    public final Property.DoubleProperty minRangeValue = putProperty(Property.doubleProperty("min_range_value", 0.0D, "fancymenu.elements.slider.v2.type.range.set_min"));
+    public final Property.DoubleProperty maxRangeValue = putProperty(Property.doubleProperty("max_range_value", 20.0D, "fancymenu.elements.slider.v2.type.range.set_max"));
+    public final Property.IntegerProperty roundingDecimalPlace = putProperty(Property.integerProperty("rounding_decimal_place", 2, "fancymenu.elements.slider.v2.type.range.decimal.round"));
     @Nullable
     public String label;
     public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
@@ -62,11 +62,11 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public boolean transparentBackground = false;
     public boolean restartBackgroundAnimationsOnHover = true;
     public boolean nineSliceCustomBackground = false;
-    public int nineSliceBorderX = 5;
-    public int nineSliceBorderY = 5;
+    public final Property.IntegerProperty nineSliceBorderX = putProperty(Property.integerProperty("nine_slice_border_x", 5, "fancymenu.elements.buttons.textures.nine_slice.border_x"));
+    public final Property.IntegerProperty nineSliceBorderY = putProperty(Property.integerProperty("nine_slice_border_y", 5, "fancymenu.elements.buttons.textures.nine_slice.border_y"));
     public boolean nineSliceSliderHandle = false;
-    public int nineSliceSliderHandleBorderX = 5;
-    public int nineSliceSliderHandleBorderY = 5;
+    public final Property.IntegerProperty nineSliceSliderHandleBorderX = putProperty(Property.integerProperty("nine_slice_slider_handle_border_x", 5, "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"));
+    public final Property.IntegerProperty nineSliceSliderHandleBorderY = putProperty(Property.integerProperty("nine_slice_slider_handle_border_y", 5, "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"));
     public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
@@ -81,6 +81,9 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.buildSlider();
         this.prepareExecutableBlock();
         this.allowDepthTestManipulation = true;
+        this.minRangeValue.addValueSetListener((oldValue, newValue) -> this.buildSlider());
+        this.maxRangeValue.addValueSetListener((oldValue, newValue) -> this.buildSlider());
+        this.roundingDecimalPlace.addValueSetListener((oldValue, newValue) -> this.buildSlider());
     }
 
     /**
@@ -107,8 +110,8 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
         //Build slider instance based on element's slider type
         if (this.type == SliderType.INTEGER_RANGE) {
-            int min = (int) this.minRangeValue;
-            int max = (int) this.maxRangeValue;
+            int min = (int) this.minRangeValue.getDouble();
+            int max = (int) this.maxRangeValue.getDouble();
             int preSelected = min;
             if ((preSelectedString != null) && MathUtils.isDouble(preSelectedString)) {
                 preSelected = (int) Double.parseDouble(preSelectedString);
@@ -117,12 +120,14 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
             ((RangeSlider)this.slider).setShowAsInteger(true);
         }
         if (this.type == SliderType.DECIMAL_RANGE) {
-            double preSelected = this.minRangeValue;
+            double minRange = this.minRangeValue.getDouble();
+            double maxRange = this.maxRangeValue.getDouble();
+            double preSelected = minRange;
             if ((preSelectedString != null) && MathUtils.isDouble(preSelectedString)) {
                 preSelected = Double.parseDouble(preSelectedString);
             }
-            this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), this.minRangeValue, this.maxRangeValue, preSelected);
-            ((RangeSlider)this.slider).setRoundingDecimalPlace(this.roundingDecimalPlace);
+            this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), minRange, maxRange, preSelected);
+            ((RangeSlider)this.slider).setRoundingDecimalPlace(this.roundingDecimalPlace.getInteger());
         }
         if (this.type == SliderType.LIST) {
             if (this.listValues.isEmpty()) this.listValues.addAll(List.of("placeholder_1", "placeholder_2"));
@@ -418,11 +423,11 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     public int getNineSliceBorderX() {
-        return this.getTemplateProperty(template -> template.nineSliceBorderX, this.nineSliceBorderX);
+        return this.getTemplateProperty(template -> template.nineSliceBorderX.getInteger(), this.nineSliceBorderX.getInteger());
     }
 
     public int getNineSliceBorderY() {
-        return this.getTemplateProperty(template -> template.nineSliceBorderY, this.nineSliceBorderY);
+        return this.getTemplateProperty(template -> template.nineSliceBorderY.getInteger(), this.nineSliceBorderY.getInteger());
     }
 
     public boolean isNineSliceSliderHandle() {
@@ -430,11 +435,11 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     public int getNineSliceSliderHandleBorderX() {
-        return this.getTemplateProperty(template -> template.nineSliceSliderHandleBorderX, this.nineSliceSliderHandleBorderX);
+        return this.getTemplateProperty(template -> template.nineSliceSliderHandleBorderX.getInteger(), this.nineSliceSliderHandleBorderX.getInteger());
     }
 
     public int getNineSliceSliderHandleBorderY() {
-        return this.getTemplateProperty(template -> template.nineSliceSliderHandleBorderY, this.nineSliceSliderHandleBorderY);
+        return this.getTemplateProperty(template -> template.nineSliceSliderHandleBorderY.getInteger(), this.nineSliceSliderHandleBorderY.getInteger());
     }
 
     public float getOpacity() {

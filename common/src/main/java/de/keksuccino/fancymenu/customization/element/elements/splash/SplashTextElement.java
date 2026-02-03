@@ -29,10 +29,10 @@ public class SplashTextElement extends AbstractElement {
     public String source = "Splash Text";
     @Nullable
     public ResourceSupplier<IText> textFileSupplier;
-    public float scale = 1.0F;
+    public final Property.FloatProperty scale = putProperty(Property.floatProperty("scale", 1.0F, "fancymenu.elements.splash.set_scale"));
     public boolean shadow = true;
     public boolean bounce = true;
-    public float rotation = 20.0F;
+    public final Property.FloatProperty rotation = putProperty(Property.floatProperty("rotation", 20.0F, "fancymenu.elements.splash.rotation"));
     public boolean refreshOnMenuReload = false;
     public Font font = Minecraft.getInstance().font;
 
@@ -47,6 +47,8 @@ public class SplashTextElement extends AbstractElement {
     public SplashTextElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         this.allowDepthTestManipulation = true;
+        this.scale.addValueSetListener((oldValue, newValue) -> this.updateSplash());
+        this.rotation.addValueSetListener((oldValue, newValue) -> this.updateSplash());
     }
 
     @Override
@@ -143,11 +145,12 @@ public class SplashTextElement extends AbstractElement {
         RenderSystem.enableBlend();
 
         graphics.pose().pushPose();
-        graphics.pose().scale(this.scale, this.scale, this.scale);
+        float resolvedScale = Math.max(0.0F, this.scale.getFloat());
+        graphics.pose().scale(resolvedScale, resolvedScale, resolvedScale);
 
         graphics.pose().pushPose();
-        graphics.pose().translate(((this.getAbsoluteX() + (this.getAbsoluteWidth() / 2F)) / this.scale), this.getAbsoluteY() / this.scale, 0.0F);
-        graphics.pose().mulPose(Axis.ZP.rotationDegrees(this.rotation));
+        graphics.pose().translate(((this.getAbsoluteX() + (this.getAbsoluteWidth() / 2F)) / resolvedScale), this.getAbsoluteY() / resolvedScale, 0.0F);
+        graphics.pose().mulPose(Axis.ZP.rotationDegrees(this.rotation.getFloat()));
         graphics.pose().scale(splashBaseScale, splashBaseScale, splashBaseScale);
 
         DrawableColor c = this.baseColor.getDrawable();

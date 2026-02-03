@@ -64,8 +64,8 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public boolean transparentBackground = false;
     public boolean restartBackgroundAnimationsOnHover = true;
     public boolean nineSliceCustomBackground = false;
-    public int nineSliceBorderX = 5;
-    public int nineSliceBorderY = 5;
+    public final Property.IntegerProperty nineSliceBorderX = putProperty(Property.integerProperty("nine_slice_border_x", 5, "fancymenu.elements.buttons.textures.nine_slice.border_x"));
+    public final Property.IntegerProperty nineSliceBorderY = putProperty(Property.integerProperty("nine_slice_border_y", 5, "fancymenu.elements.buttons.textures.nine_slice.border_y"));
     public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
@@ -84,8 +84,8 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public ResourceSupplier<ITexture> sliderBackgroundTextureNormal;
     public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
     public boolean nineSliceSliderHandle = false;
-    public int nineSliceSliderHandleBorderX = 5;
-    public int nineSliceSliderHandleBorderY = 5;
+    public final Property.IntegerProperty nineSliceSliderHandleBorderX = putProperty(Property.integerProperty("nine_slice_slider_handle_border_x", 5, "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"));
+    public final Property.IntegerProperty nineSliceSliderHandleBorderY = putProperty(Property.integerProperty("nine_slice_slider_handle_border_y", 5, "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"));
     public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
 
     protected static long lastTemplateUpdateButton = -1L;
@@ -375,12 +375,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (this.getWidget() instanceof CustomizableWidget w) {
             if (this.getWidget() instanceof CustomizableSlider s) {
                 s.setNineSliceCustomSliderBackground_FancyMenu(this.getPropertySource().nineSliceCustomBackground);
-                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX);
-                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY);
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX.getInteger());
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY.getInteger());
             } else {
                 w.setNineSliceCustomBackground_FancyMenu(this.getPropertySource().nineSliceCustomBackground);
-                w.setNineSliceBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX);
-                w.setNineSliceBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY);
+                w.setNineSliceBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX.getInteger());
+                w.setNineSliceBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY.getInteger());
             }
             w.setCustomBackgroundNormalFancyMenu(backNormal);
             w.setCustomBackgroundHoverFancyMenu(backHover);
@@ -411,8 +411,8 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
         if (this.getWidget() instanceof CustomizableSlider w) {
             w.setNineSliceCustomSliderHandle_FancyMenu(this.getPropertySource().nineSliceSliderHandle);
-            w.setNineSliceSliderHandleBorderX_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderX);
-            w.setNineSliceSliderHandleBorderY_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderY);
+            w.setNineSliceSliderHandleBorderX_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderX.getInteger());
+            w.setNineSliceSliderHandleBorderY_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderY.getInteger());
             w.setCustomSliderBackgroundNormalFancyMenu(sliderBackNormal);
             w.setCustomSliderBackgroundHighlightedFancyMenu(sliderBackHighlighted);
         }

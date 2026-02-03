@@ -36,7 +36,6 @@ public class ItemElementBuilder extends ElementBuilder<ItemElement, ItemEditorEl
         ItemElement element = this.buildDefaultInstance();
 
         element.itemKey = Objects.requireNonNullElse(serialized.getValue("item_key"), element.itemKey);
-        element.itemCount = Objects.requireNonNullElse(serialized.getValue("item_count"), element.itemCount);
         element.enchanted = SerializationHelper.INSTANCE.deserializeBoolean(element.enchanted, serialized.getValue("enchanted"));
         element.itemName = serialized.getValue("item_name");
         element.lore = serialized.getValue("lore");
@@ -51,7 +50,6 @@ public class ItemElementBuilder extends ElementBuilder<ItemElement, ItemEditorEl
     protected SerializedElement serializeElement(@NotNull ItemElement element, @NotNull SerializedElement serializeTo) {
 
         serializeTo.putProperty("item_key", element.itemKey);
-        serializeTo.putProperty("item_count", element.itemCount);
         serializeTo.putProperty("enchanted", "" + element.enchanted);
         if (element.itemName != null) serializeTo.putProperty("item_name", element.itemName);
         if (element.lore != null) serializeTo.putProperty("lore", element.lore);

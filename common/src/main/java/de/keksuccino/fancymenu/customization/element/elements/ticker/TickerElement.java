@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
@@ -17,7 +18,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
 
     @NotNull
     public volatile GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
-    public volatile long tickDelayMs = 0;
+    public final Property.LongProperty tickDelayMs = putProperty(Property.longProperty("tick_delay", 0L, "fancymenu.elements.ticker.tick_delay"));
     public volatile boolean isAsync = false;
     public volatile TickMode tickMode = TickMode.NORMAL;
     protected volatile boolean ready = false;
@@ -44,7 +45,8 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
                 TickerElementBuilder.cachedOncePerSessionItems.remove(this.getInstanceIdentifier());
             }
             long now = System.currentTimeMillis();
-            if ((this.tickDelayMs <= 0) || ((this.lastTick + this.tickDelayMs) <= now)) {
+            long delayMs = Math.max(0L, this.tickDelayMs.getLong());
+            if ((delayMs <= 0) || ((this.lastTick + delayMs) <= now)) {
                 this.lastTick = now;
                 this.ticked = true;
                 this.actionExecutor.execute();

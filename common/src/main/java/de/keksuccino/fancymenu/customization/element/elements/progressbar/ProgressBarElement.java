@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.element.elements.progressbar;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -37,19 +36,19 @@ public class ProgressBarElement extends AbstractElement {
     @Nullable
     public ResourceSupplier<ITexture> barTextureSupplier;
     public boolean barNineSlice = false;
-    public int barNineSliceBorderTop = 5;
-    public int barNineSliceBorderRight = 5;
-    public int barNineSliceBorderBottom = 5;
-    public int barNineSliceBorderLeft = 5;
+    public final Property.IntegerProperty barNineSliceBorderTop = putProperty(Property.integerProperty("bar_nine_slice_border_top", 5, "fancymenu.elements.progress_bar.bar_texture.nine_slice.border.top"));
+    public final Property.IntegerProperty barNineSliceBorderRight = putProperty(Property.integerProperty("bar_nine_slice_border_right", 5, "fancymenu.elements.progress_bar.bar_texture.nine_slice.border.right"));
+    public final Property.IntegerProperty barNineSliceBorderBottom = putProperty(Property.integerProperty("bar_nine_slice_border_bottom", 5, "fancymenu.elements.progress_bar.bar_texture.nine_slice.border.bottom"));
+    public final Property.IntegerProperty barNineSliceBorderLeft = putProperty(Property.integerProperty("bar_nine_slice_border_left", 5, "fancymenu.elements.progress_bar.bar_texture.nine_slice.border.left"));
     @Nullable
     public ResourceSupplier<ITexture> backgroundTextureSupplier;
     public boolean backgroundNineSlice = false;
-    public int backgroundNineSliceBorderTop = 5;
-    public int backgroundNineSliceBorderRight = 5;
-    public int backgroundNineSliceBorderBottom = 5;
-    public int backgroundNineSliceBorderLeft = 5;
+    public final Property.IntegerProperty backgroundNineSliceBorderTop = putProperty(Property.integerProperty("background_nine_slice_border_top", 5, "fancymenu.elements.progress_bar.background_texture.nine_slice.border.top"));
+    public final Property.IntegerProperty backgroundNineSliceBorderRight = putProperty(Property.integerProperty("background_nine_slice_border_right", 5, "fancymenu.elements.progress_bar.background_texture.nine_slice.border.right"));
+    public final Property.IntegerProperty backgroundNineSliceBorderBottom = putProperty(Property.integerProperty("background_nine_slice_border_bottom", 5, "fancymenu.elements.progress_bar.background_texture.nine_slice.border.bottom"));
+    public final Property.IntegerProperty backgroundNineSliceBorderLeft = putProperty(Property.integerProperty("background_nine_slice_border_left", 5, "fancymenu.elements.progress_bar.background_texture.nine_slice.border.left"));
     public boolean useProgressForElementAnchor = false;
-    public String progressSource = null;
+    public final Property.FloatProperty progressSource = putProperty(Property.floatProperty("progress_source", 50.0F, "fancymenu.elements.progress_bar.source"));
     public ProgressValueMode progressValueMode = ProgressValueMode.PERCENTAGE;
     public boolean smoothFillingAnimation = true;
 
@@ -157,7 +156,7 @@ public class ProgressBarElement extends AbstractElement {
                             int textureHeight = Math.max(1, texture.getHeight());
                             RenderingUtils.blitNineSlicedTexture(graphics, loc, getAbsoluteX(), getAbsoluteY(), fullWidth, fullHeight,
                                     textureWidth, textureHeight,
-                                    this.barNineSliceBorderTop, this.barNineSliceBorderRight, this.barNineSliceBorderBottom, this.barNineSliceBorderLeft);
+                                    this.barNineSliceBorderTop.getInteger(), this.barNineSliceBorderRight.getInteger(), this.barNineSliceBorderBottom.getInteger(), this.barNineSliceBorderLeft.getInteger());
                         } else {
                             graphics.blit(loc, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, fullWidth, fullHeight, fullWidth, fullHeight);
                         }
@@ -196,8 +195,8 @@ public class ProgressBarElement extends AbstractElement {
                     RenderingUtils.blitNineSlicedTexture(graphics, location,
                             getAbsoluteX(), getAbsoluteY(), getAbsoluteWidth(), getAbsoluteHeight(),
                             textureWidth, textureHeight,
-                            this.backgroundNineSliceBorderTop, this.backgroundNineSliceBorderRight,
-                            this.backgroundNineSliceBorderBottom, this.backgroundNineSliceBorderLeft);
+                            this.backgroundNineSliceBorderTop.getInteger(), this.backgroundNineSliceBorderRight.getInteger(),
+                            this.backgroundNineSliceBorderBottom.getInteger(), this.backgroundNineSliceBorderLeft.getInteger());
                 } else {
                     graphics.blit(location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight());
                 }
@@ -220,15 +219,15 @@ public class ProgressBarElement extends AbstractElement {
      */
     public float getCurrentProgress() {
         if (isEditor()) return 0.5F;
-        if (progressSource != null) {
-            // Replace placeholders and remove spaces.
-            String progressString = StringUtils.replace(PlaceholderParser.replacePlaceholders(progressSource), " ", "");
+        String progressString = this.progressSource.getAsString();
+        if (progressString != null) {
+            progressString = StringUtils.replace(progressString, " ", "");
             if (MathUtils.isFloat(progressString)) {
-                // If progress is provided as a percentage, convert to 0.0-1.0.
+                float progressValue = Float.parseFloat(progressString);
                 if (progressValueMode == ProgressValueMode.PERCENTAGE) {
-                    return Float.parseFloat(progressString) / 100.0F;
+                    return progressValue / 100.0F;
                 }
-                return Float.parseFloat(progressString);
+                return progressValue;
             }
         }
         return 0.0F;

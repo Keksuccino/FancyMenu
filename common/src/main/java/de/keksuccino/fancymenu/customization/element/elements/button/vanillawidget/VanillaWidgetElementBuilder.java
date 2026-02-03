@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.customization.element.elements.button.custombutto
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.properties.Property;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,7 +44,6 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
                 serializeTo.setType("vanilla_button");
 
                 serializeTo.putProperty("is_hidden", "" + element.vanillaButtonHidden);
-                serializeTo.putProperty("automated_button_clicks", "" + element.automatedButtonClicks);
 
                 return serializeTo;
 
@@ -67,11 +65,6 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         String hidden = serialized.getValue("is_hidden");
         if ((hidden != null) && hidden.equalsIgnoreCase("true")) {
             element.vanillaButtonHidden = true;
-        }
-
-        String automatedClicks = serialized.getValue("automated_button_clicks");
-        if ((automatedClicks != null) && MathUtils.isInteger(automatedClicks)) {
-            element.automatedButtonClicks = Integer.parseInt(automatedClicks);
         }
 
         return element;
@@ -101,8 +94,8 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (e.vanillaButtonHidden) {
             stack.vanillaButtonHidden = true;
         }
-        if (e.automatedButtonClicks != 0) {
-            stack.automatedButtonClicks = e.automatedButtonClicks;
+        if (!e.automatedButtonClicks.isDefault()) {
+            stack.automatedButtonClicks.copyValueFrom(e.automatedButtonClicks);
         }
 
         //ButtonElement stuff
@@ -142,20 +135,20 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (e.nineSliceCustomBackground) {
             stack.nineSliceCustomBackground = true;
         }
-        if (e.nineSliceBorderX != 5) {
-            stack.nineSliceBorderX = e.nineSliceBorderX;
+        if (!e.nineSliceBorderX.isDefault()) {
+            stack.nineSliceBorderX.copyValueFrom(e.nineSliceBorderX);
         }
-        if (e.nineSliceBorderY != 5) {
-            stack.nineSliceBorderY = e.nineSliceBorderY;
+        if (!e.nineSliceBorderY.isDefault()) {
+            stack.nineSliceBorderY.copyValueFrom(e.nineSliceBorderY);
         }
         if (e.nineSliceSliderHandle) {
             stack.nineSliceSliderHandle = true;
         }
-        if (e.nineSliceSliderHandleBorderX != 5) {
-            stack.nineSliceSliderHandleBorderX = e.nineSliceSliderHandleBorderX;
+        if (!e.nineSliceSliderHandleBorderX.isDefault()) {
+            stack.nineSliceSliderHandleBorderX.copyValueFrom(e.nineSliceSliderHandleBorderX);
         }
-        if (e.nineSliceSliderHandleBorderY != 5) {
-            stack.nineSliceSliderHandleBorderY = e.nineSliceSliderHandleBorderY;
+        if (!e.nineSliceSliderHandleBorderY.isDefault()) {
+            stack.nineSliceSliderHandleBorderY.copyValueFrom(e.nineSliceSliderHandleBorderY);
         }
         if (e.sliderBackgroundTextureNormal != null) {
             stack.sliderBackgroundTextureNormal = e.sliderBackgroundTextureNormal;

@@ -38,7 +38,6 @@ public class BrowserElementBuilder extends ElementBuilder<BrowserElement, Browse
         element.hideVideoControls = deserializeBoolean(element.hideVideoControls, serialized.getValue("hide_video_controls"));
         element.loopVideos = deserializeBoolean(element.loopVideos, serialized.getValue("loop_videos"));
         element.muteMedia = deserializeBoolean(element.muteMedia, serialized.getValue("mute_media"));
-        element.mediaVolume = deserializeNumber(Float.class, element.mediaVolume, serialized.getValue("media_volume"));
 
         return element;
 
@@ -52,7 +51,6 @@ public class BrowserElementBuilder extends ElementBuilder<BrowserElement, Browse
         serializeTo.putProperty("hide_video_controls", "" + element.hideVideoControls);
         serializeTo.putProperty("loop_videos", "" + element.loopVideos);
         serializeTo.putProperty("mute_media", "" + element.muteMedia);
-        serializeTo.putProperty("media_volume", "" + element.mediaVolume);
 
         return serializeTo;
 

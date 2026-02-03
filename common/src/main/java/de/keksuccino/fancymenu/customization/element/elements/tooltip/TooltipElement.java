@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -38,14 +39,17 @@ public class TooltipElement extends AbstractElement {
     @Nullable
     public ResourceSupplier<ITexture> backgroundTexture;
     // Nine-slicing is mandatory for custom tooltip backgrounds
-    public int nineSliceBorderTop = 5;
-    public int nineSliceBorderRight = 5;
-    public int nineSliceBorderBottom = 5;
-    public int nineSliceBorderLeft = 5;
+    public final Property.IntegerProperty nineSliceBorderTop = putProperty(Property.integerProperty("nine_slice_border_top", 5, "fancymenu.elements.tooltip.nine_slice.border.top"));
+    public final Property.IntegerProperty nineSliceBorderRight = putProperty(Property.integerProperty("nine_slice_border_right", 5, "fancymenu.elements.tooltip.nine_slice.border.right"));
+    public final Property.IntegerProperty nineSliceBorderBottom = putProperty(Property.integerProperty("nine_slice_border_bottom", 5, "fancymenu.elements.tooltip.nine_slice.border.bottom"));
+    public final Property.IntegerProperty nineSliceBorderLeft = putProperty(Property.integerProperty("nine_slice_border_left", 5, "fancymenu.elements.tooltip.nine_slice.border.left"));
     public boolean mouseFollowing = false;
     public boolean interactable = false;
     @NotNull
     public volatile MarkdownRenderer markdownRenderer = new MarkdownRenderer();
+    public final Property.FloatProperty textScale = putProperty(Property.floatProperty("scale", 1.0F, "fancymenu.elements.text.scale"));
+    public final Property.IntegerProperty textBorder = putProperty(Property.integerProperty("text_border", 2, "fancymenu.elements.text.text_border"));
+    public final Property.IntegerProperty lineSpacing = putProperty(Property.integerProperty("line_spacing", 2, "fancymenu.elements.text.line_spacing"));
     protected List<String> lastLines;
     protected IText lastIText;
     protected int cachedRealHeight = 0;
@@ -122,8 +126,8 @@ public class TooltipElement extends AbstractElement {
                     RenderingUtils.blitNineSlicedTexture(graphics, tex.getResourceLocation(), 
                         x, y, width, height, 
                         textureWidth, textureHeight,
-                        this.nineSliceBorderTop, this.nineSliceBorderRight, 
-                        this.nineSliceBorderBottom, this.nineSliceBorderLeft);
+                        this.nineSliceBorderTop.getInteger(), this.nineSliceBorderRight.getInteger(), 
+                        this.nineSliceBorderBottom.getInteger(), this.nineSliceBorderLeft.getInteger());
 
                     if (!isEditor()) graphics.pose().popPose();
 
@@ -162,6 +166,8 @@ public class TooltipElement extends AbstractElement {
     }
 
     protected void renderTick() {
+        this.syncMarkdownRendererProperties();
+
         // Update width for markdown renderer (account for padding)
         int paddingX = 6;
         this.markdownRenderer.setOptimalWidth(this.getAbsoluteWidth() - (paddingX * 2));
@@ -187,6 +193,23 @@ public class TooltipElement extends AbstractElement {
             this.markdownRenderer.setText(t);
         }
         this.lastText = t;
+    }
+
+    protected void syncMarkdownRendererProperties() {
+        float scale = Math.max(0.0F, this.textScale.getFloat());
+        if (this.markdownRenderer.getTextBaseScale() != scale) {
+            this.markdownRenderer.setTextBaseScale(scale);
+        }
+
+        int border = Math.max(0, this.textBorder.getInteger());
+        if ((int)this.markdownRenderer.getBorder() != border) {
+            this.markdownRenderer.setBorder(border);
+        }
+
+        int spacing = Math.max(0, this.lineSpacing.getInteger());
+        if ((int)this.markdownRenderer.getLineSpacing() != spacing) {
+            this.markdownRenderer.setLineSpacing(spacing);
+        }
     }
 
     @Override

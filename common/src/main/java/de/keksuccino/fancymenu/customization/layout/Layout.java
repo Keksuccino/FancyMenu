@@ -956,7 +956,7 @@ public class Layout extends LayoutBase {
                         element.appearanceDelay = AbstractElement.AppearanceDelay.EVERY_TIME;
                     }
                     if ((seconds != null) && MathUtils.isFloat(seconds)) {
-                        element.appearanceDelayInSeconds = Float.parseFloat(seconds);
+                        element.appearanceDelaySeconds.set(Float.parseFloat(seconds));
                     }
                     if ((fadeIn != null) && fadeIn.equalsIgnoreCase("true")) {
                         if ((fadeInSpeed != null) && MathUtils.isFloat(fadeInSpeed)) {
@@ -965,7 +965,7 @@ public class Layout extends LayoutBase {
                             } else if (element.appearanceDelay == AbstractElement.AppearanceDelay.EVERY_TIME) {
                                 element.fadeIn = AbstractElement.Fading.EVERY_TIME;
                             }
-                            element.fadeInSpeed = Float.parseFloat(fadeInSpeed);
+                            element.fadeInSpeed.set(Float.parseFloat(fadeInSpeed));
                         }
                     }
                     addElement = true;
@@ -1001,7 +1001,7 @@ public class Layout extends LayoutBase {
                 if (action.equalsIgnoreCase("clickbutton")) {
                     String clicks = sec.getValue("clicks");
                     if ((clicks != null) && (MathUtils.isInteger(clicks))) {
-                        element.automatedButtonClicks = Integer.parseInt(clicks);
+                        element.automatedButtonClicks.set(Integer.parseInt(clicks));
                         addElement = true;
                     }
                 }

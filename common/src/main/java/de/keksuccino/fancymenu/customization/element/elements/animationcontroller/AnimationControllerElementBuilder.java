@@ -101,10 +101,6 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
 
         element.randomTimingOffsetMode = SerializationHelper.INSTANCE.deserializeBoolean(element.randomTimingOffsetMode, serialized.getValue("random_timing_offset_mode"));
 
-        element.randomTimingOffsetMinMs = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, element.randomTimingOffsetMinMs, serialized.getValue("random_timing_offset_min_ms"));
-
-        element.randomTimingOffsetMaxMs = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, element.randomTimingOffsetMaxMs, serialized.getValue("random_timing_offset_max_ms"));
-
         return element;
 
     }
@@ -136,10 +132,6 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
         serializeTo.putProperty("ignore_position", "" + element.ignorePosition);
 
         serializeTo.putProperty("random_timing_offset_mode", "" + element.randomTimingOffsetMode);
-
-        serializeTo.putProperty("random_timing_offset_min_ms", "" + element.randomTimingOffsetMinMs);
-
-        serializeTo.putProperty("random_timing_offset_max_ms", "" + element.randomTimingOffsetMaxMs);
 
         return serializeTo;
 

@@ -305,16 +305,10 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                 "fancymenu.elements.buttons.textures.nine_slice")
                 .setIcon(MaterialIcons.GRID_GUIDES);
 
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_x", this.selfClass(),
-                consumes -> consumes.element.nineSliceBorderX,
-                (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceBorderX = integer,
-                Component.translatable("fancymenu.elements.buttons.textures.nine_slice.border_x"), true, 5, null, null)
+        this.element.nineSliceBorderX.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_HORIZONTAL);
 
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_y", this.selfClass(),
-                consumes -> consumes.element.nineSliceBorderY,
-                (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceBorderY = integer,
-                Component.translatable("fancymenu.elements.buttons.textures.nine_slice.border_y"), true, 5, null, null)
+        this.element.nineSliceBorderY.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_VERTICAL);
 
     }
@@ -403,16 +397,10 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                 "fancymenu.elements.buttons.textures.nine_slice")
                 .setIcon(MaterialIcons.GRID_GUIDES);
 
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_x", this.selfClass(),
-                consumes -> consumes.element.nineSliceBorderX,
-                (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceBorderX = integer,
-                Component.translatable("fancymenu.elements.buttons.textures.nine_slice.border_x"), true, 5, null, null)
+        this.element.nineSliceBorderX.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_HORIZONTAL);
 
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_y", this.selfClass(),
-                consumes -> consumes.element.nineSliceBorderY,
-                (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceBorderY = integer,
-                Component.translatable("fancymenu.elements.buttons.textures.nine_slice.border_y"), true, 5, null, null)
+        this.element.nineSliceBorderY.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_VERTICAL);
 
         buttonBackgroundMenu.addSeparatorEntry("separator_before_nine_slider_slider_handle_settings");
@@ -423,16 +411,10 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                 "fancymenu.elements.slider.v2.handle.textures.nine_slice")
                 .setIcon(MaterialIcons.DRAG_HANDLE);
 
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_x", this.selfClass(),
-                consumes -> consumes.element.nineSliceSliderHandleBorderX,
-                (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceSliderHandleBorderX = integer,
-                Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"), true, 5, null, null)
+        this.element.nineSliceSliderHandleBorderX.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_HORIZONTAL);
 
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_y", this.selfClass(),
-                consumes -> consumes.element.nineSliceSliderHandleBorderY,
-                (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceSliderHandleBorderY = integer,
-                Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null)
+        this.element.nineSliceSliderHandleBorderY.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_VERTICAL);
 
     }

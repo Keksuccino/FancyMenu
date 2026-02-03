@@ -41,10 +41,7 @@ public class TickerEditorElement extends AbstractEditorElement<TickerEditorEleme
 
         this.rightClickMenu.addSeparatorEntry("ticker_separator_1");
 
-        this.addLongInputContextMenuEntryTo(this.rightClickMenu, "tick_delay", TickerEditorElement.class,
-                        consumes -> consumes.element.tickDelayMs,
-                        (tickerEditorElement, aLong) -> tickerEditorElement.element.tickDelayMs = Math.max(0L, aLong),
-                        Component.translatable("fancymenu.elements.ticker.tick_delay"), true, 0L, null, null)
+        this.element.tickDelayMs.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true)
                 .setIcon(MaterialIcons.TIMER)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.ticker.tick_delay.desc")));

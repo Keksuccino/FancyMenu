@@ -91,8 +91,6 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         }
 
         element.nineSliceCustomBackground = deserializeBoolean(element.nineSliceCustomBackground, serialized.getValue("nine_slice_custom_background"));
-        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_border_x"));
-        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_border_y"));
 
         element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
 
@@ -118,8 +116,6 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.sliderBackgroundTextureHighlighted = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_highlighted"));
 
         element.nineSliceSliderHandle = deserializeBoolean(element.nineSliceSliderHandle, serialized.getValue("nine_slice_slider_handle"));
-        element.nineSliceSliderHandleBorderX = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderX, serialized.getValue("nine_slice_slider_handle_border_x"));
-        element.nineSliceSliderHandleBorderY = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderY, serialized.getValue("nine_slice_slider_handle_border_y"));
 
         return element;
 
@@ -144,8 +140,6 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         serializeTo.putProperty("transparent_background", "" + element.transparentBackground);
         serializeTo.putProperty("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
         serializeTo.putProperty("nine_slice_custom_background", "" + element.nineSliceCustomBackground);
-        serializeTo.putProperty("nine_slice_border_x", "" + element.nineSliceBorderX);
-        serializeTo.putProperty("nine_slice_border_y", "" + element.nineSliceBorderY);
         if (element.hoverSound != null) {
             serializeTo.putProperty("hoversound", element.hoverSound.getSourceWithPrefix());
         }
@@ -184,8 +178,6 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         }
 
         serializeTo.putProperty("nine_slice_slider_handle", "" + element.nineSliceSliderHandle);
-        serializeTo.putProperty("nine_slice_slider_handle_border_x", "" + element.nineSliceSliderHandleBorderX);
-        serializeTo.putProperty("nine_slice_slider_handle_border_y", "" + element.nineSliceSliderHandleBorderY);
 
         return serializeTo;
 

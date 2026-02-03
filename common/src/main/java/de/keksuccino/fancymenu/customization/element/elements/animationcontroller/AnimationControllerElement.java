@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.util.properties.Property;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -23,8 +24,10 @@ public class AnimationControllerElement extends AbstractElement {
     public boolean ignoreSize = false;
     public boolean ignorePosition = false;
     public boolean randomTimingOffsetMode = false;
-    public int randomTimingOffsetMinMs = 0;
-    public int randomTimingOffsetMaxMs = 0;
+    public final Property.IntegerProperty randomTimingOffsetMinMs = putProperty(Property.integerProperty("random_timing_offset_min_ms", 0,
+            "fancymenu.elements.animation_controller.random_timing_offsets.range.min"));
+    public final Property.IntegerProperty randomTimingOffsetMaxMs = putProperty(Property.integerProperty("random_timing_offset_max_ms", 0,
+            "fancymenu.elements.animation_controller.random_timing_offsets.range.max"));
 
     public AnimationControllerElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);

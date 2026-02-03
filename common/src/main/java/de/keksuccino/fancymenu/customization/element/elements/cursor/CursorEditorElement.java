@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,20 +37,12 @@ public class CursorEditorElement extends AbstractEditorElement<CursorEditorEleme
 
         this.rightClickMenu.addSeparatorEntry("separator_after_cursor_texture").setStackable(true);
 
-        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "hotspot_x", CursorEditorElement.class,
-                        consumes -> consumes.element.hotspotX,
-                        (cursorEditorElement, integer) -> cursorEditorElement.element.hotspotX = integer,
-                        Component.translatable("fancymenu.elements.cursor.hotspot_x"),
-                        true, 0, MathUtils::isInteger, null)
+        this.element.hotspotX.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.hotspot_x.desc")))
                 .setStackable(true)
                 .setIcon(MaterialIcons.CENTER_FOCUS_STRONG);
 
-        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "hotspot_y", CursorEditorElement.class,
-                        consumes -> consumes.element.hotspotY,
-                        (cursorEditorElement, integer) -> cursorEditorElement.element.hotspotY = integer,
-                        Component.translatable("fancymenu.elements.cursor.hotspot_y"),
-                        true, 0, MathUtils::isInteger, null)
+        this.element.hotspotY.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.cursor.hotspot_y.desc")))
                 .setStackable(true)
                 .setIcon(MaterialIcons.CENTER_FOCUS_STRONG);

@@ -83,15 +83,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                     return Component.translatable("fancymenu.elements.text.case_mode.upper");
                 }).setIcon(MaterialIcons.TEXT_FORMAT);
 
-        this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
-                        consumes -> (consumes instanceof TextEditorElement),
-                        consumes -> (consumes.element).markdownRenderer.getTextBaseScale(),
-                        (element1, aFloat) -> {
-                            (element1.element).markdownRenderer.setTextBaseScale(Math.max(0.2F, aFloat));
-                            (element1.element).updateContent();
-                        },
-                        Component.translatable("fancymenu.elements.text.scale"),
-                        true, 1.0F, null, null)
+        this.element.textScale.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.FORMAT_SIZE)
                 .setStackable(true);
 
@@ -111,24 +103,12 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.base_color.desc")))
                 .setIcon(MaterialIcons.PALETTE);
 
-        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_border",
-                        consumes -> (consumes instanceof TextEditorElement),
-                        consumes -> (int)(consumes.element).markdownRenderer.getBorder(),
-                        (element, border) -> (element.element).markdownRenderer.setBorder(Math.max(0, border)),
-                        Component.translatable("fancymenu.elements.text.text_border"),
-                        true, 2, null, null)
+        this.element.textBorder.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.text_border.desc")))
                 .setIcon(MaterialIcons.BORDER_OUTER);
 
-        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_line_spacing",
-                        consumes -> (consumes instanceof TextEditorElement),
-                        consumes -> (int)(consumes.element).markdownRenderer.getLineSpacing(),
-                        (element, border) -> {
-                            (element.element).markdownRenderer.setLineSpacing(Math.max(0, border));
-                        },
-                        Component.translatable("fancymenu.elements.text.line_spacing"),
-                        true, 2, null, null)
+        this.element.lineSpacing.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true)
                 .setIcon(MaterialIcons.FORMAT_LINE_SPACING);
 
@@ -228,10 +208,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 .setStackable(true)
                 .setIcon(MaterialIcons.PALETTE);
 
-        this.addIntegerInputContextMenuEntryTo(markdownMenu, "quote_indent", TextEditorElement.class,
-                        consumes -> (int)consumes.element.markdownRenderer.getQuoteIndent(),
-                        (textEditorElement, integer) -> textEditorElement.element.markdownRenderer.setQuoteIndent(integer),
-                        Component.translatable("fancymenu.elements.text.markdown.quote.indent"), true, 8, null, null)
+        this.element.quoteIndent.buildContextMenuEntryAndAddTo(markdownMenu, this)
                 .setStackable(true)
                 .setIcon(MaterialIcons.FORMAT_INDENT_INCREASE);
 
@@ -252,17 +229,11 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 .setStackable(true)
                 .setIcon(MaterialIcons.PALETTE);
 
-        this.addIntegerInputContextMenuEntryTo(markdownMenu, "bullet_list_indent", TextEditorElement.class,
-                        consumes -> (int)consumes.element.markdownRenderer.getBulletListIndent(),
-                        (textEditorElement, integer) -> textEditorElement.element.markdownRenderer.setBulletListIndent(integer),
-                        Component.translatable("fancymenu.elements.text.markdown.bullet_list.indent"), true, 8, null, null)
+        this.element.bulletListIndent.buildContextMenuEntryAndAddTo(markdownMenu, this)
                 .setStackable(true)
                 .setIcon(MaterialIcons.FORMAT_INDENT_INCREASE);
 
-        this.addIntegerInputContextMenuEntryTo(markdownMenu, "bullet_list_spacing", TextEditorElement.class,
-                        consumes -> (int)consumes.element.markdownRenderer.getBulletListSpacing(),
-                        (textEditorElement, integer) -> textEditorElement.element.markdownRenderer.setBulletListSpacing(integer),
-                        Component.translatable("fancymenu.elements.text.markdown.bullet_list.spacing"), true, 3, null, null)
+        this.element.bulletListSpacing.buildContextMenuEntryAndAddTo(markdownMenu, this)
                 .setStackable(true)
                 .setIcon(MaterialIcons.FORMAT_LINE_SPACING);
 
@@ -326,25 +297,16 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
         tableMenu.addSeparatorEntry("separator_after_table_colors");
 
-        this.addFloatInputContextMenuEntryTo(tableMenu, "table_line_thickness", TextEditorElement.class,
-                        consumes -> consumes.element.markdownRenderer.getTableLineThickness(),
-                        (textEditorElement, aFloat) -> textEditorElement.element.markdownRenderer.setTableLineThickness(Math.max(0.5F, aFloat)),
-                        Component.translatable("fancymenu.elements.text.markdown.tables.line_thickness"), true, 1.0F, null, null)
+        this.element.tableLineThickness.buildContextMenuEntryAndAddTo(tableMenu, this)
                 .setStackable(true)
                 .setIcon(MaterialIcons.LINE_WEIGHT);
 
-        this.addFloatInputContextMenuEntryTo(tableMenu, "table_cell_padding", TextEditorElement.class,
-                        consumes -> consumes.element.markdownRenderer.getTableCellPadding(),
-                        (textEditorElement, aFloat) -> textEditorElement.element.markdownRenderer.setTableCellPadding(Math.max(0.0F, aFloat)),
-                        Component.translatable("fancymenu.elements.text.markdown.tables.cell_padding"), true, 8.0F, null, null)
+        this.element.tableCellPadding.buildContextMenuEntryAndAddTo(tableMenu, this)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.cell_padding.desc")))
                 .setIcon(MaterialIcons.PADDING_ICON);
 
-        this.addFloatInputContextMenuEntryTo(tableMenu, "table_margin", TextEditorElement.class,
-                        consumes -> consumes.element.markdownRenderer.getTableMargin(),
-                        (textEditorElement, aFloat) -> textEditorElement.element.markdownRenderer.setTableMargin(Math.max(0.0F, aFloat)),
-                        Component.translatable("fancymenu.elements.text.markdown.tables.margin"), true, 4.0F, null, null)
+        this.element.tableMargin.buildContextMenuEntryAndAddTo(tableMenu, this)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.markdown.tables.margin.desc")))
                 .setIcon(MaterialIcons.MARGIN);

@@ -53,12 +53,7 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                 .setIcon(MaterialIcons.TUNE);
 
 
-        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_length",
-                        consumes -> (consumes instanceof InputFieldEditorElement),
-                        consumes -> consumes.element.maxTextLength,
-                        (element, length) -> element.element.maxTextLength = length,
-                        Component.translatable("fancymenu.elements.input_field.editor.set_max_length"),
-                        true, 10000, null, null)
+        this.element.maxTextLength.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true)
                 .setIcon(MaterialIcons.SHORT_TEXT);
 

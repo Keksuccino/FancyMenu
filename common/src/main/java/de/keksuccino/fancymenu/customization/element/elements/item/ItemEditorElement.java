@@ -66,11 +66,7 @@ public class ItemEditorElement extends AbstractEditorElement<ItemEditorElement, 
                 true, null, null, null)
                 .setIcon(MaterialIcons.TEXT_FIELDS);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_count", ItemEditorElement.class,
-                consumes -> consumes.element.itemCount,
-                (itemEditorElement, s) -> itemEditorElement.element.itemCount = s,
-                null, false, true, Component.translatable("fancymenu.elements.item.item_count"),
-                true, "1", null, null)
+        this.element.itemCount.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.NUMBERS);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_lore", ItemEditorElement.class, consumes -> {

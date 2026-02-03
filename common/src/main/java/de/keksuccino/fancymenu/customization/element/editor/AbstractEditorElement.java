@@ -536,12 +536,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 return true;
             };
 
-            this.addGenericFloatInputContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_seconds",
-                            element -> element.settings.isDelayable(),
-                            element -> element.element.appearanceDelayInSeconds,
-                            (element, input) -> element.element.appearanceDelayInSeconds = input,
-                            Component.translatable("fancymenu.element.general.appearance_delay.seconds"),
-                            true, 1.0F, null, null)
+            this.element.appearanceDelaySeconds.buildContextMenuEntryAndAddTo(appearanceDelayMenu, this)
                     .addIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
                     .setStackable(true)
                     .setIcon(MaterialIcons.TIMER);
@@ -572,25 +567,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             ).setStackable(true)
                     .setIcon(MaterialIcons.TRANSITION_FADE);
 
-            this.addGenericFloatInputContextMenuEntryTo(fadingMenu, "fade_in_speed",
-                    consumes -> consumes.settings.isFadeable(),
-                    consumes -> consumes.element.fadeInSpeed,
-                    (abstractEditorElement, aFloat) -> abstractEditorElement.element.fadeInSpeed = aFloat,
-                    Component.translatable("fancymenu.element.fading.fade_in.speed"), true, 1.0F,
-                    consumes -> {
-                        if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-                            float f = Float.parseFloat(consumes);
-                            return (f > 0.0F);
-                        }
-                        return false;
-                    },
-                    consumes -> {
-                        if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-                            float f = Float.parseFloat(consumes);
-                            if (f <= 0.0F) return null;
-                        }
-                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.error.negative_value"));
-                    }).setStackable(true)
+            this.element.fadeInSpeed.buildContextMenuEntryAndAddTo(fadingMenu, this)
+                    .setStackable(true)
                     .setIcon(MaterialIcons.SPEED);
 
             fadingMenu.addSeparatorEntry("separator_after_fade_in_speed").setStackable(true);
@@ -613,37 +591,15 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     .setIcon(MaterialIcons.TRANSITION_FADE)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.fade_out.desc")));
 
-            this.addGenericFloatInputContextMenuEntryTo(fadingMenu, "fade_out_speed",
-                    consumes -> consumes.settings.isFadeable(),
-                    consumes -> consumes.element.fadeOutSpeed,
-                    (abstractEditorElement, aFloat) -> abstractEditorElement.element.fadeOutSpeed = aFloat,
-                    Component.translatable("fancymenu.element.fading.fade_out.speed"), true, 1.0F,
-                    consumes -> {
-                        if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-                            float f = Float.parseFloat(consumes);
-                            return (f > 0.0F);
-                        }
-                        return false;
-                    },
-                    consumes -> {
-                        if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-                            float f = Float.parseFloat(consumes);
-                            if (f <= 0.0F) return null;
-                        }
-                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.error.negative_value"));
-                    }).setStackable(true)
+            this.element.fadeOutSpeed.buildContextMenuEntryAndAddTo(fadingMenu, this)
+                    .setStackable(true)
                     .setIcon(MaterialIcons.SPEED);
 
         }
 
         if (this.settings.isOpacityChangeable()) {
 
-            this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "base_opacity",
-                            consumes -> consumes.settings.isOpacityChangeable(),
-                            consumes -> consumes.element.baseOpacity,
-                            (abstractEditorElement, s) -> abstractEditorElement.element.baseOpacity = s,
-                            null, false, true, Component.translatable("fancymenu.element.base_opacity"),
-                            true, "1.0", null, null)
+            this.element.baseOpacity.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                     .setStackable(true)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.base_opacity.desc")))
                     .setIcon(MaterialIcons.OPACITY);
@@ -704,20 +660,13 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     .setIcon(MaterialIcons.ROTATE_RIGHT)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.advanced_mode.desc")));
 
-            this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "rotation_degrees", this.selfClass(),
-                            consumes -> consumes.element.rotationDegrees,
-                            (abstractEditorElement, aFloat) -> abstractEditorElement.element.rotationDegrees = aFloat,
-                            Component.translatable("fancymenu.element.rotation.degrees"), true, 0, null, null)
+            this.element.rotationDegrees.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                     .setStackable(false)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.degrees.desc")))
                     .setIcon(MaterialIcons.ROTATE_RIGHT)
                     .addIsVisibleSupplier((menu, entry) -> !this.element.advancedRotationMode);
 
-            this.addStringInputContextMenuEntryTo(this.rightClickMenu, "rotation_degrees_advanced", this.selfClass(),
-                            consumes -> consumes.element.advancedRotationDegrees,
-                            (abstractEditorElement, s) -> abstractEditorElement.element.advancedRotationDegrees = s,
-                            null, false, true, Component.translatable("fancymenu.element.rotation.degrees"),
-                            true, null, null, null)
+            this.element.advancedRotationDegrees.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                     .setStackable(false)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.rotation.degrees.desc")))
                     .setIcon(MaterialIcons.ROTATE_RIGHT)
@@ -737,20 +686,13 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     .setIcon(MaterialIcons.FILTER_TILT_SHIFT)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.advanced_mode.desc")));
 
-            this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "vertical_tilt_degrees", this.selfClass(),
-                            consumes -> consumes.element.verticalTiltDegrees,
-                            (abstractEditorElement, aFloat) -> abstractEditorElement.element.verticalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, aFloat)),
-                            Component.translatable("fancymenu.element.tilt.vertical.degrees"), true, 0, null, null)
+            this.element.verticalTiltDegrees.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                     .setStackable(false)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.degrees.desc")))
                     .setIcon(MaterialIcons.FILTER_TILT_SHIFT)
                     .addIsVisibleSupplier((menu, entry) -> !this.element.advancedVerticalTiltMode);
 
-            this.addStringInputContextMenuEntryTo(this.rightClickMenu, "vertical_tilt_degrees_advanced", this.selfClass(),
-                            consumes -> consumes.element.advancedVerticalTiltDegrees,
-                            (abstractEditorElement, s) -> abstractEditorElement.element.advancedVerticalTiltDegrees = s,
-                            null, false, true, Component.translatable("fancymenu.element.tilt.vertical.degrees"),
-                            true, null, null, null)
+            this.element.advancedVerticalTiltDegrees.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                     .setStackable(false)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.vertical.degrees.desc")))
                     .setIcon(MaterialIcons.FILTER_TILT_SHIFT)
@@ -764,20 +706,13 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     .setIcon(MaterialIcons.FILTER_TILT_SHIFT)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.advanced_mode.desc")));
 
-            this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "horizontal_tilt_degrees", this.selfClass(),
-                            consumes -> consumes.element.horizontalTiltDegrees,
-                            (abstractEditorElement, aFloat) -> abstractEditorElement.element.horizontalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, aFloat)),
-                            Component.translatable("fancymenu.element.tilt.horizontal.degrees"), true, 0, null, null)
+            this.element.horizontalTiltDegrees.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                     .setStackable(false)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.degrees.desc")))
                     .setIcon(MaterialIcons.FILTER_TILT_SHIFT)
                     .addIsVisibleSupplier((menu, entry) -> !this.element.advancedHorizontalTiltMode);
 
-            this.addStringInputContextMenuEntryTo(this.rightClickMenu, "horizontal_tilt_degrees_advanced", this.selfClass(),
-                            consumes -> consumes.element.advancedHorizontalTiltDegrees,
-                            (abstractEditorElement, s) -> abstractEditorElement.element.advancedHorizontalTiltDegrees = s,
-                            null, false, true, Component.translatable("fancymenu.element.tilt.horizontal.degrees"),
-                            true, null, null, null)
+            this.element.advancedHorizontalTiltDegrees.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                     .setStackable(false)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.tilt.horizontal.degrees.desc")))
                     .setIcon(MaterialIcons.FILTER_TILT_SHIFT)
@@ -796,19 +731,11 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.elements.parallax.desc")))
                     .setIcon(MaterialIcons._3D);
 
-            this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_x", this.selfClass(),
-                            consumes -> consumes.element.parallaxIntensityXString,
-                            (element1, s) -> element1.element.parallaxIntensityXString = s,
-                            null, false, true, Component.translatable("fancymenu.elements.parallax.intensity_x"),
-                            true, "0.5", null, null)
+            this.element.parallaxIntensityX.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_x.desc")))
                     .setIcon(MaterialIcons.SPLITSCREEN_LANDSCAPE);
 
-            this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity_y", this.selfClass(),
-                            consumes -> consumes.element.parallaxIntensityYString,
-                            (element1, s) -> element1.element.parallaxIntensityYString = s,
-                            null, false, true, Component.translatable("fancymenu.elements.parallax.intensity_y"),
-                            true, "0.5", null, null)
+            this.element.parallaxIntensityY.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                     .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.elements.parallax.intensity_y.desc")))
                     .setIcon(MaterialIcons.SPLITSCREEN_PORTRAIT);
 
@@ -1175,7 +1102,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
                     if (this.rotationGrabberActive) {
                         this.preRotationSnapshot = this.editor.history.createSnapshot();
-                        this.rotationStartAngle = this.element.rotationDegrees;
+                        this.rotationStartAngle = this.element.rotationDegrees.getFloat();
                         // Calculate initial mouse angle relative to element center
                         float centerX = this.getX() + (this.getWidth() / 2.0F);
                         float centerY = this.getY() + (this.getHeight() / 2.0F);
@@ -1184,13 +1111,13 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
                     if (this.verticalTiltGrabberActive) {
                         this.preTiltSnapshot = this.editor.history.createSnapshot();
-                        this.verticalTiltStartAngle = this.element.verticalTiltDegrees;
+                        this.verticalTiltStartAngle = this.element.verticalTiltDegrees.getFloat();
                         this.verticalTiltStartMouseY = mouseY;
                     }
 
                     if (this.horizontalTiltGrabberActive) {
                         this.preTiltSnapshot = this.editor.history.createSnapshot();
-                        this.horizontalTiltStartAngle = this.element.horizontalTiltDegrees;
+                        this.horizontalTiltStartAngle = this.element.horizontalTiltDegrees.getFloat();
                         this.horizontalTiltStartMouseX = mouseX;
                     }
 
@@ -1212,12 +1139,12 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             this.leftMouseDown = false;
             this.activeResizeGrabber = null;
             if (this.isGettingRotated() && (this.preRotationSnapshot != null)) {
-                if (this.rotationStartAngle != this.element.rotationDegrees) {
+                if (this.rotationStartAngle != this.element.rotationDegrees.getFloat()) {
                     this.editor.history.saveSnapshot(this.preRotationSnapshot);
                 }
             }
             if ((this.isGettingVerticalTilted() || this.isGettingHorizontalTilted()) && (this.preTiltSnapshot != null)) {
-                if ((this.verticalTiltStartAngle != this.element.verticalTiltDegrees) || (this.horizontalTiltStartAngle != this.element.horizontalTiltDegrees)) {
+                if ((this.verticalTiltStartAngle != this.element.verticalTiltDegrees.getFloat()) || (this.horizontalTiltStartAngle != this.element.horizontalTiltDegrees.getFloat())) {
                     this.editor.history.saveSnapshot(this.preTiltSnapshot);
                 }
             }
@@ -1269,7 +1196,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 while (newRotation < 0) newRotation += 360;
                 while (newRotation >= 360) newRotation -= 360;
 
-                this.element.rotationDegrees = newRotation;
+                this.element.rotationDegrees.set(newRotation);
             } else if (this.leftMouseDown && this.isGettingVerticalTilted()) { // VERTICAL TILT
                 // Calculate tilt based on vertical mouse movement
                 double mouseDiff = mouseY - this.verticalTiltStartMouseY;
@@ -1284,7 +1211,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     newTilt = Math.round(newTilt / 15.0F) * 15.0F;
                 }
 
-                this.element.verticalTiltDegrees = newTilt;
+                this.element.verticalTiltDegrees.set(newTilt);
             } else if (this.leftMouseDown && this.isGettingHorizontalTilted()) { // HORIZONTAL TILT
                 // Calculate tilt based on horizontal mouse movement
                 double mouseDiff = mouseX - this.horizontalTiltStartMouseX;
@@ -1299,7 +1226,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     newTilt = Math.round(newTilt / 15.0F) * 15.0F;
                 }
 
-                this.element.horizontalTiltDegrees = newTilt;
+                this.element.horizontalTiltDegrees.set(newTilt);
             } else if (this.leftMouseDown && !this.isGettingResized() && this.movingCrumpleZonePassed) { // MOVE ELEMENT
                 int diffX = (int)-(this.movingStartPosX - mouseX);
                 int diffY = (int)-(this.movingStartPosY - mouseY);
@@ -1905,7 +1832,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
             // Position grabber at the current rotation angle
             // Start at the top (90 degrees offset because 0 degrees is to the right in standard coordinates)
-            float angleRad = (float) Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
+            float angleRad = (float) Math.toRadians(AbstractEditorElement.this.element.getRotationDegrees() - 90);
             return (int) (centerX + radius * Math.cos(angleRad));
         }
 
@@ -1917,7 +1844,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
             // Position grabber at the current rotation angle
             // Start at the top (90 degrees offset because 0 degrees is to the right in standard coordinates)
-            float angleRad = (float) Math.toRadians(AbstractEditorElement.this.element.rotationDegrees - 90);
+            float angleRad = (float) Math.toRadians(AbstractEditorElement.this.element.getRotationDegrees() - 90);
             return (int) (centerY + radius * Math.sin(angleRad));
         }
 
@@ -1974,7 +1901,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             float lineTop = AbstractEditorElement.this.getY() - lineExtension;
             // Map tilt angle (-60 to 60) to position on line
             // 0 degrees = center, -60 = top, 60 = bottom
-            float normalizedTilt = (AbstractEditorElement.this.element.verticalTiltDegrees + 60.0F) / 120.0F; // 0 to 1
+            float normalizedTilt = (AbstractEditorElement.this.element.getVerticalTiltDegrees() + 60.0F) / 120.0F; // 0 to 1
             return (int)(lineTop + (lineLength * normalizedTilt));
         }
 
@@ -2026,7 +1953,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             float lineLeft = AbstractEditorElement.this.getX() - lineExtension;
             // Map tilt angle (-60 to 60) to position on line
             // 0 degrees = center, -60 = left, 60 = right
-            float normalizedTilt = (AbstractEditorElement.this.element.horizontalTiltDegrees + 60.0F) / 120.0F; // 0 to 1
+            float normalizedTilt = (AbstractEditorElement.this.element.getHorizontalTiltDegrees() + 60.0F) / 120.0F; // 0 to 1
             return (int)(lineLeft + (lineLength * normalizedTilt));
         }
 

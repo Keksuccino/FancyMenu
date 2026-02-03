@@ -52,14 +52,8 @@ public class AudioEditorElement extends AbstractEditorElement<AudioEditorElement
                 .setStackable(false)
                 .setIcon(MaterialIcons.VOLUME_UP);
 
-        this.rightClickMenu.addClickableEntry("volume", Component.translatable("fancymenu.elements.audio.set_volume"), (menu, entry) -> {
-            this.openContextMenuScreen(new SetAudioVolumeScreen(this.element.volume, aFloat -> {
-                if (aFloat != null) {
-                    this.element.setVolume(aFloat);
-                }
-                this.openContextMenuScreen(this.editor);
-            }));
-        }).setIcon(MaterialIcons.VOLUME_UP);
+        this.element.volume.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.VOLUME_UP);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_volume");
 

@@ -67,41 +67,17 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                 .setIcon(MaterialIcons.FORMAT_LIST_BULLETED)
                 .addIsVisibleSupplier((menu, entry) -> (this.element).type == SliderElement.SliderType.LIST);
 
-        this.addDoubleInputContextMenuEntryTo(this.rightClickMenu, "set_min_range_value",
-                        SliderEditorElement.class,
-                        consumes -> consumes.element.minRangeValue,
-                        (element, range) -> {
-                            (element.element).minRangeValue = range;
-                            (element.element).buildSlider();
-                        },
-                        Component.translatable("fancymenu.elements.slider.v2.type.range.set_min"),
-                        false, 0, null, null)
+        this.element.minRangeValue.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_min.desc")))
                 .setIcon(MaterialIcons.TUNE)
                 .addIsVisibleSupplier((menu, entry) -> ((this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || ((this.element).type == SliderElement.SliderType.INTEGER_RANGE));
 
-        this.addDoubleInputContextMenuEntryTo(this.rightClickMenu, "set_max_range_value",
-                        SliderEditorElement.class,
-                        consumes -> (consumes.element).maxRangeValue,
-                        (element, range) -> {
-                            (element.element).maxRangeValue = range;
-                            (element.element).buildSlider();
-                        },
-                        Component.translatable("fancymenu.elements.slider.v2.type.range.set_max"),
-                        false, 0, null, null)
+        this.element.maxRangeValue.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_max.desc")))
                 .setIcon(MaterialIcons.TUNE)
                 .addIsVisibleSupplier((menu, entry) -> ((this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || ((this.element).type == SliderElement.SliderType.INTEGER_RANGE));
 
-        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "rounding_decimal_place",
-                        SliderEditorElement.class,
-                        consumes -> (consumes.element).roundingDecimalPlace,
-                        (element, range) -> {
-                            (element.element).roundingDecimalPlace = range;
-                            (element.element).buildSlider();
-                        },
-                        Component.translatable("fancymenu.elements.slider.v2.type.range.decimal.round"),
-                        true, 2, null, null)
+        this.element.roundingDecimalPlace.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.decimal.round.desc")))
                 .setIcon(MaterialIcons.FUNCTIONS)
                 .addIsVisibleSupplier((menu, entry) -> (this.element).type == SliderElement.SliderType.DECIMAL_RANGE);
@@ -311,16 +287,10 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                 "fancymenu.elements.buttons.textures.nine_slice")
                 .setIcon(MaterialIcons.GRID_GUIDES);
 
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_x", SliderEditorElement.class,
-                consumes -> consumes.element.nineSliceBorderX,
-                (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceBorderX = integer,
-                Component.translatable("fancymenu.elements.buttons.textures.nine_slice.border_x"), true, 5, null, null)
+        this.element.nineSliceBorderX.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_HORIZONTAL);
 
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_y", SliderEditorElement.class,
-                consumes -> consumes.element.nineSliceBorderY,
-                (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceBorderY = integer,
-                Component.translatable("fancymenu.elements.buttons.textures.nine_slice.border_y"), true, 5, null, null)
+        this.element.nineSliceBorderY.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_VERTICAL);
 
         buttonBackgroundMenu.addSeparatorEntry("separator_before_nine_slider_slider_handle_settings");
@@ -331,16 +301,10 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                 "fancymenu.elements.slider.v2.handle.textures.nine_slice")
                 .setIcon(MaterialIcons.DRAG_HANDLE);
 
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_x", SliderEditorElement.class,
-                consumes -> consumes.element.nineSliceSliderHandleBorderX,
-                (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceSliderHandleBorderX = integer,
-                Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"), true, 5, null, null)
+        this.element.nineSliceSliderHandleBorderX.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_HORIZONTAL);
 
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_y", SliderEditorElement.class,
-                consumes -> consumes.element.nineSliceSliderHandleBorderY,
-                (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceSliderHandleBorderY = integer,
-                Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null)
+        this.element.nineSliceSliderHandleBorderY.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_VERTICAL);
 
     }

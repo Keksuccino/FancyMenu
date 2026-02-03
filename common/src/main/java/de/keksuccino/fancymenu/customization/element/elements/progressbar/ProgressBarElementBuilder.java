@@ -26,7 +26,7 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
         ProgressBarElement element = new ProgressBarElement(this);
         element.baseWidth = 200;
         element.baseHeight = 20;
-        element.progressSource = "50";
+        element.progressSource.set(50.0F);
         return element;
     }
 
@@ -39,17 +39,9 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
 
         element.barTextureSupplier = deserializeImageResourceSupplier(serialized.getValue("bar_texture"));
         element.barNineSlice = deserializeBoolean(element.barNineSlice, serialized.getValue("bar_nine_slice"));
-        element.barNineSliceBorderTop = deserializeNumber(Integer.class, element.barNineSliceBorderTop, serialized.getValue("bar_nine_slice_border_top"));
-        element.barNineSliceBorderRight = deserializeNumber(Integer.class, element.barNineSliceBorderRight, serialized.getValue("bar_nine_slice_border_right"));
-        element.barNineSliceBorderBottom = deserializeNumber(Integer.class, element.barNineSliceBorderBottom, serialized.getValue("bar_nine_slice_border_bottom"));
-        element.barNineSliceBorderLeft = deserializeNumber(Integer.class, element.barNineSliceBorderLeft, serialized.getValue("bar_nine_slice_border_left"));
 
         element.backgroundTextureSupplier = deserializeImageResourceSupplier(serialized.getValue("background_texture"));
         element.backgroundNineSlice = deserializeBoolean(element.backgroundNineSlice, serialized.getValue("background_nine_slice"));
-        element.backgroundNineSliceBorderTop = deserializeNumber(Integer.class, element.backgroundNineSliceBorderTop, serialized.getValue("background_nine_slice_border_top"));
-        element.backgroundNineSliceBorderRight = deserializeNumber(Integer.class, element.backgroundNineSliceBorderRight, serialized.getValue("background_nine_slice_border_right"));
-        element.backgroundNineSliceBorderBottom = deserializeNumber(Integer.class, element.backgroundNineSliceBorderBottom, serialized.getValue("background_nine_slice_border_bottom"));
-        element.backgroundNineSliceBorderLeft = deserializeNumber(Integer.class, element.backgroundNineSliceBorderLeft, serialized.getValue("background_nine_slice_border_left"));
 
         String barDirection = serialized.getValue("direction");
         if (barDirection != null) {
@@ -61,7 +53,9 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
             element.progressValueMode = Objects.requireNonNullElse(ProgressBarElement.ProgressValueMode.getByName(valueMode), ProgressBarElement.ProgressValueMode.PERCENTAGE);
         }
 
-        element.progressSource = serialized.getValue("progress_source");
+        if (serialized.getValue("progress_source") == null) {
+            serialized.putProperty("progress_source", "0");
+        }
 
         element.smoothFillingAnimation = SerializationHelper.INSTANCE.deserializeBoolean(element.smoothFillingAnimation, serialized.getValue("smooth_filling_animation"));
 
@@ -76,21 +70,12 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
             serializeTo.putProperty("bar_texture", element.barTextureSupplier.getSourceWithPrefix());
         }
         serializeTo.putProperty("bar_nine_slice", "" + element.barNineSlice);
-        serializeTo.putProperty("bar_nine_slice_border_top", "" + element.barNineSliceBorderTop);
-        serializeTo.putProperty("bar_nine_slice_border_right", "" + element.barNineSliceBorderRight);
-        serializeTo.putProperty("bar_nine_slice_border_bottom", "" + element.barNineSliceBorderBottom);
-        serializeTo.putProperty("bar_nine_slice_border_left", "" + element.barNineSliceBorderLeft);
         if (element.backgroundTextureSupplier != null) {
             serializeTo.putProperty("background_texture", element.backgroundTextureSupplier.getSourceWithPrefix());
         }
         serializeTo.putProperty("background_nine_slice", "" + element.backgroundNineSlice);
-        serializeTo.putProperty("background_nine_slice_border_top", "" + element.backgroundNineSliceBorderTop);
-        serializeTo.putProperty("background_nine_slice_border_right", "" + element.backgroundNineSliceBorderRight);
-        serializeTo.putProperty("background_nine_slice_border_bottom", "" + element.backgroundNineSliceBorderBottom);
-        serializeTo.putProperty("background_nine_slice_border_left", "" + element.backgroundNineSliceBorderLeft);
         serializeTo.putProperty("direction", element.direction.getName());
         serializeTo.putProperty("progress_for_element_anchor", "" + element.useProgressForElementAnchor);
-        serializeTo.putProperty("progress_source", element.progressSource);
         serializeTo.putProperty("value_mode", element.progressValueMode.getName());
 
         serializeTo.putProperty("smooth_filling_animation", "" + element.smoothFillingAnimation);

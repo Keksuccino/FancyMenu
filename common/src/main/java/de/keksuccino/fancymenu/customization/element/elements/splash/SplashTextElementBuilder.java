@@ -65,11 +65,6 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
             element.textFileSupplier = deserializeTextResourceSupplier(element.source);
         }
 
-        String rotation = serialized.getValue("rotation");
-        if ((rotation != null) && MathUtils.isFloat(rotation)) {
-            element.rotation = Float.parseFloat(rotation);
-        }
-
         String refresh = serialized.getValue("refresh");
         if ((refresh != null) && refresh.equalsIgnoreCase("true")) {
             element.refreshOnMenuReload = true;
@@ -80,11 +75,6 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
             if (shadow.equalsIgnoreCase("false")) {
                 element.shadow = false;
             }
-        }
-
-        String scale = serialized.getValue("scale");
-        if ((scale != null) && MathUtils.isFloat(scale)) {
-            element.scale = Float.parseFloat(scale);
         }
 
         String bounce = serialized.getValue("bouncing");
@@ -105,9 +95,7 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
             serializeTo.putProperty("source", element.source);
         }
         serializeTo.putProperty("source_mode", element.sourceMode.name);
-        serializeTo.putProperty("scale", "" + element.scale);
         serializeTo.putProperty("shadow", "" + element.shadow);
-        serializeTo.putProperty("rotation", "" + element.rotation);
         serializeTo.putProperty("refresh", "" + element.refreshOnMenuReload);
         serializeTo.putProperty("bouncing", "" + element.bounce);
 

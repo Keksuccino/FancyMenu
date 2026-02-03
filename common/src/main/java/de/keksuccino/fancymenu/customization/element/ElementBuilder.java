@@ -91,9 +91,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             String delaySec = serialized.getValue("appearance_delay_seconds");
             if (delaySec == null) {
                 delaySec = serialized.getValue("delayappearanceseconds");
-            }
-            if ((delaySec != null) && MathUtils.isFloat(delaySec)) {
-                element.appearanceDelayInSeconds = Float.parseFloat(delaySec);
+                if (delaySec != null) {
+                    serialized.putProperty("appearance_delay_seconds", delaySec);
+                }
             }
 
             //Backwards compat for old fade-in logic
@@ -122,14 +122,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             String fis = serialized.getValue("fade_in_speed");
             if (fis == null) {
                 fis = serialized.getValue("fadeinspeed");
+                if (fis != null) {
+                    serialized.putProperty("fade_in_speed", fis);
+                }
             }
-            if ((fis != null) && MathUtils.isFloat(fis)) {
-                element.fadeInSpeed = Float.parseFloat(fis);
-            }
-
-            element.fadeOutSpeed = deserializeNumber(Float.class, element.fadeOutSpeed, serialized.getValue("fade_out_speed"));
-
-            element.baseOpacity = Objects.requireNonNullElse(serialized.getValue("base_opacity"), element.baseOpacity);
 
             element.autoSizing = deserializeBoolean(element.autoSizing, serialized.getValue("auto_sizing"));
             element.autoSizingBaseScreenWidth = deserializeNumber(Integer.class, element.autoSizingBaseScreenWidth, serialized.getValue("auto_sizing_base_screen_width"));
@@ -209,8 +205,12 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 if (parallaxIntensityY == null) parallaxIntensityY = (parallaxIntensityX != null) ? parallaxIntensityX : legacyParallaxIntensity;
             }
 
-            element.parallaxIntensityXString = parallaxIntensityX;
-            element.parallaxIntensityYString = parallaxIntensityY;
+            if (serialized.getValue("parallax_intensity_x") == null && parallaxIntensityX != null) {
+                serialized.putProperty("parallax_intensity_x", parallaxIntensityX);
+            }
+            if (serialized.getValue("parallax_intensity_y") == null && parallaxIntensityY != null) {
+                serialized.putProperty("parallax_intensity_y", parallaxIntensityY);
+            }
 
             element.animatedOffsetX = deserializeNumber(Integer.class, element.animatedOffsetX, serialized.getValue("animated_offset_x"));
             element.animatedOffsetY = deserializeNumber(Integer.class, element.animatedOffsetY, serialized.getValue("animated_offset_y"));
@@ -219,17 +219,11 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             element.layerHiddenInEditor = deserializeBoolean(element.layerHiddenInEditor, serialized.getValue("layer_hidden_in_editor"));
 
-            element.rotationDegrees = deserializeNumber(Float.class, element.rotationDegrees, serialized.getValue("rotation_degrees"));
             element.advancedRotationMode = deserializeBoolean(element.advancedRotationMode, serialized.getValue("advanced_rotation_mode"));
-            element.advancedRotationDegrees = serialized.getValue("advanced_rotation_degrees");
 
-            element.verticalTiltDegrees = deserializeNumber(Float.class, element.verticalTiltDegrees, serialized.getValue("vertical_tilt_degrees"));
             element.advancedVerticalTiltMode = deserializeBoolean(element.advancedVerticalTiltMode, serialized.getValue("advanced_vertical_tilt_mode"));
-            element.advancedVerticalTiltDegrees = serialized.getValue("advanced_vertical_tilt_degrees");
             
-            element.horizontalTiltDegrees = deserializeNumber(Float.class, element.horizontalTiltDegrees, serialized.getValue("horizontal_tilt_degrees"));
             element.advancedHorizontalTiltMode = deserializeBoolean(element.advancedHorizontalTiltMode, serialized.getValue("advanced_horizontal_tilt_mode"));
-            element.advancedHorizontalTiltDegrees = serialized.getValue("advanced_horizontal_tilt_degrees");
 
             element.getPropertyMap().forEach((s, property) -> property.deserialize(serialized));
 
@@ -303,12 +297,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             }
 
             sec.putProperty("appearance_delay", element.appearanceDelay.name);
-            sec.putProperty("appearance_delay_seconds", "" + element.appearanceDelayInSeconds);
             sec.putProperty("fade_in_v2", element.fadeIn.getName());
-            sec.putProperty("fade_in_speed", "" + element.fadeInSpeed);
             sec.putProperty("fade_out", element.fadeOut.getName());
-            sec.putProperty("fade_out_speed", "" + element.fadeOutSpeed);
-            sec.putProperty("base_opacity", element.baseOpacity);
             sec.putProperty("auto_sizing", "" + element.autoSizing);
             sec.putProperty("auto_sizing_base_screen_width", "" + element.autoSizingBaseScreenWidth);
             sec.putProperty("auto_sizing_base_screen_height", "" + element.autoSizingBaseScreenHeight);
@@ -333,8 +323,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.requirementContainer.serializeToExistingPropertyContainer(sec);
 
             sec.putProperty("enable_parallax", "" + element.enableParallax);
-            sec.putProperty("parallax_intensity_x", "" + element.parallaxIntensityXString);
-            sec.putProperty("parallax_intensity_y", "" + element.parallaxIntensityYString);
             sec.putProperty("invert_parallax", "" + element.invertParallax);
 
             sec.putProperty("animated_offset_x", "" + element.animatedOffsetX);
@@ -344,17 +332,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("layer_hidden_in_editor", "" + element.layerHiddenInEditor);
 
-            sec.putProperty("rotation_degrees", "" + element.rotationDegrees);
             sec.putProperty("advanced_rotation_mode", "" + element.advancedRotationMode);
-            sec.putProperty("advanced_rotation_degrees", element.advancedRotationDegrees);
-
-            sec.putProperty("vertical_tilt_degrees", "" + element.verticalTiltDegrees);
             sec.putProperty("advanced_vertical_tilt_mode", "" + element.advancedVerticalTiltMode);
-            sec.putProperty("advanced_vertical_tilt_degrees", element.advancedVerticalTiltDegrees);
-            
-            sec.putProperty("horizontal_tilt_degrees", "" + element.horizontalTiltDegrees);
             sec.putProperty("advanced_horizontal_tilt_mode", "" + element.advancedHorizontalTiltMode);
-            sec.putProperty("advanced_horizontal_tilt_degrees", element.advancedHorizontalTiltDegrees);
 
             element.getPropertyMap().forEach((s, property) -> property.serialize(sec));
 

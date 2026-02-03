@@ -1,9 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.video.mcef;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.element.elements.video.SetVideoVolumeScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
@@ -53,15 +51,7 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
 
         this.rightClickMenu.addSeparatorEntry("separator_after_toggle_loop");
 
-        this.rightClickMenu.addClickableEntry("set_volume", Component.translatable("fancymenu.elements.video_mcef.volume"), (menu, entry) -> {
-            this.openContextMenuScreen(new SetVideoVolumeScreen(this.element.volume, vol -> {
-                if (vol != null) {
-                    this.editor.history.saveSnapshot();
-                    this.element.volume = vol;
-                }
-                this.openContextMenuScreen(this.editor);
-            }));
-        }).setStackable(false)
+        this.element.volume.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.VOLUME_UP);
 
         this.addCycleContextMenuEntryTo(this.rightClickMenu, "sound_channel",
@@ -75,12 +65,5 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
 
     }
 
-
-    private static boolean validVolume(String volume) {
-        if (volume == null) return false;
-        if (!MathUtils.isFloat(volume)) return false;
-        float vol = Float.parseFloat(volume);
-        return (vol <= 1.0F) && (vol >= 0.0F);
-    }
 
 }

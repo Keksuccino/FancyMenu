@@ -97,16 +97,10 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement<VanillaWidge
                         "fancymenu.elements.slider.v2.handle.textures.nine_slice")
                         .setIcon(MaterialIcons.DRAG_HANDLE);
 
-                this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_x", VanillaWidgetEditorElement.class,
-                        consumes -> consumes.element.nineSliceSliderHandleBorderX,
-                        (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceSliderHandleBorderX = integer,
-                        Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"), true, 5, null, null)
+                this.element.nineSliceSliderHandleBorderX.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                         .setIcon(MaterialIcons.BORDER_HORIZONTAL);
 
-                this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_y", VanillaWidgetEditorElement.class,
-                        consumes -> consumes.element.nineSliceSliderHandleBorderY,
-                        (buttonEditorElement, integer) -> buttonEditorElement.element.nineSliceSliderHandleBorderY = integer,
-                        Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null)
+                this.element.nineSliceSliderHandleBorderY.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                         .setIcon(MaterialIcons.BORDER_VERTICAL);
 
             }

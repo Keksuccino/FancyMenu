@@ -58,23 +58,23 @@ public interface ElementStacker<E extends AbstractElement> {
         if (e.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY) {
             stack.appearanceDelay = e.appearanceDelay;
         }
-        if (e.appearanceDelayInSeconds != 1.0F) {
-            stack.appearanceDelayInSeconds = e.appearanceDelayInSeconds;
+        if (!e.appearanceDelaySeconds.isDefault()) {
+            stack.appearanceDelaySeconds.copyValueFrom(e.appearanceDelaySeconds);
         }
         if (e.fadeIn != AbstractElement.Fading.NO_FADING) {
             stack.fadeIn = e.fadeIn;
         }
-        if (e.fadeInSpeed != 1.0F) {
-            stack.fadeInSpeed = e.fadeInSpeed;
+        if (!e.fadeInSpeed.isDefault()) {
+            stack.fadeInSpeed.copyValueFrom(e.fadeInSpeed);
         }
         if (e.fadeOut != AbstractElement.Fading.NO_FADING) {
             stack.fadeOut = e.fadeOut;
         }
-        if (e.fadeOutSpeed != 1.0F) {
-            stack.fadeOutSpeed = e.fadeOutSpeed;
+        if (!e.fadeOutSpeed.isDefault()) {
+            stack.fadeOutSpeed.copyValueFrom(e.fadeOutSpeed);
         }
-        if (!e.baseOpacity.equals("1.0")) {
-            stack.baseOpacity = e.baseOpacity;
+        if (!e.baseOpacity.isDefault()) {
+            stack.baseOpacity.copyValueFrom(e.baseOpacity);
         }
         if (e.autoSizing) {
             stack.autoSizing = true;

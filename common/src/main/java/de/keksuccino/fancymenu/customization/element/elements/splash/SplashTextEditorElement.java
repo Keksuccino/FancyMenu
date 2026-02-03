@@ -69,27 +69,11 @@ public class SplashTextEditorElement extends AbstractEditorElement<SplashTextEdi
 
         this.rightClickMenu.addSeparatorEntry("splash_separator_1");
 
-        this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).scale,
-                        (element, scale) -> {
-                            ((SplashTextElement)element.element).scale = Math.max(0.2F, scale);
-                            ((SplashTextElement)element.element).updateSplash();
-                        },
-                        Component.translatable("fancymenu.elements.splash.set_scale"),
-                        true, 1.0F, null, null)
+        this.element.scale.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true)
                 .setIcon(MaterialIcons.FORMAT_SIZE);
 
-        this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_rotation",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).rotation,
-                        (element, rot) -> {
-                            ((SplashTextElement)element.element).rotation = rot;
-                            ((SplashTextElement)element.element).updateSplash();
-                        },
-                        Component.translatable("fancymenu.elements.splash.rotation"),
-                        true, 20.0F, null, null)
+        this.element.rotation.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true)
                 .setIcon(MaterialIcons.ROTATE_RIGHT);
 

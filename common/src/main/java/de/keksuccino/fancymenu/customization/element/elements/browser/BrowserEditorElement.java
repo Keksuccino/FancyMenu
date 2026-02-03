@@ -61,10 +61,7 @@ public class BrowserEditorElement extends AbstractEditorElement<BrowserEditorEle
                 .setStackable(true)
                 .setIcon(MaterialIcons.VOLUME_OFF);
 
-        this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "media_volume", BrowserEditorElement.class,
-                        consumes -> consumes.element.mediaVolume,
-                        (element1, aFloat) -> element1.element.mediaVolume = aFloat,
-                        Component.translatable("fancymenu.elements.browser.media_volume"), true, 1.0F, null, null)
+        this.element.mediaVolume.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.media_volume.desc")))
                 .setStackable(true)
                 .setIcon(MaterialIcons.VOLUME_UP);
