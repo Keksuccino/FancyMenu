@@ -30,8 +30,6 @@ public class FancyMenu {
 
     //TODO File icons in File Chooser screens mit MaterialIcons ersetzen
 
-    //TODO Line rendering von separator in PiPWindow und LayerLayoutEditorWidget verbessern (separator zwischen Title Bar und Body)
-
 
 
 	private static final Logger LOGGER = LogManager.getLogger();

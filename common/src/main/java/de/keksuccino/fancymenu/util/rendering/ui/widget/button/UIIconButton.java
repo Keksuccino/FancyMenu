@@ -20,15 +20,12 @@ import java.util.function.Consumer;
 @SuppressWarnings("unused")
 public class UIIconButton implements Renderable, GuiEventListener, NarratableEntry {
 
-    private static final float DEFAULT_ICON_PADDING = 6.0F;
-    private static final float DEFAULT_HOVER_BACKGROUND_PADDING = 0.0F;
-
+    private static final float DEFAULT_ICON_PADDING = 4.0F;
     private float x;
     private float y;
     private float width;
     private float height;
     private float iconPadding = DEFAULT_ICON_PADDING;
-    private float hoverBackgroundPadding = DEFAULT_HOVER_BACKGROUND_PADDING;
     private float iconAlpha = 1.0F;
     @Nonnull
     private MaterialIcon icon;
@@ -58,12 +55,7 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
 
         RenderSystem.enableBlend();
         if (this.hovered) {
-            float padding = Math.max(0.0F, this.hoverBackgroundPadding);
-            float backgroundWidth = this.width - (padding * 2.0F);
-            float backgroundHeight = this.height - (padding * 2.0F);
-            if (backgroundWidth > 0.0F && backgroundHeight > 0.0F) {
-                UIBase.renderIconButtonHoverBackground(graphics, this.x + padding, this.y + padding, backgroundWidth, backgroundHeight);
-            }
+            UIBase.renderIconButtonHoverBackground(graphics, this.x, this.y, this.width, this.height);
         }
 
         IconAnimation.Offset offset = this.getHoverOffset();
@@ -184,10 +176,6 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         return this.iconPadding;
     }
 
-    public float getHoverBackgroundPadding() {
-        return this.hoverBackgroundPadding;
-    }
-
     public float getIconAlpha() {
         return this.iconAlpha;
     }
@@ -233,11 +221,6 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
 
     public UIIconButton setIconPadding(float iconPadding) {
         this.iconPadding = Math.max(0.0F, iconPadding);
-        return this;
-    }
-
-    public UIIconButton setHoverBackgroundPadding(float hoverBackgroundPadding) {
-        this.hoverBackgroundPadding = Math.max(0.0F, hoverBackgroundPadding);
         return this;
     }
 

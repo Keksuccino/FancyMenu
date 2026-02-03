@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.*;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
@@ -24,7 +25,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -786,19 +786,24 @@ public abstract class AbstractFileBrowserWindowBody extends AbstractBrowserWindo
         }
 
         @Override
-        protected @NotNull ResourceLocation getIconTexture() {
+        protected @NotNull MaterialIcon getIcon() {
             if (this.file.isFile() && (this.fileType != null)) {
-                if (this.fileType instanceof TextFileType) return TEXT_FILE_ICON_TEXTURE;
-                if (this.fileType instanceof VideoFileType) return VIDEO_FILE_ICON_TEXTURE;
-                if (this.fileType instanceof AudioFileType) return AUDIO_FILE_ICON_TEXTURE;
-                if (this.fileType instanceof ImageFileType) return IMAGE_FILE_ICON_TEXTURE;
+                if (this.fileType instanceof TextFileType) return TEXT_FILE_ICON;
+                if (this.fileType instanceof VideoFileType) return VIDEO_FILE_ICON;
+                if (this.fileType instanceof AudioFileType) return AUDIO_FILE_ICON;
+                if (this.fileType instanceof ImageFileType) return IMAGE_FILE_ICON;
             }
-            return this.file.isFile() ? GENERIC_FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
+            return this.file.isFile() ? GENERIC_FILE_ICON : FOLDER_ICON;
         }
 
         @Override
         protected boolean isResourceUnfriendly() {
             return this.resourceUnfriendlyFileName;
+        }
+
+        @Override
+        protected int getIconInnerPadding() {
+            return 5;
         }
 
         @Override
@@ -828,8 +833,8 @@ public abstract class AbstractFileBrowserWindowBody extends AbstractBrowserWindo
         }
 
         @Override
-        protected @NotNull ResourceLocation getIconTexture() {
-            return GO_UP_ICON_TEXTURE;
+        protected @NotNull MaterialIcon getIcon() {
+            return GO_UP_ICON;
         }
 
         @Override

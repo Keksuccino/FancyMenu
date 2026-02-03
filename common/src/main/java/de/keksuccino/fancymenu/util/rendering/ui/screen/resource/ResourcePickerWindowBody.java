@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.*;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.AbstractBrowserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -571,8 +572,13 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
         }
 
         @Override
-        protected @NotNull ResourceLocation getIconTexture() {
-            return FOLDER_ICON_TEXTURE;
+        protected @NotNull MaterialIcon getIcon() {
+            return FOLDER_ICON;
+        }
+
+        @Override
+        protected int getIconInnerPadding() {
+            return 5;
         }
 
         @Override
@@ -601,14 +607,19 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
         }
 
         @Override
-        protected @NotNull ResourceLocation getIconTexture() {
+        protected @NotNull MaterialIcon getIcon() {
             if (this.fileType != null) {
-                if (this.fileType instanceof TextFileType) return TEXT_FILE_ICON_TEXTURE;
-                if (this.fileType instanceof VideoFileType) return VIDEO_FILE_ICON_TEXTURE;
-                if (this.fileType instanceof AudioFileType) return AUDIO_FILE_ICON_TEXTURE;
-                if (this.fileType instanceof ImageFileType) return IMAGE_FILE_ICON_TEXTURE;
+                if (this.fileType instanceof TextFileType) return TEXT_FILE_ICON;
+                if (this.fileType instanceof VideoFileType) return VIDEO_FILE_ICON;
+                if (this.fileType instanceof AudioFileType) return AUDIO_FILE_ICON;
+                if (this.fileType instanceof ImageFileType) return IMAGE_FILE_ICON;
             }
-            return GENERIC_FILE_ICON_TEXTURE;
+            return GENERIC_FILE_ICON;
+        }
+
+        @Override
+        protected int getIconInnerPadding() {
+            return 5;
         }
 
         @Override
@@ -632,8 +643,8 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
         }
 
         @Override
-        protected @NotNull ResourceLocation getIconTexture() {
-            return GO_UP_ICON_TEXTURE;
+        protected @NotNull MaterialIcon getIcon() {
+            return GO_UP_ICON;
         }
 
         @Override

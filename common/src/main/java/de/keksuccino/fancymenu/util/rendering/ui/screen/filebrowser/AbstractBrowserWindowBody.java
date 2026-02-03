@@ -3,9 +3,10 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
@@ -16,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.UIIconButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
@@ -35,7 +37,6 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -47,21 +48,19 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     public static final int PIP_WINDOW_WIDTH = 600;
     public static final int PIP_WINDOW_HEIGHT = 446;
 
-    // All icon textures are 32x32 pixels
-    protected static final ResourceLocation GO_UP_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/go_up_icon.png");
-    protected static final ResourceLocation GENERIC_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/file_icon.png");
-    protected static final ResourceLocation TEXT_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/text_file_icon.png");
-    protected static final ResourceLocation AUDIO_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/audio_file_icon.png");
-    protected static final ResourceLocation VIDEO_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/video_file_icon.png");
-    protected static final ResourceLocation IMAGE_FILE_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/image_file_icon.png");
-    protected static final ResourceLocation FOLDER_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/folder_icon.png");
+    // All icon renders are 32x32 pixels
+    protected static final MaterialIcon GO_UP_ICON = MaterialIcons.ARROW_UPWARD;
+    protected static final MaterialIcon GENERIC_FILE_ICON = MaterialIcons.DRAFTS;
+    protected static final MaterialIcon TEXT_FILE_ICON = MaterialIcons.ARTICLE;
+    protected static final MaterialIcon AUDIO_FILE_ICON = MaterialIcons.MUSIC_NOTE;
+    protected static final MaterialIcon VIDEO_FILE_ICON = MaterialIcons.MOVIE;
+    protected static final MaterialIcon IMAGE_FILE_ICON = MaterialIcons.IMAGE;
+    protected static final MaterialIcon FOLDER_ICON = MaterialIcons.FOLDER;
 
-    protected static final ResourceLocation AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/play_button_normal.png");
-    protected static final ResourceLocation AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/pause_button_normal.png");
-    protected static final ResourceLocation AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE_HOVER = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/play_button_hover.png");
-    protected static final ResourceLocation AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE_HOVER = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/file_browser/controls/pause_button_hover.png");
+    protected static final MaterialIcon AUDIO_PREVIEW_PLAY_ICON = MaterialIcons.PLAY_ARROW;
+    protected static final MaterialIcon AUDIO_PREVIEW_PAUSE_ICON = MaterialIcons.PAUSE;
 
-    protected static final int AUDIO_PREVIEW_BUTTON_SIZE = 20;
+    protected static final int AUDIO_PREVIEW_BUTTON_SIZE = 26;
     protected static final int AUDIO_PREVIEW_BUTTON_SPACING = 6;
     protected static final int AUDIO_PREVIEW_SLIDER_HEIGHT = 20;
     protected static final int AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT = 6;
@@ -103,7 +102,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     protected ExtendedButton applyButton;
     protected boolean applyButtonEnabled = false;
     protected ExtendedButton cancelButton;
-    protected ExtendedButton audioPreviewToggleButton;
+    protected UIIconButton audioPreviewToggleButton;
     protected RangeSlider audioPreviewVolumeSlider;
     protected ComponentWidget currentDirectoryComponent;
     protected int fileScrollListHeightOffset = 0;
@@ -346,10 +345,6 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         this.tickPreviewDelay();
         this.tickAudioPreview();
         this.tickTextPreview();
-        if (this.previewAudioSupplier == null && this.audioPreviewToggleButton != null) {
-            this.audioPreviewToggleButton.visible = false;
-            this.audioPreviewToggleButton.active = false;
-        }
         if (this.previewAudioSupplier == null && this.audioPreviewVolumeSlider != null) {
             this.audioPreviewVolumeSlider.visible = false;
             this.audioPreviewVolumeSlider.active = false;
@@ -498,6 +493,11 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if ((button == 0) && (this.previewAudioSupplier != null) && (this.audioPreviewToggleButton != null)) {
+            if (this.audioPreviewToggleButton.mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            }
+        }
 
         if ((button == 0) && !this.fileListScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.fileListScrollArea.isMouseInteractingWithGrabbers() && !this.previewTextScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.previewTextScrollArea.isMouseInteractingWithGrabbers() && !this.isWidgetHovered()) {
             for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
@@ -515,6 +515,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             if (l instanceof AbstractWidget w) {
                 if (w.isHovered()) return true;
             }
+        }
+        if (this.previewAudioSupplier != null && this.audioPreviewToggleButton != null && this.audioPreviewToggleButton.isHovered()) {
+            return true;
         }
         return false;
     }
@@ -779,21 +782,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected void initAudioPreviewButton() {
-        if (this.audioPreviewToggleButton != null) {
-            this.removeWidget(this.audioPreviewToggleButton);
-        }
-        this.audioPreviewToggleButton = new AudioPreviewToggleButton(0, 0, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, button -> {
+        this.audioPreviewToggleButton = new UIIconButton(0.0F, 0.0F, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_PLAY_ICON, button -> {
             this.togglePreviewAudio();
         });
-        UIBase.applyDefaultWidgetSkinTo(this.audioPreviewToggleButton, UIBase.shouldBlur());
-        DrawableColor transparent = DrawableColor.of(new Color(0,0,0,0));
-        this.audioPreviewToggleButton.setBackgroundColor(transparent, transparent, transparent, transparent, transparent, transparent);
-        this.audioPreviewToggleButton.setLabelEnabled(false);
-        this.audioPreviewToggleButton.setFocusable(false);
-        this.audioPreviewToggleButton.setNavigatable(false);
-        this.audioPreviewToggleButton.visible = false;
-        this.audioPreviewToggleButton.active = false;
-        this.addWidget(this.audioPreviewToggleButton);
     }
 
     protected void initAudioPreviewVolumeSlider() {
@@ -916,11 +907,13 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected void renderAudioPreviewButton(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, int buttonX, int buttonY) {
-        if (this.audioPreviewToggleButton == null) return;
-        this.audioPreviewToggleButton.setX(buttonX);
-        this.audioPreviewToggleButton.setY(buttonY);
-        this.audioPreviewToggleButton.visible = true;
-        this.audioPreviewToggleButton.active = (this.previewAudioSupplier != null);
+        if (this.audioPreviewToggleButton == null || this.previewAudioSupplier == null) return;
+        this.audioPreviewToggleButton
+                .setX(buttonX)
+                .setY(buttonY)
+                .setWidth(AUDIO_PREVIEW_BUTTON_SIZE)
+                .setHeight(AUDIO_PREVIEW_BUTTON_SIZE)
+                .setIcon(this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_ICON : AUDIO_PREVIEW_PLAY_ICON);
         this.audioPreviewToggleButton.render(graphics, mouseX, mouseY, partial);
     }
 
@@ -1041,30 +1034,6 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
-    protected class AudioPreviewToggleButton extends ExtendedButton {
-
-        public AudioPreviewToggleButton(int x, int y, int width, int height, @NotNull Button.OnPress onPress) {
-            super(x, y, width, height, Component.empty(), onPress);
-        }
-
-        @Override
-        public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            super.renderWidget(graphics, mouseX, mouseY, partial);
-            ResourceLocation icon = this.getButtonTexture();
-            RenderSystem.enableBlend();
-            graphics.blit(icon, this.getX(), this.getY(), 0.0F, 0.0F, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE, AUDIO_PREVIEW_BUTTON_SIZE);
-            UIBase.resetShaderColor(graphics);
-        }
-
-        protected ResourceLocation getButtonTexture() {
-            if (this.isHoveredOrFocused()) {
-                return AbstractBrowserWindowBody.this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE_HOVER : AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE_HOVER;
-            }
-            return AbstractBrowserWindowBody.this.previewAudioPlaying ? AUDIO_PREVIEW_PAUSE_BUTTON_TEXTURE : AUDIO_PREVIEW_PLAY_BUTTON_TEXTURE;
-        }
-
-    }
-
     public abstract static class AbstractIconTextScrollAreaEntry extends ScrollAreaEntry {
 
         protected static final int BORDER = 3;
@@ -1083,14 +1052,18 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         }
 
         @NotNull
-        protected abstract ResourceLocation getIconTexture();
+        protected abstract MaterialIcon getIcon();
 
-        protected int getIconTextureWidth() {
+        protected int getIconRenderWidth() {
             return ICON_PIXEL_SIZE;
         }
 
-        protected int getIconTextureHeight() {
+        protected int getIconRenderHeight() {
             return ICON_PIXEL_SIZE;
+        }
+
+        protected int getIconInnerPadding() {
+            return 0;
         }
 
         protected boolean isResourceUnfriendly() {
@@ -1109,18 +1082,18 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
             RenderSystem.enableBlend();
 
-            int textureWidth = this.getIconTextureWidth();
-            int textureHeight = this.getIconTextureHeight();
-            if ((textureWidth == ICON_PIXEL_SIZE) && (textureHeight == ICON_PIXEL_SIZE)) {
-                graphics.blit(this.getIconTexture(), (int)(this.x + BORDER), (int)(this.y + BORDER), 0.0F, 0.0F, ICON_PIXEL_SIZE, ICON_PIXEL_SIZE, ICON_PIXEL_SIZE, ICON_PIXEL_SIZE);
-            } else {
-                float scaleX = (float) ICON_PIXEL_SIZE / (float) textureWidth;
-                float scaleY = (float) ICON_PIXEL_SIZE / (float) textureHeight;
-                graphics.pose().pushPose();
-                graphics.pose().translate(this.x + BORDER, this.y + BORDER, 0.0F);
-                graphics.pose().scale(scaleX, scaleY, 1.0F);
-                graphics.blit(this.getIconTexture(), 0, 0, 0.0F, 0.0F, textureWidth, textureHeight, textureWidth, textureHeight);
-                graphics.pose().popPose();
+            int iconWidth = this.getIconRenderWidth();
+            int iconHeight = this.getIconRenderHeight();
+            int padding = Math.max(0, this.getIconInnerPadding());
+            float areaX = this.x + BORDER + padding;
+            float areaY = this.y + BORDER + padding;
+            float areaWidth = iconWidth - (padding * 2);
+            float areaHeight = iconHeight - (padding * 2);
+            IconRenderData iconData = resolveMaterialIconData(this.getIcon(), areaWidth, areaHeight);
+            if (iconData != null) {
+                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+                blitScaledIcon(graphics, iconData, areaX, areaY, areaWidth, areaHeight);
+                UIBase.resetShaderColor(graphics);
             }
 
             UIBase.renderText(graphics, this.entryNameComponent, this.x + BORDER + ICON_PIXEL_SIZE + 3, this.y + (this.height / 2f) - (UIBase.getUITextHeightNormal() / 2f), this.getTextColor());
@@ -1129,6 +1102,55 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
                 TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip")), () -> true);
             }
 
+        }
+
+        @Nullable
+        private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon, float renderWidth, float renderHeight) {
+            if (icon == null) {
+                return null;
+            }
+            ResourceLocation location = icon.getTextureLocationForUI(renderWidth, renderHeight);
+            if (location == null) {
+                return null;
+            }
+            int iconSize = icon.calculateBestTextureSizeForUI(renderWidth, renderHeight);
+            int width = icon.getWidth(iconSize);
+            int height = icon.getHeight(iconSize);
+            if (width <= 0 || height <= 0) {
+                return null;
+            }
+            return new IconRenderData(location, width, height);
+        }
+
+        private static void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+            if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
+                return;
+            }
+            float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
+            if (!Float.isFinite(scale) || scale <= 0.0F) {
+                return;
+            }
+            float scaledWidth = iconData.width * scale;
+            float scaledHeight = iconData.height * scale;
+            float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
+            float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
+            graphics.pose().pushPose();
+            graphics.pose().translate(drawX, drawY, 0.0F);
+            graphics.pose().scale(scale, scale, 1.0F);
+            graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+            graphics.pose().popPose();
+        }
+
+        private static final class IconRenderData {
+            private final ResourceLocation texture;
+            private final int width;
+            private final int height;
+
+            private IconRenderData(@NotNull ResourceLocation texture, int width, int height) {
+                this.texture = texture;
+                this.width = width;
+                this.height = height;
+            }
         }
 
     }
