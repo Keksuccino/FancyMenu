@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.element.elements.dragger.DraggerEle
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.item.ItemElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.jsonmodel.JsonModelElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
@@ -37,6 +38,7 @@ public class Elements {
     public static final PlayerEntityElementBuilder PLAYER_ENTITY_V1 = new PlayerEntityElementBuilder();
     public static final de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder PLAYER_ENTITY_V2 = new de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
+    public static final JsonModelElementBuilder JSON_MODEL = new JsonModelElementBuilder();
     public static final SplashTextElementBuilder SPLASH_TEXT = new SplashTextElementBuilder();
     public static final SlideshowElementBuilder SLIDESHOW = new SlideshowElementBuilder();
     public static final RectangleShapeElementBuilder RECTANGLE_SHAPE = new RectangleShapeElementBuilder();
@@ -66,6 +68,7 @@ public class Elements {
             ElementRegistry.register(PLAYER_ENTITY_V2);
         }
         ElementRegistry.register(IMAGE);
+        ElementRegistry.register(JSON_MODEL);
         ElementRegistry.register(SPLASH_TEXT);
         ElementRegistry.register(SLIDESHOW);
         ElementRegistry.register(RECTANGLE_SHAPE);
