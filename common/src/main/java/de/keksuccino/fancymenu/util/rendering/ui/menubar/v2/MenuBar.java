@@ -50,8 +50,8 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     protected final List<MenuBarEntry> rightEntries = new ArrayList<>();
     protected final List<MenuBarClickListener> clickListeners = new ArrayList<>();
     protected final List<PendingContextMenuOpen> pendingContextMenuOpens = new ArrayList<>();
-    protected static final MaterialIconTexture COLLAPSE_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.UNFOLD_LESS_DOUBLE, MaterialIconTexture::getDefaultTextureSize);
-    protected static final MaterialIconTexture EXPAND_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.UNFOLD_MORE_DOUBLE, MaterialIconTexture::getDefaultTextureSize);
+    protected static final MaterialIconTexture COLLAPSE_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.UNFOLD_LESS_DOUBLE);
+    protected static final MaterialIconTexture EXPAND_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.UNFOLD_MORE_DOUBLE);
     protected boolean hovered = false;
     protected boolean expanded = true;
     protected boolean layoutReady = false;
@@ -809,11 +809,10 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 ResourceLocation materialIconLocation = null;
                 if (isMaterialIcon) {
                     MaterialIconTexture materialIconTexture = (MaterialIconTexture) iconTexture;
-                    float renderWidth = availableWidth;
-                    float renderHeight = availableHeight;
-                    baseWidth = materialIconTexture.getWidthForUI(renderWidth, renderHeight);
-                    baseHeight = materialIconTexture.getHeightForUI(renderWidth, renderHeight);
-                    materialIconLocation = materialIconTexture.getResourceLocationForUI(renderWidth, renderHeight);
+                    materialIconTexture.updateRenderContext((float) availableWidth, (float) availableHeight, UIBase.getUIScale());
+                    baseWidth = materialIconTexture.getWidth();
+                    baseHeight = materialIconTexture.getHeight();
+                    materialIconLocation = materialIconTexture.getResourceLocation();
                 }
                 boolean hasBaseSize = baseWidth > 0 && baseHeight > 0;
                 if (hasBaseSize) {

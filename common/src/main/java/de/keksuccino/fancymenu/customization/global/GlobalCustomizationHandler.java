@@ -70,9 +70,49 @@ public final class GlobalCustomizationHandler {
         return getTextureResource(BUTTON_BACKGROUND_INACTIVE, FancyMenu.getOptions().globalButtonBackgroundInactive.getValue());
     }
 
+    public static boolean isGlobalButtonBackgroundNineSliceEnabled() {
+        return FancyMenu.getOptions().globalButtonBackgroundNineSlice.getValue();
+    }
+
+    public static int getGlobalButtonBackgroundNineSliceBorderTop() {
+        return FancyMenu.getOptions().globalButtonBackgroundNineSliceBorderTop.getValue();
+    }
+
+    public static int getGlobalButtonBackgroundNineSliceBorderRight() {
+        return FancyMenu.getOptions().globalButtonBackgroundNineSliceBorderRight.getValue();
+    }
+
+    public static int getGlobalButtonBackgroundNineSliceBorderBottom() {
+        return FancyMenu.getOptions().globalButtonBackgroundNineSliceBorderBottom.getValue();
+    }
+
+    public static int getGlobalButtonBackgroundNineSliceBorderLeft() {
+        return FancyMenu.getOptions().globalButtonBackgroundNineSliceBorderLeft.getValue();
+    }
+
     @Nullable
     public static RenderableResource getCustomSliderBackground() {
         return getTextureResource(SLIDER_BACKGROUND, FancyMenu.getOptions().globalSliderBackground.getValue());
+    }
+
+    public static boolean isGlobalSliderBackgroundNineSliceEnabled() {
+        return FancyMenu.getOptions().globalSliderBackgroundNineSlice.getValue();
+    }
+
+    public static int getGlobalSliderBackgroundNineSliceBorderTop() {
+        return FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderTop.getValue();
+    }
+
+    public static int getGlobalSliderBackgroundNineSliceBorderRight() {
+        return FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderRight.getValue();
+    }
+
+    public static int getGlobalSliderBackgroundNineSliceBorderBottom() {
+        return FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderBottom.getValue();
+    }
+
+    public static int getGlobalSliderBackgroundNineSliceBorderLeft() {
+        return FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderLeft.getValue();
     }
 
     @Nullable
@@ -88,6 +128,26 @@ public final class GlobalCustomizationHandler {
     @Nullable
     public static RenderableResource getCustomSliderHandleInactive() {
         return getTextureResource(SLIDER_HANDLE_INACTIVE, FancyMenu.getOptions().globalSliderHandleInactive.getValue());
+    }
+
+    public static boolean isGlobalSliderHandleNineSliceEnabled() {
+        return FancyMenu.getOptions().globalSliderHandleNineSlice.getValue();
+    }
+
+    public static int getGlobalSliderHandleNineSliceBorderTop() {
+        return FancyMenu.getOptions().globalSliderHandleNineSliceBorderTop.getValue();
+    }
+
+    public static int getGlobalSliderHandleNineSliceBorderRight() {
+        return FancyMenu.getOptions().globalSliderHandleNineSliceBorderRight.getValue();
+    }
+
+    public static int getGlobalSliderHandleNineSliceBorderBottom() {
+        return FancyMenu.getOptions().globalSliderHandleNineSliceBorderBottom.getValue();
+    }
+
+    public static int getGlobalSliderHandleNineSliceBorderLeft() {
+        return FancyMenu.getOptions().globalSliderHandleNineSliceBorderLeft.getValue();
     }
 
     @Nullable

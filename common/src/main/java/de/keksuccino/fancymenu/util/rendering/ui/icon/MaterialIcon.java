@@ -64,32 +64,47 @@ public final class MaterialIcon {
      */
     @Nullable
     public ResourceLocation getTextureLocationForUI(float renderWidth, float renderHeight) {
-        return getTextureLocation(getTextureSizeForUI(renderWidth, renderHeight));
+        return getTextureLocation(calculateBestTextureSizeForUI(renderWidth, renderHeight));
+    }
+
+    /**
+     * Resolves a texture location for rendering that balances crispness and scaling quality.
+     * The size is derived from the render area and rendering scale.
+     */
+    @Nullable
+    public ResourceLocation getTextureLocation(float renderWidth, float renderHeight, float renderScale) {
+        return getTextureLocation(calculateBestTextureSize(renderWidth, renderHeight, renderScale));
+    }
+
+    /**
+     * Calculates the best texture size (in pixels) for rendering based on the render area and render scale.
+     */
+    public int calculateBestTextureSizeForUI(float renderWidth, float renderHeight) {
+        return this.calculateBestTextureSize(renderWidth, renderHeight, UIBase.getUIScale());
     }
 
     /**
      * Calculates the best texture size (in pixels) for UI rendering based on the render area and UI scale.
      */
-    public int getTextureSizeForUI(float renderWidth, float renderHeight) {
+    public int calculateBestTextureSize(float renderWidth, float renderHeight, float renderScale) {
         float maxRenderSize = Math.max(renderWidth, renderHeight);
         if (!Float.isFinite(maxRenderSize) || maxRenderSize <= 0.0F) {
             return DEFAULT_FALLBACK_TEXTURE_SIZE;
         }
 
-        float uiScale = UIBase.getUIScale();
-        if (!Float.isFinite(uiScale) || uiScale <= 0.0F) {
-            uiScale = 1.0F;
+        if (!Float.isFinite(renderScale) || renderScale <= 0.0F) {
+            renderScale = 1.0F;
         }
 
-        float densityBucket = resolveDensityBucket(uiScale);
-        float renderPixelSize = maxRenderSize * uiScale;
+        float densityBucket = resolveDensityBucket(renderScale);
+        float renderPixelSize = maxRenderSize * renderScale;
         float qualityScale = resolveQualityScale(renderPixelSize);
         float minTextureSize = BASELINE_ICON_DP * densityBucket * qualityScale;
         float oversample = resolveOversampleFactor(renderPixelSize);
         float desiredSize = renderPixelSize * oversample * GLYPH_COVERAGE_COMPENSATION;
 
         float targetSize = Math.max(minTextureSize, desiredSize);
-        float maxMinification = resolveMaxMinificationRatio(uiScale);
+        float maxMinification = resolveMaxMinificationRatio(renderScale);
         float maxAllowedSize = renderPixelSize * maxMinification;
         if (Float.isFinite(maxAllowedSize) && maxAllowedSize > 0.0F) {
             targetSize = Math.min(targetSize, maxAllowedSize);

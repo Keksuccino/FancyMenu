@@ -3,57 +3,53 @@ package de.keksuccino.fancymenu.util.rendering.ui.icon;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.resources.ResourceLocation;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.InputStream;
 import java.util.Objects;
-import java.util.function.IntSupplier;
 
-public final class MaterialIconTexture implements ITexture {
+public class MaterialIconTexture implements ITexture {
 
-    public static final int DEFAULT_TEXTURE_SIZE = 96;
+    @NotNull
+    protected final MaterialIcon icon;
+    protected float renderWidth;
+    protected float renderHeight;
+    protected float renderScale;
+    protected boolean closed = false;
 
-    @Nonnull
-    private final MaterialIcon icon;
-    @Nonnull
-    private final IntSupplier textureSizeSupplier;
-    private boolean closed = false;
-
-    public MaterialIconTexture(@Nonnull MaterialIcon icon, @Nonnull IntSupplier textureSizeSupplier) {
+    public MaterialIconTexture(@NotNull MaterialIcon icon) {
         this.icon = Objects.requireNonNull(icon, "icon");
-        this.textureSizeSupplier = Objects.requireNonNull(textureSizeSupplier, "textureSizeSupplier");
     }
 
-    public static int getDefaultTextureSize() {
-        return DEFAULT_TEXTURE_SIZE;
+    /**
+     * It's important to call this before getting anything from the texture (width, height, resource location, etc.)!
+     */
+    public MaterialIconTexture updateRenderContext(float renderWidth, float renderHeight, float renderScale) {
+        this.renderWidth = renderWidth;
+        this.renderHeight = renderHeight;
+        this.renderScale = renderScale;
+        return this;
     }
 
-    @Nonnull
+    @NotNull
     public MaterialIcon getIcon() {
         return this.icon;
     }
 
-    private int getTextureSizePx() {
-        return Math.max(1, this.textureSizeSupplier.getAsInt());
-    }
-
-    public int getTextureSizeForUI(float renderWidth, float renderHeight) {
-        return this.icon.getTextureSizeForUI(renderWidth, renderHeight);
-    }
-
-    public int getWidthForUI(float renderWidth, float renderHeight) {
-        int size = getTextureSizeForUI(renderWidth, renderHeight);
+    @Override
+    public int getWidth() {
+        int size = calculateBestTextureSize(renderWidth, renderHeight, renderScale);
         return this.icon.getWidth(size);
     }
 
-    public int getHeightForUI(float renderWidth, float renderHeight) {
-        int size = getTextureSizeForUI(renderWidth, renderHeight);
+    @Override
+    public int getHeight() {
+        int size = calculateBestTextureSize(renderWidth, renderHeight, renderScale);
         return this.icon.getHeight(size);
     }
 
-    @Nullable
-    public ResourceLocation getResourceLocationForUI(float renderWidth, float renderHeight) {
-        return this.icon.getTextureLocationForUI(renderWidth, renderHeight);
+    public int calculateBestTextureSize(float renderWidth, float renderHeight, float renderScale) {
+        return this.icon.calculateBestTextureSize(renderWidth, renderHeight, renderScale);
     }
 
     @Override
@@ -61,27 +57,11 @@ public final class MaterialIconTexture implements ITexture {
         if (this.closed) {
             return null;
         }
-        return this.icon.getTextureLocation(getTextureSizePx());
+        return this.icon.getTextureLocation(this.renderWidth, this.renderHeight, this.renderScale);
     }
 
     @Override
-    public int getWidth() {
-        if (this.closed) {
-            return 1;
-        }
-        return this.icon.getWidth(getTextureSizePx());
-    }
-
-    @Override
-    public int getHeight() {
-        if (this.closed) {
-            return 1;
-        }
-        return this.icon.getHeight(getTextureSizePx());
-    }
-
-    @Override
-    public @Nonnull AspectRatio getAspectRatio() {
+    public @NotNull AspectRatio getAspectRatio() {
         return new AspectRatio(getWidth(), getHeight());
     }
 
@@ -95,7 +75,7 @@ public final class MaterialIconTexture implements ITexture {
         if (this.closed) {
             return false;
         }
-        int size = getTextureSizePx();
+        int size = this.calculateBestTextureSize(renderWidth, renderHeight, renderScale);
         return this.icon.isLoaded(size) && !this.icon.isFailed(size);
     }
 
@@ -104,7 +84,7 @@ public final class MaterialIconTexture implements ITexture {
         if (this.closed) {
             return false;
         }
-        int size = getTextureSizePx();
+        int size = this.calculateBestTextureSize(renderWidth, renderHeight, renderScale);
         return this.icon.isLoaded(size) && !this.icon.isFailed(size);
     }
 
@@ -113,7 +93,8 @@ public final class MaterialIconTexture implements ITexture {
         if (this.closed) {
             return false;
         }
-        return this.icon.isFailed(getTextureSizePx());
+        int size = this.calculateBestTextureSize(renderWidth, renderHeight, renderScale);
+        return this.icon.isFailed(size);
     }
 
     @Override

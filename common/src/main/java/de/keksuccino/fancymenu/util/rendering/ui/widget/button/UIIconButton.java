@@ -131,7 +131,7 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         if (location == null) {
             return null;
         }
-        int size = icon.getTextureSizeForUI(safeRenderWidth, safeRenderHeight);
+        int size = icon.calculateBestTextureSizeForUI(safeRenderWidth, safeRenderHeight);
         int width = icon.getWidth(size);
         int height = icon.getHeight(size);
         if (width <= 0 || height <= 0) {

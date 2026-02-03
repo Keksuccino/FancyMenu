@@ -2753,5 +2753,20 @@
   "fancymenu.ui.scales.titanic": "Titanic (%s)",
   "fancymenu.ui.scales.massive": "Massive (%s)",
   "fancymenu.ui.scales.immense": "Immense (%s)",
-  "fancymenu.ui.scales.maximum": "Maximum (%s)"
+  "fancymenu.ui.scales.maximum": "Maximum (%s)",
+  "fancymenu.global_customizations.button_backgrounds.nine_slice": "Nine-Slice Button Backgrounds: %s",
+  "fancymenu.global_customizations.button_backgrounds.nine_slice.border.top": "Button Background Nine-Slice Top Border Size [Pixels]",
+  "fancymenu.global_customizations.button_backgrounds.nine_slice.border.right": "Button Background Nine-Slice Right Border Size [Pixels]",
+  "fancymenu.global_customizations.button_backgrounds.nine_slice.border.bottom": "Button Background Nine-Slice Bottom Border Size [Pixels]",
+  "fancymenu.global_customizations.button_backgrounds.nine_slice.border.left": "Button Background Nine-Slice Left Border Size [Pixels]",
+  "fancymenu.global_customizations.slider_background.nine_slice": "Nine-Slice Slider Background: %s",
+  "fancymenu.global_customizations.slider_background.nine_slice.border.top": "Slider Background Nine-Slice Top Border Size [Pixels]",
+  "fancymenu.global_customizations.slider_background.nine_slice.border.right": "Slider Background Nine-Slice Right Border Size [Pixels]",
+  "fancymenu.global_customizations.slider_background.nine_slice.border.bottom": "Slider Background Nine-Slice Bottom Border Size [Pixels]",
+  "fancymenu.global_customizations.slider_background.nine_slice.border.left": "Slider Background Nine-Slice Left Border Size [Pixels]",
+  "fancymenu.global_customizations.slider_handle.nine_slice": "Nine-Slice Slider Handle: %s",
+  "fancymenu.global_customizations.slider_handle.nine_slice.border.top": "Slider Handle Nine-Slice Top Border Size [Pixels]",
+  "fancymenu.global_customizations.slider_handle.nine_slice.border.right": "Slider Handle Nine-Slice Right Border Size [Pixels]",
+  "fancymenu.global_customizations.slider_handle.nine_slice.border.bottom": "Slider Handle Nine-Slice Bottom Border Size [Pixels]",
+  "fancymenu.global_customizations.slider_handle.nine_slice.border.left": "Slider Handle Nine-Slice Left Border Size [Pixels]"
 }

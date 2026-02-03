@@ -2374,7 +2374,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 if (location == null) {
                     return null;
                 }
-                int iconSize = this.materialIcon.getTextureSizeForUI(renderSize, renderSize);
+                int iconSize = this.materialIcon.calculateBestTextureSizeForUI(renderSize, renderSize);
                 int width = this.materialIcon.getWidth(iconSize);
                 int height = this.materialIcon.getHeight(iconSize);
                 if (width <= 0 || height <= 0) {
@@ -2506,7 +2506,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             if (location == null) {
                 return null;
             }
-            int iconSize = CONTEXT_MENU_TOOLTIP_ICON.getTextureSizeForUI(renderSize, renderSize);
+            int iconSize = CONTEXT_MENU_TOOLTIP_ICON.calculateBestTextureSizeForUI(renderSize, renderSize);
             int width = CONTEXT_MENU_TOOLTIP_ICON.getWidth(iconSize);
             int height = CONTEXT_MENU_TOOLTIP_ICON.getHeight(iconSize);
             if (width <= 0 || height <= 0) {
@@ -2687,7 +2687,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (location == null) {
             return null;
         }
-        int iconSize = icon.getTextureSizeForUI(renderWidth, renderHeight);
+        int iconSize = icon.calculateBestTextureSizeForUI(renderWidth, renderHeight);
         int width = icon.getWidth(iconSize);
         int height = icon.getHeight(iconSize);
         if (width <= 0 || height <= 0) {
@@ -2821,7 +2821,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             if (location == null) {
                 return null;
             }
-            int iconSize = SUB_CONTEXT_MENU_ARROW_ICON.getTextureSizeForUI(renderSize, renderSize);
+            int iconSize = SUB_CONTEXT_MENU_ARROW_ICON.calculateBestTextureSizeForUI(renderSize, renderSize);
             int width = SUB_CONTEXT_MENU_ARROW_ICON.getWidth(iconSize);
             int height = SUB_CONTEXT_MENU_ARROW_ICON.getHeight(iconSize);
             if (width <= 0 || height <= 0) {
@@ -3282,7 +3282,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             if (location == null) {
                 return null;
             }
-            int iconSize = this.icon.getTextureSizeForUI(renderSize, renderSize);
+            int iconSize = this.icon.calculateBestTextureSizeForUI(renderSize, renderSize);
             int width = this.icon.getWidth(iconSize);
             int height = this.icon.getHeight(iconSize);
             if (width <= 0 || height <= 0) {

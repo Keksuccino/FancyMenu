@@ -56,7 +56,7 @@ import java.util.function.Consumer;
 
 public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
-    private static final MaterialIconTexture CLOSE_EDITOR_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE, MaterialIconTexture::getDefaultTextureSize);
+    private static final MaterialIconTexture CLOSE_EDITOR_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE);
 
     @Nullable
     private MenuBar grandfatheredMenuBar = null;

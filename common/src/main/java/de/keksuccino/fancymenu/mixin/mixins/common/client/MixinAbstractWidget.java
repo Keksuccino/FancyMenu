@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -86,6 +87,14 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private int nineSliceCustomBackgroundBorderX_FancyMenu = 5;
 	@Unique
 	private int nineSliceCustomBackgroundBorderY_FancyMenu = 5;
+	@Unique
+	private int nineSliceCustomBackgroundBorderTop_FancyMenu = 5;
+	@Unique
+	private int nineSliceCustomBackgroundBorderRight_FancyMenu = 5;
+	@Unique
+	private int nineSliceCustomBackgroundBorderBottom_FancyMenu = 5;
+	@Unique
+	private int nineSliceCustomBackgroundBorderLeft_FancyMenu = 5;
 	@Unique @Nullable
 	private Integer customWidthFancyMenu;
 	@Unique @Nullable
@@ -767,6 +776,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public void setNineSliceBorderX_FancyMenu(int borderX) {
 		this.nineSliceCustomBackgroundBorderX_FancyMenu = borderX;
+		this.nineSliceCustomBackgroundBorderLeft_FancyMenu = borderX;
+		this.nineSliceCustomBackgroundBorderRight_FancyMenu = borderX;
 	}
 
 	@Unique
@@ -779,12 +790,62 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public void setNineSliceBorderY_FancyMenu(int borderY) {
 		this.nineSliceCustomBackgroundBorderY_FancyMenu = borderY;
+		this.nineSliceCustomBackgroundBorderTop_FancyMenu = borderY;
+		this.nineSliceCustomBackgroundBorderBottom_FancyMenu = borderY;
 	}
 
 	@Unique
 	@Override
 	public int getNineSliceCustomBackgroundBorderY_FancyMenu() {
 		return nineSliceCustomBackgroundBorderY_FancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setNineSliceBorderTop_FancyMenu(int borderTop) {
+		this.nineSliceCustomBackgroundBorderTop_FancyMenu = borderTop;
+	}
+
+	@Unique
+	@Override
+	public int getNineSliceCustomBackgroundBorderTop_FancyMenu() {
+		return this.nineSliceCustomBackgroundBorderTop_FancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setNineSliceBorderRight_FancyMenu(int borderRight) {
+		this.nineSliceCustomBackgroundBorderRight_FancyMenu = borderRight;
+	}
+
+	@Unique
+	@Override
+	public int getNineSliceCustomBackgroundBorderRight_FancyMenu() {
+		return this.nineSliceCustomBackgroundBorderRight_FancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setNineSliceBorderBottom_FancyMenu(int borderBottom) {
+		this.nineSliceCustomBackgroundBorderBottom_FancyMenu = borderBottom;
+	}
+
+	@Unique
+	@Override
+	public int getNineSliceCustomBackgroundBorderBottom_FancyMenu() {
+		return this.nineSliceCustomBackgroundBorderBottom_FancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setNineSliceBorderLeft_FancyMenu(int borderLeft) {
+		this.nineSliceCustomBackgroundBorderLeft_FancyMenu = borderLeft;
+	}
+
+	@Unique
+	@Override
+	public int getNineSliceCustomBackgroundBorderLeft_FancyMenu() {
+		return this.nineSliceCustomBackgroundBorderLeft_FancyMenu;
 	}
 
 	@Unique
@@ -818,9 +879,17 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.hasFancyMenuColorBackgroundNormal_FancyMenu()) return null;
 		if ((Object)this instanceof ImageButton) return null;
 		if ((Object)this instanceof AbstractSliderButton) {
-			return GlobalCustomizationHandler.getCustomSliderHandleNormal();
+			RenderableResource resource = GlobalCustomizationHandler.getCustomSliderHandleNormal();
+			if (resource != null) {
+				this.applyGlobalSliderHandleNineSlice_FancyMenu();
+			}
+			return resource;
 		}
-		return GlobalCustomizationHandler.getCustomButtonBackgroundNormal();
+		RenderableResource resource = GlobalCustomizationHandler.getCustomButtonBackgroundNormal();
+		if (resource != null) {
+			this.applyGlobalButtonBackgroundNineSlice_FancyMenu();
+		}
+		return resource;
 	}
 
 	@Unique
@@ -829,9 +898,17 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.hasFancyMenuColorBackgroundHover_FancyMenu()) return null;
 		if ((Object)this instanceof ImageButton) return null;
 		if ((Object)this instanceof AbstractSliderButton) {
-			return GlobalCustomizationHandler.getCustomSliderHandleHover();
+			RenderableResource resource = GlobalCustomizationHandler.getCustomSliderHandleHover();
+			if (resource != null) {
+				this.applyGlobalSliderHandleNineSlice_FancyMenu();
+			}
+			return resource;
 		}
-		return GlobalCustomizationHandler.getCustomButtonBackgroundHover();
+		RenderableResource resource = GlobalCustomizationHandler.getCustomButtonBackgroundHover();
+		if (resource != null) {
+			this.applyGlobalButtonBackgroundNineSlice_FancyMenu();
+		}
+		return resource;
 	}
 
 	@Unique
@@ -840,9 +917,17 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.hasFancyMenuColorBackgroundInactive_FancyMenu()) return null;
 		if ((Object)this instanceof ImageButton) return null;
 		if ((Object)this instanceof AbstractSliderButton) {
-			return GlobalCustomizationHandler.getCustomSliderHandleInactive();
+			RenderableResource resource = GlobalCustomizationHandler.getCustomSliderHandleInactive();
+			if (resource != null) {
+				this.applyGlobalSliderHandleNineSlice_FancyMenu();
+			}
+			return resource;
 		}
-		return GlobalCustomizationHandler.getCustomButtonBackgroundInactive();
+		RenderableResource resource = GlobalCustomizationHandler.getCustomButtonBackgroundInactive();
+		if (resource != null) {
+			this.applyGlobalButtonBackgroundNineSlice_FancyMenu();
+		}
+		return resource;
 	}
 
 	@Unique
@@ -876,6 +961,25 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			return slider.getSliderHandleColorInactive() != null;
 		}
 		return false;
+	}
+
+	@Unique
+	private void applyGlobalButtonBackgroundNineSlice_FancyMenu() {
+		this.setNineSliceCustomBackground_FancyMenu(GlobalCustomizationHandler.isGlobalButtonBackgroundNineSliceEnabled());
+		this.setNineSliceBorderTop_FancyMenu(GlobalCustomizationHandler.getGlobalButtonBackgroundNineSliceBorderTop());
+		this.setNineSliceBorderRight_FancyMenu(GlobalCustomizationHandler.getGlobalButtonBackgroundNineSliceBorderRight());
+		this.setNineSliceBorderBottom_FancyMenu(GlobalCustomizationHandler.getGlobalButtonBackgroundNineSliceBorderBottom());
+		this.setNineSliceBorderLeft_FancyMenu(GlobalCustomizationHandler.getGlobalButtonBackgroundNineSliceBorderLeft());
+	}
+
+	@Unique
+	private void applyGlobalSliderHandleNineSlice_FancyMenu() {
+		if (!((Object)this instanceof CustomizableSlider slider)) return;
+		slider.setNineSliceCustomSliderHandle_FancyMenu(GlobalCustomizationHandler.isGlobalSliderHandleNineSliceEnabled());
+		slider.setNineSliceSliderHandleBorderTop_FancyMenu(GlobalCustomizationHandler.getGlobalSliderHandleNineSliceBorderTop());
+		slider.setNineSliceSliderHandleBorderRight_FancyMenu(GlobalCustomizationHandler.getGlobalSliderHandleNineSliceBorderRight());
+		slider.setNineSliceSliderHandleBorderBottom_FancyMenu(GlobalCustomizationHandler.getGlobalSliderHandleNineSliceBorderBottom());
+		slider.setNineSliceSliderHandleBorderLeft_FancyMenu(GlobalCustomizationHandler.getGlobalSliderHandleNineSliceBorderLeft());
 	}
 
 	@Unique
