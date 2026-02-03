@@ -100,6 +100,8 @@ public class JsonModelElement extends AbstractElement {
 
     public JsonModelElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.setSupportsRotation(false);
+        this.setSupportsTilting(false);
     }
 
     @Override
