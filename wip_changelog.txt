@@ -139,6 +139,7 @@
 - Improved background menu rendering of Custom GUIs in Popup mode (background menus should now better show their customizations) (#1472)
 - Most numeric inputs of elements now support placeholders and a better value setting system with a "number picker" that live-updates for previewing what changes do to the element
 - Most color inputs of elements now support setting the color via a color picker that live-updates, so you see how color changes affect the element
+- You can now resize elements by simply hovering the element edges instead of the resize grabber
 - The text editor got some QoL additions
   - Duplicate Line: Ctrl + D
   - Move Line Up/Down: Alt + Up/Down
