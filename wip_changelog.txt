@@ -137,6 +137,8 @@
 - Context and Dropdown menus of FancyMenu now have a search bar (just start typing while a context/dropdown menu is open and see it start filtering entries)
 - Context and Dropdown menus of FancyMenu now have full keyboard key navigation support (Arrow keys, Tab, Enter, ESC)
 - Improved background menu rendering of Custom GUIs in Popup mode (background menus should now better show their customizations) (#1472)
+- Most of the numeric inputs of elements now support placeholders and a better value setting system with a "number picker" that live-updates for previewing what changes do to the element
+- Many color inputs of elements now support setting the color via a color picker that live-updates, so you see how color changes affect the element
 - The text editor got some QoL additions
   - Duplicate Line: Ctrl + D
   - Move Line Up/Down: Alt + Up/Down
