@@ -534,6 +534,7 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
             }
 
             this.currentDirectoryComponent.setShadow(false);
+            this.currentDirectoryComponent.setUseUIFont(true);
             this.currentDirectoryComponent.setBaseColorSupplier(consumes -> UIBase.getUITheme().ui_interface_widget_label_color_normal);
             this.addWidget(this.currentDirectoryComponent);
 
@@ -645,6 +646,11 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
         @Override
         protected @NotNull MaterialIcon getIcon() {
             return GO_UP_ICON;
+        }
+
+        @Override
+        protected int getIconInnerPadding() {
+            return 5;
         }
 
         @Override

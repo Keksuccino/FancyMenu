@@ -105,12 +105,19 @@ public class SaveFileWindowBody extends AbstractFileBrowserWindowBody {
         this.fileNameEditBox.setX((int)(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileNameEditBox.getWidth() - 1));
         this.fileNameEditBox.setY((int)(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + 1));
         this.fileNameEditBox.render(graphics, mouseX, mouseY, partial);
-        graphics.drawString(this.font, FILE_NAME_PREFIX_TEXT, this.fileNameEditBox.getX() - 1 - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5, this.fileNameEditBox.getY() - 1 + (this.fileNameEditBox.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt(), false);
+        float labelPadding = UIBase.getAreaLabelVerticalPadding();
+        float labelWidth = UIBase.getUITextWidthNormal(FILE_NAME_PREFIX_TEXT);
+        float labelHeight = UIBase.getUITextHeightNormal();
+        float labelX = this.fileNameEditBox.getX() - 1 - labelWidth - labelPadding;
+        float labelY = this.fileNameEditBox.getY() - 1 + (this.fileNameEditBox.getHeight() / 2.0F) - (labelHeight / 2.0F);
+        UIBase.renderText(graphics, FILE_NAME_PREFIX_TEXT, labelX, labelY, UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
     }
 
     @Override
     protected int getBelowFileScrollAreaElementWidth() {
-        int w = (int)(this.fileListScrollArea.getWidthWithBorder() - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5);
+        float labelPadding = UIBase.getAreaLabelVerticalPadding();
+        float labelWidth = UIBase.getUITextWidthNormal(FILE_NAME_PREFIX_TEXT);
+        int w = (int) (this.fileListScrollArea.getWidthWithBorder() - labelWidth - labelPadding);
         return Math.min(super.getBelowFileScrollAreaElementWidth(), w);
     }
 

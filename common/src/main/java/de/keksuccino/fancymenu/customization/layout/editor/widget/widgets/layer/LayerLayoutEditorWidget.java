@@ -65,8 +65,14 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private static final float RIGHT_SIDE_BUTTON_OFFSET = 7.0f;
     private static final float GROUP_INDENT = 12.0f;
     private static final float GROUP_NAME_LEFT_PADDING = 0.0f;
-    private static final float GROUP_COLLAPSE_BUTTON_WIDTH = 24.0f;
-    private static final float GROUP_EYE_BUTTON_WIDTH = 30.0f;
+    private static final float ENTRY_ICON_BUTTON_SHRINK = 2.0f;
+    private static final float LAYER_EYE_BUTTON_WIDTH = 30.0f - (ENTRY_ICON_BUTTON_SHRINK * 2.0f);
+    private static final float LAYER_EYE_BUTTON_HEIGHT = 28.0f - (ENTRY_ICON_BUTTON_SHRINK * 2.0f);
+    private static final float GROUP_COLLAPSE_BUTTON_WIDTH = 24.0f - (ENTRY_ICON_BUTTON_SHRINK * 2.0f);
+    private static final float GROUP_EYE_BUTTON_WIDTH = 30.0f - (ENTRY_ICON_BUTTON_SHRINK * 2.0f);
+    private static final float GROUP_BUTTON_HEIGHT = 28.0f - (ENTRY_ICON_BUTTON_SHRINK * 2.0f);
+    private static final float VANILLA_MOVE_BUTTON_WIDTH = 30.0f - (ENTRY_ICON_BUTTON_SHRINK * 2.0f);
+    private static final float VANILLA_MOVE_BUTTON_HEIGHT = 28.0f - (ENTRY_ICON_BUTTON_SHRINK * 2.0f);
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
 
@@ -1224,7 +1230,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.element = element;
             this.layerWidget = layerWidget;
             this.group = group;
-            this.eyeButton = new UIIconButton(0.0F, 0.0F, this.getLayerIconWidth(), this.getLayerIconHeight(), EYE_ICON, button -> {
+            this.eyeButton = new UIIconButton(0.0F, 0.0F, LAYER_EYE_BUTTON_WIDTH, LAYER_EYE_BUTTON_HEIGHT, EYE_ICON, button -> {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
@@ -1310,7 +1316,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float eyeWidth = this.eyeButton.getWidth();
             float eyeHeight = this.eyeButton.getHeight();
             this.eyeButton.setX(this.x + this.getWidth() - eyeWidth - RIGHT_SIDE_BUTTON_OFFSET)
-                    .setY(this.y)
+                    .setY(this.y + (this.getHeight() - eyeHeight) * 0.5f)
                     .setWidth(eyeWidth)
                     .setHeight(eyeHeight)
                     .setIcon(EYE_ICON)
@@ -1451,7 +1457,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             super(parent, 50, 28);
             this.group = group;
             this.layerWidget = layerWidget;
-            this.eyeButton = new UIIconButton(0.0F, 0.0F, GROUP_EYE_BUTTON_WIDTH, this.getHeight(), EYE_ICON, button -> {
+            this.eyeButton = new UIIconButton(0.0F, 0.0F, GROUP_EYE_BUTTON_WIDTH, GROUP_BUTTON_HEIGHT, EYE_ICON, button -> {
                 List<AbstractEditorElement<?, ?>> elements = this.layerWidget.editor.getElementsInGroup(this.group);
                 if (elements.isEmpty()) {
                     return;
@@ -1471,7 +1477,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                     element.element.layerHiddenInEditor = hideElements;
                 }
             });
-            this.collapseButton = new UIIconButton(0.0F, 0.0F, GROUP_COLLAPSE_BUTTON_WIDTH, this.getHeight(), GROUP_COLLAPSE_ICON, button -> {
+            this.collapseButton = new UIIconButton(0.0F, 0.0F, GROUP_COLLAPSE_BUTTON_WIDTH, GROUP_BUTTON_HEIGHT, GROUP_COLLAPSE_ICON, button -> {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
@@ -1537,7 +1543,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float eyeWidth = this.eyeButton.getWidth();
             float eyeHeight = this.eyeButton.getHeight();
             this.eyeButton.setX(this.x + this.getWidth() - eyeWidth - RIGHT_SIDE_BUTTON_OFFSET)
-                    .setY(this.y)
+                    .setY(this.y + (this.getHeight() - eyeHeight) * 0.5f)
                     .setWidth(eyeWidth)
                     .setHeight(eyeHeight)
                     .setIcon(EYE_ICON)
@@ -1549,7 +1555,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float collapseWidth = this.collapseButton.getWidth();
             float collapseHeight = this.collapseButton.getHeight();
             this.collapseButton.setX(this.x + this.getWidth() - eyeWidth - collapseWidth - RIGHT_SIDE_BUTTON_OFFSET)
-                    .setY(this.y)
+                    .setY(this.y + (this.getHeight() - collapseHeight) * 0.5f)
                     .setWidth(collapseWidth)
                     .setHeight(collapseHeight)
                     .setIcon(this.group.collapsed ? GROUP_EXPAND_ICON : GROUP_COLLAPSE_ICON)
@@ -1710,7 +1716,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public VanillaLayerElementEntry(ScrollArea parent, LayerLayoutEditorWidget layerWidget) {
             super(parent, 50, 28);
             this.layerWidget = layerWidget;
-            this.moveTopBottomButton = new UIIconButton(0.0F, 0.0F, 30.0F, this.getHeight(), MOVE_TO_TOP_ICON, button -> {
+            this.moveTopBottomButton = new UIIconButton(0.0F, 0.0F, VANILLA_MOVE_BUTTON_WIDTH, VANILLA_MOVE_BUTTON_HEIGHT, MOVE_TO_TOP_ICON, button -> {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
@@ -1766,7 +1772,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float buttonWidth = this.moveTopBottomButton.getWidth();
             float buttonHeight = this.moveTopBottomButton.getHeight();
             this.moveTopBottomButton.setX(this.x + this.getWidth() - buttonWidth - RIGHT_SIDE_BUTTON_OFFSET)
-                    .setY(this.y)
+                    .setY(this.y + (this.getHeight() - buttonHeight) * 0.5f)
                     .setWidth(buttonWidth)
                     .setHeight(buttonHeight)
                     .setIcon(icon)

@@ -250,15 +250,18 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         this.performInitialWidgetFocusActionInRender();
 
         if (this.currentFileTypesComponent != null) {
-            this.fileTypeScrollArea.horizontalScrollBar.active = (Minecraft.getInstance().font.width(this.currentFileTypesComponent) > (this.fileTypeScrollArea.getInnerWidth() - 10));
+            float textWidth = UIBase.getUITextWidthNormal(this.currentFileTypesComponent);
+            this.fileTypeScrollArea.horizontalScrollBar.active = (textWidth > (this.fileTypeScrollArea.getInnerWidth() - 10));
         }
 
         RenderSystem.enableBlend();
 
-        graphics.drawString(this.font, this.getEntriesLabel(), 20, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        float labelY = this.getMainAreaLabelY();
+        float contentTopY = this.getMainAreaTopY();
+        UIBase.renderText(graphics, this.getEntriesLabel(), 20.0F, labelY, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt());
 
         int leftAreaWidth = this.width - 260 - 20;
-        int currentDirFieldY = 50 + 15;
+        int currentDirFieldY = (int) contentTopY;
         if (this.searchBarEnabled) {
             this.renderSearchBar(graphics, mouseX, mouseY, partial, 20, currentDirFieldY, leftAreaWidth, 20);
             currentDirFieldY += 25;
@@ -270,8 +273,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         this.renderFileTypeScrollArea(graphics, mouseX, mouseY, partial);
 
         Component previewLabel = Component.translatable("fancymenu.ui.filechooser.preview");
-        int previewLabelWidth = this.font.width(previewLabel);
-        graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+        float previewLabelWidth = UIBase.getUITextWidthNormal(previewLabel);
+        float previewLabelX = this.width - 20 - previewLabelWidth;
+        UIBase.renderText(graphics, previewLabel, previewLabelX, labelY, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt());
 
         this.renderConfirmButton(graphics, mouseX, mouseY, partial);
 
@@ -328,7 +332,12 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         this.fileTypeScrollArea.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileTypeScrollArea.getWidthWithBorder());
         this.fileTypeScrollArea.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + this.fileTypeScrollListYOffset);
         this.fileTypeScrollArea.render(graphics, mouseX, mouseY, partial);
-        graphics.drawString(this.font, FILE_TYPE_PREFIX_TEXT, (int)(this.fileTypeScrollArea.getXWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5), (int)(this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2) - (Minecraft.getInstance().font.lineHeight / 2)), UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt(), false);
+        float labelPadding = UIBase.getAreaLabelVerticalPadding();
+        float labelWidth = UIBase.getUITextWidthNormal(FILE_TYPE_PREFIX_TEXT);
+        float labelHeight = UIBase.getUITextHeightNormal();
+        float labelX = this.fileTypeScrollArea.getXWithBorder() - labelWidth - labelPadding;
+        float labelY = this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2.0F) - (labelHeight / 2.0F);
+        UIBase.renderText(graphics, FILE_TYPE_PREFIX_TEXT, labelX, labelY, UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
     }
 
     protected void renderFileScrollArea(GuiGraphics graphics, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
@@ -362,11 +371,12 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
                         ? UIBase.getUITheme().ui_blur_interface_area_border_color.getColorInt()
                         : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt();
                 AspectRatio ratio = t.getAspectRatio();
-                int[] size = ratio.getAspectRatioSizeByMaximumSize(200, (this.cancelButton.getY() - 50) - (50 + 15));
+                int previewTopY = (int) this.getMainAreaTopY();
+                int[] size = ratio.getAspectRatioSizeByMaximumSize(200, (this.cancelButton.getY() - 50) - previewTopY);
                 int w = size[0];
                 int h = size[1];
                 int x = this.width - 20 - w;
-                int y = 50 + 15;
+                int y = previewTopY;
                 UIBase.resetShaderColor(graphics);
                 graphics.fill(x, y, x + w, y + h, previewBackgroundColor);
                 RenderingUtils.resetShaderColor(graphics);
@@ -379,7 +389,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             this.previewTextScrollArea.setWidth(200, true);
             this.previewTextScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
             this.previewTextScrollArea.setX(this.width - 20 - this.previewTextScrollArea.getWidthWithBorder(), true);
-            this.previewTextScrollArea.setY(50 + 15, true);
+            this.previewTextScrollArea.setY((int) this.getMainAreaTopY(), true);
             this.previewTextScrollArea.render(graphics, mouseX, mouseY, partial);
         }
         UIBase.resetShaderColor(graphics);
@@ -413,7 +423,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected int getBelowFileScrollAreaElementWidth() {
-        return (int)(this.fileListScrollArea.getWidthWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5);
+        float labelPadding = UIBase.getAreaLabelVerticalPadding();
+        float labelWidth = UIBase.getUITextWidthNormal(FILE_TYPE_PREFIX_TEXT);
+        return (int) (this.fileListScrollArea.getWidthWithBorder() - labelWidth - labelPadding);
     }
 
     /**
@@ -878,9 +890,10 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     protected void renderAudioPreview(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int previewWidth = 200;
-        int topY = 50 + 15;
+        int topY = (int) this.getMainAreaTopY();
         int availableHeight = (this.cancelButton.getY() - 50) - topY;
-        int progressAreaHeight = AUDIO_PREVIEW_PROGRESS_BAR_SPACING + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT + AUDIO_PREVIEW_TIME_SPACING + this.font.lineHeight;
+        int textHeight = Math.round(UIBase.getUITextHeightNormal());
+        int progressAreaHeight = AUDIO_PREVIEW_PROGRESS_BAR_SPACING + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT + AUDIO_PREVIEW_TIME_SPACING + textHeight;
         int basePreviewHeight = Math.max(40, availableHeight - (AUDIO_PREVIEW_BUTTON_SIZE + AUDIO_PREVIEW_BUTTON_SPACING + progressAreaHeight));
         int previewHeight = Math.max(12, basePreviewHeight / 3);
         int x = this.width - 20 - previewWidth;
@@ -896,7 +909,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         UIBase.renderBorder(graphics, x, y, x + previewWidth, y + previewHeight, UIBase.ELEMENT_BORDER_THICKNESS, previewBorderColor, true, true, true, true);
         int progressY = y + previewHeight + AUDIO_PREVIEW_PROGRESS_BAR_SPACING;
         this.renderAudioPreviewProgress(graphics, x, progressY, previewWidth);
-        int controlsY = progressY + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT + AUDIO_PREVIEW_TIME_SPACING + this.font.lineHeight + AUDIO_PREVIEW_BUTTON_SPACING;
+        int controlsY = progressY + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT + AUDIO_PREVIEW_TIME_SPACING + textHeight + AUDIO_PREVIEW_BUTTON_SPACING;
         int buttonX = x;
         int buttonY = controlsY;
         int sliderX = buttonX + AUDIO_PREVIEW_BUTTON_SIZE + AUDIO_PREVIEW_BUTTON_SPACING;
@@ -975,9 +988,17 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
         String timeText = this.formatAudioTime(playTime) + " / " + this.formatAudioTime(duration);
         int timeY = barYEnd + AUDIO_PREVIEW_TIME_SPACING;
-        int textWidth = this.font.width(timeText);
-        int textX = previewX + (previewWidth / 2) - (textWidth / 2);
-        graphics.drawString(this.font, timeText, textX, timeY, UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt(), false);
+        float textWidth = UIBase.getUITextWidth(timeText);
+        float textX = previewX + (previewWidth / 2.0F) - (textWidth / 2.0F);
+        UIBase.renderText(graphics, timeText, textX, timeY, UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt());
+    }
+
+    protected float getMainAreaLabelY() {
+        return 50.0F;
+    }
+
+    protected float getMainAreaTopY() {
+        return this.getMainAreaLabelY() + UIBase.getUITextHeightNormal() + UIBase.getAreaLabelVerticalPadding();
     }
 
     @NotNull
