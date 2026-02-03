@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothLineRenderer;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -185,15 +186,23 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
         //Separator between title bar and body (match PiPWindow logic)
         float titleBarHeight = this.getTitleBarHeight();
         if (this.isExpanded() && titleBarHeight > 0.0F) {
-            double renderScale = getRenderScaleSafe();
-            float divider = (float) Math.max(1.0F, renderScale);
-            float dividerHeight = divider / (float) renderScale;
+            float divider = this.getBorderThickness();
             UIBase.resetShaderColor(graphics);
-            float titleBarX = this.getBorderThickness();
-            float titleBarY = this.getBorderThickness();
-            float titleBarRight = titleBarX + this.getBodyWidth();
-            float bottom = titleBarY + titleBarHeight;
-            RenderingUtils.fillF(graphics, titleBarX, bottom - dividerHeight, titleBarRight, bottom, this.getBorderColor().getColorInt());
+            if (divider > 0.0F) {
+                float titleBarX = this.getBorderThickness();
+                float titleBarY = this.getBorderThickness();
+                float titleBarRight = titleBarX + this.getBodyWidth();
+                float bottom = titleBarY + titleBarHeight;
+                SmoothLineRenderer.renderSmoothHorizontalLineScaled(
+                        graphics,
+                        titleBarX,
+                        bottom - divider,
+                        titleBarRight - titleBarX,
+                        divider,
+                        this.getBorderColor().getColorInt(),
+                        partial
+                );
+            }
         }
 
         //Widget border

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothLineRenderer;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
@@ -390,8 +391,18 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
         if (titleBarHeight > 0.0F) {
             float bottom = titleBarY + titleBarHeight;
-            float divider = Math.max(1.0F, scale);
-            RenderingUtils.fillF(graphics, titleBarX, bottom - divider, titleBarRight, bottom, this.getBorderColor(theme));
+            float divider = border;
+            if (divider > 0.0F) {
+                SmoothLineRenderer.renderSmoothHorizontalLine(
+                        graphics,
+                        titleBarX,
+                        bottom - divider,
+                        titleBarRight - titleBarX,
+                        divider,
+                        this.getBorderColor(theme),
+                        partial
+                );
+            }
         }
     }
 
