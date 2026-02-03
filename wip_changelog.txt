@@ -86,6 +86,8 @@
 - Added "Is Modpack Mode Enabled" requirement that checks if FancyMenu's Modpack Mode is enabled (useful for showing "in-dev" debug stuff)
 - Added "Is Customization Menu Bar Visible" requirement that checks if FancyMenu's menu bar is visible
 - Added "Circle Shape" element, which works similar to the "Rectangle Shape" element (with blur and color support)
+- Added "Block/Item JSON Model" element that can render a block/item JSON model loaded from Minecraft's resources or external sources (#1347)
+  - Supports setting a custom texture, has rotation controls, light controls, etc.
 - Added "EXECUTE LATER" block to the action script system that can hold actions and execute them with a delay in milliseconds (#1497)
   - The block gets queued for that and executed in the main thread after the delay
 - Added "Comment" object to the action script system that lets you add comments to your scripts for easier organization and logic explaination (#1465)
