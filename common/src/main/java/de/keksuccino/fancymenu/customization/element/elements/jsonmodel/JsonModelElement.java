@@ -418,4 +418,5 @@ public class JsonModelElement extends AbstractElement {
             this.contents().close();
         }
     }
+
 }
