@@ -671,48 +671,50 @@ public class CustomizationOverlayUI {
         globalCustomizationsMenu.addSubMenuEntry("slider_textures", Component.translatable("fancymenu.global_customizations.slider_textures"), sliderTexturesMenu)
                 .setIcon(MaterialIcons.IMAGE);
 
-        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(sliderTexturesMenu, "slider_background_texture", emptyImageSupplier,
-                        GlobalCustomizationHandler::getCustomSliderBackgroundSupplier,
-                        supplier -> FancyMenu.getOptions().globalSliderBackground.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
-                        Component.translatable("fancymenu.global_customizations.slider_background"), true, null, true, true, true)
+        ContextMenu sliderBackgroundMenu = new ContextMenu();
+        sliderTexturesMenu.addSubMenuEntry("slider_background_texture", Component.translatable("fancymenu.global_customizations.slider_background"), sliderBackgroundMenu)
                 .setIcon(MaterialIcons.IMAGE);
 
-        sliderTexturesMenu.addSeparatorEntry("separator_before_slider_background_nine_slice");
+        ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(sliderBackgroundMenu, "slider_background_set_texture", emptyImageSupplier,
+                        GlobalCustomizationHandler::getCustomSliderBackgroundSupplier,
+                        supplier -> FancyMenu.getOptions().globalSliderBackground.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
+                        Component.translatable("fancymenu.global_customizations.slider_background.set_texture"), true, null, true, true, true)
+                .setIcon(MaterialIcons.IMAGE);
 
-        sliderTexturesMenu.addValueCycleEntry("slider_background_nine_slice_toggle",
+        sliderBackgroundMenu.addSeparatorEntry("separator_before_slider_background_nine_slice");
+
+        sliderBackgroundMenu.addValueCycleEntry("slider_background_nine_slice_toggle",
                         CommonCycles.cycleEnabledDisabled("fancymenu.global_customizations.slider_background.nine_slice", FancyMenu.getOptions().globalSliderBackgroundNineSlice.getValue())
                                 .addCycleListener(cycle -> FancyMenu.getOptions().globalSliderBackgroundNineSlice.setValue(cycle.getAsBoolean())))
                 .setIcon(MaterialIcons.GRID_GUIDES);
 
-        ContextMenuUtils.addIntegerInputContextMenuEntryTo(sliderTexturesMenu, "slider_background_nine_slice_border_top",
+        ContextMenuUtils.addIntegerInputContextMenuEntryTo(sliderBackgroundMenu, "slider_background_nine_slice_border_top",
                         Component.translatable("fancymenu.global_customizations.slider_background.nine_slice.border.top"),
                         () -> FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderTop.getValue(),
                         integer -> FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderTop.setValue(integer),
                         true, FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderTop.getDefaultValue(), null, null)
                 .setIcon(MaterialIcons.BORDER_TOP);
 
-        ContextMenuUtils.addIntegerInputContextMenuEntryTo(sliderTexturesMenu, "slider_background_nine_slice_border_right",
+        ContextMenuUtils.addIntegerInputContextMenuEntryTo(sliderBackgroundMenu, "slider_background_nine_slice_border_right",
                         Component.translatable("fancymenu.global_customizations.slider_background.nine_slice.border.right"),
                         () -> FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderRight.getValue(),
                         integer -> FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderRight.setValue(integer),
                         true, FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderRight.getDefaultValue(), null, null)
                 .setIcon(MaterialIcons.BORDER_RIGHT);
 
-        ContextMenuUtils.addIntegerInputContextMenuEntryTo(sliderTexturesMenu, "slider_background_nine_slice_border_bottom",
+        ContextMenuUtils.addIntegerInputContextMenuEntryTo(sliderBackgroundMenu, "slider_background_nine_slice_border_bottom",
                         Component.translatable("fancymenu.global_customizations.slider_background.nine_slice.border.bottom"),
                         () -> FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderBottom.getValue(),
                         integer -> FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderBottom.setValue(integer),
                         true, FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderBottom.getDefaultValue(), null, null)
                 .setIcon(MaterialIcons.BORDER_BOTTOM);
 
-        ContextMenuUtils.addIntegerInputContextMenuEntryTo(sliderTexturesMenu, "slider_background_nine_slice_border_left",
+        ContextMenuUtils.addIntegerInputContextMenuEntryTo(sliderBackgroundMenu, "slider_background_nine_slice_border_left",
                         Component.translatable("fancymenu.global_customizations.slider_background.nine_slice.border.left"),
                         () -> FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderLeft.getValue(),
                         integer -> FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderLeft.setValue(integer),
                         true, FancyMenu.getOptions().globalSliderBackgroundNineSliceBorderLeft.getDefaultValue(), null, null)
                 .setIcon(MaterialIcons.BORDER_LEFT);
-
-        sliderTexturesMenu.addSeparatorEntry("separator_after_slider_background");
 
         ContextMenu sliderHandleMenu = new ContextMenu();
         sliderTexturesMenu.addSubMenuEntry("slider_handle_textures", Component.translatable("fancymenu.global_customizations.slider_handle_textures"), sliderHandleMenu)

@@ -1291,8 +1291,8 @@
   "fancymenu.global_customizations.menu_music_tracks.manage": "Manage Menu Music Tracks",
   "fancymenu.global_customizations.menu_music_tracks.remove": "Remove Track",
   "fancymenu.global_customizations.menu_music_tracks.remove.confirm": "Remove the selected track from the list?",
-  "fancymenu.global_customizations.slider_background": "Custom Slider Background Texture",
-  "fancymenu.global_customizations.slider_handle_textures": "Custom Slider Handle Textures",
+  "fancymenu.global_customizations.slider_background": "Slider Background Texture",
+  "fancymenu.global_customizations.slider_handle_textures": "Slider Handle Textures",
   "fancymenu.global_customizations.slider_handle_textures.hover": "Hover",
   "fancymenu.global_customizations.slider_handle_textures.inactive": "Inactive",
   "fancymenu.global_customizations.slider_handle_textures.normal": "Normal",
@@ -2768,5 +2768,7 @@
   "fancymenu.global_customizations.slider_handle.nine_slice.border.top": "Slider Handle Nine-Slice Top Border Size [Pixels]",
   "fancymenu.global_customizations.slider_handle.nine_slice.border.right": "Slider Handle Nine-Slice Right Border Size [Pixels]",
   "fancymenu.global_customizations.slider_handle.nine_slice.border.bottom": "Slider Handle Nine-Slice Bottom Border Size [Pixels]",
-  "fancymenu.global_customizations.slider_handle.nine_slice.border.left": "Slider Handle Nine-Slice Left Border Size [Pixels]"
+  "fancymenu.global_customizations.slider_handle.nine_slice.border.left": "Slider Handle Nine-Slice Left Border Size [Pixels]",
+  "fancymenu.global_customizations.slider_background.set_texture": "Set Texture"
+
 }
