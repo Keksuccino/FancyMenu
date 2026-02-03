@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.cycle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,12 +19,12 @@ public class ValueCycle<T> implements IValueCycle<T> {
 
     /**
      * A value toggle.<br>
-     * <b>The value list needs at least two entries!</b>
+     * <b>The value list needs at least one entry!</b>
      */
     public static <T> ValueCycle<T> fromList(@NotNull List<T> values) {
         Objects.requireNonNull(values);
-        if (values.size() < 2) {
-            throw new InvalidParameterException("Failed to create ValueCycle! Value list size too small (<2)!");
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException("Failed to create ValueCycle! Value list size too small (empty)!");
         }
         ValueCycle<T> valueCycle = new ValueCycle<>();
         valueCycle.values.addAll(values);
@@ -34,7 +33,7 @@ public class ValueCycle<T> implements IValueCycle<T> {
 
     /**
      * A value toggle.<br>
-     * <b>The value array needs at least two entries!</b>
+     * <b>The value array needs at least one entry!</b>
      */
     @SafeVarargs
     public static <T> ValueCycle<T> fromArray(@NotNull T... values) {
@@ -50,8 +49,8 @@ public class ValueCycle<T> implements IValueCycle<T> {
     }
 
     public ValueCycle<T> removeValue(@NotNull T value) {
-        if (this.values.size() == 2) {
-            LOGGER.error("Unable to remove value! At least 2 values needed!");
+        if (this.values.size() <= 1) {
+            LOGGER.error("Unable to remove value! At least 1 value needed!");
             return this;
         }
         this.values.remove(value);
@@ -95,7 +94,7 @@ public class ValueCycle<T> implements IValueCycle<T> {
     }
 
     public ValueCycle<T> setCurrentValueByIndex(int index, boolean notifyListeners) {
-        if ((index > 0) && (index < this.values.size())) {
+        if ((index >= 0) && (index < this.values.size())) {
             this.currentIndex = index;
             if (notifyListeners) this.notifyListeners();
         }

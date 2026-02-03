@@ -5,7 +5,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
-import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -23,8 +22,8 @@ public class LocalizedGenericValueCycle<T> extends ValueCycle<T> implements ILoc
     public static <T> LocalizedGenericValueCycle<T> of(@NotNull String cycleLocalizationKey, @NotNull T... values) {
         Objects.requireNonNull(values);
         List<T> valueList = Arrays.asList(values);
-        if (valueList.size() < 2) {
-            throw new InvalidParameterException("Failed to create LocalizedGenericValueCycle! Value list size too small (<2)!");
+        if (valueList.isEmpty()) {
+            throw new IllegalArgumentException("Failed to create LocalizedGenericValueCycle! Value list size too small (empty)!");
         }
         LocalizedGenericValueCycle<T> valueCycle = new LocalizedGenericValueCycle<>(cycleLocalizationKey);
         valueCycle.values.addAll(valueList);
