@@ -114,17 +114,10 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     protected int movingStartPosY = 0;
     protected int resizingStartPosX = 0;
     protected int resizingStartPosY = 0;
-    protected final List<ResizeGrabber> resizeGrabbers = List.of(
-            new ResizeGrabber(ResizeGrabberType.TOP_LEFT),
-            new ResizeGrabber(ResizeGrabberType.TOP),
-            new ResizeGrabber(ResizeGrabberType.TOP_RIGHT),
-            new ResizeGrabber(ResizeGrabberType.RIGHT),
-            new ResizeGrabber(ResizeGrabberType.BOTTOM_RIGHT),
-            new ResizeGrabber(ResizeGrabberType.BOTTOM),
-            new ResizeGrabber(ResizeGrabberType.BOTTOM_LEFT),
-            new ResizeGrabber(ResizeGrabberType.LEFT)
-    );
-    protected ResizeGrabber activeResizeGrabber = null;
+    protected static final int RESIZE_EDGE_GRAB_ZONE = 4;
+    protected static final int RESIZE_INDICATOR_SIZE = 4;
+    protected @Nullable ResizeGrabberType activeResizeGrabberType = null;
+    protected @Nullable ResizeGrabberType hoveredResizeGrabberType = null;
     protected RotationGrabber rotationGrabber = new RotationGrabber();
     protected boolean rotationGrabberActive = false;
     protected float rotationStartAngle = 0.0F;
@@ -765,6 +758,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         this.tick();
 
         this.hovered = this.isMouseOver(mouseX, mouseY);
+        this.updateResizeHoverState(mouseX, mouseY);
 
         this.element.renderInternal(graphics, mouseX, mouseY, partial);
 
@@ -773,8 +767,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         this.renderDeprecatedIndicator(graphics);
 
         //Update cursor
-        ResizeGrabber hoveredGrabber = this.getHoveredResizeGrabber();
-        if (hoveredGrabber != null) CursorHandler.setClientTickCursor(hoveredGrabber.getCursor());
+        ResizeGrabberType hoveredResizeType = this.getHoveredResizeType();
+        if (hoveredResizeType != null) CursorHandler.setClientTickCursor(this.getResizeCursor(hoveredResizeType));
 
         RotationGrabber hoveredRotationGrabber = this.getHoveredRotationGrabber();
         if (hoveredRotationGrabber != null) CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_ALL);
@@ -870,9 +864,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             //RIGHT
             graphics.fill(this.getX() + this.getWidth() - 1, this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 
-            for (ResizeGrabber g : this.resizeGrabbers) {
-                g.render(graphics, mouseX, mouseY, partial);
-            }
+            this.renderResizeIndicators(graphics);
 
             // Render rotation circle and grabber
             if (this.isSelected() && this.element.supportsRotation() && !this.element.advancedRotationMode && !this.isMultiSelected()) {
@@ -953,6 +945,70 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             this.horizontalTiltGrabber.render(graphics, mouseX, mouseY, partial);
         }
 
+    }
+
+    protected void renderResizeIndicators(@NotNull GuiGraphics graphics) {
+        if (!this.isSelected() || this.isMultiSelected() || !this.settings.isResizeable()) {
+            return;
+        }
+        for (ResizeGrabberType type : ResizeGrabberType.values()) {
+            if (!this.isResizeIndicatorEnabled(type)) {
+                continue;
+            }
+            int x = this.getResizeIndicatorX(type, RESIZE_INDICATOR_SIZE);
+            int y = this.getResizeIndicatorY(type, RESIZE_INDICATOR_SIZE);
+            graphics.fill(x, y, x + RESIZE_INDICATOR_SIZE, y + RESIZE_INDICATOR_SIZE, BORDER_COLOR.get(this));
+        }
+    }
+
+    protected boolean isResizeIndicatorEnabled(@NotNull ResizeGrabberType type) {
+        boolean resizeLeft = (type == ResizeGrabberType.LEFT) || (type == ResizeGrabberType.TOP_LEFT) || (type == ResizeGrabberType.BOTTOM_LEFT);
+        boolean resizeRight = (type == ResizeGrabberType.RIGHT) || (type == ResizeGrabberType.TOP_RIGHT) || (type == ResizeGrabberType.BOTTOM_RIGHT);
+        boolean resizeTop = (type == ResizeGrabberType.TOP) || (type == ResizeGrabberType.TOP_LEFT) || (type == ResizeGrabberType.TOP_RIGHT);
+        boolean resizeBottom = (type == ResizeGrabberType.BOTTOM) || (type == ResizeGrabberType.BOTTOM_LEFT) || (type == ResizeGrabberType.BOTTOM_RIGHT);
+        boolean resizeHorizontal = resizeLeft || resizeRight;
+        boolean resizeVertical = resizeTop || resizeBottom;
+        boolean resizeCorner = resizeHorizontal && resizeVertical;
+        boolean canResizeX = this.settings.isResizeableX() && this.element.advancedWidth.isDefault();
+        boolean canResizeY = this.settings.isResizeableY() && this.element.advancedHeight.isDefault();
+        if (resizeLeft && !this.element.advancedX.isDefault()) return false;
+        if (resizeTop && !this.element.advancedY.isDefault()) return false;
+        if (resizeCorner) {
+            return canResizeX && canResizeY;
+        }
+        if (resizeVertical) {
+            return canResizeY;
+        }
+        if (resizeHorizontal) {
+            return canResizeX;
+        }
+        return false;
+    }
+
+    protected int getResizeIndicatorX(@NotNull ResizeGrabberType type, int size) {
+        int x = this.getX();
+        boolean resizeLeft = (type == ResizeGrabberType.LEFT) || (type == ResizeGrabberType.TOP_LEFT) || (type == ResizeGrabberType.BOTTOM_LEFT);
+        boolean resizeRight = (type == ResizeGrabberType.RIGHT) || (type == ResizeGrabberType.TOP_RIGHT) || (type == ResizeGrabberType.BOTTOM_RIGHT);
+        if (resizeLeft) {
+            return x - (size / 2);
+        }
+        if (resizeRight) {
+            return x + this.getWidth() - (size / 2);
+        }
+        return x + (this.getWidth() / 2) - (size / 2);
+    }
+
+    protected int getResizeIndicatorY(@NotNull ResizeGrabberType type, int size) {
+        int y = this.getY();
+        boolean resizeTop = (type == ResizeGrabberType.TOP) || (type == ResizeGrabberType.TOP_LEFT) || (type == ResizeGrabberType.TOP_RIGHT);
+        boolean resizeBottom = (type == ResizeGrabberType.BOTTOM) || (type == ResizeGrabberType.BOTTOM_LEFT) || (type == ResizeGrabberType.BOTTOM_RIGHT);
+        if (resizeTop) {
+            return y - (size / 2);
+        }
+        if (resizeBottom) {
+            return y + this.getHeight() - (size / 2);
+        }
+        return y + (this.getHeight() / 2) - (size / 2);
     }
 
     /**
@@ -1038,7 +1094,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         this.selected = false;
         this.multiSelected = false;
         this.leftMouseDown = false;
-        this.activeResizeGrabber = null;
+        this.activeResizeGrabberType = null;
+        this.hoveredResizeGrabberType = null;
         this.rotationGrabberActive = false;
         this.verticalTiltGrabberActive = false;
         this.horizontalTiltGrabberActive = false;
@@ -1085,13 +1142,14 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
         if (this.element.layerHiddenInEditor) return false;
+        this.updateResizeHoverState((int) mouseX, (int) mouseY);
 
         if (!this.isSelected()) {
             return false;
         }
         if (button == 0) {
             if (!this.rightClickMenu.isUserNavigatingInMenu()) {
-                this.activeResizeGrabber = !this.isMultiSelected() ? this.getHoveredResizeGrabber() : null;
+                this.activeResizeGrabberType = !this.isMultiSelected() ? this.getResizeGrabberTypeAt((int) mouseX, (int) mouseY) : null;
                 this.rotationGrabberActive = !this.isMultiSelected() && this.getHoveredRotationGrabber() != null;
                 this.verticalTiltGrabberActive = !this.isMultiSelected() && this.getHoveredVerticalTiltGrabber() != null;
                 this.horizontalTiltGrabberActive = !this.isMultiSelected() && this.getHoveredHorizontalTiltGrabber() != null;
@@ -1137,7 +1195,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (button == 0) {
             this.leftMouseDown = false;
-            this.activeResizeGrabber = null;
+            this.activeResizeGrabberType = null;
             if (this.isGettingRotated() && (this.preRotationSnapshot != null)) {
                 if (this.rotationStartAngle != this.element.rotationDegrees.getFloat()) {
                     this.editor.history.saveSnapshot(this.preRotationSnapshot);
@@ -1395,7 +1453,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 int diffY = (int)-(this.resizingStartPosY - mouseY);
                 if ((diffX > 0) || (diffY > 0)) this.recentlyResized = true;
 
-                ResizeGrabberType resizeType = this.activeResizeGrabber.type;
+                ResizeGrabberType resizeType = this.activeResizeGrabberType;
                 boolean resizeLeft = (resizeType == ResizeGrabberType.LEFT) || (resizeType == ResizeGrabberType.TOP_LEFT) || (resizeType == ResizeGrabberType.BOTTOM_LEFT);
                 boolean resizeRight = (resizeType == ResizeGrabberType.RIGHT) || (resizeType == ResizeGrabberType.TOP_RIGHT) || (resizeType == ResizeGrabberType.BOTTOM_RIGHT);
                 boolean resizeTop = (resizeType == ResizeGrabberType.TOP) || (resizeType == ResizeGrabberType.TOP_LEFT) || (resizeType == ResizeGrabberType.TOP_RIGHT);
@@ -1497,7 +1555,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
     public boolean isHovered() {
         if (this.element.layerHiddenInEditor) return false;
-        return this.hovered || this.rightClickMenu.isUserNavigatingInMenu() || (this.getHoveredResizeGrabber() != null) || (this.getHoveredRotationGrabber() != null) || (this.getHoveredVerticalTiltGrabber() != null) || (this.getHoveredHorizontalTiltGrabber() != null);
+        return this.hovered || this.rightClickMenu.isUserNavigatingInMenu() || (this.getHoveredResizeType() != null) || (this.getHoveredRotationGrabber() != null) || (this.getHoveredVerticalTiltGrabber() != null) || (this.getHoveredHorizontalTiltGrabber() != null);
     }
 
     public int getX() {
@@ -1524,7 +1582,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         if (!this.settings.isResizeable()) {
             return false;
         }
-        return this.activeResizeGrabber != null;
+        return this.activeResizeGrabberType != null;
     }
 
     public boolean isGettingRotated() {
@@ -1561,19 +1619,110 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     }
 
     @Nullable
-    public ResizeGrabber getHoveredResizeGrabber() {
+    public ResizeGrabberType getHoveredResizeType() {
         if (!this.settings.isResizeable()) {
             return null;
         }
-        if (this.activeResizeGrabber != null) {
-            return this.activeResizeGrabber;
+        if (this.activeResizeGrabberType != null) {
+            return this.activeResizeGrabberType;
         }
-        for (ResizeGrabber g : this.resizeGrabbers) {
-            if (g.hovered) {
-                return g;
-            }
+        return this.hoveredResizeGrabberType;
+    }
+
+    protected void updateResizeHoverState(int mouseX, int mouseY) {
+        this.hoveredResizeGrabberType = this.getResizeGrabberTypeAt(mouseX, mouseY);
+    }
+
+    @Nullable
+    protected ResizeGrabberType getResizeGrabberTypeAt(int mouseX, int mouseY) {
+        if (!this.settings.isResizeable()) {
+            return null;
+        }
+        if (!this.isSelected()) {
+            return null;
+        }
+        if (this.isMultiSelected()) {
+            return null;
+        }
+        int left = this.getX();
+        int right = left + this.getWidth();
+        int top = this.getY();
+        int bottom = top + this.getHeight();
+
+        int grabZone = RESIZE_EDGE_GRAB_ZONE;
+        if ((mouseX < left - grabZone) || (mouseX > right + grabZone) || (mouseY < top - grabZone) || (mouseY > bottom + grabZone)) {
+            return null;
+        }
+
+        int distLeft = Math.abs(mouseX - left);
+        int distRight = Math.abs(mouseX - right);
+        int distTop = Math.abs(mouseY - top);
+        int distBottom = Math.abs(mouseY - bottom);
+
+        boolean canResizeX = this.settings.isResizeableX() && this.element.advancedWidth.isDefault();
+        boolean canResizeY = this.settings.isResizeableY() && this.element.advancedHeight.isDefault();
+        boolean canResizeLeft = canResizeX && this.element.advancedX.isDefault();
+        boolean canResizeRight = canResizeX;
+        boolean canResizeTop = canResizeY && this.element.advancedY.isDefault();
+        boolean canResizeBottom = canResizeY;
+
+        boolean nearLeft = distLeft <= grabZone;
+        boolean nearRight = distRight <= grabZone;
+        boolean nearTop = distTop <= grabZone;
+        boolean nearBottom = distBottom <= grabZone;
+
+        boolean useLeft = nearLeft && canResizeLeft;
+        boolean useRight = nearRight && canResizeRight;
+        boolean useTop = nearTop && canResizeTop;
+        boolean useBottom = nearBottom && canResizeBottom;
+
+        if (useLeft && useRight) {
+            useLeft = distLeft <= distRight;
+            useRight = !useLeft;
+        }
+        if (useTop && useBottom) {
+            useTop = distTop <= distBottom;
+            useBottom = !useTop;
+        }
+
+        if (useLeft && useTop) {
+            return ResizeGrabberType.TOP_LEFT;
+        }
+        if (useRight && useTop) {
+            return ResizeGrabberType.TOP_RIGHT;
+        }
+        if (useRight && useBottom) {
+            return ResizeGrabberType.BOTTOM_RIGHT;
+        }
+        if (useLeft && useBottom) {
+            return ResizeGrabberType.BOTTOM_LEFT;
+        }
+        if (useTop) {
+            return ResizeGrabberType.TOP;
+        }
+        if (useBottom) {
+            return ResizeGrabberType.BOTTOM;
+        }
+        if (useLeft) {
+            return ResizeGrabberType.LEFT;
+        }
+        if (useRight) {
+            return ResizeGrabberType.RIGHT;
         }
         return null;
+    }
+
+    protected long getResizeCursor(@NotNull ResizeGrabberType type) {
+        if ((type == ResizeGrabberType.TOP_LEFT) || (type == ResizeGrabberType.BOTTOM_RIGHT)) {
+            return CursorHandler.CURSOR_RESIZE_NWSE;
+        }
+        if ((type == ResizeGrabberType.TOP_RIGHT) || (type == ResizeGrabberType.BOTTOM_LEFT)) {
+            return CursorHandler.CURSOR_RESIZE_NESW;
+        }
+        if ((type == ResizeGrabberType.TOP) || (type == ResizeGrabberType.BOTTOM)) {
+            return CursorHandler.CURSOR_RESIZE_VERTICAL;
+        }
+        return CursorHandler.CURSOR_RESIZE_HORIZONTAL;
     }
 
     @Nullable
@@ -1712,97 +1861,6 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         BOTTOM,
         BOTTOM_LEFT,
         LEFT
-    }
-
-    public class ResizeGrabber implements Renderable {
-
-        protected int width = 4;
-        protected int height = 4;
-        protected final ResizeGrabberType type;
-        protected boolean hovered = false;
-
-        protected ResizeGrabber(ResizeGrabberType type) {
-            this.type = type;
-        }
-
-        @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
-            if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
-                graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
-            }
-        }
-
-        protected int getX() {
-            int x = AbstractEditorElement.this.getX();
-            boolean resizeLeft = (this.type == ResizeGrabberType.LEFT) || (this.type == ResizeGrabberType.TOP_LEFT) || (this.type == ResizeGrabberType.BOTTOM_LEFT);
-            boolean resizeRight = (this.type == ResizeGrabberType.RIGHT) || (this.type == ResizeGrabberType.TOP_RIGHT) || (this.type == ResizeGrabberType.BOTTOM_RIGHT);
-            if (resizeLeft) {
-                return x - (this.width / 2);
-            }
-            if (resizeRight) {
-                return x + AbstractEditorElement.this.getWidth() - (this.width / 2);
-            }
-            return x + (AbstractEditorElement.this.getWidth() / 2) - (this.width / 2);
-        }
-
-        protected int getY() {
-            int y = AbstractEditorElement.this.getY();
-            boolean resizeTop = (this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.TOP_LEFT) || (this.type == ResizeGrabberType.TOP_RIGHT);
-            boolean resizeBottom = (this.type == ResizeGrabberType.BOTTOM) || (this.type == ResizeGrabberType.BOTTOM_LEFT) || (this.type == ResizeGrabberType.BOTTOM_RIGHT);
-            if (resizeTop) {
-                return y - (this.height / 2);
-            }
-            if (resizeBottom) {
-                return y + AbstractEditorElement.this.getHeight() - (this.height / 2);
-            }
-            return y + (AbstractEditorElement.this.getHeight() / 2) - (this.height / 2);
-        }
-
-        protected long getCursor() {
-            if ((this.type == ResizeGrabberType.TOP_LEFT) || (this.type == ResizeGrabberType.BOTTOM_RIGHT)) {
-                return CursorHandler.CURSOR_RESIZE_NWSE;
-            }
-            if ((this.type == ResizeGrabberType.TOP_RIGHT) || (this.type == ResizeGrabberType.BOTTOM_LEFT)) {
-                return CursorHandler.CURSOR_RESIZE_NESW;
-            }
-            if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
-                return CursorHandler.CURSOR_RESIZE_VERTICAL;
-            }
-            return CursorHandler.CURSOR_RESIZE_HORIZONTAL;
-        }
-
-        protected boolean isGrabberEnabled() {
-            if (AbstractEditorElement.this.isMultiSelected()) {
-                return false;
-            }
-            boolean resizeLeft = (this.type == ResizeGrabberType.LEFT) || (this.type == ResizeGrabberType.TOP_LEFT) || (this.type == ResizeGrabberType.BOTTOM_LEFT);
-            boolean resizeRight = (this.type == ResizeGrabberType.RIGHT) || (this.type == ResizeGrabberType.TOP_RIGHT) || (this.type == ResizeGrabberType.BOTTOM_RIGHT);
-            boolean resizeTop = (this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.TOP_LEFT) || (this.type == ResizeGrabberType.TOP_RIGHT);
-            boolean resizeBottom = (this.type == ResizeGrabberType.BOTTOM) || (this.type == ResizeGrabberType.BOTTOM_LEFT) || (this.type == ResizeGrabberType.BOTTOM_RIGHT);
-            boolean resizeHorizontal = resizeLeft || resizeRight;
-            boolean resizeVertical = resizeTop || resizeBottom;
-            boolean resizeCorner = resizeHorizontal && resizeVertical;
-            boolean canResizeX = AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableX() && AbstractEditorElement.this.element.advancedWidth.isDefault();
-            boolean canResizeY = AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableY() && AbstractEditorElement.this.element.advancedHeight.isDefault();
-            if (resizeLeft && !AbstractEditorElement.this.element.advancedX.isDefault()) return false;
-            if (resizeTop && !AbstractEditorElement.this.element.advancedY.isDefault()) return false;
-            if (resizeCorner) {
-                return canResizeX && canResizeY;
-            }
-            if (resizeVertical) {
-                return canResizeY;
-            }
-            if (resizeHorizontal) {
-                return canResizeX;
-            }
-            return false;
-        }
-
-        protected boolean isMouseOver(double mouseX, double mouseY) {
-            return (mouseX >= this.getX()) && (mouseX <= this.getX() + this.width) && (mouseY >= this.getY()) && mouseY <= this.getY() + this.height;
-        }
-
     }
 
     public class RotationGrabber implements Renderable {

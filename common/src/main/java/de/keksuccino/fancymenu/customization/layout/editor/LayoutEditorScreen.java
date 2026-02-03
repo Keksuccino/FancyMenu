@@ -1268,7 +1268,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//Handle mouse click for elements
 		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			e.mouseClicked(mouseX, mouseY, button);
-			if (e.isHovered() || e.isGettingResized() || (e.getHoveredResizeGrabber() != null)) {
+			if (e.isHovered() || e.isGettingResized() || (e.getHoveredResizeType() != null)) {
 				canStartMouseSelection = false;
 			}
 		}
