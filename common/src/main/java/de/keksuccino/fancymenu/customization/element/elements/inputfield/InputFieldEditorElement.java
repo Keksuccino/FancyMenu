@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,33 +58,41 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                 .setStackable(true)
                 .setIcon(MaterialIcons.SHORT_TEXT);
 
+        this.element.hintText.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.hint_text.desc")))
+                .setIcon(MaterialIcons.TEXT_FIELDS);
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_hint_text");
+
+        this.element.textColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.text_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
+
+        this.element.hintTextColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.hint_text_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_hint_colors");
+
         this.element.backgroundColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.background_color.desc")))
                 .setIcon(MaterialIcons.PALETTE);
 
-        this.element.borderColorNormal.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+        ContextMenu borderColorMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("border_color", Component.translatable("fancymenu.elements.input_field.border_color_group"), borderColorMenu)
+                .setIcon(MaterialIcons.BORDER_COLOR);
+
+        this.element.borderColorNormal.buildContextMenuEntryAndAddTo(borderColorMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.border_color.desc")))
                 .setIcon(MaterialIcons.BORDER_COLOR);
 
-        this.element.borderColorFocused.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+        this.element.borderColorFocused.buildContextMenuEntryAndAddTo(borderColorMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.border_color_focused.desc")))
                 .setIcon(MaterialIcons.BORDER_COLOR);
 
         this.element.borderRoundingRadius.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.border_rounding_radius.desc")))
                 .setIcon(MaterialIcons.ROUNDED_CORNER);
-
-        this.element.textColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.text_color.desc")))
-                .setIcon(MaterialIcons.PALETTE);
-
-        this.element.hintText.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.hint_text.desc")))
-                .setIcon(MaterialIcons.TEXT_FIELDS);
-
-        this.element.hintTextColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.hint_text_color.desc")))
-                .setIcon(MaterialIcons.PALETTE);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_audios");
 

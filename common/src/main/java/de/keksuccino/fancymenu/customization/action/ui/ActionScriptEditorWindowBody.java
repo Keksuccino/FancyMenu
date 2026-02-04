@@ -466,7 +466,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
                 boolean b = super.mouseClicked(mouseX, mouseY, button); // Do this first, so the action entries can do their thing (toggle favorites) before the menu gets rebuilt
                 if (this.isUserNavigatingInMenu() && (button == 1)) {
-                    this.entries.clear();
+                    this.clearEntries();
                     buildAddActionSubMenu(this);
                     return true;
                 }
