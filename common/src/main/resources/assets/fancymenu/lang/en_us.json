@@ -2802,6 +2802,5 @@
   "fancymenu.overlay.menu_bar.tools.browse_game_resources": "Browse Game Resources",
   "fancymenu.overlay.menu_bar.tools.browse_game_resources.desc": "Browse-only. An easy way to browse\ngame and mod assets.",
 
-  "fancymenu.overlay.menu_bar.user_interface.pip_window_docking": "PiP Window Docking: %s",
-  "fancymenu.ui.themes.bumblebee": "Bumblebee"
+  "fancymenu.overlay.menu_bar.user_interface.pip_window_docking": "PiP Window Docking: %s"
 }

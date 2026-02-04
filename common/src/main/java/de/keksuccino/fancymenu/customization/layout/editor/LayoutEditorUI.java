@@ -972,7 +972,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             @Override
             public ContextMenu openMenuAt(float x, float y) {
 
-                this.entries.clear();
+                this.clearEntries();
 
                 List<VanillaWidgetEditorElement> hiddenVanillaButtons = new ArrayList<>();
                 for (VanillaWidgetEditorElement e : editor.vanillaWidgetEditorElements) {
