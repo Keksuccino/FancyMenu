@@ -57,6 +57,22 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                 .setStackable(true)
                 .setIcon(MaterialIcons.SHORT_TEXT);
 
+        this.element.backgroundColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.background_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
+
+        this.element.borderColorNormal.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.border_color.desc")))
+                .setIcon(MaterialIcons.BORDER_COLOR);
+
+        this.element.borderColorFocused.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.border_color_focused.desc")))
+                .setIcon(MaterialIcons.BORDER_COLOR);
+
+        this.element.borderRoundingRadius.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.border_rounding_radius.desc")))
+                .setIcon(MaterialIcons.ROUNDED_CORNER);
+
         this.rightClickMenu.addSeparatorEntry("separator_before_audios");
 
         this.element.hoverSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)

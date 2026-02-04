@@ -53,6 +53,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected boolean navigatable = true;
     protected boolean canConsumeUserInput = true;
     protected boolean roundedColorBackground = false;
+    protected float roundedColorBackgroundRadius = -1.0F;
     @Nullable
     protected String inputPrefix;
     @Nullable
@@ -86,8 +87,10 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
         if (this.isVisible()) {
 
-            if (this.roundedColorBackground) {
-                float radius = UIBase.getWidgetCornerRoundingRadius();
+            float radius = this.roundedColorBackground ? this.resolveRoundedColorBackgroundRadius() : 0.0F;
+            boolean useRoundedBackground = this.roundedColorBackground && radius > 0.0F;
+
+            if (useRoundedBackground) {
                 SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
                         graphics,
                         this.getX(),
@@ -106,8 +109,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             }
             if (bordered) {
                 int borderColor = this.isFocused() ? this.borderFocusedColor.getColorInt() : this.borderNormalColor.getColorInt();
-                if (this.roundedColorBackground) {
-                    float radius = UIBase.getWidgetCornerRoundingRadius();
+                if (useRoundedBackground) {
                     float borderThickness = 1.0F;
                     float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
                     SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
@@ -480,6 +482,22 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     public ExtendedEditBox setRoundedColorBackgroundEnabled(boolean roundedColorBackground) {
         this.roundedColorBackground = roundedColorBackground;
         return this;
+    }
+
+    public float getRoundedColorBackgroundRadius() {
+        return this.roundedColorBackgroundRadius;
+    }
+
+    public ExtendedEditBox setRoundedColorBackgroundRadius(float roundedColorBackgroundRadius) {
+        this.roundedColorBackgroundRadius = roundedColorBackgroundRadius;
+        return this;
+    }
+
+    protected float resolveRoundedColorBackgroundRadius() {
+        if (this.roundedColorBackgroundRadius >= 0.0F) {
+            return this.roundedColorBackgroundRadius;
+        }
+        return UIBase.getWidgetCornerRoundingRadius();
     }
 
     public @Nullable String getInputPrefix() {

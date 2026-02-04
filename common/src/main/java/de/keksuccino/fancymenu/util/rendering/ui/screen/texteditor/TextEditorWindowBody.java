@@ -26,7 +26,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -423,10 +422,10 @@ public class TextEditorWindowBody extends PiPWindowBody {
         if (!this.multilineMode) {
             MutableComponent indicator = Component.translatable("fancymenu.editor.text_editor.single_line_warning.indicator").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt())).append(Component.literal(" [?]").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().warning_color.getColorInt())));
             int indicatorX = this.getEditorAreaX();
-            int indicatorY = this.getEditorAreaY() - this.font.lineHeight - 5;
-            int indicatorWidth = this.font.width(indicator);
-            graphics.drawString(this.font, indicator, indicatorX, indicatorY, -1, false);
-            if (UIBase.isXYInArea(mouseX, mouseY, indicatorX, indicatorY, indicatorWidth, this.font.lineHeight)) {
+            float indicatorY = this.getEditorAreaY() - UIBase.getUITextHeightNormal() - UIBase.getAreaLabelVerticalPadding();
+            int indicatorWidth = Math.round(UIBase.getUITextWidthNormal(indicator));
+            UIBase.renderText(graphics, indicator, indicatorX, indicatorY, -1);
+            if (UIBase.isXYInArea(mouseX, mouseY, indicatorX, (int) indicatorY, indicatorWidth, (int) UIBase.getUITextHeightNormal())) {
                 TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.editor.text_editor.single_line_warning").withColor(UIBase.getUITheme().error_color.getColorInt())), () -> true);
             }
         }
@@ -677,9 +676,10 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
     protected void renderLineNumber(GuiGraphics graphics, TextEditorLine line) {
         String lineNumberString = "" + (line.lineIndex+1);
-        int lineNumberWidth = this.font.width(lineNumberString);
+        int lineNumberWidth = Math.round(UIBase.getUITextWidth(lineNumberString));
         int lineNumberX = this.getLineNumberSidebarRight() - 3 - lineNumberWidth;
-        graphics.drawString(this.font, lineNumberString, lineNumberX, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.get().getColorInt() : this.lineNumberTextColorNormal.get().getColorInt(), false);
+        float lineNumberY = line.getY() + (line.getHeight() / 2F) - (UIBase.getUITextHeightNormal() / 2F);
+        UIBase.renderText(graphics, lineNumberString, lineNumberX, lineNumberY, line.isFocused() ? this.lineNumberTextColorFocused.get().getColorInt() : this.lineNumberTextColorNormal.get().getColorInt());
     }
 
     protected int getLineNumberSidebarX() {
@@ -1772,7 +1772,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
             int j1 = l;
             if (!s.isEmpty()) {
                 String s1 = flag ? s.substring(0, j) : s;
-                j1 += this.font.width(b.getFormatterFancyMenu().apply(s1, b.getDisplayPosFancyMenu()));
+                j1 += Math.round(UIBase.getUITextWidth(s1));
             }
             int k1 = j1;
             if (!flag) {
@@ -1984,13 +1984,11 @@ public class TextEditorWindowBody extends PiPWindowBody {
         protected Color dotColor = Color.BLUE;
         protected Color entryLabelColor = Color.WHITE;
         public ExtendedButton buttonBase;
-        public Font font = Minecraft.getInstance().font;
-
         public PlaceholderMenuEntry(@NotNull TextEditorWindowBody parent, @NotNull Component label, @NotNull Runnable clickAction) {
             this.parent = parent;
             this.label = label;
             this.clickAction = clickAction;
-            this.labelWidth = this.font.width(this.label);
+            this.labelWidth = Math.round(UIBase.getUITextWidthNormal(this.label));
             this.buttonBase = new ExtendedButton(0, 0, this.getWidth(), this.getHeight(), "", (button) -> {
                 this.clickAction.run();
             }) {
@@ -2064,7 +2062,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
             //Render dot
             renderListingDot(graphics, this.x + 5, yCenter - 2, this.dotColor);
             //Render label
-            graphics.drawString(this.font, this.label, this.x + 5 + 4 + 3, yCenter - (this.font.lineHeight / 2), this.entryLabelColor.getRGB(), false);
+            UIBase.renderText(graphics, this.label, this.x + 5 + 4 + 3, yCenter - (UIBase.getUITextHeightNormal() / 2F), this.entryLabelColor.getRGB());
         }
 
         public int getWidth() {

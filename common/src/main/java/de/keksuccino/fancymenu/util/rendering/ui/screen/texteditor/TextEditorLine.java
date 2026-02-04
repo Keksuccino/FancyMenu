@@ -24,7 +24,6 @@ public class TextEditorLine extends AdvancedTextField {
     public TextEditorWindowBody parent;
     protected String lastTickValue = "";
     public boolean isInMouseHighlightingMode = false;
-    protected final Font font2;
     protected final boolean handleSelf2;
     public int textWidth = 0;
     public int lineIndex = 0;
@@ -37,7 +36,6 @@ public class TextEditorLine extends AdvancedTextField {
     public TextEditorLine(Font font, int x, int y, int width, int height, boolean handleSelf, @Nullable CharacterFilter characterFilter, TextEditorWindowBody parent) {
         super(font, x, y, width, height, handleSelf, characterFilter);
         this.parent = parent;
-        this.font2 = font;
         this.handleSelf2 = handleSelf;
         this.setBordered(false);
     }
@@ -119,54 +117,69 @@ public class TextEditorLine extends AdvancedTextField {
             int cursorPos = this.getCursorPosition() - this.getAsAccessor().getDisplayPosFancyMenu();
             int highlightPos = this.getAsAccessor().getHighlightPosFancyMenu() - this.getAsAccessor().getDisplayPosFancyMenu();
             String text = this.getValue();
-            boolean isCursorNotAtStartOrEnd = cursorPos >= 0 && cursorPos <= text.length();
-            boolean renderCursor = this.isFocused() && (Util.getMillis() - this.getAsAccessor().getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorNotAtStartOrEnd;
-            int textX = this.getAsAccessor().getBorderedFancyMenu() ? this.getX() + 4 : this.getX() + 1;
-            int textY = this.getAsAccessor().getBorderedFancyMenu() ? this.getY() + (this.height - 8) / 2 : (this.getY() + Math.max(0, (this.getHeight() / 2)) - (this.font2.lineHeight / 2));
-            int textXRender = textX;
+            boolean isCursorInsideVisibleText = cursorPos >= 0 && cursorPos <= text.length();
+            boolean renderCursor = this.isFocused() && (Util.getMillis() - this.getAsAccessor().getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorInsideVisibleText;
+            float textHeight = UIBase.getUITextHeightNormal();
+            float textX = this.getAsAccessor().getBorderedFancyMenu() ? this.getX() + 4.0F : this.getX() + 1.0F;
+            float textY = this.getAsAccessor().getBorderedFancyMenu()
+                    ? this.getY() + (this.height - textHeight) / 2F
+                    : this.getY() + Math.max(0.0F, (this.getHeight() / 2F)) - (textHeight / 2F);
+            float textXAfterCursor = textX;
             if (highlightPos > text.length()) {
                 highlightPos = text.length();
             }
 
+            MutableComponent beforeCursorComp = null;
+            MutableComponent afterCursorComp = null;
+            boolean renderAfterCursor = false;
+
             if (!text.isEmpty()) {
-                String textBeforeCursor = isCursorNotAtStartOrEnd ? text.substring(0, cursorPos) : text;
-                //Render text before cursor
-                textXRender = graphics.drawString(this.font2, this.getFormattedText(textBeforeCursor), textX, textY, textColorInt, false);
+                String textBeforeCursor = isCursorInsideVisibleText ? text.substring(0, cursorPos) : text;
+                beforeCursorComp = this.getFormattedText(textBeforeCursor);
+                textXAfterCursor = textX + UIBase.getUITextWidthNormal(beforeCursorComp);
+
+                if (isCursorInsideVisibleText && cursorPos < text.length()) {
+                    afterCursorComp = this.getFormattedText(text.substring(cursorPos));
+                    renderAfterCursor = true;
+                }
             }
 
             boolean isCursorNotAtEndOfLine = this.getCursorPosition() < this.getValue().length() || this.getValue().length() >= this.getAsAccessor().getMaxLengthFancyMenu();
-            int cursorPosRender = textXRender;
-            if (!isCursorNotAtStartOrEnd) {
+            float cursorPosRender = textXAfterCursor;
+            if (!isCursorInsideVisibleText) {
                 cursorPosRender = cursorPos > 0 ? textX + this.width : textX;
             } else if (isCursorNotAtEndOfLine) {
-                cursorPosRender = textXRender - 1;
+                cursorPosRender = textXAfterCursor - 1;
             }
 
-            if (!text.isEmpty() && isCursorNotAtStartOrEnd && cursorPos < text.length()) {
-                //Render text after cursor
-                graphics.drawString(this.font2, this.getFormattedText(text.substring(cursorPos)), textXRender, textY, textColorInt, false);
+            if (!text.isEmpty() && beforeCursorComp != null) {
+                UIBase.renderText(graphics, beforeCursorComp, textX, textY, textColorInt);
+                if (renderAfterCursor && afterCursorComp != null) {
+                    UIBase.renderText(graphics, afterCursorComp, textXAfterCursor, textY, textColorInt);
+                }
             }
 
             if (this.getAsAccessor().getHintFancyMenu() != null && text.isEmpty() && !this.isFocused()) {
-                graphics.drawString(this.font2, this.getAsAccessor().getHintFancyMenu(), textXRender, textY, textColorInt, false);
+                UIBase.renderText(graphics, this.getAsAccessor().getHintFancyMenu(), textXAfterCursor, textY, textColorInt);
             }
 
             if (!isCursorNotAtEndOfLine && this.getAsAccessor().getSuggestionFancyMenu() != null) {
-                graphics.drawString(this.font2, this.getAsAccessor().getSuggestionFancyMenu(), (cursorPosRender - 1), textY, -8355712, false);
+                UIBase.renderText(graphics, this.getAsAccessor().getSuggestionFancyMenu(), cursorPosRender - 1, textY, -8355712);
             }
 
             if (renderCursor) {
                 if (isCursorNotAtEndOfLine) {
-                    graphics.fill(cursorPosRender, textY - 1, cursorPosRender + 1, textY + 1 + 9, textColorInt);
+                    graphics.fill((int) cursorPosRender, (int) (textY - 1), (int) cursorPosRender + 1, (int) (textY + 1 + textHeight), textColorInt);
                 } else {
-                    graphics.drawString(this.font2, "_", cursorPosRender, textY, textColorInt, false);
+                    graphics.fill((int) cursorPosRender, (int) (textY + textHeight - 2), (int) cursorPosRender + 5, (int) (textY + textHeight - 1), textColorInt);
                 }
             }
 
             if (highlightPos != cursorPos) {
-                this.currentHighlightPosXStart = cursorPosRender;
-                this.currentHighlightPosXEnd = textX + this.font2.width(text.substring(0, highlightPos)) - 1;
-                this.getAsAccessor().invokeRenderHighlightFancyMenu(graphics, this.currentHighlightPosXStart, textY - 1, this.currentHighlightPosXEnd, textY + 1 + 9);
+                float highlightWidth = UIBase.getUITextWidth(text.substring(0, highlightPos));
+                this.currentHighlightPosXStart = (int) cursorPosRender;
+                this.currentHighlightPosXEnd = (int) (textX + highlightWidth) - 1;
+                this.getAsAccessor().invokeRenderHighlightFancyMenu(graphics, this.currentHighlightPosXStart, (int) (textY - 1), this.currentHighlightPosXEnd, (int) (textY + 1 + textHeight));
             } else {
                 this.currentHighlightPosXStart = 0;
                 this.currentHighlightPosXEnd = 0;
@@ -203,7 +216,7 @@ public class TextEditorLine extends AdvancedTextField {
     @Override
     public void setCursorPosition(int newPos) {
 
-        this.textWidth = this.font2.width(this.getValue());
+        this.textWidth = Math.round(UIBase.getUITextWidth(this.getValue()));
 
         super.setCursorPosition(newPos);
 
@@ -292,7 +305,7 @@ public class TextEditorLine extends AdvancedTextField {
                 super.deleteChars(i);
             }
         }
-        this.textWidth = this.font2.width(this.getValue());
+        this.textWidth = Math.round(UIBase.getUITextWidth(this.getValue()));
     }
 
     @Override
@@ -325,19 +338,19 @@ public class TextEditorLine extends AdvancedTextField {
     @Override
     public void setValue(String p_94145_) {
         super.setValue(p_94145_);
-        this.textWidth = this.font2.width(this.getValue());
+        this.textWidth = Math.round(UIBase.getUITextWidth(this.getValue()));
     }
 
     @Override
     public void insertText(String textToWrite) {
         super.insertText(textToWrite);
-        this.textWidth = this.font2.width(this.getValue());
+        this.textWidth = Math.round(UIBase.getUITextWidth(this.getValue()));
     }
 
     @Override
     public void setMaxLength(int p_94200_) {
         super.setMaxLength(p_94200_);
-        this.textWidth = this.font2.width(this.getValue());
+        this.textWidth = Math.round(UIBase.getUITextWidth(this.getValue()));
     }
 
 }

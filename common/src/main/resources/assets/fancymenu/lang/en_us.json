@@ -2803,5 +2803,13 @@
   "fancymenu.overlay.menu_bar.tools.browse_game_resources.desc": "Browse-only. An easy way to browse\ngame and mod assets.",
 
   "fancymenu.overlay.menu_bar.user_interface.pip_window_docking": "PiP Window Docking: %s",
-  "fancymenu.ui.themes.purple_void": "Purple Void"
+  "fancymenu.ui.themes.purple_void": "Purple Void",
+  "fancymenu.elements.input_field.background_color": "Background Color",
+  "fancymenu.elements.input_field.background_color.desc": "Set the input field background color.\nSupports placeholders.",
+  "fancymenu.elements.input_field.border_color": "Border Color",
+  "fancymenu.elements.input_field.border_color.desc": "Set the input field border color for the normal state.\nSupports placeholders.",
+  "fancymenu.elements.input_field.border_color_focused": "Focused Border Color",
+  "fancymenu.elements.input_field.border_color_focused.desc": "Set the input field border color while focused.\nSupports placeholders.",
+  "fancymenu.elements.input_field.border_rounding_radius": "Border Rounding Radius",
+  "fancymenu.elements.input_field.border_rounding_radius.desc": "Set the input field corner radius in pixels.\nSupports placeholders.\nRecommended: 0-8."
 }
