@@ -43,6 +43,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     public static final int DEFAULT_RESIZE_MARGIN = 4;
     private static final long TITLE_BAR_DOUBLE_CLICK_TIME_MS = 500;
     private static final int DEFAULT_ICON_TEXTURE_SIZE = 8;
+    private static final int TITLE_BAR_ICON_PADDING_EXTRA = 2;
     private static final ResourceLocation DEFAULT_CLOSE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_close.png");
     private static final ResourceLocation DEFAULT_MAXIMIZE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_maximize.png");
     private static final ResourceLocation DEFAULT_NORMALIZE_BUTTON_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/pip/pip_window_restore.png");
@@ -353,10 +354,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
 
         float padding = getRenderButtonPadding();
-        float iconSize = Math.max(0.0F, Math.min(titleBarHeight - padding * 2.0F, titleBarHeight));
+        float iconPadding = padding + TITLE_BAR_ICON_PADDING_EXTRA * scale;
+        float iconSize = Math.max(0.0F, Math.min(titleBarHeight - iconPadding * 2.0F, titleBarHeight));
         float textStartX = titleBarX + padding + Math.max(1.0F, 2.0F * scale);
         if (iconSize > 0.0F) {
-            float iconX = titleBarX + padding;
+            float iconX = titleBarX + iconPadding;
             float iconY = titleBarY + (titleBarHeight - iconSize) * 0.5F;
             boolean renderedIcon = false;
             float iconSizeUnscaled = resolveUnscaledSize(iconSize, scale);
@@ -378,7 +380,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                 renderedIcon = true;
             }
             if (renderedIcon) {
-                textStartX = iconX + iconSize + padding;
+                textStartX = iconX + iconSize + iconPadding;
             }
         }
 

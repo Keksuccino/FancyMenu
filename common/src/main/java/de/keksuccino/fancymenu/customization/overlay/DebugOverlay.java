@@ -65,6 +65,9 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
         if (Minecraft.getInstance().screen == null) return;
 
+        RenderSystem.disableDepthTest();
+        RenderingUtils.setDepthTestLocked(true);
+
         this.renderWidgetOverlays(graphics, Minecraft.getInstance().screen, mouseX, mouseY, partial);
 
         float uiScale = UIBase.getFixedUIRenderScale();
@@ -147,6 +150,8 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         }
 
         RenderingUtils.resetShaderColor(graphics);
+
+        RenderingUtils.setDepthTestLocked(false);
 
     }
 

@@ -29,7 +29,7 @@ public class FancyMenu {
 
 
 
-    //TODO FIXEN: "Add Action" window nutzt noch MC font
+    //TODO Neue Button/Slider Label customizations zu Global Customizations adden (label shadow, label color normal, label color hover, label scale, etc.)
 
 
 
