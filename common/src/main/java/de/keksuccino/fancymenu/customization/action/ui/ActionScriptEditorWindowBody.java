@@ -466,7 +466,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
                 boolean b = super.mouseClicked(mouseX, mouseY, button); // Do this first, so the action entries can do their thing (toggle favorites) before the menu gets rebuilt
                 if (this.isUserNavigatingInMenu() && (button == 1)) {
-                    this.clearEntries();
+                    this.clearEntriesKeepOpen();
                     buildAddActionSubMenu(this);
                     return true;
                 }
@@ -570,6 +570,13 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
     protected void toggleFavorite(@NotNull Action action) {
         ActionFavoritesManager.toggleFavorite(action.getIdentifier());
+    }
+
+    protected void scheduleActionsMenuRightClickConsumeReset() {
+        // Because of some client tick shenanigans it's important to delay the reset of the click consume var some ticks
+        MainThreadTaskExecutor.executeInMainThread(() ->
+                MainThreadTaskExecutor.executeInMainThread(() -> this.actionsMenuRightClickConsumedByEntry = false,
+                        MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK), MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
     }
 
     @Nullable
@@ -1504,10 +1511,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (button == 1) {
-            // Because of some client tick shenanigans it's important to delay the reset of the click consume var some ticks
-            MainThreadTaskExecutor.executeInMainThread(() ->
-                    MainThreadTaskExecutor.executeInMainThread(() -> this.actionsMenuRightClickConsumedByEntry = false,
-                            MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK), MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+            this.scheduleActionsMenuRightClickConsumeReset();
         }
         if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.mouseReleased(mouseX, mouseY, button)) {
             return true;
@@ -3763,6 +3767,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if ((button == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered && !actionsMenuRightClickConsumedByEntry) {
                 ActionScriptEditorWindowBody.this.toggleFavorite(this.action);
                 actionsMenuRightClickConsumedByEntry = true;
+                ActionScriptEditorWindowBody.this.scheduleActionsMenuRightClickConsumeReset();
                 return true;
             }
             return super.mouseClicked(mouseX, mouseY, button);

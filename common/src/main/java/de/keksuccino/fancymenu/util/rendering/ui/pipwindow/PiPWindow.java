@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 @SuppressWarnings("unused")
 public class PiPWindow extends AbstractContainerEventHandler implements Renderable {
 
-    public static final int DEFAULT_TITLE_BAR_HEIGHT = 18;
+    public static final int DEFAULT_TITLE_BAR_HEIGHT = 21;
     public static final int DEFAULT_BORDER_THICKNESS = 1;
     public static final int DEFAULT_BUTTON_SIZE = 12;
     public static final int DEFAULT_BUTTON_PADDING = 2;

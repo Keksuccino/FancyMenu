@@ -667,6 +667,26 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this;
     }
 
+    /**
+     * Clears all non-protected entries without closing the menu.
+     */
+    public ContextMenu clearEntriesKeepOpen() {
+        this.closeSubMenus();
+        this.unhoverAllEntries();
+        ContextMenu root = this.getRootMenu();
+        if (root.arrowNavigationMenu == this || root == this) {
+            root.resetArrowNavigationState();
+        }
+        List<ContextMenuEntry<?>> entriesToRemove = new ArrayList<>(this.entries);
+        for (ContextMenuEntry<?> e : entriesToRemove) {
+            if (this.isProtectedEntry(e)) continue;
+            this.entries.remove(e);
+            e.onRemoved();
+        }
+        this.resetSearchState();
+        return this;
+    }
+
     @Nullable
     public ContextMenuEntry<?> getEntry(String identifier) {
         for (ContextMenuEntry<?> e : this.entries) {
