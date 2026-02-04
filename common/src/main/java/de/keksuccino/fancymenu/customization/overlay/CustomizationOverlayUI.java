@@ -43,6 +43,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourcePickerWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizerHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
@@ -376,6 +377,16 @@ public class CustomizationOverlayUI {
             }
             builderCount++;
         }
+
+        toolsMenu.addSeparatorEntry("separator_after_dummy_screens");
+
+        toolsMenu.addClickableEntry("browse_game_resources", Component.translatable("fancymenu.overlay.menu_bar.tools.browse_game_resources"), (menu, entry) -> {
+            ResourcePickerWindowBody picker = new ResourcePickerWindowBody(null, null, location -> {
+            });
+            picker.openInWindow(null);
+            menu.closeMenuChain();
+        }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.tools.browse_game_resources.desc")))
+                .setIcon(MaterialIcons.FOLDER_OPEN);
 
         // UI
         buildUITabAndAddTo(menuBar);

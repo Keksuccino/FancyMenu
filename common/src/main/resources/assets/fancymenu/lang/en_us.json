@@ -2798,6 +2798,8 @@
   "fancymenu.elements.json_model.light_0_z": "Light 1 Z",
   "fancymenu.elements.json_model.light_1_x": "Light 2 X",
   "fancymenu.elements.json_model.light_1_y": "Light 2 Y",
-  "fancymenu.elements.json_model.light_1_z": "Light 2 Z"
+  "fancymenu.elements.json_model.light_1_z": "Light 2 Z",
+  "fancymenu.overlay.menu_bar.tools.browse_game_resources": "Browse Game Resources",
+  "fancymenu.overlay.menu_bar.tools.browse_game_resources.desc": "Browse-only. An easy way to browse\ngame and mod assets."
 
 }
