@@ -183,27 +183,32 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return;
         }
 
-        enforceMinimumSizeForBodyScale();
+        UIBase.startUIScaleRendering();
+        try {
+            enforceMinimumSizeForBodyScale();
 
-        RenderSystem.enableBlend();
+            RenderSystem.enableBlend();
 
-        RenderSystem.disableDepthTest();
-        RenderingUtils.setDepthTestLocked(true);
+            RenderSystem.disableDepthTest();
+            RenderingUtils.setDepthTestLocked(true);
 
-        if (shouldRenderDockOverlay()) {
-            renderDockOverlay(graphics, partial);
+            if (shouldRenderDockOverlay()) {
+                renderDockOverlay(graphics, partial);
+            }
+
+            renderWindowBackground(graphics, partial);
+
+            renderBodyScreen(graphics, mouseX, mouseY, partial);
+            renderWindowForeground(graphics, mouseX, mouseY, partial);
+            if (this.isDebug()) {
+                renderDebugOverlay(graphics);
+            }
+            updateResizeCursor(mouseX, mouseY);
+
+            RenderingUtils.setDepthTestLocked(false);
+        } finally {
+            UIBase.stopUIScaleRendering();
         }
-
-        renderWindowBackground(graphics, partial);
-
-        renderBodyScreen(graphics, mouseX, mouseY, partial);
-        renderWindowForeground(graphics, mouseX, mouseY, partial);
-        if (this.isDebug()) {
-            renderDebugOverlay(graphics);
-        }
-        updateResizeCursor(mouseX, mouseY);
-
-        RenderingUtils.setDepthTestLocked(false);
 
     }
 
@@ -2034,7 +2039,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private void updateForcedFancyMenuUiScale() {
-        double scale = UIBase.calculateFixedScale(UIBase.getUIScale());
+        double scale = UIBase.calculateFixedRenderScale(UIBase.getUIScale());
         if (!Double.isFinite(scale) || scale <= 0.0) {
             scale = 1.0;
         }

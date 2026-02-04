@@ -85,7 +85,6 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean removeHtmlBreaks = true;
     protected boolean textShadow = true;
     protected boolean uiFontRenderingEnabled = false;
-    protected boolean uiFontRenderingUsesUIScale = true;
     protected float textOpacity = 1.0F;
     protected float lineSpacing = 2;
     protected float border = 2;
@@ -618,15 +617,6 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this;
     }
 
-    public boolean isUiFontRenderingUsesUIScale() {
-        return uiFontRenderingUsesUIScale;
-    }
-
-    public MarkdownRenderer setUiFontRenderingUsesUIScale(boolean uiFontRenderingUsesUIScale) {
-        this.uiFontRenderingUsesUIScale = uiFontRenderingUsesUIScale;
-        return this;
-    }
-
     public float getLineSpacing() {
         return this.lineSpacing;
     }
@@ -735,28 +725,28 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     protected float getUnscaledTextWidth(@NotNull Component text) {
         if (this.uiFontRenderingEnabled) {
-            return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal(), this.uiFontRenderingUsesUIScale);
+            return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal());
         }
         return this.font.width(text);
     }
 
     protected float getUnscaledTextWidth(@NotNull String text) {
         if (this.uiFontRenderingEnabled) {
-            return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal(), this.uiFontRenderingUsesUIScale);
+            return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal());
         }
         return this.font.width(text);
     }
 
     protected float getUnscaledTextHeight() {
         if (this.uiFontRenderingEnabled) {
-            return UIBase.getUITextHeight(UIBase.getUITextSizeNormal(), this.uiFontRenderingUsesUIScale);
+            return UIBase.getUITextHeight(UIBase.getUITextSizeNormal());
         }
         return this.font.lineHeight;
     }
 
     protected void renderText(@NotNull GuiGraphics graphics, @NotNull Component text, float x, float y, int color, boolean shadow) {
         if (this.uiFontRenderingEnabled) {
-            UIBase.renderText(graphics, text, x, y, color, UIBase.getUITextSizeNormal(), this.uiFontRenderingUsesUIScale);
+            UIBase.renderText(graphics, text, x, y, color, UIBase.getUITextSizeNormal());
             return;
         }
         graphics.drawString(this.font, text, (int)x, (int)y, color, shadow);

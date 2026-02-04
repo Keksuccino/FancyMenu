@@ -73,6 +73,18 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.border_rounding_radius.desc")))
                 .setIcon(MaterialIcons.ROUNDED_CORNER);
 
+        this.element.textColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.text_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
+
+        this.element.hintText.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.hint_text.desc")))
+                .setIcon(MaterialIcons.TEXT_FIELDS);
+
+        this.element.hintTextColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.hint_text_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
+
         this.rightClickMenu.addSeparatorEntry("separator_before_audios");
 
         this.element.hoverSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)

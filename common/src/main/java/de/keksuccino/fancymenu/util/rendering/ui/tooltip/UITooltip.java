@@ -68,8 +68,10 @@ public class UITooltip implements Renderable {
         Screen screen = Minecraft.getInstance().screen;
 
         if (!this.isEmpty() && (screen != null)) {
+            UIBase.startUIScaleRendering();
+            try {
 
-            float scale = UIBase.getFixedUIScale();
+            float scale = UIBase.getFixedUIRenderScale();
             int x = this.calculateX(screen, mouseX);
             int y = this.calculateY(screen, mouseY);
 
@@ -88,6 +90,10 @@ public class UITooltip implements Renderable {
 
             RenderingUtils.setDepthTestLocked(false);
             RenderingUtils.resetShaderColor(graphics);
+
+            } finally {
+                UIBase.stopUIScaleRendering();
+            }
 
         }
 
@@ -192,7 +198,7 @@ public class UITooltip implements Renderable {
     }
 
     protected int calculateX(Screen screen, int mouseX) {
-        float scale = UIBase.getFixedUIScale();
+        float scale = UIBase.getFixedUIRenderScale();
         if (this.x != null) {
             mouseX = this.x;
         }
@@ -209,7 +215,7 @@ public class UITooltip implements Renderable {
     }
 
     protected int calculateY(Screen screen, int mouseY) {
-        float scale = UIBase.getFixedUIScale();
+        float scale = UIBase.getFixedUIRenderScale();
         if (this.y != null) {
             mouseY = this.y;
         }

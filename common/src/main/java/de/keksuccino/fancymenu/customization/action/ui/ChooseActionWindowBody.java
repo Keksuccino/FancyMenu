@@ -181,11 +181,17 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
                 ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
                 : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.build_screen.available_actions"), 20, 50, textColor, false);
+        float labelPadding = UIBase.getAreaLabelVerticalPadding();
+        float labelHeight = UIBase.getUITextHeightNormal();
+        int searchBarTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
+        float availableActionsLabelY = searchBarTop - labelHeight - labelPadding;
+        UIBase.renderText(graphics, Component.translatable("fancymenu.actions.screens.build_screen.available_actions"), 20, availableActionsLabelY, textColor);
 
         Component descLabel = Component.translatable("fancymenu.actions.screens.build_screen.action_description");
-        int descLabelWidth = this.font.width(descLabel);
-        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, textColor, false);
+        float descLabelWidth = UIBase.getUITextWidthNormal(descLabel);
+        float descriptionTop = this.descriptionScrollArea.getYWithBorder();
+        float descLabelY = descriptionTop - labelHeight - labelPadding;
+        UIBase.renderText(graphics, descLabel, this.width - 20 - descLabelWidth, descLabelY, textColor);
 
         this.performInitialWidgetFocusActionInRender();
 

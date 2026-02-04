@@ -155,7 +155,7 @@ public class EditorElementBorderDisplay implements Renderable {
     }
 
     protected float getScale() {
-        return UIBase.getFixedUIScale();
+        return UIBase.getFixedUIRenderScale();
     }
 
     public int getWidth() {

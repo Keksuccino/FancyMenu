@@ -459,7 +459,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		if (FancyMenu.getOptions().showLayoutEditorGrid.getValue()) {
 
-			float scale = UIBase.calculateFixedScale(1.0F);
+			float scale = UIBase.calculateFixedRenderScale(1.0F);
 			int scaledWidth = (int)((float)screenWidth / scale);
 			int scaledHeight = (int)((float)screenHeight / scale);
 

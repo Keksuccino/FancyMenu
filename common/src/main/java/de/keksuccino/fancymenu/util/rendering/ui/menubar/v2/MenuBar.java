@@ -71,82 +71,87 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        float scale = getRenderScale();
-        int scaledMouseX = (int) ((float)mouseX / scale);
-        int scaledMouseY = (int) ((float)mouseY / scale);
-        int y = 0;
-        int width = ScreenUtils.getScreenWidth();
-        int scaledWidth = (width != 0) ? (int)((float)width / scale) : 0;
+        UIBase.startUIScaleRendering();
+        try {
+            float scale = getRenderScale();
+            int scaledMouseX = (int) ((float)mouseX / scale);
+            int scaledMouseY = (int) ((float)mouseY / scale);
+            int y = 0;
+            int width = ScreenUtils.getScreenWidth();
+            int scaledWidth = (width != 0) ? (int)((float)width / scale) : 0;
 
-        this.collapseOrExpandEntry.x = scaledWidth - this.collapseOrExpandEntry.getWidth();
-        this.collapseOrExpandEntry.y = y;
-        this.collapseOrExpandEntry.height = PIXEL_SIZE;
-        this.collapseOrExpandEntry.hovered = this.collapseOrExpandEntry.isMouseOver(scaledMouseX, scaledMouseY);
+            this.collapseOrExpandEntry.x = scaledWidth - this.collapseOrExpandEntry.getWidth();
+            this.collapseOrExpandEntry.y = y;
+            this.collapseOrExpandEntry.height = PIXEL_SIZE;
+            this.collapseOrExpandEntry.hovered = this.collapseOrExpandEntry.isMouseOver(scaledMouseX, scaledMouseY);
 
-        this.hovered = this.isMouseOver(mouseX, mouseY);
+            this.hovered = this.isMouseOver(mouseX, mouseY);
 
-        RenderSystem.enableBlend();
+            RenderSystem.enableBlend();
 
-        RenderSystem.disableDepthTest();
-        RenderingUtils.setDepthTestLocked(true);
+            RenderSystem.disableDepthTest();
+            RenderingUtils.setDepthTestLocked(true);
 
-        UIBase.resetShaderColor(graphics);
+            UIBase.resetShaderColor(graphics);
 
-        graphics.pose().pushPose();
-        graphics.pose().scale(scale, scale, scale);
+            graphics.pose().pushPose();
+            graphics.pose().scale(scale, scale, scale);
 
-        if (this.expanded) {
-            this.renderBackground(graphics, 0, y, scaledWidth, PIXEL_SIZE, partial, scale);
-        } else {
-            this.renderBackground(graphics, this.collapseOrExpandEntry.x, y, this.collapseOrExpandEntry.x + this.collapseOrExpandEntry.getWidth(), PIXEL_SIZE, partial, scale);
-        }
-
-        this.layoutReady = false;
-        if (this.expanded) {
-            //Render all visible entries
-            int leftX = 0;
-            for (MenuBarEntry e : this.leftEntries) {
-                e.x = leftX;
-                e.y = y;
-                e.height = PIXEL_SIZE;
-                e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
-                if (e.isVisible()) {
-                    RenderSystem.enableBlend();
-                    UIBase.resetShaderColor(graphics);
-                    e.render(graphics, scaledMouseX, scaledMouseY, partial);
-                }
-                leftX += e.getWidth();
+            if (this.expanded) {
+                this.renderBackground(graphics, 0, y, scaledWidth, PIXEL_SIZE, partial, scale);
+            } else {
+                this.renderBackground(graphics, this.collapseOrExpandEntry.x, y, this.collapseOrExpandEntry.x + this.collapseOrExpandEntry.getWidth(), PIXEL_SIZE, partial, scale);
             }
-            int rightX = scaledWidth;
-            for (MenuBarEntry e : this.rightEntries) {
-                e.x = rightX - e.getWidth();
-                e.y = y;
-                e.height = PIXEL_SIZE;
-                e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
-                if (e.isVisible()) {
-                    RenderSystem.enableBlend();
-                    UIBase.resetShaderColor(graphics);
-                    e.render(graphics, scaledMouseX, scaledMouseY, partial);
+
+            this.layoutReady = false;
+            if (this.expanded) {
+                //Render all visible entries
+                int leftX = 0;
+                for (MenuBarEntry e : this.leftEntries) {
+                    e.x = leftX;
+                    e.y = y;
+                    e.height = PIXEL_SIZE;
+                    e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
+                    if (e.isVisible()) {
+                        RenderSystem.enableBlend();
+                        UIBase.resetShaderColor(graphics);
+                        e.render(graphics, scaledMouseX, scaledMouseY, partial);
+                    }
+                    leftX += e.getWidth();
                 }
-                rightX -= e.getWidth();
+                int rightX = scaledWidth;
+                for (MenuBarEntry e : this.rightEntries) {
+                    e.x = rightX - e.getWidth();
+                    e.y = y;
+                    e.height = PIXEL_SIZE;
+                    e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
+                    if (e.isVisible()) {
+                        RenderSystem.enableBlend();
+                        UIBase.resetShaderColor(graphics);
+                        e.render(graphics, scaledMouseX, scaledMouseY, partial);
+                    }
+                    rightX -= e.getWidth();
+                }
+                this.layoutReady = true;
+            } else {
+                this.collapseOrExpandEntry.render(graphics, scaledMouseX, scaledMouseY, partial);
             }
-            this.layoutReady = true;
-        } else {
-            this.collapseOrExpandEntry.render(graphics, scaledMouseX, scaledMouseY, partial);
+
+            this.flushPendingContextMenuOpens();
+
+            if (this.expanded) {
+                this.renderBottomLine(graphics, scaledWidth);
+            } else {
+                this.renderExpandEntryBorder(graphics, scaledWidth);
+            }
+
+            graphics.pose().popPose();
+
+            RenderingUtils.setDepthTestLocked(false);
+            UIBase.resetShaderColor(graphics);
+        } finally {
+            UIBase.stopUIScaleRendering();
         }
-
-        this.flushPendingContextMenuOpens();
-
-        if (this.expanded) {
-            this.renderBottomLine(graphics, scaledWidth);
-        } else {
-            this.renderExpandEntryBorder(graphics, scaledWidth);
-        }
-
-        graphics.pose().popPose();
-
-        RenderingUtils.setDepthTestLocked(false);
-        UIBase.resetShaderColor(graphics);
 
     }
 
@@ -595,7 +600,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     }
 
     public static float getRenderScale() {
-        return UIBase.calculateFixedScale(getBaseScale());
+        return UIBase.calculateFixedRenderScale(getBaseScale());
     }
 
     protected void markLayoutDirty() {

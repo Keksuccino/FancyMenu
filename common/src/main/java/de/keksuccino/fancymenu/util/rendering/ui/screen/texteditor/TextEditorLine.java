@@ -171,7 +171,7 @@ public class TextEditorLine extends AdvancedTextField {
                 if (isCursorNotAtEndOfLine) {
                     graphics.fill((int) cursorPosRender, (int) (textY - 1), (int) cursorPosRender + 1, (int) (textY + 1 + textHeight), textColorInt);
                 } else {
-                    graphics.fill((int) cursorPosRender, (int) (textY + textHeight - 2), (int) cursorPosRender + 5, (int) (textY + textHeight - 1), textColorInt);
+                    graphics.fill((int) cursorPosRender, (int) (textY + textHeight - 1), (int) cursorPosRender + 5, (int) (textY + textHeight), textColorInt);
                 }
             }
 

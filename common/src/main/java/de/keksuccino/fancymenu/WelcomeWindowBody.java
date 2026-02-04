@@ -78,9 +78,9 @@ public class WelcomeWindowBody extends PiPWindowBody {
         RenderSystem.enableBlend();
 
         // Render headline
-        float headlineW = UIBase.getUITextWidthNormal(HEADLINE, true);
-        float headlineH = UIBase.getUITextHeightNormal(true);
-        UIBase.renderText(graphics, HEADLINE, (this.width / 2F) - (headlineW / 2F), (HEADER_HEIGHT / 2F) - (headlineH / 2F), UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), UIBase.getUITextSizeNormal(), false);
+        float headlineW = UIBase.getUITextWidthNormal(HEADLINE);
+        float headlineH = UIBase.getUITextHeightNormal();
+        UIBase.renderText(graphics, HEADLINE, (this.width / 2F) - (headlineW / 2F), (HEADER_HEIGHT / 2F) - (headlineH / 2F), UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), UIBase.getUITextSizeNormal());
 
     }
 

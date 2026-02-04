@@ -67,7 +67,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
         this.renderWidgetOverlays(graphics, Minecraft.getInstance().screen, mouseX, mouseY, partial);
 
-        float uiScale = UIBase.getFixedUIScale();
+        float uiScale = UIBase.getFixedUIRenderScale();
         int scaledMouseX = (int)((float)mouseX / uiScale);
         int scaledMouseY = (int)((float)mouseY / uiScale);
 
@@ -435,7 +435,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (ContainerEventHandler.super.mouseClicked(mouseX, mouseY, button)) return true;
         this.closeRightClickContextMenu();
-        float uiScale = UIBase.getFixedUIScale();
+        float uiScale = UIBase.getFixedUIRenderScale();
         int scaledMouseX = (int)(mouseX / uiScale);
         int scaledMouseY = (int)(mouseY / uiScale);
         for (DebugOverlayLine line : this.lines) {

@@ -117,47 +117,52 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
             return;
         }
 
-        this.updateMousePosition(mouseX, mouseY);
-
-        double renderScale = getRenderScaleSafe();
-        double inputScale = getInputScaleSafe(renderScale);
-        double uiMouseX = mouseX * inputScale;
-        double uiMouseY = mouseY * inputScale;
-
-        this.clampOffsetsToScreen();
-
-        double localMouseX = uiMouseX - this.getTranslatedX();
-        double localMouseY = uiMouseY - this.getTranslatedY();
-
-        this.layoutTitleBarButtons();
-
-        this.hovered = isPointInArea(localMouseX, localMouseY, 0.0F, 0.0F, this.getWidth(), this.getHeight());
-        this.titleBarHovered = isPointInArea(localMouseX, localMouseY, 0.0F, 0.0F, this.getWidth(), this.getTitleBarHeight() + (this.getBorderThickness() * 2));
-        this.hoveredResizeEdge = this.updateHoveredResizingEdge(localMouseX, localMouseY);
-
-        this.updateCursor();
-
-        RenderSystem.disableDepthTest();
-        RenderingUtils.setDepthTestLocked(true);
-
+        UIBase.startUIScaleRendering();
         try {
-            graphics.pose().pushPose();
-            graphics.pose().scale((float) renderScale, (float) renderScale, 1.0F);
-            graphics.pose().translate(this.getTranslatedX(), this.getTranslatedY(), this.posZ);
+            this.updateMousePosition(mouseX, mouseY);
 
-            if (this.isExpanded()) {
-                this.renderBackground(graphics, partial);
-                this.renderBodyViewport(graphics, localMouseX, localMouseY, renderScale, partial);
+            double renderScale = getRenderScaleSafe();
+            double inputScale = getInputScaleSafe(renderScale);
+            double uiMouseX = mouseX * inputScale;
+            double uiMouseY = mouseY * inputScale;
+
+            this.clampOffsetsToScreen();
+
+            double localMouseX = uiMouseX - this.getTranslatedX();
+            double localMouseY = uiMouseY - this.getTranslatedY();
+
+            this.layoutTitleBarButtons();
+
+            this.hovered = isPointInArea(localMouseX, localMouseY, 0.0F, 0.0F, this.getWidth(), this.getHeight());
+            this.titleBarHovered = isPointInArea(localMouseX, localMouseY, 0.0F, 0.0F, this.getWidth(), this.getTitleBarHeight() + (this.getBorderThickness() * 2));
+            this.hoveredResizeEdge = this.updateHoveredResizingEdge(localMouseX, localMouseY);
+
+            this.updateCursor();
+
+            RenderSystem.disableDepthTest();
+            RenderingUtils.setDepthTestLocked(true);
+
+            try {
+                graphics.pose().pushPose();
+                graphics.pose().scale((float) renderScale, (float) renderScale, 1.0F);
+                graphics.pose().translate(this.getTranslatedX(), this.getTranslatedY(), this.posZ);
+
+                if (this.isExpanded()) {
+                    this.renderBackground(graphics, partial);
+                    this.renderBodyViewport(graphics, localMouseX, localMouseY, renderScale, partial);
+                }
+                this.renderFrame(graphics, localMouseX, localMouseY, partial);
+
+                graphics.pose().popPose();
+
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Error while rendering a layout editor widget!", ex);
             }
-            this.renderFrame(graphics, localMouseX, localMouseY, partial);
 
-            graphics.pose().popPose();
-
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Error while rendering a layout editor widget!", ex);
+            RenderingUtils.setDepthTestLocked(false);
+        } finally {
+            UIBase.stopUIScaleRendering();
         }
-
-        RenderingUtils.setDepthTestLocked(false);
 
     }
 
@@ -931,7 +936,7 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
     }
 
     private double getRenderScaleSafe() {
-        double scale = UIBase.calculateFixedScale(UIBase.getUIScale());
+        double scale = UIBase.calculateFixedRenderScale(UIBase.getUIScale());
         if (!Double.isFinite(scale) || scale <= 0.0) {
             return 1.0;
         }

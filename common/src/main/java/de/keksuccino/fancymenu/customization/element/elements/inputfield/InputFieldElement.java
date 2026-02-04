@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
@@ -33,6 +34,9 @@ public class InputFieldElement extends AbstractElement {
     public final Property.ColorProperty borderColorFocused = putProperty(Property.hexColorProperty("border_color_focused", DrawableColor.of(new Color(255, 255, 255)).getHex(), true, "fancymenu.elements.input_field.border_color_focused"));
     public final Property.FloatProperty borderRoundingRadius = putProperty(Property.floatProperty("border_rounding_radius", 0.0F, "fancymenu.elements.input_field.border_rounding_radius",
             Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 100.0F).build()));
+    public final Property.ColorProperty textColor = putProperty(Property.hexColorProperty("text_color", DrawableColor.of(new Color(14737632)).getHex(), true, "fancymenu.elements.input_field.text_color"));
+    public final Property.StringProperty hintText = putProperty(Property.stringProperty("hint_text", "", false, true, "fancymenu.elements.input_field.hint_text"));
+    public final Property.ColorProperty hintTextColor = putProperty(Property.hexColorProperty("hint_text_color", null, true, "fancymenu.elements.input_field.hint_text_color"));
     public ExtendedEditBox editBox;
     public String lastValue = "";
     public boolean navigatable = true;
@@ -123,6 +127,19 @@ public class InputFieldElement extends AbstractElement {
         this.editBox.setBackgroundColor(this.backgroundColor.getDrawable());
         this.editBox.setBorderNormalColor(this.borderColorNormal.getDrawable());
         this.editBox.setBorderFocusedColor(this.borderColorFocused.getDrawable());
+        this.editBox.setTextColor(this.textColor.getDrawable());
+        String hintColorRaw = this.hintTextColor.get();
+        if ((hintColorRaw != null) && !hintColorRaw.isEmpty()) {
+            this.editBox.setHintTextColor(this.hintTextColor.getDrawable());
+        } else {
+            this.editBox.setHintTextColor(null);
+        }
+        String hint = this.hintText.getString();
+        if ((hint != null) && !hint.isEmpty()) {
+            this.editBox.setHintFancyMenu(consumes -> Component.literal(hint));
+        } else {
+            this.editBox.setHintFancyMenu(null);
+        }
         float radius = Math.max(0.0F, this.borderRoundingRadius.getFloat());
         this.editBox.setRoundedColorBackgroundEnabled(radius > 0.0F);
         this.editBox.setRoundedColorBackgroundRadius(radius);

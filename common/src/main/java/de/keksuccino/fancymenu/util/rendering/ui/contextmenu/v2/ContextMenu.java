@@ -118,6 +118,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         if (!this.isOpen()) return;
 
+        UIBase.startUIScaleRendering();
+        try {
+
         this.updateSearchVisibilityState(false);
 
         ContextMenu root = this.getRootMenu();
@@ -131,7 +134,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         boolean animationsEnabled = UIBase.shouldPlayAnimations() && this.openAnimationEnabled;
         boolean openingAnimation = animationsEnabled && this.isTopLevelOpenAnimationRunning();
-        float uiScale = UIBase.calculateFixedScale(this.getScale());
+        float uiScale = UIBase.calculateFixedRenderScale(this.getScale());
         float animationScale = animationsEnabled ? this.getOpenAnimationScale(partial) : 1.0F;
         float renderScale = uiScale * animationScale;
 
@@ -202,7 +205,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         // Calculate max height considering both menu scale and GUI scale
         double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
-        float menuScale = UIBase.calculateFixedScale(this.scale);
+        float menuScale = UIBase.calculateFixedRenderScale(this.scale);
         float maxMenuHeight = (getScreenHeight() / menuScale) * 0.7f;
 
         this.needsScrolling = this.rawHeight > maxMenuHeight;
@@ -492,6 +495,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             }
         }
 
+        } finally {
+            UIBase.stopUIScaleRendering();
+        }
+
     }
 
     @NotNull
@@ -763,7 +770,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     protected float getActualX() {
         if (this.isSubMenu()) {
             float cachedScale = this.parentEntry.parent.scale;
-            float scale = UIBase.calculateFixedScale(this.scale);
+            float scale = UIBase.calculateFixedRenderScale(this.scale);
             float scaledOffsetX = (float) (5.0F * scale);
             SubMenuOpeningSide side = this.getPossibleSubMenuOpeningSide();
             if (side == SubMenuOpeningSide.LEFT) {
@@ -790,7 +797,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     protected float getActualY() {
         float y = this.getY();
         if (this.isSubMenu()) {
-            float scale = UIBase.calculateFixedScale(this.scale);
+            float scale = UIBase.calculateFixedRenderScale(this.scale);
             int scaledOffsetY = (int) (10.0F * scale);
             y = (float) ((float)this.parentEntry.y * scale);
             y += scaledOffsetY;
@@ -800,7 +807,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         // Calculate the actual height to use for positioning considering scaling
-        float menuScale = UIBase.calculateFixedScale(this.scale);
+        float menuScale = UIBase.calculateFixedRenderScale(this.scale);
         float heightToUse;
 
         if (this.needsScrolling) {
@@ -842,7 +849,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public float getScaledBorderThickness() {
-        float scale = UIBase.calculateFixedScale(this.scale);
+        float scale = UIBase.calculateFixedRenderScale(this.scale);
         return (float)((float)this.getBorderThickness() * scale);
     }
 
@@ -863,7 +870,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public float getScaledWidth() {
-        float scale = UIBase.calculateFixedScale(this.scale);
+        float scale = UIBase.calculateFixedRenderScale(this.scale);
         return (float) ((float)this.getWidth() * scale);
     }
 
@@ -880,7 +887,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public float getScaledHeight() {
-        float scale = UIBase.calculateFixedScale(this.scale);
+        float scale = UIBase.calculateFixedRenderScale(this.scale);
         if (this.needsScrolling) {
             return (float)((float)this.displayHeight * scale);
         }
@@ -1151,7 +1158,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private boolean isEntryVisible(ContextMenuEntry<?> entry) {
         if (!this.needsScrolling) return true;
 
-        float scale = UIBase.calculateFixedScale(this.getScale());
+        float scale = UIBase.calculateFixedRenderScale(this.getScale());
         float scaledY = (float)((float)this.getActualY()/scale) + this.getBorderThickness();
 
         float entryTop = entry.y;
@@ -1378,7 +1385,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (!this.needsScrolling) {
             return;
         }
-        float scale = UIBase.calculateFixedScale(this.getScale());
+        float scale = UIBase.calculateFixedRenderScale(this.getScale());
         float scaledY = (float)((float)this.getActualY()/scale) + this.getBorderThickness();
         float visibleTop = scaledY + SCROLL_INDICATOR_HEIGHT;
         float visibleBottom = scaledY + this.displayHeight - SCROLL_INDICATOR_HEIGHT;
@@ -1415,7 +1422,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isUserNavigatingInMenu()) {
-            float scale = UIBase.calculateFixedScale(this.scale) * this.getOpenAnimationScale(0.0F);
+            float scale = UIBase.calculateFixedRenderScale(this.scale) * this.getOpenAnimationScale(0.0F);
             int scaledMouseX = (int) ((float)mouseX / scale);
             int scaledMouseY = (int) ((float)mouseY / scale);
             String searchText = this.getActiveSearchText();
@@ -1481,7 +1488,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (this.isUserNavigatingInMenu()) {
-            float scale = UIBase.calculateFixedScale(this.scale) * this.getOpenAnimationScale(0.0F);
+            float scale = UIBase.calculateFixedRenderScale(this.scale) * this.getOpenAnimationScale(0.0F);
             int scaledMouseX = (int) ((float)mouseX / scale);
             int scaledMouseY = (int) ((float)mouseY / scale);
             String searchText = this.getActiveSearchText();
@@ -1508,7 +1515,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (this.isUserNavigatingInMenu()) {
-            float scale = UIBase.calculateFixedScale(this.scale) * this.getOpenAnimationScale(0.0F);
+            float scale = UIBase.calculateFixedRenderScale(this.scale) * this.getOpenAnimationScale(0.0F);
             int scaledMouseX = (int) ((float)mouseX / scale);
             int scaledMouseY = (int) ((float)mouseY / scale);
             double scaledDragX = dragX / scale;
@@ -1570,7 +1577,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     // It's important to not use the real isMouseOver() method, because that would break FM's GUIs
     public boolean isMouseOverMenu(double mouseX, double mouseY) {
-        float scale = UIBase.calculateFixedScale(this.getScale()) * this.getOpenAnimationScale(0.0F);
+        float scale = UIBase.calculateFixedRenderScale(this.getScale()) * this.getOpenAnimationScale(0.0F);
         float actualX = this.getActualX() / scale + this.getBorderThickness();
         float actualY = this.getActualY() / scale + this.getBorderThickness();
         float width = this.getWidth();
@@ -3003,7 +3010,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            float renderScale = UIBase.calculateFixedScale(this.parent.getScale());
+            float renderScale = UIBase.calculateFixedRenderScale(this.parent.getScale());
             float lineThickness = renderScale > 0.0F ? (0.5F / renderScale) : 0.5F;
             float uiScale = UIBase.getUIScale();
             float thinnessT = (uiScale - 1.0F) / 1.5F;

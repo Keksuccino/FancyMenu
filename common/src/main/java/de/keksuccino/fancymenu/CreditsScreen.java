@@ -51,7 +51,6 @@ public class CreditsScreen extends Screen {
         this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUITheme().ui_interface_generic_text_color);
         this.markdownRenderer.getMarkdownRenderer().setTextShadow(false);
         this.markdownRenderer.getMarkdownRenderer().setUIFontRenderingEnabled(true);
-        this.markdownRenderer.getMarkdownRenderer().setUiFontRenderingUsesUIScale(false);
         this.addRenderableWidget(this.markdownRenderer);
 
         UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(centerX - 100, this.height - (this.footerHeight / 2) - 10, 200, 20, Component.translatable("fancymenu.common.close"), var1 -> this.onClose())));
