@@ -92,6 +92,9 @@ public class UITheme {
     public DrawableColor layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(17, 79, 52));
     public DrawableColor menu_bar_close_icon_color = DrawableColor.of(new Color(218, 60, 30));
 
+    public DrawableColor pip_docking_overlay_color = DrawableColor.of(new Color(64, 150, 255, 80));
+    public DrawableColor pip_docking_overlay_border_color = DrawableColor.of(new Color(64, 150, 255, 200));
+
     public DrawableColor scroll_grabber_color_normal = DrawableColor.of(new Color(89, 91, 93, 100));
     public DrawableColor scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));
 

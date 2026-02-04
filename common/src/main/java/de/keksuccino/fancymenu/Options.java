@@ -83,6 +83,7 @@ public class Options extends AbstractOptions {
     public final Option<Boolean> useMinecraftFont = new Option<>(config, "use_minecraft_font", false, "ui");
     public final Option<Boolean> smoothFontMultilineRendering = new Option<>(config, "smooth_font_multiline_rendering", false, "ui");
     public final Option<Boolean> enableUiAnimations = new Option<>(config, "enable_ui_animations", true, "ui");
+    public final Option<Boolean> pipWindowDocking = new Option<>(config, "pip_window_docking", true, "ui");
 
     public final Option<Boolean> showDebugOverlay = new Option<>(config, "show_debug_overlay", false, "debug_overlay");
     public final Option<Boolean> debugOverlayShowBasicScreenCategory = new Option<>(config, "debug_overlay_show_basic_screen_category", true, "debug_overlay");

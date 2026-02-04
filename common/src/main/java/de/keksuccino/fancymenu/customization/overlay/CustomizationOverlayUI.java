@@ -1167,6 +1167,12 @@ public class CustomizationOverlayUI {
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.user_interface.use_minecraft_font.desc")))
                 .setIcon(MaterialIcons.BRAND_FAMILY);
 
+        userInterfaceMenu.addSeparatorEntry("separator_before_pip_window_docking");
+
+        userInterfaceMenu.addValueCycleEntry("pip_window_docking", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.pip_window_docking", FancyMenu.getOptions().pipWindowDocking.getValue())
+                        .addCycleListener(cycle -> FancyMenu.getOptions().pipWindowDocking.setValue(cycle.getAsBoolean())))
+                .setIcon(MaterialIcons.PIP);
+
         userInterfaceMenu.addSeparatorEntry("separator_before_blur_settings");
 
         boolean allowUiBlur = UIBase.getUITheme().allow_blur;

@@ -84,6 +84,8 @@ public class PumpkinSoupUITheme extends UITheme {
         layout_editor_anchor_point_overlay_color_base = DrawableColor.of(new Color(92, 176, 140));
         layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(56, 120, 94));
         menu_bar_close_icon_color = DrawableColor.of(new Color(230, 126, 60));
+        pip_docking_overlay_color = DrawableColor.of(new Color(230, 126, 60, 80));
+        pip_docking_overlay_border_color = DrawableColor.of(new Color(230, 126, 60, 200));
 
         scroll_grabber_color_normal = DrawableColor.of(new Color(186, 170, 156, 140));
         scroll_grabber_color_hover = DrawableColor.of(new Color(160, 146, 134, 180));

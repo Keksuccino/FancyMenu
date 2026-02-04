@@ -84,6 +84,8 @@ public class LightUITheme extends UITheme {
         layout_editor_anchor_point_overlay_color_base = DrawableColor.of(new Color(16, 185, 129));
         layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(15, 118, 110));
         menu_bar_close_icon_color = DrawableColor.of(new Color(239, 68, 68));
+        pip_docking_overlay_color = DrawableColor.of(new Color(59, 130, 246, 80));
+        pip_docking_overlay_border_color = DrawableColor.of(new Color(59, 130, 246, 200));
 
         scroll_grabber_color_normal = DrawableColor.of(new Color(176, 182, 190, 130));
         scroll_grabber_color_hover = DrawableColor.of(new Color(150, 156, 165, 170));

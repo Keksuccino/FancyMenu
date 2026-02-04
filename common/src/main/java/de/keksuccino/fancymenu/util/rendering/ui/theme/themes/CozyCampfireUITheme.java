@@ -84,6 +84,8 @@ public class CozyCampfireUITheme extends UITheme {
         layout_editor_anchor_point_overlay_color_base = DrawableColor.of(new Color(92, 186, 156));
         layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(52, 116, 96));
         menu_bar_close_icon_color = DrawableColor.of(new Color(232, 142, 64));
+        pip_docking_overlay_color = DrawableColor.of(new Color(232, 142, 64, 80));
+        pip_docking_overlay_border_color = DrawableColor.of(new Color(232, 142, 64, 200));
 
         scroll_grabber_color_normal = DrawableColor.of(new Color(100, 90, 80, 150));
         scroll_grabber_color_hover = DrawableColor.of(new Color(140, 124, 108, 200));

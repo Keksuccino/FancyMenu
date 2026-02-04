@@ -84,6 +84,8 @@ public class SpookySeasonUITheme extends UITheme {
         layout_editor_anchor_point_overlay_color_base = DrawableColor.of(new Color(70, 168, 141));
         layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(36, 96, 82));
         menu_bar_close_icon_color = DrawableColor.of(new Color(232, 118, 74));
+        pip_docking_overlay_color = DrawableColor.of(new Color(216, 108, 43, 80));
+        pip_docking_overlay_border_color = DrawableColor.of(new Color(216, 108, 43, 200));
 
         scroll_grabber_color_normal = DrawableColor.of(new Color(90, 83, 98, 140));
         scroll_grabber_color_hover = DrawableColor.of(new Color(120, 111, 129, 190));

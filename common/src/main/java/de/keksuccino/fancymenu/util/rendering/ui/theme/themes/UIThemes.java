@@ -28,6 +28,7 @@ public class UIThemes {
     public static final SpookySeasonUITheme SPOOKY_SEASON = new SpookySeasonUITheme();
     public static final PumpkinSoupUITheme PUMPKIN_SOUP = new PumpkinSoupUITheme();
     public static final CozyCampfireUITheme COZY_CAMPFIRE = new CozyCampfireUITheme();
+    public static final BumblebeeUITheme BUMBLEBEE = new BumblebeeUITheme();
 
     // ASSET THEMES
 //    public static final ResourceLocation OLED_PURPLE_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/oled_purple.json");
@@ -35,7 +36,7 @@ public class UIThemes {
 //    public static final ResourceLocation BUTTER_DARK_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/butter_dark.json");
 //    public static final ResourceLocation BUTTER_OLED_THEME_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "themes/butter_oled.json");
 
-    public static final UITheme[] DEFAULT_THEMES = new UITheme[]{ LIGHT, DARK, LIGHT_HIGH_CONTRAST, DARK_HIGH_CONTRAST, CHERRY_BLOSSOM, SPOOKY_SEASON, PUMPKIN_SOUP, COZY_CAMPFIRE };
+    public static final UITheme[] DEFAULT_THEMES = new UITheme[]{ LIGHT, DARK, LIGHT_HIGH_CONTRAST, DARK_HIGH_CONTRAST, CHERRY_BLOSSOM, SPOOKY_SEASON, PUMPKIN_SOUP, COZY_CAMPFIRE, BUMBLEBEE };
 
     public static void registerAll() {
 
@@ -94,6 +95,8 @@ public class UIThemes {
         registerDefaultTheme(PUMPKIN_SOUP);
 
         registerDefaultTheme(COZY_CAMPFIRE);
+
+        registerDefaultTheme(BUMBLEBEE);
 
     }
 

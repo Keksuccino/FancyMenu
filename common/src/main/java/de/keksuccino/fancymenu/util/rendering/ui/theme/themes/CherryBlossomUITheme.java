@@ -84,6 +84,8 @@ public class CherryBlossomUITheme extends UITheme {
         layout_editor_anchor_point_overlay_color_base = DrawableColor.of(new Color(78, 190, 156));
         layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(43, 120, 102));
         menu_bar_close_icon_color = DrawableColor.of(new Color(224, 75, 108));
+        pip_docking_overlay_color = DrawableColor.of(new Color(221, 104, 143, 80));
+        pip_docking_overlay_border_color = DrawableColor.of(new Color(221, 104, 143, 200));
 
         scroll_grabber_color_normal = DrawableColor.of(new Color(186, 175, 186, 140));
         scroll_grabber_color_hover = DrawableColor.of(new Color(162, 151, 164, 180));

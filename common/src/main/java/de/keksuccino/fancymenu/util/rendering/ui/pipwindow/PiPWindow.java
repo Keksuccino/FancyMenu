@@ -49,6 +49,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private static final MaterialIcon DEFAULT_CLOSE_BUTTON_MATERIAL_ICON = MaterialIcons.CLOSE;
     private static final MaterialIcon DEFAULT_MAXIMIZE_BUTTON_MATERIAL_ICON = MaterialIcons.OPEN_IN_FULL;
     private static final MaterialIcon DEFAULT_NORMALIZE_BUTTON_MATERIAL_ICON = MaterialIcons.FULLSCREEN_EXIT;
+    private static final int DEFAULT_DOCK_OVERLAY_PADDING = 6;
+    private static final int DEFAULT_DOCK_OVERLAY_BORDER_THICKNESS = 1;
 
     private final Minecraft minecraft = Minecraft.getInstance();
     private final List<GuiEventListener> children = new ArrayList<>();
@@ -123,6 +125,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private boolean hasMousePosition = false;
     private double dragOffsetX;
     private double dragOffsetY;
+    private boolean dockOverlayVisible = false;
     private double resizeStartMouseX;
     private double resizeStartMouseY;
     private int resizeStartX;
@@ -186,6 +189,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
         RenderSystem.disableDepthTest();
         RenderingUtils.setDepthTestLocked(true);
+
+        if (shouldRenderDockOverlay()) {
+            renderDockOverlay(graphics, partial);
+        }
 
         renderWindowBackground(graphics, partial);
 
@@ -484,6 +491,64 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                     smoothBorderCorner,
                     smoothBorderCorner,
                     this.getBorderColor(theme),
+                    partial
+            );
+        }
+    }
+
+    private boolean shouldRenderDockOverlay() {
+        return this.dockOverlayVisible && this.draggingTitleBar && isDockingEnabled() && this.maximizable;
+    }
+
+    private void renderDockOverlay(@NotNull GuiGraphics graphics, float partial) {
+        int areaX = 0;
+        int areaY = getMenuBarHeight();
+        int areaWidth = getMaximumWidth();
+        int areaHeight = getMaximumHeight();
+        if (areaWidth <= 0 || areaHeight <= 0) {
+            return;
+        }
+
+        int padding = getDockOverlayPadding();
+        float x = areaX + padding;
+        float y = areaY + padding;
+        float width = areaWidth - padding * 2.0F;
+        float height = areaHeight - padding * 2.0F;
+        if (width <= 0.0F || height <= 0.0F) {
+            return;
+        }
+
+        float radius = Math.max(0.0F, UIBase.getInterfaceCornerRoundingRadius() * getFrameScaleSafe());
+        UITheme theme = getTheme();
+        SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                graphics,
+                x,
+                y,
+                width,
+                height,
+                radius,
+                radius,
+                radius,
+                radius,
+                theme.pip_docking_overlay_color.getColorInt(),
+                partial
+        );
+
+        float borderThickness = getDockOverlayBorderThickness();
+        if (borderThickness > 0.0F) {
+            float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+            SmoothRectangleRenderer.renderSmoothBorderRoundAllCorners(
+                    graphics,
+                    x,
+                    y,
+                    width,
+                    height,
+                    borderThickness,
+                    borderRadius,
+                    borderRadius,
+                    borderRadius,
+                    borderRadius,
+                    theme.pip_docking_overlay_border_color.getColorInt(),
                     partial
             );
         }
@@ -1366,11 +1431,18 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return false;
         }
 
-        boolean wasDragging = this.draggingTitleBar || this.activeResizeHandle != PiPWindowResizeHandle.NONE;
+        boolean wasDraggingTitleBar = this.draggingTitleBar;
+        boolean wasResizing = this.activeResizeHandle != PiPWindowResizeHandle.NONE;
+        boolean wasDragging = wasDraggingTitleBar || wasResizing;
         if (button == 0) {
+            boolean shouldDock = wasDraggingTitleBar && this.dockOverlayVisible && isDockingEnabled() && this.maximizable;
             this.draggingTitleBar = false;
             this.activeResizeHandle = PiPWindowResizeHandle.NONE;
             this.setDragging(false);
+            this.dockOverlayVisible = false;
+            if (shouldDock) {
+                setMaximized(true);
+            }
         }
         if (wasDragging) {
             return true;
@@ -1391,7 +1463,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
         if (button == 0) {
             if (this.draggingTitleBar) {
-                setPosition((int) Math.round(mouseX - this.dragOffsetX), (int) Math.round(mouseY - this.dragOffsetY));
+                updateDragPosition(mouseX, mouseY);
                 return true;
             }
             if (this.activeResizeHandle != PiPWindowResizeHandle.NONE) {
@@ -1643,7 +1715,26 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         this.draggingTitleBar = true;
         this.dragOffsetX = mouseX - this.x;
         this.dragOffsetY = mouseY - this.y;
+        this.dockOverlayVisible = false;
         this.setDragging(true);
+    }
+
+    private void updateDragPosition(double mouseX, double mouseY) {
+        double effectiveMouseX = mouseX;
+        double effectiveMouseY = mouseY;
+        if (isDockingEnabled()) {
+            int screenWidth = this.minecraft.getWindow().getGuiScaledWidth();
+            int screenHeight = this.minecraft.getWindow().getGuiScaledHeight();
+            if (screenWidth > 0 && screenHeight > 0) {
+                effectiveMouseX = Math.min(Math.max(mouseX, 0.0), screenWidth - 1.0);
+                double topEdge = getMenuBarHeight();
+                effectiveMouseY = Math.min(Math.max(mouseY, topEdge), screenHeight - 1.0);
+            }
+        }
+        int targetX = (int) Math.round(effectiveMouseX - this.dragOffsetX);
+        int targetY = (int) Math.round(effectiveMouseY - this.dragOffsetY);
+        setPosition(targetX, targetY);
+        updateDockOverlayVisibility(mouseX, mouseY);
     }
 
     private void beginResize(@NotNull PiPWindowResizeHandle handle, double mouseX, double mouseY) {
@@ -1701,6 +1792,25 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         setScaledBounds(newX, newY, newWidth, newHeight);
     }
 
+    private void updateDockOverlayVisibility(double mouseX, double mouseY) {
+        if (!isDockingEnabled() || !this.draggingTitleBar || this.maximized || !this.maximizable) {
+            this.dockOverlayVisible = false;
+            return;
+        }
+        int screenWidth = this.minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = this.minecraft.getWindow().getGuiScaledHeight();
+        if (screenWidth <= 0 || screenHeight <= 0) {
+            this.dockOverlayVisible = false;
+            return;
+        }
+        int topEdge = getMenuBarHeight();
+        boolean atEdge = mouseX <= 0.0
+                || mouseX >= screenWidth - 1.0
+                || mouseY <= topEdge
+                || mouseY >= screenHeight - 1.0;
+        this.dockOverlayVisible = atEdge;
+    }
+
     private double toScreenMouseX(double mouseX) {
         return (mouseX - getBodyX()) * getScreenInputScaleFactor();
     }
@@ -1732,6 +1842,21 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return 1.0F;
         }
         return scale;
+    }
+
+    private boolean isDockingEnabled() {
+        return FancyMenu.getOptions().pipWindowDocking.getValue();
+    }
+
+    private int getDockOverlayPadding() {
+        float scale = getFrameScaleSafe();
+        int padding = Math.round(DEFAULT_DOCK_OVERLAY_PADDING * scale);
+        return Math.max(0, padding);
+    }
+
+    private float getDockOverlayBorderThickness() {
+        float scale = getFrameScaleSafe();
+        return Math.max(0.0F, DEFAULT_DOCK_OVERLAY_BORDER_THICKNESS * scale);
     }
 
     private float getRenderBorderThickness() {

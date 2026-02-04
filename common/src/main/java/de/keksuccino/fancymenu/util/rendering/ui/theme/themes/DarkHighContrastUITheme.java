@@ -87,6 +87,8 @@ public class DarkHighContrastUITheme extends UITheme {
         layout_editor_anchor_point_overlay_color_base = DrawableColor.of(new Color(0, 255, 180));
         layout_editor_anchor_point_overlay_color_border = DrawableColor.of(new Color(0, 150, 110));
         menu_bar_close_icon_color = DrawableColor.of(new Color(255, 64, 64));
+        pip_docking_overlay_color = DrawableColor.of(new Color(255, 170, 0, 120));
+        pip_docking_overlay_border_color = DrawableColor.of(new Color(255, 170, 0, 220));
 
         scroll_grabber_color_normal = DrawableColor.of(new Color(255, 255, 255, 140));
         scroll_grabber_color_hover = DrawableColor.of(new Color(255, 170, 0, 200));
