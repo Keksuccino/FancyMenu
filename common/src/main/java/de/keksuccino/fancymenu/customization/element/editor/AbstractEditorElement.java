@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothCircleRenderer;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -116,6 +117,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     protected int resizingStartPosY = 0;
     protected static final int RESIZE_EDGE_GRAB_ZONE = 4;
     protected static final int RESIZE_INDICATOR_SIZE = 4;
+    protected static final float RESIZE_INDICATOR_CORNER_RADIUS = 1.0F;
+    protected static final int TILT_CONTROLS_PADDING = 10;
+    protected static final int TILT_CONTROLS_LINE_EXTENSION = 20;
     protected @Nullable ResizeGrabberType activeResizeGrabberType = null;
     protected @Nullable ResizeGrabberType hoveredResizeGrabberType = null;
     protected RotationGrabber rotationGrabber = new RotationGrabber();
@@ -947,24 +951,19 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         if (!FancyMenu.getOptions().enableElementTiltingControls.getValue()) return;
 
         // Render vertical tilt line
-        float centerX = this.getX() + (this.getWidth() / 2.0F);
-        float centerY = this.getY() + (this.getHeight() / 2.0F);
-
-        final int lineExtension = 20; // Extra pixels beyond element bounds
-
         if (!this.element.advancedVerticalTiltMode) {
-            // Vertical line (for vertical tilt) - offset 8 pixels to the right
-            int verticalLineX = (int)centerX + 8;
-            int verticalLineTop = this.getY() - lineExtension;
-            int verticalLineBottom = this.getY() + this.getHeight() + lineExtension;
+            // Vertical line (for vertical tilt) - offset to the right with padding
+            int verticalLineX = this.getVerticalTiltLineX();
+            int verticalLineTop = this.getVerticalTiltLineTop();
+            int verticalLineBottom = this.getVerticalTiltLineBottom();
             graphics.fill(verticalLineX, verticalLineTop, verticalLineX + 1, verticalLineBottom, UIBase.getUITheme().layout_editor_element_border_vertical_tilting_controls_color.getColorIntWithAlpha(VERTICAL_TILT_CONTROLS_ALPHA.get(this)));
         }
 
         if (!this.element.advancedHorizontalTiltMode) {
-            // Horizontal line (for horizontal tilt) - offset 8 pixels down
-            int horizontalLineY = (int)centerY + 8;
-            int horizontalLineLeft = this.getX() - lineExtension;
-            int horizontalLineRight = this.getX() + this.getWidth() + lineExtension;
+            // Horizontal line (for horizontal tilt) - offset below with padding
+            int horizontalLineY = this.getHorizontalTiltLineY();
+            int horizontalLineLeft = this.getHorizontalTiltLineLeft();
+            int horizontalLineRight = this.getHorizontalTiltLineRight();
             graphics.fill(horizontalLineLeft, horizontalLineY, horizontalLineRight, horizontalLineY + 1, UIBase.getUITheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorIntWithAlpha(HORIZONTAL_TILT_CONTROLS_ALPHA.get(this)));
         }
 
@@ -978,17 +977,54 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
     }
 
+    protected int getVerticalTiltLineX() {
+        return this.getX() + this.getWidth() + TILT_CONTROLS_PADDING;
+    }
+
+    protected int getVerticalTiltLineTop() {
+        return this.getY() - TILT_CONTROLS_LINE_EXTENSION;
+    }
+
+    protected int getVerticalTiltLineBottom() {
+        return this.getY() + this.getHeight() + TILT_CONTROLS_LINE_EXTENSION;
+    }
+
+    protected int getHorizontalTiltLineY() {
+        return this.getY() + this.getHeight() + TILT_CONTROLS_PADDING;
+    }
+
+    protected int getHorizontalTiltLineLeft() {
+        return this.getX() - TILT_CONTROLS_LINE_EXTENSION;
+    }
+
+    protected int getHorizontalTiltLineRight() {
+        return this.getX() + this.getWidth() + TILT_CONTROLS_LINE_EXTENSION;
+    }
+
     protected void renderResizeIndicators(@NotNull GuiGraphics graphics) {
         if (!this.isSelected() || this.isMultiSelected() || !this.settings.isResizeable()) {
             return;
         }
+        float radius = UIBase.getInterfaceCornerRoundingRadius() > 0.0F ? RESIZE_INDICATOR_CORNER_RADIUS : 0.0F;
         for (ResizeGrabberType type : ResizeGrabberType.values()) {
             if (!this.isResizeIndicatorEnabled(type)) {
                 continue;
             }
             int x = this.getResizeIndicatorX(type, RESIZE_INDICATOR_SIZE);
             int y = this.getResizeIndicatorY(type, RESIZE_INDICATOR_SIZE);
-            graphics.fill(x, y, x + RESIZE_INDICATOR_SIZE, y + RESIZE_INDICATOR_SIZE, BORDER_COLOR.get(this));
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                    graphics,
+                    x,
+                    y,
+                    RESIZE_INDICATOR_SIZE,
+                    RESIZE_INDICATOR_SIZE,
+                    radius,
+                    radius,
+                    radius,
+                    radius,
+                    BORDER_COLOR.get(this),
+                    1.0F
+            );
         }
     }
 
@@ -1287,13 +1323,13 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
                 this.element.rotationDegrees.set(newRotation);
             } else if (this.leftMouseDown && this.isGettingVerticalTilted()) { // VERTICAL TILT
-                // Calculate tilt based on vertical mouse movement
-                double mouseDiff = mouseY - this.verticalTiltStartMouseY;
-                float tiltChange = (float)(mouseDiff * 0.5); // Scale factor for sensitivity
-                float newTilt = this.verticalTiltStartAngle + tiltChange;
-
-                // Clamp tilt to reasonable range (-60 to 60 degrees)
-                newTilt = Math.max(-60.0F, Math.min(60.0F, newTilt));
+                // Calculate tilt based on mouse position along the tilt line
+                int lineTop = this.getVerticalTiltLineTop();
+                int lineBottom = this.getVerticalTiltLineBottom();
+                int lineLength = Math.max(1, lineBottom - lineTop);
+                double normalized = (mouseY - lineTop) / (double) lineLength;
+                normalized = Math.max(0.0D, Math.min(1.0D, normalized));
+                float newTilt = (float) ((normalized * 120.0D) - 60.0D);
 
                 // Snap to 15-degree increments if shift is held
                 if (Screen.hasShiftDown()) {
@@ -1302,13 +1338,13 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
                 this.element.verticalTiltDegrees.set(newTilt);
             } else if (this.leftMouseDown && this.isGettingHorizontalTilted()) { // HORIZONTAL TILT
-                // Calculate tilt based on horizontal mouse movement
-                double mouseDiff = mouseX - this.horizontalTiltStartMouseX;
-                float tiltChange = (float)(mouseDiff * 0.5); // Scale factor for sensitivity
-                float newTilt = this.horizontalTiltStartAngle + tiltChange;
-
-                // Clamp tilt to reasonable range (-60 to 60 degrees)
-                newTilt = Math.max(-60.0F, Math.min(60.0F, newTilt));
+                // Calculate tilt based on mouse position along the tilt line
+                int lineLeft = this.getHorizontalTiltLineLeft();
+                int lineRight = this.getHorizontalTiltLineRight();
+                int lineLength = Math.max(1, lineRight - lineLeft);
+                double normalized = (mouseX - lineLeft) / (double) lineLength;
+                normalized = Math.max(0.0D, Math.min(1.0D, normalized));
+                float newTilt = (float) ((normalized * 120.0D) - 60.0D);
 
                 // Snap to 15-degree increments if shift is held
                 if (Screen.hasShiftDown()) {
@@ -1973,21 +2009,32 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 // Draw the grabber as a filled square at the tilt position
                 int x = this.getX();
                 int y = this.getY();
+                float radius = UIBase.getInterfaceCornerRoundingRadius() > 0.0F ? RESIZE_INDICATOR_CORNER_RADIUS : 0.0F;
+                int color = UIBase.getUITheme().layout_editor_element_border_vertical_tilting_controls_color.getColorIntWithAlpha(VERTICAL_TILT_CONTROLS_ALPHA.get(AbstractEditorElement.this));
 
-                // Draw a small filled square (the grabber)
-                graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUITheme().layout_editor_element_border_vertical_tilting_controls_color.getColorIntWithAlpha(VERTICAL_TILT_CONTROLS_ALPHA.get(AbstractEditorElement.this)));
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        x - size / 2,
+                        y - size / 2,
+                        size,
+                        size,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        color,
+                        1.0F
+                );
             }
         }
 
         protected int getX() {
-            float centerX = AbstractEditorElement.this.getX() + (AbstractEditorElement.this.getWidth() / 2.0F);
-            return (int)centerX + 8; // Offset 8 pixels to the right to avoid overlap
+            return AbstractEditorElement.this.getVerticalTiltLineX();
         }
 
         protected int getY() {
-            float lineExtension = 20;
-            float lineLength = AbstractEditorElement.this.getHeight() + (lineExtension * 2);
-            float lineTop = AbstractEditorElement.this.getY() - lineExtension;
+            float lineLength = AbstractEditorElement.this.getHeight() + (TILT_CONTROLS_LINE_EXTENSION * 2);
+            float lineTop = AbstractEditorElement.this.getY() - TILT_CONTROLS_LINE_EXTENSION;
             // Map tilt angle (-60 to 60) to position on line
             // 0 degrees = center, -60 = top, 60 = bottom
             float normalizedTilt = (AbstractEditorElement.this.element.getVerticalTiltDegrees() + 60.0F) / 120.0F; // 0 to 1
@@ -2030,16 +2077,28 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 // Draw the grabber as a filled square at the tilt position
                 int x = this.getX();
                 int y = this.getY();
+                float radius = UIBase.getInterfaceCornerRoundingRadius() > 0.0F ? RESIZE_INDICATOR_CORNER_RADIUS : 0.0F;
+                int color = UIBase.getUITheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorIntWithAlpha(HORIZONTAL_TILT_CONTROLS_ALPHA.get(AbstractEditorElement.this));
 
-                // Draw a small filled square (the grabber)
-                graphics.fill(x - size/2, y - size/2, x + size/2, y + size/2, UIBase.getUITheme().layout_editor_element_border_horizontal_tilting_controls_color.getColorIntWithAlpha(HORIZONTAL_TILT_CONTROLS_ALPHA.get(AbstractEditorElement.this)));
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        x - size / 2,
+                        y - size / 2,
+                        size,
+                        size,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        color,
+                        1.0F
+                );
             }
         }
 
         protected int getX() {
-            float lineExtension = 20;
-            float lineLength = AbstractEditorElement.this.getWidth() + (lineExtension * 2);
-            float lineLeft = AbstractEditorElement.this.getX() - lineExtension;
+            float lineLength = AbstractEditorElement.this.getWidth() + (TILT_CONTROLS_LINE_EXTENSION * 2);
+            float lineLeft = AbstractEditorElement.this.getX() - TILT_CONTROLS_LINE_EXTENSION;
             // Map tilt angle (-60 to 60) to position on line
             // 0 degrees = center, -60 = left, 60 = right
             float normalizedTilt = (AbstractEditorElement.this.element.getHorizontalTiltDegrees() + 60.0F) / 120.0F; // 0 to 1
@@ -2047,8 +2106,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         }
 
         protected int getY() {
-            float centerY = AbstractEditorElement.this.getY() + (AbstractEditorElement.this.getHeight() / 2.0F);
-            return (int)centerY + 8; // Offset 8 pixels down to avoid overlap
+            return AbstractEditorElement.this.getHorizontalTiltLineY();
         }
 
         protected boolean isGrabberEnabled() {

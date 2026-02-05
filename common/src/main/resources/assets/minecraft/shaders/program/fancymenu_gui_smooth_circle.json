@@ -11,6 +11,9 @@
     { "name": "Rect", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] },
     { "name": "BorderThickness", "type": "float", "count": 1, "values": [ 0.0 ] },
     { "name": "Roundness", "type": "float", "count": 1, "values": [ 2.0 ] },
+    { "name": "ShapeMode", "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "ArcStart", "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "ArcEnd", "type": "float", "count": 1, "values": [ 0.0 ] },
     { "name": "Rotation", "type": "float", "count": 4, "values": [ 1.0, 0.0, 0.0, 1.0 ] },
     { "name": "Color", "type": "float", "count": 4, "values": [ 1.0, 1.0, 1.0, 1.0 ] }
   ]

@@ -12,6 +12,9 @@
         { "name": "Rect", "values": [ 0.0, 0.0, 0.0, 0.0 ] },
         { "name": "BorderThickness", "values": [ 0.0 ] },
         { "name": "Roundness", "values": [ 2.0 ] },
+        { "name": "ShapeMode", "values": [ 0.0 ] },
+        { "name": "ArcStart", "values": [ 0.0 ] },
+        { "name": "ArcEnd", "values": [ 0.0 ] },
         { "name": "Color", "values": [ 1.0, 1.0, 1.0, 1.0 ] }
       ]
     }
