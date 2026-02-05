@@ -277,8 +277,8 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     }
 
     protected void tickAreaMouseOver(int mouseX, int mouseY) {
-        boolean draggedEmpty = this.editor.getCurrentlyDraggedElements().isEmpty();
-        if (!draggedEmpty) {
+        boolean hoverChangeAllowed = this.isHoverAnchorChangeAllowed();
+        if (hoverChangeAllowed) {
             this.currentlyHoveredArea = FancyMenu.getOptions().anchorOverlayChangeAnchorOnAreaHover.getValue() ? this.getMouseOverArea(mouseX, mouseY) : null;
             //If just started dragging, set lastCompleted to current, to "ignore" the initially hovered area
             if (this.lastTickDraggedEmpty) {
@@ -308,7 +308,20 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         } else {
             this.resetAreaHoverCache();
         }
-        this.lastTickDraggedEmpty = draggedEmpty;
+        this.lastTickDraggedEmpty = !hoverChangeAllowed;
+    }
+
+    protected boolean isHoverAnchorChangeAllowed() {
+        List<AbstractEditorElement<?, ?>> draggedElements = this.editor.getCurrentlyDraggedElements();
+        if (draggedElements.isEmpty()) {
+            return false;
+        }
+        for (AbstractEditorElement<?, ?> e : draggedElements) {
+            if (e.isGettingResized() || e.isGettingRotated() || e.isGettingTilted()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
