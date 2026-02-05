@@ -184,5 +184,6 @@
 - Fixed creation of empty ".minecraft" folder inside real ".minecraft" folder when the instances uses .minecraft as its instance directory (#1486)
 - Fixed multiple bugs that made elements sometimes glitch when fading out (flicker, size changing, etc.)
 - Fixed element tilting grabbers sometimes not moving at the same speed as the mouse cursor when dragging them
+- Fixed changing the element anchor by hovering an anchor point or other element sometimes getting triggered when resizing, rotating or tilting the element instead of moving/dragging it
 
 %changelog:end%
