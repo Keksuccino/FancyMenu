@@ -4,23 +4,28 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Lifecycle;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.client.multiplayer.ClientRegistryLayer;
 import net.minecraft.client.multiplayer.CommonListenerCookie;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.RegistrationInfo;
 import net.minecraft.core.SectionPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.data.worldgen.BootstrapContext;
+import net.minecraft.data.worldgen.DimensionTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
@@ -29,16 +34,20 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.RegistryDataLoader;
 import net.minecraft.server.ServerLinks;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeGenerationSettings;
+import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -58,6 +67,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.storage.LevelData;
+import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraft.world.ticks.LevelChunkTicks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,8 +82,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -83,6 +95,8 @@ public class WorldSceneRenderer {
     public static final String MEMORY_KEY = "world_scene_renderer";
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Object REGISTRY_LOCK = new Object();
+    private static @Nullable RegistryAccess.Frozen FALLBACK_REGISTRY_ACCESS;
 
     private static final Codec<PalettedContainer<BlockState>> BLOCK_STATE_CODEC = PalettedContainer.codecRW(
             Block.BLOCK_STATE_REGISTRY,
@@ -274,7 +288,12 @@ public class WorldSceneRenderer {
                         setState(SceneState.ERROR, result.error);
                         return;
                     }
-                    this.context = buildContext(key, result);
+                    try {
+                        this.context = buildContext(key, result);
+                    } catch (Exception ex) {
+                        LOGGER.error("[FANCYMENU] Failed to build world scene context", ex);
+                        this.context = null;
+                    }
                     if (this.context == null) {
                         setState(SceneState.ERROR, "Failed to build world scene");
                         return;
@@ -472,7 +491,28 @@ public class WorldSceneRenderer {
         if (this.minecraft.getConnection() != null) {
             return this.minecraft.getConnection().registryAccess();
         }
-        return ClientRegistryLayer.createRegistryAccess().compositeAccess().freeze();
+        RegistryAccess.Frozen cached = FALLBACK_REGISTRY_ACCESS;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (REGISTRY_LOCK) {
+            if (FALLBACK_REGISTRY_ACCESS != null) {
+                return FALLBACK_REGISTRY_ACCESS;
+            }
+            RegistryAccess.Frozen staticAccess = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
+            RegistryAccess.Frozen merged = staticAccess;
+            try {
+                RegistryAccess.Frozen worldgen = RegistryDataLoader.load(this.minecraft.getResourceManager(), staticAccess, RegistryDataLoader.SYNCHRONIZED_REGISTRIES);
+                merged = mergeRegistryAccess(staticAccess, worldgen);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to load world scene registries, using static registries only.", ex);
+            }
+            if (!hasRequiredRegistries(merged)) {
+                merged = mergeRegistryAccess(merged, createMinimalRegistryAccess());
+            }
+            FALLBACK_REGISTRY_ACCESS = merged;
+            return FALLBACK_REGISTRY_ACCESS;
+        }
     }
 
     private FeatureFlagSet getEnabledFeatures() {
@@ -503,6 +543,75 @@ public class WorldSceneRenderer {
     private void setState(@NotNull SceneState state, @Nullable String message) {
         this.state = state;
         this.stateMessage = message;
+    }
+
+    private static boolean hasRequiredRegistries(@NotNull RegistryAccess.Frozen access) {
+        return access.registry(Registries.DIMENSION_TYPE).isPresent()
+                && access.registry(Registries.BIOME).isPresent()
+                && access.registry(Registries.DAMAGE_TYPE).isPresent();
+    }
+
+    private static RegistryAccess.Frozen mergeRegistryAccess(@NotNull RegistryAccess.Frozen base, @NotNull RegistryAccess.Frozen extra) {
+        Map<ResourceKey<? extends Registry<?>>, Registry<?>> merged = new HashMap<>();
+        base.registries().forEach(entry -> merged.put(entry.key(), entry.value()));
+        extra.registries().forEach(entry -> merged.put(entry.key(), entry.value()));
+        return new RegistryAccess.ImmutableRegistryAccess(merged).freeze();
+    }
+
+    private static RegistryAccess.Frozen createMinimalRegistryAccess() {
+        RegistryAccess.Frozen staticAccess = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
+
+        MappedRegistry<DimensionType> dimensionRegistry = new MappedRegistry<>(Registries.DIMENSION_TYPE, Lifecycle.stable());
+        DimensionTypes.bootstrap(new SimpleBootstrapContext<>(dimensionRegistry, staticAccess));
+        dimensionRegistry.freeze();
+
+        MappedRegistry<DamageType> damageRegistry = new MappedRegistry<>(Registries.DAMAGE_TYPE, Lifecycle.stable());
+        DamageTypes.bootstrap(new SimpleBootstrapContext<>(damageRegistry, staticAccess));
+        damageRegistry.freeze();
+
+        MappedRegistry<Biome> biomeRegistry = new MappedRegistry<>(Registries.BIOME, Lifecycle.stable());
+        biomeRegistry.register(Biomes.PLAINS, createFallbackBiome(), RegistrationInfo.BUILT_IN);
+        biomeRegistry.freeze();
+
+        return new RegistryAccess.ImmutableRegistryAccess(List.of(dimensionRegistry, damageRegistry, biomeRegistry)).freeze();
+    }
+
+    private static Biome createFallbackBiome() {
+        BiomeSpecialEffects effects = new BiomeSpecialEffects.Builder()
+                .fogColor(12638463)
+                .waterColor(4159204)
+                .waterFogColor(329011)
+                .skyColor(7907327)
+                .build();
+        return new Biome.BiomeBuilder()
+                .temperature(0.8F)
+                .downfall(0.4F)
+                .specialEffects(effects)
+                .mobSpawnSettings(MobSpawnSettings.EMPTY)
+                .generationSettings(BiomeGenerationSettings.EMPTY)
+                .build();
+    }
+
+    private static final class SimpleBootstrapContext<T> implements BootstrapContext<T> {
+
+        private final MappedRegistry<T> registry;
+        private final RegistryAccess access;
+
+        private SimpleBootstrapContext(@NotNull MappedRegistry<T> registry, @NotNull RegistryAccess access) {
+            this.registry = registry;
+            this.access = access;
+        }
+
+        @Override
+        public Holder.Reference<T> register(ResourceKey<T> resourceKey, T object, Lifecycle lifecycle) {
+            RegistrationInfo info = new RegistrationInfo(Optional.empty(), lifecycle);
+            return this.registry.register(resourceKey, object, info);
+        }
+
+        @Override
+        public <S> net.minecraft.core.HolderGetter<S> lookup(ResourceKey<? extends Registry<? extends S>> resourceKey) {
+            return this.access.lookup(resourceKey).orElseThrow(() -> new IllegalStateException("Missing registry " + resourceKey.location()));
+        }
     }
 
     private static Codec<PalettedContainerRO<Holder<Biome>>> makeBiomeCodec(Registry<Biome> biomeRegistry) {

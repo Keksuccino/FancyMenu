@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
@@ -40,8 +41,11 @@ public final class SeamlessWorldLoadingHandler {
     @Nullable private static File activeFile;
     @Nullable private static String activeSource;
     @Nullable private static ResourceSupplier<ITexture> activeSupplier;
-    @Nullable private static LoadTarget pendingTarget;
-    @Nullable private static String pendingIdentifier;
+    @Nullable private static LoadTarget captureTarget;
+    @Nullable private static String captureIdentifier;
+    @Nullable private static NativeImage lastCapturedImage;
+    private static long lastCaptureTimeMs;
+    private static final long CAPTURE_INTERVAL_MS = 1000L;
 
     private SeamlessWorldLoadingHandler() {
     }
@@ -62,12 +66,20 @@ public final class SeamlessWorldLoadingHandler {
         clearActiveTarget(LoadTarget.SERVER);
     }
 
-    public static void requestWorldScreenshot(@Nullable String worldSavePath) {
-        requestScreenshot(LoadTarget.WORLD, worldSavePath);
+    public static void startWorldCapture(@Nullable String worldSavePath) {
+        setCaptureTarget(LoadTarget.WORLD, worldSavePath);
     }
 
-    public static void requestServerScreenshot(@Nullable String serverIp) {
-        requestScreenshot(LoadTarget.SERVER, serverIp);
+    public static void startServerCapture(@Nullable String serverIp) {
+        setCaptureTarget(LoadTarget.SERVER, serverIp);
+    }
+
+    public static void saveAndClearWorldCapture(@Nullable String worldSavePath) {
+        saveAndClearCapture(LoadTarget.WORLD, worldSavePath);
+    }
+
+    public static void saveAndClearServerCapture(@Nullable String serverIp) {
+        saveAndClearCapture(LoadTarget.SERVER, serverIp);
     }
 
     public static boolean renderLoadingBackgroundIfActive(@NotNull GuiGraphics graphics, int x, int y, int width, int height, @Nullable Screen screen) {
@@ -85,9 +97,10 @@ public final class SeamlessWorldLoadingHandler {
             return false;
         }
 
-        float scale = Math.max((float) width / (float) textureWidth, (float) height / (float) textureHeight);
-        int renderWidth = (int) Math.ceil(textureWidth * scale);
-        int renderHeight = (int) Math.ceil(textureHeight * scale);
+        AspectRatio aspectRatio = background.getAspectRatio();
+        int[] renderSize = aspectRatio.getAspectRatioSizeByMinimumSize(width, height);
+        int renderWidth = renderSize[0];
+        int renderHeight = renderSize[1];
         if (renderWidth <= 0 || renderHeight <= 0) {
             return false;
         }
@@ -97,7 +110,7 @@ public final class SeamlessWorldLoadingHandler {
 
         RenderSystem.enableBlend();
         RenderingUtils.resetShaderColor(graphics);
-        graphics.blit(location, renderX, renderY, 0.0F, 0.0F, renderWidth, renderHeight, textureWidth, textureHeight);
+        graphics.blit(location, renderX, renderY, 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
         RenderingUtils.resetShaderColor(graphics);
         RenderSystem.disableBlend();
         return true;
@@ -158,39 +171,22 @@ public final class SeamlessWorldLoadingHandler {
         activeSupplier = null;
     }
 
-    public static void cancelPending() {
-        pendingTarget = null;
-        pendingIdentifier = null;
+    public static void clearCapture() {
+        clearCaptureState();
     }
 
-    private static void requestScreenshot(@NotNull LoadTarget target, @Nullable String identifier) {
+    public static void captureFrameIfNeeded(@NotNull RenderTarget renderTarget) {
         if (!isEnabled()) {
+            clearCaptureState();
             return;
         }
-        String resolved = sanitizeIdentifier(identifier);
-        if (resolved == null) {
+        if (captureTarget == null || captureIdentifier == null) {
             return;
         }
-        pendingTarget = target;
-        pendingIdentifier = resolved;
-    }
-
-    public static void capturePendingIfPossible(@NotNull RenderTarget renderTarget) {
-        if (!isEnabled()) {
-            pendingTarget = null;
-            pendingIdentifier = null;
+        long now = Util.getMillis();
+        if (lastCapturedImage != null && now - lastCaptureTimeMs < CAPTURE_INTERVAL_MS) {
             return;
         }
-        if (pendingTarget == null || pendingIdentifier == null) {
-            return;
-        }
-        File outputFile = resolveScreenshotFile(pendingTarget, pendingIdentifier);
-        pendingTarget = null;
-        pendingIdentifier = null;
-        saveScreenshot(renderTarget, outputFile);
-    }
-
-    private static void saveScreenshot(@NotNull RenderTarget renderTarget, @NotNull File outputFile) {
         NativeImage image;
         try {
             image = Screenshot.takeScreenshot(renderTarget);
@@ -198,6 +194,74 @@ public final class SeamlessWorldLoadingHandler {
             LOGGER.warn("[FANCYMENU] Failed to capture seamless world loading screenshot.", ex);
             return;
         }
+        replaceLastCapturedImage(image);
+        lastCaptureTimeMs = now;
+    }
+
+    private static void setCaptureTarget(@NotNull LoadTarget target, @Nullable String identifier) {
+        if (!isEnabled()) {
+            clearCaptureState();
+            return;
+        }
+        String resolved = sanitizeIdentifier(identifier);
+        if (resolved == null) {
+            clearCaptureState();
+            return;
+        }
+        if (target != captureTarget || !resolved.equals(captureIdentifier)) {
+            clearLastCapturedImage();
+            captureTarget = target;
+            captureIdentifier = resolved;
+            lastCaptureTimeMs = 0L;
+        }
+    }
+
+    private static void saveAndClearCapture(@NotNull LoadTarget target, @Nullable String identifier) {
+        if (!isEnabled()) {
+            clearCaptureState();
+            return;
+        }
+        String resolved = sanitizeIdentifier(identifier);
+        if (resolved == null) {
+            clearCaptureState();
+            return;
+        }
+        if (captureTarget != target || !resolved.equals(captureIdentifier)) {
+            clearCaptureState();
+            return;
+        }
+        NativeImage image = lastCapturedImage;
+        lastCapturedImage = null;
+        captureTarget = null;
+        captureIdentifier = null;
+        lastCaptureTimeMs = 0L;
+        if (image == null) {
+            return;
+        }
+        File outputFile = resolveScreenshotFile(target, resolved);
+        saveNativeImage(image, outputFile);
+    }
+
+    private static void clearCaptureState() {
+        captureTarget = null;
+        captureIdentifier = null;
+        lastCaptureTimeMs = 0L;
+        clearLastCapturedImage();
+    }
+
+    private static void clearLastCapturedImage() {
+        if (lastCapturedImage != null) {
+            lastCapturedImage.close();
+            lastCapturedImage = null;
+        }
+    }
+
+    private static void replaceLastCapturedImage(@NotNull NativeImage image) {
+        clearLastCapturedImage();
+        lastCapturedImage = image;
+    }
+
+    private static void saveNativeImage(@NotNull NativeImage image, @NotNull File outputFile) {
         FileUtils.createDirectory(outputFile.getParentFile());
         Util.ioPool().execute(() -> {
             try {

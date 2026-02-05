@@ -53,7 +53,7 @@ public class MixinGameRenderer {
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/pipeline/RenderTarget;bindWrite(Z)V", shift = At.Shift.AFTER))
     private void afterRenderLevel_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
         if (this.minecraft != null && this.minecraft.level != null) {
-            SeamlessWorldLoadingHandler.capturePendingIfPossible(this.minecraft.getMainRenderTarget());
+            SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.getMainRenderTarget());
         }
     }
 

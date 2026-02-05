@@ -29,6 +29,7 @@ public final class WorldSessionTracker {
     public static void clearSession() {
         activeSession = null;
         pendingSession = null;
+        SeamlessWorldLoadingHandler.clearCapture();
         SeamlessWorldLoadingHandler.finishWorldLoad();
     }
 
@@ -49,6 +50,7 @@ public final class WorldSessionTracker {
         SessionData session = pendingSession.copy();
         activeSession = pendingSession;
         pendingSession = null;
+        SeamlessWorldLoadingHandler.startWorldCapture(session.worldSavePath);
         SeamlessWorldLoadingHandler.finishWorldLoad();
         Listeners.ON_WORLD_ENTERED.onWorldEntered(
                 session.worldName,
@@ -68,7 +70,7 @@ public final class WorldSessionTracker {
         captureSnapshot(minecraft);
         SessionData session = activeSession.copy();
         activeSession = null;
-        SeamlessWorldLoadingHandler.requestWorldScreenshot(session.worldSavePath);
+        SeamlessWorldLoadingHandler.saveAndClearWorldCapture(session.worldSavePath);
         Listeners.ON_WORLD_LEFT.onWorldLeft(
                 session.worldName,
                 session.worldSavePath,

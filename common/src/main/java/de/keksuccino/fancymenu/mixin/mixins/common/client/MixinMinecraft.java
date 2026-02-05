@@ -290,7 +290,7 @@ public class MixinMinecraft {
 
 	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At("RETURN"))
 	private void afterDisconnectFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, CallbackInfo info) {
-		SeamlessWorldLoadingHandler.cancelPending();
+		SeamlessWorldLoadingHandler.clearCapture();
 	}
 
 	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;level:Lnet/minecraft/client/multiplayer/ClientLevel;", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.BEFORE))
@@ -306,7 +306,7 @@ public class MixinMinecraft {
 
 	@Inject(method = "clearClientLevel", at = @At("RETURN"))
 	private void afterClearClientLevelFancyMenu(Screen nextScreen, CallbackInfo info) {
-		SeamlessWorldLoadingHandler.cancelPending();
+		SeamlessWorldLoadingHandler.clearCapture();
 	}
 
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V", shift = At.Shift.AFTER))
@@ -401,7 +401,7 @@ public class MixinMinecraft {
 				? this.lastServerIp_FancyMenu
 				: UNKNOWN_SERVER_IP_FANCYMENU;
 		if (!UNKNOWN_SERVER_IP_FANCYMENU.equals(serverIp)) {
-			SeamlessWorldLoadingHandler.requestServerScreenshot(serverIp);
+			SeamlessWorldLoadingHandler.saveAndClearServerCapture(serverIp);
 		}
 		SeamlessWorldLoadingHandler.finishServerLoad();
 		Listeners.ON_SERVER_LEFT.onServerLeft(serverIp);
@@ -424,6 +424,9 @@ public class MixinMinecraft {
 				: UNKNOWN_SERVER_IP_FANCYMENU;
 		this.pendingServerJoinEvent_FancyMenu = false;
 		this.hasActiveServerConnection_FancyMenu = true;
+		if (!UNKNOWN_SERVER_IP_FANCYMENU.equals(serverIp)) {
+			SeamlessWorldLoadingHandler.startServerCapture(serverIp);
+		}
 		SeamlessWorldLoadingHandler.finishServerLoad();
 		Listeners.ON_SERVER_JOINED.onServerJoined(serverIp);
 	}
