@@ -82,6 +82,7 @@ public final class GlobalCustomizationHandler {
     }
 
     public static boolean isGlobalButtonBackgroundNineSliceEnabled() {
+        if (isGlobalButtonBackgroundTransparent()) return false;
         return FancyMenu.getOptions().globalButtonBackgroundNineSlice.getValue();
     }
 
@@ -112,6 +113,7 @@ public final class GlobalCustomizationHandler {
     }
 
     public static boolean isGlobalSliderBackgroundNineSliceEnabled() {
+        if (isGlobalSliderBackgroundTransparent()) return false;
         return FancyMenu.getOptions().globalSliderBackgroundNineSlice.getValue();
     }
 
