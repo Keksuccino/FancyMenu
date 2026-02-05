@@ -77,22 +77,12 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         }
         return 0.7F;
     };
-
-    private static @NotNull MaterialIcon getAnchorPointIcon(@NotNull ElementAnchorPoint anchorPoint) {
-        return switch (anchorPoint.getName()) {
-            case "top-left" -> MaterialIcons.NORTH_WEST;
-            case "mid-left" -> MaterialIcons.WEST;
-            case "bottom-left" -> MaterialIcons.SOUTH_WEST;
-            case "top-centered" -> MaterialIcons.NORTH;
-            case "mid-centered" -> MaterialIcons.CENTER_FOCUS_STRONG;
-            case "bottom-centered" -> MaterialIcons.SOUTH;
-            case "top-right" -> MaterialIcons.NORTH_EAST;
-            case "mid-right" -> MaterialIcons.EAST;
-            case "bottom-right" -> MaterialIcons.SOUTH_EAST;
-            case "vanilla" -> MaterialIcons.DASHBOARD;
-            default -> MaterialIcons.ANCHOR;
-        };
-    }
+    protected static final int RESIZE_EDGE_GRAB_ZONE = 4;
+    protected static final int RESIZE_INDICATOR_SIZE = 5;
+    protected static final float RESIZE_INDICATOR_CORNER_RADIUS = 1.0F;
+    protected static final int TILT_CONTROLS_PADDING = 10;
+    protected static final int TILT_CONTROLS_LINE_EXTENSION = 20;
+    protected static final float TILT_ROTATION_ZERO_SNAP_DEGREES = 2.0F;
 
     @NotNull
     public N element;
@@ -115,12 +105,6 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     protected int movingStartPosY = 0;
     protected int resizingStartPosX = 0;
     protected int resizingStartPosY = 0;
-    protected static final int RESIZE_EDGE_GRAB_ZONE = 4;
-    protected static final int RESIZE_INDICATOR_SIZE = 5;
-    protected static final float RESIZE_INDICATOR_CORNER_RADIUS = 1.0F;
-    protected static final int TILT_CONTROLS_PADDING = 10;
-    protected static final int TILT_CONTROLS_LINE_EXTENSION = 20;
-    protected static final float TILT_ZERO_SNAP_DEGREES = 2.0F;
     protected @Nullable ResizeGrabberType activeResizeGrabberType = null;
     protected @Nullable ResizeGrabberType hoveredResizeGrabberType = null;
     protected RotationGrabber rotationGrabber = new RotationGrabber();
@@ -941,7 +925,22 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         float circleDiameter = radius * 2.0F;
         float circleX = centerX - radius;
         float circleY = centerY - radius;
-        SmoothCircleRenderer.renderSmoothCircleBorder(graphics, circleX, circleY, circleDiameter, circleDiameter, 1.0F, 2.0F, circleColor, partial);
+        float rotationAngleRad = (float) -Math.toRadians(this.element.getRotationDegrees() - 90.0F);
+        float arcHalfRadians = (float) Math.toRadians(15.0F);
+        SmoothCircleRenderer.renderSmoothCircleBorderArc(
+                graphics,
+                circleX,
+                circleY,
+                circleDiameter,
+                circleDiameter,
+                1.0F,
+                2.0F,
+                rotationAngleRad - arcHalfRadians,
+                rotationAngleRad + arcHalfRadians,
+                true,
+                circleColor,
+                partial
+        );
 
         this.rotationGrabber.render(graphics, mouseX, mouseY, partial);
 
@@ -1322,7 +1321,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 while (newRotation < 0) newRotation += 360;
                 while (newRotation >= 360) newRotation -= 360;
 
-                this.element.rotationDegrees.set(newRotation);
+                this.element.rotationDegrees.set(this.snapRotationToZero(newRotation));
             } else if (this.leftMouseDown && this.isGettingVerticalTilted()) { // VERTICAL TILT
                 // Calculate tilt based on mouse position along the tilt line
                 int lineTop = this.getVerticalTiltLineTop();
@@ -1781,7 +1780,14 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     }
 
     protected float snapTiltToZero(float tiltDegrees) {
-        return (Math.abs(tiltDegrees) <= TILT_ZERO_SNAP_DEGREES) ? 0.0F : tiltDegrees;
+        return (Math.abs(tiltDegrees) <= TILT_ROTATION_ZERO_SNAP_DEGREES) ? 0.0F : tiltDegrees;
+    }
+
+    protected float snapRotationToZero(float rotationDegrees) {
+        if (Math.abs(rotationDegrees) <= TILT_ROTATION_ZERO_SNAP_DEGREES) {
+            return 0.0F;
+        }
+        return (Math.abs(360.0F - rotationDegrees) <= TILT_ROTATION_ZERO_SNAP_DEGREES) ? 0.0F : rotationDegrees;
     }
 
     protected long getResizeCursor(@NotNull ResizeGrabberType type) {
@@ -1924,6 +1930,22 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         return this.editor;
     }
 
+    private static @NotNull MaterialIcon getAnchorPointIcon(@NotNull ElementAnchorPoint anchorPoint) {
+        return switch (anchorPoint.getName()) {
+            case "top-left" -> MaterialIcons.NORTH_WEST;
+            case "mid-left" -> MaterialIcons.WEST;
+            case "bottom-left" -> MaterialIcons.SOUTH_WEST;
+            case "top-centered" -> MaterialIcons.NORTH;
+            case "mid-centered" -> MaterialIcons.CENTER_FOCUS_STRONG;
+            case "bottom-centered" -> MaterialIcons.SOUTH;
+            case "top-right" -> MaterialIcons.NORTH_EAST;
+            case "mid-right" -> MaterialIcons.EAST;
+            case "bottom-right" -> MaterialIcons.SOUTH_EAST;
+            case "vanilla" -> MaterialIcons.DASHBOARD;
+            default -> MaterialIcons.ANCHOR;
+        };
+    }
+
     public enum ResizeGrabberType {
         TOP_LEFT,
         TOP,
@@ -1937,20 +1959,32 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
     public class RotationGrabber implements Renderable {
 
-        protected int size = 6; // Size of the grabber
+        protected int size = RESIZE_INDICATOR_SIZE; // Size of the grabber
         protected boolean hovered = false;
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
             if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
-                // Draw the grabber as a filled circle at the rotation position
+                // Draw the grabber as a filled square at the rotation position
                 int x = this.getX();
                 int y = this.getY();
+                float radius = UIBase.getInterfaceCornerRoundingRadius() > 0.0F ? RESIZE_INDICATOR_CORNER_RADIUS : 0.0F;
                 int color = UIBase.getUITheme().layout_editor_element_border_rotation_controls_color.getColorIntWithAlpha(ROTATION_CONTROLS_ALPHA.get(AbstractEditorElement.this));
 
-                // Draw a small filled square (approximation of a circle for the grabber)
-                graphics.fill(x - size / 2, y - size / 2, x + size / 2, y + size / 2, color);
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        x - size / 2,
+                        y - size / 2,
+                        size,
+                        size,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        color,
+                        1.0F
+                );
             }
         }
 
