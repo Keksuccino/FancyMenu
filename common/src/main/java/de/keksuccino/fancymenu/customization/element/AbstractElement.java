@@ -247,6 +247,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		this.tickBaseOpacity();
 
+		boolean rawShouldRender = this._shouldRender();
+		boolean willStartFadeOutThisTick = !isEditor()
+				&& !rawShouldRender
+				&& !this.isDisappearanceDelayed()
+				&& !this.becameInvisible
+				&& (this.fadeOut != Fading.NO_FADING)
+				&& !this.fadeOutElementJustCreated;
+
 		// Apply transformations if needed
 		boolean transformationsApplied = false;
 		float rotDegrees = this.getRotationDegrees();
@@ -255,7 +263,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		boolean hasRotation = this.supportsRotation && (rotDegrees != 0.0F);
 		boolean hasTilt = this.supportsTilting && (verticalTilt != 0.0F || horizontalTilt != 0.0F);
 
-		if (this.shouldRender() && (hasRotation || hasTilt)) {
+		if ((this.shouldRender() || willStartFadeOutThisTick) && (hasRotation || hasTilt)) {
 
 			graphics.pose().pushPose();
 			transformationsApplied = true;
@@ -314,7 +322,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.renderTick_Tail();
 
 		// Pop the transformations
-		if (this.shouldRender() && transformationsApplied) {
+		if (transformationsApplied) {
 			graphics.pose().popPose();
 		}
 
@@ -488,6 +496,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.fadeOutFinished = false;
 		this.shouldDoFadeInIfNeeded = true;
 		this.shouldDoFadeOutIfNeeded = false;
+		this.fadeOutElementJustCreated = false;
 
 	}
 

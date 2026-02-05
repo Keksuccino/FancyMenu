@@ -216,7 +216,7 @@ public class TextEditorLine extends AdvancedTextField {
     @Override
     public void setCursorPosition(int newPos) {
 
-        this.textWidth = Math.round(UIBase.getUITextWidth(this.getValue()));
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
 
         super.setCursorPosition(newPos);
 
@@ -305,7 +305,7 @@ public class TextEditorLine extends AdvancedTextField {
                 super.deleteChars(i);
             }
         }
-        this.textWidth = Math.round(UIBase.getUITextWidth(this.getValue()));
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
     }
 
     @Override
@@ -322,6 +322,8 @@ public class TextEditorLine extends AdvancedTextField {
             this.isInMouseHighlightingMode = true;
             this.parent.setFocusedLine(Math.max(0, this.parent.getLineIndex(this)));
             super.mouseClicked(mouseX, mouseY, mouseButton);
+            int cursorPos = this.parent.getCursorPosFromMouseX(this, mouseX);
+            this.moveCursorTo(cursorPos, false);
             this.setHighlightPos(this.getCursorPosition());
         } else if ((mouseButton == 0) && !this.isHovered()) {
             //Clear highlighting when left-clicked in another line, etc.
@@ -338,19 +340,19 @@ public class TextEditorLine extends AdvancedTextField {
     @Override
     public void setValue(String p_94145_) {
         super.setValue(p_94145_);
-        this.textWidth = Math.round(UIBase.getUITextWidth(this.getValue()));
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
     }
 
     @Override
     public void insertText(String textToWrite) {
         super.insertText(textToWrite);
-        this.textWidth = Math.round(UIBase.getUITextWidth(this.getValue()));
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
     }
 
     @Override
     public void setMaxLength(int p_94200_) {
         super.setMaxLength(p_94200_);
-        this.textWidth = Math.round(UIBase.getUITextWidth(this.getValue()));
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
     }
 
 }

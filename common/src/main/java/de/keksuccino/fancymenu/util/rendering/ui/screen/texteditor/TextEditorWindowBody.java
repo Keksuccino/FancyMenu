@@ -806,12 +806,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
                 this.startHighlightLineIndex = this.getLineIndex(focused);
                 this.endHighlightLineIndex = this.startHighlightLineIndex;
             }
-            int i = Mth.floor(this.getRenderMouseX()) - focused.getX();
-            if (focused.getAsAccessor().getBorderedFancyMenu()) {
-                i -= 4;
-            }
-            String s = this.font.plainSubstrByWidth(focused.getValue().substring(focused.getAsAccessor().getDisplayPosFancyMenu()), focused.getInnerWidth());
-            focused.moveCursorTo(this.font.plainSubstrByWidth(s, i).length() + focused.getAsAccessor().getDisplayPosFancyMenu(), true);
+            int cursorPos = this.getCursorPosFromMouseX(focused, this.getRenderMouseX());
+            focused.moveCursorTo(cursorPos, true);
             if ((focused.getAsAccessor().getHighlightPosFancyMenu() == focused.getCursorPosition()) && (this.startHighlightLineIndex == this.endHighlightLineIndex)) {
                 this.resetHighlighting();
             }
@@ -1719,8 +1715,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
                             //Focus focusedLineIndex in case it is right-clicked
                             this.setFocusedLine(this.getLineIndex(hoveredLine));
                             //Set cursor in case focusedLineIndex is right-clicked
-                            String s = this.font.plainSubstrByWidth(hoveredLine.getValue().substring(hoveredLine.getAsAccessor().getDisplayPosFancyMenu()), hoveredLine.getInnerWidth());
-                            hoveredLine.moveCursorTo(this.font.plainSubstrByWidth(s, (int)mouseX - hoveredLine.getX()).length() + hoveredLine.getAsAccessor().getDisplayPosFancyMenu(), false);
+                            int cursorPos = this.getCursorPosFromMouseX(hoveredLine, mouseX);
+                            hoveredLine.moveCursorTo(cursorPos, false);
                         }
                     }
                     if (button == 1) {
@@ -1776,7 +1772,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
     public int getEditBoxCursorX(EditBox editBox) {
         try {
             IMixinEditBox b = (IMixinEditBox) editBox;
-            String s = this.font.plainSubstrByWidth(editBox.getValue().substring(b.getDisplayPosFancyMenu()), editBox.getInnerWidth());
+            String s = this.getTextByWidth(editBox.getValue().substring(b.getDisplayPosFancyMenu()), editBox.getInnerWidth());
             int j = editBox.getCursorPosition() - b.getDisplayPosFancyMenu();
             boolean flag = j >= 0 && j <= s.length();
             boolean flag2 = editBox.getCursorPosition() < editBox.getValue().length() || editBox.getValue().length() >= b.getMaxLengthFancyMenu();
@@ -1784,7 +1780,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
             int j1 = l;
             if (!s.isEmpty()) {
                 String s1 = flag ? s.substring(0, j) : s;
-                j1 += Math.round(UIBase.getUITextWidth(s1));
+                j1 += Math.round(this.getTextWidthAtUIScale(s1));
             }
             int k1 = j1;
             if (!flag) {
@@ -1798,6 +1794,89 @@ public class TextEditorWindowBody extends PiPWindowBody {
             LOGGER.error("[FANCYMENU] Failed to get cursor X position!", ex);
         }
         return 0;
+    }
+
+    int getCursorPosFromMouseX(@NotNull TextEditorLine line, double mouseX) {
+        int displayPos = Math.max(0, line.getAsAccessor().getDisplayPosFancyMenu());
+        String value = line.getValue();
+        if (value.isEmpty() || displayPos >= value.length()) {
+            return value.length();
+        }
+        int localX = Mth.floor(mouseX) - line.getX();
+        if (line.getAsAccessor().getBorderedFancyMenu()) {
+            localX -= 4;
+        }
+        if (localX <= 0) {
+            return displayPos;
+        }
+        float maxWidth = line.getInnerWidth();
+        float targetWidth = (maxWidth > 0.0F) ? Math.min(localX, maxWidth) : localX;
+        String remaining = value.substring(displayPos);
+        int offset = this.getTextIndexByWidth(remaining, targetWidth);
+        return Math.min(value.length(), displayPos + offset);
+    }
+
+    private String getTextByWidth(@NotNull String text, float maxWidth) {
+        if (text.isEmpty()) {
+            return text;
+        }
+        int length = this.getTextIndexByWidth(text, maxWidth);
+        return text.substring(0, length);
+    }
+
+    private int getTextIndexByWidth(@NotNull String text, float targetWidth) {
+        if (text.isEmpty()) {
+            return 0;
+        }
+        if (!Float.isFinite(targetWidth)) {
+            return targetWidth > 0.0F ? text.length() : 0;
+        }
+        if (targetWidth <= 0.0F) {
+            return 0;
+        }
+        if (UIBase.isCurrentlyRenderingAtUIScale()) {
+            return this.getTextIndexByWidthInternal(text, targetWidth);
+        }
+        UIBase.startUIScaleRendering();
+        try {
+            return this.getTextIndexByWidthInternal(text, targetWidth);
+        } finally {
+            UIBase.stopUIScaleRendering();
+        }
+    }
+
+    private int getTextIndexByWidthInternal(@NotNull String text, float targetWidth) {
+        float fullWidth = UIBase.getUITextWidth(text);
+        if (targetWidth >= fullWidth) {
+            return text.length();
+        }
+        int low = 0;
+        int high = text.length();
+        while (low < high) {
+            int mid = (low + high + 1) / 2;
+            float width = UIBase.getUITextWidth(text.substring(0, mid));
+            if (width <= targetWidth) {
+                low = mid;
+            } else {
+                high = mid - 1;
+            }
+        }
+        return low;
+    }
+
+    float getTextWidthAtUIScale(@NotNull String text) {
+        if (text.isEmpty()) {
+            return 0.0F;
+        }
+        if (UIBase.isCurrentlyRenderingAtUIScale()) {
+            return UIBase.getUITextWidth(text);
+        }
+        UIBase.startUIScaleRendering();
+        try {
+            return UIBase.getUITextWidth(text);
+        } finally {
+            UIBase.stopUIScaleRendering();
+        }
     }
 
     public void scrollToLine(int lineIndex, boolean bottom) {

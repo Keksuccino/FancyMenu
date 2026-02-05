@@ -94,17 +94,17 @@ public class ImageElement extends AbstractElement {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
                     if (this.repeat.getBoolean()) {
-                        this.currentImageTint.setAsShaderColor(graphics, this.opacity);
+                        this.currentImageTint.setAsShaderColor(graphics, Math.clamp(this.opacity, 0.0F, 1.0F));
                         RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
                         this.currentImageTint.resetShaderColor(graphics);
                     } else if (this.nineSlice.getBoolean()) {
-                        this.currentImageTint.setAsShaderColor(graphics, this.opacity);
+                        this.currentImageTint.setAsShaderColor(graphics, Math.clamp(this.opacity, 0.0F, 1.0F));
                         int borderX = this.nineSliceBorderX.getInteger();
                         int borderY = this.nineSliceBorderY.getInteger();
                         RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), borderY, borderX, borderY, borderX);
                         this.currentImageTint.resetShaderColor(graphics);
                     } else {
-                        int color = resolveTintColor(this.currentImageTint, this.opacity);
+                        int color = resolveTintColor(this.currentImageTint, Math.clamp(this.opacity, 0.0F, 1.0F));
                         SmoothImageRectangleRenderer.renderSmoothImageRectRoundAllCornersScaled(
                                 graphics,
                                 loc,
