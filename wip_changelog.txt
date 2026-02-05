@@ -177,5 +177,6 @@
 - Fixed/Improved some listeners being very heavy on performance (#1490)
 - Fixed audio files loaded via resource pack stop working (or play really quiet) when joining a world (#1463, #1365)
 - Fixed "Layer" widget in layout editor not showing transparency for its icons in some Minecraft versions
+- Fixed creation of empty ".minecraft" folder inside real ".minecraft" folder when the instances uses .minecraft as its instance directory (#1486)
 
 %changelog:end%
