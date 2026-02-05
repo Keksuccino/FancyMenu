@@ -1003,6 +1003,11 @@ public class TextEditorWindowBody extends PiPWindowBody {
                 if (currentLine != null) {
                     Objects.requireNonNull(this.getFocusedLine()).moveCursorTo(this.lastCursorPosSetByUser, false);
                 }
+            } else {
+                TextEditorLine currentLine = this.getLine(current);
+                if (currentLine != null) {
+                    currentLine.moveCursorTo(0, false);
+                }
             }
         }
     }
@@ -1010,6 +1015,13 @@ public class TextEditorWindowBody extends PiPWindowBody {
     public void goDownLine(boolean isNewLine) {
         if (this.isLineFocused()) {
             int current = Math.max(0, this.getFocusedLineIndex());
+            if (!isNewLine && (current >= this.getLineCount() - 1)) {
+                TextEditorLine currentLine = this.getLine(current);
+                if (currentLine != null) {
+                    currentLine.moveCursorToEnd(false);
+                }
+                return;
+            }
             if (isNewLine) {
                 this.addLineAtIndex(current+1);
             }

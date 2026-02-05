@@ -31,10 +31,6 @@ public class FancyMenu {
 
     //TODO Neue Button/Slider Label customizations zu Global Customizations adden (label shadow, label color normal, label color hover, label scale, etc.)
 
-    //TODO Machen, dass man in Text Editor auf der letzten Zeile Arrow Down drücken kann, um an das Ende der Zeile zu springen
-
-    // TODO Machen, dass man in Text Editor auf der ersten Zeile Arrow Up drücken kann, um a den Anfang der Zeile zu springen
-
 
 
 
