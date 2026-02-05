@@ -37,24 +37,13 @@ public class JsonModelEditorElement extends AbstractEditorElement<JsonModelEdito
         this.element.renderTranslucent.buildContextMenuEntryAndAddTo(textureMenu, this)
                 .setIcon(MaterialIcons.TUNE);
 
-        ContextMenu transformMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("json_model_transform", Component.translatable("fancymenu.elements.json_model.menu.transform"), transformMenu)
+        this.rightClickMenu.addClickableEntry("json_model_transform", Component.translatable("fancymenu.elements.json_model.menu.transform"),
+                (menu, entry) -> {
+                    JsonModelTransformScreen screen = new JsonModelTransformScreen(this.element, this.editor);
+                    menu.closeMenuChain();
+                    JsonModelTransformScreen.openInWindow(screen);
+                })
                 .setIcon(MaterialIcons._3D_ROTATION);
-
-        this.element.modelScale.buildContextMenuEntryAndAddTo(transformMenu, this)
-                .setIcon(MaterialIcons.STRAIGHTEN);
-        this.element.modelOffsetX.buildContextMenuEntryAndAddTo(transformMenu, this)
-                .setIcon(MaterialIcons.MOVE);
-        this.element.modelOffsetY.buildContextMenuEntryAndAddTo(transformMenu, this)
-                .setIcon(MaterialIcons.MOVE);
-        this.element.modelOffsetZ.buildContextMenuEntryAndAddTo(transformMenu, this)
-                .setIcon(MaterialIcons.MOVE);
-        this.element.modelRotationX.buildContextMenuEntryAndAddTo(transformMenu, this)
-                .setIcon(MaterialIcons.ROTATE_RIGHT);
-        this.element.modelRotationY.buildContextMenuEntryAndAddTo(transformMenu, this)
-                .setIcon(MaterialIcons.ROTATE_RIGHT);
-        this.element.modelRotationZ.buildContextMenuEntryAndAddTo(transformMenu, this)
-                .setIcon(MaterialIcons.ROTATE_RIGHT);
 
         ContextMenu lightMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("json_model_lighting", Component.translatable("fancymenu.elements.json_model.menu.lighting"), lightMenu)
