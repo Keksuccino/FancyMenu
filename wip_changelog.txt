@@ -97,7 +97,7 @@
 - "Button" and "Slider" elements got some new features
   - They can have transparent backgrounds now (without the need to set transparent textures)
   - Labels can now show underlined on hover (without setting a "hover label" text)
-  - You can now set a hover color for the label to change its color when button/slider is hovered (without setting a "hover label" text)
+  - You can now set a hover color for the label to change its color when button/slider is hovered (without setting a "hover label" text) (#1352)
   - You can now set a base color for the label to change its default (white) color (without setting a custom label text)
   - There's support for setting the label text scale now
   - Both elements now let you toggle on/off the text shadow of labels
