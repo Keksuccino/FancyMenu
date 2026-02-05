@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.CapeResourceSupplier;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinOptions;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.Property;
@@ -20,6 +21,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -28,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
+import java.util.Set;
 
 public class PlayerEntityElement extends AbstractElement {
     
@@ -187,6 +190,7 @@ public class PlayerEntityElement extends AbstractElement {
             this.widget.setHeadFollowsMouse(this.headFollowsMouse);
             this.widget.setBodyFollowsMouse(this.bodyFollowsMouse);
             this.widget.setSlim(this.slim);
+            this.updateModelPartVisibility();
 
         }
 
@@ -270,6 +274,45 @@ public class PlayerEntityElement extends AbstractElement {
             if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
         }
         this.widget.setSkin(new PlayerSkin(skinLoc, null, capeLoc, null, this.slim ? PlayerSkin.Model.SLIM : PlayerSkin.Model.WIDE, false));
+    }
+
+    protected void updateModelPartVisibility() {
+        if (this.widget == null) return;
+        if (this.copyClientPlayer) {
+            try {
+                Set<PlayerModelPart> parts = ((IMixinOptions) Minecraft.getInstance().options).getModelPartsFancyMenu();
+                this.widget.setShowCape(parts.contains(PlayerModelPart.CAPE));
+                this.widget.setShowJacket(parts.contains(PlayerModelPart.JACKET));
+                this.widget.setShowLeftSleeve(parts.contains(PlayerModelPart.LEFT_SLEEVE));
+                this.widget.setShowRightSleeve(parts.contains(PlayerModelPart.RIGHT_SLEEVE));
+                this.widget.setShowLeftPants(parts.contains(PlayerModelPart.LEFT_PANTS_LEG));
+                this.widget.setShowRightPants(parts.contains(PlayerModelPart.RIGHT_PANTS_LEG));
+                this.widget.setShowHat(parts.contains(PlayerModelPart.HAT));
+
+                this.widget.setShowHead(true);
+                this.widget.setShowBody(true);
+                this.widget.setShowLeftArm(true);
+                this.widget.setShowRightArm(true);
+                this.widget.setShowLeftLeg(true);
+                this.widget.setShowRightLeg(true);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to sync client skin settings for PlayerEntityElement!", ex);
+            }
+        } else {
+            this.widget.setShowCape(true);
+            this.widget.setShowJacket(true);
+            this.widget.setShowLeftSleeve(true);
+            this.widget.setShowRightSleeve(true);
+            this.widget.setShowLeftPants(true);
+            this.widget.setShowRightPants(true);
+            this.widget.setShowHat(true);
+            this.widget.setShowHead(true);
+            this.widget.setShowBody(true);
+            this.widget.setShowLeftArm(true);
+            this.widget.setShowRightArm(true);
+            this.widget.setShowLeftLeg(true);
+            this.widget.setShowRightLeg(true);
+        }
     }
 
     public void setCopyClientPlayer(boolean copyClientPlayer) {

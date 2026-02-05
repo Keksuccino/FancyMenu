@@ -50,6 +50,20 @@ public class MixinGameRenderer {
         ScreenCustomization.onPreGameRenderTick();
     }
 
+    @Inject(
+        method = "renderLevel",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lnet/minecraft/client/Camera;FLorg/joml/Matrix4f;)V",
+            shift = At.Shift.BEFORE
+        )
+    )
+    private void beforeRenderItemInHand_FancyMenu(DeltaTracker $$0, CallbackInfo info) {
+        if (this.minecraft != null && this.minecraft.level != null) {
+            SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.getMainRenderTarget());
+        }
+    }
+
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/pipeline/RenderTarget;bindWrite(Z)V", shift = At.Shift.AFTER))
     private void afterRenderLevel_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
         if (this.minecraft != null && this.minecraft.level != null) {

@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
-import de.keksuccino.fancymenu.customization.background.backgrounds.worldscene.WorldSceneRenderContext;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -37,7 +36,6 @@ public class MixinLevelRenderer {
 
     @WrapOperation(method = "renderLevel(Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderEntity(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V"))
 	private void wrap_renderEntity_FancyMenu(LevelRenderer levelRenderer, Entity entity, double cameraX, double cameraY, double cameraZ, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, Operation<Void> original) {
-		if (WorldSceneRenderContext.isRendering()) return;
 		if (Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.shouldCheckVisibility()) {
 			double interpolatedX = Mth.lerp(partialTicks, entity.xo, entity.getX());
             double interpolatedY = Mth.lerp(partialTicks, entity.yo, entity.getY());
