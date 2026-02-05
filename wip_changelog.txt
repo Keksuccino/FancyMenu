@@ -94,7 +94,7 @@
 - Ported "Is Player Using Item" requirement from Spiffy (#1401)
 - Ported "Is Player In Structure" requirement from Spiffy (#1402)
 - The "Layer" widget of the layout editor now has support for creating groups that can hold layers for better organization (you can also collapse groups to save space) (#1449)
-- "Button" and "Slider" elements got some new features:
+- "Button" and "Slider" elements got some new features
   - They can have transparent backgrounds now (without the need to set transparent textures)
   - Labels can now show underlined on hover (without setting a "hover label" text)
   - You can now set a hover color for the label to change its color when button/slider is hovered (without setting a "hover label" text)
