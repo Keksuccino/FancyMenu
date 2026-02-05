@@ -32,6 +32,7 @@
 - Added new FancyMenu UI scales which will make it easier to find the correct UI scale for your monitor resolution
   - When the scale is set to Auto, the smallest scale is now 1.25 (was 1 before), because 1.25 looks way better on 1080p monitors (you can still manually set scale 1 if you prefer that)
 - Added shortcut to quickly open the layout editor with the last edited layout (CTRL+ALT+L) (#868)
+- Added "Seamless World Loading" setting to the "Global Customizations" that takes a screenshot of worlds/servers when leaving them and shows the screenshot on next join to make it look like the world already renders (#1238)
 - Added a file browser for Minecraft resources to the "Choose Resource" screen, so you can now browse nearly all resources loaded via resource packs like a normal directory
 - Added click events to Markdown, which let's you use a listener to listen for specific text clicks in Markdown text (used for the Text element, etc.) (#1366)
   - The formatting for a click event is very similar to hyperlinks: "[some clickable text](click:unique_text_click_event_id)"
