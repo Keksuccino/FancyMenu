@@ -591,6 +591,12 @@ public class CustomizationOverlayUI {
                 }))
                 .setIcon(MaterialIcons.IMAGE);
 
+        globalCustomizationsMenu.addValueCycleEntry("seamless_world_loading",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.seamless_world_loading", FancyMenu.getOptions().seamlessWorldLoading.getValue())
+                                .addCycleListener(cycle -> FancyMenu.getOptions().seamlessWorldLoading.setValue(cycle.getAsBoolean())))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.seamless_world_loading.desc")))
+                .setIcon(MaterialIcons.SCREENSHOT);
+
         globalCustomizationsMenu.addSeparatorEntry("separator_after_mp_server_icons");
 
         globalCustomizationsMenu.addSubMenuEntry("window_icon", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon"), buildWindowIconMenu())

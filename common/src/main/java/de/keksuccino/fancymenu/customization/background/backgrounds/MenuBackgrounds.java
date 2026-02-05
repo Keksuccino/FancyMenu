@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageM
 import de.keksuccino.fancymenu.customization.background.backgrounds.panorama.PanoramaMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.SlideshowMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.mcef.MCEFVideoMenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.background.backgrounds.worldscene.WorldSceneMenuBackgroundBuilder;
 
 public class MenuBackgrounds {
 
@@ -14,6 +15,7 @@ public class MenuBackgrounds {
     public static final PanoramaMenuBackgroundBuilder PANORAMA = new PanoramaMenuBackgroundBuilder();
     public static final ColorMenuBackgroundBuilder COLOR = new ColorMenuBackgroundBuilder();
     public static final MCEFVideoMenuBackgroundBuilder VIDEO_MCEF = new MCEFVideoMenuBackgroundBuilder();
+    public static final WorldSceneMenuBackgroundBuilder WORLD_SCENE = new WorldSceneMenuBackgroundBuilder();
 
     public static void registerAll() {
 
@@ -23,6 +25,7 @@ public class MenuBackgrounds {
         MenuBackgroundRegistry.register(IMAGE);
         MenuBackgroundRegistry.register(SLIDESHOW);
         MenuBackgroundRegistry.register(VIDEO_MCEF);
+        MenuBackgroundRegistry.register(WORLD_SCENE);
 
     }
 

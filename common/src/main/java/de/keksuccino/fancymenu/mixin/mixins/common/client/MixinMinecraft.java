@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.helpers.WorldSessionTracker;
 import de.keksuccino.fancymenu.util.ScreenUtils;
@@ -287,6 +288,11 @@ public class MixinMinecraft {
 		this.fireServerLeft_FancyMenu();
 	}
 
+	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At("RETURN"))
+	private void afterDisconnectFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, CallbackInfo info) {
+		SeamlessWorldLoadingHandler.cancelPending();
+	}
+
 	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;level:Lnet/minecraft/client/multiplayer/ClientLevel;", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.BEFORE))
 	private void beforeLevelClearedWorldLeftFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, CallbackInfo info) {
 		WorldSessionTracker.handleWorldLeft((Minecraft)(Object)this);
@@ -296,6 +302,11 @@ public class MixinMinecraft {
 		WorldSessionTracker.captureSnapshot((Minecraft) (Object) this);
 		this.fireServerLeft_FancyMenu();
 		WorldSessionTracker.handleWorldLeft((Minecraft) (Object) this);
+	}
+
+	@Inject(method = "clearClientLevel", at = @At("RETURN"))
+	private void afterClearClientLevelFancyMenu(Screen nextScreen, CallbackInfo info) {
+		SeamlessWorldLoadingHandler.cancelPending();
 	}
 
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V", shift = At.Shift.AFTER))
@@ -389,6 +400,10 @@ public class MixinMinecraft {
 		String serverIp = (this.lastServerIp_FancyMenu != null && !this.lastServerIp_FancyMenu.isBlank())
 				? this.lastServerIp_FancyMenu
 				: UNKNOWN_SERVER_IP_FANCYMENU;
+		if (!UNKNOWN_SERVER_IP_FANCYMENU.equals(serverIp)) {
+			SeamlessWorldLoadingHandler.requestServerScreenshot(serverIp);
+		}
+		SeamlessWorldLoadingHandler.finishServerLoad();
 		Listeners.ON_SERVER_LEFT.onServerLeft(serverIp);
 		this.hasActiveServerConnection_FancyMenu = false;
 		this.pendingServerJoinEvent_FancyMenu = false;
@@ -409,6 +424,7 @@ public class MixinMinecraft {
 				: UNKNOWN_SERVER_IP_FANCYMENU;
 		this.pendingServerJoinEvent_FancyMenu = false;
 		this.hasActiveServerConnection_FancyMenu = true;
+		SeamlessWorldLoadingHandler.finishServerLoad();
 		Listeners.ON_SERVER_JOINED.onServerJoined(serverIp);
 	}
 

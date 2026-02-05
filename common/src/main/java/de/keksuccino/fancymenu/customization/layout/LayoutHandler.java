@@ -190,6 +190,19 @@ public class LayoutHandler {
 		return null;
 	}
 
+	@Nullable
+	public static Layout getLastEditedLayout() {
+		return getLastEditedLayout(true);
+	}
+
+	@Nullable
+	public static Layout getLastEditedLayout(boolean removeNeverEdited) {
+		List<Layout> layouts = getAllLayouts();
+		sortLayoutListByLastEdited(layouts, removeNeverEdited);
+		if (layouts.isEmpty()) return null;
+		return layouts.getFirst();
+	}
+
 	@NotNull
 	public static List<Layout> sortLayoutListByLastEdited(@NotNull List<Layout> layouts, boolean removeNeverEdited) {
 		layouts.sort(Comparator.comparingLong(value -> value.lastEditedTime));

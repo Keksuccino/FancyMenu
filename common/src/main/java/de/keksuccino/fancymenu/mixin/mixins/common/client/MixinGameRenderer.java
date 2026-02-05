@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtBlockListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtEntityListener;
@@ -47,6 +48,13 @@ public class MixinGameRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
+    }
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/pipeline/RenderTarget;bindWrite(Z)V", shift = At.Shift.AFTER))
+    private void afterRenderLevel_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
+        if (this.minecraft != null && this.minecraft.level != null) {
+            SeamlessWorldLoadingHandler.capturePendingIfPossible(this.minecraft.getMainRenderTarget());
+        }
     }
 
     @Inject(method = "pick(F)V", at = @At("TAIL"))

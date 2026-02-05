@@ -88,6 +88,13 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                     element.appearanceDelay = appearanceDelay;
                 }
             }
+            String disappearanceDelay = serialized.getValue("disappearance_delay");
+            if (disappearanceDelay != null) {
+                AbstractElement.DisappearanceDelay parsed = AbstractElement.DisappearanceDelay.getByName(disappearanceDelay);
+                if (parsed != null) {
+                    element.disappearanceDelay = parsed;
+                }
+            }
             String delaySec = serialized.getValue("appearance_delay_seconds");
             if (delaySec == null) {
                 delaySec = serialized.getValue("delayappearanceseconds");
@@ -297,6 +304,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             }
 
             sec.putProperty("appearance_delay", element.appearanceDelay.name);
+            sec.putProperty("disappearance_delay", element.disappearanceDelay.name);
             sec.putProperty("fade_in_v2", element.fadeIn.getName());
             sec.putProperty("fade_out", element.fadeOut.getName());
             sec.putProperty("auto_sizing", "" + element.autoSizing);
@@ -311,6 +319,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             if (element.appearanceDelay == null) {
                 element.appearanceDelay = AbstractElement.AppearanceDelay.NO_DELAY;
+            }
+            if (element.disappearanceDelay == null) {
+                element.disappearanceDelay = AbstractElement.DisappearanceDelay.NO_DELAY;
             }
             sec.putProperty("x", "" + element.posOffsetX);
             sec.putProperty("y", "" + element.posOffsetY);

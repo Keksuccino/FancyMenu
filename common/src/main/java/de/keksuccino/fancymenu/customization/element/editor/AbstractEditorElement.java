@@ -534,6 +534,37 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     .setStackable(true)
                     .setIcon(MaterialIcons.TIMER);
 
+            ContextMenu disappearanceDelayMenu = new ContextMenu();
+            this.rightClickMenu.addSubMenuEntry("disappearance_delay", Component.translatable("fancymenu.element.general.disappearance_delay"), disappearanceDelayMenu)
+                    .setStackable(true)
+                    .setIcon(MaterialIcons.TIMER);
+
+            this.addGenericCycleContextMenuEntryTo(disappearanceDelayMenu, "disappearance_delay_type",
+                            ListUtils.of(AbstractElement.DisappearanceDelay.NO_DELAY, AbstractElement.DisappearanceDelay.FIRST_TIME, AbstractElement.DisappearanceDelay.EVERY_TIME),
+                            consumes -> consumes.settings.isDelayable(),
+                            consumes -> consumes.element.disappearanceDelay,
+                            (element, switcherValue) -> element.element.disappearanceDelay = switcherValue,
+                            (menu, entry, switcherValue) -> {
+                                return Component.translatable("fancymenu.element.general.disappearance_delay." + switcherValue.name);
+                            })
+                    .setStackable(true)
+                    .setIcon(MaterialIcons.TIMER);
+
+            Supplier<Boolean> disappearanceDelayIsActive = () -> {
+                List<AbstractEditorElement<?, ?>> selected = this.editor.getSelectedElements();
+                selected.removeIf(e -> !e.settings.isDelayable());
+                if (selected.size() > 1) return true;
+                for (AbstractEditorElement<?, ?> e : selected) {
+                    if (e.element.disappearanceDelay == AbstractElement.DisappearanceDelay.NO_DELAY) return false;
+                }
+                return true;
+            };
+
+            this.element.disappearanceDelaySeconds.buildContextMenuEntryAndAddTo(disappearanceDelayMenu, this)
+                    .addIsActiveSupplier((menu, entry) -> disappearanceDelayIsActive.get())
+                    .setStackable(true)
+                    .setIcon(MaterialIcons.TIMER);
+
         }
 
         if (this.settings.isFadeable()) {

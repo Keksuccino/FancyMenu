@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
@@ -16,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -110,6 +112,11 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Inject(method = "renderMenuBackgroundTexture", at = @At("HEAD"), cancellable = true)
     private static void before_renderMenuBackgroundTexture_FancyMenu(GuiGraphics graphics, ResourceLocation location, int x, int y, float uOffset, float vOffset, int width, int height, CallbackInfo info) {
+        Screen currentScreen = Minecraft.getInstance().screen;
+        if (SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, currentScreen)) {
+            info.cancel();
+            return;
+        }
         RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
         if (customBackground == null) return;
         ResourceLocation customLocation = customBackground.getResourceLocation();

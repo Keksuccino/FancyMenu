@@ -9,8 +9,14 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
+import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
@@ -134,6 +140,29 @@ public class CustomizationOverlay {
 				//Reload FancyMenu
 				if (keyName.equals("r") && Screen.hasControlDown() && Screen.hasAltDown()) {
 					ScreenCustomization.reloadFancyMenu();
+				}
+
+				//Open last edited layout
+				if (keyName.equals("l") && Screen.hasControlDown() && Screen.hasAltDown()) {
+					Layout lastEdited = LayoutHandler.getLastEditedLayout();
+					if (lastEdited != null) {
+						Screen layoutTargetScreen = null;
+						if (!lastEdited.isUniversalLayout()) {
+							Screen currentScreen = e.getScreen();
+							if ((currentScreen != null) && (lastEdited.screenIdentifier != null) && ScreenIdentifierHandler.isIdentifierOfScreen(lastEdited.screenIdentifier, currentScreen)) {
+								layoutTargetScreen = currentScreen;
+							} else if (lastEdited.screenIdentifier != null) {
+								if (CustomGuiHandler.guiExists(lastEdited.screenIdentifier)) {
+									layoutTargetScreen = CustomGuiHandler.constructInstance(lastEdited.screenIdentifier, currentScreen, null);
+								}
+								if (layoutTargetScreen == null) {
+									layoutTargetScreen = ScreenInstanceFactory.tryConstruct(lastEdited.screenIdentifier);
+								}
+							}
+						}
+						Screen finalLayoutTargetScreen = layoutTargetScreen;
+						MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(lastEdited, finalLayoutTargetScreen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+					}
 				}
 
 			}

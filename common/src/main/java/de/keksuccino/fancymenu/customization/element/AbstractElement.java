@@ -66,6 +66,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public volatile boolean visible = true;
 	public volatile AppearanceDelay appearanceDelay = AppearanceDelay.NO_DELAY;
 	public long appearanceDelayEndTime = -1;
+	public volatile DisappearanceDelay disappearanceDelay = DisappearanceDelay.NO_DELAY;
+	public long disappearanceDelayEndTime = -1;
 	@NotNull
 	public Fading fadeIn = Fading.NO_FADING;
 	@NotNull
@@ -89,6 +91,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean fadeOutElementJustCreated = true;
 	public boolean appearanceDelayElementJustCreated = true;
 	public boolean lastTickAppearanceDelayed = false;
+	public boolean disappearanceDelayElementJustCreated = true;
+	public boolean lastTickDisappearanceDelayed = false;
+	public boolean lastTickRawShouldRender = false;
+	public boolean lastTickShouldRender = false;
 	public boolean autoSizing = false;
 	public int autoSizingBaseScreenWidth = 0;
 	public int autoSizingBaseScreenHeight = 0;
@@ -145,6 +151,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
     public final Property.BooleanProperty stretchX = putProperty(Property.booleanProperty("stretch_x", false, "fancymenu.elements.stretch.x"));
     public final Property.BooleanProperty stretchY = putProperty(Property.booleanProperty("stretch_y", false, "fancymenu.elements.stretch.y"));
     public final Property.FloatProperty appearanceDelaySeconds = putProperty(Property.floatProperty("appearance_delay_seconds", 1.0F, "fancymenu.element.general.appearance_delay.seconds"));
+    public final Property.FloatProperty disappearanceDelaySeconds = putProperty(Property.floatProperty("disappearance_delay_seconds", 1.0F, "fancymenu.element.general.disappearance_delay.seconds"));
     public final Property.FloatProperty fadeInSpeed = putProperty(Property.floatProperty("fade_in_speed", 1.0F, "fancymenu.element.fading.fade_in.speed"));
     public final Property.FloatProperty fadeOutSpeed = putProperty(Property.floatProperty("fade_out_speed", 1.0F, "fancymenu.element.fading.fade_out.speed"));
     public final Property.FloatProperty baseOpacity = putProperty(Property.floatProperty("base_opacity", 1.0F, "fancymenu.element.base_opacity"));
@@ -291,6 +298,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (!isEditor()) {
 
 			this.tickAppearanceDelay(this.shouldRender());
+			this.tickDisappearanceDelay();
 
 			this.tickFadeInOut(this.shouldRender());
 
@@ -309,6 +317,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.shouldRender() && transformationsApplied) {
 			graphics.pose().popPose();
 		}
+
+		this.lastTickShouldRender = this.shouldRender();
 
 		if (this.allowDepthTestManipulation) {
 			RenderingUtils.setDepthTestLocked(false);
@@ -345,7 +355,22 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public void tickVisibleInvisible() {
 
-		if (!this._shouldRender()) {
+		boolean rawShouldRender = this._shouldRender();
+
+		if (!rawShouldRender) {
+			if (this.lastTickRawShouldRender && this.lastTickShouldRender) {
+				this.applyDisappearanceDelay();
+			}
+		} else if (this.disappearanceDelayEndTime != -1) {
+			this.disappearanceDelayEndTime = -1;
+			this.lastTickDisappearanceDelayed = false;
+		}
+
+		this.lastTickRawShouldRender = rawShouldRender;
+
+		boolean effectiveVisible = rawShouldRender || this.isDisappearanceDelayed();
+
+		if (!effectiveVisible) {
 			if (!this.becameInvisible) {
 				this.becameInvisible = true;
 				this.onBecomeInvisible();
@@ -370,6 +395,15 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			this.getMemory().putProperty("appearance_delay_applied", true);
 		}
 		this.lastTickAppearanceDelayed = this.isAppearanceDelayed();
+
+	}
+
+	public void tickDisappearanceDelay() {
+
+		if (this.lastTickDisappearanceDelayed && !this.isDisappearanceDelayed() && !this.lastTickRawShouldRender) {
+			this.getMemory().putProperty("disappearance_delay_applied", true);
+		}
+		this.lastTickDisappearanceDelayed = this.isDisappearanceDelayed();
 
 	}
 
@@ -494,6 +528,27 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			this.appearanceDelayEndTime = -1;
 		}
 		this.lastTickAppearanceDelayed = this.isAppearanceDelayed();
+	}
+
+	public void applyDisappearanceDelay() {
+		boolean isResize = !this.isNewMenu && this.disappearanceDelayElementJustCreated;
+		this.disappearanceDelayElementJustCreated = false;
+		if (isEditor()) {
+			this.disappearanceDelayEndTime = -1;
+			return;
+		}
+		boolean applied = this.getMemory().putPropertyIfAbsentAndGet("disappearance_delay_applied", false);
+		float delaySeconds = Math.max(0.0F, this.disappearanceDelaySeconds.getFloat());
+		if ((!isResize || !applied) && (this.disappearanceDelay != DisappearanceDelay.NO_DELAY) && (delaySeconds > 0.0F)) {
+			if ((this.disappearanceDelay == DisappearanceDelay.FIRST_TIME) && applied) {
+				this.disappearanceDelayEndTime = -1;
+			} else {
+				this.disappearanceDelayEndTime = System.currentTimeMillis() + ((long)(delaySeconds * 1000.0F));
+			}
+		} else {
+			this.disappearanceDelayEndTime = -1;
+		}
+		this.lastTickDisappearanceDelayed = this.isDisappearanceDelayed();
 	}
 
 	public void updateOpacity() {
@@ -928,6 +983,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return (System.currentTimeMillis() < this.appearanceDelayEndTime);
 	}
 
+	public boolean isDisappearanceDelayed() {
+		return (System.currentTimeMillis() < this.disappearanceDelayEndTime);
+	}
+
 	public boolean shouldRender() {
 
 		if (!isEditor() && this.loadOncePerSession && this.shouldHideOncePerSessionElement()) return false;
@@ -936,6 +995,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		boolean b = this._shouldRender();
 		if (!isEditor()) {
+			if (!b && this.isDisappearanceDelayed()) return true;
 			if (!b && this.fadeOutStarted && !this.fadeOutFinished) return true;
 		}
 
@@ -1136,6 +1196,30 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		@Nullable
 		public static AppearanceDelay getByName(@NotNull String name) {
 			for (AppearanceDelay d : AppearanceDelay.values()) {
+				if (d.name.equals(name)) {
+					return d;
+				}
+			}
+			return null;
+		}
+
+	}
+
+	public enum DisappearanceDelay {
+
+		NO_DELAY("no_delay"),
+		FIRST_TIME("first_time"),
+		EVERY_TIME("every_time");
+
+		public final String name;
+
+		DisappearanceDelay(String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public static DisappearanceDelay getByName(@NotNull String name) {
+			for (DisappearanceDelay d : DisappearanceDelay.values()) {
 				if (d.name.equals(name)) {
 					return d;
 				}

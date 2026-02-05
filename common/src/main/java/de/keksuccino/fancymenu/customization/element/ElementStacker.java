@@ -61,6 +61,12 @@ public interface ElementStacker<E extends AbstractElement> {
         if (!e.appearanceDelaySeconds.isDefault()) {
             stack.appearanceDelaySeconds.copyValueFrom(e.appearanceDelaySeconds);
         }
+        if (e.disappearanceDelay != AbstractElement.DisappearanceDelay.NO_DELAY) {
+            stack.disappearanceDelay = e.disappearanceDelay;
+        }
+        if (!e.disappearanceDelaySeconds.isDefault()) {
+            stack.disappearanceDelaySeconds.copyValueFrom(e.disappearanceDelaySeconds);
+        }
         if (e.fadeIn != AbstractElement.Fading.NO_FADING) {
             stack.fadeIn = e.fadeIn;
         }
