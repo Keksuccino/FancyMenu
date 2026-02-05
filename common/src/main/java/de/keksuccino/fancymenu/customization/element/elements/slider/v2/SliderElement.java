@@ -278,7 +278,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
         if (this.slider instanceof CustomizableWidget w) {
             if (this.slider instanceof CustomizableSlider s) {
-                s.setNineSliceCustomSliderBackground_FancyMenu(this.isNineSliceCustomBackground());
+                s.setNineSliceCustomSliderBackground_FancyMenu(!transparentBackground && this.isNineSliceCustomBackground());
                 s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getNineSliceBorderX());
                 s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getNineSliceBorderY());
                 s.setNineSliceCustomSliderHandle_FancyMenu(this.isNineSliceSliderHandle());

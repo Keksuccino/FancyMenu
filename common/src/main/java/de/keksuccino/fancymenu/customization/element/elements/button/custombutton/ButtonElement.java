@@ -404,11 +404,11 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
         if (this.getWidget() instanceof CustomizableWidget w) {
             if (this.getWidget() instanceof CustomizableSlider s) {
-                s.setNineSliceCustomSliderBackground_FancyMenu(this.getPropertySource().nineSliceCustomBackground);
+                s.setNineSliceCustomSliderBackground_FancyMenu(!transparentBackground && this.getPropertySource().nineSliceCustomBackground);
                 s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX.getInteger());
                 s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY.getInteger());
             } else {
-                w.setNineSliceCustomBackground_FancyMenu(this.getPropertySource().nineSliceCustomBackground);
+                w.setNineSliceCustomBackground_FancyMenu(!transparentBackground && this.getPropertySource().nineSliceCustomBackground);
                 w.setNineSliceBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX.getInteger());
                 w.setNineSliceBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY.getInteger());
             }
