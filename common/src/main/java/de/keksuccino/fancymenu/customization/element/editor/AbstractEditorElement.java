@@ -120,6 +120,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     protected static final float RESIZE_INDICATOR_CORNER_RADIUS = 1.0F;
     protected static final int TILT_CONTROLS_PADDING = 10;
     protected static final int TILT_CONTROLS_LINE_EXTENSION = 20;
+    protected static final float TILT_ZERO_SNAP_DEGREES = 2.0F;
     protected @Nullable ResizeGrabberType activeResizeGrabberType = null;
     protected @Nullable ResizeGrabberType hoveredResizeGrabberType = null;
     protected RotationGrabber rotationGrabber = new RotationGrabber();
@@ -1336,7 +1337,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     newTilt = Math.round(newTilt / 15.0F) * 15.0F;
                 }
 
-                this.element.verticalTiltDegrees.set(newTilt);
+                this.element.verticalTiltDegrees.set(this.snapTiltToZero(newTilt));
             } else if (this.leftMouseDown && this.isGettingHorizontalTilted()) { // HORIZONTAL TILT
                 // Calculate tilt based on mouse position along the tilt line
                 int lineLeft = this.getHorizontalTiltLineLeft();
@@ -1351,7 +1352,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     newTilt = Math.round(newTilt / 15.0F) * 15.0F;
                 }
 
-                this.element.horizontalTiltDegrees.set(newTilt);
+                this.element.horizontalTiltDegrees.set(this.snapTiltToZero(newTilt));
             } else if (this.leftMouseDown && !this.isGettingResized() && this.movingCrumpleZonePassed) { // MOVE ELEMENT
                 int diffX = (int)-(this.movingStartPosX - mouseX);
                 int diffY = (int)-(this.movingStartPosY - mouseY);
@@ -1777,6 +1778,10 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             return ResizeGrabberType.RIGHT;
         }
         return null;
+    }
+
+    protected float snapTiltToZero(float tiltDegrees) {
+        return (Math.abs(tiltDegrees) <= TILT_ZERO_SNAP_DEGREES) ? 0.0F : tiltDegrees;
     }
 
     protected long getResizeCursor(@NotNull ResizeGrabberType type) {
