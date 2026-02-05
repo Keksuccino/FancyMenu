@@ -116,7 +116,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     protected int resizingStartPosX = 0;
     protected int resizingStartPosY = 0;
     protected static final int RESIZE_EDGE_GRAB_ZONE = 4;
-    protected static final int RESIZE_INDICATOR_SIZE = 4;
+    protected static final int RESIZE_INDICATOR_SIZE = 5;
     protected static final float RESIZE_INDICATOR_CORNER_RADIUS = 1.0F;
     protected static final int TILT_CONTROLS_PADDING = 10;
     protected static final int TILT_CONTROLS_LINE_EXTENSION = 20;
@@ -1060,7 +1060,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             return x - (size / 2);
         }
         if (resizeRight) {
-            return x + this.getWidth() - (size / 2);
+            return x + this.getWidth() - 1 - (size / 2);
         }
         return x + (this.getWidth() / 2) - (size / 2);
     }
@@ -1073,7 +1073,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             return y - (size / 2);
         }
         if (resizeBottom) {
-            return y + this.getHeight() - (size / 2);
+            return y + this.getHeight() - 1 - (size / 2);
         }
         return y + (this.getHeight() / 2) - (size / 2);
     }
@@ -1999,7 +1999,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
     public class VerticalTiltGrabber implements Renderable {
 
-        protected int size = 6; // Size of the grabber
+        protected int size = RESIZE_INDICATOR_SIZE; // Size of the grabber
         protected boolean hovered = false;
 
         @Override
@@ -2067,7 +2067,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
     public class HorizontalTiltGrabber implements Renderable {
 
-        protected int size = 6; // Size of the grabber
+        protected int size = RESIZE_INDICATOR_SIZE; // Size of the grabber
         protected boolean hovered = false;
 
         @Override

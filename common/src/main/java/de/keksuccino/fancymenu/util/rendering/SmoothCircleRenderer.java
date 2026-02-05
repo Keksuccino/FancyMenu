@@ -96,10 +96,13 @@ public final class SmoothCircleRenderer {
      * Start/end angles are in radians where 0 points to the right, and angles increase clockwise
      * (because GUI Y increases downward).
      *
+     * <p>If {@code roundInside} is false, the provided rectangle is treated as the inner edge,
+     * and the border is expanded outward by {@code borderThickness}.
+     *
      * <p>If {@code borderThickness <= 0}, the method renders a filled arc wedge instead of just the border.
      */
-    public static void renderSmoothCircleBorderArc(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float roundness, float startAngleRadians, float endAngleRadians, int color, float partial) {
-        renderSmoothCircleArcInternal(graphics, x, y, width, height, borderThickness, roundness, startAngleRadians, endAngleRadians, color, partial);
+    public static void renderSmoothCircleBorderArc(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float roundness, float startAngleRadians, float endAngleRadians, boolean roundInside, int color, float partial) {
+        renderSmoothCircleArcInternal(graphics, x, y, width, height, borderThickness, roundness, startAngleRadians, endAngleRadians, roundInside, color, partial);
     }
 
     /**
@@ -109,8 +112,11 @@ public final class SmoothCircleRenderer {
      * the thickness expands inward from the superellipse outline (matching {@link #renderSmoothCircleBorder}).
      * Start/end angles are in radians where 0 points to the right, and angles increase clockwise
      * (because GUI Y increases downward).
+     *
+     * <p>If {@code roundInside} is false, the provided rectangle is treated as the inner edge,
+     * and the border is expanded outward by {@code borderThickness}.
      */
-    public static void renderSmoothCircleBorderArcScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float roundness, float startAngleRadians, float endAngleRadians, int color, float partial) {
+    public static void renderSmoothCircleBorderArcScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float roundness, float startAngleRadians, float endAngleRadians, boolean roundInside, int color, float partial) {
         float additionalScale = resolveAdditionalRenderScale();
         float translationX = resolveAdditionalRenderTranslationX();
         float translationY = resolveAdditionalRenderTranslationY();
@@ -124,6 +130,7 @@ public final class SmoothCircleRenderer {
                 roundness,
                 startAngleRadians,
                 endAngleRadians,
+                roundInside,
                 color,
                 partial
         );
@@ -138,13 +145,24 @@ public final class SmoothCircleRenderer {
         _renderSmoothCircle(graphics, partial, new CircleArea(x, y, width, height, Math.max(0.0F, borderThickness), clampedRoundness, color));
     }
 
-    private static void renderSmoothCircleArcInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float roundness, float startAngleRadians, float endAngleRadians, int color, float partial) {
+    private static void renderSmoothCircleArcInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float roundness, float startAngleRadians, float endAngleRadians, boolean roundInside, int color, float partial) {
         Objects.requireNonNull(graphics);
         if (width <= 0.0F || height <= 0.0F) {
             return;
         }
         float clampedRoundness = Math.max(0.1F, roundness);
-        _renderSmoothCircleArc(graphics, partial, new ArcArea(x, y, width, height, Math.max(0.0F, borderThickness), clampedRoundness, startAngleRadians, endAngleRadians, color));
+        float clampedBorder = Math.max(0.0F, borderThickness);
+        float adjustedX = x;
+        float adjustedY = y;
+        float adjustedWidth = width;
+        float adjustedHeight = height;
+        if (!roundInside && clampedBorder > 0.0F) {
+            adjustedX -= clampedBorder;
+            adjustedY -= clampedBorder;
+            adjustedWidth += clampedBorder * 2.0F;
+            adjustedHeight += clampedBorder * 2.0F;
+        }
+        _renderSmoothCircleArc(graphics, partial, new ArcArea(adjustedX, adjustedY, adjustedWidth, adjustedHeight, clampedBorder, clampedRoundness, startAngleRadians, endAngleRadians, color));
     }
 
     private static float resolveAdditionalRenderScale() {
