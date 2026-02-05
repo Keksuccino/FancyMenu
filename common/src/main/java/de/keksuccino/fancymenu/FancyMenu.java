@@ -26,6 +26,12 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
+
+
+    //TODO Vollen Kreis rendern, wenn element rotation grabber gezogen wird
+
+
+
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final String VERSION = "3.9.0";
