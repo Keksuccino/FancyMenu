@@ -110,6 +110,8 @@ public class PlayerEntityElement extends AbstractElement {
 
     public PlayerEntityElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.supportsRotation = false;
+        this.supportsTilting = false;
     }
 
     @Override

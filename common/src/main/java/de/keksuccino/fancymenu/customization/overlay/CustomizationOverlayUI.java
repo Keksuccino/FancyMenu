@@ -32,11 +32,14 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIconTexture;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIScale;
@@ -79,7 +82,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -712,12 +717,14 @@ public class CustomizationOverlayUI {
                 FancyMenu.getOptions().globalButtonLabelHoverColor.getDefaultValue(),
                 MaterialIcons.FORMAT_COLOR_TEXT);
 
-        ContextMenuUtils.addFloatInputContextMenuEntryTo(buttonLabelMenu, "button_label_scale",
-                        Component.translatable("fancymenu.elements.widgets.label.scale"),
-                        () -> FancyMenu.getOptions().globalButtonLabelScale.getValue(),
-                        value -> FancyMenu.getOptions().globalButtonLabelScale.setValue(value),
-                        true, FancyMenu.getOptions().globalButtonLabelScale.getDefaultValue(), null, null)
-                .setIcon(MaterialIcons.FORMAT_SIZE);
+        addGlobalLabelScaleMenuEntry(buttonLabelMenu, "button_label_scale",
+                "fancymenu.elements.widgets.label.scale",
+                () -> FancyMenu.getOptions().globalButtonLabelScaleRaw.getValue(),
+                value -> FancyMenu.getOptions().globalButtonLabelScaleRaw.setValue(value),
+                () -> FancyMenu.getOptions().globalButtonLabelScale.getValue(),
+                value -> FancyMenu.getOptions().globalButtonLabelScale.setValue(value),
+                FancyMenu.getOptions().globalButtonLabelScale.getDefaultValue(),
+                MaterialIcons.FORMAT_SIZE);
 
         buttonLabelMenu.addValueCycleEntry("button_label_shadow",
                         CommonCycles.cycleEnabledDisabled("fancymenu.elements.widgets.label.shadow", FancyMenu.getOptions().globalButtonLabelShadow.getValue())
@@ -862,12 +869,14 @@ public class CustomizationOverlayUI {
                 FancyMenu.getOptions().globalSliderLabelHoverColor.getDefaultValue(),
                 MaterialIcons.FORMAT_COLOR_TEXT);
 
-        ContextMenuUtils.addFloatInputContextMenuEntryTo(sliderLabelMenu, "slider_label_scale",
-                        Component.translatable("fancymenu.elements.widgets.label.scale"),
-                        () -> FancyMenu.getOptions().globalSliderLabelScale.getValue(),
-                        value -> FancyMenu.getOptions().globalSliderLabelScale.setValue(value),
-                        true, FancyMenu.getOptions().globalSliderLabelScale.getDefaultValue(), null, null)
-                .setIcon(MaterialIcons.FORMAT_SIZE);
+        addGlobalLabelScaleMenuEntry(sliderLabelMenu, "slider_label_scale",
+                "fancymenu.elements.widgets.label.scale",
+                () -> FancyMenu.getOptions().globalSliderLabelScaleRaw.getValue(),
+                value -> FancyMenu.getOptions().globalSliderLabelScaleRaw.setValue(value),
+                () -> FancyMenu.getOptions().globalSliderLabelScale.getValue(),
+                value -> FancyMenu.getOptions().globalSliderLabelScale.setValue(value),
+                FancyMenu.getOptions().globalSliderLabelScale.getDefaultValue(),
+                MaterialIcons.FORMAT_SIZE);
 
         sliderLabelMenu.addValueCycleEntry("slider_label_shadow",
                         CommonCycles.cycleEnabledDisabled("fancymenu.elements.widgets.label.shadow", FancyMenu.getOptions().globalSliderLabelShadow.getValue())
@@ -1030,6 +1039,63 @@ public class CustomizationOverlayUI {
                 .setIcon(MaterialIcons.INFO);
 
         return addTo.addSubMenuEntry(entryIdentifier, label, subMenu)
+                .setIcon(icon);
+    }
+
+    private static ContextMenu.ClickableContextMenuEntry<?> addGlobalLabelScaleMenuEntry(@NotNull ContextMenu addTo, @NotNull String entryIdentifier,
+                                                                                         @NotNull String contextMenuEntryLocalizationKeyBase,
+                                                                                         @NotNull java.util.function.Supplier<String> rawGetter,
+                                                                                         @NotNull java.util.function.Consumer<String> rawSetter,
+                                                                                         @NotNull java.util.function.Supplier<Float> valueGetter,
+                                                                                         @NotNull java.util.function.Consumer<Float> valueSetter,
+                                                                                         float defaultValue,
+                                                                                         @NotNull MaterialIcon icon) {
+        float defaultFloat = defaultValue;
+
+        PropertyHolder holder = new PropertyHolder() {
+            private final Map<String, Property<?>> properties = new HashMap<>();
+
+            @Override
+            public @NotNull Map<String, Property<?>> getPropertyMap() {
+                return properties;
+            }
+        };
+
+        float currentValue = defaultFloat;
+        Float storedValue = valueGetter.get();
+        if (storedValue != null) currentValue = storedValue;
+
+        Property.FloatProperty scaleProperty = holder.putProperty(Property.floatProperty(entryIdentifier, defaultFloat, currentValue, contextMenuEntryLocalizationKeyBase));
+        String currentRaw = rawGetter.get();
+        if (currentRaw != null) {
+            String trimmed = currentRaw.trim();
+            if (!trimmed.isEmpty()) {
+                scaleProperty.set(currentValue);
+                scaleProperty.setManualInput(trimmed);
+            }
+        }
+
+        scaleProperty.addValueSetListener((oldValue, newValue) -> {
+            String manual = scaleProperty.getManualInput();
+            if (manual != null && !manual.isEmpty()) {
+                rawSetter.accept(manual);
+            } else {
+                rawSetter.accept("");
+                float resolved = (newValue != null) ? newValue : defaultFloat;
+                valueSetter.accept(resolved);
+            }
+        });
+
+        ContextMenuBuilder<PropertyHolder> builder = ContextMenuBuilder.createStandalone(
+                () -> Minecraft.getInstance().screen,
+                filter -> List.of(holder),
+                () -> holder,
+                null,
+                null,
+                null
+        );
+
+        return scaleProperty.buildContextMenuEntryAndAddTo(addTo, builder)
                 .setIcon(icon);
     }
 

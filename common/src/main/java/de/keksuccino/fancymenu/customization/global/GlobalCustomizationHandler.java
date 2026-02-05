@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.Mu
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMusicManager;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -179,7 +181,8 @@ public final class GlobalCustomizationHandler {
     }
 
     public static float getGlobalButtonLabelScale() {
-        return FancyMenu.getOptions().globalButtonLabelScale.getValue();
+        return parseLabelScale(FancyMenu.getOptions().globalButtonLabelScaleRaw.getValue(),
+                FancyMenu.getOptions().globalButtonLabelScale.getValue());
     }
 
     public static boolean isGlobalButtonLabelShadowEnabled() {
@@ -201,7 +204,8 @@ public final class GlobalCustomizationHandler {
     }
 
     public static float getGlobalSliderLabelScale() {
-        return FancyMenu.getOptions().globalSliderLabelScale.getValue();
+        return parseLabelScale(FancyMenu.getOptions().globalSliderLabelScaleRaw.getValue(),
+                FancyMenu.getOptions().globalSliderLabelScale.getValue());
     }
 
     public static boolean isGlobalSliderLabelShadowEnabled() {
@@ -376,11 +380,20 @@ public final class GlobalCustomizationHandler {
     @Nullable
     private static DrawableColor parseLabelColor(@Nullable String value) {
         if (value == null) return null;
-        String trimmed = value.trim();
+        String trimmed = PlaceholderParser.replacePlaceholders(value).trim();
         if (trimmed.isEmpty()) return null;
         DrawableColor color = DrawableColor.of(trimmed);
         if (color == DrawableColor.EMPTY) return null;
         return color;
+    }
+
+    private static float parseLabelScale(@Nullable String rawValue, float fallback) {
+        if (rawValue == null) return fallback;
+        String trimmed = rawValue.trim();
+        if (trimmed.isEmpty()) return fallback;
+        String parsed = PlaceholderParser.replacePlaceholders(trimmed);
+        if (!MathUtils.isFloat(parsed)) return fallback;
+        return Float.parseFloat(parsed);
     }
 
     @NotNull

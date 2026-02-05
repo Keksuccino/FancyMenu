@@ -39,6 +39,7 @@ public class Options extends AbstractOptions {
     public final Option<String> globalButtonLabelBaseColor = new Option<>(config, "global_button_label_base_color", "", "global_customizations");
     public final Option<String> globalButtonLabelHoverColor = new Option<>(config, "global_button_label_hover_color", "", "global_customizations");
     public final Option<Float> globalButtonLabelScale = new Option<>(config, "global_button_label_scale", 1.0F, "global_customizations");
+    public final Option<String> globalButtonLabelScaleRaw = new Option<>(config, "global_button_label_scale_raw", "", "global_customizations");
     public final Option<Boolean> globalButtonLabelShadow = new Option<>(config, "global_button_label_shadow", true, "global_customizations");
     public final Option<String> globalSliderBackground = new Option<>(config, "global_slider_background", "", "global_customizations");
     public final Option<Boolean> globalSliderBackgroundTransparent = new Option<>(config, "global_slider_background_transparent", false, "global_customizations");
@@ -51,6 +52,7 @@ public class Options extends AbstractOptions {
     public final Option<String> globalSliderLabelBaseColor = new Option<>(config, "global_slider_label_base_color", "", "global_customizations");
     public final Option<String> globalSliderLabelHoverColor = new Option<>(config, "global_slider_label_hover_color", "", "global_customizations");
     public final Option<Float> globalSliderLabelScale = new Option<>(config, "global_slider_label_scale", 1.0F, "global_customizations");
+    public final Option<String> globalSliderLabelScaleRaw = new Option<>(config, "global_slider_label_scale_raw", "", "global_customizations");
     public final Option<Boolean> globalSliderLabelShadow = new Option<>(config, "global_slider_label_shadow", true, "global_customizations");
     public final Option<String> globalSliderHandleNormal = new Option<>(config, "global_slider_handle_normal", "", "global_customizations");
     public final Option<String> globalSliderHandleHover = new Option<>(config, "global_slider_handle_hover", "", "global_customizations");
