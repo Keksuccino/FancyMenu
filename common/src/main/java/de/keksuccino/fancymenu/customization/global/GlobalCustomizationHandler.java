@@ -5,10 +5,12 @@ import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.Mu
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMusicManager;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -57,17 +59,24 @@ public final class GlobalCustomizationHandler {
 
     @Nullable
     public static RenderableResource getCustomButtonBackgroundNormal() {
+        if (isGlobalButtonBackgroundTransparent()) return getTransparentTexture();
         return getTextureResource(BUTTON_BACKGROUND_NORMAL, FancyMenu.getOptions().globalButtonBackgroundNormal.getValue());
     }
 
     @Nullable
     public static RenderableResource getCustomButtonBackgroundHover() {
+        if (isGlobalButtonBackgroundTransparent()) return getTransparentTexture();
         return getTextureResource(BUTTON_BACKGROUND_HOVER, FancyMenu.getOptions().globalButtonBackgroundHover.getValue());
     }
 
     @Nullable
     public static RenderableResource getCustomButtonBackgroundInactive() {
+        if (isGlobalButtonBackgroundTransparent()) return getTransparentTexture();
         return getTextureResource(BUTTON_BACKGROUND_INACTIVE, FancyMenu.getOptions().globalButtonBackgroundInactive.getValue());
+    }
+
+    public static boolean isGlobalButtonBackgroundTransparent() {
+        return FancyMenu.getOptions().globalButtonBackgroundTransparent.getValue();
     }
 
     public static boolean isGlobalButtonBackgroundNineSliceEnabled() {
@@ -92,7 +101,12 @@ public final class GlobalCustomizationHandler {
 
     @Nullable
     public static RenderableResource getCustomSliderBackground() {
+        if (isGlobalSliderBackgroundTransparent()) return getTransparentTexture();
         return getTextureResource(SLIDER_BACKGROUND, FancyMenu.getOptions().globalSliderBackground.getValue());
+    }
+
+    public static boolean isGlobalSliderBackgroundTransparent() {
+        return FancyMenu.getOptions().globalSliderBackgroundTransparent.getValue();
     }
 
     public static boolean isGlobalSliderBackgroundNineSliceEnabled() {
@@ -148,6 +162,50 @@ public final class GlobalCustomizationHandler {
 
     public static int getGlobalSliderHandleNineSliceBorderLeft() {
         return FancyMenu.getOptions().globalSliderHandleNineSliceBorderLeft.getValue();
+    }
+
+    public static boolean isGlobalButtonLabelUnderlineOnHoverEnabled() {
+        return FancyMenu.getOptions().globalButtonLabelUnderlineOnHover.getValue();
+    }
+
+    @Nullable
+    public static DrawableColor getGlobalButtonLabelBaseColor() {
+        return parseLabelColor(FancyMenu.getOptions().globalButtonLabelBaseColor.getValue());
+    }
+
+    @Nullable
+    public static DrawableColor getGlobalButtonLabelHoverColor() {
+        return parseLabelColor(FancyMenu.getOptions().globalButtonLabelHoverColor.getValue());
+    }
+
+    public static float getGlobalButtonLabelScale() {
+        return FancyMenu.getOptions().globalButtonLabelScale.getValue();
+    }
+
+    public static boolean isGlobalButtonLabelShadowEnabled() {
+        return FancyMenu.getOptions().globalButtonLabelShadow.getValue();
+    }
+
+    public static boolean isGlobalSliderLabelUnderlineOnHoverEnabled() {
+        return FancyMenu.getOptions().globalSliderLabelUnderlineOnHover.getValue();
+    }
+
+    @Nullable
+    public static DrawableColor getGlobalSliderLabelBaseColor() {
+        return parseLabelColor(FancyMenu.getOptions().globalSliderLabelBaseColor.getValue());
+    }
+
+    @Nullable
+    public static DrawableColor getGlobalSliderLabelHoverColor() {
+        return parseLabelColor(FancyMenu.getOptions().globalSliderLabelHoverColor.getValue());
+    }
+
+    public static float getGlobalSliderLabelScale() {
+        return FancyMenu.getOptions().globalSliderLabelScale.getValue();
+    }
+
+    public static boolean isGlobalSliderLabelShadowEnabled() {
+        return FancyMenu.getOptions().globalSliderLabelShadow.getValue();
     }
 
     @Nullable
@@ -308,6 +366,21 @@ public final class GlobalCustomizationHandler {
         ResourceSupplier<ITexture> supplier = cache.get(source);
         if (supplier == null) return null;
         return supplier.get();
+    }
+
+    @Nullable
+    private static RenderableResource getTransparentTexture() {
+        return PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
+    }
+
+    @Nullable
+    private static DrawableColor parseLabelColor(@Nullable String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) return null;
+        DrawableColor color = DrawableColor.of(trimmed);
+        if (color == DrawableColor.EMPTY) return null;
+        return color;
     }
 
     @NotNull

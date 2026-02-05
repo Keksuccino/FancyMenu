@@ -26,14 +26,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
-
-
-
-    //TODO Neue Button/Slider Label customizations zu Global Customizations adden (label shadow, label color normal, label color hover, label scale, etc.)
-
-
-
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final String VERSION = "3.9.0";

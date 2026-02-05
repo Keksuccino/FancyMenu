@@ -289,40 +289,70 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidgetLabelUnderline() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            w.setUnderlineLabelOnHoverFancyMenu(this.isUnderlineLabelOnHover());
+            boolean underline = this.isUnderlineLabelOnHover();
+            if (underline || w.isUnderlineLabelOnHoverFancyMenu()) {
+                w.setUnderlineLabelOnHoverFancyMenu(underline);
+            }
         }
     }
 
     public void updateWidgetLabelShadow() {
         AbstractWidget widget = this.getWidget();
         if (widget == null) return;
+        ButtonElement template = this.getPropertySource();
+        boolean templateAppliesLabel = (template != null) && template.templateApplyLabel && (template != this);
         boolean shadow = this.isLabelShadowEnabled();
-        if (widget instanceof ExtendedButton b) {
-            b.setLabelShadowEnabled(shadow);
+        boolean shouldApply = templateAppliesLabel ? !template.labelShadow.isDefault() : !this.labelShadow.isDefault();
+        if (!shouldApply && (widget instanceof CustomizableWidget w)) {
+            shouldApply = w.isLabelShadowFancyMenu() != shadow;
         }
-        if (widget instanceof AbstractExtendedSlider s) {
-            s.setLabelShadow(shadow);
-        }
-        if (widget instanceof CustomizableWidget w) {
-            w.setLabelShadowFancyMenu(shadow);
+        if (shouldApply) {
+            if (widget instanceof ExtendedButton b) {
+                b.setLabelShadowEnabled(shadow);
+            }
+            if (widget instanceof AbstractExtendedSlider s) {
+                s.setLabelShadow(shadow);
+            }
+            if (widget instanceof CustomizableWidget w) {
+                w.setLabelShadowFancyMenu(shadow);
+            }
         }
     }
 
     public void updateWidgetLabelHoverColor() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            w.setLabelHoverColorFancyMenu(this.getLabelHoverColor());
+            DrawableColor color = this.getLabelHoverColor();
+            if (color != null) {
+                w.setLabelHoverColorFancyMenu(color);
+            } else if (w.getLabelHoverColorFancyMenu() != null) {
+                w.setLabelHoverColorFancyMenu(null);
+            }
         }
     }
 
     public void updateWidgetLabelBaseColor() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            w.setLabelBaseColorFancyMenu(this.getLabelBaseColor());
+            DrawableColor color = this.getLabelBaseColor();
+            if (color != null) {
+                w.setLabelBaseColorFancyMenu(color);
+            } else if (w.getLabelBaseColorFancyMenu() != null) {
+                w.setLabelBaseColorFancyMenu(null);
+            }
         }
     }
 
     public void updateWidgetLabelScale() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            w.setLabelScaleFancyMenu(this.getLabelScale());
+            ButtonElement template = this.getPropertySource();
+            boolean templateAppliesLabel = (template != null) && template.templateApplyLabel && (template != this);
+            float scale = this.getLabelScale();
+            boolean shouldApply = templateAppliesLabel ? !template.labelScale.isDefault() : !this.labelScale.isDefault();
+            if (!shouldApply && Float.compare(w.getLabelScaleFancyMenu(), scale) != 0) {
+                shouldApply = true;
+            }
+            if (shouldApply) {
+                w.setLabelScaleFancyMenu(scale);
+            }
         }
     }
 

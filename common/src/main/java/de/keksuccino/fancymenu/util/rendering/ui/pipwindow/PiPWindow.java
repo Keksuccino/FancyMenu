@@ -119,6 +119,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private PiPWindow parentWindow;
 
     private boolean draggingTitleBar = false;
+    private boolean pressedTitleBar = false;
     private PiPWindowResizeHandle activeResizeHandle = PiPWindowResizeHandle.NONE;
     private PiPWindowResizeHandle hoverResizeHandle = PiPWindowResizeHandle.NONE;
     private double lastMouseX;
@@ -1387,6 +1388,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         }
 
         if (button == 0) {
+            this.pressedTitleBar = false;
             PiPWindowResizeHandle handle = getResizeHandleForInput(mouseX, mouseY);
             if (handle != PiPWindowResizeHandle.NONE) {
                 beginResize(handle, mouseX, mouseY);
@@ -1415,7 +1417,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
                 }
                 this.lastTitleBarClickTime = currentTime;
             }
-            if (this.movable && isPointInTitleBar(mouseX, mouseY) && !this.maximized) {
+            this.pressedTitleBar = clickedTitleBar;
+            if (this.movable && clickedTitleBar && !this.maximized) {
                 beginDrag(mouseX, mouseY);
                 return true;
             }
@@ -1442,6 +1445,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         boolean wasResizing = this.activeResizeHandle != PiPWindowResizeHandle.NONE;
         boolean wasDragging = wasDraggingTitleBar || wasResizing;
         if (button == 0) {
+            this.pressedTitleBar = false;
             boolean shouldDock = wasDraggingTitleBar && this.dockOverlayVisible && isDockingEnabled() && this.maximizable;
             this.draggingTitleBar = false;
             this.activeResizeHandle = PiPWindowResizeHandle.NONE;
@@ -1475,6 +1479,10 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             }
             if (this.activeResizeHandle != PiPWindowResizeHandle.NONE) {
                 updateResize(mouseX, mouseY);
+                return true;
+            }
+            if (this.pressedTitleBar && this.movable && this.maximized && this.maximizable) {
+                beginDragFromMaximized(mouseX, mouseY);
                 return true;
             }
         }
@@ -1724,6 +1732,31 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         this.dragOffsetY = mouseY - this.y;
         this.dockOverlayVisible = false;
         this.setDragging(true);
+    }
+
+    private void beginDragFromMaximized(double mouseX, double mouseY) {
+        if (!this.maximized || !this.maximizable) {
+            beginDrag(mouseX, mouseY);
+            return;
+        }
+        // Restore size under the cursor before starting the drag.
+        int restoreWidth = getScaledSize(this.restoreRawWidth);
+        int maxWidth = getMaximumWidth();
+        double ratioX = (maxWidth > 0) ? mouseX / (double) maxWidth : 0.5;
+        ratioX = Math.min(Math.max(ratioX, 0.0), 1.0);
+        int targetX = (int) Math.round(mouseX - ratioX * restoreWidth);
+        double border = getRenderBorderThickness();
+        double titleHeight = getRenderTitleBarHeight();
+        double offsetY = mouseY - (this.y + border);
+        if (titleHeight > 0.0) {
+            offsetY = Math.min(Math.max(offsetY, 0.0), titleHeight - 1.0);
+        } else {
+            offsetY = 0.0;
+        }
+        int targetY = (int) Math.round(mouseY - offsetY - border);
+        setMaximized(false);
+        setBounds(targetX, targetY, this.restoreRawWidth, this.restoreRawHeight);
+        beginDrag(mouseX, mouseY);
     }
 
     private void updateDragPosition(double mouseX, double mouseY) {

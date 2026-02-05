@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderButton;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -302,10 +303,11 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     protected void renderLabel(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int textColor = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
         int finalTextColor = RenderingUtils.replaceAlphaInColor(textColor, this.alpha);
+        boolean labelShadowFinal = this.labelShadow && GlobalCustomizationHandler.isGlobalSliderLabelShadowEnabled();
         if (this.renderLabelWithUiBase) {
             this.renderScrollingLabelUiBase(this, graphics, 2, finalTextColor);
         } else {
-            this.renderScrollingLabel(this, graphics, Minecraft.getInstance().font, 2, this.labelShadow, finalTextColor);
+            this.renderScrollingLabel(this, graphics, Minecraft.getInstance().font, 2, labelShadowFinal, finalTextColor);
         }
     }
 

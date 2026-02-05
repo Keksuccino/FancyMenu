@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -218,6 +219,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		AbstractWidget w = this.getWidgetFancyMenu();
 		Component result = info.getReturnValue();
 		boolean hovered = w.isHoveredOrFocused() && w.visible && w.active;
+		boolean applyGlobalLabel = this.isGlobalLabelCustomizationTarget_FancyMenu();
 		if (hovered && (this.hoverLabelFancyMenu != null)) {
 			result = this.hoverLabelFancyMenu;
 		} else if (this.customLabelFancyMenu != null) {
@@ -227,18 +229,30 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			boolean underline = this.underlineLabelOnHoverFancyMenu;
 			DrawableColor hoverColor = this.labelHoverColorFancyMenu;
 			DrawableColor baseColor = this.labelBaseColorFancyMenu;
+			if (applyGlobalLabel) {
+				if (!underline) underline = this.isGlobalUnderlineLabelOnHoverEnabled_FancyMenu();
+				if (baseColor == null) baseColor = this.getGlobalLabelBaseColor_FancyMenu();
+				if ((hoverColor == null) && (this.labelBaseColorFancyMenu == null)) {
+					hoverColor = this.getGlobalLabelHoverColor_FancyMenu();
+				}
+			}
 			DrawableColor appliedColor = (hoverColor != null) ? hoverColor : baseColor;
 			if (underline || (appliedColor != null)) {
-				int appliedColorRgb = (appliedColor != null) ? (appliedColor.getColorInt() & 0xFFFFFF) : 0;
+				final boolean underlineFinal = underline;
+				final DrawableColor appliedColorFinal = appliedColor;
+				final int appliedColorRgb = (appliedColorFinal != null) ? (appliedColorFinal.getColorInt() & 0xFFFFFF) : 0;
 				result = result.copy().withStyle(style -> {
 					var updated = style;
-					if (underline) updated = updated.withUnderlined(true);
-					if (appliedColor != null) updated = updated.withColor(appliedColorRgb);
+					if (underlineFinal) updated = updated.withUnderlined(true);
+					if (appliedColorFinal != null) updated = updated.withColor(appliedColorRgb);
 					return updated;
 				});
 			}
 		} else if (result != null) {
 			DrawableColor baseColor = this.labelBaseColorFancyMenu;
+			if (applyGlobalLabel && (baseColor == null)) {
+				baseColor = this.getGlobalLabelBaseColor_FancyMenu();
+			}
 			if (baseColor != null) {
 				int baseColorRgb = baseColor.getColorInt() & 0xFFFFFF;
 				result = result.copy().withStyle(style -> style.withColor(baseColorRgb));
@@ -250,7 +264,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Inject(method = "renderScrollingString(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;II)V", at = @At("HEAD"), cancellable = true)
 	private void before_renderScrollingString_FancyMenu(GuiGraphics graphics, Font font, int width, int color, CallbackInfo info) {
 		float scale = this.resolveLabelScaleFancyMenu();
-		boolean labelShadow = this.labelShadowFancyMenu;
+		boolean labelShadow = this.resolveLabelShadow_FancyMenu();
 		if (scale == 1.0F && labelShadow) return;
 		if (scale == 0.0F) {
 			info.cancel();
@@ -690,6 +704,19 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	}
 
 	@Unique
+	@Override
+	public float resolveLabelScaleFancyMenu() {
+		float localScale = this.labelScaleFancyMenu;
+		if (this.isGlobalLabelCustomizationTarget_FancyMenu()) {
+			float globalScale = this.getGlobalLabelScale_FancyMenu();
+			if (Float.compare(localScale, 1.0F) == 0 && Float.compare(globalScale, 1.0F) != 0) {
+				return globalScale;
+			}
+		}
+		return localScale;
+	}
+
+	@Unique
 	@Nullable
 	@Override
 	public IAudio getCustomClickSoundFancyMenu() {
@@ -980,6 +1007,79 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		slider.setNineSliceSliderHandleBorderRight_FancyMenu(GlobalCustomizationHandler.getGlobalSliderHandleNineSliceBorderRight());
 		slider.setNineSliceSliderHandleBorderBottom_FancyMenu(GlobalCustomizationHandler.getGlobalSliderHandleNineSliceBorderBottom());
 		slider.setNineSliceSliderHandleBorderLeft_FancyMenu(GlobalCustomizationHandler.getGlobalSliderHandleNineSliceBorderLeft());
+	}
+
+	@Unique
+	private boolean isButtonWidget_FancyMenu() {
+		return (Object)this instanceof AbstractButton;
+	}
+
+	@Unique
+	private boolean isSliderWidget_FancyMenu() {
+		return (Object)this instanceof AbstractSliderButton;
+	}
+
+	@Unique
+	private boolean isGlobalLabelCustomizationTarget_FancyMenu() {
+		return this.isButtonWidget_FancyMenu() || this.isSliderWidget_FancyMenu();
+	}
+
+	@Unique
+	private boolean isGlobalUnderlineLabelOnHoverEnabled_FancyMenu() {
+		if (this.isSliderWidget_FancyMenu()) {
+			return GlobalCustomizationHandler.isGlobalSliderLabelUnderlineOnHoverEnabled();
+		}
+		if (this.isButtonWidget_FancyMenu()) {
+			return GlobalCustomizationHandler.isGlobalButtonLabelUnderlineOnHoverEnabled();
+		}
+		return false;
+	}
+
+	@Unique
+	@Nullable
+	private DrawableColor getGlobalLabelBaseColor_FancyMenu() {
+		if (this.isSliderWidget_FancyMenu()) {
+			return GlobalCustomizationHandler.getGlobalSliderLabelBaseColor();
+		}
+		if (this.isButtonWidget_FancyMenu()) {
+			return GlobalCustomizationHandler.getGlobalButtonLabelBaseColor();
+		}
+		return null;
+	}
+
+	@Unique
+	@Nullable
+	private DrawableColor getGlobalLabelHoverColor_FancyMenu() {
+		if (this.isSliderWidget_FancyMenu()) {
+			return GlobalCustomizationHandler.getGlobalSliderLabelHoverColor();
+		}
+		if (this.isButtonWidget_FancyMenu()) {
+			return GlobalCustomizationHandler.getGlobalButtonLabelHoverColor();
+		}
+		return null;
+	}
+
+	@Unique
+	private float getGlobalLabelScale_FancyMenu() {
+		if (this.isSliderWidget_FancyMenu()) {
+			return GlobalCustomizationHandler.getGlobalSliderLabelScale();
+		}
+		if (this.isButtonWidget_FancyMenu()) {
+			return GlobalCustomizationHandler.getGlobalButtonLabelScale();
+		}
+		return 1.0F;
+	}
+
+	@Unique
+	private boolean resolveLabelShadow_FancyMenu() {
+		boolean localShadow = this.labelShadowFancyMenu;
+		if (this.isSliderWidget_FancyMenu()) {
+			return GlobalCustomizationHandler.isGlobalSliderLabelShadowEnabled() && localShadow;
+		}
+		if (this.isButtonWidget_FancyMenu()) {
+			return GlobalCustomizationHandler.isGlobalButtonLabelShadowEnabled() && localShadow;
+		}
+		return localShadow;
 	}
 
 	@Unique

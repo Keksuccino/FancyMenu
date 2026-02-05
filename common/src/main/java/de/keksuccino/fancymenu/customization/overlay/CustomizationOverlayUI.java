@@ -32,20 +32,26 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIconTexture;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIScale;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourcePickerWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizerHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -641,6 +647,13 @@ public class CustomizationOverlayUI {
                 Component.translatable("fancymenu.global_customizations.button_backgrounds.inactive"), true, null, true, true, true)
                 .setIcon(MaterialIcons.IMAGE);
 
+        buttonBackgroundMenu.addSeparatorEntry("separator_before_button_background_transparent");
+
+        buttonBackgroundMenu.addValueCycleEntry("button_background_transparent",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.elements.buttons.textures.transparent_background", FancyMenu.getOptions().globalButtonBackgroundTransparent.getValue())
+                                .addCycleListener(cycle -> FancyMenu.getOptions().globalButtonBackgroundTransparent.setValue(cycle.getAsBoolean())))
+                .setIcon(MaterialIcons.OPACITY);
+
         buttonBackgroundMenu.addSeparatorEntry("separator_before_button_background_nine_slice");
 
         buttonBackgroundMenu.addValueCycleEntry("button_background_nine_slice_toggle",
@@ -676,6 +689,41 @@ public class CustomizationOverlayUI {
                         true, FancyMenu.getOptions().globalButtonBackgroundNineSliceBorderLeft.getDefaultValue(), null, null)
                 .setIcon(MaterialIcons.BORDER_LEFT);
 
+        ContextMenu buttonLabelMenu = new ContextMenu();
+        globalCustomizationsMenu.addSubMenuEntry("button_label_settings", Component.translatable("fancymenu.global_customizations.button_labels"), buttonLabelMenu)
+                .setIcon(MaterialIcons.FORMAT_SIZE);
+
+        buttonLabelMenu.addValueCycleEntry("button_label_underline_on_hover",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.elements.widgets.label.underline_on_hover", FancyMenu.getOptions().globalButtonLabelUnderlineOnHover.getValue())
+                                .addCycleListener(cycle -> FancyMenu.getOptions().globalButtonLabelUnderlineOnHover.setValue(cycle.getAsBoolean())))
+                .setIcon(MaterialIcons.FORMAT_UNDERLINED);
+
+        addGlobalColorMenuEntry(buttonLabelMenu, "button_label_base_color",
+                Component.translatable("fancymenu.elements.widgets.label.base_color"),
+                () -> FancyMenu.getOptions().globalButtonLabelBaseColor.getValue(),
+                value -> FancyMenu.getOptions().globalButtonLabelBaseColor.setValue(value),
+                FancyMenu.getOptions().globalButtonLabelBaseColor.getDefaultValue(),
+                MaterialIcons.FORMAT_COLOR_TEXT);
+
+        addGlobalColorMenuEntry(buttonLabelMenu, "button_label_hover_color",
+                Component.translatable("fancymenu.elements.widgets.label.hover_color"),
+                () -> FancyMenu.getOptions().globalButtonLabelHoverColor.getValue(),
+                value -> FancyMenu.getOptions().globalButtonLabelHoverColor.setValue(value),
+                FancyMenu.getOptions().globalButtonLabelHoverColor.getDefaultValue(),
+                MaterialIcons.FORMAT_COLOR_TEXT);
+
+        ContextMenuUtils.addFloatInputContextMenuEntryTo(buttonLabelMenu, "button_label_scale",
+                        Component.translatable("fancymenu.elements.widgets.label.scale"),
+                        () -> FancyMenu.getOptions().globalButtonLabelScale.getValue(),
+                        value -> FancyMenu.getOptions().globalButtonLabelScale.setValue(value),
+                        true, FancyMenu.getOptions().globalButtonLabelScale.getDefaultValue(), null, null)
+                .setIcon(MaterialIcons.FORMAT_SIZE);
+
+        buttonLabelMenu.addValueCycleEntry("button_label_shadow",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.elements.widgets.label.shadow", FancyMenu.getOptions().globalButtonLabelShadow.getValue())
+                                .addCycleListener(cycle -> FancyMenu.getOptions().globalButtonLabelShadow.setValue(cycle.getAsBoolean())))
+                .setIcon(MaterialIcons.SHADOW);
+
         globalCustomizationsMenu.addSeparatorEntry("separator_after_button_textures");
 
         ContextMenu sliderTexturesMenu = new ContextMenu();
@@ -691,6 +739,13 @@ public class CustomizationOverlayUI {
                         supplier -> FancyMenu.getOptions().globalSliderBackground.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
                         Component.translatable("fancymenu.global_customizations.slider_background.set_texture"), true, null, true, true, true)
                 .setIcon(MaterialIcons.IMAGE);
+
+        sliderBackgroundMenu.addSeparatorEntry("separator_before_slider_background_transparent");
+
+        sliderBackgroundMenu.addValueCycleEntry("slider_background_transparent",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.elements.buttons.textures.transparent_background", FancyMenu.getOptions().globalSliderBackgroundTransparent.getValue())
+                                .addCycleListener(cycle -> FancyMenu.getOptions().globalSliderBackgroundTransparent.setValue(cycle.getAsBoolean())))
+                .setIcon(MaterialIcons.OPACITY);
 
         sliderBackgroundMenu.addSeparatorEntry("separator_before_slider_background_nine_slice");
 
@@ -784,6 +839,41 @@ public class CustomizationOverlayUI {
                         true, FancyMenu.getOptions().globalSliderHandleNineSliceBorderLeft.getDefaultValue(), null, null)
                 .setIcon(MaterialIcons.BORDER_LEFT);
 
+        ContextMenu sliderLabelMenu = new ContextMenu();
+        globalCustomizationsMenu.addSubMenuEntry("slider_label_settings", Component.translatable("fancymenu.global_customizations.slider_labels"), sliderLabelMenu)
+                .setIcon(MaterialIcons.FORMAT_SIZE);
+
+        sliderLabelMenu.addValueCycleEntry("slider_label_underline_on_hover",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.elements.widgets.label.underline_on_hover", FancyMenu.getOptions().globalSliderLabelUnderlineOnHover.getValue())
+                                .addCycleListener(cycle -> FancyMenu.getOptions().globalSliderLabelUnderlineOnHover.setValue(cycle.getAsBoolean())))
+                .setIcon(MaterialIcons.FORMAT_UNDERLINED);
+
+        addGlobalColorMenuEntry(sliderLabelMenu, "slider_label_base_color",
+                Component.translatable("fancymenu.elements.widgets.label.base_color"),
+                () -> FancyMenu.getOptions().globalSliderLabelBaseColor.getValue(),
+                value -> FancyMenu.getOptions().globalSliderLabelBaseColor.setValue(value),
+                FancyMenu.getOptions().globalSliderLabelBaseColor.getDefaultValue(),
+                MaterialIcons.FORMAT_COLOR_TEXT);
+
+        addGlobalColorMenuEntry(sliderLabelMenu, "slider_label_hover_color",
+                Component.translatable("fancymenu.elements.widgets.label.hover_color"),
+                () -> FancyMenu.getOptions().globalSliderLabelHoverColor.getValue(),
+                value -> FancyMenu.getOptions().globalSliderLabelHoverColor.setValue(value),
+                FancyMenu.getOptions().globalSliderLabelHoverColor.getDefaultValue(),
+                MaterialIcons.FORMAT_COLOR_TEXT);
+
+        ContextMenuUtils.addFloatInputContextMenuEntryTo(sliderLabelMenu, "slider_label_scale",
+                        Component.translatable("fancymenu.elements.widgets.label.scale"),
+                        () -> FancyMenu.getOptions().globalSliderLabelScale.getValue(),
+                        value -> FancyMenu.getOptions().globalSliderLabelScale.setValue(value),
+                        true, FancyMenu.getOptions().globalSliderLabelScale.getDefaultValue(), null, null)
+                .setIcon(MaterialIcons.FORMAT_SIZE);
+
+        sliderLabelMenu.addValueCycleEntry("slider_label_shadow",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.elements.widgets.label.shadow", FancyMenu.getOptions().globalSliderLabelShadow.getValue())
+                                .addCycleListener(cycle -> FancyMenu.getOptions().globalSliderLabelShadow.setValue(cycle.getAsBoolean())))
+                .setIcon(MaterialIcons.SHADOW);
+
         globalCustomizationsMenu.addSeparatorEntry("separator_after_slider_textures");
 
         ContextMenuUtils.addImageResourceChooserContextMenuEntryTo(globalCustomizationsMenu, "menu_background_texture", emptyImageSupplier,
@@ -855,6 +945,92 @@ public class CustomizationOverlayUI {
 
         return globalCustomizationsMenu;
 
+    }
+
+    private static ContextMenu.ClickableContextMenuEntry<?> addGlobalColorMenuEntry(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label,
+                                                                                   @NotNull java.util.function.Supplier<String> getter, @NotNull java.util.function.Consumer<String> setter,
+                                                                                   @NotNull String defaultValue, @NotNull MaterialIcon icon) {
+        ContextMenu subMenu = new ContextMenu();
+
+        subMenu.addClickableEntry("input_via_color_picker", Component.translatable("fancymenu.context_menu.entries.color.input_via_color_picker"),
+                        (contextMenu, entry) -> {
+                            String original = getter.get();
+                            DrawableColor preset = null;
+                            if (original != null && !original.trim().isEmpty()) {
+                                DrawableColor parsed = DrawableColor.of(original.trim());
+                                if (parsed != DrawableColor.EMPTY) {
+                                    preset = parsed;
+                                }
+                            }
+                            ColorPickerWindowBody picker = new ColorPickerWindowBody(preset,
+                                    drawable -> {
+                                        if (drawable != null) {
+                                            setter.accept(drawable.getHex());
+                                        }
+                                    },
+                                    drawable -> {
+                                        if (drawable != null) {
+                                            setter.accept(drawable.getHex());
+                                        }
+                                    },
+                                    drawable -> setter.accept((original != null) ? original : defaultValue));
+                            contextMenu.closeMenuChain();
+                            PiPWindow window = new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"))
+                                    .setScreen(picker)
+                                    .setForceFancyMenuUiScale(true)
+                                    .setMinSize(ColorPickerWindowBody.PIP_WINDOW_WIDTH, ColorPickerWindowBody.PIP_WINDOW_HEIGHT)
+                                    .setSize(ColorPickerWindowBody.PIP_WINDOW_WIDTH, ColorPickerWindowBody.PIP_WINDOW_HEIGHT);
+                            PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+                        })
+                .setIcon(MaterialIcons.DROPPER_EYE);
+
+        subMenu.addClickableEntry("input_as_string", Component.translatable("fancymenu.context_menu.entries.color.input_as_string"),
+                        (contextMenu, entry) -> {
+                            TextEditorWindowBody s = new TextEditorWindowBody(label, null, call -> {
+                                if (call != null) {
+                                    setter.accept(call);
+                                }
+                            });
+                            s.setMultilineMode(false);
+                            s.setPlaceholdersAllowed(true);
+                            s.setText(getter.get());
+                            contextMenu.closeMenuChain();
+                            Dialogs.openGeneric(s, label, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                                    .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
+                        })
+                .setIcon(MaterialIcons.TEXT_FIELDS);
+
+        subMenu.addSeparatorEntry("separator_before_reset");
+
+        subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"),
+                        (contextMenu, entry) -> setter.accept(defaultValue))
+                .setIcon(MaterialIcons.UNDO);
+
+        java.util.function.Supplier<Component> currentValueDisplayLabelSupplier = () -> {
+            Component valueComponent;
+            String val = getter.get();
+            if (val == null || val.trim().isEmpty()) {
+                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
+            } else {
+                if (Minecraft.getInstance().font.width(val) > 150) {
+                    val = new StringBuilder(val).reverse().toString();
+                    val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+                    val = new StringBuilder(val).reverse().toString();
+                    val = ".." + val;
+                }
+                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
+            }
+            return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+        };
+        subMenu.addSeparatorEntry("separator_before_current_value_display");
+        subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+                .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
+                .setClickSoundEnabled(false)
+                .setChangeBackgroundColorOnHover(false)
+                .setIcon(MaterialIcons.INFO);
+
+        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu)
+                .setIcon(icon);
     }
 
     public static ContextMenu buildWindowIconMenu() {

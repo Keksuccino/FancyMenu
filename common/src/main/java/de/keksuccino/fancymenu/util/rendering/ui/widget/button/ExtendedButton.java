@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
@@ -201,10 +202,11 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected void renderLabelText(@NotNull GuiGraphics graphics) {
         if (this.enableLabel) {
             int k = this.active ? this.labelBaseColorNormal.getColorIntWithAlpha(this.alpha) : this.labelBaseColorInactive.getColorIntWithAlpha(this.alpha);
+            boolean labelShadowFinal = this.labelShadow && GlobalCustomizationHandler.isGlobalButtonLabelShadowEnabled();
             if (this.renderLabelWithUiBase) {
                 this.renderScrollingLabelUiBase(this, graphics, 2, k);
             } else {
-                this.renderScrollingLabel(this, graphics, mc.font, 2, this.labelShadow, k);
+                this.renderScrollingLabel(this, graphics, mc.font, 2, labelShadowFinal, k);
             }
         }
     }

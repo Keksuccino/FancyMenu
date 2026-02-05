@@ -2818,5 +2818,7 @@
   "fancymenu.elements.input_field.hint_text": "Hint Text",
   "fancymenu.elements.input_field.hint_text.desc": "Set the hint/placeholder text shown when the input field is empty.\nSupports placeholders.",
   "fancymenu.elements.input_field.hint_text_color": "Hint Text Color",
-  "fancymenu.elements.input_field.hint_text_color.desc": "Set the hint/placeholder text color.\nSupports placeholders."
+  "fancymenu.elements.input_field.hint_text_color.desc": "Set the hint/placeholder text color.\nSupports placeholders.",
+  "fancymenu.global_customizations.button_labels": "Button Labels",
+  "fancymenu.global_customizations.slider_labels": "Slider Labels"
 }

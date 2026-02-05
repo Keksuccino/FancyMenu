@@ -221,9 +221,9 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
 
         this.rightClickMenu.addClickableEntry("entity_pose", Component.translatable("fancymenu.elements.player_entity.edit_pose"),
                 (menu, entry) -> {
-                    this.openContextMenuScreen(new PlayerEntityPoseScreen(this.element, this.editor, () -> {
-                        this.openContextMenuScreen(this.editor);
-                    }));
+                    PlayerEntityPoseScreen screen = new PlayerEntityPoseScreen(this.element, this.editor);
+                    menu.closeMenuChain();
+                    PlayerEntityPoseScreen.openInWindow(screen);
                 })
                 .setIcon(MaterialIcons.EDIT);
 
