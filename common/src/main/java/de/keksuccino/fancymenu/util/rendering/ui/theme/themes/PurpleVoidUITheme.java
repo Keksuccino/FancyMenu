@@ -18,7 +18,7 @@ public class PurpleVoidUITheme extends UITheme {
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(12, 12, 14, 190));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(52, 52, 60, 170));
         ui_blur_interface_background_tint = DrawableColor.of(new Color(10, 10, 12, 220));
-        ui_blur_interface_border_color = DrawableColor.of(new Color(58, 58, 64, 190));
+        ui_blur_interface_border_color = DrawableColor.of(new Color(52, 52, 60, 170));
         ui_blur_interface_title_bar_tint = DrawableColor.of(new Color(16, 16, 18, 220));
         ui_blur_interface_area_background_color_type_1 = DrawableColor.of(new Color(14, 14, 16, 170));
         ui_blur_interface_area_background_color_type_2 = DrawableColor.of(new Color(10, 10, 12, 155));

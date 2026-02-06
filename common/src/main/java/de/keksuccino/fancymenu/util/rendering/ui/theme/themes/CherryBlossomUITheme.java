@@ -18,7 +18,7 @@ public class CherryBlossomUITheme extends UITheme {
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(250, 244, 248, 185));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(221, 207, 218, 160));
         ui_blur_interface_background_tint = DrawableColor.of(new Color(249, 243, 247, 215));
-        ui_blur_interface_border_color = DrawableColor.of(new Color(215, 202, 213, 180));
+        ui_blur_interface_border_color = DrawableColor.of(new Color(221, 207, 218, 160));
         ui_blur_interface_title_bar_tint = DrawableColor.of(new Color(240, 232, 238, 215));
         ui_blur_interface_area_background_color_type_1 = DrawableColor.of(new Color(255, 251, 253, 155));
         ui_blur_interface_area_background_color_type_2 = DrawableColor.of(new Color(245, 235, 242, 145));

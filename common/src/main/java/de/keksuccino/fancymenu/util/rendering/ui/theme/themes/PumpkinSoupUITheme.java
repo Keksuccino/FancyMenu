@@ -18,7 +18,7 @@ public class PumpkinSoupUITheme extends UITheme {
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(250, 244, 236, 185));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(210, 192, 175, 160));
         ui_blur_interface_background_tint = DrawableColor.of(new Color(249, 242, 234, 215));
-        ui_blur_interface_border_color = DrawableColor.of(new Color(204, 186, 170, 180));
+        ui_blur_interface_border_color = DrawableColor.of(new Color(210, 192, 175, 160));
         ui_blur_interface_title_bar_tint = DrawableColor.of(new Color(238, 227, 214, 215));
         ui_blur_interface_area_background_color_type_1 = DrawableColor.of(new Color(255, 250, 245, 155));
         ui_blur_interface_area_background_color_type_2 = DrawableColor.of(new Color(244, 232, 220, 150));

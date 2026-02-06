@@ -18,7 +18,7 @@ public class CozyCampfireUITheme extends UITheme {
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(24, 19, 16, 185));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(92, 78, 66, 160));
         ui_blur_interface_background_tint = DrawableColor.of(new Color(26, 20, 16, 215));
-        ui_blur_interface_border_color = DrawableColor.of(new Color(96, 82, 70, 180));
+        ui_blur_interface_border_color = DrawableColor.of(new Color(92, 78, 66, 160));
         ui_blur_interface_title_bar_tint = DrawableColor.of(new Color(38, 30, 22, 215));
         ui_blur_interface_area_background_color_type_1 = DrawableColor.of(new Color(34, 27, 20, 155));
         ui_blur_interface_area_background_color_type_2 = DrawableColor.of(new Color(24, 20, 16, 150));

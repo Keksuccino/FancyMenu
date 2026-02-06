@@ -18,7 +18,7 @@ public class SpookySeasonUITheme extends UITheme {
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(16, 13, 20, 185));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(78, 70, 86, 160));
         ui_blur_interface_background_tint = DrawableColor.of(new Color(18, 15, 23, 215));
-        ui_blur_interface_border_color = DrawableColor.of(new Color(86, 77, 98, 180));
+        ui_blur_interface_border_color = DrawableColor.of(new Color(78, 70, 86, 160));
         ui_blur_interface_title_bar_tint = DrawableColor.of(new Color(30, 24, 34, 215));
         ui_blur_interface_area_background_color_type_1 = DrawableColor.of(new Color(27, 22, 31, 155));
         ui_blur_interface_area_background_color_type_2 = DrawableColor.of(new Color(19, 15, 23, 150));

@@ -24,7 +24,7 @@ public class UITheme {
     public DrawableColor ui_blur_overlay_background_tint = DrawableColor.of(new Color(38, 38, 38, 174));
     public DrawableColor ui_blur_overlay_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
     public DrawableColor ui_blur_interface_background_tint = DrawableColor.of(new Color(38, 38, 38, 216));
-    public DrawableColor ui_blur_interface_border_color = DrawableColor.of(new Color(93, 97, 100, 200));
+    public DrawableColor ui_blur_interface_border_color = DrawableColor.of(new Color(93, 97, 100, 100));
     public DrawableColor ui_blur_interface_title_bar_tint = DrawableColor.of(new Color(79, 79, 79, 174));
     public DrawableColor ui_blur_interface_area_background_color_type_1 = DrawableColor.of(new Color(43, 43, 43, 100));
     public DrawableColor ui_blur_interface_area_background_color_type_2 = DrawableColor.of(new Color(5, 5, 5, 73));
@@ -51,7 +51,7 @@ public class UITheme {
     public DrawableColor ui_overlay_background_color = DrawableColor.of(new Color(40, 40, 40));
     public DrawableColor ui_overlay_border_color = DrawableColor.of(new Color(62, 64, 66));
     public DrawableColor ui_interface_background_color = DrawableColor.of(new Color(38, 38, 38));
-    public DrawableColor ui_interface_border_color = DrawableColor.of(new Color(59, 59, 59));
+    public DrawableColor ui_interface_border_color = DrawableColor.of(new Color(62, 64, 66));
     public DrawableColor ui_interface_title_bar_color = DrawableColor.of(new Color(87, 87, 87));
     public DrawableColor ui_interface_area_background_color_type_1 = DrawableColor.of(new Color(43, 43, 43));
     public DrawableColor ui_interface_area_background_color_type_2 = DrawableColor.of(new Color(38, 38, 38));
