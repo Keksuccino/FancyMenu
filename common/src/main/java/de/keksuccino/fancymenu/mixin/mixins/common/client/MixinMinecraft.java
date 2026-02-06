@@ -392,6 +392,7 @@ public class MixinMinecraft {
 	@Unique
 	private void fireServerLeft_FancyMenu() {
 		if (!this.hasActiveServerConnection_FancyMenu) {
+			SeamlessWorldLoadingHandler.finishServerLoad();
 			this.pendingServerJoinEvent_FancyMenu = false;
 			this.lastServerIp_FancyMenu = null;
 			return;
