@@ -145,6 +145,8 @@
 - Most color inputs of elements now support setting the color via a color picker that live-updates, so you see how color changes affect the element
 - You can now resize elements by simply hovering the element edges instead of the resize grabber
 - Tilt and rotation grabbers of elements now snap to 0 degrees
+- The "Settings" menu of the Customization menu bar tab is now also available in the Layout Editor
+- The "UI" menu bar tab got moved into the "Settings" menu
 - The "Text Input Field" element got some new features
   - Customizable input field background color (#844)
   - Customizable input field border colors (normal and focused) (#844)
