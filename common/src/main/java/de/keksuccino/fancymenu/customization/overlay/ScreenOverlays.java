@@ -25,8 +25,6 @@ public class ScreenOverlays {
     public static final long CUSTOMIZATION_DEBUG_OVERLAY = register(null, true);
     public static final long CUSTOMIZATION_MENU_BAR = register(null, true);
     public static final long LAYOUT_EDITOR_MENU_BAR = register(null, true);
-    public static final long LAYOUT_EDITOR_RIGHT_CLICK_CONTEXT_MENU = register(null, true);
-    public static final long LAYOUT_EDITOR_ELEMENT_CONTEXT_MENU = register(null, true);
 
     public static final long PLACEHOLDER_11 = register(null, false);
     public static final long PLACEHOLDER_12 = register(null, false);
