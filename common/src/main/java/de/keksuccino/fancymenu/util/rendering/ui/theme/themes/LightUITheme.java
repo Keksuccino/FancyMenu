@@ -18,7 +18,7 @@ public class LightUITheme extends UITheme {
         ui_blur_overlay_background_tint = DrawableColor.of(new Color(248, 250, 253, 180));
         ui_blur_overlay_border_color = DrawableColor.of(new Color(206, 212, 221, 150));
         ui_blur_interface_background_tint = DrawableColor.of(new Color(248, 250, 253, 210));
-        ui_blur_interface_border_color = DrawableColor.of(new Color(206, 212, 221, 150));
+        ui_blur_interface_border_color = DrawableColor.of(new Color(180, 185, 190, 168));
         ui_blur_interface_title_bar_tint = DrawableColor.of(new Color(235, 239, 245, 210));
         ui_blur_interface_area_background_color_type_1 = DrawableColor.of(new Color(255, 255, 255, 150));
         ui_blur_interface_area_background_color_type_2 = DrawableColor.of(new Color(242, 246, 251, 140));
