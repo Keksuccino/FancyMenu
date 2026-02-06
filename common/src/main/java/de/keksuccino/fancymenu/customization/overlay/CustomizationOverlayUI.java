@@ -399,9 +399,6 @@ public class CustomizationOverlayUI {
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.tools.browse_game_resources.desc")))
                 .setIcon(MaterialIcons.FOLDER_OPEN);
 
-        // UI
-        buildUITabAndAddTo(menuBar);
-
         // HELP
         buildHelpTabAndAddTo(menuBar);
 
@@ -514,6 +511,11 @@ public class CustomizationOverlayUI {
                 .setIcon(MaterialIcons.WARNING);
 
         customizationSettingsMenu.addSeparatorEntry("separator_after_advanced_mode");
+
+        customizationSettingsMenu.addSubMenuEntry("user_interface", Component.translatable("fancymenu.overlay.menu_bar.user_interface"), buildUserInterfaceMenu())
+                .setIcon(MaterialIcons.TUNE);
+
+        customizationSettingsMenu.addSeparatorEntry("separator_after_user_interface");
 
         ContextMenuUtils.addLongInputContextMenuEntryTo(customizationSettingsMenu, "placeholder_caching_duration",
                         Component.translatable("fancymenu.settings.caching.placeholders.set"),
@@ -1363,9 +1365,16 @@ public class CustomizationOverlayUI {
     }
 
     public static ContextMenu buildUITabAndAddTo(MenuBar menuBar) {
+        ContextMenu userInterfaceMenu = buildUserInterfaceMenu();
+        menuBar.addContextMenuEntry("user_interface", Component.translatable("fancymenu.overlay.menu_bar.user_interface"), userInterfaceMenu);
+        return userInterfaceMenu;
+
+    }
+
+    @NotNull
+    private static ContextMenu buildUserInterfaceMenu() {
 
         ContextMenu userInterfaceMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("user_interface", Component.translatable("fancymenu.overlay.menu_bar.user_interface"), userInterfaceMenu);
 
         ContextMenu uiScaleMenu = new ContextMenu();
         userInterfaceMenu.addSubMenuEntry("ui_scale", Component.translatable("fancymenu.ui.scale.label"), uiScaleMenu)
